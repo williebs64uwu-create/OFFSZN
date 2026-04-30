@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es-419">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inicio | Willie Inspired</title>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  
+  <!-- Core Scripts for Navbar/Footer "Perfil" -->
+  <script src="/env.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>window.supabaseClient = null;</script>
+  <script src="/script/config.js"></script>
+  <script src="/script/auth-utils.js"></script>
+  <script src="/components/offszn_perfiles_profesionales/loader.js"></script>
+
+  <!-- Global Nav/Footer Styles (same as playlist) -->
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="/css/global-overlays.css">
+
+  <style>
+    /* ========== PREMIUM AESTHETIC VARIABLES (21st.dev inspired) ========== */
+    :root {
+      --bg: #000000;
+      --fg: #ffffff;
+      --text-secondary: #888888;
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-hover: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --accent: #fff;
+    }
+    
+    body {
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: 'Geist', sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navbar Override Premium */
+    .prof-nav {
+      background-color: transparent !important;
+      backdrop-filter: none !important;
+      border-bottom: none !important;
+      position: sticky !important;
+      top: 0;
+      z-index: 1000;
+      transition: background-color 0.3s ease, backdrop-filter 0.3s ease, border-bottom 0.3s ease !important;
+    }
+    
+    .prof-nav.scrolled {
+      background-color: rgba(0, 0, 0, 0.8) !important;
+      backdrop-filter: blur(20px) !important;
+      border-bottom: 1px solid var(--glass-border) !important;
+    }
+    
+    .prof-nav a, 
+    .prof-nav span, 
+    .prof-nav button, 
+    .prof-nav i {
+      color: #ffffff !important;
+      letter-spacing: 1px !important;
+    }
+
+    .prof-nav a:hover {
+      opacity: 0.7 !important;
+    }
+
+    /* ========== BEAT CARDS ========== */
+    .beats-grid-premium {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 24px;
+      max-width: 1200px;
+      margin: 0 auto 120px;
+      padding: 0 24px;
+    }
+    
+    .beat-card-premium {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.3s, border-color 0.3s;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    
+    .beat-card-premium:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255,255,255,0.2);
+    }
+    
+    .beat-cover {
+      width: 100%;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+      display: block;
+      background: #111;
+    }
+    
+    .beat-info {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .beat-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .beat-meta {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .beat-price {
+      font-weight: 800;
+      color: #fff;
+      font-size: 1rem;
+    }
+
+
+    #app {
+      flex: 1;
+      padding-bottom: 60px;
+    }
+
+    /* ========== HERO SECTION ========== */
+    .hero {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+      margin-top: -80px; /* Cubre debajo de la navbar transparente */
+    }
+
+    #particles-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hero-title {
+      font-size: clamp(3rem, 10vw, 8rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.05em;
+      margin: 0 0 16px 0;
+      color: #fff;
+      text-transform: uppercase;
+      font-family: 'Geist', sans-serif;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--text-secondary);
+      font-weight: 400;
+      letter-spacing: 0.5px;
+    }
+
+    .scroll-indicator {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      z-index: 1;
+      animation: pulse 2s infinite;
+      pointer-events: none;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.3; }
+      50% { opacity: 1; }
+      100% { opacity: 0.3; }
+    }
+
+    /* ========== BENTO GRID FEATURES ========== */
+    .features-section {
+      max-width: 1200px;
+      margin: 0 auto 120px;
+      padding: 0 24px;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .section-header h2 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+    }
+    .section-header p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-auto-rows: 320px;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .bento-grid {
+        grid-template-columns: 1fr;
+        grid-auto-rows: minmax(280px, auto);
+      }
+    }
+
+    .bento-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .bento-card:hover {
+      background: var(--glass-hover);
+      border-color: rgba(255,255,255,0.15);
+      transform: translateY(-4px);
+    }
+
+    .bento-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);
+      pointer-events: none;
+    }
+
+    .bento-icon {
+      font-size: 2rem;
+      color: #fff;
+      margin-bottom: 24px;
+      display: inline-flex;
+    }
+
+    .bento-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .bento-desc {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .card-large {
+      grid-column: span 2;
+    }
+    @media (max-width: 900px) {
+      .card-large {
+        grid-column: span 1;
+      }
+    }
+
+    /* Decoraciones absolutas en las tarjetas */
+    .bento-decoration {
+      position: absolute;
+      right: -20px;
+      bottom: -20px;
+      opacity: 0.1;
+      font-size: 12rem;
+      transition: opacity 0.3s, transform 0.5s;
+    }
+    .bento-card:hover .bento-decoration {
+      opacity: 0.2;
+      transform: scale(1.1) rotate(-5deg);
+    }
+
+    /* ========== PRICING (LICENCIAS) ========== */
+    .pricing-section {
+      max-width: 1200px;
+      margin: 0 auto 120px;
+      padding: 0 24px;
+      position: relative;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      align-items: center; /* para que la del medio destaque */
+      margin-top: 60px;
+    }
+
+    @media (max-width: 900px) {
+      .pricing-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+    }
+
+    .pricing-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .pricing-card.popular {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: scale(1.05);
+      z-index: 2;
+      box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1);
+    }
+    
+    @media (max-width: 900px) {
+      .pricing-card.popular {
+        transform: none;
+      }
+    }
+
+    .pricing-card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      color: #000;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      padding: 4px 12px;
+      border-radius: 100px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 10px rgba(255,255,255,0.2);
+      white-space: nowrap;
+    }
+
+    .pricing-name {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .pricing-price {
+      font-size: 3.5rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .pricing-per {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 32px;
+    }
+
+    .pricing-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 40px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .pricing-features li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.95rem;
+      color: #ccc;
+    }
+
+    .pricing-features i {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+
+    .pricing-btn {
+      margin-top: auto;
+      width: 100%;
+      padding: 16px;
+      border-radius: 100px;
+      border: 1px solid var(--glass-border);
+      background: transparent;
+      color: #fff;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .pricing-card.popular .pricing-btn {
+      background: #fff;
+      color: #000;
+      border: none;
+    }
+
+    .pricing-card:hover .pricing-btn:not(.popular .pricing-btn) {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    /* ========== FAQ ========== */
+    .faq-section {
+      max-width: 800px;
+      margin: 0 auto 120px;
+      padding: 0 24px;
+      text-align: center;
+    }
+
+    .faq-accordion {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 48px;
+      text-align: left;
+    }
+
+    .faq-item {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+
+    .faq-item:hover {
+      border-color: rgba(255,255,255,0.15);
+      background: var(--glass-hover);
+    }
+
+    .faq-question {
+      width: 100%;
+      padding: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .faq-icon {
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0, 1, 0, 1);
+      background: rgba(0,0,0,0.2);
+    }
+
+    .faq-answer-inner {
+      padding: 0 24px 24px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 500px;
+      transition: max-height 0.4s ease-in-out;
+    }
+
+    .faq-item.active .faq-icon {
+      transform: rotate(45deg);
+      color: #fff;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ==================== DYNAMIC NAVBAR (Perfil) ==================== -->
+  <div id="prof-navbar-container"></div>
+
+  <main id="app">
+    <!-- ==================== HERO SECTION ==================== -->
+    <section class="hero">
+      <canvas id="particles-bg"></canvas>
+      <div class="hero-content">
+        <h1 class="hero-title">WILLIE INSPIRED</h1>
+        <p class="hero-subtitle">Encuentra el sonido que necesitas.</p>
+      </div>
+    </section>
+
+    <!-- ==================== BENTO FEATURES GRID ==================== -->
+    <section class="features-section" id="about">
+      <div class="section-header">
+        <h2>Mi Arsenal</h2>
+        <p>Herramientas y sonidos diseñados sin atajos.</p>
+      </div>
+
+      <div class="bento-grid">
+        
+        <!-- Tarjeta 1 (Grande) -->
+        <div class="bento-card card-large">
+          <i class="bi bi-speaker bento-decoration"></i>
+          <div class="bento-icon"><i class="bi bi-music-note-list"></i></div>
+          <h3 class="bento-title">Beats Exclusivos</h3>
+          <p class="bento-desc" style="max-width: 80%;">
+            Producciones de alto nivel, mezcladas y masterizadas. Listas para la industria. Todo mi catálogo cuenta con licencias transparentes adaptadas a tu nivel de inversión.
+          </p>
+          <a href="/@willieinspired" style="margin-top: auto; color: #fff; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+            Ver catálogo <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+
+        <!-- Tarjeta 2 -->
+        <div class="bento-card">
+          <i class="bi bi-box-seam bento-decoration"></i>
+          <div class="bento-icon"><i class="bi bi-folder2-open"></i></div>
+          <h3 class="bento-title">Sound Kits</h3>
+          <p class="bento-desc">
+            Librerías premium que uso en mi día a día. Drums crujientes, loops oscuros y presets listos para tu DAW.
+          </p>
+        </div>
+
+        <!-- Tarjeta 3 -->
+        <div class="bento-card" style="background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, transparent 100%);">
+          <i class="bi bi-people bento-decoration" style="opacity: 0.05;"></i>
+          <div class="bento-icon"><i class="bi bi-star-fill"></i></div>
+          <h3 class="bento-title">Inner Circle</h3>
+          <p class="bento-desc">
+            Acceso anticipado, stems y mentorías 1 a 1 para ayudarte a escalar tu sonido y tus ventas.
+          </p>
+          <button style="margin-top: auto; background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 12px; border-radius: 100px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#fff'; this.style.color='#000'" onmouseout="this.style.background='transparent'; this.style.color='#fff'">
+            Próximamente
+          </button>
+        </div>
+
+        <!-- Tarjeta 4 (Grande) -->
+        <div class="bento-card card-large">
+          <div class="bento-icon"><i class="bi bi-mic-fill"></i></div>
+          <h3 class="bento-title">Servicios de Mezcla y Master</h3>
+          <p class="bento-desc" style="max-width: 80%;">
+            Eleva la calidad de tus temas. Trabajo directamente contigo para lograr el estándar de volumen y claridad de la industria.
+          </p>
+          <div style="margin-top: auto; display: flex; gap: 12px;">
+             <span style="background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600;">Dolby Atmos</span>
+             <span style="background: rgba(255,255,255,0.1); padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600;">Stereo Master</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== BEATS CATALOG ==================== -->
+    <section class="catalog-section" id="beats">
+      <div class="section-header" style="text-align: center; margin-bottom: 60px;">
+        <span class="eyebrow">CATALOG</span>
+        <h2>Últimos Beats</h2>
+        <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto;">Instrumentales premium mezcladas y masterizadas, listas para usar.</p>
+      </div>
+      <div id="beats-grid" class="beats-grid-premium">
+        <!-- Cargando... -->
+      </div>
+    </section>
+
+    <!-- ==================== LICENCIAS (PRICING) ==================== -->
+    <section class="pricing-section" id="licencias">
+      <div class="section-header" style="text-align: center;">
+        <span class="eyebrow">LICENSING</span>
+        <h2>Choose Your Level</h2>
+        <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto;">Professional terms tailored to your career stage. All licenses include instant delivery and clear legal usage rights.</p>
+      </div>
+
+      <div class="pricing-grid" id="licenses-container">
+        <!-- Cargando Licencias Dinámicas... -->
+      </div>
+    </section>
+
+    <!-- ==================== FAQ ==================== -->
+    <section class="faq-section" id="faq">
+      <div class="section-header">
+        <span class="eyebrow">QUESTIONS</span>
+        <h2>Frequently Asked</h2>
+      </div>
+
+      <div class="faq-accordion">
+        
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Why Should You Buy Beats Online?</span>
+            <i class="bi bi-plus faq-icon"></i>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Buying beats online allows you to access industry-quality production instantly without paying massive studio costs. You get clear usage rights and can focus directly on writing and recording your next hit.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>How do I receive the beat after purchase?</span>
+            <i class="bi bi-plus faq-icon"></i>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Immediately after purchase, you will receive an email with direct download links for your files (MP3, WAV, or Stems) along with the PDF license agreement outlining your usage rights.
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <button class="faq-question">
+            <span>Can I use the beat for commercial releases?</span>
+            <i class="bi bi-plus faq-icon"></i>
+          </button>
+          <div class="faq-answer">
+            <div class="faq-answer-inner">
+              Yes, all licenses allow you to distribute your song on platforms like Spotify, Apple Music, and YouTube. The stream limits will depend on the specific license tier you choose (Basic, Standard, or Premium).
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== DYNAMIC FOOTER (Perfil) ==================== -->
+  <div id="prof-footer-container"></div>
+
+  <!-- Inyección de Lógica -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Inicializar base de datos
+      AuthUtils.initSupabase();
+      const supabaseClient = window.supabaseClient;
+
+      try {
+        // En lugar de leer de la URL, como es tu landing propia,
+        // forzamos a cargar la navbar y footer con la información de tu usuario.
+        const { data: user, error: userError } = await supabaseClient
+          .from('users')
+          .select('id, nickname, avatar_url, socials')
+          .eq('nickname', 'willieinspired') // Tu usuario hardcodeado
+          .single();
+
+        if (user && window.ProfLoader) {
+          // Esto inyecta el nav y footer de la tienda de "perfiles"
+          window.ProfLoader.init(user);
+          
+          // Lógica extra para el Navbar Sticky (porque el loader inyecta el HTML de forma asincrónica)
+          const checkNavAndAddScroll = setInterval(() => {
+            const nav = document.querySelector('.prof-nav');
+            if (nav) {
+              clearInterval(checkNavAndAddScroll);
+              window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                  nav.classList.add('scrolled');
+                } else {
+                  nav.classList.remove('scrolled');
+                }
+              });
+            }
+          }, 500);
+
+          // FETCH BEATS DINÁMICOS
+          const { data: beats } = await supabaseClient
+            .from('products')
+            .select('id, name, price_basic, image_url, bpm, key, public_slug')
+            .eq('producer_id', user.id)
+            .eq('visibility', 'public')
+            .eq('product_type', 'beat')
+            .order('created_at', { ascending: false })
+            .limit(8);
+            
+          const beatsContainer = document.getElementById('beats-grid');
+          if(beats && beats.length > 0) {
+             beatsContainer.innerHTML = beats.map(b => {
+                 const finalImg = b.image_url ? (b.image_url.startsWith('http') ? b.image_url : 'https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/' + b.image_url) : '/images/portada-default.png';
+                 return `
+                    <a href="/beat/${b.public_slug || b.id}" style="text-decoration: none;" class="beat-card-premium">
+                      <img src="${finalImg}" class="beat-cover" onerror="this.src='/images/portada-default.png'">
+                      <div class="beat-info">
+                         <div class="beat-title">${b.name}</div>
+                         <div class="beat-meta">
+                            <span><i class="bi bi-speedometer2"></i> ${b.bpm || '--'} BPM</span>
+                            <span class="beat-price">$${b.price_basic || '--'}</span>
+                         </div>
+                      </div>
+                    </a>
+                 `;
+             }).join('');
+          } else {
+             beatsContainer.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color: var(--text-secondary);">No hay beats disponibles aún.</p>';
+          }
+
+          // FETCH LICENCIAS DINÁMICAS
+          const { data: licenses } = await supabaseClient
+            .from('licenses')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('price', { ascending: true });
+            
+          const licensesContainer = document.getElementById('licenses-container');
+          if(licenses && licenses.length > 0) {
+              licensesContainer.innerHTML = licenses.map((lic, index) => {
+                  const isPopular = index === Math.floor(licenses.length / 2); // Medio como recomendada
+                  let streamsText = 'Unlimited Streams';
+                  if(lic.streams_limit && lic.streams_limit.toString().toLowerCase() !== 'ilimitado' && lic.streams_limit !== '') {
+                      streamsText = lic.streams_limit + ' Streams';
+                  }
+
+                  let filesText = 'MP3 High Quality';
+                  if (lic.has_stems) filesText = 'MP3 + WAV + STEMS';
+                  else if (lic.has_wav) filesText = 'MP3 + WAV';
+
+                  return `
+                  <div class="pricing-card ${isPopular ? 'popular' : ''}">
+                      ${isPopular ? '<div class="popular-badge">Recomendada</div>' : ''}
+                      <div class="pricing-name">${lic.name}</div>
+                      <div class="pricing-price">$${lic.price}</div>
+                      <div class="pricing-per">PER TRACK</div>
+                      
+                      <ul class="pricing-features">
+                        <li><i class="bi bi-file-earmark-music"></i> ${filesText}</li>
+                        <li><i class="bi bi-broadcast"></i> ${streamsText}</li>
+                        <li><i class="bi bi-globe2"></i> Distribution Allowed</li>
+                        <li><i class="bi ${lic.is_exclusive ? 'bi-lock-fill' : 'bi-unlock'}"></i> ${lic.is_exclusive ? 'Exclusive' : 'Non-Exclusive'}</li>
+                      </ul>
+                      
+                      <button class="pricing-btn" onclick="window.location.href='/#beats'">See Beats</button>
+                  </div>
+                  `;
+              }).join('');
+          } else {
+              licensesContainer.innerHTML = '<p style="text-align:center; grid-column: 1/-1; color: var(--text-secondary);">No hay licencias configuradas.</p>';
+          }
+        }
+      } catch (err) {
+        console.error("Error al cargar datos del usuario:", err);
+      }
+
+      // FAQ Logic
+      document.querySelectorAll('.faq-question').forEach(button => {
+        button.addEventListener('click', () => {
+          const faqItem = button.parentElement;
+          const isActive = faqItem.classList.contains('active');
+          
+          // Cerrar todos
+          document.querySelectorAll('.faq-item').forEach(item => {
+            item.classList.remove('active');
+          });
+          
+          // Si no estaba activo, abrir este
+          if (!isActive) {
+            faqItem.classList.add('active');
+          }
+        });
+      });
+
+      // ========== PARTICULAS SUTILES INTERACTIVAS ==========
+      const canvas = document.getElementById('particles-bg');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        let mouse = { x: window.innerWidth/2, y: window.innerHeight/2 };
+        let targetMouse = { x: window.innerWidth/2, y: window.innerHeight/2 };
+        
+        function resize() {
+          width = canvas.width = window.innerWidth;
+          // limit the canvas to the window height so it covers the hero
+          height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Crear particulas
+        for(let i=0; i<150; i++) {
+          particles.push({
+            x: Math.random() * width,
+            y: Math.random() * height,
+            size: Math.random() * 1.5 + 0.5, // 0.5 a 2px
+            speedX: (Math.random() - 0.5) * 0.15,
+            speedY: (Math.random() - 0.5) * 0.15,
+            parallaxFactor: Math.random() * 0.04 + 0.01 // Velocidad diferente para paralaje
+          });
+        }
+
+        document.addEventListener('mousemove', (e) => {
+          targetMouse.x = e.clientX;
+          targetMouse.y = e.clientY;
+        });
+
+        function animate() {
+          ctx.clearRect(0, 0, width, height);
+          
+          // Interpolacion suave para el mouse
+          mouse.x += (targetMouse.x - mouse.x) * 0.05;
+          mouse.y += (targetMouse.y - mouse.y) * 0.05;
+
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+          particles.forEach(p => {
+            // Movimiento natural
+            p.x += p.speedX;
+            p.y += p.speedY;
+            
+            // Loop infinito
+            if(p.x < 0) p.x = width;
+            if(p.x > width) p.x = 0;
+            if(p.y < 0) p.y = height;
+            if(p.y > height) p.y = 0;
+
+            // Desplazamiento por el mouse (Paralaje invertido)
+            let offsetX = (mouse.x - width/2) * p.parallaxFactor;
+            let offsetY = (mouse.y - height/2) * p.parallaxFactor;
+
+            ctx.beginPath();
+            ctx.arc(p.x - offsetX, p.y - offsetY, p.size, 0, Math.PI * 2);
+            ctx.fill();
+          });
+          
+          requestAnimationFrame(animate);
+        }
+        animate();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: offszn
+    env: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+
+    rewrites:
+      # SECURITY: Block access to sensitive folders and files
+      - source: "/server/*"
+        destination: "/404.html"
+      - source: "/.env"
+        destination: "/404.html"
+      - source: "/_redirects"
+        destination: "/404.html"

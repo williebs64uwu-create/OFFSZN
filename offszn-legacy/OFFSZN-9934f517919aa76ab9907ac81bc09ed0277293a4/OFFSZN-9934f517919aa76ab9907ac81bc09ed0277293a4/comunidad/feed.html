@@ -1,0 +1,1146 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feed de la Comunidad | OFFSZN</title>
+  <meta name="description"
+    content="Descubre lo último de la comunidad OFFSZN. Noticias, actualizaciones y contenido de productores musicales.">
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="https://offszn.lat/comunidad/feed.html">
+  <meta name="theme-color" content="#0a0a0a">
+  <!-- Open Graph -->
+  <meta property="og:title" content="Feed de la Comunidad | OFFSZN">
+  <meta property="og:description"
+    content="Descubre lo Ãºltimo de la comunidad OFFSZN. Noticias, actualizaciones y contenido de productores musicales.">
+  <meta property="og:url" content="https://offszn.lat/comunidad/feed.html">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://offszn.lat/images/og-default.jpg">
+  <meta property="og:site_name" content="OFFSZN">
+  <meta property="og:locale" content="es_PE">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Feed de la Comunidad | OFFSZN">
+  <meta name="twitter:description"
+    content="Descubre lo último de la comunidad OFFSZN. Noticias, actualizaciones y contenido de productores musicales.">
+  <meta name="twitter:image" content="https://offszn.lat/images/og-default.jpg">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="/css/auth-ui.css">
+  <link rel="stylesheet" href="/css/global-overlays.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/sticky-player.css">
+  <link rel="stylesheet" href="/css/avatar-manager.css">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+  <!-- 1. Cargar ConfiguraciÃ³n Segura y Supabase -->
+  <script src="/env.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"
+    integrity="sha384-o2Uz8M8jf3RRbNF9dFLYtjA2ohqUgp6vUxr43Uzvt8MJkkLNvpXvLCUVbWh+cadK"
+    crossorigin="anonymous"></script>
+  <script>
+    window.supabaseClient = null;
+    // Reiniciar Auth despuÃ©s de cargar env.js
+    window.addEventListener('load', () => {
+      if (window.AuthUtils && typeof window.AuthUtils.initSupabase === 'function') {
+        window.AuthUtils.initSupabase();
+      }
+    });
+  </script>
+  <script src="/script/auth-utils.js?v=11"></script>
+  <!-- WaveSurfer for Maqueta Visualization -->
+  <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+</head>
+
+<body>
+
+
+
+  <!-- ==================== DYNAMIC NAVBAR ==================== -->
+  <div id="navbar-placeholder">
+    <!-- Static shell to prevent flash before JS loads -->
+    <div
+      style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;">
+    </div>
+  </div>
+  <script src="/script/load-navbar.js?v=21"></script>
+
+  <main class="feed-container">
+    <h1 class="feed-title">Comunidad</h1>
+
+    <!-- FILTER BAR -->
+    <section class="feed-filters" style="display:none;" id="feed-filters">
+      <!-- Genre Pills (BeatStars-style scroll) Ã¢â‚¬â€ NOW ON TOP -->
+      <div class="genre-scroll-wrapper">
+        <button class="genre-scroll-btn left" onclick="scrollGenres(-200)"><i class="bi bi-chevron-left"></i></button>
+        <div class="genre-pills" id="genre-pills">
+          <span class="genre-pill active" data-genre="all" onclick="selectGenre(this)">Todos</span>
+          <span class="genre-pill" data-genre="trap" onclick="selectGenre(this)">trap</span>
+          <span class="genre-pill" data-genre="hip-hop" onclick="selectGenre(this)">hip-hop/rap</span>
+          <span class="genre-pill" data-genre="boom bap" onclick="selectGenre(this)">boom bap</span>
+          <span class="genre-pill" data-genre="reggaeton" onclick="selectGenre(this)">reggaetón</span>
+          <span class="genre-pill" data-genre="drill" onclick="selectGenre(this)">drill</span>
+          <span class="genre-pill" data-genre="under" onclick="selectGenre(this)">under</span>
+          <span class="genre-pill" data-genre="drumless" onclick="selectGenre(this)">drumless</span>
+          <span class="genre-pill" data-genre="experimental" onclick="selectGenre(this)">experimental</span>
+          <span class="genre-pill" data-genre="r&b" onclick="selectGenre(this)">R&B</span>
+          <span class="genre-pill" data-genre="freestyle rap" onclick="selectGenre(this)">freestyle rap</span>
+          <span class="genre-pill" data-genre="hoodtrap" onclick="selectGenre(this)">hoodtrap</span>
+          <span class="genre-pill" data-genre="dark boom bap" onclick="selectGenre(this)">dark boom bap</span>
+          <span class="genre-pill" data-genre="rage" onclick="selectGenre(this)">rage</span>
+          <span class="genre-pill" data-genre="ambient" onclick="selectGenre(this)">ambient</span>
+          <span class="genre-pill" data-genre="soul" onclick="selectGenre(this)">soul</span>
+          <span class="genre-pill" data-genre="melodic" onclick="selectGenre(this)">melodic</span>
+          <span class="genre-pill" data-genre="detroit" onclick="selectGenre(this)">detroit</span>
+          <span class="genre-pill" data-genre="pluggnb" onclick="selectGenre(this)">pluggnb</span>
+          <span class="genre-pill" data-genre="grimm" onclick="selectGenre(this)">grimm</span>
+          <span class="genre-pill" data-genre="lo-fi" onclick="selectGenre(this)">lo-fi</span>
+          <span class="genre-pill" data-genre="pop" onclick="selectGenre(this)">pop</span>
+          <span class="genre-pill" data-genre="dancehall" onclick="selectGenre(this)">dancehall</span>
+          <span class="genre-pill" data-genre="funk" onclick="selectGenre(this)">funk</span>
+          <span class="genre-pill" data-genre="rock" onclick="selectGenre(this)">rock</span>
+          <span class="genre-pill" data-genre="synthwave" onclick="selectGenre(this)">synthwave</span>
+          <span class="genre-pill" data-genre="cumbia" onclick="selectGenre(this)">cumbia</span>
+        </div>
+        <button class="genre-scroll-btn right" onclick="scrollGenres(200)"><i class="bi bi-chevron-right"></i></button>
+      </div>
+
+      <!-- Category dropdowns Ã¢â‚¬â€ BELOW GENRE PILLS -->
+      <div class="filter-categories">
+        <!-- Beats -->
+        <div class="filter-cat-btn" id="filter-beats" onclick="toggleFilterDropdown('beats')">
+          Beats <i class="bi bi-chevron-down"></i>
+          <div class="filter-dropdown" id="dd-beats">
+            <label><input type="checkbox" value="remake" onchange="applyFilters()"> Remake</label>
+            <label><input type="checkbox" value="personalizado" onchange="applyFilters()"> Personalizado</label>
+          </div>
+        </div>
+        <!-- Presets -->
+        <div class="filter-cat-btn" id="filter-presets" onclick="toggleFilterDropdown('presets')">
+          Presets <i class="bi bi-chevron-down"></i>
+          <div class="filter-dropdown" id="dd-presets">
+            <label><input type="checkbox" value="vocal_chain" onchange="applyFilters()"> Vocal Chain</label>
+            <label><input type="checkbox" value="instrumentos" onchange="applyFilters()"> Instrumentos</label>
+            <label><input type="checkbox" value="vst" onchange="applyFilters()"> VST</label>
+          </div>
+        </div>
+        <!-- Servicios -->
+        <div class="filter-cat-btn" id="filter-servicios" onclick="toggleFilterDropdown('servicios')">
+          Servicios <i class="bi bi-chevron-down"></i>
+          <div class="filter-dropdown" id="dd-servicios">
+            <label><input type="checkbox" value="mezcla" onchange="applyFilters()"> Mezcla</label>
+            <label><input type="checkbox" value="master" onchange="applyFilters()"> Master</label>
+            <label><input type="checkbox" value="afinar_voces" onchange="applyFilters()"> Afinar Voces</label>
+          </div>
+        </div>
+        <!-- Precios -->
+        <div class="filter-cat-btn" id="filter-precios" onclick="toggleFilterDropdown('precios')">
+          Precios <i class="bi bi-chevron-down"></i>
+          <div class="filter-dropdown filter-dropdown-price" id="dd-precios">
+            <div class="price-range-header">
+              <span id="price-min-label">$10</span> Comprar <span id="price-max-label">$1000</span>
+            </div>
+            <div class="price-range-inputs">
+              <input type="range" id="price-min" min="10" max="1000" value="10" step="10"
+                oninput="updatePriceLabels(); applyFilters()">
+              <input type="range" id="price-max" min="10" max="1000" value="1000" step="10"
+                oninput="updatePriceLabels(); applyFilters()">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="requests-feed">
+      <div id="requests-container" style="display: flex; flex-direction: column; gap: 0;">
+        <!-- Skeleton Loaders -->
+        <div class="request-card-skeleton"></div>
+        <div class="request-card-skeleton"></div>
+        <div class="request-card-skeleton"></div>
+      </div>
+    </section>
+  </main>
+
+  <style>
+    :root {
+      --premium-black: #050505;
+      --premium-border: rgba(255, 255, 255, 0.08);
+      --premium-white: #ffffff;
+      --premium-gray: #a1a1a1;
+    }
+
+    body {
+      background-color: var(--premium-black);
+      color: var(--premium-white);
+    }
+
+    .feed-container {
+      max-width: 600px;
+      margin: 30px auto 40px;
+      padding: 0 1.5rem;
+    }
+
+    .feed-title {
+      font-family: 'Geist', sans-serif;
+      font-weight: 800;
+      font-size: 2rem;
+      color: #fff;
+      margin: 0 0 16px 0;
+      letter-spacing: -0.5px;
+    }
+
+    .requests-feed {
+      min-height: 400px;
+    }
+
+    .feed-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 24px;
+    }
+
+    /* Request Card Style */
+    .request-card {
+      background: #0a0a0a;
+      border: 1px solid var(--premium-border);
+      border-radius: 20px;
+      padding: 24px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .request-card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .request-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, transparent 0%, rgba(255, 255, 255, 0.02) 100%);
+      pointer-events: none;
+    }
+
+    .request-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .buyer-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .buyer-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #222;
+      border: 1px solid var(--premium-border);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .buyer-name {
+      font-weight: 700;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .buyer-role {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #888;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 2px 8px;
+      border-radius: 100px;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .buyer-date {
+      font-size: 0.75rem;
+      color: #444;
+      white-space: nowrap;
+    }
+
+    .budget-tag {
+      background: #fff;
+      color: #000;
+      padding: 6px 12px;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 800;
+    }
+
+    .request-description {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #ccc;
+      margin: 4px 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .request-footer {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .request-date {
+      font-size: 0.8rem;
+      color: #555;
+    }
+
+    .btn-take-job {
+      background: transparent;
+      border: 1px solid #fff;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-take-job:hover {
+      background: #fff;
+      color: #000;
+    }
+
+    /* Skeletons */
+    .request-card-skeleton {
+      height: 250px;
+      background: linear-gradient(90deg, #0a0a0a 25%, #151515 50%, #0a0a0a 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: 20px;
+      border: 1px solid var(--premium-border);
+    }
+
+    @keyframes loading {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .feed-container {
+        margin-top: 80px;
+      }
+
+      .filter-categories {
+        flex-wrap: wrap;
+      }
+    }
+
+    /* ===== FILTER BAR ===== */
+    .feed-filters {
+      margin-bottom: 32px;
+    }
+
+    .filter-categories {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .filter-cat-btn {
+      position: relative;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #ccc;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+
+    .filter-cat-btn:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .filter-cat-btn i {
+      font-size: 0.65rem;
+      transition: transform 0.2s;
+    }
+
+    .filter-cat-btn.open i {
+      transform: rotate(180deg);
+    }
+
+    .filter-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      background: rgba(10, 10, 10, 0.97);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 10px;
+      min-width: 180px;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 100;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .filter-dropdown.show {
+      display: flex;
+    }
+
+    .filter-dropdown label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      color: #bbb;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .filter-dropdown label:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .filter-dropdown input[type="checkbox"] {
+      accent-color: #fff;
+      width: 15px;
+      height: 15px;
+    }
+
+    /* Price Range */
+    .filter-dropdown-price {
+      min-width: 220px;
+      padding: 14px;
+    }
+
+    .price-range-header {
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .price-range-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .price-range-inputs input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: #333;
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .price-range-inputs input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    /* Genre Pills */
+    .genre-scroll-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      margin-bottom: 14px;
+    }
+
+    .genre-scroll-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #888;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s;
+      font-size: 0.75rem;
+    }
+
+    .genre-scroll-btn:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+    }
+
+    .genre-pills {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      scroll-behavior: smooth;
+      padding: 4px 0;
+    }
+
+    .genre-pills::-webkit-scrollbar {
+      display: none;
+    }
+
+    .genre-pill {
+      flex-shrink: 0;
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #888;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .genre-pill:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #ccc;
+    }
+
+    .genre-pill.active {
+      background: #fff;
+      color: #000;
+      border-color: #fff;
+    }
+
+    @media (max-width: 768px) {
+      .genre-scroll-btn {
+        display: none;
+      }
+
+      .feed-title {
+        font-size: 1.6rem;
+      }
+    }
+
+    /* ===== ACTIVITY CARD (Premium Social Stream) ===== */
+    .activity-card {
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      margin-bottom: 30px;
+      overflow: hidden;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .activity-inner {
+      padding: 16px;
+    }
+
+    .activity-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .actor-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .actor-details {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .actor-nickname {
+      font-weight: 700;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    .btn-follow-small {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #999;
+      font-weight: 700;
+      font-size: 0.7rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      margin-left: 5px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s;
+    }
+
+    .btn-follow-small:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .activity-time {
+      font-size: 0.8rem;
+      color: #444;
+      margin-top: 2px;
+      display: block;
+    }
+
+    /* SUB-CARD (BeatStars style) */
+    .product-sub-card {
+      background: #0a0a0a;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      gap: 15px;
+      margin: 10px 0;
+    }
+
+    .sub-card-art {
+      width: 100px;
+      height: 100px;
+      border-radius: 6px;
+      object-fit: cover;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .sub-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .sub-card-title {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #fff;
+      margin-bottom: 2px;
+      display: block;
+    }
+
+    .sub-card-artist {
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .sub-card-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #1a1a1a;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      color: #666;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .sub-card-waveform {
+      margin-top: 10px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      opacity: 0.4;
+    }
+
+    .wf-bar {
+      flex: 1;
+      background: #fff;
+      border-radius: 1px;
+    }
+
+    .sub-card-buy {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-buy-feed {
+      padding: 6px 14px;
+      background: #1a1a1a;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* FOOTER ACTIONS */
+    .activity-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 16px;
+      padding-top: 8px;
+    }
+
+    .action-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: color 0.2s;
+    }
+
+    .action-btn.active i {
+      color: #ff4b4b !important;
+      transform: scale(1.1);
+    }
+
+    .btn-follow-small,
+    .btn-welcome-wave {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      height: 28px;
+      white-space: nowrap;
+    }
+
+    .btn-follow-small:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-1px);
+    }
+
+    .btn-follow-small.active {
+      background: #fff;
+      color: #000;
+      border-color: #fff;
+    }
+
+    .btn-welcome-wave.disabled {
+      opacity: 0.4;
+      cursor: default;
+      pointer-events: none;
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .simple-loader {
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 40px auto;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ===== GUEST AUTH MODAL (Premium Redesign) ===== */
+    .guest-auth-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .guest-auth-modal.active {
+      display: flex;
+    }
+
+    .guest-auth-card {
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 90%;
+      max-width: 400px;
+      padding: 40px 30px;
+      border-radius: 20px;
+      text-align: center;
+      position: relative;
+      animation: modalSlideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes modalSlideUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .guest-modal-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 1.5rem;
+      color: #555;
+      cursor: pointer;
+    }
+
+    .guest-auth-title {
+      font-family: 'Geist', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .guest-auth-text {
+      font-size: 0.95rem;
+      color: #888;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .guest-auth-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .guest-btn-primary {
+      background: #fff;
+      color: #000 !important;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .guest-btn-secondary {
+      background: transparent;
+      border: none;
+      color: #555;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 10px;
+    }
+
+    /* ===== WELCOME CARD (Discord Style) ===== */
+    .welcome-sub-card {
+      background: #0a0a0a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 12px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .welcome-banner {
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #888;
+      margin-bottom: 12px;
+    }
+
+    .welcome-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .welcome-avatar-wrapper {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      padding: 2px;
+      flex-shrink: 0;
+    }
+
+    .welcome-avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .welcome-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .welcome-nickname {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 0;
+    }
+
+    .welcome-tag {
+      font-size: 0.7rem;
+      color: #666;
+      background: #1a1a1a;
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      align-self: flex-start;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .welcome-socials {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .welcome-social-icon {
+      color: #888;
+      font-size: 0.9rem;
+      background: #1a1a1a;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .welcome-social-icon:hover {
+      color: #fff;
+      background: #333;
+    }
+
+    .welcome-bio {
+      font-size: 0.85rem;
+      color: #aaa;
+      font-style: italic;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      padding-left: 12px;
+      border-left: 2px solid #333;
+    }
+
+    .welcome-actions {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .btn-welcome-wave {
+      background: #fff;
+      color: #000;
+      border: 1px solid #fff;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-welcome-wave:hover {
+      background: #e0e0e0;
+      border-color: #e0e0e0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-welcome-wave i {
+      color: #000;
+      font-size: 1rem;
+    }
+
+    .btn-welcome-wave.active {
+      background: #333;
+      color: #fff;
+    }
+
+    .btn-welcome-wave.active i {
+      color: #fff;
+    }
+  </style>
+  <!-- ==================== SIDE PANELS (INJECTED MANUALLY FOR ANALYSIS) ==================== -->
+
+  <!-- BACKDROP -->
+  <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
+
+  <!-- CART SIDE PANEL -->
+  <div class="side-panel" id="globalCartPanel">
+    <div class="panel-header">
+      <div class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+        <div style="position: relative; display: flex;">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cart-panel-count" class="notification-badge"
+            style="position: absolute; top: -6px; right: -6px; display: flex;">1</span>
+        </div>
+        Tu Carrito
+      </div>
+      <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
+    </div>
+    <!-- ID CHANGED: globalCartItems -> cart-items-container to match script/cart.js -->
+    <div class="panel-content" id="cart-items-container">
+      <div style="text-align:center; padding: 40px 0; color: #666;">
+        <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 10px;"></i>
+        <p>Tu carrito esta vaci­o</p>
+      </div>
+    </div>
+    <!-- ID ADDED: cart-summary (needed by script) -->
+    <div class="cart-total-section" id="cart-summary">
+      <div style="display:flex; justify-content:space-between; margin-bottom:1rem; color:#fff; font-weight:700;">
+        <span>Total:</span>
+        <!-- ID CHANGED for JS compatibility -->
+        <span id="cart-total-price">$0.00</span>
+      </div>
+      <!-- ID CHANGED for JS compatibility -->
+      <button class="btn-checkout-global" id="cart-checkout-btn" onclick="window.location.href='/pages/checkout.html'">
+        <i class="bi bi-lock-fill" style="margin-right:6px;"></i> Ir a Pagar Seguro
+      </button>
+
+      <!-- TRUST BADGES -->
+      <div
+        style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+        <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
+          METODOS DE PAGO SEGUROS</p>
+
+        <div
+          style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%); transition: filter 0.3s;"
+          onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(100%)'">
+          <!-- Global -->
+          <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
+          <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
+          <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
+
+          <!-- Local (Custom Badges) -->
+          <div
+            style="background: #742284; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+            YAPE</div>
+          <div
+            style="background: #00d3de; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+            PLIN</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/script/cart.js"></script>
+  <script src="/script/notifications.js"></script>
+  <script src="/script/avatar-manager.js"></script>
+  <script src="/script/navbar.js?v=20" type="module"></script>
+  <script src="/script/sticky-player.js"></script>
+  <script src="/script/id-obfuscator.js"></script>
+  <script src="/script/feed.js" type="module"></script>
+
+  <!-- ==================== FOOTER ==================== -->
+  <!-- Este div es el placeholder donde se inyectarÃ¡ el componente de footer (Desktop/Mobile) -->
+  <!-- Se carga mediante /script/footer.js -->
+  <div id="footer-placeholder"></div>
+
+</body>
+
+</html>

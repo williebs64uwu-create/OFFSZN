@@ -20,7 +20,7 @@
   <link rel="stylesheet" href="/css/footer.css">
 
   <!-- Custom Premium Landing Style -->
-  <link rel="stylesheet" href="/css/premium-landing.css?v=13">
+  <link rel="stylesheet" href="/css/premium-landing.css?v=14">
   <link rel="stylesheet" href="/css/social-proof.css">
 
   <!-- Fonts -->
@@ -95,19 +95,10 @@
   <!-- ==================== NAVBAR ==================== -->
   <div id="navbar-landing-container"></div>
   <script>
-    // Fetch Navbar Landing with Timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-    fetch('/components/navbar-landing.html', { signal: controller.signal })
-      .then(res => {
-        clearTimeout(timeoutId);
-        if (!res.ok) throw new Error('Navbar not found');
-        return res.text();
-      })
+    fetch('/components/navbar-landing.html')
+      .then(res => res.text())
       .then(html => {
         document.getElementById('navbar-landing-container').innerHTML = html;
-        
         // Scroll Effect for Glass UI
         window.addEventListener('scroll', () => {
           const nav = document.querySelector('.navbar-landing');
@@ -119,32 +110,15 @@
             }
           }
         });
-
-        // Initialize Auth after navbar is ready
-        if (typeof initAuthState === 'function') initAuthState();
-      })
-      .catch(err => {
-        clearTimeout(timeoutId);
-        console.warn('Navbar fetch failed or timed out:', err);
-        
-        // Inyectar un Navbar de emergencia (Fallback) para que no quede vacío
-        document.getElementById('navbar-landing-container').innerHTML = `
-          <nav class="navbar-landing">
-            <div class="nav-container">
-              <div class="nav-logo">
-                <a href="/">OFFSZN</a>
-              </div>
-              <div class="nav-actions">
-                <a href="/explorar" class="btn-secondary-premium">Explorar</a>
-                <a href="/pages/register.html" class="btn-login-premium">Empezar a crear</a>
-              </div>
-            </div>
-          </nav>
-        `;
-
-        // Re-init mobile nav logic for the fallback
-        if (typeof initMobileNav === 'function') initMobileNav();
-        if (typeof initAuthState === 'function') initAuthState();
+        // Auth: toggle navbar state after HTML is injected
+        function tryAuthInit(retries) {
+          if (typeof initAuthState === 'function') {
+            initAuthState();
+          } else if (retries > 0) {
+            setTimeout(() => tryAuthInit(retries - 1), 200);
+          }
+        }
+        tryAuthInit(15);
       });
   </script>
 

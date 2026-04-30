@@ -1,0 +1,235 @@
+document.addEventListener('DOMContentLoaded', () => {
+
+  //configuracion
+  let API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
+
+  const authToken = localStorage.getItem('authToken');
+  const productGrid = document.getElementById('product-grid');
+
+  async function loadProducts() {
+    if (!productGrid) return;
+    productGrid.innerHTML = '<p class="loading-message">Cargando productos...</p>';
+
+    try {
+      const productsResponse = await fetch(`${API_URL}/products`);
+      if (!productsResponse.ok) throw new Error('No se pudieron cargar los productos.');
+      const allProducts = await productsResponse.json();
+
+      let purchasedProductIds = new Set();
+      if (authToken) {
+        try {
+          const purchasedResponse = await fetch(`${API_URL}/my-products`, {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          });
+          if (purchasedResponse.ok) {
+            const purchasedProducts = await purchasedResponse.json();
+            purchasedProducts.forEach(p => {
+              if (p && p.id) {
+                purchasedProductIds.add(p.id);
+              }
+            });
+          } else {
+            console.warn("No se pudo obtener la lista de productos comprados. El usuario podría no haber iniciado sesión correctamente o la API falló.");
+          }
+        } catch (purchasedError) {
+          console.error("Error al obtener productos comprados:", purchasedError);
+        }
+      }
+
+      if (allProducts.length === 0) {
+        productGrid.innerHTML = '<p class="empty-cart-message">No hay productos disponibles.</p>';
+        return;
+      }
+
+      productGrid.innerHTML = '';
+      allProducts.forEach(product => {
+        const isPurchased = purchasedProductIds.has(product.id);
+
+        const card = document.createElement('div');
+        card.className = `product-card ${isPurchased ? 'purchased' : ''}`;
+
+        const img = document.createElement('img');
+        img.src = product.image_url;
+        img.alt = product.name;
+        const content = document.createElement('div');
+        content.className = 'product-content';
+
+        const title = document.createElement('h3');
+        title.textContent = product.name;
+
+        const description = document.createElement('p');
+        description.textContent = product.description;
+
+        const price = document.createElement('div');
+        price.className = 'product-price';
+
+        if (product.is_free) {
+          price.textContent = 'GRATIS';
+          price.classList.add('free-price');
+        } else {
+          const prices = [
+            product.price_basic,
+            product.price_premium,
+            product.price_stems,
+            product.price_exclusive
+          ].filter(p => p > 0);
+
+          if (prices.length > 0) {
+            const lowestPrice = Math.min(...prices);
+            price.textContent = `Desde $${lowestPrice.toFixed(2)}`;
+          } else {
+            price.textContent = 'GRATIS';
+          }
+        }
+        content.append(title);
+        content.append(description);
+        content.append(price);
+
+
+        if (isPurchased) {
+          content.innerHTML += `
+            <div class="purchased-badge">
+                <i class="bi bi-check-circle-fill"></i> Adquirido
+            </div>`;
+        } else {
+          content.innerHTML += `
+              <button class="btn btn-add-to-cart" data-product-id="${product.id}">
+                <i class="bi bi-cart-plus"></i> Añadir al Carrito
+              </button>
+              <div class="paypal-button-container" data-product-id="${product.id}"></div>
+          `;
+        }
+
+        card.append(img);
+        card.append(content);
+
+        productGrid.append(card);
+      });
+
+      initializePayPalButtons();
+      addCartButtonListeners();
+
+
+    } catch (error) {
+      console.error('Error al cargar productos:', error);
+      productGrid.innerHTML = `<p class="empty-cart-message">Error al cargar productos: ${error.message}</p>`;
+    }
+  }
+
+  function initializePayPalButtons() {
+    document.querySelectorAll('.product-card:not(.purchased) .paypal-button-container').forEach(buttonContainer => {
+
+      const productId = buttonContainer.dataset.productId;
+
+      paypal.Buttons({
+
+        createOrder: async () => {
+          if (!authToken) {
+            alert('Debes iniciar sesión para poder comprar.');
+            window.location.href = '/pages/login.html';
+            return;
+          }
+
+          try {
+            const res = await fetch(`${API_URL}/orders/create`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+              },
+              body: JSON.stringify({ productId: productId })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error);
+            return data.orderID;
+
+          } catch (error) {
+            console.error('Error al crear la orden:', error);
+            alert(`Error al crear la orden: ${error.message}`);
+          }
+        },
+
+        onApprove: async (data, actions) => {
+          try {
+            const res = await fetch(`${API_URL}/orders/capture`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+              },
+              body: JSON.stringify({ orderID: data.orderID })
+            });
+
+            const captureData = await res.json();
+            if (!res.ok) throw new Error(captureData.error);
+
+            console.log('Pago capturado:', captureData);
+            alert('¡Gracias por tu compra!');
+
+            window.location.href = '/pages/my-products.html';
+
+          } catch (error) {
+            console.error('Error al capturar el pago:', error);
+            alert('Error al finalizar el pago.');
+          }
+        },
+
+        onError: (err) => {
+          console.error('Error de PayPal:', err);
+          alert('Ha ocurrido un error con PayPal.');
+        }
+
+      }).render(buttonContainer);
+    });
+  }
+
+  function addCartButtonListeners() {
+    document.querySelectorAll('.product-card:not(.purchased) .btn-add-to-cart').forEach(button => {
+      button.addEventListener('click', async (event) => {
+        if (!authToken) {
+          alert('Debes iniciar sesión para añadir al carrito.');
+          window.location.href = '/pages/login.html';
+          return;
+        }
+
+        const productId = event.target.dataset.productId;
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split"></i> Añadiendo...'; //feedback
+
+        try {
+          const res = await fetch(`${API_URL}/cart`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ productId: productId })
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            alert('¡Producto añadido al carrito!');
+            button.innerHTML = '<i class="bi bi-check-lg"></i> Añadido';
+          } else if (res.status === 409) {
+            alert('Este producto ya está en tu carrito.');
+            button.innerHTML = '<i class="bi bi-cart-check"></i> Ya en Carrito';
+            button.disabled = false;
+          } else {
+            throw new Error(data.error || 'Error desconocido');
+          }
+
+        } catch (error) {
+          console.error('Error al añadir al carrito:', error);
+          alert(`Error: ${error.message}`);
+          button.innerHTML = '<i class="bi bi-cart-plus"></i> Añadir al Carrito';
+          button.disabled = false;
+        }
+      });
+    });
+  }
+
+  loadProducts();
+
+});

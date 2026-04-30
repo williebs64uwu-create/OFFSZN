@@ -1,0 +1,411 @@
+/* History Page Design Overrides - Profile Public Aesthetic */
+:root {
+    --p-bg: #000000;
+    --p-card-bg: #121212;
+    --p-accent: #8b5cf6;
+    --p-text: #ffffff;
+    --p-subtext: #b3b3b3;
+}
+
+/* Base context */
+#history-app-main {
+    background-color: var(--p-bg);
+    min-height: 100vh;
+    color: var(--p-text);
+    font-family: 'Geist', sans-serif;
+}
+
+/* Header - Centered Title */
+.history-header {
+    background: transparent;
+    padding: 50px 60px 5px;
+    /* Aligned L-padding (40 body + 20 row) and reduced vertical */
+    text-align: left;
+    position: relative;
+}
+
+.history-header::after {
+    display: none;
+}
+
+.history-header-content {
+    position: relative;
+    z-index: 10;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.history-header h1 {
+    font-size: 3rem;
+    font-weight: 900;
+    margin: 0;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+/* Body */
+.history-body {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px 40px;
+    /* Reduced vertical padding */
+    position: relative;
+    z-index: 10;
+}
+
+/* Soft-deleted items visual placeholder */
+.deleted-waveform-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    position: relative;
+    opacity: 0.2;
+}
+
+.dotted-line {
+    width: 100%;
+    height: 1px;
+    border-top: 2px dotted #555;
+}
+
+/* List Row (Premium Table Look - BeatStars style) */
+.list-row {
+    display: grid;
+    grid-template-columns: 60px 220px 50px 1fr 100px 140px 120px;
+    align-items: center;
+    gap: 15px;
+    /* Reduced gap */
+    padding: 10px 20px;
+    /* Reduced padding */
+    border-bottom: 1px solid #111;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.list-row:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: #222;
+}
+
+.list-cover {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.list-cover img {
+    width: 100%;
+    height: 100%;
+    border-radius: 6px;
+    object-fit: cover;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.list-col-main {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.list-track-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.list-author-sub {
+    font-size: 0.8rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.list-col-play-btn {
+    display: flex;
+    justify-content: center;
+}
+
+.play-btn-circle {
+    width: 42px;
+    height: 42px;
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.play-btn-circle:hover {
+    transform: scale(1.1);
+    background: #fff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* Waveform Mock */
+.list-col-waveform {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    /* Take full width of its grid column */
+}
+
+.list-waveform-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.mock-waveform {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    height: 100%;
+    width: 100%;
+    opacity: 0.4;
+    /* Slightly more visible */
+}
+
+.wave-bar {
+    flex: 1;
+    /* Stretch bars to fill width instead of fixed logic */
+    min-width: 2px;
+    background: var(--p-accent);
+    /* Use accent color instead of plain white */
+    border-radius: 2px;
+}
+
+.list-col-time {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+    text-align: center;
+}
+
+.list-col-tags {
+    display: flex;
+    gap: 8px;
+}
+
+.tag-chip {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: #fff;
+    background: transparent;
+    border: 1px solid #333;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+}
+
+.list-col-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: flex-end;
+}
+
+.action-icon-btn {
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.action-icon-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+}
+
+.action-icon-btn.active {
+    color: var(--p-accent);
+}
+
+.action-icon-btn.like-btn.active {
+    color: #ef4444 !important;
+}
+
+.cover-play-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #fff;
+    border-radius: 6px;
+    opacity: 0.8;
+    /* Always visible as play button */
+    transition: all 0.2s;
+}
+
+.list-cover:hover .cover-play-overlay {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.6);
+    transform: scale(1.02);
+}
+
+.history-row-date {
+    display: none;
+    /* Hide on desktop, show only on mobile actions row */
+    font-size: 0.7rem;
+    color: #555;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-left: 6px;
+    white-space: nowrap;
+    align-self: center;
+}
+
+
+/* Skeleton Loaders */
+.skeleton {
+    background: linear-gradient(90deg, #111 25%, #1a1a1a 50%, #111 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+.skel-box {
+    border-radius: 6px;
+}
+
+.skel-text {
+    border-radius: 4px;
+    height: 12px;
+}
+
+.skel-circle {
+    border-radius: 50%;
+}
+
+.skeleton-row .list-waveform-container {
+    background: rgba(255, 255, 255, 0.03);
+    height: 10px;
+    border-radius: 10px;
+    align-self: center;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 900px) {
+    .history-header {
+        padding: 30px 25px 5px;
+        /* Reduced top and aligned with mobile list (10 body + 15 row) */
+    }
+
+    .history-header h1 {
+        font-size: 2.2rem;
+    }
+
+    .history-body {
+        padding: 10px;
+    }
+
+    .list-row {
+        grid-template-columns: 60px 1fr 50px 120px;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .desktop-only {
+        display: none !important;
+    }
+
+    .list-col-time {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .list-row {
+        grid-template-columns: 50px 1fr;
+        /* Switch to 2 columns on small mobile */
+        grid-template-areas:
+            "cover main"
+            "actions actions";
+        gap: 8px;
+        padding: 16px 12px;
+    }
+
+    .list-cover {
+        grid-area: cover;
+        width: 50px;
+        height: 50px;
+    }
+
+    .list-col-main {
+        grid-area: main;
+        align-self: center;
+    }
+
+    .list-track-title {
+        font-size: 0.9rem;
+    }
+
+    .list-author-sub {
+        font-size: 0.75rem;
+    }
+
+    .list-col-play-btn {
+        display: none;
+        /* Clicking cover handles play on mobile */
+    }
+
+    .list-col-actions {
+        grid-area: actions;
+        display: flex;
+        gap: 16px;
+        /* Reduced gap */
+        justify-content: flex-start;
+        padding-top: 6px;
+        /* Reduced padding */
+        margin-top: 2px;
+        border-top: none;
+        /* Removed separator line per user request */
+        /* Separator for actions */
+    }
+
+    .action-icon-btn {
+        font-size: 1.15rem;
+        padding: 6px;
+        color: #888;
+    }
+
+    .history-row-date {
+        display: inline-block;
+        /* Show only on mobile in actions row */
+        margin-left: auto;
+        /* Align to the right */
+        color: #555;
+    }
+}

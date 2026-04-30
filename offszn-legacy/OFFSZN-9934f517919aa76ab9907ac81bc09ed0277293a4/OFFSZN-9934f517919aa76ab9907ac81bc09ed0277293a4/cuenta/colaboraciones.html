@@ -1,0 +1,2476 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- Supabase Config & Auth Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
+    <script src="/env.js"></script>
+    <script src="/script/auth-utils.js?v=11"></script>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colaboraciones - OFFSZN</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <script src="../script/auth-guard.js"></script>
+    <link rel="icon" type="image/png" href="../images/LOGO-OFFSZN.png">
+
+    <style>
+        /* ===== SIDEBAR PROFILE CARD ===== */
+        .sidebar-profile-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 20px 0 20px 0;
+            border-bottom: 1px solid #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-avatar-wrapper {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #333;
+            margin-bottom: 8px;
+            background: #000;
+            position: relative;
+        }
+
+        .sidebar-avatar {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .sidebar-username {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Geist', sans-serif;
+            margin-bottom: 8px;
+            text-align: center;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sidebar-profile-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 18px;
+            border-radius: 100px;
+            border: 1px solid #333;
+            background: transparent;
+            color: #aaa;
+            font-size: 12px;
+            font-weight: 500;
+            font-family: 'Geist', sans-serif;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .sidebar-profile-btn:hover {
+            border-color: #fff;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-profile-btn i {
+            font-size: 11px;
+        }
+
+        @keyframes sidebarPulse {
+            0% {
+                background-color: rgba(255, 255, 255, 0.03);
+            }
+
+            50% {
+                background-color: rgba(255, 255, 255, 0.08);
+            }
+
+            100% {
+                background-color: rgba(255, 255, 255, 0.03);
+            }
+        }
+
+        .sidebar-profile-card .skeleton,
+        .sidebar-profile-card .skeleton-text {
+            animation: sidebarPulse 2s infinite ease-in-out;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /* ===== SIDEBAR STYLES (B&W PREMIUM) ===== */
+        .sidebar-stub {
+            width: 220px;
+            background: #000;
+            border-right: 1px solid #1a1a1a;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding-top: 30px;
+            padding-left: 15px;
+            padding-right: 15px;
+            gap: 6px;
+        }
+
+        .sidebar-icon-btn {
+            width: 100%;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 12px;
+            gap: 14px;
+            color: #888;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            position: relative;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .sidebar-icon-btn i {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+            display: inline-block;
+            color: #666;
+            transition: 0.2s;
+        }
+
+        .sidebar-icon-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-icon-btn.active {
+            color: #000 !important;
+            background: #fff !important;
+            font-weight: 700;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+        }
+
+        .sidebar-icon-btn.active i {
+            color: #000 !important;
+        }
+
+        .sidebar-icon-btn[data-title]:hover::after,
+        .sidebar-icon-btn[title]:hover::after {
+            display: none;
+        }
+
+        /* ===== SIDEBAR STYLES (B&W PREMIUM) ===== */
+
+
+
+
+
+
+        .sidebar-icon-btn[data-title]:hover::after,
+        .sidebar-icon-btn[title]:hover::after {
+            display: none;
+        }
+
+        /* ===== STANDARD SIDEBAR STUB ===== */
+        :root {
+            --sidebar-width: 80px;
+            --primary-color: #ffffff;
+            --bg-dark: #000000;
+            --bg-card: #0A0A0A;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+        }
+
+        html {
+            overflow-y: scroll;
+            /* ?? PREVENTS LAYOUT SHIFT */
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Geist', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* --- SKELETON STYLES --- */
+        .skeleton {
+            background: #1a1a1a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            transform: translateX(-100%);
+            background-image: linear-gradient(90deg,
+                    rgba(255, 255, 255, 0) 0,
+                    rgba(255, 255, 255, 0.05) 20%,
+                    rgba(255, 255, 255, 0.1) 60%,
+                    rgba(255, 255, 255, 0));
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* Sidebar Styles */
+
+
+
+
+
+
+
+
+
+
+
+
+        .sidebar-divider {
+            width: 40px;
+            border-bottom: 1px solid #222;
+            margin: 5px 0;
+        }
+
+        /* Tooltips */
+
+
+        @keyframes fadeInTooltip {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Main Layout */
+        .main-content-wrapper {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+
+
+        /* Page Content */
+        .page-content {
+            padding: 40px;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .page-title p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .btn-new-collab {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-new-collab:hover {
+            background: #e0e0e0;
+            transform: translateY(-1px);
+        }
+
+        /* Layout: 2 Columns (Lists | Stats/Help) */
+        .collab-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+        }
+
+        /* Tabs */
+        .tabs-container {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            /* Ensure horizontal layout */
+            gap: 10px;
+        }
+
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tab-btn.active {
+            color: #fff;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary-color);
+        }
+
+        .tab-badge {
+            background: #333;
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 5px;
+        }
+
+        .tab-btn.active .tab-badge {
+            background: var(--primary-color);
+        }
+
+
+
+
+        /* Cards */
+        .collab-card {
+            background: var(--bg-card);
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: 0.2s;
+        }
+
+        .collab-card:hover {
+            border-color: #333;
+        }
+
+        .collab-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            background: #222;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .collab-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .collab-img:hover .btn-play-mini {
+            opacity: 1 !important;
+        }
+
+
+        /* HOVER PLAY BUTTON */
+        .collab-img:hover .btn-play-mini {
+            opacity: 1 !important;
+        }
+
+        .collab-info {
+            flex: 1;
+        }
+
+        .collab-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .collab-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* --- GROUPED CARDS (NEW) --- */
+        .group-card {
+            background: var(--bg-card);
+            border: 1px solid #1a1a1a;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .group-header {
+            background: #151515;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid #222;
+        }
+
+        .group-info h4 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            color: #fff;
+        }
+
+        .group-body {
+            padding: 0;
+        }
+
+        .collab-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #1a1a1a;
+            transition: 0.2s;
+        }
+
+        .collab-row:last-child {
+            border-bottom: none;
+        }
+
+        .collab-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .row-user {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .row-meta {
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        .collab-bg-role {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .split-badge {
+            background: #222;
+            border: 1px solid #333;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #fff;
+        }
+
+        .collab-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #333;
+            background: #000;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-action:hover {
+            background: #222;
+        }
+
+        .btn-action.approve:hover {
+            border-color: #10B981;
+            color: #10B981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .btn-action.reject:hover {
+            border-color: #EF4444;
+            color: #EF4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 0;
+            color: var(--text-muted);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+
+        .empty-state i {
+            font-size: 40px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #111;
+            border: 1px solid #222;
+            width: 500px;
+            border-radius: 16px;
+            padding: 30px;
+            position: relative;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+
+        .modal-header p {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .form-group {
+            margin-top: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            background: #050505;
+            border: 1px solid #222;
+            padding: 12px;
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .slider-container {
+            margin-top: 10px;
+        }
+
+        .slider-val {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input[type=range] {
+            width: 100%;
+            accent-color: var(--primary-color);
+        }
+
+        /* Pricing Modal Styles (Elite) */
+        .elite-modal {
+            background: #0f0f0f;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .elite-modal {
+            transform: translateY(0);
+        }
+
+        .btn-close-modal {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .btn-close-modal:hover {
+            color: #fff;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .elite-btn {
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .elite-btn-ghost {
+            background: transparent;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Standard Modal Buttons */
+        .btn-modal-cancel {
+            background: transparent;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-modal-cancel:hover {
+            border-color: #666;
+            color: #fff;
+        }
+
+        .btn-modal-save {
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-modal-save:hover {
+            filter: brightness(1.1);
+        }
+
+        /* ===== PRICING MODAL (Standardized) ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .elite-modal {
+            background: #000;
+            border: 1px solid #222;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 400px;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-icon-wrapper {
+            width: 60px;
+            height: 60px;
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: #fff;
+            font-size: 24px;
+        }
+
+        .elite-modal h3 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 12px;
+            font-family: 'Geist', sans-serif;
+        }
+
+        .elite-modal p {
+            color: #888;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .btn-upgrade-modal {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: #fff;
+            color: #000;
+            border-radius: 12px;
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 15px;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-upgrade-modal:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .btn-close-modal-link {
+            margin-top: 15px;
+            background: transparent;
+            border: none;
+            color: #555;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-close-modal-link:hover {
+            color: #fff;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .elite-modal {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-icon-wrapper {
+            width: 80px;
+            height: 80px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .modal-icon-wrapper i {
+            font-size: 32px;
+            color: #000;
+        }
+
+        .elite-modal h3 {
+            font-size: 24px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .elite-modal p {
+            color: #888;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .btn-confirm {
+            padding: 12px 24px;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
+        }
+
+        /* Edit/Confirm Overrides to not break other modals */
+        #editModal .elite-modal,
+        #confirmModal .elite-modal {
+            max-width: 500px;
+        }
+
+        .plan-card {
+            background: #151515;
+            border: 1px solid #333;
+            padding: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+
+        .plan-card:hover {
+            background: #222;
+        }
+
+        .plan-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .plan-info h4 {
+            color: #fff;
+            font-size: 16px;
+            margin: 0 0 4px 0;
+        }
+
+        .plan-info p {
+            color: #888;
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .plan-price {
+            font-weight: 700;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        /* ===== TOAST NOTIFICATIONS ===== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .elite-toast {
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 250px;
+            transform: translateY(20px);
+            opacity: 0;
+            animation: toastSlideUp 0.3s forwards ease-out;
+            pointer-events: auto;
+        }
+
+        .skeleton-text {
+            display: inline-block;
+            height: 1em;
+            width: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .elite-toast.success i {
+            color: #10B981;
+        }
+
+        .elite-toast.error i {
+            color: #EF4444;
+        }
+
+        /* Sidebar Upgrade Button */
+        .sidebar-upgrade-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFD700;
+            font-size: 20px;
+            transition: 0.2s;
+            text-decoration: none;
+            cursor: pointer;
+            margin-top: auto;
+            background: rgba(255, 215, 0, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .sidebar-upgrade-btn:hover {
+            transform: scale(1.05);
+            background: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+        }
+
+        @keyframes toastSlideUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Sidebar Avatar fixes */
+    </style>
+</head>
+
+<body>
+    <!-- Simplified Modal Structure -->
+    <div class="modal-overlay" id="pricingModal">
+        <div class="elite-modal">
+            <div class="modal-icon-wrapper">
+                <i class="bi bi-star-fill"></i>
+            </div>
+            <h3>Límite alcanzado</h3>
+            <p>Has llegado al límite de 30 productos. Pásate al plan PRO para tener subidas ilimitadas y 0% de comisión.
+            </p>
+            <button class="btn-upgrade-modal" onclick="window.location.href='planes.html'">Mejorar Plan</button>
+            <button class="btn-close-modal-link" onclick="closePricingModal()">Quizás más tarde</button>
+        </div>
+    </div>
+
+    <!-- SIDEBAR (Standard) -->
+    <div class="sidebar-stub">
+
+        <!-- Profile Card -->
+        <div class="sidebar-profile-card" id="sidebarProfileCard">
+            <div class="sidebar-avatar-wrapper skeleton" id="sidebarAvatarSkeleton"
+                style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 8px; background: #1a1a1a;">
+                <img id="sidebarAvatar" src="" alt="Avatar" class="sidebar-avatar"
+                    style="display:none; width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <span id="sidebarUsername" class="sidebar-username skeleton-text"
+                style="width: 100px; height: 18px; display: inline-block; border-radius: 4px; margin-bottom: 8px;"></span>
+            <div id="sidebarBtnSkeleton" class="skeleton"
+                style="width: 110px; height: 30px; border-radius: 100px; background: #1a1a1a;"></div>
+            <a id="sidebarProfileLink" href="/explorar.html" class="sidebar-profile-btn" style="display:none;">
+                Ir a mi perfil <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        <!-- 1. GESTIÓN -->
+
+        <a href="/cuenta/dashboard" class="sidebar-icon-btn" data-title="Dashboard"><i
+                class="bi bi-house-door-fill"></i> <span>Dashboard</span></a>
+        <a href="/cuenta/mis-kits" class="sidebar-icon-btn" data-title="Catálogo"><i class="bi bi-folder2-open"></i>
+            <span>Catálogo</span></a>
+        <a href="/cuenta/subir-kit.html" class="sidebar-icon-btn" data-title="Subir"><i
+                class="bi bi-cloud-arrow-up-fill"></i> <span>Subir</span></a>
+
+        <!-- 2. NEGOCIO -->
+
+        <a href="/cuenta/admin-licencias.html" class="sidebar-icon-btn" data-title="Licencias"><i
+                class="bi bi-file-earmark-music-fill"></i> <span>Licencias</span></a>
+        <a href="/cuenta/negociar.html" class="sidebar-icon-btn" data-title="Negociar"><i
+                class="bi bi-chat-left-dots-fill"></i> <span>Negociar</span></a>
+        <a href="/cuenta/cupones.html" class="sidebar-icon-btn" data-title="Cupones"><i
+                class="bi bi-ticket-perforated-fill"></i> <span>Cupones</span></a>
+        <a href="/cuenta/colaboraciones.html" class="sidebar-icon-btn active" data-title="Colaboraciones"><i
+                class="bi bi-people-fill"></i> <span>Colaboraciones</span></a>
+
+        <!-- 3. ACADEMIA -->
+
+        <a href="/cuenta/cursos.html" class="sidebar-icon-btn" data-title="Cursos"><i
+                class="bi bi-mortarboard-fill"></i> <span>Cursos</span></a>
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="Estadísticas"><i
+                class="bi bi-bar-chart-fill"></i> <span>Estadísticas</span></a>
+
+        <!-- 4. SOCIAL -->
+
+        <a href="/cuenta/reels.html" class="sidebar-icon-btn" data-title="Reels"><i class="bi bi-camera-reels-fill"></i>
+            <span>Reels</span></a>
+
+        <!-- UPGRADE BUTTON (ROCKET) -->
+        <a href="/cuenta/planes.html" class="sidebar-icon-btn" title="Mejorar Plan"
+            style="color:#fff; margin-top: 10px;">
+            <i style="color: #fff;" class="bi bi-star-fill"></i> <span style="color: #fff;">Mejorar Plan</span>
+        </a>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content-wrapper">
+
+
+
+        <div class="page-content">
+
+            <!-- Header -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Colaboraciones</h1>
+                    <p>Gestiona tus invitaciones y proyectos compartidos</p>
+                </div>
+                <!-- <button class="btn-new-collab" onclick="openInviteModal()">
+                    <i class="bi bi-plus-lg"></i> Nueva Invitaci?n
+                </button> -->
+            </div>
+
+            <!-- Main Grid -->
+            <div class="collab-grid">
+
+                <!-- Left: Lists -->
+                <div class="collab-lists">
+                    <div class="tabs-container">
+                        <button class="tab-btn active" onclick="switchTab('received')">
+                            <span id="text-received" class="skeleton-text"
+                                style="width:70px; display:inline-block; border-radius:4px;"></span>
+                            <span class="tab-badge skeleton-text" id="badge-received"
+                                style="width:20px; height:16px; display:inline-block; vertical-align:middle;"></span>
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('sent')">
+                            <span id="text-sent" class="skeleton-text"
+                                style="width:70px; display:inline-block; border-radius:4px;"></span>
+                            <span class="tab-badge skeleton-text" id="badge-sent"
+                                style="width:20px; height:16px; display:inline-block; vertical-align:middle;"></span>
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('active')">
+                            <span id="text-active" class="skeleton-text"
+                                style="width:60px; display:inline-block; border-radius:4px;"></span>
+                            <span class="tab-badge skeleton-text" id="badge-active"
+                                style="width:20px; height:16px; display:inline-block; vertical-align:middle; background:var(--primary-color);"></span>
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('rejected')">
+                            <span id="text-rejected" class="skeleton-text"
+                                style="width:70px; display:inline-block; border-radius:4px;"></span>
+                            <span class="tab-badge skeleton-text" id="badge-rejected"
+                                style="width:20px; height:16px; display:inline-block; vertical-align:middle; background:#333;"></span>
+                        </button>
+                    </div>
+
+                    <!-- Content: Received -->
+                    <div id="tab-received" class="tab-content" style="display:block;">
+                        <div id="list-received">
+                            <!-- JS Injected Cards -->
+                            <div class="empty-state"><i class="bi bi-inbox"></i>
+                                <p>No tienes invitaciones pendientes</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content: Sent -->
+                    <div id="tab-sent" class="tab-content" style="display:none;">
+                        <div id="list-sent">
+                            <div class="empty-state"><i class="bi bi-send"></i>
+                                <p>No has enviado invitaciones aún</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content: Active -->
+                    <div id="tab-active" class="tab-content" style="display:none;">
+                        <div id="list-active">
+                            <div class="empty-state"><i class="bi bi-music-note-beamed"></i>
+                                <p>No tienes colaboraciones activas</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content: Rejected -->
+                    <div id="tab-rejected" class="tab-content" style="display:none;">
+                        <div id="list-rejected">
+                            <div class="empty-state"><i class="bi bi-x-circle"></i>
+                                <p>No hay invitaciones rechazadas</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right: Stats / Info -->
+                <div class="collab-sidebar">
+                    <div
+                        style="background:#111; border:1px solid #222; border-radius:12px; padding:20px; margin-bottom:20px;">
+                        <h3 style="font-size:16px; margin-bottom:15px;">Estadísticas Generales</h3>
+
+                        <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+                            <span style="color:#aaa; font-size:14px;">Total Obtenido</span>
+                            <span style="color:#10B981; font-weight:700;">$0.00</span>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+                            <span style="color:#aaa; font-size:14px;">Colaboradores</span>
+                            <span style="color:#fff; font-weight:700;" id="totalCollaboratorsCount">0</span>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:#aaa; font-size:14px;">Proyectos Activos</span>
+                            <span style="color:#fff; font-weight:700;" id="totalActiveProjects">0</span>
+                        </div>
+                    </div>
+
+                    <div
+                        style="background:rgba(139, 92, 246, 0.05); border:1px dashed #333; border-radius:12px; padding:20px;">
+                        <h3 style="font-size:14px; color:#8B5CF6; margin-bottom:10px;"><i class="bi bi-info-circle"></i>
+                            ¿Cómo funciona?</h3>
+                        <p style="font-size:12px; color:#888; line-height:1.5;">Invita a otros productores a colaborar
+                            en tus beats. Define el porcentaje de regalías (split) y cuando acepten, se reflejará
+                            automticamente en los contratos de licencia.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL: Nueva Invitación -->
+    <div class="modal-overlay" id="inviteModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>Gestión de Royalties</h2>
+                <p>Define cómo se reparten los ingresos de este beat.</p>
+            </div>
+
+            <style>
+                /* Modal Specific Styles */
+                .split-row {
+                    display: grid;
+                    grid-template-columns: 2fr 1fr 40px;
+                    gap: 10px;
+                    align-items: center;
+                    margin-bottom: 10px;
+                    padding: 10px;
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.05);
+                    border-radius: 8px;
+                }
+
+                .split-row.owner {
+                    background: rgba(139, 92, 246, 0.1);
+                    border-color: rgba(139, 92, 246, 0.2);
+                }
+
+                .split-input {
+                    background: #000;
+                    border: 1px solid #333;
+                    color: #fff;
+                    padding: 8px 12px;
+                    border-radius: 6px;
+                    width: 100%;
+                    outline: none;
+                }
+
+                .split-input:focus {
+                    border-color: #8B5CF6;
+                }
+
+                .split-percent-wrapper {
+                    position: relative;
+                }
+
+                .split-percent-wrapper::after {
+                    content: '%';
+                    position: absolute;
+                    right: 10px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #666;
+                    font-size: 14px;
+                }
+
+                .btn-remove-split {
+                    width: 36px;
+                    height: 36px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #ef4444;
+                    background: rgba(239, 68, 68, 0.1);
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: 0.2s;
+                }
+
+                .btn-remove-split:hover {
+                    background: #ef4444;
+                    color: #fff;
+                }
+
+                .total-bar {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 20px;
+                    padding-top: 20px;
+                    border-top: 1px solid #333;
+                }
+
+                .total-val {
+                    font-size: 18px;
+                    font-weight: 700;
+                    color: #10B981;
+                    /* Green if 100% */
+                }
+
+                .total-val.error {
+                    color: #ef4444;
+                }
+            </style>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label">Beat / Proyecto</label>
+                <select class="form-input" id="inviteProduct" onchange="loadSplitsForProduct()">
+                    <option value="">Seleccionar Beat...</option>
+                    <!-- JS Loaded Options -->
+                </select>
+            </div>
+
+            <div id="splitRowsContainer">
+                <!-- Rows injected via JS -->
+            </div>
+
+            <button onclick="addSplitRow()"
+                style="background: transparent; border: 1px dashed #444; color: #aaa; width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; margin-top: 10px;">
+                <i class="bi bi-plus-lg"></i> Agregar Colaborador
+            </button>
+
+            <div class="total-bar">
+                <span class="total-label" style="color:#888;">Allocated Total:</span>
+                <span class="total-val" id="splitTotal">100%</span>
+            </div>
+
+            <div style="margin-top:30px; display:flex; gap:10px;">
+                <button onclick="closeInviteModal()"
+                    style="flex:1; background:transparent; border:1px solid #333; color:#fff; padding:12px; border-radius:8px; cursor:pointer;">Cancelar</button>
+                <button onclick="saveSplits()" id="btnSaveSplits"
+                    style="flex:1; background:var(--primary-color); border:none; color:#fff; padding:12px; border-radius:8px; font-weight:600; cursor:pointer;">
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <script>
+        // Load page data after Auth Guard checks
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Re-verify session locally to trigger loads, trusting Auth Guard has handled redirects
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                window.currentUser = session.user;
+                // console.log("? Collabs Page: User confirmed", window.currentUser.email);
+                loadProducts();
+                loadCollaborations();
+            }
+        });
+        // Viewing `help.html` didn't show supabase init.
+        // Viewing `analiticas.html` might have. 
+
+        // I will add the logic, but wrap the client init so it can be easily fixed.
+
+        /* 
+           LOGIC FLOW:
+           1. Check Auth.
+           2. Fetch User Data.
+           3. Fetch Products (for dropdown).
+           4. Fetch Invitations.
+        */
+
+        let currentUser = null;
+
+
+
+        // I'll grab the key from an existing file if I can.
+        // Let's proceed with the UI logic first.
+
+        function switchTab(tab) {
+            // Save state
+            localStorage.setItem('activeCollabTab', tab);
+
+            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            const content = document.getElementById('tab-' + tab);
+            if (content) content.style.display = 'block';
+
+            // Find button (Logic slightly brittle but works for fixed order)
+            const btns = document.querySelectorAll('.tab-btn');
+            if (tab === 'received' && btns[0]) btns[0].classList.add('active');
+            if (tab === 'sent' && btns[1]) btns[1].classList.add('active');
+            if (tab === 'active' && btns[2]) btns[2].classList.add('active');
+            if (tab === 'rejected' && btns[3]) btns[3].classList.add('active');
+        }
+
+        function openInviteModal() {
+            document.getElementById('inviteModal').classList.add('active');
+            // Fetch products if empty
+            loadProducts();
+        }
+
+        function closeInviteModal() {
+            document.getElementById('inviteModal').classList.remove('active');
+        }
+
+        // REMOVED LEGACY FUNCTIONS: updateSplit
+
+        // Custom Toast Notification
+        window.showToast = (msg, type = 'success') => {
+            let container = document.getElementById('toastContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'toast-container';
+                document.body.appendChild(container);
+            }
+            const toast = document.createElement('div');
+            toast.className = `elite-toast ${type}`;
+            const icon = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
+            toast.innerHTML = `<i class="bi ${icon}"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'toastSlideUp 0.3s reverse forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- Pricing Modal Logic ---
+
+
+        // --- SPLIT MANAGER LOGIC ---
+
+        function closeInviteModal() {
+            document.getElementById('inviteModal').classList.remove('active');
+        }
+
+        // Prevent invalid chars for integers
+        window.validateIntegerInput = (event) => {
+            if (['e', 'E', '.', ',', '-', '+'].includes(event.key)) {
+                event.preventDefault();
+            }
+        };
+
+        // Enforce max 100 on paste/input
+        window.enforceMax100 = (el) => {
+            let val = parseInt(el.value);
+            if (isNaN(val)) val = 0;
+            if (val > 100) val = 100;
+            if (val < 0) val = 0;
+            el.value = val; // Remove leading zeros if parsed
+            calculateTotal();
+        };
+
+        // Render Initial State (Owner 100%)
+        function loadSplitsForProduct() {
+            const productId = document.getElementById('inviteProduct').value;
+            const container = document.getElementById('splitRowsContainer');
+            container.innerHTML = ''; // Clear
+
+            if (!productId) {
+                document.getElementById('splitTotal').innerText = '0%';
+                return;
+            }
+
+            // 1. Add Owner Row (You)
+            // Ideally fetch actual splits from DB. For now, reset to Owner 100%.
+            // TODO: Fetch existing collaborations for this product and render them.
+
+            const ownerRow = document.createElement('div');
+            ownerRow.className = 'split-row owner';
+            ownerRow.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="bi bi-person-circle" style="color:#8B5CF6; font-size:20px;"></i>
+                    <span style="color:#fff; font-weight:500;">Tú (Propietario)</span>
+                </div>
+                <div class="split-percent-wrapper">
+                    <input type="number" class="split-input" value="100" min="0" max="100" 
+                        onkeydown="validateIntegerInput(event)" oninput="enforceMax100(this)">
+                </div>
+                <div></div> <!-- Spacer -->
+            `;
+            container.appendChild(ownerRow);
+            calculateTotal();
+        }
+
+        function addSplitRow(email = '', percent = 0) {
+            const container = document.getElementById('splitRowsContainer');
+            // If selecting product first time and no rows (shouldn't happen if logic is correct), init first.
+            if (container.children.length === 0) loadSplitsForProduct();
+
+            const row = document.createElement('div');
+            row.className = 'split-row';
+            row.innerHTML = `
+                <input type="email" class="split-input col-email" placeholder="Email del colaborador" value="${email}">
+                <div class="split-percent-wrapper">
+                    <input type="number" class="split-input col-percent" value="${percent}" min="0" max="100"
+                        onkeydown="validateIntegerInput(event)" oninput="enforceMax100(this)">
+                </div>
+                <button class="btn-remove-split" onclick="this.closest('.split-row').remove(); calculateTotal();">
+                    <i class="bi bi-trash"></i>
+                </button>
+            `;
+            container.appendChild(row);
+
+            // Auto-adjust owner split? 
+            // Simple logic: Just add row, let user fix numbers.
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            const inputs = document.querySelectorAll('.split-input[type="number"]');
+            let total = 0;
+            inputs.forEach(inp => total += (parseInt(inp.value) || 0));
+
+            const totalEl = document.getElementById('splitTotal');
+            totalEl.innerText = total + '%';
+
+            if (total === 100) {
+                totalEl.style.color = '#10B981'; // Green
+                totalEl.classList.remove('error');
+            } else {
+                totalEl.style.color = '#ef4444'; // Red
+                totalEl.classList.add('error');
+            }
+            return total;
+        }
+
+        async function saveSplits() {
+            const total = calculateTotal();
+            if (total !== 100) {
+                showToast("El total debe sumar exactamente 100%", "error");
+                return;
+            }
+
+            const productId = document.getElementById('inviteProduct').value;
+            if (!productId) {
+                showToast("Selecciona un producto", "error");
+                return;
+            }
+
+            const rows = document.querySelectorAll('.split-row:not(.owner)'); // Exclude owner from 'invites' table logic usually, depends on DB.
+            // If DB stores ALL splits including owner, we'd include it. 
+            // 'collaborations' table usually tracks external collaborators. Owner is implicit in 'products' table.
+
+            // Collect Data
+            const updates = [];
+            let errorFound = false;
+
+            rows.forEach(row => {
+                const email = row.querySelector('.col-email').value;
+                const percent = parseInt(row.querySelector('.col-percent').value);
+
+                if (!email || !email.includes('@')) {
+                    showToast("Correo inválido en una de las filas", "error");
+                    errorFound = true;
+                    return;
+                }
+                updates.push({ email, percent });
+            });
+
+            if (errorFound) return;
+
+            // TODO: Clear previous invites for this product? Or Diff?
+            // For MVP: We just insert new ones. Real implementation needs reconciliation.
+            // Sending invites...
+
+            const promises = updates.map(u =>
+                supabaseClient.from('collaborations').insert([{
+                    owner_id: window.currentUser.id,
+                    collaborator_email: u.email,
+                    product_id: productId,
+                    royalty_split: u.percent,
+                    status: 'pending'
+                }])
+            );
+
+            const results = await Promise.all(promises);
+            const anyError = results.find(r => r.error);
+
+            if (anyError) {
+                showToast("Error al guardar algunos cambios", "error");
+                // console.error(anyError.error);
+            } else {
+                showToast("Splits actualizados correctamente");
+                closeInviteModal();
+                loadCollaborations();
+            }
+        }
+
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (!navbar) return; // Fix for TypeError
+            if (window.scrollY > 10) {
+                navbar.style.background = 'rgba(0, 0, 0, 0.95)';
+                navbar.style.borderBottom = '1px solid #1a1a1a';
+            } else {
+                navbar.style.background = 'rgba(0, 0, 0, 0.8)';
+                navbar.style.borderBottom = '1px solid transparent';
+            }
+        });
+
+        // Init Tabs (Restore state)
+        const savedTab = localStorage.getItem('activeCollabTab') || 'received';
+        switchTab(savedTab);
+
+        // Immediate Skeleton Injection (to avoid "0" flash)
+        document.addEventListener('DOMContentLoaded', () => {
+            // Skeletons are now in HTML for tabs.
+            // Stats Init
+            const skeletonTextLarge = '<span class="skeleton-text" style="width:60px; height:1.5em; border-radius:4px;"></span>';
+            // Added badge-active and badge-rejected to skeletons if needed, or just let them auto-fill
+            ['totalCollaboratorsCount', 'totalActiveProjects', 'totalEarnings'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = skeletonTextLarge;
+            });
+        });
+
+        /* Ensure loadProducts and loadCollaborations are defined properly */
+        async function loadProducts() {
+            const select = document.getElementById('inviteProduct');
+            if (!select) return;
+            if (select.options.length > 1) return;
+
+            if (!window.currentUser) return;
+
+            const { data, error } = await supabaseClient.from('products').select('id, name').eq('producer_id', window.currentUser.id);
+            if (error) {
+                // console.error("Error loading products", error);
+                return;
+            }
+
+            data.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.innerText = p.name;
+                select.appendChild(opt);
+            });
+        }
+
+
+        /* SKELETON GENERATOR */
+        function renderSkeletons(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            // Customize Footer based on Type
+            let footerHTML = '';
+            if (containerId.includes('received')) {
+                // Actions: Accept/Reject
+                footerHTML = `
+                    <div style="display:flex; gap:10px;">
+                        <div class="skeleton" style="width:36px; height:36px; border-radius:8px; background:#1a1a1a;"></div>
+                        <div class="skeleton" style="width:36px; height:36px; border-radius:8px; background:#1a1a1a;"></div>
+                    </div>`;
+            } else if (containerId.includes('active')) {
+                // Badge + Role
+                footerHTML = `
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+                        <div class="skeleton" style="width:60px; height:20px; border-radius:4px; background:#1a1a1a;"></div>
+                        <div class="skeleton" style="width:80px; height:12px; border-radius:2px; background:#1a1a1a;"></div>
+                    </div>`;
+            } else {
+                // Sent (Group Header style implies different structure, but simple card is ok fallback)
+                // Just hide actions
+                footerHTML = `<div class="skeleton" style="width:24px; height:24px; border-radius:4px; background:#1a1a1a;"></div>`;
+            }
+
+            const skeletonHTML = `
+                <div class="collab-card" style="pointer-events:none; border-color:#222;">
+                    <div style="display:flex; gap:20px; align-items:center; width:100%;">
+                        <div class="skeleton" style="width:60px; height:60px; border-radius:10px; background:#1a1a1a;"></div>
+                        <div style="flex:1;">
+                            <div class="skeleton" style="width:40%; height:16px; margin-bottom:10px; border-radius:4px; background:#1a1a1a;"></div>
+                            <div class="skeleton" style="width:25%; height:12px; border-radius:4px; background:#1a1a1a;"></div>
+                        </div>
+                        ${footerHTML}
+                    </div>
+                </div>
+            `.repeat(3);
+            container.innerHTML = skeletonHTML;
+        }
+
+        async function loadCollaborations() {
+            if (!window.currentUser) return;
+
+            // 1. Show Skeletons (List)
+            renderSkeletons('list-received');
+            renderSkeletons('list-sent');
+            renderSkeletons('list-active');
+            renderSkeletons('list-rejected');
+
+            try {
+                const myId = window.currentUser.id;
+
+                // Fetch logic adapted for 'collab_invitations' table
+                // We remove the inner joins to users to avoid 400 Bad Request if relations are ambiguous
+                // We will fetch user details in a second step if necessary, or rely on IDs for now.
+
+                // Artificial delay to show skeletons (User request: "que duren como siempre")
+                await new Promise(r => setTimeout(r, 800));
+
+                // REVEAL TABS TEXT
+                const txtRec = document.getElementById('text-received');
+                if (txtRec) { txtRec.innerText = 'Recibidas'; txtRec.classList.remove('skeleton-text'); txtRec.style.width = 'auto'; }
+
+                const txtSent = document.getElementById('text-sent');
+                if (txtSent) { txtSent.innerText = 'Enviadas'; txtSent.classList.remove('skeleton-text'); txtSent.style.width = 'auto'; }
+
+                const txtAct = document.getElementById('text-active');
+                if (txtAct) { txtAct.innerText = 'Activas'; txtAct.classList.remove('skeleton-text'); txtAct.style.width = 'auto'; }
+
+                const txtRej = document.getElementById('text-rejected');
+                if (txtRej) { txtRej.innerText = 'Rechazados'; txtRej.classList.remove('skeleton-text'); txtRej.style.width = 'auto'; }
+
+
+                // Badges/Stats skeletons are handled by updating innerText in updateStats or manually here
+                // Note: updateStats will overwrite the innerHTML of badges, removing skeleton markup, which is what we want.
+
+                // ?? FILTER LOGIC: HIDE PRIVATE/DRAFT INVITATIONS AND DELETED PRODUCTS
+                // Only show if status is not 'deleted' and visibility is 'public' or 'unlisted'
+                const isVisible = (p) => p && p.status !== 'deleted' && (p.visibility === 'public' || p.visibility === 'unlisted');
+
+                // Updated Select to include Audio (Safe Wildcard to prevent 400 if column missing)
+                const commonSelect = '*, products:product_id(*)';
+
+                const [resReceived, resSent, resActiveInviter, resActiveReceiver, resRejected] = await Promise.all([
+                    // Received (Pending)
+                    supabaseClient.from('collab_invitations')
+                        .select(commonSelect)
+                        .eq('collaborator_id', myId)
+                        .eq('status', 'pending'),
+
+                    // Sent (Pending)
+                    supabaseClient.from('collab_invitations')
+                        .select(commonSelect)
+                        .eq('inviter_id', myId)
+                        .eq('status', 'pending'),
+
+                    // Active (Where I am Inviter)
+                    supabaseClient.from('collab_invitations')
+                        .select(commonSelect)
+                        .eq('inviter_id', myId)
+                        .eq('status', 'accepted'),
+
+                    // Active (Where I am Collaborator)
+                    supabaseClient.from('collab_invitations')
+                        .select(commonSelect)
+                        .eq('collaborator_id', myId)
+                        .eq('status', 'accepted'),
+
+
+                    // Rejected (Both sides)
+                    supabaseClient.from('collab_invitations')
+                        .select(commonSelect)
+                        .or(`inviter_id.eq.${myId},collaborator_id.eq.${myId}`)
+                        .eq('status', 'rejected')
+                ]);
+
+
+                if (resReceived.data) resReceived.data = resReceived.data.filter(i => isVisible(i.products));
+                if (resSent.data) resSent.data = resSent.data.filter(i => isVisible(i.products));
+                if (resActiveInviter.data) resActiveInviter.data = resActiveInviter.data.filter(i => isVisible(i.products));
+                if (resActiveReceiver.data) resActiveReceiver.data = resActiveReceiver.data.filter(i => isVisible(i.products));
+                // Rejected filter
+                const resRejectedData = resRejected.data || [];
+                const filteredRejected = resRejectedData.filter(i => isVisible(i.products));
+
+
+
+                // Extract all unique User IDs to fetch details
+                const allUserIds = new Set();
+                [resReceived.data, resSent.data, resActiveInviter.data, resActiveReceiver.data].forEach(list => {
+                    if (list) list.forEach(item => {
+                        if (item.inviter_id) allUserIds.add(item.inviter_id);
+                        if (item.collaborator_id) allUserIds.add(item.collaborator_id);
+                    });
+                });
+
+                // Fetch User Details Map
+                const userMap = {};
+                if (allUserIds.size > 0) {
+                    const { data: users } = await supabaseClient
+                        .from('users')
+                        .select('id, email, nickname') // Fetch email/nickname from public users
+                        .in('id', Array.from(allUserIds));
+
+                    if (users) {
+                        users.forEach(u => userMap[u.id] = u);
+                    }
+                }
+
+                // Helper to attach user info
+                const attachUsers = (list) => {
+                    if (!list) return [];
+                    return list.map(item => ({
+                        ...item,
+                        inviter: userMap[item.inviter_id] || { email: 'Usuario', nickname: 'Usuario' },
+                        collaborator: userMap[item.collaborator_id] || { email: 'Usuario', nickname: 'Usuario' }
+                    }));
+                };
+
+                // 3. Process & Render
+                // Received
+                renderList('list-received', attachUsers(resReceived.data), 'received');
+
+                // Sent
+                renderList('list-sent', attachUsers(resSent.data), 'sent');
+
+                // Active (Merge)
+                const activeAll = [...attachUsers(resActiveInviter.data || []), ...attachUsers(resActiveReceiver.data || [])];
+                renderList('list-active', activeAll, 'active');
+
+                // Rejected
+                const rejectedAll = attachUsers(filteredRejected);
+                renderList('list-rejected', rejectedAll, 'rejected');
+
+
+                // 4. Update Badges
+                document.getElementById('badge-received').innerText = (resReceived.data || []).length;
+                document.getElementById('badge-sent').innerText = (resSent.data || []).length;
+                document.getElementById('badge-active').innerText = activeAll.length; // Added Badge
+                document.getElementById('badge-rejected').innerText = rejectedAll.length; // Added Badge
+
+
+                // 5. Update Stats
+                updateStats(activeAll);
+
+            } catch (e) {
+                // console.error("Error loading collaborations:", e);
+                showToast("Error al cargar colaboraciones", "error");
+            }
+        }
+
+        // Actions
+        async function respondCollab(id, status) {
+            const { error } = await supabaseClient
+                .from('collab_invitations')
+                .update({ status: status })
+                .eq('id', id);
+
+            if (error) {
+                showToast("Error al actualizar: " + error.message, "error");
+            } else {
+                showToast(status === 'accepted' ? "Colaboración aceptada!" : "Colaboración rechazada");
+                loadCollaborations(); // Refresh
+            }
+        }
+
+        // --- Custom Confirm Modal Logic ---
+        let confirmCallback = null;
+        function openConfirmModal(title, message, callback) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            document.getElementById('confirmModal').classList.add('active');
+            confirmCallback = callback;
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+            confirmCallback = null;
+        }
+
+        async function onConfirmAction() {
+            if (confirmCallback) await confirmCallback();
+            closeConfirmModal();
+        }
+
+        function cancelCollab(id) {
+            openConfirmModal(
+                "Cancelar Invitación",
+                "¿Seguro que quieres cancelar esta invitación? El usuario ya no podrá aceptarla.",
+                async () => {
+                    // 1. Try Hard Delete
+                    const resDelete = await supabaseClient
+                        .from('collab_invitations')
+                        .delete({ count: 'exact' })
+                        .eq('id', id);
+
+                    if (!resDelete.error && resDelete.count > 0) {
+                        showToast("Invitación eliminada");
+                        loadCollaborations();
+                        return;
+                    }
+
+                    // 2. Fallback: Soft Delete (Update Status)
+                    // console.warn("Hard delete failed (RLS?), trying soft delete...", resDelete);
+
+                    const resUpdate = await supabaseClient
+                        .from('collab_invitations')
+                        .update({ status: 'cancelled' })
+                        .eq('id', id)
+                        .select(); // To get count/data back if needed
+
+                    if (resUpdate.error) {
+                        showToast("Error: " + resUpdate.error.message, "error");
+                    } else {
+                        showToast("Invitación cancelada (Soft delete)");
+                        loadCollaborations();
+                    }
+                }
+            );
+        }
+
+        // --- Edit Logic ---
+        let currentEditId = null;
+        function openEditModal(id, currentPercent, email) {
+            currentEditId = id;
+            document.getElementById('editModal').classList.add('active');
+            document.getElementById('editEmail').value = email;
+            document.getElementById('editPercent').value = currentPercent;
+            document.getElementById('editPercentVal').innerText = currentPercent + '%';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            currentEditId = null;
+        }
+
+        function updateEditSlider(val) {
+            document.getElementById('editPercentVal').innerText = val + '%';
+        }
+
+        async function saveEditInvitation() {
+            if (!currentEditId) return;
+            const newPercent = document.getElementById('editPercent').value;
+
+            const { error } = await supabaseClient
+                .from('collab_invitations')
+                .update({ royalty_percent: newPercent })
+                .eq('id', currentEditId);
+
+            // Optional: Update localStorage for legacy scripts (just in case)
+            if (localStorage.getItem('userId') !== window.currentUser.id) { // Assuming window.currentUser.id is currentUserId
+                localStorage.setItem('userId', window.currentUser.id);
+            }
+
+            // URL PARAMS LOGIC
+            const params = new URLSearchParams(window.location.search);
+            const tab = params.get('tab');
+            if (tab) {
+                // Update localStorage so switchTab logic picks it up or we force it
+                localStorage.setItem('activeCollabTab', tab);
+
+                // Artificial delay to ensure elements exist if needed, or just auto-click
+                setTimeout(() => {
+                    const btn = document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`);
+                    if (btn) btn.click();
+                }, 500);
+            }
+
+            if (error) {
+                showToast("Error al editar: " + error.message, "error");
+            } else {
+                showToast("Invitación actualizada");
+                closeEditModal();
+                loadCollaborations();
+            }
+        }
+
+        function renderList(containerId, items, type) {
+            const container = document.getElementById(containerId);
+            if (!items.length) {
+                let msg = "No tienes invitaciones pendientes";
+                let icon = "bi-inbox";
+                if (type === 'sent') { msg = "No has enviado invitaciones"; icon = "bi-send"; }
+                if (type === 'sent') { msg = "No has enviado invitaciones"; icon = "bi-send"; }
+                if (type === 'active') { msg = "No tienes colaboraciones activas"; icon = "bi-music-note-beamed"; }
+                if (type === 'rejected') { msg = "No hay invitaciones rechazadas"; icon = "bi-x-circle"; }
+
+
+                container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi ${icon}"></i>
+                            <p>${msg}</p>
+                        </div>`;
+                return;
+            }
+
+            let html = '';
+
+            // --- GROUPED LOGIC FOR SENT ITEMS ---
+            if (type === 'sent') {
+                const grouped = {};
+                items.forEach(item => {
+                    const pid = item.product_id;
+                    if (!grouped[pid]) {
+                        grouped[pid] = {
+                            product: item.products,
+                            invitations: []
+                        };
+                    }
+                    grouped[pid].invitations.push(item);
+                });
+
+                Object.entries(grouped).forEach(([pid, group]) => {
+                    const prod = group.product || {};
+                    const prodName = prod.name || 'Producto Desconocido';
+                    const prodImg = (prod && prod.image_url) ? prod.image_url : '../images/PORTADA%20DEFAULT.png';
+                    const totalSplit = group.invitations.reduce((acc, curr) => acc + (curr.royalty_percent || 0), 0);
+
+                    // AUDIO
+                    const audioSrc = prod ? (prod.audio_url || prod.mp3_url || prod.demo_url) : null;
+
+
+                    // ?? DYNAMIC EDIT URL BASED ON PRODUCT TYPE
+                    const pType = prod.product_type || 'beat';
+                    let uploadFile = 'Beats.html';
+
+                    if (pType === 'drumkit') uploadFile = 'Drum-Kits.html';
+                    if (pType === 'preset') uploadFile = 'Presets.html';
+
+                    const editUrl = `/cuenta/Upload/${uploadFile}?edit=${pid}`;
+
+                    let rows = '';
+
+                    // User request: "poner el lapiz arriba de todo y no dejar nada de borrar".
+
+                    group.invitations.forEach(inv => {
+                        let userObj = inv.collaborator || {};
+                        let displayName = userObj.nickname || userObj.email || 'Desconocido';
+                        let split = inv.royalty_percent || 0;
+
+                        rows += `
+                        <div class="collab-row">
+                            <div class="row-user">
+                                <div style="width:30px; height:30px; border-radius:50%; background:#222; display:flex; align-items:center; justify-content:center; color:#666;">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size:14px; font-weight:500;">${displayName}</div>
+                                    <div class="row-meta">Colaborador</div>
+                                </div>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:20px;">
+                                <div style="font-size:14px;">
+                                    <span style="color:#aaa;">Split:</span> <span style="font-weight:600; color:#fff;">${split}%</span>
+                                </div>
+
+                                <!-- No actions here, actions moved to header or just global edit -->
+                            </div>
+                        </div>
+                        `;
+                    });
+
+                    // Add Edit Button in Header
+                    // User said: "poner el lapiz arriba de todo ... solo moestrar los datos"
+                    // So I will put the Edit button in the Group Header.
+
+                    // Determinar URL de edicion (Asumimos Beats por defecto si no tenemos type, pero mejor intentamos obtenerlo).
+                    // Como no tengo type en el join actual, usare un helper o un link generico que el usuario valide.
+                    // Ojo: en mis-kits.html la URL depende del tipo.
+                    // Voy a usar un onclick que redirija inteligentemente o una URL segura.
+
+                    html += `
+                        <div class="group-card">
+                            <div class="group-header" style="justify-content:space-between;">
+                                <div style="display:flex; align-items:center; gap:15px;">
+                                    <div class="collab-img" style="position:relative;">
+                                        <img src="${prodImg}" onerror="this.src='/images/portada-default.png'">
+                                            ${audioSrc ? `
+                                        <button class="btn-play-mini" onclick="previewProduct('${audioSrc}', this)" 
+                                            style="position:absolute; inset:0; background:rgba(0,0,0,0.5); border:none; color:#fff; display:flex; align-items:center; justify-content:center; opacity:0; transition:0.2s; cursor:pointer;">
+                                            <i class="bi bi-play-fill" style="font-size:24px;"></i>
+                                        </button>` : ''}
+                                    </div>
+                                    <div class="group-info">
+                                        <h4>${prodName}</h4>
+                                        <div style="font-size:12px; color:#888;">Total Asignado: <span style="${totalSplit === 100 ? 'color:#10B981' : 'color:#8B5CF6'}">${totalSplit}%</span></div>
+                                    </div>
+                                </div>
+                                <a href="${editUrl}" class="btn-action" style="width:auto; padding:0 12px; gap:8px; text-decoration:none;" title="Editar Producto">
+                                    <i class="bi bi-pencil"></i> <span style="font-size:13px;">Editar</span>
+                                </a>
+                            </div>
+                            <div class="group-body">
+                                ${rows}
+                            </div>
+                        </div>`;
+                });
+
+            } else {
+
+                // --- STANDARD LIST FOR RECEIVED / ACTIVE ---
+                items.forEach(item => {
+                    const product = item.products;
+                    const productName = product ? product.name : '?? Producto Eliminado';
+                    const productImg = (product && product.image_url) ? product.image_url : '../images/PORTADA%20DEFAULT.png';
+                    const split = item.royalty_percent || 0;
+
+                    // AUDIO
+                    const audioSrc = product ? (product.audio_url || product.mp3_url || product.demo_url) : null;
+
+
+                    const cardStyle = !product ? 'opacity: 0.6; border-style: dashed;' : '';
+
+                    let otherUser = null;
+                    if (type === 'received') {
+                        otherUser = item.inviter;
+                    } else if (type === 'active') {
+                        // If I am inviter, show collaborator. If I am collaborator, show inviter/owner.
+                        otherUser = (item.inviter_id === window.currentUser.id) ? item.collaborator : item.inviter;
+                    } else {
+                        // Fallback (Sent usually handled separately above)
+                        otherUser = item.collaborator;
+                    }
+
+                    let otherName = otherUser ? (otherUser.nickname || otherUser.email) : 'Desconocido';
+
+                    let actionsHTML = '';
+                    if (type === 'received') {
+                        actionsHTML = `
+                            <div class="card-actions">
+                                <div style="font-size:12px; color:#aaa; margin-bottom:5px;">De: ${otherName}</div>
+                                <div style="display:flex; gap:10px;">
+                                    <button class="btn-action reject" onclick="respondCollab('${item.id}', 'rejected')" title="Rechazar"><i class="bi bi-x-lg"></i></button>
+                                    <button class="btn-action accept" style="border-color:#10B981; color:#10B981;" onclick="respondCollab('${item.id}', 'accepted')" title="Aceptar"><i class="bi bi-check-lg"></i></button>
+                                </div>
+                            </div>`;
+                    } else if (type === 'rejected') {
+                        actionsHTML = `
+                            <div class="card-actions">
+                                <span class="badge-status" style="margin-right:10px; background:rgba(239, 68, 68, 0.1); color:#EF4444; border:1px solid #EF4444;">RECHAZADO</span>
+                            </div>`;
+                    } else {
+                        // Active
+                        const isOwner = item.inviter_id === window.currentUser.id;
+                        const roleLabel = isOwner ? 'Dueño (Tú)' : 'Colaborador (Tú)';
+
+                        actionsHTML = `
+                            <div class="card-actions">
+                                <span class="badge-status published" style="margin-right:10px;">ACTIVADO</span>
+                                <span style="font-size:12px; color:#aaa;">${roleLabel}</span>
+                            </div>`;
+                    }
+
+
+
+                    html += `
+                        <div class="collab-card" style="${cardStyle}">
+                            <div class="collab-img" style="position:relative;">
+                                <img src="${productImg}" alt="Cover" onerror="this.onerror=null;this.src='../images/PORTADA%20DEFAULT.png';">
+                                    ${audioSrc ? `
+                                <button class="btn-play-mini" onclick="previewProduct('${audioSrc}', this)" 
+                                    style="position:absolute; inset:0; background:rgba(0,0,0,0.5); border:none; color:#fff; display:flex; align-items:center; justify-content:center; opacity:0; transition:0.2s; cursor:pointer;">
+                                    <i class="bi bi-play-fill" style="font-size:24px;"></i>
+                                </button>` : ''}
+                            </div>
+                            <div class="collab-info">
+                                <h4 style="margin-bottom:2px;">${productName}</h4>
+                                <p style="color:#aaa; font-size:13px;">Split: <span style="color:#fff; font-weight:600;">${split}%</span></p>
+                            </div>
+                            ${actionsHTML}
+                        </div>
+                    `;
+                });
+            }
+            container.innerHTML = html;
+        }
+
+        function updateStats(activeItems) {
+            // Count unique collaborators
+            const collaborators = new Set();
+            activeItems.forEach(item => {
+                // If I am inviter, add collaborator. If I am collaborator, add inviter.
+                if (item.inviter_id === window.currentUser.id && item.collaborator_id) {
+                    collaborators.add(item.collaborator_id);
+                } else if (item.inviter_id) {
+                    collaborators.add(item.inviter_id);
+                }
+            });
+            document.getElementById('totalCollaboratorsCount').innerText = collaborators.size;
+
+            // Count active projects (unique product IDs preferably, but here list count is close enough for beta)
+            document.getElementById('totalActiveProjects').innerText = activeItems.length;
+        }
+
+
+        // Expose to window to fix ReferenceErrors if called inline
+        window.loadProducts = loadProducts;
+        window.loadCollaborations = loadCollaborations;
+        window.openInviteModal = function () {
+            document.getElementById('inviteModal').classList.add('active');
+            loadProducts();
+            loadSplitsForProduct();
+        };
+
+        /* AUDIO PREVIEW LOGIC */
+        let currentAudio = null;
+        let currentBtn = null;
+
+        function previewProduct(url, btn) {
+            if (!url) {
+                showToast("No hay audio disponible", "error");
+                return;
+            }
+
+            // Stop current
+            if (currentAudio) {
+                currentAudio.pause();
+                const prevBtn = currentBtn;
+                currentAudio = null; // Clear first
+                currentBtn = null;
+
+                if (prevBtn) prevBtn.innerHTML = '<i class="bi bi-play-fill" style="font-size:24px;"></i>';
+
+                // If clicked self, we are done
+                if (prevBtn === btn) return;
+            }
+
+            // Play new
+            currentBtn = btn;
+            currentBtn.innerHTML = '<i class="bi bi-pause-fill" style="font-size:24px;"></i>';
+
+            currentAudio = new Audio(url);
+            currentAudio.volume = 0.5;
+            currentAudio.play().catch(e => {
+                // console.error(e);
+                showToast("Error reproduciendo audio", "error");
+                currentBtn.innerHTML = '<i class="bi bi-play-fill" style="font-size:24px;"></i>';
+                currentBtn = null;
+                currentAudio = null;
+            });
+
+            currentAudio.onended = () => {
+                if (currentBtn) currentBtn.innerHTML = '<i class="bi bi-play-fill" style="font-size:24px;"></i>';
+                currentBtn = null;
+                currentAudio = null;
+            };
+        }
+    </script>
+    <!-- ==================== EDIT MODAL ==================== -->
+    <div class="modal-overlay" id="editModal">
+        <div class="elite-modal">
+            <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>Editar Colaboración</h2>
+                <button class="btn-close-modal" onclick="closeEditModal()"><i class="bi bi-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Colaborador</label>
+                    <input type="text" id="editEmail" class="form-input" readonly
+                        style="opacity:0.6; cursor:not-allowed;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Porcentaje de Regalías</label>
+                    <div class="slider-container">
+                        <div class="slider-val">
+                            <span>Royalties</span>
+                            <span id="editPercentVal" style="color:var(--primary-color);">0%</span>
+                        </div>
+                        <input type="range" id="editPercent" min="0" max="100" value="0"
+                            oninput="updateEditSlider(this.value)">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn-modal-cancel" onclick="closeEditModal()">Cancelar</button>
+                <button class="btn-modal-save" onclick="saveEditInvitation()">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CONFIRM MODAL ==================== -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="elite-modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 id="confirmTitle" style="font-size:18px;">Confirmar Acción</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage" style="color:#ccc; font-size:14px; line-height:1.5;">¿Estás seguro?</p>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn-modal-cancel" onclick="closeConfirmModal()">Cancelar</button>
+                <button class="btn-modal-save" style="background:#EF4444;"
+                    onclick="onConfirmAction()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Sidebar Profile Loader -->
+    <script>
+        (async function loadSidebarProfile() {
+            try {
+                const sb = window.supabaseClient || (window.supabase?.createClient ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY) : null);
+                if (!sb) { console.warn('Sidebar: Supabase client not found'); return; }
+
+                const { data: { user } } = await sb.auth.getUser();
+                if (!user) return;
+
+                const { data: profile, error } = await sb.from('users')
+                    .select('nickname, avatar_url, storage_version, id')
+                    .eq('id', user.id)
+                    .single();
+
+                if (error) {
+                    const { data: profileAlt } = await sb.from('profiles').select('username, avatar_url, storage_version, id').eq('user_id', user.id).single();
+                    if (profileAlt) updateSidebarUI(profileAlt.username, profileAlt.avatar_url, profileAlt.storage_version, profileAlt.id);
+                    return;
+                }
+
+                if (profile) updateSidebarUI(profile.nickname, profile.avatar_url, profile.storage_version, profile.id);
+
+                async function updateSidebarUI(name, avatar, version, uid) {
+                    const avatarEl = document.getElementById('sidebarAvatar');
+                    const avatarSkel = document.getElementById('sidebarAvatarSkeleton');
+                    const nameEl = document.getElementById('sidebarUsername');
+                    const btnSkel = document.getElementById('sidebarBtnSkeleton');
+                    const linkEl = document.getElementById('sidebarProfileLink');
+
+                    if (nameEl && name) {
+                        nameEl.textContent = name;
+                        nameEl.classList.remove('skeleton-text');
+                        nameEl.style.background = 'none';
+                        nameEl.style.width = 'auto';
+                        nameEl.style.height = 'auto';
+                    }
+
+                    if (linkEl && name) {
+                        linkEl.href = '/@' + name;
+                        linkEl.style.display = 'inline-flex';
+                        if (btnSkel) btnSkel.style.display = 'none';
+                    }
+
+                    if (avatarEl && avatar) {
+                        try {
+                            let finalSrc = avatar;
+                            if (typeof avatar === 'string' && avatar.startsWith('http') && !avatar.includes('supabase.co')) {
+                                finalSrc = avatar;
+                            } else if (window.AuthUtils && window.AuthUtils.getAuthorizedUrl) {
+                                finalSrc = await window.AuthUtils.getAuthorizedUrl(avatar, version, uid);
+                            }
+
+                            avatarEl.src = finalSrc;
+                            avatarEl.onload = () => {
+                                avatarEl.style.display = 'block';
+                                if (avatarSkel) {
+                                    avatarSkel.classList.remove('skeleton');
+                                    avatarSkel.style.background = 'transparent';
+                                }
+                            };
+                        } catch (e) {
+                            avatarEl.src = avatar;
+                            avatarEl.style.display = 'block';
+                            if (avatarSkel) avatarSkel.classList.remove('skeleton');
+                        }
+                    }
+                }
+            } catch (e) { console.warn('Sidebar profile load error:', e); }
+        })();
+    </script>
+</body>
+
+<!-- PRICING MODAL -->
+<div class="modal-overlay" id="modalPricing" onclick="if(event.target === this) closeModals()">
+    <div class="elite-modal">
+        <div class="modal-header-custom">
+            <h3><i class="bi bi-star-fill" style="color:#fff;"></i> Mejorar Plan</h3>
+            <button class="btn-modal-close" onclick="closeModals()"><i class="bi bi-x"></i></button>
+        </div>
+
+        <p style="color:#888; font-size:14px; margin-bottom:20px;">Elige el plan perfecto para potenciar tu carrera
+            musical.</p>
+
+        <div class="plans-container">
+            <!-- Basic -->
+            <div class="plan-card" onclick="selectPlan('basic')" id="plan-basic">
+                <div class="plan-top">
+                    <div class="plan-name">Basic <small>Para empezar</small></div>
+                    <div class="plan-price">$9<span>/mo</span></div>
+                </div>
+                <div class="plan-features">
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> 5 Subidas Mensuales</div>
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Analytics Básicas</div>
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Soporte 24/7</div>
+                </div>
+            </div>
+
+            <!-- Pro -->
+            <div class="plan-card selected" onclick="selectPlan('pro')" id="plan-pro">
+                <div class="plan-top">
+                    <div class="plan-name">Pro <small>Para profesionales</small></div>
+                    <div class="plan-price">$19<span>/mo</span></div>
+                </div>
+                <div class="plan-features">
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Subidas Ilimitadas</div>
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> Analytics Avanzadas</div>
+                    <div class="feature-item"><i class="bi bi-check-circle-fill"></i> 0% Comisión</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModals()">Cancelar</button>
+            <button class="btn-confirm" onclick="confirmPlan()">Actualizar Plan</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openPricingModal() { document.getElementById('modalPricing').classList.add('active'); }
+    function closeModals() {
+        document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active'));
+    }
+    function selectPlan(plan) {
+        document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+        if (document.getElementById('plan-' + plan)) document.getElementById('plan-' + plan).classList.add('selected');
+    }
+    function confirmPlan() { closeModals(); alert("Redirecting to checkout..."); }
+</script>
+
+</html>

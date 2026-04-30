@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Servicio - OFFSZN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    <script src="/script/config.js"></script>
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/script/auth-utils.js?v=2"></script>
+    <script src="/script/id-obfuscator.js"></script>
+    <script src="/components/offszn_perfiles_profesionales/loader.js"></script>
+    <style>
+        :root {
+            --bg: #FFFFFF;
+            --text-main: #000000;
+            --text-secondary: #666666;
+            --border: #EEEEEE;
+            --accent: #000000;
+            --btn-text: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Geist', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Layout Main */
+        .service-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: calc(100vh - 81px);
+        }
+
+        /* Info Section (Left) */
+        .info-section {
+            padding: 80px 10%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-right: 1px solid var(--border);
+        }
+
+        .category-label {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 850;
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+        }
+
+        .price-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 32px;
+        }
+
+        .price-amount {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .price-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .desc-text {
+            font-size: 1.15rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 48px;
+            white-space: pre-wrap;
+            max-width: 500px;
+        }
+
+        .cta-primary {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--btn-text);
+            text-decoration: none;
+            padding: 20px 48px;
+            border-radius: 100px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            text-align: center;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .cta-primary:hover {
+            transform: translateY(-2px);
+            background: #222;
+        }
+
+        /* Media Section (Right) */
+        .media-section {
+            background: #FAF6F0; /* Premium Cream Color */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .embed-container {
+            width: 100%;
+            max-width: 450px;
+            height: 400px;
+            background: transparent;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .embed-container iframe {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .embed-placeholder {
+            text-align: center;
+            color: var(--text-secondary);
+            margin: auto;
+        }
+
+        /* Skeletons */
+        .skeleton {
+            background: #f0f0f0;
+            border-radius: 8px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        #error-container {
+            display: none;
+            text-align: center;
+            padding: 100px 20px;
+            flex: 1;
+        }
+
+        /* Mobile */
+        @media (max-width: 900px) {
+            .service-container {
+                grid-template-columns: 1fr;
+            }
+            .info-section {
+                padding: 40px 24px 24px;
+                border-right: none;
+                border-bottom: none;
+                order: 1;
+            }
+            .media-section {
+                padding: 24px 24px 40px;
+                order: 2;
+            }
+            .embed-container {
+                height: 380px;
+            }
+            nav {
+                padding: 15px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="prof-navbar-container"></div>
+
+    <main id="app">
+        <!-- Loading State -->
+        <div id="loading" class="service-container">
+            <div class="info-section">
+                <div class="skeleton" style="width: 100px; height: 16px; margin-bottom: 16px;"></div>
+                <div class="skeleton" style="width: 80%; height: 60px; margin-bottom: 24px;"></div>
+                <div class="skeleton" style="width: 120px; height: 32px; margin-bottom: 40px;"></div>
+                <div class="skeleton" style="width: 100%; height: 100px; margin-bottom: 48px;"></div>
+                <div class="skeleton" style="width: 200px; height: 60px; border-radius: 100px;"></div>
+            </div>
+            <div class="media-section">
+                <div class="skeleton" style="width: 100%; max-width: 500px; aspect-ratio: 1/1; border-radius: 24px;"></div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="service-detail" class="service-container" style="display: none;">
+            <section class="info-section">
+                <div class="category-label" id="s-category">SERVICIO</div>
+                <h1 id="s-title">Título del Servicio</h1>
+                <div class="price-badge">
+                    <span class="price-amount" id="s-price">$0</span>
+                    <span class="price-label">USD / pago único</span>
+                </div>
+                <div class="desc-text" id="s-description">
+                    Descripción detallada del servicio profesional...
+                </div>
+                <a href="#" id="s-cta" class="cta-primary">CONTACTAR AHORA</a>
+            </section>
+
+            <section class="media-section">
+                <div class="embed-container" id="s-media-container">
+                    <div class="embed-placeholder">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity: 0.2; margin-bottom: 16px;">
+                            <path d="M9 18V5l12-2v13M9 18c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z"/>
+                        </svg>
+                        <p>No hay previsualización</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="error-container">
+            <h2 style="font-size: 2.5rem; margin-bottom: 16px; letter-spacing: -1px;">Servicio no encontrado</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 32px;">El link puede ser inválido o el servicio ya no está disponible.</p>
+            <a href="/" class="cta-primary">Volver al Marketplace</a>
+        </div>
+    </main>
+
+    <div id="prof-footer-container"></div>
+
+    <script>
+        // Inicializar Supabase usando la utilidad centralizada
+        AuthUtils.initSupabase();
+        const supabaseClient = window.supabaseClient;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            let rawS = urlParams.get('s');
+            
+            // Fallback: Si no hay query param 's', intentar extraer del path
+            if (!rawS) {
+                const pathParts = window.location.pathname.split('/').filter(p => p.trim());
+                if (pathParts.length >= 2 && pathParts[0] === 'servicio') {
+                    rawS = pathParts[pathParts.length - 1];
+                }
+            }
+            
+            if (!rawS) {
+                showError();
+                return;
+            }
+
+            // Extract parts: [slug]-[code]-[nickname]
+            const segments = rawS.split('-').filter(p => p.trim());
+            if (segments.length < 2) {
+                showError();
+                return;
+            }
+
+            // The nickname is the last segment
+            const nickname = segments[segments.length - 1];
+            // The code is the second to last segment
+            const code = segments[segments.length - 2];
+
+            if (!code || !nickname) {
+                showError();
+                return;
+            }
+
+            const targetId = window.IdObfuscator ? window.IdObfuscator.decodeId(code) : code;
+            console.log("🔍 Buscando Servicio:", targetId, "del usuario:", nickname);
+
+            try {
+                // Fetch User first to get nickname/socials/avatar
+                const { data: userData, error: userError } = await supabaseClient
+                    .from('users')
+                    .select('id, nickname, socials, avatar_url')
+                    .eq('nickname', nickname)
+                    .single();
+
+                if (userError || !userData) {
+                    throw new Error("Usuario no encontrado");
+                }
+
+                const services = userData.socials?.custom_services || [];
+                // Búsqueda robusta: coincidencias exactas, prefijadas o por código ofuscado
+                const service = services.find(s => 
+                    s.id === targetId || 
+                    s.id === `servicios_offszn_${targetId}` ||
+                    (window.IdObfuscator && window.IdObfuscator.encodeId(s.id) === code)
+                );
+
+                if (!service) {
+                    throw new Error("Servicio no encontrado en el catálogo del usuario");
+                }
+
+                renderService(service, userData);
+
+            } catch (err) {
+                console.error("Error loading service:", err);
+                showError();
+            }
+        });
+
+        function renderService(s, user) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('service-detail').style.display = 'grid';
+
+            // Init Modular UI (Navbar & Footer)
+            if (window.ProfLoader) {
+                window.ProfLoader.init(user);
+            }
+
+            // Info
+            document.getElementById('s-title').textContent = s.title;
+            document.getElementById('s-category').textContent = s.category || 'Servicio';
+            document.getElementById('s-price').textContent = `$${s.price || 'Consultar'}`;
+            document.getElementById('s-description').textContent = s.description;
+
+            // Media Embed
+            const mediaContainer = document.getElementById('s-media-container');
+            if (s.link) {
+                mediaContainer.innerHTML = getEmbedHTML(s.link);
+            }
+
+            const chatText = encodeURIComponent(`Hola, me interesa tu servicio "${s.title}" que vi en tu landing.`);
+            document.getElementById('s-cta').href = `/mensajes.html?to=${user.id}&text=${chatText}`;
+            
+            document.title = `${s.title} | ${user.nickname} - OFFSZN`;
+        }
+
+        function getEmbedHTML(link) {
+            if (!link) return '';
+            
+            // YouTube
+            if (link.includes('youtube.com') || link.includes('youtu.be')) {
+                let videoId = '';
+                if (link.includes('watch?v=')) {
+                    videoId = link.split('watch?v=')[1].split('&')[0];
+                } else if (link.includes('youtu.be/')) {
+                    videoId = link.split('youtu.be/')[1].split('?')[0];
+                }
+                if (videoId) {
+                    return `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+                }
+            }
+            
+            // Spotify
+            if (link.includes('spotify.com')) {
+                let embedUrl = link;
+                if (!link.includes('/embed/')) {
+                    embedUrl = link.replace('open.spotify.com/', 'open.spotify.com/embed/');
+                }
+                return `<iframe src="${embedUrl}" width="100%" height="100%" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>`;
+            }
+            
+            // SoundCloud
+            if (link.includes('soundcloud.com')) {
+                return `<iframe width="100%" height="100%" scrolling="no" frameborder="no" allow="autoplay" src="https://w.soundcloud.com/player/?url=${encodeURIComponent(link)}&color=%23000000&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true&visual=true"></iframe>`;
+            }
+
+            return `<div style="text-align:center; padding:20px;">
+                <p style="color:var(--text-secondary); margin-bottom:12px;">Previsualización externa disponible</p>
+                <a href="${link}" target="_blank" class="cta-primary" style="padding: 10px 24px; font-size: 0.9rem;">Ver Contenido</a>
+            </div>`;
+        }
+
+        function showError() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error-container').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

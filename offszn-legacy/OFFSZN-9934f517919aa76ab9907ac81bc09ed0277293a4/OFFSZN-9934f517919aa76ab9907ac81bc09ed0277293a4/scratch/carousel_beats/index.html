@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carousel B&W - Beats $0 (Helpful Tone)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --white: #FFFFFF;
+            --black: #000000;
+            --gray-light: #F2F2F2;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-main); background: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
+
+        .ig-frame {
+            width: 420px; height: 680px;
+            background: #fff; overflow: hidden;
+            display: flex; flex-direction: column; position: relative;
+        }
+
+        .ig-header {
+            padding: 12px 14px; display: flex; align-items: center; gap: 10px;
+            background: #fff; border-bottom: 1px solid #eee; z-index: 10;
+        }
+
+        .avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--black); display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 14px; font-weight: 700;
+        }
+
+        .handle { font-size: 13px; font-weight: 700; color: var(--black); }
+        .subtitle { font-size: 11px; color: #666; }
+
+        .carousel-viewport { width: 420px; height: 525px; overflow: hidden; position: relative; }
+        .carousel-track { display: flex; height: 100%; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        .slide {
+            min-width: 420px; height: 100%; position: relative;
+            display: flex; flex-direction: column; padding: 40px 36px 60px;
+            justify-content: center;
+        }
+
+        .slide.light { background-color: var(--white); color: var(--black); }
+        .slide.dark { background-color: var(--black); color: var(--white); }
+
+        h2 { 
+            font-size: 38px; font-weight: 900; line-height: 1.05; letter-spacing: -1.5px; 
+            margin-bottom: 20px; text-transform: uppercase;
+        }
+
+        p { font-size: 15px; line-height: 1.4; font-weight: 400; opacity: 0.9; }
+
+        .image-area { width: 100%; flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+
+        .progress-container {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            padding: 20px 36px; display: flex; align-items: center; gap: 12px;
+        }
+
+        .progress-track { flex: 1; height: 2px; background: rgba(128,128,128,0.2); }
+        .slide.dark .progress-track { background: rgba(255,255,255,0.1); }
+        .progress-fill { height: 100%; }
+        .slide.light .progress-fill { background: var(--black); }
+        .slide.dark .progress-fill { background: var(--white); }
+        .progress-counter { font-size: 11px; font-weight: 700; opacity: 0.5; }
+
+        .swipe-arrow { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); opacity: 0.3; }
+
+        .ig-actions { padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+        .ig-dots { display: flex; gap: 4px; justify-content: center; padding-bottom: 12px; background: #fff; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: #ddd; }
+        .dot.active { background: #0095f6; }
+        .ig-caption { padding: 0 14px 14px; font-size: 13px; background: #fff; }
+        
+        .bold-num { font-size: 60px; font-weight: 900; opacity: 0.1; position: absolute; top: 0; left: -10px; }
+        .slide.dark .bold-num { opacity: 0.2; }
+        
+        .cta-btn {
+            margin-top: 30px; padding: 16px 40px; font-size: 14px; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .slide.dark .cta-btn { background: var(--white); color: var(--black); }
+        .slide.light .cta-btn { background: var(--black); color: var(--white); }
+    </style>
+</head>
+<body>
+
+    <div class="ig-frame">
+        <div class="ig-header">
+            <div class="avatar">O</div>
+            <div class="header-info">
+                <span class="handle">offszn.pro</span>
+                <span class="subtitle">Guía para Productores</span>
+            </div>
+        </div>
+
+        <div class="carousel-viewport" id="viewport">
+            <div class="carousel-track" id="track">
+                
+                <!-- Slide 1: Hero -->
+                <div class="slide light">
+                    <h2>Vende tus <br>primeros beats <br>gastando $0</h2>
+                    <div class="image-area"></div>
+                    <p>No necesitas dinero para empezar. <br>Necesitas un sistema.</p>
+                </div>
+
+                <!-- Slide 2: Problem -->
+                <div class="slide dark">
+                    <span class="bold-num">01</span>
+                    <h2>El error <br>de los <br>novatos</h2>
+                    <div class="image-area"></div>
+                    <p>Esperar a tener "el mejor equipo" para empezar a vender. El mercado no espera.</p>
+                </div>
+
+                <!-- Slide 3: Management context (Helpful instead of "Secret Key") -->
+                <div class="slide dark" style="background: #0a0a0a;">
+                    <span class="bold-num">02</span>
+                    <h2>Dónde <br>subir tus <br>beats?</h2>
+                    <div class="image-area"></div>
+                    <p>Usa plataformas que te permitan empezar sin cuotas mensuales. En OFFSZN puedes subir y vender sin pagar suscrición.</p>
+                </div>
+
+                <!-- Slide 4: Real Tools -->
+                <div class="slide light">
+                    <span class="bold-num">03</span>
+                    <h2>Software <br>profesional <br>gratis</h2>
+                    <div class="image-area"></div>
+                    <p>FL Studio Trial y Kilohearts Essentials te dan todo lo que necesitas para sonar pro.</p>
+                </div>
+
+                <!-- Slide 5: Business -->
+                <div class="slide dark">
+                    <span class="bold-num">04</span>
+                    <h2>Negocio <br>sustentable</h2>
+                    <div class="image-area"></div>
+                    <p>Céntrate en crear y cobrar regalías. <br>Cada centavo ahorrado es <br>inversión futura.</p>
+                </div>
+
+                <!-- Slide 6: Flow -->
+                <div class="slide light">
+                    <span class="bold-num">05</span>
+                    <h2>Hoja de <br>ruta real</h2>
+                    <div class="image-area"></div>
+                    <p>Produce > Crea tu tienda gratis > Empieza a promocionar.</p>
+                </div>
+
+                <!-- Slide 7: CTA -->
+                <div class="slide dark">
+                    <h2>Empezamos <br>hoy mismo?</h2>
+                    <div class="image-area"></div>
+                    <p>Comenta "LINK" y te paso la <br>lista de herramientas <br>gratuitas por DM.</p>
+                    <div class="cta-btn">Comenta "LINK"</div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="ig-dots" id="dots"></div>
+        <div class="ig-actions">
+            <div class="main-actions"><span>🖤</span><span>💬</span><span>✈️</span></div>
+            <span>🏁</span>
+        </div>
+        <div class="ig-caption"><strong>offszn.pro</strong> Tu talento es la única inversión que importa. 🔥</div>
+    </div>
+
+    <script>
+        const track = document.getElementById('track');
+        const dotsContainer = document.getElementById('dots');
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        let currentIndex = 0;
+
+        slides.forEach((slide, i) => {
+            const dot = document.createElement('div');
+            dot.className = 'dot' + (i === 0 ? ' active' : '');
+            dotsContainer.appendChild(dot);
+
+            const progress = document.createElement('div');
+            progress.className = 'progress-container';
+            const pct = ((i + 1) / totalSlides) * 100;
+            progress.innerHTML = `
+                <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+                <div class="progress-counter">${i+1}/${totalSlides}</div>
+            `;
+            slide.appendChild(progress);
+
+            if (i < totalSlides - 1) {
+                const arrow = document.createElement('div');
+                arrow.className = 'swipe-arrow';
+                const isLight = slide.classList.contains('light');
+                const strokeColor = isLight ? '#000' : '#fff';
+                arrow.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${strokeColor}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`;
+                slide.appendChild(arrow);
+            }
+        });
+
+        const dots = document.querySelectorAll('.dot');
+        function updateCarousel() {
+            track.style.transform = `translateX(${-currentIndex * 420}px)`;
+            dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+        }
+
+        let startX = 0;
+        const viewport = document.getElementById('viewport');
+        viewport.addEventListener('mousedown', e => { startX = e.clientX; });
+        viewport.addEventListener('mouseup', e => {
+            const diff = startX - e.clientX;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0 && currentIndex < totalSlides - 1) currentIndex++;
+                else if (diff < 0 && currentIndex > 0) currentIndex--;
+                updateCarousel();
+            }
+        });
+    </script>
+</body>
+</html>

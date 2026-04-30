@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayuda y contacto | OFFSZN</title>
+    <link rel="stylesheet" href="/css/contacto-demo.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/avatar-manager.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- 1. Cargar Supabase (Moved to Head for Global Access) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // --- GLOBAL SUPABASE CONFIG ---
+        // Moved here so it is available for Search AND Auth scripts immediately.
+
+
+
+        window.supabaseClient = null;
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
+</head>
+
+<body>
+
+
+
+    <!-- ==================== EXTRACTED NAVBAR ==================== -->
+    <header class="navbar">
+        <div class="navbar-container">
+            <div class="mobile-left-group" style="display: flex; align-items: center; gap: 16px;">
+                <button class="hamburger-btn" id="hamburger-btn" style="padding: 4px;">
+                    <svg width="26" height="20" viewBox="0 0 26 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1 3H25M1 10H25M1 17H25" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
+
+                <div class="logo">
+                    <a href="/index.html">
+                        <img src="/favicon.ico" alt="OFFSZN" class="mobile-logo-img">
+                    </a>
+                </div>
+            </div>
+
+            <!-- MOBILE TOP-BAR ACTIONS (hidden on desktop) -->
+            <div class="mobile-topbar-actions" id="mobile-topbar-actions">
+                <div class="mobile-guest-actions" id="mobile-guest-actions"
+                    style="display: none; align-items: center; gap: 8px;">
+                    <a href="/pages/login.html" class="mobile-login-link">Iniciar Sesión</a>
+                    <a href="/pages/register.html" class="mobile-join-btn">Únete</a>
+                    <a href="#" class="mobile-cart-btn" title="Carrito" onclick="toggleCartPanel(event)"
+                        style="margin-left: 4px;">
+                        <i class="bi bi-cart3"></i>
+                        <span class="mobile-cart-badge" id="mobile-cart-badge-guest" style="display:none;">0</span>
+                    </a>
+                </div>
+
+                <!-- 1. Auth Actions (Profile -> Messages -> Notif -> Cart) -->
+                <div class="mobile-auth-actions" id="mobile-auth-actions" style="display: none; gap: 18px;">
+
+                    <!-- Avatar (Profile - Direct Link) -->
+                    <div class="mobile-avatar-btn" id="mobile-avatar-btn"
+                        onclick="if(window.currentUserNickname) window.location.href = '/@' + window.currentUserNickname;">
+                        <span id="mobile-avatar-initial">W</span>
+                    </div>
+
+                    <!-- Messages: Smart logic to open chat if on chat page, or redirect to messages -->
+                    <a href="/mensajes.html" class="mobile-notif-btn" title="Mensajes">
+                        <i class="bi bi-chat-text"></i>
+                        <span class="mobile-notif-badge" id="mobile-msg-badge" style="display:none;">0</span>
+                    </a>
+
+                    <!-- Notifications -->
+                    <a href="/notificaciones.html" class="mobile-notif-btn" title="Notificaciones">
+                        <i class="bi bi-bell"></i>
+                        <span class="mobile-notif-badge" id="mobile-notif-badge" style="display:none;">0</span>
+                    </a>
+
+                    <!-- Cart -->
+                    <a href="#" class="mobile-cart-btn" title="Carrito" onclick="toggleCartPanel(event)">
+                        <i class="bi bi-cart3"></i>
+                        <span class="mobile-cart-badge" id="mobile-cart-badge" style="display:none;">0</span>
+                    </a>
+
+                </div>
+            </div>
+
+            <div class="nav-container" id="nav-container">
+                <!-- Sidebar header: close + logo (mobile only) -->
+                <div class="sidebar-header">
+                    <button class="sidebar-close-btn" aria-label="Cerrar menú"><i class="bi bi-x"></i></button>
+                    <a href="/index.html" class="sidebar-logo">
+                        <img src="/favicon.ico" alt="OFFSZN" style="height: 28px; width: auto;">
+                    </a>
+                </div>
+                <div class="navbar-center">
+                    <ul class="navbar-links desktop-menu-only">
+                        <li><a href="/explorar.html">Explorar</a></li>
+                        <li class="dropdown-parent">
+                            <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+                                style="user-select: none; -webkit-user-select: none; cursor: pointer;"
+                                onselectstart="return false;">
+                                Recursos <i class="bi bi-chevron-down"></i>
+                            </a>
+                            <div class="dropdown-menu mega-columns">
+                                <!-- BOX 1: SONIDOS (Tools) -->
+                                <div class="mega-column-box">
+                                    <span class="dropdown-section-title"
+                                        style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                        SONIDOS
+                                    </span>
+                                    <div class="dropdown-section">
+                                        <a href="/recursos/drum-kits" class="mega-nav-link"><i class="bi bi-disc"></i>
+                                            Drum
+                                            Kits</a>
+                                        <a href="/recursos/presets" class="mega-nav-link"><i class="bi bi-sliders"></i>
+                                            Presets</a>
+                                        <a href="/recursos/samples-loops" class="mega-nav-link"><i
+                                                class="bi bi-soundwave"></i> Loops</a>
+                                        <a href="/recursos/one-shots" class="mega-nav-link"><i
+                                                class="bi bi-bullseye"></i>
+                                            One-Shots</a>
+                                        <a href="/plugins/vst-plugins.html" class="mega-nav-link"><i
+                                                class="bi bi-plug"></i>
+                                            Plugins VST</a>
+                                    </div>
+                                </div>
+
+                                <!-- BOX 2: COMUNIDAD (Swapped to Middle) -->
+                                <div class="mega-column-box">
+                                    <span class="dropdown-section-title"
+                                        style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                        COMUNIDAD
+                                    </span>
+                                    <div class="dropdown-section">
+                                        <a href="/comunidad/productores" class="mega-nav-link"><i
+                                                class="bi bi-people"></i>
+                                            Productores</a>
+                                        <a href="/comunidad/colaboraciones" class="mega-nav-link"><i
+                                                class="bi bi-person-plus"></i>
+                                            Collabs</a>
+                                        <a href="/comunidad/eventos" class="mega-nav-link"><i
+                                                class="bi bi-calendar-event"></i> Eventos</a>
+                                        <a href="/comunidad/feed" class="mega-nav-link"><i
+                                                class="bi bi-collection-play"></i> Feed</a>
+                                        <a href="/cursos/inicio" class="mega-nav-link">
+                                            <i class="bi bi-mortarboard"></i> Cursos <span
+                                                style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 6px; border: 1px solid rgba(139, 92, 246, 0.2);">SOON</span>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- BOX 3: GÉNEROS (Swapped to End) -->
+                                <div class="mega-column-box">
+                                    <span class="dropdown-section-title"
+                                        style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 12px; display:block; font-weight:800; padding-left: 6px;">
+                                        GÉNEROS
+                                    </span>
+                                    <div class="dropdown-section">
+                                        <a href="/recursos/beats" class="mega-nav-link">Hip-Hop</a>
+                                        <a href="/recursos/beats" class="mega-nav-link">Trap</a>
+                                        <a href="/recursos/beats" class="mega-nav-link">R&B</a>
+                                        <a href="/recursos/beats" class="mega-nav-link">Reggaetón</a>
+                                        <a href="/recursos/beats" class="mega-nav-link">Drill</a>
+                                        <a href="/recursos/beats" class="mega-nav-link"
+                                            style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 4px; transition: color 0.2s;">Ver
+                                            todos &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+
+                        <!-- STUDIO / LAB (New Identity Feature) -->
+                        <li class="dropdown-parent">
+                            <a onclick="toggleDropdown(this)" class="nav-toggle-link noselect"
+                                style="user-select: none; -webkit-user-select: none; cursor: pointer;"
+                                onselectstart="return false;">
+                                Studio <span
+                                    style="background: rgba(139, 92, 246, 0.1); color: #a78bfa; font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 4px; border: 1px solid rgba(139, 92, 246, 0.2);">BETA</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </a>
+                            <div class="dropdown-menu" style="min-width: 250px; padding: 8px;">
+                                <div class="dropdown-section">
+                                    <span class="dropdown-section-title"
+                                        style="font-size: 0.7rem; letter-spacing: 1.5px; color:#555; margin-bottom: 8px; display:block; font-weight:800; padding: 0 8px;">
+                                        EXCLUSIVE TOOLS
+                                    </span>
+
+                                    <a href="/studio/genera-sonidos.html" class="dropdown-item" style="border-radius: 8px;">
+                  <i class="bi bi-music-note-beamed"></i>
+                  <div class="dropdown-item-content">
+                    <div class="dropdown-item-title">Generador IA</div>
+                    <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">Pide lo que quieres y obtelo en segundos!</div>
+                  </div>
+                </a>
+                                </div>
+                            </div>
+                        </li>
+                        <!-- Cursos moved to Dropdown -->
+
+                    </ul>
+
+                    <!-- MOBILE SLIDING MENU (BeatStars Style) -->
+                    <div class="mobile-menu-slider-wrapper" id="mobile-menu-slider-wrapper">
+                        <div class="mobile-menu-slides" id="mobile-menu-slides">
+                            <!-- VIEW 1: MAIN MENU -->
+                            <div class="menu-slide" id="menu-view-main"
+                                style="overflow-y: auto; padding-bottom: 120px;">
+                                <a href="/explorar.html" class="mobile-menu-link text-uppercase"
+                                    style="font-weight: 800; letter-spacing: 0.5px;">EXPLORAR</a>
+
+                                <div class="mobile-menu-link has-arrow text-uppercase" style="font-weight: 700;"
+                                    onclick="openSubmenu('beats')">
+                                    <span>BEATS</span>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+
+                                <div class="mobile-menu-link has-arrow text-uppercase" style="font-weight: 700;"
+                                    onclick="openSubmenu('kits')">
+                                    <span>KITS</span>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+
+                                <div class="mobile-menu-link has-arrow text-uppercase" style="font-weight: 700;"
+                                    onclick="openSubmenu('comunidad')">
+                                    <span>COMUNIDAD</span>
+                                    <i class="bi bi-chevron-right"></i>
+                                </div>
+
+                                <div class="mobile-menu-divider"></div>
+
+                                <a href="/mensajes.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">MENSAJES</a>
+                                <a href="/mis-compras.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">COMPRAS</a>
+                                <a href="/favoritos.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">FAVORITOS</a>
+                                <a href="/gift-cards.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">GIFT CARDS</a>
+                                <a href="/historial.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; font-weight: 600;">HISTORIAL</a>
+
+                                <div class="mobile-menu-divider"></div>
+
+                                
+                                <a href="/ayuda.html" class="mobile-menu-link text-uppercase"
+                                    style="font-size: 0.85rem; color: #888; font-weight: 600;">AYUDA</a>
+
+                                <!-- MEJORAR PLAN (Bottom) -->
+                                <div style="margin-top: 10px; padding: 10px 16px;">
+                                    <a href="/cuenta/planes.html"
+                                        style="display: block; background: linear-gradient(135deg, #1a1a1a 0%, #000 100%); border: 1px solid #333; border-radius: 12px; padding: 16px; text-decoration: none; position: relative; overflow: hidden;">
+                                        <div style="position: relative; z-index: 2;">
+                                            <span
+                                                style="color: #8b5cf6; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px; display: block; margin-bottom: 4px;">OFFSZN
+                                                PRO</span>
+                                            <span
+                                                style="color: #fff; font-size: 1rem; font-weight: 700; display: block; margin-bottom: 4px;">Mejorar
+                                                Plan</span>
+                                            <span style="color: #888; font-size: 0.75rem;">Desbloquea todo el
+                                                potencial.</span>
+                                        </div>
+                                        <i class="bi bi-star-fill"
+                                            style="position: absolute; bottom: -10px; right: -10px; font-size: 4rem; color: rgba(139, 92, 246, 0.1); transform: rotate(15deg);"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- VIEW 2: SUBMENUS CONTAINER -->
+                            <div class="menu-slide" id="menu-view-sub" style="overflow-y: auto; padding-bottom: 120px;">
+                                <div class="mobile-menu-header" onclick="closeSubmenu(event)">
+                                    <i class="bi bi-chevron-left"></i> MENÚ PRINCIPAL
+                                </div>
+
+                                <!-- SUBMENU: BEATS -->
+                                <div id="submenu-beats" class="submenu-content" style="display: none;">
+                                    <span class="mobile-section-title">BEATS</span>
+                                    <a href="/explorar.html" class="mobile-menu-link sub"><i class="bi bi-cart3"></i>
+                                        COMPRAR</a>
+                                    <a href="/servicios/custom-beats.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-music-note-list"></i> SOLICITAR</a>
+                                    <a href="/vender.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-cloud-arrow-up"></i>
+                                        ENVIAR</a>
+                                </div>
+
+                                <!-- SUBMENU: KITS -->
+                                <div id="submenu-kits" class="submenu-content" style="display: none;">
+                                    <span class="mobile-section-title">KITS</span>
+                                    <a href="/recursos/drum-kits.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-disc"></i> DRUM KITS</a>
+                                    <a href="/recursos/presets.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-sliders"></i> PRESETS</a>
+                                    <a href="/recursos/samples-loops.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-soundwave"></i> LOOPS</a>
+                                    <a href="/recursos/one-shots.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-bullseye"></i> ONE SHOTS</a>
+                                    <a href="/plugins/vst-plugins.html" class="mobile-menu-link sub highlight"><i
+                                            class="bi bi-plug"></i> PLUGINS VST</a>
+                                </div>
+
+                                <!-- SUBMENU: COMUNIDAD -->
+                                <div id="submenu-comunidad" class="submenu-content" style="display: none;">
+                                    <span class="mobile-section-title">COMUNIDAD</span>
+                                    <a href="/comunidad/feed.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-collection-play"></i> FEED</a>
+                                    <a href="/studio/genera-sonidos.html" class="mobile-menu-link sub"><i class="bi bi-music-note-beamed"></i> GENERADOR IA</a>
+                                    <a href="/comunidad/productores.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-people"></i> PRODUCTORES</a>
+                                    <a href="/comunidad/colaboraciones.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-person-plus"></i> COLLABS</a>
+                                    <a href="/comunidad/eventos.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-calendar-event"></i> EVENTOS</a>
+                                    <a href="/cursos/inicio.html" class="mobile-menu-link sub"><i
+                                            class="bi bi-mortarboard"></i> CURSOS</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEW: NAVBAR SEARCH (Wavs Style) -->
+                    <!-- NEW: NAVBAR SEARCH (Wavs Style) with Internal Filter & Trending Panel -->
+                    <div class="navbar-search"
+                        style="margin-left: 24px; flex: 1; max-width: 440px; position: relative;">
+                        <i class="bi bi-search"
+                            style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #666; font-size: 0.85rem; z-index: 10;"></i>
+                        <input type="text" id="navbarSearchInput" placeholder="Buscar 'trap' o 'drill'..."
+                            style="width: 100%; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.08); padding: 11px 110px 11px 42px; border-radius: 12px; color: #fff; font-size: 0.9rem; outline: none; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);">
+
+                        <!-- Internal Filter Trigger - Seamless Integration -->
+                        <div class="search-filter-trigger" onclick="toggleSearchFilter(event)"
+                            style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 8px; height: 28px; transition: background 0.2s;">
+                            <span id="search-filter-label"
+                                style="font-size: 0.75rem; color: #ccc; font-weight: 600; letter-spacing: 0.3px;">Todo</span>
+                            <i class="bi bi-chevron-down" style="font-size: 0.65rem; color: #888;"></i>
+                        </div>
+
+                        <!-- Filter Dropdown (Glassmorphism) -->
+                        <div id="search-filter-dropdown"
+                            style="position: absolute; top: calc(100% + 8px); right: 0; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 6px; width: 140px; display: none; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 1002; transform-origin: top right; animation: scaleIn 0.2s ease;">
+                            <div onclick="selectSearchFilter('Todo')" class="search-filter-item selected">Todo</div>
+                            <div onclick="selectSearchFilter('Beats')" class="search-filter-item">Beats</div>
+                            <div onclick="selectSearchFilter('Drum Kits')" class="search-filter-item">Drum Kits</div>
+                            <div onclick="selectSearchFilter('Samples')" class="search-filter-item">Samples</div>
+                            <div onclick="selectSearchFilter('Presets')" class="search-filter-item">Presets</div>
+                            <div onclick="selectSearchFilter('Plantillas')" class="search-filter-item">Plantillas</div>
+                            <div onclick="selectSearchFilter('Productores')" class="search-filter-item">Productores
+                            </div>
+                        </div>
+
+                        <!-- Trending / Intelligent Panel (Appears on Focus) -->
+                        <!-- Trending / Intelligent Panel -->
+                        <div id="search-trending-panel"
+                            style="position: absolute; top: calc(100% + 4px); left: 0; width: 100%; background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; display: none; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1001;">
+
+                            <!-- Recent Searches (New) -->
+                            <div style="margin-bottom: 20px;">
+                                <span
+                                    style="display: block; font-family: 'Geist', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 8px; text-transform: uppercase;">Búsquedas
+                                    Recientes</span>
+                                <div style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div class="recent-item" onclick="setSearch('Dark Piano')"><i
+                                            class="bi bi-clock-history"></i>
+                                        Dark
+                                        Piano</div>
+                                    <div class="recent-item" onclick="setSearch('Tainy Drums')"><i
+                                            class="bi bi-clock-history"></i>
+                                        Tainy
+                                        Drums</div>
+                                </div>
+                            </div>
+
+                            <span
+                                style="display: block; font-family: 'Geist', sans-serif; font-size: 0.7rem; color: #555; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 12px; text-transform: uppercase;">Tendencias
+                                Ahora</span>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                <span class="trend-tag"><i class="bi bi-graph-up-arrow"></i> Dark Trap</span>
+                                <span class="trend-tag"><i class="bi bi-fire"></i> Reggaeton 2025</span>
+                                <span class="trend-tag">Drill UK</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search Overlay and Tags moved outside of hidden .navbar-search -->
+                    <!-- Search Overlay Backdrop -->
+                    <div id="search-overlay"></div>
+
+                    <!-- Active Tags Container (New) -->
+                    <div id="active-search-tags"></div>
+
+                    <div class="navbar-right">
+
+                        <!-- 1. CURRENCY (Always Visible) -->
+                        <div class="currency-dropdown" style="position: relative;">
+                            <button id="currency-toggle-btn" onclick="toggleCurrency(event)" class="nav-text-btn"
+                                style="background:none; border:none; color:#bbb; font-size:0.8rem; font-weight:600; cursor:pointer; padding:6px 8px; display:flex; align-items:center; gap:4px; outline:none; transition: all 0.2s;">
+                                <span id="current-currency">PEN</span> <i class="bi bi-caret-down-fill"
+                                    style="font-size:0.6rem;"></i>
+                            </button>
+                            <div id="currency-menu"
+                                style="position: absolute; top: 100%; left: 0; background: #141414; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 4px; display: none; flex-direction: column; min-width: 80px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 1005;">
+                                <div onclick="setCurrency('PEN')" class="currency-item"
+                                    style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+                                    PEN</div>
+                                <div onclick="setCurrency('USD')" class="currency-item"
+                                    style="padding:6px 12px; font-size:0.8rem; color:#ccc; cursor:pointer; border-radius:4px;">
+                                    USD</div>
+                            </div>
+                        </div>
+
+                        <!-- 2. CART (Always Visible) -->
+                        <a href="#" class="nav-icon-btn" title="Carrito" data-label="Carrito"
+                            onclick="toggleCartPanel(event)">
+                            <i class="bi bi-cart3"></i>
+                            <span id="cart-count-badge" class="cart-label-count" style="display:none;">0</span>
+                        </a>
+
+                        <!-- 3. LOGGED IN ACTIONS (Hidden by default) -->
+                        <div id="nav-auth-section" style="display: flex; align-items: center; gap: 0.5rem;">
+
+                            <!-- NOTIFICACIONES -->
+                            <div class="notification-dropdown">
+                                <button class="nav-icon-btn" onclick="toggleNotificationDropdown(event)"
+                                    data-label="Notificaciones" style="user-select: none;"
+                                    onselectstart="return false;">
+                                    <i class="bi bi-bell"></i>
+                                    <span class="notification-badge" id="notification-badge"
+                                        style="display:none;">0</span>
+                                </button>
+                                <div class="notification-menu" id="notification-menu">
+                                    <div class="notification-header"
+                                        style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #222;">
+                                        <h4 style="margin: 0; font-size: 0.95rem; font-weight: 600; color: #fff;">
+                                            Notificaciones
+                                        </h4>
+                                        <a href="/notificaciones.html" class="notif-view-all">Ver todos</a>
+                                    </div>
+                                    <div id="notification-list" style="max-height: 400px; overflow-y: auto;">
+                                        <div class="notif-empty"
+                                            style="text-align: center; color: #fff; padding: 40px 20px;">
+                                            <div style="font-size: 2rem; margin-bottom: 16px; color: #666;"><i
+                                                    class="bi bi-bell"></i></div>
+                                            <h4 style="margin-bottom: 8px; font-size: 0.9rem; font-weight: 500;">
+                                                Cargando...
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- USER PROFILE -->
+                            <div class="user-dropdown">
+                                <div class="user-trigger" onclick="toggleUserDropdown(event)" style="cursor: pointer;">
+                                    <div id="user-avatar-display" class="user-avatar-placeholder">W</div>
+                                </div>
+                                <div class="user-dropdown-menu" style="width: 380px;">
+                                    <div class="user-dropdown-header"
+                                        onclick="window.location.href='/perfil-publico.html'"
+                                        style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background-color: #232323; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px 16px; margin-bottom: 12px; cursor: pointer; transition: background-color 0.2s; user-select: none;"
+                                        onmouseover="this.style.backgroundColor='#2a2a2a'"
+                                        onmouseout="this.style.backgroundColor='#232323'">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div class="user-dropdown-avatar-lg"
+                                                style="width: 48px; height: 48px; font-size: 1.2rem; border-radius: 50%;">
+                                                W
+                                            </div>
+                                            <div style="display: flex; flex-direction: column;">
+                                                <h4 id="dropdown-username"
+                                                    style="margin: 0; font-size: 1rem; color: #fff; font-weight: 600;">
+                                                    Willie
+                                                    Inspired</h4>
+                                                <span style="color: #999; font-size: 0.85rem;">0 Créditos</span>
+                                            </div>
+                                        </div>
+                                        <a href="/cuenta/planes.html" class="btn-subscribe-sm"
+                                            onclick="event.stopPropagation();"
+                                            style="padding: 6px 12px; font-size: 0.8rem;">
+                                            <i class="bi bi-plus-circle-fill"></i> Suscribirse
+                                        </a>
+                                    </div>
+
+                                    <div class="w-grid">
+                                        <a href="/cuenta/mis-kits" class="w-grid-item auth-protected"><i class="fas fa-folder-open"></i><span>Catálogo</span></a>
+                                        <a href="/mis-compras.html" class="w-grid-item auth-protected"><i
+                                                class="fas fa-layer-group"></i><span>Compras</span></a>
+                                        <a href="/mensajes.html" class="w-grid-item auth-protected"><i
+                                                class="fas fa-envelope"></i><span>Mensajes</span></a>
+                                    </div>
+
+                                    <!-- LIST -->
+                                    <a href="/favoritos.html" class="w-list-item"><i class="fas fa-heart"></i> Mis
+                                        Favoritos</a>
+                                    <a href="/gift-cards.html" class="w-list-item"><i class="fas fa-gift"></i> Gift
+                                        Cards</a>
+                                    <a href="/historial.html" class="w-list-item"><i class="fas fa-history"></i>
+                                        Historial</a>
+                                    <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 8px 0;"></div>
+                                    <a href="/account-settings.html" class="w-list-item"><i
+                                            class="fas fa-sliders-h"></i>
+                                        Configuración</a>
+                                    <a href="/ayuda.html" class="w-list-item"><i class="fas fa-question-circle"></i>
+                                        Centro
+                                        de
+                                        Ayuda</a>
+                                    <a href="#" id="navbar-logout-btn" class="w-list-item"
+                                        style="color: #ef4444; margin-top: 8px;">
+                                        <i class="fas fa-sign-out-alt" style="color: #ef4444;"></i> Cerrar Sesión
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- UPLOAD BUTTON -->
+                            <a href="/cuenta/subir-kit.html" target=_blank class="btn-upload"><i
+                                    class="fas fa-cloud-upload-alt"></i>
+                                Subir</a>
+                        </div>
+
+                        <!-- 4. GUEST ACTIONS (Shown when Logged Out) -->
+                        <div id="nav-guest-section" style="display: none; align-items: center; gap: 0.5rem;">
+                            <!-- Separtor -->
+                            <div style="width:1px; height:24px; background:rgba(255,255,255,0.1); margin:0 4px;"></div>
+                            <a href="/pages/login.html" class="navbar-login-link">Iniciar Sesión</a>
+                            <a href="/pages/register.html" class="btn-join">Únete <i
+                                    class="bi bi-rocket-takeoff"></i></a>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOBILE SEARCH BAR (below navbar, mobile only) -->
+        <div class="mobile-search-wrapper" id="mobile-search-wrapper">
+            <div class="mobile-search-inner">
+                <i class="bi bi-search"></i>
+                <input type="text" id="mobileSearchInput" placeholder="Buscar 'trap' o 'drill'...">
+            </div>
+        </div>
+    </header>
+
+    <main class="contact-page-wrapper">
+        <!-- Hero Section -->
+        <div class="hero-help">
+            <div class="hero-help-content">
+                <h1>¿En qué podemos ayudarte?</h1>
+                <div class="help-search-box" style="position: relative;">
+                    <input type="text" id="helpSearchInput" placeholder="Busca preguntas frecuentes (ej. 'pagos')..."
+                        autocomplete="off">
+                    <button onclick="performSearch(document.getElementById('helpSearchInput').value)">Buscar</button>
+
+                    <!-- Dropdown -->
+                    <div class="search-suggestions-container" id="search-suggestions">
+                        <!-- JS injects suggestions here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overlapping Cards Section -->
+        <div class="help-cards-wrapper">
+            <div class="container-inner">
+                <div class="help-cards">
+                    <!-- Card 1 -->
+                    <div class="help-card-new">
+                        <div class="icon-circle icon-blue"><i class="bi bi-display"></i></div>
+                        <h3>Para Compradores</h3>
+                        <p>Empieza aquí si compras beats o kits en OFFSZN.</p>
+                        <a href="javascript:void(0);" onclick="performSearch('Para Compradores')"
+                            class="card-btn-solid">Ver tutoriales <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="help-card-new">
+                        <div class="icon-circle icon-green"><i class="bi bi-cpu"></i></div>
+                        <h3>Para Vendedores</h3>
+                        <p>Aprende a vender, subir beats y configurar tu perfil profesional.</p>
+                        <a href="javascript:void(0);" onclick="performSearch('Para Vendedores')"
+                            class="card-btn-outline">Ver guías <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="help-card-new">
+                        <div class="icon-circle icon-red"><i class="bi bi-cursor-fill"></i></div>
+                        <h3>Abrir un Ticket</h3>
+                        <p>¿Tienes una pregunta que no encuentras? ¡Contáctanos directamente!</p>
+                        <a href="#" onclick="handleTicketClick(event)" class="card-btn-outline">Crear ticket <i
+                                class="bi bi-chat-dots"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Knowledge Base Section -->
+        <section class="knowledge-section">
+            <div class="container-inner">
+                <h2>Base de Conocimientos</h2>
+                <div class="kb-grid" id="kbGrid">
+                    <a href="javascript:void(0);" onclick="performSearch('Para Compradores')" class="kb-item"><i
+                            class="bi bi-cart3"></i> Para Compradores</a>
+                    <a href="javascript:void(0);" onclick="performSearch('Para Vendedores')" class="kb-item"><i
+                            class="bi bi-shop"></i> Para Productores</a>
+                    <a href="javascript:void(0);" onclick="performSearch('Perfil y Suscripción')" class="kb-item"><i
+                            class="bi bi-phone"></i> Perfil y Suscripción</a>
+                    <a href="javascript:void(0);" onclick="performSearch('subir beats')" class="kb-item"><i
+                            class="bi bi-music-note"></i> Publicación de Beats</a>
+                    <a href="javascript:void(0);" onclick="performSearch('YouTube')" class="kb-item"><i
+                            class="bi bi-youtube"></i> Cargas a YouTube</a>
+                    <a href="javascript:void(0);" onclick="performSearch('Pagos y Retiros')" class="kb-item"><i
+                            class="bi bi-cash-stack"></i> Pagos y Retiros</a>
+                    <a href="javascript:void(0);" onclick="performSearch('licencias')" class="kb-item"><i
+                            class="bi bi-shield-check"></i> Licencias y Derechos</a>
+                    <a href="javascript:void(0);" onclick="performSearch('cancelo')" class="kb-item"><i
+                            class="bi bi-box-arrow-right"></i> Cancelación de Plan</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search Results Section (Hidden initially) -->
+        <section class="search-results-section" id="search-results-section" style="display: none;">
+            <div class="container-inner results-layout">
+
+                <!-- Sidebar -->
+                <aside class="results-sidebar">
+                    <h3>Por Categoría</h3>
+                    <ul id="category-filter-list">
+                        <!-- JS populates this -->
+                    </ul>
+                </aside>
+
+                <!-- Main Results -->
+                <div class="results-main">
+                    <h2 id="results-count-title">0 resultados para "..."</h2>
+                    <div class="results-list" id="results-list-container">
+                        <!-- JS populates this -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Dark Banner Section -->
+        <section class="support-banner-section" id="support-banner">
+            <div class="container-inner">
+                <div class="support-banner">
+                    <div class="banner-left">
+                        <h2>¿No encuentras lo que buscas?</h2>
+                    </div>
+                    <div class="banner-right">
+                        <p>El equipo de soporte de OFFSZN está listo para ayudarte. El tiempo de respuesta varía según
+                            el tipo de consulta y la severidad del problema.</p>
+                        <div class="banner-actions">
+                            <a href="/cuenta/planes.html" class="btn-dark-outline"
+                                title="Exclusivo para usuarios PRO">Soporte prioritario</a>
+                            <a href="#" onclick="handleTicketClick(event)" class="btn-text">Abrir ticket <i
+                                    class="bi bi-arrow-up-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Ticket Modal Overlay -->
+    <div class="ticket-modal-overlay" id="ticketModalOverlay" style="display:none;">
+        <div class="ticket-modal">
+            <button class="ticket-modal-close" onclick="closeTicketModal()"><i class="bi bi-x"></i></button>
+
+            <!-- Not logged in state -->
+            <div id="ticket-guest-state" style="display:none; text-align:center;">
+                <i class="bi bi-person-lock" style="font-size: 3rem; margin-bottom: 1rem; color: #ff3366;"></i>
+                <h3 style="margin-bottom: 0.5rem; color: #fff;">Identifícate para continuar</h3>
+                <p style="color: #aaa; margin-bottom: 1.5rem;">Para brindarte una mejor asistencia y darle seguimiento a
+                    tu caso, necesitas iniciar sesión o crear una cuenta en OFFSZN.</p>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <a href="/pages/login.html" class="card-btn-outline"
+                        style="flex: 1; justify-content: center; border-color: rgba(255,255,255,0.2);">Iniciar
+                        sesión</a>
+                    <a href="/pages/register.html" class="card-btn-solid"
+                        style="flex: 1; justify-content: center;">Únete gratis</a>
+                </div>
+            </div>
+
+            <!-- Logged in state -->
+            <div id="ticket-auth-state" style="display:none;">
+                <h3 style="margin-bottom: 0.5rem; color: #fff;"><i class="bi bi-ticket-detailed"></i> Abrir Ticket de
+                    Soporte</h3>
+                <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 1.5rem;">Cuéntanos qué sucede. Nuestro equipo
+                    de atención al creador lo revisará de inmediato.</p>
+                <form id="ticketForm" onsubmit="submitTicket(event)">
+                    <div style="margin-bottom: 1rem;">
+                        <label
+                            style="display:block; font-size: 0.85rem; color:#888; margin-bottom: 0.4rem; font-weight: 500;">Asunto</label>
+                        <input type="text" id="ticketSubject" class="ticket-input" required
+                            placeholder="Ej. Error al subir un beat a mi perfil">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <label
+                            style="display:block; font-size: 0.85rem; color:#888; margin-bottom: 0.4rem; font-weight: 500;">Categoría
+                            de Ayuda</label>
+                        <select id="ticketCategory" class="ticket-select" required>
+                            <option value="pagos">Pagos y Facturación</option>
+                            <option value="compras">Compras y Descargas</option>
+                            <option value="cuenta">Mi Cuenta / Perfil</option>
+                            <option value="publicacion">Publicación y Studio</option>
+                            <option value="otro">Consultas Generales</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label
+                            style="display:block; font-size: 0.85rem; color:#888; margin-bottom: 0.4rem; font-weight: 500;">Mensaje
+                            detallado</label>
+                        <textarea id="ticketMessage" class="ticket-textarea" rows="4" required
+                            placeholder="Explica tu caso con el mayor detalle posible y adjunta cualquier error específico..."
+                            style="resize: vertical;"></textarea>
+                    </div>
+                    <button type="submit" class="card-btn-solid"
+                        style="width: 100%; justify-content: center; font-weight: 600; padding: 12px;">Enviar consulta
+                        <i class="bi bi-send"></i></button>
+                </form>
+                <div id="ticket-success" style="display:none; text-align:center; padding: 1.5rem 0 0.5rem;">
+                    <i class="bi bi-plug" style="font-size: 3.5rem; color: #00ea77; margin-bottom: 1rem;"></i>
+                    <h3 style="margin-bottom: 0.5rem; color: #fff;">¡Mensaje Enviado!</h3>
+                    <p style="color: #aaa; font-size: 0.95rem;">Hemos recibido tu ticket correctamente. Nuestro equipo
+                        lo revisará y te contactaremos pronto a través de tu correo electrónico asociado a la cuenta.
+                    </p>
+                    <button onclick="closeTicketModal()" class="card-btn-outline"
+                        style="margin-top: 1.5rem; width: 100%; justify-content: center; border-color: rgba(255,255,255,0.2);">Entendido</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ==================== SIDE PANELS (INJECTED MANUALLY FOR ANALYSIS) ==================== -->
+
+    <!-- BACKDROP -->
+    <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
+
+    <!-- CART SIDE PANEL -->
+    <div class="side-panel" id="globalCartPanel">
+        <div class="panel-header">
+            <div class="panel-title" style="display: flex; align-items: center; gap: 8px;">
+                <div style="position: relative; display: flex;">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cart-panel-count" class="notification-badge"
+                        style="position: absolute; top: -6px; right: -6px; display: flex;">1</span>
+                </div>
+                Tu Carrito
+            </div>
+            <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
+        </div>
+        <!-- ID CHANGED: globalCartItems -> cart-items-container to match script/cart.js -->
+        <div class="panel-content" id="cart-items-container">
+            <div style="text-align:center; padding: 40px 0; color: #666;">
+                <i class="fas fa-shopping-basket" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                <p>Tu carrito está vacío</p>
+            </div>
+        </div>
+        <!-- ID ADDED: cart-summary (needed by script) -->
+        <div class="cart-total-section" id="cart-summary">
+            <div style="display:flex; justify-content:space-between; margin-bottom:1rem; color:#fff; font-weight:700;">
+                <span>Total:</span>
+                <!-- ID CHANGED for JS compatibility -->
+                <span id="cart-total-price">$0.00</span>
+            </div>
+            <!-- ID CHANGED for JS compatibility -->
+            <button class="btn-checkout-global" id="cart-checkout-btn"
+                onclick="window.location.href='/pages/checkout.html'">
+                <i class="bi bi-lock-fill" style="margin-right:6px;"></i> Ir a Pagar Seguro
+            </button>
+
+            <!-- TRUST BADGES -->
+            <div
+                style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
+                    METODOS DE PAGO SEGUROS</p>
+
+                <div style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%); transition: filter 0.3s;"
+                    onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(100%)'">
+                    <!-- Global -->
+                    <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
+
+                    <!-- Local (Custom Badges) -->
+                    <div
+                        style="background: #742284; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        YAPE</div>
+                    <div
+                        style="background: #00d3de; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        PLIN</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/script/cart.js"></script>
+    <script src="/script/notifications.js"></script>
+    <script src="/script/avatar-manager.js"></script>
+    <script src="/script/navbar.js?v=20" type="module"></script>
+
+    <!-- ==================== FOOTER ==================== -->
+    <!-- Este div es el placeholder donde se inyectará el componente de footer (Desktop/Mobile) -->
+    <!-- Se carga mediante /script/footer.js -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Cargar base de datos del centro de ayuda -->
+    <script src="/script/data/help-articles.js?v=1"></script>
+
+    <script>
+        const articles = window.helpArticles || [];
+
+        const searchInput = document.getElementById('helpSearchInput');
+        const suggestionsContainer = document.getElementById('search-suggestions');
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+
+            if (query.length === 0) {
+                suggestionsContainer.style.display = 'none';
+                return;
+            }
+
+            const uniqueTitles = [...new Set(articles.map(a => a.title))];
+            const filtered = uniqueTitles.filter(title => title.toLowerCase().includes(query)).slice(0, 5);
+
+            suggestionsContainer.innerHTML = '';
+
+            if (filtered.length > 0) {
+                filtered.forEach(title => {
+                    const a = document.createElement('a');
+                    a.href = "javascript:void(0)";
+                    a.className = 'suggestion-item';
+                    a.onclick = () => performSearch(title);
+                    a.innerHTML = `<i class="bi bi-search suggestion-icon"></i> <span>${title}</span>`;
+                    suggestionsContainer.appendChild(a);
+                });
+                const searchAll = document.createElement('div');
+                searchAll.className = 'suggestion-item';
+                searchAll.style.cursor = 'pointer';
+                searchAll.style.color = 'var(--primary-blue)';
+                searchAll.style.fontWeight = '600';
+                searchAll.onclick = () => performSearch(query);
+                searchAll.innerHTML = `<i class="bi bi-arrow-right-circle suggestion-icon"></i> <span>Ver todos los resultados para "${query}"</span>`;
+                suggestionsContainer.appendChild(searchAll);
+            } else {
+                suggestionsContainer.innerHTML = `<div class="suggestion-empty">No encontramos artículos para "${query}"</div>`;
+            }
+
+            suggestionsContainer.style.display = 'block';
+        });
+
+        function performSearch(query, updateUrl = true) {
+            query = query.trim();
+            if (!query) return;
+
+            searchInput.value = query; // Fill input
+            suggestionsContainer.style.display = 'none'; // hide dropdown
+
+            const mainContent1 = document.querySelector('.help-cards-wrapper');
+            const mainContent2 = document.querySelector('.knowledge-section');
+            const resultsSection = document.getElementById('search-results-section');
+            const supportSection = document.querySelector('.support-banner-section');
+
+            // Hide standard content
+            mainContent1.style.display = 'none';
+            mainContent2.style.display = 'none';
+            if (supportSection) supportSection.style.display = 'none';
+
+            // Show results section
+            resultsSection.style.display = 'block';
+
+            const lWord = query.toLowerCase();
+            const filtered = articles.filter(art =>
+                art.title.toLowerCase().includes(lWord) ||
+                art.snippet.toLowerCase().includes(lWord) ||
+                art.category.toLowerCase().includes(lWord)
+            );
+
+            window.currentFilteredArticles = filtered;
+            window.currentSearchQuery = query;
+
+            renderResults(filtered, query);
+            renderCategories(filtered, 'Todas');
+
+            if (updateUrl) {
+                const newUrl = new URL(window.location.href);
+                newUrl.searchParams.set('q', query);
+                window.history.pushState({ view: 'search', query }, '', newUrl);
+            }
+        }
+
+        // Ruteo en cliente para historial atras/adelante
+        window.addEventListener('popstate', (event) => {
+            const params = new URLSearchParams(window.location.search);
+            const query = params.get('q');
+            if (query) {
+                performSearch(query, false);
+            } else {
+                // Volver al Home
+                document.querySelector('.help-cards-wrapper').style.display = 'block';
+                document.querySelector('.knowledge-section').style.display = 'block';
+                const supportSection = document.querySelector('.support-banner-section');
+                if (supportSection) supportSection.style.display = 'block';
+                document.getElementById('search-results-section').style.display = 'none';
+                searchInput.value = '';
+            }
+        });
+
+        // Initialize state check
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('q')) {
+                performSearch(params.get('q'), false);
+            }
+        });
+
+        function renderResults(filteredArticles, query) {
+            const titleEl = document.getElementById('results-count-title');
+            const listEl = document.getElementById('results-list-container');
+
+            titleEl.innerHTML = `${filteredArticles.length} resultados para "${query}"`;
+
+            if (filteredArticles.length === 0) {
+                listEl.innerHTML = '<p style="color:#a1a1aa; padding: 2rem 0; font-size: 1.1rem;">No se encontraron artículos que coincidan con tu búsqueda. Intenta con otras palabras clave.</p>';
+                return;
+            }
+
+            const highlight = (text, word) => {
+                if (!word) return text;
+                const safeWord = word.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
+                const regex = new RegExp(`(${safeWord})`, 'gi');
+                return text.replace(regex, '<span class="highlight-text">$1</span>');
+            };
+
+            const html = filteredArticles.map(art => `
+          <div class="result-card">
+            <a href="${art.link}" class="result-title">${highlight(art.title, query)}</a>
+            <div class="result-breadcrumbs">${art.category} > ${art.subcategory}</div>
+            <div class="result-snippet">${highlight(art.snippet, query)}</div>
+            <div class="result-meta">
+              <span>${art.author}</span> &bull; <span>${art.date}</span> &bull; <span>0 comentarios</span>
+            </div>
+          </div>
+        `).join('');
+
+            listEl.innerHTML = html;
+        }
+
+        function filterByCategory(cat) {
+            let arts = window.currentFilteredArticles;
+            if (cat !== 'Todas') {
+                arts = arts.filter(a => a.category === cat);
+            }
+            renderResults(arts, window.currentSearchQuery);
+            renderCategories(window.currentFilteredArticles, cat);
+        }
+
+        function renderCategories(baseArticles, activeCategory) {
+            const catList = document.getElementById('category-filter-list');
+            const counts = { 'Todas': baseArticles.length };
+
+            baseArticles.forEach(art => {
+                counts[art.category] = (counts[art.category] || 0) + 1;
+            });
+
+            let html = `<li class="${activeCategory === 'Todas' ? 'active' : ''}" onclick="filterByCategory('Todas')">Todas las categorías <span>(${counts['Todas']})</span></li>`;
+
+            Object.keys(counts).forEach(cat => {
+                if (cat === 'Todas') return;
+                html += `<li class="${activeCategory === cat ? 'active' : ''}" onclick="filterByCategory('${cat}')">${cat} <span>(${counts[cat]})</span></li>`;
+            });
+
+            catList.innerHTML = html;
+        }
+
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.help-search-box')) {
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+
+        // Show dropdown again if focused and has value
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.value.trim().length > 0) {
+                suggestionsContainer.style.display = 'block';
+            }
+        });
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                performSearch(searchInput.value);
+            }
+        });
+
+        // TICKET MODAL LOGIC
+        async function handleTicketClick(e) {
+            e.preventDefault();
+            const overlay = document.getElementById('ticketModalOverlay');
+            const guestState = document.getElementById('ticket-guest-state');
+            const authState = document.getElementById('ticket-auth-state');
+            const successState = document.getElementById('ticket-success');
+            const formState = document.getElementById('ticketForm');
+
+            overlay.style.display = 'flex';
+            // Force reflow before adding opacity transition class
+            void overlay.offsetWidth;
+            overlay.classList.add('active');
+
+            let isLoggedIn = false;
+            if (window.supabaseClient) {
+                const { data } = await window.supabaseClient.auth.getSession();
+                if (data && data.session) {
+                    isLoggedIn = true;
+                }
+            }
+
+            if (isLoggedIn) {
+                guestState.style.display = 'none';
+                authState.style.display = 'block';
+                formState.style.display = 'block';
+                successState.style.display = 'none';
+                formState.reset();
+            } else {
+                authState.style.display = 'none';
+                guestState.style.display = 'block';
+            }
+        }
+
+        function closeTicketModal() {
+            const overlay = document.getElementById('ticketModalOverlay');
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.style.display = 'none', 300);
+        }
+
+        function submitTicket(e) {
+            e.preventDefault();
+            // Here you would connect to Supabase database directly or generic API
+            document.getElementById('ticketForm').style.display = 'none';
+            document.getElementById('ticket-success').style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>

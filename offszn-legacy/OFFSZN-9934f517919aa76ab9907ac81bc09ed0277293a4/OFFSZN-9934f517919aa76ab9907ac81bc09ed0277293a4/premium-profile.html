@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="es-419">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{USER_NICKNAME}} | OFFSZN Premium</title>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  
+  <!-- Core Scripts -->
+  <script src="/env.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/script/config.js"></script>
+  <script src="/script/auth-utils.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  
+  <!-- Global Nav/Footer Styles (same as playlist) -->
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/footer.css">
+  <link rel="stylesheet" href="/css/global-overlays.css">
+
+  <style>
+    /* ========== PREMIUM AESTHETIC VARIABLES ========== */
+    :root {
+      --bg: #000000;
+      --fg: #ffffff;
+      --text-secondary: #888888;
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-hover: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --accent: #fff;
+    }
+    
+    body {
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: 'Geist', sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ========== INITIAL LOADER ========== */
+    #initial-loader {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      transition: opacity 0.5s ease, visibility 0.5s;
+    }
+    
+    .loader-icon {
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ========== NAVBAR PREMIUM ========== */
+    .prof-nav {
+      background-color: transparent !important;
+      backdrop-filter: none !important;
+      border-bottom: none !important;
+      position: fixed !important;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+      transition: all 0.3s ease !important;
+    }
+    
+    .prof-nav.scrolled {
+      background-color: rgba(0, 0, 0, 0.8) !important;
+      backdrop-filter: blur(20px) !important;
+      border-bottom: 1px solid var(--glass-border) !important;
+    }
+
+    /* ========== HERO SECTION ========== */
+    .hero {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    #particles-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .hero-title {
+      font-size: clamp(3rem, 10vw, 8rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.05em;
+      margin: 0 0 16px 0;
+      color: #fff;
+      text-transform: uppercase;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--text-secondary);
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* ========== TABS SECTION ========== */
+    .tabs-section {
+      max-width: 1200px;
+      margin: 0 auto 120px;
+      padding: 0 24px;
+    }
+    
+    .tabs-header {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-bottom: 48px;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 16px;
+    }
+    
+    .tab-trigger {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      padding: 8px 0;
+      position: relative;
+      transition: color 0.3s;
+    }
+    
+    .tab-trigger:hover { color: #fff; }
+    
+    .tab-trigger.active {
+      color: #fff;
+    }
+    
+    .tab-trigger.active::after {
+      content: '';
+      position: absolute;
+      bottom: -17px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: #fff;
+    }
+    
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 32px;
+    }
+
+    /* ========== PRODUCT CARD (EXPLORE STYLE) ========== */
+    .product-card-premium {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+    
+    .product-card-premium:hover {
+      background: var(--glass-hover);
+      transform: translateY(-4px);
+      border-color: rgba(255,255,255,0.2);
+    }
+    
+    .card-img-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1/1;
+      background: #111;
+    }
+    
+    .card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .quick-play-btn {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #fff;
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      border: none;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all 0.3s ease;
+    }
+    
+    .product-card-premium:hover .quick-play-btn {
+      opacity: 1;
+      transform: scale(1);
+    }
+    
+    .card-info {
+      padding: 16px;
+    }
+    
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .card-price {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* ========== LICENSES (BENTO) ========== */
+    .pricing-section {
+      max-width: 1200px;
+      margin: 0 auto 120px;
+      padding: 0 24px;
+    }
+    
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    
+    @media (max-width: 900px) {
+      .pricing-grid { grid-template-columns: 1fr; }
+    }
+    
+    .pricing-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s;
+    }
+    
+    .pricing-card:hover {
+      background: var(--glass-hover);
+      border-color: rgba(255,255,255,0.15);
+    }
+    
+    .pricing-card.popular {
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.2);
+      transform: scale(1.02);
+    }
+    
+    .price-tag {
+      font-size: 3rem;
+      font-weight: 800;
+      margin: 20px 0;
+    }
+    
+    .pricing-features {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 40px 0;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .pricing-features li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .pricing-features i { color: #fff; font-size: 1rem; }
+
+    .playlist-section {
+      max-width: 1000px;
+      margin: 0 auto 120px;
+      padding: 0 24px;
+    }
+    
+    .playlist-container {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      overflow: hidden;
+    }
+    
+    .track-item {
+      display: flex;
+      align-items: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--glass-border);
+      transition: background 0.3s;
+      cursor: pointer;
+    }
+    
+    .track-item:last-child { border-bottom: none; }
+    
+    .track-item:hover { background: var(--glass-hover); }
+    
+    .track-num { width: 40px; color: var(--text-secondary); font-size: 0.9rem; }
+    
+    .track-img { width: 48px; height: 48px; border-radius: 4px; object-fit: cover; margin-right: 16px; }
+    
+    .track-info { flex: 1; }
+    
+    .track-title { font-weight: 600; font-size: 1rem; }
+    
+    .track-meta { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+    
+    .track-action { color: #fff; font-size: 1.2rem; opacity: 0.5; transition: opacity 0.3s; }
+    
+    .track-item:hover .track-action { opacity: 1; }
+
+    /* ========== FAQ ========== */
+    .faq-section {
+      max-width: 800px;
+      margin: 0 auto 120px;
+      padding: 0 24px;
+    }
+    
+    .faq-item {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    
+    .faq-question {
+      width: 100%;
+      padding: 24px;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      color: var(--text-secondary);
+      padding: 0 24px;
+    }
+    
+    .faq-item.active .faq-answer {
+      max-height: 200px;
+      padding-bottom: 24px;
+    }
+    
+    .faq-item.active .bi-plus { transform: rotate(45deg); }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+    
+    .section-header h2 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 16px;
+      letter-spacing: -0.03em;
+    }
+    
+    .section-header p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- LOADER -->
+  <div id="initial-loader">
+    <div class="loader-icon"></div>
+  </div>
+
+  <!-- NAVBAR -->
+  <div id="prof-navbar-container"></div>
+
+  <main id="app">
+    <!-- HERO -->
+    <section class="hero">
+      <canvas id="particles-bg"></canvas>
+      <div class="hero-content" id="hero-content">
+        <h1 class="hero-title">{{USER_NICKNAME}}</h1>
+        <p class="hero-subtitle">{{USER_BIO}}</p>
+      </div>
+    </section>
+
+    <!-- PRODUCTS TABS -->
+    <section class="tabs-section" id="products-section" style="display: none;">
+      <div class="tabs-header">
+        <button class="tab-trigger active" onclick="switchTab('BEATS')">BEATS</button>
+        <button class="tab-trigger" onclick="switchTab('DRUMKITS')">DRUMKITS</button>
+        <button class="tab-trigger" onclick="switchTab('LOOPKITS')">LOOPKITS</button>
+        <button class="tab-trigger" onclick="switchTab('PRESETS')">PRESETS</button>
+      </div>
+      <div id="products-grid" class="products-grid"></div>
+    </section>
+
+    <!-- LICENSES -->
+    <section class="pricing-section" id="licencias-section" style="display: none;">
+      <div class="section-header">
+        <h2>Licencias</h2>
+        <p>Derechos de uso profesional para tu carrera.</p>
+      </div>
+      <div class="pricing-grid" id="licenses-grid"></div>
+    </section>
+
+    <!-- PLAYLIST SECTION -->
+    <section class="playlist-section" id="playlist-section" style="display: none;">
+      <div class="section-header">
+        <h2>Playlist Destacada</h2>
+        <p>Escucha mis mejores producciones en un solo lugar.</p>
+      </div>
+      <div class="playlist-container" id="playlist-grid"></div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq-section">
+      <div class="section-header">
+        <h2>Preguntas Frecuentes</h2>
+      </div>
+      <div id="faq-container">
+        <!-- FAQ Items -->
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            ¿Cómo recibo mis archivos después de la compra?
+            <i class="bi bi-plus"></i>
+          </button>
+          <div class="faq-answer">
+            Inmediatamente después del pago, recibirás un correo con los enlaces de descarga directa de tus archivos y el contrato de licencia.
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            ¿Qué incluye cada licencia?
+            <i class="bi bi-plus"></i>
+          </button>
+          <div class="faq-answer">
+            Dependiendo del nivel, recibes desde el MP3 hasta los Stems (pistas por separado) para una mezcla profesional.
+          </div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-question" onclick="toggleFaq(this)">
+            ¿Puedo subir mi canción a Spotify?
+            <i class="bi bi-plus"></i>
+          </button>
+          <div class="faq-answer">
+            Sí, todas las licencias permiten la distribución en plataformas digitales dentro de los límites de streams especificados.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <div id="prof-footer-container"></div>
+
+  <script>
+    let currentCategory = 'BEATS';
+    let allProducts = [];
+    const userId = window.OFFSZN_USER_ID;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      AuthUtils.initSupabase();
+      const supabase = window.supabaseClient;
+
+      // 1. Cargar Datos en paralelo
+      try {
+        const [userRes, productsRes] = await Promise.all([
+          supabase.from('users').select('*').eq('id', userId).single(),
+          supabase.from('products').select('*').eq('producer_id', userId).eq('visibility', 'public').order('created_at', { ascending: false })
+        ]);
+
+        if (userRes.data) {
+          const user = userRes.data;
+          renderLicenses(user.license_settings);
+          // Iniciar Nav y Footer del Loader de Perfiles
+          if (window.ProfLoader) window.ProfLoader.init(user);
+        }
+
+        if (productsRes.data) {
+          allProducts = productsRes.data;
+          if (allProducts.length > 0) {
+            document.getElementById('products-section').style.display = 'block';
+            switchTab('BEATS');
+            renderPlaylist(allProducts.filter(p => (p.product_type || '').toUpperCase() === 'BEAT'));
+          }
+        }
+
+        // 2. Iniciar Partículas
+        initParticles();
+
+        // 3. Quitar Loader y Animación Hero
+        setTimeout(() => {
+          document.getElementById('initial-loader').style.opacity = '0';
+          setTimeout(() => {
+            document.getElementById('initial-loader').style.visibility = 'hidden';
+            gsap.to('#hero-content', { opacity: 1, y: 0, duration: 1, ease: 'power3.out' });
+          }, 500);
+        }, 800);
+
+      } catch (err) {
+        console.error("Error loading data:", err);
+      }
+    });
+
+    function switchTab(cat) {
+      currentCategory = cat;
+      
+      // UI Update
+      document.querySelectorAll('.tab-trigger').forEach(t => {
+        t.classList.toggle('active', t.innerText === cat);
+      });
+
+      const grid = document.getElementById('products-grid');
+      const filtered = allProducts.filter(p => {
+        const type = (p.product_type || '').toUpperCase();
+        if (cat === 'BEATS') return type === 'BEAT';
+        if (cat === 'DRUMKITS') return type === 'DRUMKIT';
+        if (cat === 'LOOPKITS') return type === 'LOOPKIT';
+        if (cat === 'PRESETS') return type.includes('PRESET') || type === 'TEMPLATE';
+        return false;
+      }).slice(0, 5); // Limit 5 cards
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">No hay ${cat.toLowerCase()} disponibles aún.</p>`;
+      } else {
+        grid.innerHTML = filtered.map(p => {
+          const img = p.image_url ? (p.image_url.startsWith('http') ? p.image_url : 'https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/' + p.image_url) : '/images/portada-default.png';
+          const link = `/${p.product_type?.toLowerCase() || 'beat'}/${p.public_slug || p.id}`;
+          return `
+            <div class="product-card-premium" onclick="window.location.href='${link}'">
+              <div class="card-img-wrapper">
+                <img src="${img}" class="card-img" alt="${p.name}">
+                <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
+              </div>
+              <div class="card-info">
+                <div class="card-title">${p.name}</div>
+                <div class="card-price">$${p.price_basic || '20'}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function renderLicenses(settings) {
+      const grid = document.getElementById('licenses-grid');
+      const defaults = {
+        basic: { name: 'Basic Lease', price: 20, enabled: true, usage: { streams: '5000', sales: '500' } },
+        premium: { name: 'Premium Lease', price: 50, enabled: true, usage: { streams: '50000', sales: '2000' } },
+        unlimited: { name: 'Unlimited', price: 300, enabled: true, usage: { streams: 'Unlimited', sales: 'Unlimited' } }
+      };
+
+      const finalSettings = settings || defaults;
+      const activeKeys = Object.keys(finalSettings).filter(k => finalSettings[k].enabled);
+
+      if (activeKeys.length > 0) {
+        document.getElementById('licencias-section').style.display = 'block';
+        grid.innerHTML = activeKeys.map((key, i) => {
+          const lic = finalSettings[key];
+          const isPopular = i === 1;
+          return `
+            <div class="pricing-card ${isPopular ? 'popular' : ''}">
+              <div style="font-weight: 700; letter-spacing: 1px; text-transform: uppercase; font-size: 0.75rem;">${lic.name}</div>
+              <div class="price-tag">$${lic.price}</div>
+              <ul class="pricing-features">
+                <li><i class="bi bi-check2"></i> ${lic.usage?.streams || 'Unlimited'} Streams</li>
+                <li><i class="bi bi-check2"></i> ${lic.usage?.sales || 'Unlimited'} Ventas</li>
+                <li><i class="bi bi-check2"></i> Uso Comercial</li>
+              </ul>
+              <button class="pricing-btn" style="margin-top: auto; padding: 16px; border-radius: 100px; background: ${isPopular ? '#fff' : 'transparent'}; color: ${isPopular ? '#000' : '#fff'}; border: 1px solid #fff; font-weight: 700; cursor: pointer;">SELECCIONAR</button>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function toggleFaq(btn) {
+      const item = btn.parentElement;
+      const isActive = item.classList.contains('active');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+      if (!isActive) item.classList.add('active');
+    }
+
+    function initParticles() {
+      const canvas = document.getElementById('particles-bg');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      
+      const resize = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      };
+      
+      window.addEventListener('resize', resize);
+      resize();
+
+      class Particle {
+        constructor() {
+          this.reset();
+        }
+        reset() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.vx = (Math.random() - 0.5) * 0.5;
+          this.vy = (Math.random() - 0.5) * 0.5;
+          this.size = Math.random() * 2;
+        }
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+          if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+        }
+        draw() {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < 60; i++) particles.push(new Particle());
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    // Scroll effect for navbar
+    window.addEventListener('scroll', () => {
+      const nav = document.querySelector('.prof-nav');
+      if (nav) {
+        nav.classList.toggle('scrolled', window.scrollY > 50);
+      }
+    });
+
+    function renderPlaylist(beats) {
+      const container = document.getElementById('playlist-grid');
+      if (beats.length > 0) {
+        document.getElementById('playlist-section').style.display = 'block';
+        container.innerHTML = beats.map((b, i) => {
+          const img = b.image_url ? (b.image_url.startsWith('http') ? b.image_url : 'https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/' + b.image_url) : '/images/portada-default.png';
+          return `
+            <div class="track-item" onclick="window.location.href='/beat/${b.public_slug || b.id}'">
+              <div class="track-num">${i + 1}</div>
+              <img src="${img}" class="track-img">
+              <div class="track-info">
+                <div class="track-title">${b.name}</div>
+                <div class="track-meta">${b.bpm || '--'} BPM • ${b.key || ''}</div>
+              </div>
+              <div class="track-action"><i class="bi bi-play-circle"></i></div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+  </script>
+</body>
+</html>

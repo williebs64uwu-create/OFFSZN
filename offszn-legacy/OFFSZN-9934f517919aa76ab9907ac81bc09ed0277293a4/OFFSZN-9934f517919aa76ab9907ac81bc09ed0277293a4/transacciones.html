@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Transacciones | OFFSZN</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#0a0a0a">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/marketplace.css">
+    <link rel="stylesheet" href="/css/sticky-player.css">
+    <link rel="stylesheet" href="/css/hover-card.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/account-settings.css">
+
+    <!-- Supabase -->
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"
+        integrity="sha384-o2Uz8M8jf3RRbNF9dFLYtjA2ohqUgp6vUxr43Uzvt8MJkkLNvpXvLCUVbWh+cadK"
+        crossorigin="anonymous"></script>
+    <script>
+        window.supabaseClient = null;
+        // Reiniciar Auth después de cargar env.js
+        window.addEventListener('load', () => {
+            if (window.AuthUtils && typeof window.AuthUtils.initSupabase === 'function') {
+                window.AuthUtils.initSupabase();
+            }
+        });
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
+    <style>
+        /* Modal Visibility Fix */
+        .modal-overlay {
+            display: none !important;
+        }
+        .modal-overlay.active {
+            display: flex !important;
+        }
+
+        /* Premium Modal Classes */
+        .modal-content {
+            background: #09090b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            color: #fff;
+            position: relative;
+        }
+        .modal-small {
+            max-width: 480px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-close-modal {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: none;
+            color: #a1a1aa !important;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem !important;
+            transition: all 0.2s;
+        }
+        .btn-close-modal:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: #fff !important;
+        }
+
+        /* Redesign: Transactions Table */
+        .tx-header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 16px;
+        }
+
+        .tx-filter-input {
+            flex: 1;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 16px;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .tx-filter-input:focus {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-export {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-export:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Revised Grid */
+        .tx-grid {
+            display: grid;
+            grid-template-columns: 40px 130px 1fr 100px 100px 50px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tx-table-header {
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            color: #666;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .transaction-item {
+            padding: 14px 20px;
+            background: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background 0.2s;
+        }
+
+        .transaction-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Status Tags */
+        .tr-status {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            width: fit-content;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tr-status.completado {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .tr-status.procesando {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .tr-status.fallado {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .tr-email {
+            font-family: 'Geist', sans-serif;
+            font-size: 0.9rem;
+            color: #a1a1aa;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tr-amount {
+            font-weight: 700;
+            color: #fff;
+            text-align: right;
+            font-size: 0.95rem;
+        }
+
+        .btn-details {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px;
+            transition: color 0.2s;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-details:hover {
+            color: #fff;
+        }
+
+        /* Pagination Footer */
+        .tx-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+            margin-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .tx-selection-summary {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .tx-pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-page {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-page:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-page:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Custom Checkbox */
+        .tx-checkbox {
+            width: 18px;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            position: relative;
+        }
+
+        .tx-checkbox:checked {
+            background: #fff;
+            border-color: #fff;
+        }
+
+        .tx-checkbox:checked::after {
+            content: "\F26E"; /* Bootstrap Icons Check */
+            font-family: "bootstrap-icons";
+            color: #000;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Transaction Details Modal Styles */
+        .tx-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tx-detail-label {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .tx-detail-value {
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Banner (Clickable) -->
+    <a href="/pages/register.html" class="promo-banner logged-out">
+        <span>🎉 <b>OFERTA EXCLUSIVA:</b> REGÍSTRATE Y OBTÉN <b>$5 USD GRATIS</b> EN TU PRIMERA COMPRA <i
+                class="bi bi-arrow-right-short" style="font-size: 1.1em; vertical-align: middle;"></i></span>
+    </a>
+
+    <!-- ==================== DYNAMIC NAVBAR ==================== -->
+    <div id="navbar-placeholder">
+        <div style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;"></div>
+    </div>
+    <script src="/script/load-navbar.js?v=20"></script>
+
+    <main class="settings-container">
+        <!-- Sidebar Navigation -->
+        <aside class="settings-sidebar">
+            <div class="profile-card">
+                <div class="profile-card-avatar" id="sidebarAvatar"></div>
+                <div class="profile-card-name" id="sidebarName"></div>
+                <div class="profile-card-role" id="sidebarRole"></div>
+            </div>
+
+            <!-- Mobile Navigation Trigger -->
+            <div class="settings-mobile-trigger" id="mobileNavTrigger">
+                <div class="trigger-content">
+                    <i class="bi bi-currency-dollar"></i>
+                    <span>Transacciones</span>
+                </div>
+                <i class="bi bi-chevron-down trigger-arrow"></i>
+            </div>
+
+            <nav class="settings-nav" id="settingsNav">
+                <a href="/account-settings.html" class="settings-nav-item">
+                    <i class="bi bi-person-gear"></i> Ajustes de cuenta
+                </a>
+                <a href="/preferencias.html" class="settings-nav-item">
+                    <i class="bi bi-sliders"></i> Preferencias
+                </a>
+                <a href="/perfilpro.html" class="settings-nav-item">
+                    <i class="bi bi-person-badge"></i> Perfil
+                </a>
+                <a href="/transacciones.html" class="settings-nav-item active">
+                    <i class="bi bi-currency-dollar"></i> Transacciones
+                </a>
+                <a href="/siguiendo.html" class="settings-nav-item">
+                    <i class="bi bi-people"></i> Siguiendo
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Settings Content -->
+        <section class="settings-main">
+            <div class="settings-section">
+                <h1 class="settings-section-title">Transacciones y Cobros</h1>
+
+                <!-- Payment Configuration Section -->
+                <div class="settings-group">
+                    <h2 class="settings-group-title"><i class="bi bi-paypal" style="color: #0070BA;"></i> Configuración
+                        de Cobros</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px;">
+                        Configura tus métodos de pago para recibir el dinero de tus ventas automáticamente en tu cuenta.
+                    </p>
+
+                    <div class="payment-setup-card"
+                        style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px;">
+                        <div
+                            style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div
+                                    style="width: 48px; height: 48px; background: #003087; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #fff;">
+                                    <i class="bi bi-paypal"></i>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 1rem; font-weight: 700;">PayPal</h4>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                        <div id="paypal-status-dot" class="status-dot offline"
+                                            style="width: 8px; height: 8px; border-radius: 50%;"></div>
+                                        <span id="paypal-status-label"
+                                            style="font-size: 0.85rem; font-weight: 600; min-width: 120px; white-space: nowrap;">
+                                            <div class="skeleton-base skeleton-text" style="height: 12px; margin: 0;">
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="flex: 1; min-width: 200px;">
+                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Correo
+                                    Vinculado:</div>
+                                <div id="paypal-display-email"
+                                    style="font-size: 0.95rem; font-weight: 600; color: #fff;">
+                                    <div class="skeleton-base skeleton-text medium"
+                                        style="height: 14px; margin-top: 4px;"></div>
+                                </div>
+                            </div>
+
+                            <button id="btn-connect-paypal" class="btn-primary-sm" style="min-width: 180px;">
+                                Conectar PayPal
+                            </button>
+                        </div>
+                    </div>
+
+                    <div
+                        style="margin-top: 24px; padding: 16px; background: rgba(139, 92, 246, 0.05); border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.1);">
+                        <p style="font-size: 0.85rem; color: #a78bfa; margin: 0; line-height: 1.5;">
+                            <i class="bi bi-info-circle-fill"></i>
+                            Asegúrate de que tu correo de PayPal esté verificado para evitar retrasos en tus cobros.
+                        </p>
+                    </div>
+
+                    <!-- Yape Setup Card -->
+                    <div id="yape-setup-container" class="payment-setup-card yape-card"
+                        style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; margin-top: 24px;">
+                        <div
+                            style="display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+                            <div style="display: flex; align-items: flex-start; gap: 16px;">
+                                <div
+                                    style="width: 52px; height: 52px; background: transparent; border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; align-self: center;">
+                                    <img src="/images/para-yape.png" alt="Yape" style="width: 100%; height: 100%; object-fit: contain;">
+                                </div>
+                                <div style="margin-top: 2px;">
+                                    <h4 style="margin: 0; font-size: 1rem; font-weight: 700;">Yape <span style="font-size: 0.75rem; color: #a1a1aa; font-weight: 500;">(Perú)</span></h4>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                        <div id="yape-status-dot" class="status-dot offline"
+                                            style="width: 8px; height: 8px; border-radius: 50%;"></div>
+                                        <span id="yape-status-label"
+                                            style="font-size: 0.85rem; font-weight: 600; min-width: 120px; white-space: nowrap;">
+                                            <div class="skeleton-base skeleton-text" style="height: 12px; margin: 0;">
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="flex: 1; min-width: 250px;">
+                                <!-- Read-only display -->
+                                <div id="yape-display-area" style="display: block;">
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Número Vinculado:</div>
+                                    <div id="yape-display-phone" style="font-size: 0.95rem; font-weight: 600; color: #fff; letter-spacing: 1px;">
+                                        <div class="skeleton-base skeleton-text medium" style="height: 14px; margin-top: 4px;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Edit mode (Inline config) -->
+                                 <div id="yape-config-area" style="display: none; flex-direction: column; gap: 16px;">
+                                     <div class="yape-input-row">
+                                         <div class="yape-prefix-box">
+                                             +51
+                                         </div>
+                                         <div style="display: flex; gap: 8px; flex: 1; align-items: center;">
+                                             <input type="text" id="yape-p1" class="yape-input-box" maxlength="3" placeholder="000" pattern="\d*">
+                                             <span style="color: rgba(255,255,255,0.3); font-weight: bold;">-</span>
+                                             <input type="text" id="yape-p2" class="yape-input-box" maxlength="3" placeholder="000" pattern="\d*">
+                                             <span style="color: rgba(255,255,255,0.3); font-weight: bold;">-</span>
+                                             <input type="text" id="yape-p3" class="yape-input-box" maxlength="3" placeholder="000" pattern="\d*">
+                                         </div>
+                                     </div>
+
+                                     <label class="custom-checkbox" style="display: flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; margin-top: 8px;">
+                                         <div style="position: relative; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                             <input type="checkbox" id="yape-terms-checkbox" style="opacity: 0; position: absolute; cursor: pointer; width: 22px; height: 22px; z-index: 2; margin: 0; padding: 0;">
+                                             <div id="yape-checkbox-visual" style="width: 22px; height: 22px; position: relative; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 6px; transition: all 0.2s;">
+                                                 <i class="bi bi-check-lg" style="margin: 0; padding: 0; line-height: 1;"></i>
+                                             </div>
+                                         </div>
+                                         <span style="font-size: 0.85rem; color: #a1a1aa; line-height: 1;">Acepto los <a href="/legal/terminos-de-servicio.html" target="_blank" class="terms-link">términos y condiciones</a> de cobros por Yape.</span>
+                                     </label>
+                                 </div>
+                            </div>
+
+                             <div class="yape-actions-container">
+                                 <button id="btn-toggle-yape" class="btn-yape-white btn-primary-sm" style="transition: all 0.2s;">
+                                     Configurar Yape
+                                 </button>
+                                 <button id="btn-save-yape" class="btn-yape-white" disabled style="display: none; padding: 12px 24px; border-radius: 100px; border: none; color: #000; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+                                     Guardar número
+                                 </button>
+                                 <button id="btn-cancel-yape" style="display: none; padding: 10px 24px; border-radius: 100px; background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #fff; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                                     Cancelar
+                                 </button>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h2 class="settings-group-title"><i class="bi bi-clock-history"></i> Historial de Ventas</h2>
+
+                    <div class="tx-header-actions">
+                        <input type="text" id="tx-search-input" class="tx-filter-input" placeholder="Filtrar por email de comprador...">
+                        <button id="btn-export-reports" class="btn-export">
+                            <i class="bi bi-download"></i> Exportar Reporte
+                        </button>
+                    </div>
+
+                    <div class="tx-table-container" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; overflow: hidden;">
+                        <div class="tx-table-header tx-grid">
+                            <input type="checkbox" id="header-checkbox" class="tx-checkbox">
+                            <span>Estado</span>
+                            <span>Email</span>
+                            <span>Fecha</span>
+                            <span style="text-align: right;">Monto</span>
+                            <span></span>
+                        </div>
+
+                        <div id="sales-history-container" class="transaction-list" style="margin-top: 0; gap: 0;">
+                            <div style="text-align: center; padding: 60px; color: var(--text-secondary);">
+                                <i class="bi bi-clipboard-data" style="font-size: 3rem; opacity: 0.2; display: block; margin-bottom: 16px;"></i>
+                                <p>Cargando historial...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tx-footer">
+                        <div id="selection-summary" class="tx-selection-summary">
+                            0 de 0 fila(s) seleccionada(s).
+                        </div>
+                        <div class="tx-pagination-controls">
+                            <button id="btn-prev-page" class="btn-page" disabled>Anterior</button>
+                            <button id="btn-next-page" class="btn-page" disabled>Siguiente</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <!-- ==================== GLOBAL FOOTER ==================== -->
+    <div id="footer-placeholder"></div>
+    <script src="/script/footer.js?v=11"></script>
+
+    <!-- Avatar Crop Modal -->
+    <div id="cropModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3>Ajustar Imagen</h3>
+            <div class="crop-container">
+                <img id="cropImage" src="" alt="Para recortar">
+            </div>
+            <div class="modal-actions">
+                <button id="cancelCrop" class="btn-secondary">Cancelar</button>
+                <button id="confirmCrop" class="btn-primary">Recortar y Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PayPal Email Modal -->
+    <div id="modal-paypal-email" class="modal-overlay" style="backdrop-filter: blur(12px); background: rgba(0,0,0,0.9);">
+        <div class="modal-content modal-small" style="padding: 30px;">
+            <div class="modal-header" style="padding: 0 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 24px;">
+                <h3 style="margin: 0; font-size: 1.25rem;">Configurar PayPal</h3>
+                <button class="btn-close-modal" onclick="PaymentSettings.closePayPalModal()" style="background: none; border: none; color: #666; cursor: pointer; font-size: 1.4rem;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 0;">
+                <p class="modal-description" style="color: #a1a1aa; font-size: 0.95rem; line-height: 1.5; margin-bottom: 24px;">Ingresa el correo electrónico asociado a tu cuenta de PayPal para recibir tus pagos de ventas automáticamente.</p>
+                <div class="input-group" style="margin-top: 10px;">
+                    <label for="paypal-input-email" style="display: block; margin-bottom: 8px; font-size: 0.85rem; color: #fff; font-weight: 600;">Correo de PayPal</label>
+                    <input type="email" id="paypal-input-email" placeholder="ejemplo@paypal.com" style="width: 100%; height: 50px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0 16px; color: #fff; font-size: 0.95rem; outline: none; transition: border-color 0.2s;">
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 30px 0 0 0; display: flex; justify-content: center; gap: 12px;">
+                <button class="btn-secondary" onclick="PaymentSettings.closePayPalModal()" style="padding: 12px 24px; border-radius: 100px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-weight: 600; cursor: pointer;">Cancelar</button>
+                <button class="btn-primary" id="btn-save-paypal-email" onclick="PaymentSettings.savePayPalEmail()" style="padding: 12px 32px; border-radius: 100px; background: #8b5cf6; border: none; color: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Elite Yape Verification Modal -->
+    <div id="modal-yape-verify" class="modal-overlay" style="backdrop-filter: blur(16px); background: rgba(0,0,0,0.85);">
+        <div class="elite-modal" style="width: 100%; max-width: 420px; padding: 40px 32px; border-radius: 28px; text-align: center; position: relative; border: 1px solid rgba(255,255,255,0.08);">
+            <button id="btn-close-verify" style="position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: #a1a1aa; cursor: pointer; font-size: 1.2rem; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#a1a1aa'">
+                <i class="bi bi-x-lg"></i>
+            </button>
+
+            <div style="width: 72px; height: 72px; background: #1a1a2e; border-radius: 22px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.06);">
+                <img src="/images/para-yape.png" alt="Yape" style="width: 48px; height: 48px; object-fit: contain;">
+            </div>
+
+            <h3 style="margin: 0; font-size: 1.4rem; font-weight: 800; color: #fff;">Verifica tu número</h3>
+            <p style="margin: 12px 0 0; font-size: 0.9rem; color: #71717a; line-height: 1.6;">
+                Enviamos un código de 6 dígitos a<br>
+                <b id="verify-phone-display" style="color: #fff; letter-spacing: 0.5px;">+51 000 000 000</b>
+            </p>
+
+            <div class="otp-input-container">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric" autocomplete="one-time-code">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+                <input type="text" class="otp-box" maxlength="1" inputmode="numeric">
+            </div>
+
+            <div id="otp-error-msg" style="display: none; color: #ef4444; font-size: 0.85rem; margin-bottom: 12px; font-weight: 600;"></div>
+
+            <button id="btn-confirm-otp" class="btn-verify-otp" disabled>
+                Verificar
+            </button>
+
+            <div class="resend-timer" style="margin-top: 24px;">
+                ¿No recibiste el código?<br>
+                <div style="margin-top: 8px;">
+                    <span id="resend-label">Puedes reenviar en </span>
+                    <span id="resend-countdown" style="font-weight: 700; color: #fff;">60s</span>
+                    <a id="btn-resend-otp" class="resend-link disabled" style="display: none;">Reenviar SMS</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Details Modal -->
+    <div id="modal-tx-details" class="modal-overlay" style="backdrop-filter: blur(12px); background: rgba(0,0,0,0.9);">
+        <div class="modal-content modal-small" style="padding: 30px;">
+            <div class="modal-header" style="padding: 0 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 24px;">
+                <h3 style="margin: 0; font-size: 1.25rem;">Detalles de la Transacción</h3>
+                <button class="btn-close-modal" id="btn-close-tx-details" style="background: none; border: none; color: #666; cursor: pointer; font-size: 1.4rem;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div id="tx-details-content" class="modal-body" style="padding: 0;">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="modal-footer" style="padding: 30px 0 0 0; display: flex; justify-content: center;">
+                <button class="btn-secondary" id="btn-close-tx-details-alt" style="padding: 12px 32px; border-radius: 100px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.borderColor='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.1)'">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Logs Modal -->
+    <div id="modalSecurityLogs" class="modal-overlay" style="backdrop-filter: blur(12px); background: rgba(0,0,0,0.85);">
+        <div class="modal-content security-log-modal">
+            <div class="modal-header">
+                <div class="header-icon">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <div class="header-text">
+                    <h3>Bitácora de Seguridad</h3>
+                    <p class="modal-subtitle">Registro de integridad de la transacción</p>
+                </div>
+                <button class="btn-close-modal" onclick="PaymentSettings.closeSecurityModal()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="security-logs-content" class="security-logs-list">
+                    <!-- Logs will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cropper.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"
+        integrity="sha384-AMJcAgMUmNt1Zo4ranquGLeT5m7yOrVbtNsNk0oZohvxqKk6RRzXHqlEaS9gFXR7" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"
+        integrity="sha384-jzwsV9ieM/KUDMeo+d8dc+jm0GEl7ywPNwg10alB5BodVuC/Kx9RpEnyrl2Om9zH"
+        crossorigin="anonymous"></script>
+
+    <!-- Global Scripts -->
+
+    <script src="/script/cart.js?v=11"></script>
+    <script src="/script/notifications.js?v=26"></script>
+    <script src="/script/navbar.js?v=20" type="module"></script>
+    <script src="/script/sticky-player.js"></script>
+    <script src="/script/settings-ui.js?v=2"></script>
+    <script src="/script/payment-settings.js?v=2" type="module"></script>
+</body>
+
+</html>

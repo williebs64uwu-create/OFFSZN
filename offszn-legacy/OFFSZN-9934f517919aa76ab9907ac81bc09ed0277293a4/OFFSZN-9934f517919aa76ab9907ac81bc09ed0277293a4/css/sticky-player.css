@@ -1,0 +1,537 @@
+/* STICKY PLAYER - Fixed Bottom */
+#sticky-player-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 90px;
+    background: #121212;
+    /* Solid background */
+    /* backdrop-filter: blur(12px); Removed transparency */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    /* Flex but hidden initially via transform/opacity if needed, or JS toggle */
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 9990;
+    /* High but below modals */
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: transform;
+}
+
+#sticky-player-bar.visible {
+    transform: translateY(0);
+}
+
+/* --- LEFT: INFO --- */
+.sp-left {
+    display: flex;
+    align-items: center;
+    width: auto;
+    flex: 1;
+    /* Grow to fill space so content can align to center */
+    min-width: 200px;
+    gap: 12px;
+    justify-content: flex-end;
+    /* Align content to the right (towards center) */
+    padding-right: 20px;
+    /* Buffer from center */
+}
+
+.sp-cover {
+    width: 56px;
+    height: 56px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: #333;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.sp-cover:hover {
+    transform: scale(1.05);
+}
+
+.sp-info-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.sp-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+    cursor: pointer;
+}
+
+.sp-title:hover {
+    text-decoration: underline;
+}
+
+.sp-artist {
+    font-size: 0.8rem;
+    color: #aaa;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Reusing hover trigger styles if present, else basic */
+.sp-artist .artist-hover-trigger {
+    color: #ccc;
+    cursor: pointer;
+}
+
+.sp-artist .artist-hover-trigger:hover {
+    color: #fff;
+    /* text-decoration: underline;  <-- REMOVED to avoid double line */
+}
+
+/* Actions in Info Area (Like, DL) */
+.sp-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: 0;
+    /* Remove auto spacing to keep it grouped with info */
+    margin-right: 0;
+}
+
+.sp-icon-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+.sp-icon-btn:hover {
+    color: #fff;
+}
+
+.sp-icon-btn.active {
+    color: #fff;
+    /* White accent instead of purple */
+}
+
+/* --- CENTER: CONTROLS & WAVEFORM --- */
+.sp-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 50%;
+    max-width: 720px;
+    gap: 4px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* Row 1: Waveform & Time */
+.sp-progress-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 12px;
+    font-size: 0.75rem;
+    color: #888;
+    font-weight: 600;
+    margin-bottom: 2px;
+    justify-content: center;
+}
+
+#sp-current-time,
+#sp-total-time {
+    width: 50px;
+    /* FIXED WIDTH to prevent container jitter */
+    text-align: center;
+    flex-shrink: 0;
+    font-family: monospace;
+    /* Monospace for stable character widths */
+}
+
+.sp-waveform-container {
+    flex: 1;
+    height: 40px;
+    /* Matched to JS */
+    position: relative;
+    cursor: pointer;
+    display: block;
+    /* WaveSurfer 7 prefers block */
+    overflow: hidden;
+}
+
+/* Row 2: Controls */
+.sp-controls-row {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.sp-ctrl-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.sp-ctrl-btn:hover {
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.sp-play-btn {
+    width: 38px;
+    height: 38px;
+    background: #fff;
+    color: #000;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sp-play-btn i {
+    margin-left: 2px;
+}
+
+.sp-play-btn i.bi-pause-fill {
+    margin-left: 0;
+}
+
+.sp-play-btn:hover {
+    transform: scale(1.05);
+    color: #000;
+    filter: brightness(0.9);
+}
+
+/* Progress Bar area if we want it in center (Spotify style) */
+.sp-progress-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+    font-size: 0.7rem;
+    color: #888;
+    font-weight: 600;
+}
+
+.sp-progress-bar {
+    flex: 1;
+    height: 4px;
+    background: #444;
+    border-radius: 2px;
+    position: relative;
+    cursor: pointer;
+}
+
+.sp-progress-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0%;
+    background: #fff;
+    /* White Progress Bar */
+    border-radius: 2px;
+}
+
+.sp-progress-bar:hover .sp-progress-fill {
+    background: #eee;
+}
+
+
+/* --- RIGHT: VOLUME/EXTRA --- */
+.sp-right {
+    width: auto;
+    flex: 1;
+    /* Grow to fill space */
+    display: flex;
+    align-items: center;
+    /* justify-content: flex-end;  <-- CHANGED to start to bring closer to center */
+    justify-content: flex-start;
+    gap: 12px;
+    position: relative;
+    padding-left: 20px;
+    /* Buffer from center */
+}
+
+.sp-volume-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+}
+
+/* Vertical Volume Slider on Hover */
+.sp-vol-slider-wrapper {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 130px;
+    background: #18181b;
+    border: 1px solid #333;
+    /* Darker border */
+    border-radius: 8px;
+    padding: 12px 0;
+    display: none;
+    /* Show on hover */
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+}
+
+/* Bridge to prevent closing */
+.sp-vol-slider-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    width: 100%;
+    height: 25px;
+    background: transparent;
+}
+
+.sp-volume-container:hover .sp-vol-slider-wrapper,
+.sp-vol-slider-wrapper:hover {
+    display: flex;
+}
+
+.sp-vol-track {
+    width: 6px;
+    height: 100%;
+    background: #444;
+    border-radius: 3px;
+    position: relative;
+    cursor: pointer;
+}
+
+.sp-vol-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 80%;
+    /* Default */
+    background: #fff;
+    border-radius: 2px;
+}
+
+/* Buy Button in Player (Sticky) */
+.sp-buy-btn {
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.sp-buy-btn:hover {
+    filter: brightness(1.1);
+}
+
+/* TOAST NOTIFICATION */
+.sp-toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    background: #111;
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    pointer-events: none;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sp-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+@keyframes toast-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Mobile Responsiveness (Compact Sticky Player - Image 4) */
+@media (max-width: 768px) {
+    #sticky-player-bar {
+        height: auto;
+        min-height: 90px;
+        padding: 10px 16px calc(12px + env(safe-area-inset-bottom)) 16px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+        gap: 6px 0;
+        align-items: center;
+        bottom: 0px !important;
+        z-index: 9999 !important;
+        background: #0a0a0a;
+        /* True pitch black like Image 4 */
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    /* Flatten containers to let grid position their children */
+    .sp-center,
+    .sp-left {
+        display: contents;
+    }
+
+    /* Hide unneeded elements for compact mobile view */
+    .sp-right,
+    .sp-cover,
+    .sp-actions,
+    .sp-badges {
+        display: none !important;
+    }
+
+    /* Top Row: 0:00 | Waveform | 4:20 */
+    .sp-progress-row {
+        grid-column: 1 / 3;
+        grid-row: 1;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 4px;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .sp-waveform-container {
+        height: 34px;
+        /* Thicker waveform to match Image 4 */
+    }
+
+    #sp-current-time,
+    #sp-total-time {
+        font-size: 0.7rem;
+        width: 35px;
+        font-weight: 700;
+        color: #ddd;
+    }
+
+    /* Bottom Row Left: Title & Artist */
+    .sp-info-text {
+        grid-column: 1;
+        grid-row: 2;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow: hidden;
+        padding-right: 15px;
+    }
+
+    .sp-title {
+        font-size: 0.95rem;
+        font-weight: 800;
+        margin-bottom: 2px;
+        color: #fff;
+        text-transform: uppercase;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sp-artist {
+        font-size: 0.8rem;
+        color: #888;
+        font-weight: 500;
+        text-transform: uppercase;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Bottom Row Right: Controls */
+    .sp-controls-row {
+        grid-column: 2;
+        grid-row: 2;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 20px;
+        /* Wider gap like image */
+    }
+
+    .sp-ctrl-btn {
+        font-size: 1.3rem;
+        /* Larger icons */
+        color: #fff;
+        background: transparent;
+        padding: 0;
+    }
+
+    .sp-play-btn {
+        width: auto;
+        height: auto;
+        font-size: 1.8rem;
+        /* Massive play icon */
+        background: transparent;
+        color: #fff;
+    }
+
+    .sp-play-btn:hover {
+        background: transparent;
+        color: #fff;
+        transform: scale(1.1);
+    }
+
+    /* Extra Controls Button (The ... menu) */
+    .sp-mobile-options-btn {
+        display: flex;
+        /* We will inject this via JS or just not have it if JS handles click */
+    }
+}

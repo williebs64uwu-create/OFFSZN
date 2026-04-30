@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración | OFFSZN</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#0a0a0a">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/marketplace.css">
+    <link rel="stylesheet" href="/css/sticky-player.css">
+    <link rel="stylesheet" href="/css/hover-card.css">
+    <link rel="stylesheet" href="/css/footer.css">
+    <link rel="stylesheet" href="/css/account-settings.css">
+    <link rel="stylesheet" href="/css/avatar-manager.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css"
+        integrity="sha384-AMJcAgMUmNt1Zo4ranquGLeT5m7yOrVbtNsNk0oZohvxqKk6RRzXHqlEaS9gFXR7" crossorigin="anonymous">
+
+    <!-- Supabase -->
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"
+        integrity="sha384-o2Uz8M8jf3RRbNF9dFLYtjA2ohqUgp6vUxr43Uzvt8MJkkLNvpXvLCUVbWh+cadK"
+        crossorigin="anonymous"></script>
+    <script>
+        window.supabaseClient = null;
+        // Initialization handled by auth-utils.js
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
+
+</head>
+
+<body>
+    <!-- Top Banner (Clickable) -->
+    <a href="/pages/register.html" class="promo-banner logged-out">
+        <span>🎉 <b>OFERTA EXCLUSIVA:</b> REGÍSTRATE Y OBTÉN <b>$5 USD GRATIS</b> EN TU PRIMERA COMPRA <i
+                class="bi bi-arrow-right-short" style="font-size: 1.1em; vertical-align: middle;"></i></span>
+    </a>
+
+    <!-- ==================== DYNAMIC NAVBAR ==================== -->
+    <div id="navbar-placeholder">
+        <div style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;"></div>
+    </div>
+    <script src="/script/load-navbar.js?v=20"></script>
+
+    <!-- Side Panels & Backdrops -->
+    <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
+
+    <!-- CART SIDE PANEL -->
+    <div class="side-panel" id="globalCartPanel">
+        <div class="panel-header">
+            <div class="panel-title" style="display: flex; align-items: center; gap: 12px;">
+                <div style="position: relative; display: flex;">
+                    <i class="fas fa-shopping-cart" style="font-size: 0.9rem; opacity: 0.7;"></i>
+                    <span id="cart-panel-count" class="notification-badge"
+                        style="position: absolute; top: -8px; right: -8px; display: flex; transform: scale(0.85);">0</span>
+                </div>
+                MI SELECCIÓN
+            </div>
+            <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
+        </div>
+        <div class="panel-content" id="cart-items-container">
+            <div style="text-align:center; padding: 60px 0; color: #444;">
+                <i class="bi bi-cart-x"
+                    style="font-size: 3.5rem; opacity: 0.1; display: block; margin-bottom: 20px;"></i>
+                <p style="font-size: 0.9rem; color: #666; font-weight: 500;">No hay elementos en tu selección</p>
+            </div>
+        </div>
+        <div class="cart-total-section" id="cart-summary">
+            <div
+                style="display:flex; justify-content:space-between; margin-bottom:1.5rem; color:#fff; font-weight:800; font-size: 1.1rem; letter-spacing: -0.5px;">
+                <span
+                    style="color: #666; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Subtotal</span>
+                <span id="cart-total-price">$0.00</span>
+            </div>
+            <button class="btn-checkout-global" id="cart-checkout-btn"
+                onclick="window.location.href='/pages/checkout.html'">
+                PROCEDER AL PAGO
+            </button>
+
+            <!-- TRUST BADGES -->
+            <div
+                style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
+                    METODOS DE PAGO SEGUROS</p>
+
+                <div style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%); transition: filter 0.3s;"
+                    onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(100%)'">
+                    <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
+                    <div class="badge-yape">YAPE</div>
+                    <div
+                        style="background: #00d3de; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        PLIN</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="settings-container">
+        <!-- Sidebar Navigation -->
+        <aside class="settings-sidebar">
+            <div class="profile-card">
+                <div class="profile-card-avatar" id="sidebarAvatar">W</div>
+                <div class="profile-card-name" id="sidebarName"></div>
+                <div class="profile-card-role" id="sidebarRole">Productor</div>
+            </div>
+
+            <!-- Mobile Navigation Trigger -->
+            <div class="settings-mobile-trigger" id="mobileNavTrigger">
+                <div class="trigger-content">
+                    <i class="bi bi-person-gear"></i>
+                    <span>Ajustes de cuenta</span>
+                </div>
+                <i class="bi bi-chevron-down trigger-arrow"></i>
+            </div>
+
+            <nav class="settings-nav" id="settingsNav">
+                <a href="/account-settings.html" class="settings-nav-item active">
+                    <i class="bi bi-person-gear"></i> Ajustes de cuenta
+                </a>
+                <a href="/preferencias.html" class="settings-nav-item">
+                    <i class="bi bi-sliders"></i> Preferencias
+                </a>
+                <a href="/perfilpro.html" class="settings-nav-item">
+                    <i class="bi bi-person-badge"></i> Perfil
+                </a>
+                <a href="/transacciones.html" class="settings-nav-item">
+                    <i class="bi bi-currency-dollar"></i> Transacciones
+                </a>
+                <a href="/siguiendo.html" class="settings-nav-item">
+                    <i class="bi bi-people"></i> Siguiendo
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Settings Content -->
+        <section class="settings-main">
+            <div class="settings-section">
+                <h1 class="settings-section-title">Editar cuenta</h1>
+
+                <div class="settings-group">
+                    <div class="avatar-edit-wrapper">
+                        <div class="avatar-edit-preview" id="formAvatar">W</div>
+                        <button class="btn-change-avatar"
+                            onclick="AvatarManager.open(document.querySelector('#formAvatar img')?.src)">Cambiar
+                            avatar</button>
+                    </div>
+
+                    <form id="accountForm" class="form-grid">
+                        <div class="form-group">
+                            <label style="display: flex; justify-content: space-between;">
+                                Nombre
+                                <span id="firstNameCounter" style="color: #a1a1aa; font-size: 0.75rem;">0/25</span>
+                            </label>
+                            <input type="text" id="firstName" class="form-input" placeholder="Tu nombre" maxlength="25">
+                        </div>
+                        <div class="form-group">
+                            <label style="display: flex; justify-content: space-between;">
+                                Apellido
+                                <span id="lastNameCounter" style="color: #a1a1aa; font-size: 0.75rem;">0/25</span>
+                            </label>
+                            <input type="text" id="lastName" class="form-input" placeholder="Tu apellido"
+                                maxlength="25">
+                        </div>
+                        <div class="form-group full-width">
+                            <label style="display: flex; justify-content: space-between;">
+                                Nombre de usuario (Username)
+                                <span id="nicknameCounter" style="color: #a1a1aa; font-size: 0.75rem;">0/30</span>
+                            </label>
+                            <input type="text" id="nickname" class="form-input" placeholder="nombredeusuario"
+                                maxlength="30">
+                            <div id="error-nickname" class="field-error"></div>
+                            <span id="nicknameStatus" style="font-size: 0.75rem;"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Correo electrónico</label>
+                            <input type="email" id="email" class="form-input" readonly
+                                style="opacity: 0.6; cursor: not-allowed;">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary-sm">Guardar cambios</button>
+                        </div>
+                    </form>
+                </div>
+
+
+                <div class="settings-group">
+                    <h2 class="settings-group-title">Cambiar contraseña</h2>
+                    <form id="passwordForm" class="form-grid">
+                        <div class="form-group full-width">
+                            <label for="currentPassword">Contraseña actual</label>
+                            <div style="position: relative;">
+                                <input type="password" id="currentPassword" class="form-input"
+                                    style="padding-right: 40px;">
+                                <i class="bi bi-eye-slash toggle-password" data-target="currentPassword"
+                                    style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #a1a1aa; font-size: 1.2rem;"></i>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">Nueva contraseña</label>
+                            <div style="position: relative;">
+                                <input type="password" id="newPassword" class="form-input" style="padding-right: 40px;">
+                                <i class="bi bi-eye-slash toggle-password" data-target="newPassword"
+                                    style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #a1a1aa; font-size: 1.2rem;"></i>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirmar nueva contraseña</label>
+                            <div style="position: relative;">
+                                <input type="password" id="confirmPassword" class="form-input"
+                                    style="padding-right: 40px;">
+                                <i class="bi bi-eye-slash toggle-password" data-target="confirmPassword"
+                                    style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #a1a1aa; font-size: 1.2rem;"></i>
+                            </div>
+                            <div id="error-password-match" class="field-error"></div>
+                        </div>
+                        <div class="form-actions" style="justify-content: space-between; align-items: center;">
+                            <a href="#" id="btnForgotPassword" class="forgot-password-link">Olvidé mi contraseña</a>
+                            <button type="submit" class="btn-primary-sm">Actualizar
+                                contraseña</button>
+                        </div>
+                        <span id="error-password" class="field-error" style="margin-top: 12px; display: block;"></span>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ==================== GLOBAL FOOTER ==================== -->
+    <div id="footer-placeholder"></div>
+    <script src="/script/footer.js?v=11"></script>
+
+    <!-- Shared Modals handled by AvatarManager -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"
+        integrity="sha384-jzwsV9ieM/KUDMeo+d8dc+jm0GEl7ywPNwg10alB5BodVuC/Kx9RpEnyrl2Om9zH"
+        crossorigin="anonymous"></script>
+    <script src="/script/avatar-manager.js"></script>
+
+    <!-- Global Scripts -->
+
+    <script src="/script/cart.js?v=11"></script>
+    <script src="/script/notifications.js?v=26"></script>
+    <script src="/script/navbar.js?v=20" type="module"></script>
+    <script src="/script/sticky-player.js"></script>
+    <script src="/script/settings-ui.js?v=1"></script>
+    <script src="/script/account-settings.js?v=11" type="module"></script>
+</body>
+
+</html>

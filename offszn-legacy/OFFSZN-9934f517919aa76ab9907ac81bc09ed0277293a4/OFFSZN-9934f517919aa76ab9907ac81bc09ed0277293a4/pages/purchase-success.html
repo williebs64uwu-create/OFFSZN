@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¡Compra Exitosa! - OFFSZN</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+  <!-- SEO & Social Meta Tags -->
+  <meta name="description" content="Tu compra en OFFSZN ha sido procesada con éxito. Descarga tus archivos ahora.">
+
+  <!-- Bootstrap & Font Awesome -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Modular Styles -->
+  <link rel="stylesheet" href="/css/auth-ui.css">
+  <link rel="stylesheet" href="/css/global-overlays.css">
+  <link rel="stylesheet" href="/css/navbar.css">
+  <link rel="stylesheet" href="/css/avatar-manager.css">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+  <!-- 1. Cargar Configuración Segura y Supabase -->
+  <script src="/env.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>window.supabaseClient = null;</script>
+  <script src="/script/auth-utils.js?v=21"></script>
+
+  <style>
+    :root {
+      --primary: #7209b7;
+      --primary-dark: #560bad;
+      --success: #0cbc87;
+      --bg-dark: #000;
+      --card-bg: #0a0a0a;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: #fff;
+      font-family: 'Geist', sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 60px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .success-card {
+      max-width: 650px;
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .success-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), #c9a7eb);
+    }
+
+    .success-icon-wrapper {
+      width: 80px;
+      height: 80px;
+      background: rgba(12, 188, 135, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      color: var(--success);
+      font-size: 40px;
+      box-shadow: 0 0 30px rgba(12, 188, 135, 0.1);
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .success-msg {
+      color: #999;
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .order-summary {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 32px;
+      text-align: left;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 0.9rem;
+    }
+
+    .info-label { color: #666; }
+    .info-value { font-weight: 600; color: #fff; }
+
+    .items-list {
+      text-align: left;
+      margin-bottom: 32px;
+    }
+
+    .items-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .purchase-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255,255,255,0.03);
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      border: 1px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .purchase-item:hover {
+      border-color: var(--border);
+      background: rgba(255,255,255,0.05);
+    }
+
+    .item-img-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        background: var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .item-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .item-main { flex: 1; min-width: 0; }
+    .item-name { font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-details { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: #666; }
+    
+    .license-badge {
+      color: var(--primary);
+      font-weight: 700;
+      background: rgba(114, 9, 183, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .btn-download {
+      background: var(--success);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s;
+    }
+
+    .btn-download:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(12, 188, 135, 0.3);
+    }
+
+    .btn-contract {
+      background: var(--border);
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .btn-contract:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .support-block {
+      background: rgba(114, 9, 183, 0.05);
+      border: 1px dashed rgba(114, 9, 183, 0.3);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 10px;
+      text-align: left;
+    }
+
+    .support-item {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      color: #999;
+    }
+
+    .support-item i { color: var(--primary); margin-top: 3px; }
+    .support-item b { color: #fff; }
+    .support-item a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+    .test-badge {
+      background: #dc2626;
+      color: white;
+      font-size: 0.7rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 900;
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      text-transform: uppercase;
+      z-index: 10;
+    }
+
+    .btn-test-email {
+      margin-top: 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: #666;
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-test-email:hover {
+      color: #fff;
+      border-color: #fff;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.3s;
+    }
+
+    .btn-primary-action {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-secondary-action {
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      border: 1px solid var(--border);
+    }
+
+    .btn-action:hover {
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 600px) {
+      .success-card { padding: 30px 20px; border-radius: 0; border: none; }
+      .footer-actions { flex-direction: column; }
+    }
+
+    /* PREMIUM LOADING MODAL */
+    .loading-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(10px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .loading-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 40px;
+      border-radius: 28px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    }
+
+    .pulse-loader {
+      width: 60px; height: 60px;
+      background: var(--primary);
+      border-radius: 50%;
+      margin: 0 auto 24px;
+      position: relative;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(114, 9, 183, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(114, 9, 183, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(114, 9, 183, 0); }
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .loading-title { font-weight: 800; font-size: 1.2rem; margin-bottom: 10px; color: #fff; }
+    .loading-subtitle { color: #666; font-size: 0.9rem; line-height: 1.5; }
+  </style>
+</head>
+
+<body>
+
+  <!-- ==================== DYNAMIC NAVBAR ==================== -->
+  <div id="navbar-placeholder">
+      <div style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;"></div>
+  </div>
+  <script src="/script/load-navbar.js?v=21"></script>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="main-content">
+    <div class="success-card">
+      <div id="simBadge" class="test-badge" style="display:none;">SIMULACIÓN</div>
+      
+      <div class="success-icon-wrapper">
+        <i class="bi bi-check2-circle"></i>
+      </div>
+
+      <h1>¡Compra Realizada!</h1>
+      <p class="success-msg">
+        Gracias por tu compra. Hemos procesado tu pago y tus archivos están listos para ser descargados. También hemos enviado un recibo a tu correo.
+      </p>
+
+      <div class="order-summary">
+        <div class="info-row">
+          <span class="info-label">Orden ID</span>
+          <span class="info-value" id="orderIdText">...</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Fecha</span>
+          <span class="info-value" id="orderDateText">...</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Total</span>
+          <span class="info-value" id="orderTotalText">$0.00</span>
+        </div>
+      </div>
+
+      <div class="items-list">
+        <div class="items-title">
+          <i class="bi bi-box-seam"></i> PRODUCTOS ADQUIRIDOS
+        </div>
+        <div id="itemsContainer">
+          <p style="text-align:center; color:#444;">Buscando productos...</p>
+        </div>
+      </div>
+
+      <div class="support-block" id="supportContainer" style="display: block !important;">
+        <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+           <i class="bi bi-headset"></i> ¿Problemas con tu compra?
+        </div>
+        <div id="producerSupportList"></div>
+        <div class="support-item" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05);">
+          <i class="bi bi-envelope-fill"></i>
+          <span>Soporte OFFSZN: <a href="mailto:soporte@offszn.lat">soporte@offszn.lat</a></span>
+        </div>
+      </div>
+
+      <button id="btnSimEmail" class="btn-test-email" style="display:none;">
+          <i class="bi bi-send"></i> Re-enviar email de prueba
+      </button>
+
+      <div class="footer-actions">
+        <a href="/pages/dashboard.html" id="btnPanel" class="btn-action btn-primary-action">
+          <i class="bi bi-grid-fill"></i> Mi Panel
+        </a>
+        <a href="/explorar.html" class="btn-action btn-secondary-action">
+          <i class="bi bi-house-door"></i> Seguir Comprando
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- ==================== SIDE PANELS ==================== -->
+  <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
+
+  <!-- LOADING MODAL -->
+  <div id="downloadLoadingModal" class="loading-overlay">
+    <div class="loading-box">
+      <div class="pulse-loader"></div>
+      <div class="loading-title">Preparando Descarga</div>
+      <div class="loading-subtitle">Nuestro Scavenger está analizando la bóveda de seguridad para encontrar tus archivos...</div>
+    </div>
+  </div>
+
+  <!-- Global Cart Panel -->
+  <div class="side-panel" id="globalCartPanel">
+      <div class="panel-header">
+          <div class="panel-title">
+              <i class="fas fa-shopping-cart"></i> Tu Carrito
+              <span id="cart-panel-count" class="notification-badge">0</span>
+          </div>
+          <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
+      </div>
+      <div class="panel-content" id="cart-items-container"></div>
+      <div class="cart-total-section" id="cart-summary">
+          <div style="display:flex; justify-content:space-between; margin-bottom:1rem; font-weight:700;">
+              <span>Total:</span><span id="cart-total-price">$0.00</span>
+          </div>
+          <button class="btn-checkout-global" onclick="window.location.href='/pages/checkout.html'">Ir a Pagar</button>
+      </div>
+  </div>
+
+  <!-- ==================== FOOTER ==================== -->
+  <div id="footer-placeholder"></div>
+
+  <!-- SCRIPTS MODULARES -->
+  <script src="/script/id-obfuscator.js?v=21"></script>
+  <script src="/script/cart.js?v=21"></script>
+  <script src="/script/notifications.js?v=21"></script>
+  <script src="/script/avatar-manager.js?v=21"></script>
+  <script src="/script/footer.js?v=21"></script>
+  <script src="/script/navbar.js?v=21" type="module"></script>
+  <script src="/script/toast.js?v=21" type="module"></script>
+
+  <script type="module">
+    import { generarLicencia } from '../script/generate-license.js';
+
+    const supabase = window.supabaseClient;
+    const DOWNLOAD_ENDPOINT = '/api/orders/download-link';
+    const EMAIL_ENDPOINT = '/api/test/simulate-purchase-email';
+
+    async function init() {
+      const params = new URLSearchParams(window.location.search);
+      const orderRef = params.get('order');
+
+      if (!orderRef) {
+        window.location.href = '/explorar.html';
+        return;
+      }
+
+      const isSim = orderRef.startsWith('SIMULATED_TEST');
+      if(isSim) {
+        document.getElementById('simBadge').style.display = 'block';
+        document.getElementById('btnSimEmail').style.display = 'block';
+        document.getElementById('btnSimEmail').onclick = () => simulateEmail(orderRef);
+      }
+
+      document.getElementById('orderIdText').textContent = orderRef;
+      document.getElementById('orderDateText').textContent = new Date().toLocaleDateString('es-ES', { day:'2-digit', month:'short', year:'numeric'});
+
+      try {
+        const { data: order, error } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            order_items (
+              *,
+              products (
+                id, name, image_url, producer_id, product_type, storage_version, r2_version,
+                user:users!products_producer_id_fkey(id, nickname, email, license_settings)
+              )
+            )
+          `)
+          .eq('transaction_id', orderRef)
+          .single();
+
+        if (error || !order) {
+           if(isSim) {
+             console.warn("Usando datos de prueba para SIMULATED_TEST");
+             const prodId = params.get('productId') || 648;
+             const prodType = params.get('productType') || 'kit';
+             await renderOrder(getMockOrder(orderRef, prodId, prodType));
+           } else {
+             throw error || new Error("No order found");
+           }
+        } else {
+           await renderOrder(order);
+        }
+      } catch (err) {
+        console.error("Error al cargar orden:", err);
+        document.getElementById('itemsContainer').innerHTML = "<p style='color:#666; text-align:center; padding: 20px;'>No pudimos cargar los detalles reales, pero aquí tienes el soporte.</p>";
+      }
+
+      // BOTONES SIEMPRE FUNCIONALES
+      const btnPanel = document.getElementById('btnPanel');
+      const isLogged = AuthUtils.isLoggedIn();
+      if(isLogged) {
+          btnPanel.innerHTML = '<i class="bi bi-grid-fill"></i> Panel de Usuario';
+          btnPanel.href = '/pages/dashboard.html';
+      } else {
+          btnPanel.innerHTML = '<i class="bi bi-search"></i> Explorar más';
+          btnPanel.href = '/explorar.html';
+      }
+    }
+
+    async function renderOrder(order) {
+      document.getElementById('orderTotalText').textContent = `$${parseFloat(order.total_price).toFixed(2)}`;
+      
+      const container = document.getElementById('itemsContainer');
+      const producers = new Map();
+      
+      // Procesar items de forma asíncrona para firmar imágenes
+      const itemsHtmlStrings = await Promise.all(order.order_items.map(async item => {
+        const p = item.products;
+        if(p.user) producers.set(p.user.id, p.user);
+
+        // REGLA: Solo beats muestran licencia y contrato
+        const isBeat = (p.product_type || '').toLowerCase() === 'beat';
+        
+        // --- Lógica de Botones Dinámicos por Licencia ---
+        let buttonsHtml = '';
+        const licName = item.license_name || 'Basic Lease';
+        
+        if (isBeat) {
+          // Mapeo interno igual que el backend
+          const mapToKey = (name) => {
+            const n = (name || '').toLowerCase();
+            if (n.includes('básica') || n.includes('basica')) return 'basic';
+            if (n.includes('premium')) return 'premium';
+            if (n.includes('stems') || n.includes('trackout')) return 'trackout';
+            if (n.includes('ilimitada') || n.includes('unlimited')) return 'unlimited';
+            if (n.includes('exclusiva') || n.includes('exclusive')) return 'exclusive';
+            if (['basic', 'premium', 'stems', 'trackout', 'unlimited', 'exclusive'].includes(n)) return n;
+            return 'basic';
+          };
+
+          const licKey = mapToKey(licName);
+          const settings = p.user?.license_settings?.[licKey];
+
+          if (settings && settings.files) {
+            // Caso 1: Producer configuró archivos específicos
+            if (settings.files.mp3) {
+              buttonsHtml += `
+                <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'mp3', '${licName}')">
+                  <i class="bi bi-music-note-beamed"></i> MP3
+                </button>`;
+            }
+            if (settings.files.wav) {
+              buttonsHtml += `
+                <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'wav', '${licName}')">
+                  <i class="bi bi-file-earmark-music"></i> WAV
+                </button>`;
+            }
+            if (settings.files.stems) {
+              buttonsHtml += `
+                <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'stems', '${licName}')">
+                  <i class="bi bi-layers-half"></i> STEMS
+                </button>`;
+            }
+          } else {
+            // Caso 2: Sin configuración (Fallback conservador: MP3)
+            buttonsHtml = `<button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'mp3', '${licName}')"><i class="bi bi-download"></i> Descargar</button>`;
+          }
+        } else {
+          // Caso 3: No es Beat (Drumkits/etc)
+          buttonsHtml = `<button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'kit', '${licName}')"><i class="bi bi-download"></i> Descargar Kit</button>`;
+        }
+
+        // FIX: Usar AuthUtils para manejar Supabase vs R2 Account 1/2
+        const coverSrc = await AuthUtils.getAuthorizedUrl(
+            p.image_url, 
+            p.storage_version || p.r2_version, 
+            p.id
+        ) || '/images/portada-default.png';
+
+        return `
+          <div class="purchase-item">
+            <div class="item-img-wrapper">
+                <img src="${coverSrc}" class="item-img" onerror="this.src='/images/portada-default.png'">
+            </div>
+            <div class="item-main">
+              <div class="item-name">${p.name}</div>
+              <div class="item-details">
+                ${isBeat ? `<span class="license-badge">${item.license_name || 'Standard'}</span>` : `<span class="license-badge">${p.product_type || 'Producto'}</span>`}
+                <span>Qty: ${item.quantity}</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap: wrap; justify-content: flex-end;">
+              ${isBeat ? `
+                <div class="btn-contract" title="Ver Contrato" onclick="handleLicenseClick('${order.transaction_id}', '${p.id}', '${item.license_name}')">
+                  <i class="bi bi-file-earmark-text"></i>
+                </div>
+              ` : ''}
+              ${buttonsHtml}
+            </div>
+          </div>
+        `;
+      }));
+      
+      container.innerHTML = itemsHtmlStrings.join('');
+
+      // AJUSTE DINÁMICO DE BOTONES (GUEST VS USER) - Resiliente a simulación
+      renderSupport(producers);
+    }
+
+    function getMockOrder(ref, overrideProductId, overrideProductType) {
+      const params = new URLSearchParams(window.location.search);
+      const mockLicName = params.get('licenseName') || 'Basic Lease';
+      
+      return {
+        transaction_id: ref,
+        total_price: 15.99,
+        order_items: [{
+          quantity: 1,
+          license_name: mockLicName,
+          products: {
+            id: overrideProductId || 86,
+            name: "Beat de Prueba (Scavenger 2.0)",
+            product_type: overrideProductType || "beat",
+            image_url: null,
+            user: {
+               id: 'test-user',
+               nickname: 'Productor Demo',
+               email: 'demo@offszn.com',
+               license_settings: {
+                 basic: { name: 'Basic Lease', files: { mp3: true, wav: false, stems: false } },
+                 premium: { name: 'Premium Lease', files: { mp3: true, wav: true, stems: false } },
+                 trackout: { name: 'Trackout Lease', files: { mp3: true, wav: true, stems: true } },
+                 exclusive: { name: 'Exclusive License', files: { mp3: true, wav: true, stems: true } }
+               }
+            }
+          }
+        }]
+      };
+    }
+
+    function renderSupport(producers) {
+      // Siempre mostrar el bloque de soporte
+      document.getElementById('supportContainer').style.display = 'block';
+      const list = document.getElementById('producerSupportList');
+      if(producers.size === 0) {
+          list.innerHTML = ""; // No hay productores específicos pero el bloque general se queda
+          return;
+      }
+      list.innerHTML = Array.from(producers.values()).map(p => `
+        <div class="support-item">
+          <i class="bi bi-person-badge"></i>
+          <span>Productor <b>${p.nickname}</b>: <a href="mailto:${p.email}">${p.email}</a></span>
+        </div>
+      `).join('');
+    }
+
+    window.downloadFile = async (orderId, productId, type, licenseName = '') => {
+      const modal = document.getElementById('downloadLoadingModal');
+      modal.style.display = 'flex';
+
+      try {
+        const url = `${DOWNLOAD_ENDPOINT}?orderId=${orderId}&productId=${productId}&type=${type}&licenseName=${encodeURIComponent(licenseName)}`;
+        const response = await fetch(url, {
+            headers: AuthUtils.getAuthHeaderObj()
+        });
+        
+        const data = await response.json();
+        const downloadUrl = data.url || data.signedUrl;
+        
+        if(response.ok && downloadUrl) {
+          window.open(downloadUrl, '_blank');
+        } else {
+          // Mostrar mensaje de error si la licencia no lo permite o el archivo no existe
+          const errorMsg = data.error || 'Archivo no disponible';
+          alert(`Error: ${errorMsg}.\n\nSi crees que esto es un error, por favor contacta a soporte@offszn.lat`);
+        }
+      } catch (e) {
+        console.error("Download error:", e);
+        alert(`Error de conexión.\n\nPor favor, contacta a soporte@offszn.lat`);
+      } finally {
+        modal.style.display = 'none';
+      }
+    };
+
+    window.handleLicenseClick = async (orderId, productId, licenseName) => {
+      try {
+        // En un caso real, necesitaríamos extraer estos datos del backend o estado global.
+        // Simulamos la llamada enviando los datos básicos que tenemos en la vista de éxito.
+        const orderTextEl = document.getElementById('orderIdText');
+        const orderText = orderTextEl ? orderTextEl.textContent : orderId;
+        const buyerName = "Cliente"; // En purchase-success usualmente no tenemos el username a la mano sin un fetch
+        
+        const mockData = {
+           productName: "Producto (Verificando...)", // El botón solo sabe el ID, tendríamos que buscar en el DOM o estado
+           producerName: "OFFSZN Producer",
+           amount: 0,
+           buyerName: buyerName,
+           buyerEmail: "cliente@email.com",
+           purchaseDate: new Date().toISOString(),
+           orderId: orderId,
+           licenseType: licenseName || 'basic',
+           productType: 'beat'
+        };
+        
+        if(window.generarLicencia) {
+            await window.generarLicencia(mockData);
+        } else {
+            alert(`Para ver tu contrato detallado de ${licenseName}, por favor ve a "Mis Compras" en tu panel de usuario.`);
+        }
+      } catch(e) {
+         console.error(e);
+         alert(`Generando contrato para: ${licenseName}. Ve a "Mis Compras" para descargarlo en PDF.`);
+      }
+    };
+
+    async function simulateEmail(orderId) {
+      const btn = document.getElementById('btnSimEmail');
+      const oldText = btn.innerHTML;
+      btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando...';
+      btn.disabled = true;
+      try {
+        const res = await fetch(EMAIL_ENDPOINT, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...AuthUtils.getAuthHeaderObj()
+          },
+          body: JSON.stringify({ transactionId: orderId })
+        });
+        if(res.ok) alert("✅ Email enviado satisfactoriamente.");
+        else alert("❌ Falló el envío del email.");
+      } catch (e) {
+        console.log(e);
+      } finally {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+      }
+    }
+
+    // Initialize
+    init();
+  </script>
+
+  <!-- Importar generador de PDF globalmente para esta página -->
+  <script type="module">
+    import { generarLicencia } from '/script/generate-license.js';
+    window.generarLicencia = generarLicencia;
+  </script>
+</body>
+</html>

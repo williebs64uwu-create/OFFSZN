@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificaciones | OFFSZN</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#0a0a0a">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+    <link rel="stylesheet" href="/css/avatar-manager.css">
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- 1. Cargar Supabase (Moved to Head for Global Access) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // --- GLOBAL SUPABASE CONFIG ---
+        // Moved here so it is available for Search AND Auth scripts immediately.
+        
+        
+
+        window.supabaseClient = null;
+    </script>
+    <script src="/script/auth-utils.js?v=11"></script>
+    <script src="/script/notifications.js"></script>
+
+    <style>
+        .notifications-page {
+            padding-top: 10px;
+            min-height: 100vh;
+            background-color: #000;
+            color: #fff;
+        }
+
+        .notifications-container {
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .notifications-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 0 4px;
+        }
+
+        .notifications-header h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin: 0;
+            font-family: 'Geist', sans-serif;
+            background: linear-gradient(135deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .mark-read-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(10px);
+            white-space: nowrap;
+        }
+
+        .mark-read-btn:hover {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .notification-group-title {
+            font-size: 0.75rem;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 800;
+            margin: 32px 0 16px;
+            padding-left: 8px;
+            font-family: 'Geist', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0.9;
+        }
+
+        .notification-group-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+        }
+
+        .notifications-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* CARD DESIGN MATCHING "IMAGE 2" */
+        .notif-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            align-items: flex-start;
+        }
+
+        .notif-item:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .notif-item.unread {
+            background: rgba(139, 92, 246, 0.03);
+            border-color: rgba(139, 92, 246, 0.2);
+        }
+
+        /* INDICATOR FOR UNREAD */
+        .notif-badge-dot {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            width: 8px;
+            height: 8px;
+            background: #8b5cf6;
+            border-radius: 50%;
+            display: none;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+        }
+
+        .notif-item.unread .notif-badge-dot {
+            display: block;
+        }
+
+        .notif-item-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #fff;
+            font-size: 1.2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .notif-item-content {
+            flex: 1;
+        }
+
+        .notif-item-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+            font-family: 'Geist', sans-serif;
+            line-height: 1.3;
+            /* Truncation for very long strings */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .notif-item-message {
+            font-size: 0.82rem;
+            color: #999;
+            line-height: 1.5;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            line-clamp: 2;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .notif-item-message strong {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .notif-item-time {
+            font-size: 0.72rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* WAPPED SPECIAL CARD IN NOTIFICATIONS */
+        .wrapped-banner {
+            background: #fff;
+            color: #000;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .wrapped-banner:hover {
+            transform: scale(1.02);
+        }
+
+        .wrapped-banner .label {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
+        .wrapped-banner h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            margin: 8px 0;
+            line-height: 1.1;
+        }
+
+        .wrapped-banner .insight {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-top: 12px;
+            font-weight: 500;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            padding-top: 12px;
+        }
+
+        .wrapped-banner .stats-row {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .wrapped-banner .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wrapped-banner .stat .v {
+            font-size: 1.2rem;
+            font-weight: 900;
+        }
+
+        .wrapped-banner .stat .l {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            opacity: 0.5;
+        }
+
+        .wrapped-banner .sparkle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+        }
+
+        /* Consolidated & Refined Responsive Styles */
+        @media (max-width: 600px) {
+            .notifications-container {
+                padding: 12px 16px;
+            }
+
+            .notifications-header {
+                margin-bottom: 18px;
+            }
+
+            .notifications-header h1 {
+                font-size: 1.45rem;
+            }
+
+            .notification-group-title {
+                margin: 24px 0 12px;
+                font-size: 0.7rem;
+            }
+
+            .notif-item {
+                padding: 12px;
+                gap: 12px;
+                border-radius: 12px;
+            }
+
+            .notif-item-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+                border-radius: 10px;
+            }
+
+            .notif-item-title {
+                font-size: 0.88rem;
+                margin-bottom: 2px;
+            }
+
+            .notif-item-message {
+                font-size: 0.78rem;
+                line-height: 1.4;
+                margin-bottom: 2px;
+            }
+
+            .notif-item-time {
+                font-size: 0.68rem;
+            }
+
+            .mark-read-btn {
+                padding: 4px 10px;
+                font-size: 0.72rem;
+                border-radius: 10px;
+            }
+
+            .wrapped-banner h2 {
+                font-size: 1.4rem;
+            }
+
+            .wrapped-banner .stats-row {
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+    <!-- ==================== DYNAMIC NAVBAR ==================== -->
+    <div id="navbar-placeholder">
+        <div style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;"></div>
+    </div>
+    <script src="/script/load-navbar.js?v=20"></script>
+
+    <main class="notifications-page">
+        <div class="notifications-container">
+            <div class="notifications-header">
+                <h1>Notificaciones</h1>
+                <button id="mark-all-read-btn" class="mark-read-btn">
+                    <i class="bi bi-check2-all"></i> Marcar leídos
+                </button>
+            </div>
+
+            <div id="full-notifications-list" class="notifications-list">
+                <!-- Skeletons: Dynamic loading via JS -->
+                <!-- Smooth gradient fade-out for a premium loading feel -->
+                <div class="notif-item" style="pointer-events: none; opacity: 1;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 40%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 70%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 25%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
+                </div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.9;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 30%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 60%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 20%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
+                </div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.8;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 45%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 80%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 30%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
+                </div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.7;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 35%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 50%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 25%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
+                </div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.6;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 40%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 65%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 20%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
+                </div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.5;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 30%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 55%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 15%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
+                </div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.4;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 35%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 50%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 20%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
+                </div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.3;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 30%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 60%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 15%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
+                </div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.2;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 35%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 45%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 20%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
+                </div>
+                <div class="notif-item" style="pointer-events: none; opacity: 0.1;">
+                    <div class="skeleton"
+                        style="width: 48px; height: 48px; border-radius: 8px; flex-shrink: 0; background: rgba(255,255,255,0.05);">
+                    </div>
+                    <div class="notif-item-content" style="width: 100%;">
+                        <div class="skeleton"
+                            style="width: 30%; height: 16px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 50%; height: 14px; margin-bottom: 8px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                        <div class="skeleton"
+                            style="width: 10%; height: 12px; border-radius: 4px; background: rgba(255,255,255,0.05);">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- ==================== SIDE PANELS (INJECTED MANUALLY FOR ANALYSIS) ==================== -->
+
+    <!-- BACKDROP -->
+    <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
+
+    <!-- CART SIDE PANEL -->
+    <div class="side-panel" id="globalCartPanel">
+        <div class="panel-header">
+            <div class="panel-title" style="display: flex; align-items: center; gap: 12px;">
+                <div style="position: relative; display: flex;">
+                    <i class="fas fa-shopping-cart" style="font-size: 0.9rem; opacity: 0.7;"></i>
+                    <span id="cart-panel-count" class="notification-badge"
+                        style="position: absolute; top: -8px; right: -8px; display: flex; transform: scale(0.85);">0</span>
+                </div>
+                MI SELECCIÓN
+            </div>
+            <button class="panel-close" onclick="closeAllOverlays()">&times;</button>
+        </div>
+        <div class="panel-content" id="cart-items-container">
+            <div style="text-align:center; padding: 60px 0; color: #444;">
+                <i class="bi bi-cart-x"
+                    style="font-size: 3.5rem; opacity: 0.1; display: block; margin-bottom: 20px;"></i>
+                <p style="font-size: 0.9rem; color: #666; font-weight: 500;">No hay elementos en tu selección</p>
+            </div>
+        </div>
+        <div class="cart-total-section" id="cart-summary">
+            <div
+                style="display:flex; justify-content:space-between; margin-bottom:1.5rem; color:#fff; font-weight:800; font-size: 1.1rem; letter-spacing: -0.5px;">
+                <span
+                    style="color: #666; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Subtotal</span>
+                <span id="cart-total-price">$0.00</span>
+            </div>
+            <button class="btn-checkout-global" id="cart-checkout-btn"
+                onclick="window.location.href='/pages/checkout.html'">
+                PROCEDER AL PAGO
+            </button>
+
+            <!-- TRUST BADGES -->
+            <div
+                style="margin-top: 20px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
+                <p style="font-size: 0.65rem; color: #666; margin-bottom: 10px; letter-spacing: 1px; font-weight: 700;">
+                    METODOS DE PAGO SEGUROS</p>
+
+                <div style="display: flex; gap: 12px; justify-content: center; align-items: center; opacity: 0.8; filter: grayscale(100%); transition: filter 0.3s;"
+                    onmouseover="this.style.filter='grayscale(0%)'" onmouseout="this.style.filter='grayscale(100%)'">
+                    <!-- Global -->
+                    <i class="fab fa-cc-paypal" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-visa" style="font-size: 26px; color: #fff;"></i>
+                    <i class="fab fa-cc-mastercard" style="font-size: 26px; color: #fff;"></i>
+
+                    <!-- Local (Custom Badges) -->
+                    <div class="badge-yape">YAPE</div>
+                    <div
+                        style="background: #00d3de; color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center;">
+                        PLIN</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/script/cart.js"></script>
+    <script src="/script/notifications.js"></script>
+    <script src="/script/avatar-manager.js"></script>
+    <script src="/script/hover-card.js"></script>
+    <script src="/script/navbar.js?v=20" type="module"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Safety Check
+            if (typeof window.supabaseClient === 'undefined') return;
+
+            // Wait for session to be ready
+            window.addEventListener('offszn-session-ready', async (e) => {
+                const user = e.detail.user;
+                if (user) {
+                    renderFullNotificationsPage(user.id);
+                } else {
+                    // Force login if no session (Notifications are private)
+                    window.location.href = '/pages/login.html';
+                }
+            });
+
+            async function renderFullNotificationsPage(userId) {
+                const listContainer = document.getElementById('full-notifications-list');
+                if (!listContainer) return;
+
+                const tenDaysAgo = new Date();
+                tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+                const dateIso = tenDaysAgo.toISOString();
+
+                try {
+                    // Use a more robust fetching approach if possible, or process them here.
+                    // For now, let's process them to get proper titles, messages and targetUrls.
+                    const { data: notifs, error } = await window.supabaseClient
+                        .from('notifications')
+                        .select('*')
+                        .eq('user_id', userId)
+                        .gt('created_at', dateIso)
+                        .order('created_at', { ascending: false })
+                        .limit(50);
+
+                    if (error) throw error;
+
+                    if (!notifs || notifs.length === 0) {
+                        listContainer.innerHTML = `
+                            <div style="text-align: center; padding: 60px 20px;">
+                                <i class="bi bi-bell-slash" style="font-size: 3rem; color: #1a1a1a; margin-bottom: 20px; display: block;"></i>
+                                <h2 style="font-size: 1.1rem; color: #fff; margin-bottom: 10px; font-weight: 700;">Sin notificaciones</h2>
+                                <p style="color: #666; font-size: 0.85rem;">Te avisaremos cuando haya actividad relevante para ti.</p>
+                            </div>`;
+                        return;
+                    }
+
+                    // --- PRE-PROCESS DATA ---
+                    notifs.forEach(n => {
+                        if (typeof n.data === 'string') {
+                            try { n.parsedData = JSON.parse(n.data); } catch (e) { n.parsedData = {}; }
+                        } else {
+                            n.parsedData = n.data || {};
+                        }
+                    });
+
+                    // --- ROBUST ENHANCEMENT: Fetch Actors and Products for Rich Content ---
+                    const actorIds = new Set();
+                    const usernamesToFetch = new Set();
+                    const productIds = new Set();
+                    notifs.forEach(n => {
+                        const data = n.parsedData;
+                        if (n.type === 'product_like') {
+                            if (data.liker_id || data.user_id) actorIds.add(data.liker_id || data.user_id);
+                            if (data.product_id || data.id) productIds.add(data.product_id || data.id);
+                        }
+                        if (n.type === 'new_follower') {
+                            const fid = data.follower_id || data.id || n.actor_id || (data.user_id !== userId ? data.user_id : null);
+                            if (fid) {
+                                actorIds.add(fid);
+                            } else {
+                                // FALLBACK: Extract username from message if data is null/empty
+                                const match = n.message && n.message.match(/<strong[^>]*>(.*?)<\/strong>/);
+                                if (match && match[1]) {
+                                    n._extractedUsername = match[1];
+                                    usernamesToFetch.add(match[1]);
+                                }
+                            }
+                        }
+                    });
+
+                    let actorsMap = {};
+                    let actorsByNameMap = {};
+                    if (actorIds.size > 0) {
+                        const { data: actors } = await window.supabaseClient.from('users').select('id, nickname, first_name, avatar_url').in('id', Array.from(actorIds));
+                        if (actors) actors.forEach(u => { actorsMap[u.id] = u; if (u.nickname) actorsByNameMap[u.nickname] = u; });
+                    }
+
+                    if (usernamesToFetch.size > 0) {
+                        const { data: rescued } = await window.supabaseClient.from('users').select('id, nickname, first_name, avatar_url').in('nickname', Array.from(usernamesToFetch));
+                        if (rescued) rescued.forEach(u => { actorsMap[u.id] = u; if (u.nickname) actorsByNameMap[u.nickname] = u; });
+                    }
+
+                    let productsMap = {};
+                    if (productIds.size > 0) {
+                        const { data: products } = await window.supabaseClient.from('products').select('id, name, product_type, public_slug').in('id', Array.from(productIds));
+                        if (products) products.forEach(p => productsMap[p.id] = p);
+                    }
+
+                    // Process notifications for rich display
+                    const processed = notifs.map(n => {
+                        let msg = n.message;
+                        let url = n.targetUrl;
+                        let extraId = '';
+
+                        // Use pre-parsed data to ensure consistency
+                        let data = n.parsedData || {};
+
+                        if (n.type === 'product_like') {
+                            const pid = data?.product_id || data?.id || n.product_id;
+                            if (pid) extraId = pid;
+
+                            const lid = data?.liker_id || data?.user_id || n.actor_id;
+                            const actor = lid ? actorsMap[lid] : null;
+                            if (actor) {
+                                const name = actor.nickname || actor.first_name || 'Alguien';
+                                const p = productsMap[pid];
+                                const prodName = data?.product_name || (p ? p.name : 'tu producto');
+                                msg = `A <strong>${name}</strong> le gustó tu producto <strong>"${prodName}"</strong>.`;
+                            }
+                            if (pid) {
+                                const p = productsMap[pid];
+                                url = (p && window.createSeoLink) ? window.createSeoLink(p) : `/producto.html?id=${pid}`;
+                            }
+                        } else if (n.type === 'new_follower') {
+                            const fid = data?.follower_id || data?.id || n.actor_id || (data?.user_id !== userId ? data?.user_id : null);
+                            if (fid) extraId = fid;
+
+                            let actor = (fid && actorsMap[fid]) ? actorsMap[fid] : null;
+
+                            // Fallback to username Map
+                            if (!actor && n._extractedUsername) {
+                                actor = actorsByNameMap[n._extractedUsername];
+                                if (actor) extraId = actor.id;
+                            }
+
+                            if (actor) {
+                                const name = actor.nickname || actor.first_name || 'Alguien';
+                                msg = `<strong>${name}</strong> comenzó a seguirte.`;
+                                url = window.createProfileLink ? window.createProfileLink(actor) : `/perfil-publico.html?id=${actor.id}`;
+                            } else {
+                                // Clean interactive bits if we still fail to find the actor
+                                msg = n.message.replace(/class="[^"]*artist-hover-trigger[^"]*"/g, '').replace(/onclick="[^"]*"/g, '');
+                            }
+                        } else if (n.type === 'new_message') {
+                            const convId = data?.conversation_id || data?.id || n.conversation_id;
+                            if (convId) extraId = convId;
+                            url = convId ? `/mensajes.html?convId=${convId}` : '/mensajes.html';
+                        } else if (n.type === 'collab_invitation') {
+                            url = '/cuenta/colaboraciones.html?tab=recibidas';
+                        } else if (n.type === 'collab_accepted') {
+                            url = '/cuenta/colaboraciones.html?tab=mis-invitaciones';
+                        }
+
+                        // Final check: if we still have no URL but have an extraId, we'll let notifications.js handle it
+                        return { ...n, message: msg, targetUrl: url, extraId: extraId };
+                    });
+
+                    // Grouping Logic
+                    const grouped = groupNotifications(processed);
+
+                    // Render HTML
+                    let finalHtml = '';
+                    
+                    // --- INJECT WRAPPED SPECIAL BANNER ---
+                    // This only shows if there's significant activity or specific season
+                    finalHtml += `
+                        <div class="wrapped-banner" onclick="window.location.href='/cuenta/wrapped.html'">
+                            <div class="sparkle">✨</div>
+                            <span class="label">Abril 2026</span>
+                            <h2>¡Tu Resumen del Mes está listo!</h2>
+                            <div class="stats-row">
+                                <div class="stat"><span class="v">1.2K</span><span class="l">Vistas</span></div>
+                                <div class="stat"><span class="v">124</span><span class="l">Likes</span></div>
+                                <div class="stat"><span class="v">+86</span><span class="l">Seguidores</span></div>
+                            </div>
+                            <p class="insight">IA Insight: Tus seguidores amaron "VVS Diamond", prueba subiendo similares este mes.</p>
+                        </div>
+                    `;
+
+                    const groupOrder = ['Hoy', 'Ayer', 'Esta Semana', 'Anteriores'];
+
+                    groupOrder.forEach(groupName => {
+                        const items = grouped[groupName];
+                        if (items && items.length > 0) {
+                            finalHtml += `<div class="notification-group-title">${groupName}</div>`;
+                            items.forEach(n => {
+                                finalHtml += renderNotificationItem(n);
+                            });
+                        }
+                    });
+
+                    listContainer.innerHTML = finalHtml;
+
+                } catch (err) {
+                    console.error("Error at Notifications Page:", err);
+                    listContainer.innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">Error al cargar las notificaciones.</p>';
+                }
+            }
+
+            function groupNotifications(notifs) {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+
+                const lastWeek = new Date(today);
+                lastWeek.setDate(lastWeek.getDate() - 7);
+
+                const groups = {
+                    'Hoy': [],
+                    'Ayer': [],
+                    'Esta Semana': [],
+                    'Anteriores': []
+                };
+
+                notifs.forEach(n => {
+                    const d = new Date(n.created_at);
+                    if (d >= today) groups['Hoy'].push(n);
+                    else if (d >= yesterday) groups['Ayer'].push(n);
+                    else if (d >= lastWeek) groups['Esta Semana'].push(n);
+                    else groups['Anteriores'].push(n);
+                });
+
+                return groups;
+            }
+
+            function renderNotificationItem(n) {
+                const iconClass = getIconClass(n.type);
+                const timeStr = formatSimpleTimeAgo(n.created_at);
+
+                // Safety Fallbacks
+                const title = n.title || 'Novedad';
+                const message = n.message || 'Información de actividad.';
+
+                const extraId = n.extraId || '';
+                return `
+                    <div class="notif-item ${n.read ? '' : 'unread'}" 
+                         data-id="${n.id}" 
+                         data-type="${n.type}" 
+                         data-extra-id="${extraId}"
+                         data-url="${n.targetUrl || ''}"
+                         onclick="handleNotificationItemClick(this)">
+                        <div class="notif-badge-dot"></div>
+                        <div class="notif-item-icon">
+                            <i class="fas ${iconClass}"></i>
+                        </div>
+                        <div class="notif-item-content">
+                            <div class="notif-item-message">${message}</div>
+                            <div class="notif-item-time">${timeStr}</div>
+                        </div>
+                    </div>`;
+            }
+
+            function getIconClass(type) {
+                switch (type) {
+                    case 'collab_invitation': return 'fa-handshake';
+                    case 'collab_accepted': return 'fa-check-circle';
+                    case 'new_follower': return 'fa-user-plus';
+                    case 'product_like': return 'fa-heart';
+                    case 'product_published': return 'fa-rocket';
+                    case 'new_message': return 'fa-comment-dots';
+                    default: return 'fa-bell';
+                }
+            }
+
+            function formatSimpleTimeAgo(date) {
+                const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+                if (seconds < 60) return "Hace un momento";
+                const mins = Math.floor(seconds / 60);
+                if (mins < 60) return `Hace ${mins} min`;
+                const hours = Math.floor(mins / 60);
+                if (hours < 24) return `Hace ${hours} h`;
+                const days = Math.floor(hours / 24);
+                if (days === 1) return "Ayer";
+                if (days < 7) return `Hace ${days} d`;
+                return new Date(date).toLocaleDateString();
+            }
+
+            // Sync: If navbar marks all read, refresh this page too
+            window.addEventListener('notifications-updated', () => {
+                // If it was marked all read via navbar, we can re-fetch or just update visuals
+                // For simplicity, re-fetch if currently on this tab
+                if (document.visibilityState === 'visible' && window.NavbarState) {
+                    // Check if markRead was just triggered
+                }
+            });
+
+            // "Marcar todas como leídas" Button logic
+            document.getElementById('mark-all-read-btn')?.addEventListener('click', async () => {
+                if (window.NotificationsManager && window.NotificationsManager.markAllAsRead) {
+                    await window.NotificationsManager.markAllAsRead();
+                    // Instant refresh
+                    const { data: { session } } = await window.supabaseClient.auth.getSession();
+                    if (session?.user) renderFullNotificationsPage(session.user.id);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

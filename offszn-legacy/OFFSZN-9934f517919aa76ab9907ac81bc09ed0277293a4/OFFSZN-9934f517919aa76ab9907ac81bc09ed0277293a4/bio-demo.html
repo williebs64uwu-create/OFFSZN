@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link in Bio - OFFSZN</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+        integrity="sha384-tViUnnbYAV00FLIhhi3v/dWt3Jxw4gZQcNoSCxCIFNJVCx7/D55/wXsrNIRANwdD" crossorigin="anonymous">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        function initTailwind() {
+            if (typeof tailwind !== 'undefined') {
+                tailwind.config = {
+                    theme: {
+                        extend: {
+                            fontFamily: {
+                                'bakbak': ['"Bakbak One"', 'sans-serif'],
+                                'sans': ['"Plus Jakarta Sans"', 'sans-serif'],
+                                'open': ['"Open Sans"', 'sans-serif'],
+                            },
+                            colors: {
+                                'offszn-red': '#ff0000',
+                                'offszn-gray': '#111111',
+                                'offszn-border': '#333333',
+                            },
+                            boxShadow: {
+                                'glow': '0 0 60px -10px rgba(255, 0, 0, 0.4)',
+                                'glow-purple': '0 0 60px -10px rgba(126, 34, 206, 0.4)',
+                            }
+                        }
+                    }
+                }
+            } else {
+                console.error("Tailwind not loaded, retrying...");
+                setTimeout(initTailwind, 200);
+            }
+        }
+        initTailwind();
+    </script>
+    <!-- Wavesurfer JS (For Audio Visualization) -->
+    <script src="https://unpkg.com/wavesurfer.js@7.8.1/dist/wavesurfer.min.js"></script>
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .text-shadow {
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+        }
+
+        @keyframes slideUpFade {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-cascade,
+        .animate-cascade-item {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        #bioMainContainer.is-ready {
+            opacity: 1;
+        }
+
+        #bioMainContainer.is-ready .animate-cascade,
+        #bioMainContainer.is-ready .animate-cascade-item {
+            animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Pre-defined delays for static elements */
+        .delay-1 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-2 {
+            animation-delay: 0.2s;
+        }
+
+        .delay-3 {
+            animation-delay: 0.3s;
+        }
+
+        .delay-4 {
+            animation-delay: 0.4s;
+        }
+
+        .delay-5 {
+            animation-delay: 0.5s;
+        }
+    </style>
+</head>
+
+<body class="flex flex-col items-center min-h-screen py-10 px-4">
+
+    <!-- MAIN CONTAINER (Hidden initially for animation) -->
+    <div id="bioMainContainer" class="w-full max-w-[480px] flex flex-col gap-6 opacity-0 relative">
+
+        <!-- TOP ACTIONS BAR -->
+        <div class="flex items-center justify-between w-full mb-2 animate-cascade delay-1 z-20">
+            <!-- 1. Edit Mode Button (Hidden by default, shown for owner) -->
+            <button id="btnEditMode"
+                class="text-xs font-bold text-gray-400 hover:text-white transition-colors flex items-center gap-1 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-white/5"
+                style="display: none;">
+                <i class="bi bi-pencil-fill text-[10px]"></i> Modo Edición
+            </button>
+            <div id="editModeSpacer" class="flex-1"></div>
+            <!-- 2. Share Button -->
+            <button id="btnShareBio"
+                class="w-8 h-8 rounded-full bg-zinc-900/50 border border-white/5 flex items-center justify-center text-gray-400 hover:text-white hover:bg-zinc-800 transition-colors ml-auto">
+                <i class="bi bi-share-fill text-sm"></i>
+            </button>
+        </div>
+
+        <!-- 1. HEADER & AVATAR -->
+        <div class="flex flex-col items-center text-center relative mb-4">
+            <!-- Glow Effect behind Avatar (Hidden initially) -->
+            <div id="bioGlow"
+                class="absolute top-0 w-32 h-32 rounded-full bg-red-600 blur-[60px] opacity-0 z-0 transition-opacity duration-1000">
+            </div>
+
+            <div
+                class="relative z-10 w-28 h-28 rounded-full overflow-hidden border-2 border-zinc-800 shadow-2xl mb-4 bg-zinc-900 animate-cascade delay-1">
+                <img id="bioAvatar"
+                    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+                    alt="Avatar" class="w-full h-full object-cover">
+            </div>
+
+            <div class="relative z-10 flex flex-col items-center gap-1 mt-2 animate-cascade delay-2">
+                <div class="flex flex-col items-center gap-0 justify-center">
+                    <h1 id="bioNameAndRole"
+                        class="font-sans font-bold text-2xl md:text-3xl tracking-tight flex items-center justify-center gap-2">
+                        <span id="bioNameText"></span>
+                        <i id="bioVerified" class="bi bi-patch-check-fill text-blue-500 text-xl" title="Verified"
+                            style="display: none;"></i>
+                    </h1>
+                    <span id="bioRoleText" class="font-medium text-sm md:text-base text-gray-300 mt-1"
+                        style="display:none;"></span>
+                </div>
+            </div>
+
+            <p id="bioText"
+                class="relative z-10 text-sm md:text-md text-white mt-3 text-center tracking-wide max-w-[90%] whitespace-pre-wrap font-medium animate-cascade delay-3">
+                <!-- Bio -->
+            </p>
+        </div>
+
+        <!-- 2. SOCIAL ICONS ROW -->
+        <div id="bioSocialIcons" class="flex justify-center gap-5 text-2xl text-white mb-2 animate-cascade delay-4">
+            <!-- Icons injected via JS -->
+        </div>
+
+        <!-- 3. MAIN "TIENDA DE BEATS" PRIORITY LINK -->
+        <a id="btnTiendaBeats" href="#"
+            class="group relative flex items-center w-full p-4 bg-black border border-white rounded-[16px] hover:bg-zinc-900 transition-all duration-300 transform hover:-translate-y-1 animate-cascade delay-5"
+            style="display: none;">
+            <div class="flex items-center absolute left-4">
+                <img src="/images/LOGO-OFFSZN.png" alt="OFFSZN" class="w-6 h-6 object-contain">
+            </div>
+            <div class="flex-1 flex justify-center text-center">
+                <span class="font-bold text-sm md:text-md tracking-wide">Tienda de Beats</span>
+            </div>
+        </a>
+
+        <!-- 4. LINKS SECTION (Large links) -->
+        <div id="bioSocialLinksContainer" class="flex flex-col gap-4 animate-cascade delay-6">
+            <div class="text-center text-xs font-bold tracking-[0.2em] text-gray-400 mb-1" id="titleRedes"
+                style="display:none;">REDES SOCIALES</div>
+            <div id="bioSocialLinks" class="flex flex-col gap-4">
+                <!-- Large links injected via JS -->
+            </div>
+        </div>
+
+        <!-- 5. RECENT PRODUCTS LIST -->
+        <div id="bioRecentProducts" class="flex flex-col gap-4 mt-6 animate-cascade delay-7" style="display: none;">
+            <div class="text-center text-xs font-bold tracking-[0.2em] text-gray-400 mb-1 uppercase">LO MÁS NUEVO
+            </div>
+
+            <div id="bioProductsList" class="flex flex-col gap-4">
+                <!-- Product Cards injected via JS -->
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <a href="/explorar"
+            class="mt-8 opacity-50 hover:opacity-100 transition-opacity text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 w-full text-center pb-8 border-b-0 animate-cascade delay-8">
+            Diseñado con <img src="/images/LOGO-OFFSZN.png" alt="OFFSZN" class="h-4 object-contain border-none">
+        </a>
+
+    </div>
+
+    <!-- PLAYER OVERLAYS (Hidden) -->
+    <link rel="stylesheet" href="/css/sticky-player.css">
+    <div id="sticky-player-container"></div>
+
+    <!-- SHARE MODAL (Hidden by default) -->
+    <div id="bioShareModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300">
+        <div
+            class="bg-[#111] border border-zinc-800 rounded-2xl w-full max-w-[360px] p-6 flex flex-col items-center transform scale-95 transition-transform duration-300 text-center relative shadow-2xl">
+            <!-- Close Button -->
+            <button id="btnCloseShare" class="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors">
+                <i class="bi bi-x-lg"></i>
+            </button>
+
+            <h3 class="text-lg font-bold text-white mb-6 tracking-wide">COMPARTIR PERFIL</h3>
+
+            <!-- Avatar & Details -->
+            <div class="w-24 h-24 rounded-full overflow-hidden border-2 border-zinc-800 mb-4 bg-zinc-900 shadow-xl">
+                <img id="shareModalAvatar" src="" alt="Avatar" class="w-full h-full object-cover">
+            </div>
+            <h4 id="shareModalName" class="font-bold text-white text-xl mb-1">Nombre</h4>
+            <p id="shareModalUsername" class="text-sm text-gray-400 mb-8 tracking-wide">@username</p>
+
+            <!-- Quick Share Buttons -->
+            <div class="flex gap-4 mb-6">
+                <!-- WhatsApp -->
+                <button id="btnShareWA"
+                    class="w-12 h-12 rounded-full bg-[#25D366] text-white flex items-center justify-center text-xl hover:scale-110 transition-transform">
+                    <i class="bi bi-whatsapp"></i>
+                </button>
+                <!-- X (Twitter) -->
+                <button id="btnShareX"
+                    class="w-12 h-12 rounded-full bg-black border border-zinc-700 text-white flex items-center justify-center text-xl hover:scale-110 transition-transform">
+                    <i class="bi bi-twitter-x"></i>
+                </button>
+                <!-- Facebook -->
+                <button id="btnShareFB"
+                    class="w-12 h-12 rounded-full bg-[#1877F2] text-white flex items-center justify-center text-xl hover:scale-110 transition-transform">
+                    <i class="bi bi-facebook"></i>
+                </button>
+            </div>
+
+            <!-- Copy Link Native Input -->
+            <div class="w-full relative">
+                <input type="text" id="shareModalInput" readonly
+                    class="w-full bg-[#0a0a0a] border border-zinc-800 text-gray-300 text-sm rounded-lg pl-4 pr-12 py-3 focus:outline-none focus:border-zinc-500">
+                <button id="btnCopyShareLink"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-md bg-zinc-800 flex items-center justify-center text-white hover:bg-zinc-700 transition-colors">
+                    <i class="bi bi-copy text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Tutorial Modal -->
+    <div id="editModeTutorialModal"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300">
+        <div
+            class="bg-[#111] border border-zinc-800 rounded-2xl w-full max-w-[400px] md:max-w-[540px] p-6 lg:p-8 transform scale-95 transition-transform duration-300 relative mx-4 text-center">
+
+            <button id="btnCloseEditTutorial"
+                class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-zinc-800 text-gray-400 hover:text-white hover:bg-zinc-700 transition-colors">
+                <i class="bi bi-x-lg"></i>
+            </button> <!-- Close button -->
+
+            <h3 class="text-xl md:text-2xl font-bold text-white mb-2">Modo Editar Activado!</h3>
+            <p class="text-gray-400 text-sm md:text-base mb-6">Arrastra para editar el orden</p>
+
+            <div class="rounded-xl overflow-hidden border border-zinc-800 mb-6 lg:mb-8 relative aspect-square">
+                <!-- Video Tutorial -->
+                <video id="editTutorialVideo" class="w-full h-full object-cover" loop muted playsinline>
+                    <source src="/videos/video_para_modal.mp4" type="video/mp4">
+                    Tu navegador no soporta videos HTML5.
+                </video>
+            </div>
+
+            <button id="btnUnderstandEdit"
+                class="w-full bg-white hover:bg-zinc-200 text-black font-semibold tracking-wide py-3.5 rounded-xl transition-colors">
+                ¡Entendido!
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"
+        integrity="sha384-o2Uz8M8jf3RRbNF9dFLYtjA2ohqUgp6vUxr43Uzvt8MJkkLNvpXvLCUVbWh+cadK"
+        crossorigin="anonymous"></script>
+    <script>
+        window.supabaseClient = null;
+        // Reiniciar Auth después de cargar env.js
+        window.addEventListener('load', () => {
+            if (window.AuthUtils && typeof window.AuthUtils.initSupabase === 'function') {
+                window.AuthUtils.initSupabase();
+            }
+        });
+    </script>
+    <script src="/script/auth-utils.js"></script>
+    <script src="/script/bio.js" type="module"></script>
+
+</body>
+
+</html>

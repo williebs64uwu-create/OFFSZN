@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFFSZN | Tu Resumen Mensual</title>
+
+    <!-- Supabase & Auth -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
+    <script src="/env.js"></script>
+    <script src="/script/auth-utils.js"></script>
+    <script src="/script/auth-guard.js"></script>
+
+    <!-- Librerías -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg: #000;
+            --text: #fff;
+            --accent: #fff;
+            --border: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Geist', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* CARD PRINCIPAL */
+        #capture {
+            width: 100%;
+            max-width: 450px;
+            background-color: #000;
+            border: 1px solid var(--border);
+            padding: 50px 40px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 0 50px rgba(255, 255, 255, 0.05);
+        }
+
+        .header-section {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+            margin-bottom: 10px;
+        }
+
+        .wrapped-label {
+            font-size: 10px;
+            letter-spacing: 3px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .wrapped-title {
+            font-size: 30px;
+            font-weight: 900;
+            margin-top: 8px;
+            letter-spacing: -1px;
+            white-space: nowrap;
+        }
+
+        .profile-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .avatar-img {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            object-fit: cover;
+            background: #111;
+        }
+
+        .profile-link {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border: 1px solid var(--border);
+        }
+
+        .stat-item {
+            padding: 30px 25px;
+            border: 0.5px solid var(--border);
+            text-align: left;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #888;
+            letter-spacing: 1.5px;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        /* BOTONES */
+        .controls {
+            width: 100%;
+            max-width: 450px;
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-main {
+            background: #fff;
+            color: #000 !important;
+            border: none;
+            padding: 22px;
+            font-weight: 900;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-size: 14px;
+            letter-spacing: 1.5px;
+            transition: 0.3s;
+        }
+
+        .btn-main:hover {
+            background: #ccc;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #333;
+            color: #888;
+            padding: 18px;
+            text-decoration: none;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-secondary:hover {
+            color: #fff;
+            border-color: #fff;
+        }
+
+        /* LOADER */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #333;
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="letter-spacing: 1px; font-size: 12px; text-transform: uppercase;">Sincronizando logros...</p>
+    </div>
+
+    <main id="capture">
+        <div class="header-section">
+            <div class="wrapped-label">ABRIL 2026 - OFFSZN WRAPPED</div>
+            <div class="wrapped-title">Mis logros del mes</div>
+        </div>
+
+        <div class="profile-section">
+            <!-- Añadimos crossOrigin para evitar el error de 0 bytes -->
+            <img src="" id="user-avatar" class="avatar-img" crossOrigin="anonymous"
+                onerror="this.src='https://offszn.lat/images/default-avatar.png'">
+            <div class="profile-link" id="user-link">offszn.lat/@creador</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-label">Vistas</span>
+                <span class="stat-value" id="stat-views">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Likes</span>
+                <span class="stat-value" id="stat-likes">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Seguidores</span>
+                <span class="stat-value" id="stat-followers">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Subidos</span>
+                <span class="stat-value" id="stat-products">0</span>
+            </div>
+        </div>
+
+        <div style="font-size: 10px; color: #444; text-align: center; margin-top: 20px; letter-spacing: 2px;">OFFSZN LAT
+            © 2026</div>
+    </main>
+
+    <div class="controls">
+        <button class="btn-main" id="downloadBtn"><i class="fas fa-download" style="margin-right: 10px;"></i> Descargar
+            imagen</button>
+        <a href="/cuenta/dashboard" class="btn-secondary">VOLVER AL PANEL</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const { data: { user } } = await window.supabaseClient.auth.getUser();
+            if (!user) return window.location.href = '/login';
+
+            try {
+                // FETCH DATA
+                const [userRes, productsRes, followersRes, viewsRes] = await Promise.all([
+                    window.supabaseClient.from('users').select('nickname, avatar_url').eq('id', user.id).single(),
+                    window.supabaseClient.from('products').select('id', { count: 'exact' }).eq('producer_id', user.id).in('status', ['published', 'approved']).eq('visibility', 'public'),
+                    window.supabaseClient.from('followers').select('id', { count: 'exact' }).eq('user_id', user.id),
+                    window.supabaseClient.from('page_views').select('id', { count: 'exact' }).eq('user_id', user.id)
+                ]);
+
+                // Likes Logic
+                let likesCount = 0;
+                const { data: userProducts } = await window.supabaseClient.from('products').select('id').eq('producer_id', user.id);
+                if (userProducts?.length > 0) {
+                    const ids = userProducts.map(p => p.id.toString());
+                    const { count } = await window.supabaseClient.from('likes').select('id', { count: 'exact' }).in('target_id', ids);
+                    likesCount = count || 0;
+                }
+
+                // Update UI
+                const nick = userRes.data?.nickname || 'creador';
+                document.getElementById('user-link').innerText = 'offszn.lat/@' + nick;
+
+                // Forzamos que la URL del avatar sea absoluta y usamos proxy si es necesario
+                const avatarUrl = userRes.data?.avatar_url || 'https://offszn.lat/images/default-avatar.png';
+                document.getElementById('user-avatar').src = avatarUrl;
+
+                document.getElementById('stat-views').innerText = viewsRes.count >= 1000 ? (viewsRes.count / 1000).toFixed(1) + 'K' : viewsRes.count;
+                document.getElementById('stat-likes').innerText = likesCount;
+                document.getElementById('stat-followers').innerText = '+' + (followersRes.count || 0);
+                document.getElementById('stat-products').innerText = productsRes.count || 0;
+
+                // Animación entrada
+                gsap.to("#loader", { opacity: 0, pointerEvents: "none", duration: 0.8, delay: 0.5 });
+                gsap.from("#capture", { y: 20, opacity: 0, duration: 1, ease: "power4.out", delay: 0.8 });
+
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById('loader').innerHTML = "<p>Error al cargar. Por favor refresca.</p>";
+            }
+        });
+
+        // DESCARGA MEJORADA
+        document.getElementById('downloadBtn').addEventListener('click', function () {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> GENERANDO...';
+            btn.disabled = true;
+
+            // Pequeño delay para asegurar que el DOM esté estable
+            setTimeout(() => {
+                html2canvas(document.querySelector("#capture"), {
+                    backgroundColor: "#000",
+                    scale: 2, // Bajamos a 2 para evitar errores de memoria en móviles
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false
+                }).then(canvas => {
+                    try {
+                        const imgData = canvas.toDataURL("image/png");
+                        if (imgData === "data:,") throw new Error("Canvas vacío");
+
+                        const link = document.createElement('a');
+                        link.download = `OFFSZN-WRAPPED.png`;
+                        link.href = imgData;
+                        link.click();
+                    } catch (e) {
+                        alert("Error al generar la imagen. Intenta de nuevo o toma una captura de pantalla.");
+                        console.error(e);
+                    }
+
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }).catch(err => {
+                    alert("Error crítico. Reintenta.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            }, 100);
+        });
+    </script>
+</body>
+
+</html>
