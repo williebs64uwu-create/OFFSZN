@@ -33,8 +33,13 @@ const ProfLoader = {
         if (!container) return;
 
         try {
-            const resp = await fetch('/components/offszn_perfiles_profesionales/navbar.html');
+            const resp = await fetch('/components/offszn_perfiles_profesionales/navbar.html?v=55');
             const html = await resp.text();
+
+            if (html.includes('Te perdiste') || html.includes('<title>404')) {
+                throw new Error("El servidor devolvió la página 404 en lugar de la barra de navegación.");
+            }
+
             container.innerHTML = html;
 
             const avatar = container.querySelector('#nav-avatar');
@@ -77,8 +82,13 @@ const ProfLoader = {
         if (!container) return;
 
         try {
-            const resp = await fetch('/components/offszn_perfiles_profesionales/footer.html');
+            const resp = await fetch('/components/offszn_perfiles_profesionales/footer.html?v=55');
             const html = await resp.text();
+
+            if (html.includes('Te perdiste') || html.includes('<title>404')) {
+                throw new Error("El servidor devolvió la página 404 en lugar del footer.");
+            }
+
             container.innerHTML = html;
 
             const socialsContainer = container.querySelector('#footer-socials');
