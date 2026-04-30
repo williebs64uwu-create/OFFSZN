@@ -122,11 +122,43 @@ function initFaq() {
  * Mobile Navigation
  */
 function initMobileNav() {
-    const toggle = document.getElementById('mobile-toggle');
+    const toggle = document.getElementById('landingMobileToggle');
+    const navLinks = document.querySelector('.navbar-landing .nav-links');
     const header = document.querySelector('.navbar-landing');
-    if (toggle && header) {
-        toggle.addEventListener('click', () => {
-            header.classList.toggle('mobile-menu-active');
+
+    if (toggle && navLinks) {
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navLinks.classList.toggle('active');
+            header?.classList.toggle('mobile-menu-active');
+            
+            // Toggle icon if needed
+            const icon = toggle.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('bi-list');
+                icon.classList.toggle('bi-x');
+            }
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (navLinks.classList.contains('active') && !navLinks.contains(e.target) && e.target !== toggle) {
+                navLinks.classList.remove('active');
+                header?.classList.remove('mobile-menu-active');
+                const icon = toggle.querySelector('i');
+                if (icon) {
+                    icon.classList.add('bi-list');
+                    icon.classList.remove('bi-x');
+                }
+            }
+        });
+
+        // Close menu on link click
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+                header?.classList.remove('mobile-menu-active');
+            });
         });
     }
 }
@@ -180,15 +212,16 @@ function initGsapAnimations() {
             gsap.to(".reveal-group > *, .hero-v4-visual, .hero-cta-buttons, .hero-v4-title, .hero-v4-subtext", { 
                 opacity: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.4, stagger: 0.05, autoAlpha: 1
             });
-            // Direct CSS backup for absolute certainty
-            document.querySelectorAll(".reveal-group, .gsap-reveal, .hero-v4-title").forEach(el => {
-                el.style.opacity = "1";
+            // Safety Override: Force reveal if something hangs
+            const items = document.querySelectorAll(".reveal-mask, .reveal-group, .gsap-reveal, .navbar-landing");
+            items.forEach(el => {
                 el.style.visibility = "visible";
-                el.style.filter = "none";
-                el.style.transform = "none";
+                el.style.opacity = "1";
+                el.style.transform = "none"; // Clear any stuck GSAP transforms
             });
+            console.log("GSAP Safety Reveal Triggered");
         }
-    }, 3500);
+    }, 2500);
 
     // Hero Entry Sequence
     const heroTl = gsap.timeline({ defaults: { ease: "power3.out", duration: 1.5 } });

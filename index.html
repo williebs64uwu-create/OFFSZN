@@ -95,10 +95,19 @@
   <!-- ==================== NAVBAR ==================== -->
   <div id="navbar-landing-container"></div>
   <script>
-    fetch('/components/navbar-landing.html')
-      .then(res => res.text())
+    // Fetch Navbar Landing with Timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+    fetch('/components/navbar-landing.html', { signal: controller.signal })
+      .then(res => {
+        clearTimeout(timeoutId);
+        if (!res.ok) throw new Error('Navbar not found');
+        return res.text();
+      })
       .then(html => {
         document.getElementById('navbar-landing-container').innerHTML = html;
+        
         // Scroll Effect for Glass UI
         window.addEventListener('scroll', () => {
           const nav = document.querySelector('.navbar-landing');
@@ -110,26 +119,34 @@
             }
           }
         });
-        // Auth: toggle navbar state after HTML is injected
-        function tryAuthInit(retries) {
-          if (typeof initAuthState === 'function') {
-            initAuthState();
-          } else if (retries > 0) {
-            setTimeout(() => tryAuthInit(retries - 1), 200);
-          }
-        }
-        tryAuthInit(15);
+
+        // Initialize Auth after navbar is ready
+        if (typeof initAuthState === 'function') initAuthState();
       })
       .catch(err => {
-        console.warn('Navbar fetch failed, initializing auth anyway:', err);
-        function tryAuthInit(retries) {
-          if (typeof initAuthState === 'function') {
-            initAuthState();
-          } else if (retries > 0) {
-            setTimeout(() => tryAuthInit(retries - 1), 200);
-          }
-        }
-        tryAuthInit(15);
+        clearTimeout(timeoutId);
+        console.warn('Navbar fetch failed or timed out:', err);
+        
+        // Inyectar un Navbar de emergencia (Fallback) para que no quede vacío
+        document.getElementById('navbar-landing-container').innerHTML = `
+          <nav class="navbar-landing">
+            <div class="nav-container">
+              <div class="nav-logo">
+                <a href="/">OFFSZN</a>
+              </div>
+              <div class="nav-actions">
+                <a href="/pages/login.html" class="btn-login-premium">Login</a>
+                <button class="mobile-toggle" id="landingMobileToggle">
+                  <i class="bi bi-list"></i>
+                </button>
+              </div>
+            </div>
+          </nav>
+        `;
+
+        // Re-init mobile nav logic for the fallback
+        if (typeof initMobileNav === 'function') initMobileNav();
+        if (typeof initAuthState === 'function') initAuthState();
       });
   </script>
 
