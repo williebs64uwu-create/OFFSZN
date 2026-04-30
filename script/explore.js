@@ -133,9 +133,9 @@ async function fetchData() {
     const hasSessionHint = document.cookie.includes('sb-access-token') || localStorage.getItem('authToken');
 
     if (!token && hasSessionHint) {
-        while (!token && attempts < 20) { // Max 2 seconds
+        while (!token && attempts < 10) { // Max 1 second
             await new Promise(r => setTimeout(r, 100));
-            token = window.AuthUtils.getAccessToken();
+            token = window.AuthUtils && typeof window.AuthUtils.getAccessToken === 'function' ? window.AuthUtils.getAccessToken() : null;
             attempts++;
             if (token) break;
         }

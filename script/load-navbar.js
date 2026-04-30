@@ -9,8 +9,8 @@
 
 (async () => {
     const placeholder = document.getElementById('navbar-placeholder');
-    const CACHE_KEY = 'offszn_navbar_cache_v10'; // Increment key to force update
-    const NAVBAR_URL = 'components/navbar.html?v=30';
+    const CACHE_KEY = 'offszn_navbar_cache_v11'; // Increment key to force update
+    const NAVBAR_URL = 'components/navbar.html?v=31';
 
     /**
      * 🔥 ZERO-FLASH CACHING LOGIC
@@ -24,7 +24,6 @@
         placeholder.remove();
         if (placeholder) placeholder.remove();
         window.dispatchEvent(new CustomEvent('offszn-navbar-loaded'));
-        initGlobalDependencies();
         return;
     }
 
