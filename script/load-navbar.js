@@ -9,8 +9,8 @@
 
 (async () => {
     const placeholder = document.getElementById('navbar-placeholder');
-    const CACHE_KEY = 'offszn_navbar_cache_v11'; // Increment key to force update
-    const NAVBAR_URL = 'components/navbar.html?v=31';
+    const CACHE_KEY = 'offszn_navbar_cache_v12'; // Increment key to force update
+    const NAVBAR_URL = 'components/navbar.html?v=32';
 
     /**
      * 🔥 ZERO-FLASH CACHING LOGIC
@@ -94,6 +94,18 @@
 
     } catch (error) {
         console.error('Error loading navbar component:', error);
+        if (placeholder && !injectedFromCache) {
+            // Eliminar esqueleto y mostrar navbar de fallback
+            placeholder.innerHTML = `
+            <header style="background: #050505; height: 64px; width: 100%; display: flex; align-items: center; padding: 0 24px; box-sizing: border-box; position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.06);">
+                <div style="display:flex; align-items:center; width:100%;">
+                    <a href="/" style="color:#fff; font-weight:bold; font-size:18px; text-decoration:none;">OFFSZN</a>
+                    <div style="margin-left:auto; display:flex; gap:16px;">
+                        <a href="/explorar" style="color:#fff; text-decoration:none; font-size:14px; display:flex; align-items:center;">Explorar</a>
+                    </div>
+                </div>
+            </header>`;
+        }
     }
 
     function loadDependency(url, type, id) {
