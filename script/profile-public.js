@@ -1647,8 +1647,8 @@ window.ProfilePersonalizer = {
         const file = e.target.files[0];
         if (!file) return;
 
-        if (file.size > 30 * 1024 * 1024) {
-            if (window.showToast) window.showToast("El archivo es muy pesado (max 30MB).", "error");
+        if (file.size > 100 * 1024 * 1024) {
+            if (window.showToast) window.showToast("El archivo es muy pesado. Intenta con una imagen más liviana.", "error");
             return;
         }
 

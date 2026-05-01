@@ -915,6 +915,13 @@ app.use((err, req, res, next) => {
 
     const status = err.status || err.statusCode || 500;
 
+    // Mensaje amigable para errores de tamaño (413 Payload Too Large)
+    if (err.type === 'entity.too.large' || status === 413) {
+        return res.status(413).json({
+            error: 'El archivo es demasiado grande. Intenta con una imagen más pequeña (máx. 30MB).'
+        });
+    }
+
     res.status(status).json({
         error: "Ocurrió un error interno en el servidor. Por favor intenta de nuevo más tarde."
     });

@@ -173,9 +173,9 @@ window.AvatarManager = {
             return;
         }
 
-        // Size check (30MB)
-        if (file.size > 30 * 1024 * 1024) {
-            this.showToast(`El archivo pesa ${(file.size / 1024 / 1024).toFixed(1)}MB (máx. 30MB)`, true);
+        // Size check (100MB absolute safety net — images are auto-compressed before upload)
+        if (file.size > 100 * 1024 * 1024) {
+            this.showToast(`El archivo pesa ${(file.size / 1024 / 1024).toFixed(1)}MB. Intenta con una imagen más liviana.`, true);
             e.target.value = '';
             return;
         }
@@ -351,30 +351,65 @@ window.AvatarManager = {
         // Grab state BEFORE close() clears it
         const file = this.originalFile;
         const isGif = this.isCurrentFileGif;
-        const cropData = this.cropper.getData(true); // rounded pixel values
+        const cropper = this.cropper;
 
-        // 🔥 PIXEL-PERFECT PATH: Round everything to integers
-        const crop = {
-            x: Math.round(Math.max(0, cropData.x)),
-            y: Math.round(Math.max(0, cropData.y)),
-            width: Math.round(cropData.width),
-            height: Math.round(cropData.height)
-        };
+        console.log('📦 Save triggered. isGif:', isGif, 'originalSize:', (file.size / 1024 / 1024).toFixed(2) + 'MB');
 
-        console.log('📦 Pixel-Perfect Crop Data:', crop, 'isGif:', isGif);
+        // 🔥 GIF PATH: GIFs can't be canvas-compressed without losing animation.
+        // Send the original file with crop data so the server handles it.
+        if (isGif) {
+            const cropData = cropper.getData(true);
+            const crop = {
+                x: Math.round(Math.max(0, cropData.x)),
+                y: Math.round(Math.max(0, cropData.y)),
+                width: Math.round(cropData.width),
+                height: Math.round(cropData.height)
+            };
+            this.close();
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                if (this.onSuccess) {
+                    const resp = await fetch(event.target.result);
+                    const blob = await resp.blob();
+                    this.onSuccess(blob);
+                } else {
+                    await this.uploadToCloudinary(event.target.result, true, file.size, crop);
+                }
+            };
+            reader.readAsDataURL(file);
+            return;
+        }
+
+        // 🔥 IMAGE PATH: Use getCroppedCanvas() to auto-compress ANY size image.
+        // This is how Instagram/Discord do it: resize + compress in the browser.
+        // Output: 800x800 max, JPEG at 85% quality → always ~100-300KB regardless of input.
+        const canvas = cropper.getCroppedCanvas({
+            maxWidth: 800,
+            maxHeight: 800,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
+        });
 
         this.close();
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            if (this.onSuccess) {
-                const resp = await fetch(event.target.result);
-                const blob = await resp.blob();
-                this.onSuccess(blob);
-            } else {
-                await this.uploadToCloudinary(event.target.result, isGif, file.size, crop);
-            }
-        };
-        reader.readAsDataURL(file);
+
+        if (!canvas) {
+            this.showToast('Error al procesar la imagen. Intenta de nuevo.', true);
+            return;
+        }
+
+        // Convert canvas to compressed base64 (JPEG 85% quality)
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+        const compressedSize = Math.round((compressedBase64.length * 3) / 4); // Approximate real size
+        console.log('✅ Compressed avatar:', (compressedSize / 1024).toFixed(0) + 'KB');
+
+        if (this.onSuccess) {
+            const resp = await fetch(compressedBase64);
+            const blob = await resp.blob();
+            this.onSuccess(blob);
+        } else {
+            // No crop needed server-side since canvas already applied it
+            await this.uploadToCloudinary(compressedBase64, false, compressedSize, null);
+        }
     },
 
     // Core Cloudinary upload method
@@ -428,7 +463,9 @@ window.AvatarManager = {
 
         } catch (err) {
             console.error('Upload error:', err);
-            this.showToast(err.message || 'Error al subir el avatar.', true);
+            // Show server message if available, otherwise generic
+            const msg = err.message || 'Error al subir el avatar. Intenta con una imagen más pequeña.';
+            this.showToast(msg, true);
         }
     },
 
