@@ -23,6 +23,7 @@ import chatRoutes from './infrastructure/http/routes/chat.routes.js';
 import paypalRoutes from './infrastructure/http/routes/paypal.routes.js';
 import r2Routes from './infrastructure/http/routes/r2.routes.js';
 import subscriptionRoutes from './infrastructure/http/routes/subscription.routes.js';
+import subscriptionV2Routes from './infrastructure/http/routes/subscription-v2.routes.js';
 import requestRoutes from './infrastructure/http/routes/request.routes.js';
 import youtubeRoutes from './infrastructure/http/routes/youtube.routes.js';
 import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
@@ -289,6 +290,7 @@ app.use('/api', analyzerRoutes);
 app.use('/api/studio', studioRoutes);
 app.use('/api', profileRoutes);
 app.use('/api', subscriptionRoutes);
+app.use('/api', subscriptionV2Routes);
 app.use('/api', r2Routes);
 app.use('/api/imagekit', imagekitRoutes);
 

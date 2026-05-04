@@ -19,6 +19,12 @@ const router = Router();
 const resolveCache = new Map();
 const MAX_CACHE_SIZE = 2000;
 
+// 🔥 SLOW PATH DIAGNOSTICS: Logs files that needed the discovery loop.
+// Key = originalKey, Value = { resolvedKey, resolvedVersion, timestamp, attempts }
+// This data helps identify DB records with wrong paths that should be fixed.
+const slowPathLog = new Map();
+const MAX_SLOW_LOG = 500;
+
 // 🔥 FILE SIZE LIMITS (server-side enforcement)
 // 🔥 FILE SIZE LIMITS (server-side enforcement)
 const MAX_FILE_SIZE = 1000 * 1024 * 1024; // 1GB (Increased for Stems/WAVs)
@@ -393,7 +399,9 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         }
 
         // 🔥 SLOW PATH: Only if exact key fails, run discovery loop
+        let usedSlowPath = false;
         if (!foundKey) {
+            usedSlowPath = true;
             const trialPrefixes = [
                 '',               // Exacto como viene
                 'products/',      // Pre-migración
@@ -445,6 +453,24 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
                 resolveCache.delete(firstKey);
             }
             resolveCache.set(key, { version: foundVersion, key: foundKey });
+
+            // 🔥 DIAGNOSTICS: Log slow-path discoveries (only once per unique key)
+            if (usedSlowPath && !slowPathLog.has(key)) {
+                if (slowPathLog.size >= MAX_SLOW_LOG) {
+                    const oldest = slowPathLog.keys().next().value;
+                    slowPathLog.delete(oldest);
+                }
+                slowPathLog.set(key, {
+                    originalKey: key,
+                    resolvedKey: foundKey,
+                    resolvedVersion: foundVersion,
+                    mismatch: key !== foundKey,
+                    timestamp: new Date().toISOString()
+                });
+                if (key !== foundKey) {
+                    console.log(`🐌 [R2 Slow Path] "${key}" → Found at "${foundKey}" (${foundVersion})`);
+                }
+            }
         }
 
 
@@ -496,6 +522,123 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
     }
 });
 
+
+// 🔥 ADMIN DIAGNOSTICS: View slow-path discoveries and optionally auto-fix DB
+router.get('/admin/r2-diagnostics', async (req, res) => {
+    // Simple auth check via query param (matches existing admin pattern)
+    const secret = req.headers['x-offszn-secret'] || req.query.secret;
+    if (secret !== 'offszn_keep_alive_2026_safe') {
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const entries = Array.from(slowPathLog.values());
+    const mismatches = entries.filter(e => e.mismatch);
+
+    res.json({
+        summary: {
+            totalDiscoveries: entries.length,
+            mismatches: mismatches.length,
+            cacheSize: resolveCache.size,
+            message: mismatches.length > 0
+                ? `⚠️ ${mismatches.length} archivos necesitan corrección en la BD para cargar más rápido.`
+                : '✅ Todos los archivos se resuelven correctamente.'
+        },
+        mismatches: mismatches.map(e => ({
+            dbSays: e.originalKey,
+            actuallyAt: e.resolvedKey,
+            version: e.resolvedVersion,
+            foundAt: e.timestamp
+        })),
+        allDiscoveries: entries
+    });
+});
+
+// 🔥 ADMIN AUTO-FIX: Update product paths in DB to match actual R2 locations
+router.post('/admin/r2-fix-paths', async (req, res) => {
+    const secret = req.headers['x-offszn-secret'] || req.query.secret;
+    if (secret !== 'offszn_keep_alive_2026_safe') {
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const mismatches = Array.from(slowPathLog.values()).filter(e => e.mismatch);
+    let fixed = 0;
+    let errors = [];
+
+    for (const entry of mismatches) {
+        try {
+            // Buscamos el nombre del archivo (la parte final de la ruta)
+            const filename = entry.originalKey.split('/').pop();
+            
+            // Buscamos productos que tengan ese archivo en su audio_url o image_url
+            // Usamos ILIKE %path% para que lo encuentre aunque tenga el dominio al principio
+            let { data: products } = await supabase
+                .from('products')
+                .select('id, name, audio_url, image_url')
+                .or(`audio_url.ilike.%${entry.originalKey}%,image_url.ilike.%${entry.originalKey}%`)
+                .limit(5);
+
+            // Si aún no lo encuentra por ruta completa, buscamos solo por el nombre del archivo
+            if (!products || products.length === 0) {
+                const { data: byFilename } = await supabase
+                    .from('products')
+                    .select('id, name, audio_url, image_url')
+                    .or(`audio_url.ilike.%${filename}%,image_url.ilike.%${filename}%`)
+                    .limit(5);
+                products = byFilename;
+            }
+
+            if (products && products.length > 0) {
+                for (const product of products) {
+                    const updateFields = {};
+
+                    // Verificamos cuál campo coincide para actualizarlo
+                    if (product.audio_url && product.audio_url.includes(filename)) {
+                        updateFields.audio_url = entry.resolvedKey;
+                    }
+                    if (product.image_url && product.image_url.includes(filename)) {
+                        updateFields.image_url = entry.resolvedKey;
+                    }
+                    if (entry.resolvedVersion) {
+                        updateFields.r2_version = entry.resolvedVersion;
+                    }
+
+                    if (Object.keys(updateFields).length > 0) {
+                        const { error } = await supabase
+                            .from('products')
+                            .update(updateFields)
+                            .eq('id', product.id);
+
+                        if (error) {
+                            errors.push({ id: product.id, error: error.message });
+                        } else {
+                            fixed++;
+                            console.log(`✅ [R2 Auto-Fix] Product ${product.id} (${product.name}): Corregido a ${entry.resolvedKey}`);
+                        }
+                    }
+                }
+            } else {
+                errors.push({ key: entry.originalKey, note: 'No se encontró el producto en la BD' });
+            }
+        } catch (e) {
+            errors.push({ key: entry.originalKey, error: e.message });
+        }
+    }
+
+    // 🔥 CLEANUP: Remove fixed entries from the log so diagnostics shows clean state
+    if (fixed > 0) {
+        for (const entry of mismatches) {
+            slowPathLog.delete(entry.originalKey);
+        }
+        console.log(`🧹 [R2 Diagnostics] Cleared ${mismatches.length} entries from slow-path log after fixing ${fixed}.`);
+    }
+
+    res.json({
+        message: `Corregidos ${fixed} de ${mismatches.length} productos.`,
+        fixed,
+        total: mismatches.length,
+        errors: errors.length > 0 ? errors : undefined
+    });
+});
 
 router.post('/r2/copy-file', authenticateTokenMiddleware, async (req, res) => {
     try {

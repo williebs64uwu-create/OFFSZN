@@ -15,7 +15,8 @@
         window.supabaseClient = null;
     </script>
     <script src="/script/auth-utils.js?v=11"></script>
-    <script src="../script/auth-guard.js"></script>
+    <!-- auth-guard NOT loaded here — planes.html must be publicly accessible.
+         Guest protection is handled inside goToCheckout() instead. -->
 
     <style>
         :root {
@@ -1096,8 +1097,35 @@
 
         // === GO TO CHECKOUT ===
         function goToCheckout(plan) {
+            if (typeof AuthUtils !== 'undefined' && !AuthUtils.isLoggedIn()) {
+                // Save selection to resume after login/signup
+                sessionStorage.setItem('offszn_pending_plan', JSON.stringify({
+                    plan: plan,
+                    currency: currentCurrency,
+                    interval: currentFrequency
+                }));
+                
+                openGuestModal();
+                return;
+            }
+
             var url = 'checkout.html?plan=' + plan + '&currency=' + currentCurrency + '&interval=' + currentFrequency;
             window.location.href = url;
+        }
+
+        // === GUEST MODAL LOGIC ===
+        function openGuestModal() {
+            document.getElementById('guest-auth-modal').classList.add('active');
+        }
+
+        function closeGuestModal() {
+            document.getElementById('guest-auth-modal').classList.remove('active');
+        }
+
+        function redirectToAuth(type) {
+            const url = type === 'signup' ? '/pages/register.html' : '/pages/login.html';
+            // We append a redirect back to planes so it resumes automatically
+            window.location.href = url + '?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
         }
 
         // === PLAN STATUS CHECK ===
@@ -1200,6 +1228,22 @@
         setCurrency(currentCurrency);
 
         document.addEventListener('DOMContentLoaded', function() {
+            // 🔥 RESUME PENDING CHECKOUT: If guest selected a plan then logged in/signed up
+            const pendingPlanRaw = sessionStorage.getItem('offszn_pending_plan');
+            if (pendingPlanRaw && AuthUtils && AuthUtils.isLoggedIn()) {
+                try {
+                    const pending = JSON.parse(pendingPlanRaw);
+                    sessionStorage.removeItem('offszn_pending_plan'); // Clear to avoid loops
+                    
+                    console.log("🚀 Resuming pending checkout for:", pending.plan);
+                    const url = `checkout.html?plan=${pending.plan}&currency=${pending.currency}&interval=${pending.interval}`;
+                    window.location.href = url;
+                    return; // Stop further execution as we are redirecting
+                } catch(e) {
+                    console.error("Error resuming pending plan:", e);
+                }
+            }
+
             checkPlanStatus();
         });
     </script>
@@ -1231,5 +1275,174 @@
             }
         });
     </script>
+    <!-- GUEST AUTH MODAL -->
+    <div id="guest-auth-modal" class="premium-modal">
+        <div class="modal-backdrop" onclick="closeGuestModal()"></div>
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeGuestModal()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"></path>
+                </svg>
+            </button>
+
+            <div class="modal-header">
+                <h2>Crea tu cuenta</h2>
+                <p>Necesitas una cuenta en OFFSZN para poder activar y gestionar tu suscripción.</p>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-primary" onclick="redirectToAuth('signup')">
+                    Registrarme ahora
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14m-7-7l7 7-7 7"></path>
+                    </svg>
+                </button>
+                <button class="btn-secondary" onclick="redirectToAuth('login')">
+                    Ya tengo una cuenta
+                </button>
+            </div>
+            
+            <p class="modal-footer">Tu progreso se guardará y volverás aquí automáticamente.</p>
+        </div>
+    </div>
+
+    <style>
+        /* Premium Modal Styles */
+        .premium-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .premium-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-content {
+            position: relative;
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+            transform: translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .premium-modal.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: white;
+        }
+
+        .modal-header .logo-circle {
+            width: 64px;
+            height: 64px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+
+        .modal-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .modal-header p {
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-primary {
+            background: white;
+            color: black;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-footer {
+            margin-top: 24px;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+    </style>
 </body>
 </html>

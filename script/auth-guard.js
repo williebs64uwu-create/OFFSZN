@@ -33,18 +33,33 @@
 
                 console.log("✅ Auth Guard: Protected Access Granted & Token Synced");
             } else {
+                // 🔥 BYPASS: If we are on planes.html, don't redirect. Let them see the pricing.
+                if (window.location.pathname.includes('planes.html')) {
+                    console.log("ℹ️ Auth Guard: No session but on planes.html. Bypass redirect.");
+                    return;
+                }
+
                 console.warn("⛔ Auth Guard: No Session. Redirecting...");
                 redirectToLogin();
             }
         } catch (e) {
             console.error("Auth Guard Error:", e);
-            redirectToLogin();
+            if (!window.location.pathname.includes('planes.html')) {
+                redirectToLogin();
+            }
         }
     }
 
     function redirectToLogin() {
         // Clear cookie to be safe
         document.cookie = "sb-access-token=; path=/; max-age=0; SameSite=Strict; Secure";
+        
+        // 🔥 BYPASS: If we are on planes.html, don't redirect. Let them see the pricing.
+        if (window.location.pathname.includes('planes.html')) {
+            console.log("ℹ️ Auth Guard: User signed out, but on planes.html. Bypass redirect.");
+            return;
+        }
+        
         window.location.href = '/explorar.html';
     }
 
