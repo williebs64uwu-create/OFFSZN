@@ -1,7 +1,7 @@
 const fs = require('fs');
 
-// Data from Supabase query (291 users)
-const users = [{"Email address":"1975.espinosamilagros@gmail.com","First name":"jose","Last name":"0","Segmento":"Usuario General","Plan":"Free","Role":"Productor Musical","Onboarding":"Completado","PrimerUpload":"No","Productos":"0","Seguidores":"0"},{"Email address":"1xikoh@gmail.com","First name":"xikoo","Last name":"0","Segmento":"Usuario General","Plan":"Free","Role":"Artista / Cantante","Onboarding":"Completado","PrimerUpload":"No","Productos":"0","Seguidores":"0"},{"Email address":"2koziee@gmail.com","First name":"2kozie","Last name":"2","Segmento":"Usuario General","Plan":"Free","Role":"Productor Musical","Onboarding":"Completado","PrimerUpload":"No","Productos":"1","Seguidores":"2"},{"Email address":"4lbertguzman666@gmail.com","First name":"jxy","Last name":"0","Segmento":"Usuario General","Plan":"Free","Role":"Productor Musical","Onboarding":"Completado","PrimerUpload":"No","Productos":"1","Seguidores":"0"},{"Email address":"808salamamusic33@gmail.com","First name":"808salama","Last name":"1","Segmento":"Usuario General","Plan":"Free","Role":"Productor Musical","Onboarding":"Completado","PrimerUpload":"No","Productos":"3","Seguidores":"1"}];
+// Data from Supabase query (mock data for test)
+const users = [{"Email address":"test1@example.com","First name":"Test","Last name":"1","Segmento":"Usuario General","Plan":"Free","Role":"Productor Musical","Onboarding":"Completado","PrimerUpload":"No","Productos":"0","Seguidores":"0"},{"Email address":"test2@example.com","First name":"Test","Last name":"2","Segmento":"Usuario General","Plan":"Free","Role":"Artista / Cantante","Onboarding":"Completado","PrimerUpload":"No","Productos":"0","Seguidores":"0"}];
 
 // Just a test - we'll use the full approach differently
 const headers = Object.keys(users[0]);
