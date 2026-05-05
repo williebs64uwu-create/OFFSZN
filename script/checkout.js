@@ -1171,7 +1171,10 @@ const CheckoutManager = {
       const safeName = this.escapeHTML(item.product.name);
       
       const isBeat = String(item.product.product_type).toLowerCase() === 'beat';
-      const enabledLicenses = item.product.licenses ? item.product.licenses.filter(l => l.enabled) : [];
+      // Normalize licenses: DB stores as object {key: {…}}, convert to array
+      const rawLicenses = item.product.licenses || [];
+      const licensesArr = Array.isArray(rawLicenses) ? rawLicenses : Object.entries(rawLicenses).map(([key, val]) => ({ id: key, ...val }));
+      const enabledLicenses = licensesArr.filter(l => l.enabled);
       
       // Label logic
       let safeLicDisplay = '';
@@ -1835,7 +1838,9 @@ const CheckoutManager = {
     const container = document.getElementById('checkout-lic-body');
     if (!container) return;
 
-    const licenses = item.product.licenses || [];
+    // Normalize licenses: DB stores as object {key: {…}}, convert to array
+    const rawLicenses = item.product.licenses || [];
+    const licenses = Array.isArray(rawLicenses) ? rawLicenses : Object.entries(rawLicenses).map(([key, val]) => ({ id: key, ...val }));
     if (licenses.length === 0) {
       container.innerHTML = `<p style="color:#666; font-size:0.85rem; text-align:center; padding: 20px;">No se encontraron licencias para este producto.</p>`;
       return;
