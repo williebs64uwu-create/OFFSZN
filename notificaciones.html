@@ -767,21 +767,55 @@
                     // Render HTML
                     let finalHtml = '';
                     
-                    // --- INJECT WRAPPED SPECIAL BANNER ---
-                    // This only shows if there's significant activity or specific season
-                    finalHtml += `
-                        <div class="wrapped-banner" onclick="window.location.href='/cuenta/wrapped.html'">
-                            <div class="sparkle">✨</div>
-                            <span class="label">Abril 2026</span>
-                            <h2>¡Tu Resumen del Mes está listo!</h2>
-                            <div class="stats-row">
-                                <div class="stat"><span class="v">1.2K</span><span class="l">Vistas</span></div>
-                                <div class="stat"><span class="v">124</span><span class="l">Likes</span></div>
-                                <div class="stat"><span class="v">+86</span><span class="l">Seguidores</span></div>
-                            </div>
-                            <p class="insight">IA Insight: Tus seguidores amaron "VVS Diamond", prueba subiendo similares este mes.</p>
-                        </div>
-                    `;
+                    // --- INJECT MONTHLY SUMMARY BANNER (Real Data from DB) ---
+                    // Visibility rule: show from day 30 to day 7 of next month
+                    const today = new Date();
+                    const dayOfMonth = today.getDate();
+                    const showSummary = dayOfMonth >= 30 || dayOfMonth <= 7;
+                    
+                    if (showSummary) {
+                        // Determine which month to show
+                        // If day 1-7, show LAST month's summary. If day 30-31, show current month's summary.
+                        let summaryDate;
+                        if (dayOfMonth <= 7) {
+                            // We're in the first week — show last month
+                            summaryDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                        } else {
+                            // Day 30+ — show current month
+                            summaryDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                        }
+                        const monthYear = `${summaryDate.getFullYear()}-${String(summaryDate.getMonth() + 1).padStart(2, '0')}`;
+                        const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+                        const monthLabel = `${monthNames[summaryDate.getMonth()]} ${summaryDate.getFullYear()}`.toUpperCase();
+
+                        const { data: summary, error: summaryErr } = await window.supabaseClient
+                            .from('monthly_summaries')
+                            .select('*')
+                            .eq('user_id', userId)
+                            .eq('month_year', monthYear)
+                            .maybeSingle();
+
+                        if (summary && !summaryErr) {
+                            const formatNum = (n) => {
+                                if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+                                return String(n);
+                            };
+                            
+                            finalHtml += `
+                                <div class="wrapped-banner" onclick="window.location.href='/cuenta/wrapped.html'">
+                                    <div class="sparkle">✨</div>
+                                    <span class="label">${monthLabel}</span>
+                                    <h2>¡Tu Resumen del Mes está listo!</h2>
+                                    <div class="stats-row">
+                                        <div class="stat"><span class="v">${formatNum(summary.total_views)}</span><span class="l">Vistas</span></div>
+                                        <div class="stat"><span class="v">${formatNum(summary.total_likes)}</span><span class="l">Likes</span></div>
+                                        <div class="stat"><span class="v">+${formatNum(summary.new_followers)}</span><span class="l">Seguidores</span></div>
+                                    </div>
+                                    ${summary.insight ? `<p class="insight">IA Insight: ${summary.insight}</p>` : ''}
+                                </div>
+                            `;
+                        }
+                    }
 
                     const groupOrder = ['Hoy', 'Ayer', 'Esta Semana', 'Anteriores'];
 
