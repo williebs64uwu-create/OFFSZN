@@ -71,7 +71,7 @@ export const registerUser = async (req, res) => {
 
         const tempNickname = `user_${uuidv4().substring(0, 8)}`;
 
-        const WELCOME_CREDITS = 20;
+        const WELCOME_CREDITS = 40;
 
         const { data, error } = await supabase
             .from('users')

@@ -219,7 +219,7 @@ const processSubscriptionAudit = async (paymentId) => {
                 await supabase.from('users').update({ plan: newPlan }).eq('id', userId);
 
                 // Dar los créditos iniciales
-                const creditsMap = { 'starter': 60, 'pro': 100 };
+                const creditsMap = { 'starter': 150, 'pro': 300 };
                 const creditsToGive = creditsMap[newPlan];
 
                 // Asumiendo que existe una columna 'reward_balance' según task.md
@@ -242,12 +242,12 @@ const processSubscriptionAudit = async (paymentId) => {
 
 const PAYPAL_PLAN_PRICES = {
     starter: { 
-        monthly: { amount: '5.00', title: 'OFFSZN Starter Plan (1 Month)', durationDays: 30, credits: 60 },
-        annual: { amount: '20.00', title: 'OFFSZN Starter Plan (1 Year)', durationDays: 365, credits: 720 }
+        monthly: { amount: '5.00', title: 'OFFSZN Starter Plan (1 Month)', durationDays: 30, credits: 150 },
+        annual: { amount: '20.00', title: 'OFFSZN Starter Plan (1 Year)', durationDays: 365, credits: 1800 }
     },
     pro: { 
-        monthly: { amount: '7.00', title: 'OFFSZN PRO Plan (1 Month)', durationDays: 30, credits: 100 },
-        annual: { amount: '30.00', title: 'OFFSZN PRO Plan (1 Year)', durationDays: 365, credits: 1200 }
+        monthly: { amount: '7.00', title: 'OFFSZN PRO Plan (1 Month)', durationDays: 30, credits: 300 },
+        annual: { amount: '30.00', title: 'OFFSZN PRO Plan (1 Year)', durationDays: 365, credits: 3600 }
     }
 };
 

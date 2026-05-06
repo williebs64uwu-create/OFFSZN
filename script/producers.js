@@ -683,7 +683,7 @@ function setupModalListeners() {
                         if (errorContainer) {
                             errorContainer.innerHTML = `<span style="color: #ef4444; font-size: 0.85rem; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; display: block; margin-top: 15px;">
                                 <i class="bi bi-exclamation-circle-fill"></i> Ya enviaste tu solicitud diaria y en 24 horas estarás pudiendo enviar otra bro. <br>
-                                <a href="/cuenta/planes" style="color: #fff; text-decoration: underline; font-weight: 700;">¡Pásate a PRO para ilimitadas!</a>
+                                <a href="/cuenta/planes.html" style="color: #fff; text-decoration: underline; font-weight: 700;">¡Pásate a PRO para ilimitadas!</a>
                             </span>`;
                         } else {
                             alert(`Ya enviaste tu solicitud diaria y en 24 horas estarás pudiendo enviar otra bro.`);

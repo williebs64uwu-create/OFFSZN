@@ -415,7 +415,7 @@ async function renderHeader(user, categoryCounts = null) {
         else if (user.plan === 'starter') planTitle = ' OFFSZN STARTER';
 
         const planLink = document.createElement('a');
-        planLink.href = '/cuenta/planes';
+        planLink.href = '/cuenta/planes.html';
         planLink.textContent = planTitle;
         ttHeader.appendChild(planLink);
         tooltip.appendChild(ttHeader);
