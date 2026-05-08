@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFFSZN - Audiencia & Campañas (EmailOctopus)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0d0d12;
+            --surface-color: #1a1a24;
+            --surface-hover: #252533;
+            --primary: #8a2be2;
+            --primary-hover: #9d4edd;
+            --text-main: #f8f9fa;
+            --text-muted: #a0a0b0;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-weight: 800;
+            background: linear-gradient(90deg, #fff, #a0a0b0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background-color: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-box {
+            background: rgba(138, 43, 226, 0.1);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: rgba(0,0,0,0.2);
+            border: 1px solid var(--border-color);
+            color: white;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: rgba(255, 255, 255, 0.02);
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .file-upload {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            border: 1px dashed var(--primary);
+            border-radius: 6px;
+            text-align: center;
+            background: rgba(138, 43, 226, 0.05);
+        }
+
+        .pill {
+            background: rgba(255,255,255,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-right: 4px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div>
+            <h1>OFFSZN Audiencia</h1>
+            <div class="subtitle">Willie Inspired - Segmentación EmailOctopus</div>
+        </div>
+        <div id="status" class="badge">Esperando datos...</div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Sidebar Controls -->
+        <div class="card">
+            <div class="file-upload">
+                <label for="csvFileInput" style="cursor: pointer; color: var(--primary);">
+                    📁 Cargar Customer_List.csv manual
+                </label>
+                <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">Si no carga automáticamente, sube el archivo de /.agent/recursos/</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalContacts">0</div>
+                    <div class="stat-label">Contactos</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="totalRevenue">$0</div>
+                    <div class="stat-label">LTV Total</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <h3>Filtros de Campaña</h3>
+                
+                <div>
+                    <label>Producto Comprado (Preset Type)</label>
+                    <select id="filterProduct">
+                        <option value="">Todos los productos</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>País (Country)</label>
+                    <select id="filterCountry">
+                        <option value="">Todos los países</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Uso de Cupón (Coupon)</label>
+                    <select id="filterCoupon">
+                        <option value="">Todos</option>
+                        <option value="yes">Usaron cupón</option>
+                        <option value="no">No usaron cupón</option>
+                    </select>
+                </div>
+
+                <button class="btn" onclick="exportFilteredCSV()">📥 Exportar Segmento (CSV)</button>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3>Contactos Filtrados (<span id="filteredCount">0</span>)</h3>
+                <input type="text" id="searchInput" placeholder="Buscar email..." style="width: 250px; padding: 0.5rem;">
+            </div>
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Email Address</th>
+                            <th>Preset Type (Items)</th>
+                            <th>Amount USD</th>
+                            <th>Country</th>
+                            <th>Coupon Used</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let rawData = [];
+        let filteredData = [];
+
+        // DOM Elements
+        const fileInput = document.getElementById('csvFileInput');
+        const filterProduct = document.getElementById('filterProduct');
+        const filterCountry = document.getElementById('filterCountry');
+        const filterCoupon = document.getElementById('filterCoupon');
+        const searchInput = document.getElementById('searchInput');
+        const tbody = document.querySelector('#dataTable tbody');
+
+        // Intentar cargar automáticamente si estamos en un servidor web local
+        window.addEventListener('DOMContentLoaded', () => {
+            fetch('.agent/recursos/Customer_List.csv')
+                .then(response => {
+                    if (!response.ok) throw new Error('File not accessible via fetch');
+                    return response.text();
+                })
+                .then(csvText => {
+                    processCSV(csvText);
+                    document.getElementById('status').innerText = 'Datos cargados automáticamente';
+                })
+                .catch(err => {
+                    console.log("No se pudo auto-cargar, esperando subida manual.", err);
+                    document.getElementById('status').innerText = 'Requiere carga manual';
+                    document.getElementById('status').style.background = 'rgba(239, 68, 68, 0.1)';
+                    document.getElementById('status').style.color = '#ef4444';
+                });
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    processCSV(event.target.result);
+                    document.getElementById('status').innerText = 'Archivo manual cargado';
+                    document.getElementById('status').style.background = 'rgba(16, 185, 129, 0.1)';
+                    document.getElementById('status').style.color = 'var(--success)';
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function processCSV(csvText) {
+            Papa.parse(csvText, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    // Extraer los fields que queremos
+                    rawData = results.data.map(row => {
+                        return {
+                            email: row['Email'] || '',
+                            presetType: row['Items In Cart'] || '',
+                            amountUsd: parseFloat(row['Amount Net'] || row['Amount Gross'] || 0),
+                            country: row['Country Name'] || '',
+                            coupon: parseInt(row['Coupon Code Applied'] || '0') === 1
+                        };
+                    });
+                    
+                    populateFilters();
+                    applyFilters();
+                }
+            });
+        }
+
+        function populateFilters() {
+            const products = new Set();
+            const countries = new Set();
+
+            rawData.forEach(row => {
+                if (row.presetType) {
+                    // split by comma if multiple products
+                    row.presetType.split(',').forEach(p => products.add(p.trim()));
+                }
+                if (row.country) countries.add(row.country);
+            });
+
+            // Populate Product Dropdown
+            filterProduct.innerHTML = '<option value="">Todos los productos</option>';
+            Array.from(products).sort().forEach(p => {
+                if(p) filterProduct.innerHTML += `<option value="${p}">${p}</option>`;
+            });
+
+            // Populate Country Dropdown
+            filterCountry.innerHTML = '<option value="">Todos los países</option>';
+            Array.from(countries).sort().forEach(c => {
+                if(c) filterCountry.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+        }
+
+        function applyFilters() {
+            const product = filterProduct.value;
+            const country = filterCountry.value;
+            const coupon = filterCoupon.value;
+            const search = searchInput.value.toLowerCase();
+
+            filteredData = rawData.filter(row => {
+                let match = true;
+                
+                if (product && !row.presetType.includes(product)) match = false;
+                if (country && row.country !== country) match = false;
+                
+                if (coupon === 'yes' && !row.coupon) match = false;
+                if (coupon === 'no' && row.coupon) match = false;
+
+                if (search && !row.email.toLowerCase().includes(search)) match = false;
+
+                return match;
+            });
+
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update Stats
+            document.getElementById('totalContacts').innerText = filteredData.length;
+            const totalRev = filteredData.reduce((acc, row) => acc + row.amountUsd, 0);
+            document.getElementById('totalRevenue').innerText = `$${totalRev.toFixed(2)}`;
+            document.getElementById('filteredCount').innerText = filteredData.length;
+
+            // Render Table
+            tbody.innerHTML = '';
+            filteredData.forEach(row => {
+                const tr = document.createElement('tr');
+                
+                // Format preset pills
+                const presets = row.presetType.split(',').map(p => `<span class="pill">${p.trim()}</span>`).join('');
+
+                tr.innerHTML = `
+                    <td style="font-weight: 600; color: #fff;">${row.email}</td>
+                    <td>${presets}</td>
+                    <td style="color: var(--success);">$${row.amountUsd.toFixed(2)}</td>
+                    <td>${row.country || '-'}</td>
+                    <td>${row.coupon ? '<span class="badge">Sí</span>' : '<span style="color: var(--text-muted)">No</span>'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Event Listeners for filters
+        filterProduct.addEventListener('change', applyFilters);
+        filterCountry.addEventListener('change', applyFilters);
+        filterCoupon.addEventListener('change', applyFilters);
+        searchInput.addEventListener('input', applyFilters);
+
+        function exportFilteredCSV() {
+            if(filteredData.length === 0) return alert('No hay datos para exportar');
+            
+            // Format for EmailOctopus
+            const csvData = filteredData.map(row => ({
+                "Email address": row.email,
+                "PRESET TYPE": row.presetType,
+                "AMOUNT USD": row.amountUsd,
+                "COUNTRY": row.country,
+                "COUPON": row.coupon ? 'Yes' : 'No'
+            }));
+
+            const csv = Papa.unparse(csvData);
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'EmailOctopus_Segment.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

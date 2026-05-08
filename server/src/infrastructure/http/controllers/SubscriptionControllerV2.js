@@ -5,7 +5,7 @@ import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../.
 export const subscribePayPalRecurring = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { subscriptionID, plan } = req.body;
+        const { subscriptionID, plan, interval } = req.body;
 
         if (!subscriptionID) {
             return res.status(400).json({ error: 'Falta ID de suscripción de PayPal.' });
@@ -54,7 +54,13 @@ export const subscribePayPalRecurring = async (req, res) => {
         let nextBilling = subData.billing_info?.next_billing_time;
         if (!nextBilling) {
             // Fallback si paypal no lo envió
-            const daysToAdd = plan === 'pro' ? 7 : 30; // pro = 7 dias trial
+            let daysToAdd = 30; // Default mensual
+            if (interval === 'annual') {
+                daysToAdd = 365;
+            } else if (plan === 'pro') {
+                daysToAdd = 7; // Trial
+            }
+            
             const d = new Date();
             d.setDate(d.getDate() + daysToAdd);
             nextBilling = d.toISOString();
