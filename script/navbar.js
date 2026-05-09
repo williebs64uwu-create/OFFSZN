@@ -509,7 +509,18 @@ async function performSearch(query, category, autoRedirectExact = false) {
 
         // --- FALLBACK: IF NO RESULTS MATCH, FETCH TOP 3 ---
         if (matchedProducts.length === 0 && matchedUsers.length === 0) {
-            matchedProducts = [...cache.products].sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0)).slice(0, 3).map(item => ({ ...item, isFallback: true }));
+            const willieId = '0382a813-85c7-46c3-8d2c-61a5692adffd';
+            matchedProducts = [...cache.products]
+                .filter(p => {
+                    const producer = cache.profileMap[p.producer_id];
+                    const prodName = (producer?.nickname || '').toLowerCase();
+                    return String(p.producer_id) !== willieId && 
+                           prodName !== 'willieinspired' && 
+                           prodName !== 'willie inspired';
+                })
+                .sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0))
+                .slice(0, 3)
+                .map(item => ({ ...item, isFallback: true }));
         }
 
         if (matchedProducts.length > 0) {

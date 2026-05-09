@@ -1,0 +1,82 @@
+
+<section id="ai-store-creator" class="py-20 px-6 bg-black text-white relative overflow-hidden">
+  <div class="max-w-4xl mx-auto text-center relative z-10">
+    <h2 class="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
+      Describe tu tienda y <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">créala en segundos</span>
+    </h2>
+    <p class="text-gray-400 text-lg mb-10">Dinos qué tipo de productor eres, tus influencias y cómo quieres que se sienta tu marca. Nuestra IA configurará tu espacio por ti.</p>
+    
+    <div class="relative bg-zinc-900/50 p-1 rounded-2xl border border-zinc-800 shadow-2xl backdrop-blur-sm">
+      <textarea 
+        id="store-description" 
+        maxlength="3000"
+        placeholder="Ej: Soy un productor de R&B con vibras oscuras tipo Bryson Tiller. Quiero una tienda minimalista, elegante y con enfoque en licencias exclusivas..."
+        class="w-full h-64 bg-zinc-950/50 text-white p-6 rounded-xl border-none focus:ring-2 focus:ring-purple-500 transition-all resize-none text-lg"
+      ></textarea>
+      
+      <div class="absolute bottom-6 left-6 text-zinc-500 text-sm font-mono">
+        <span id="word-count">0</span> / 600 palabras
+      </div>
+      
+      <button 
+        onclick="handleStoreCreation()"
+        class="absolute bottom-4 right-4 bg-white text-black px-8 py-3 rounded-lg font-bold hover:scale-105 transition-transform active:scale-95 shadow-lg"
+      >
+        Obtén tu tienda →
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Modal de Conversión -->
+<div id="register-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+  <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl max-w-md w-full text-center shadow-[0_0_50px_rgba(168,85,247,0.2)]">
+    <div class="w-20 h-20 bg-gradient-to-tr from-purple-500 to-pink-500 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg animate-pulse">
+      <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+    </div>
+    <h3 class="text-2xl font-bold mb-2">¡Propuesta Generada!</h3>
+    <p class="text-gray-400 mb-8">Hemos diseñado una estructura basada en tu descripción. Solo regístrate para activarla y empezar a vender.</p>
+    
+    <div class="space-y-4">
+      <a href="/pages/register" class="block w-full bg-white text-black py-4 rounded-xl font-bold text-lg hover:bg-gray-200 transition-colors">
+        Crear mi cuenta gratis
+      </a>
+      <button onclick="closeRegisterModal()" class="text-zinc-500 hover:text-white transition-colors text-sm">
+        Seguir editando
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const textArea = document.getElementById('store-description');
+  const wordCountSpan = document.getElementById('word-count');
+
+  textArea.addEventListener('input', () => {
+    const text = textArea.value.trim();
+    const words = text ? text.split(/\s+/).length : 0;
+    wordCountSpan.innerText = words;
+    
+    if (words > 600) {
+      textArea.value = text.split(/\s+/).slice(0, 600).join(' ');
+    }
+  });
+
+  function handleStoreCreation() {
+    const description = textArea.value.trim();
+    if (description.length < 10) {
+      alert('Por favor, describe un poco más tu tienda para poder generarla.');
+      return;
+    }
+    
+    // Guardamos la info para el panel de ADMIN
+    localStorage.setItem('pending_store_description', description);
+    
+    // Mostramos el modal de registro
+    document.getElementById('register-modal').classList.remove('hidden');
+  }
+
+  function closeRegisterModal() {
+    document.getElementById('register-modal').classList.add('hidden');
+  }
+</script>

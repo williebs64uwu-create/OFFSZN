@@ -3,6 +3,7 @@ import { MercadoPagoConfig, Preference } from 'mercadopago';
 import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
 import { PLATFORM_PAYPAL_EMAIL } from '../../../shared/config/config.js';
+import { syncUserStatsToEmailOctopus } from '../../services/email-octopus.service.js';
 
 export const getPublicKey = async (req, res) => {
     return res.json({ publicKey: process.env.MERCADOPAGO_PUBLIC_KEY });
@@ -229,6 +230,9 @@ const processSubscriptionAudit = async (paymentId) => {
                 await supabase.from('users').update({ reward_balance: currentBalance + creditsToGive }).eq('id', userId);
 
                 console.log(`✅ [SUB SUCCESS] Plan actualizado y ${creditsToGive} créditos otorgados.`);
+
+                // 🔄 SYNC TO EMAILOCTOPUS (Background)
+                syncUserStatsToEmailOctopus(userId).catch(err => console.error('[EmailOctopus] Sub sync failed:', err));
             }
         }
     } catch (e) {
@@ -425,6 +429,9 @@ export const capturePayPalSubscriptionOrder = async (req, res) => {
         await supabase.from('users').update({ reward_balance: currentBalance + creditsToGive }).eq('id', userId);
 
         console.log(`✅ [PayPal Sub] Plan upgraded to ${plan} (${interval}), ${creditsToGive} credits given. New Expiry: ${newPeriodEnd}`);
+
+        // 🔄 SYNC TO EMAILOCTOPUS (Background)
+        syncUserStatsToEmailOctopus(userId).catch(err => console.error('[EmailOctopus] PayPal Sub sync failed:', err));
 
         res.status(200).json({
             status: 'approved',

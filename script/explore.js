@@ -191,7 +191,12 @@ async function fetchData() {
         if (producersRes.ok) allProducers = await producersRes.json();
         if (leaderboardRes.ok) {
             const lbData = await leaderboardRes.json();
-            window.topProducers = Array.isArray(lbData) ? lbData : [];
+            const willieId = '0382a813-85c7-46c3-8d2c-61a5692adffd';
+            window.topProducers = Array.isArray(lbData) ? lbData.filter(p => 
+                String(p.id) !== willieId && 
+                (p.nickname || '').toLowerCase() !== 'willieinspired' &&
+                (p.nickname || '').toLowerCase() !== 'willie inspired'
+            ) : [];
         } else {
             window.topProducers = window.topProducers || [];
         }
@@ -401,7 +406,13 @@ function renderTwoColLists(category = 'Todo') {
 
     // A. Trending
     let limitTrends = 5;
+    const willieId = '0382a813-85c7-46c3-8d2c-61a5692adffd';
     const allTrends = [...filtered]
+        .filter(p => 
+            String(p.producer_id) !== willieId && 
+            (p.producer_nickname || '').toLowerCase() !== 'willieinspired' &&
+            (p.producer_nickname || '').toLowerCase() !== 'willie inspired'
+        )
         .sort((a, b) => {
             const score = p => (p.views_count || 0) + (p.plays_count || 0) * 2 + (p.stats_likes || 0) * 5;
             return score(b) - score(a);
@@ -411,6 +422,11 @@ function renderTwoColLists(category = 'Todo') {
     // B. Super Fresh (Showing newest first, regardless of trending status)
     let limitFresh = 5;
     const allFresh = [...filtered]
+        .filter(p => 
+            String(p.producer_id) !== willieId && 
+            (p.producer_nickname || '').toLowerCase() !== 'willieinspired' &&
+            (p.producer_nickname || '').toLowerCase() !== 'willie inspired'
+        )
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const fresh = allFresh.slice(0, limitFresh);
 

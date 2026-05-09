@@ -1,5 +1,6 @@
 import { supabase } from '../../database/connection.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
+import { syncUserToEmailOctopus, syncUserStatsToEmailOctopus } from '../../services/email-octopus.service.js';
 
 export const getMyPurchasedProducts = async (req, res) => {
     try {
@@ -202,6 +203,9 @@ export const completeOnboarding = async (req, res) => {
             user: updatedUser[0],
             referralApplied: true // Always true even if ignored for security to avoid leaking info
         });
+
+        // 🔄 SYNC TO EMAILOCTOPUS (Background)
+        syncUserStatsToEmailOctopus(userId).catch(err => console.error('[EmailOctopus] Onboarding sync failed:', err));
 
     } catch (err) {
         console.error("Error en completeOnboarding:", err.message);

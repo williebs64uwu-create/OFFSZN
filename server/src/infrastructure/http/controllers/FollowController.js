@@ -1,4 +1,5 @@
 import { supabase } from '../../database/connection.js';
+import { syncUserStatsToEmailOctopus } from '../../services/email-octopus.service.js';
 
 export const followUser = async (req, res) => {
     try {
@@ -67,6 +68,9 @@ export const followUser = async (req, res) => {
 
         res.status(200).json({ message: 'Seguido correctamente', followersCount: count });
 
+        // 🔄 SYNC TO EMAILOCTOPUS (Background)
+        syncUserStatsToEmailOctopus(targetId).catch(err => console.error('[EmailOctopus] Follow sync failed:', err));
+
     } catch (error) {
         console.error("Error following user:", error);
         res.status(500).json({ error: error.message });
@@ -119,6 +123,9 @@ export const unfollowUser = async (req, res) => {
             .eq('user_id', targetId);
 
         res.status(200).json({ message: 'Dejado de seguir', followersCount: count });
+
+        // 🔄 SYNC TO EMAILOCTOPUS (Background)
+        syncUserStatsToEmailOctopus(targetId).catch(err => console.error('[EmailOctopus] Unfollow sync failed:', err));
 
     } catch (error) {
         console.error("Error unfollowing user:", error);

@@ -1,4 +1,5 @@
 import { supabase } from '../../database/connection.js';
+import { syncUserStatsToEmailOctopus } from '../../services/email-octopus.service.js';
 //import { v4 as uuidv4 } from 'uuid';
 //import path from 'path';
 
@@ -204,6 +205,9 @@ export const createProduct = async (req, res) => {
         }
 
         res.status(201).json({ message: '¡Producto publicado exitosamente!', product: newProduct });
+
+        // 🔄 SYNC TO EMAILOCTOPUS (Background)
+        syncUserStatsToEmailOctopus(userId).catch(err => console.error('[EmailOctopus] Product creation sync failed:', err));
 
     } catch (err) {
         console.error("Error en createProduct:", err.message);

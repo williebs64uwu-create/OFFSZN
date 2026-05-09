@@ -3,6 +3,7 @@ import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { hashPassword, comparePassword } from '../../services/hashing/bcryptService.js';
 import { generateToken } from '../../auth/jwt/jwtUtil.js';
 import { v4 as uuidv4 } from 'uuid';
+import { syncUserToEmailOctopus, syncToN8N } from '../../services/email-octopus.service.js';
 
 export const checkEmailAvailability = async (req, res) => {
     const { email } = req.body;
@@ -117,6 +118,16 @@ export const registerUser = async (req, res) => {
             onboardingRequired: true,
             user: newUser
         });
+
+        // 🔄 SYNC TO EMAILOCTOPUS & n8n (Background)
+        const syncPayload = {
+            email: newUser.email,
+            nickname: newUser.nickname,
+            onboarding_status: 'Incompleto',
+            plan: 'Free'
+        };
+        syncUserToEmailOctopus(syncPayload).catch(err => console.error('[EmailOctopus] Registration sync failed:', err));
+        syncToN8N('registration', syncPayload).catch(e => console.error('[n8n] Sync failed:', e));
 
         // 📧 WELCOME EMAIL (Background)
         try {

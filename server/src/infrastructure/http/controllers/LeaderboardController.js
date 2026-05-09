@@ -14,7 +14,7 @@ export const getLeaderboard = async (req, res) => {
             .neq('avatar_url', '')       // Must not be empty string
             .not('avatar_url', 'ilike', '%via.placeholder.com%') // No placeholders
             .not('avatar_url', 'ilike', '%dummyimage.com%')      // No placeholders
-            .not('id', 'in', '("38c4925a-5a0b-4905-a1a3-8f7ecc939394","0382a813-85c7-46c3-8d2c-61a5692adffd","d8eafb25-0a6d-48fd-8a7f-3e79a328dfb8","4afe9d29-1b86-4af4-83fa-a78e87448555","ff68a2fd-49cb-41e6-b207-492ac683eea6")'); // Exclude test accounts and admins from leaderboard rank
+            .not('id', 'in', '("38c4925a-5a0b-4905-a1a3-8f7ecc939394","0382a813-85c7-46c3-8d2c-61a5692adffd","d8eafb25-0a6d-48fd-8a7f-3e79a328dfb8","4afe9d29-1b86-4af4-83fa-a78e87448555","ff68a2fd-49cb-41e6-b207-492ac683eea6")'); // Baneo de Willie Inspired y Admins de Tendencias
 
         if (userError) {
             console.error("User Fetch Error:", userError);
