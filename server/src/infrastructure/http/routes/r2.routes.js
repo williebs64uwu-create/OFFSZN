@@ -311,7 +311,7 @@ router.post('/r2/delete-files', authenticateTokenMiddleware, async (req, res) =>
 
         console.log(`[R2 Endpoint] Removal request for ${keys.length} files by user ${req.user.userId} (Version: ${version || 'v1'})`);
 
-        await deleteFromR2(keys, version || 'v1');
+        await deleteFromR2(keys, version || null);
 
         res.json({ message: 'Archivos eliminados correctamente (o procesados silent).' });
 

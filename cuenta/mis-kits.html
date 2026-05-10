@@ -2448,10 +2448,17 @@
 
                             // Execute Deletions
                             if (r2Keys.length > 0) {
-                                const v1s = r2Keys.filter(k => k.version === 'v1').map(k => k.url);
-                                const v2s = r2Keys.filter(k => k.version === 'v2').map(k => k.url);
-                                if (v1s.length > 0) await AuthUtils.deleteFromR2(v1s, 'v1');
-                                if (v2s.length > 0) await AuthUtils.deleteFromR2(v2s, 'v2');
+                                // Group by version dynamically (v1, v2, v3, etc.)
+                                const versionGroups = r2Keys.reduce((acc, obj) => {
+                                    const v = obj.version || 'v1';
+                                    if (!acc[v]) acc[v] = [];
+                                    acc[v].push(obj.url);
+                                    return acc;
+                                }, {});
+
+                                for (const [v, urls] of Object.entries(versionGroups)) {
+                                    if (urls.length > 0) await AuthUtils.deleteFromR2(urls, v);
+                                }
                             }
                             if (supabaseTasks.length > 0) await Promise.all(supabaseTasks);
                         } catch (err) { console.warn(`Storage cleanup failed for item ${id}:`, err); }

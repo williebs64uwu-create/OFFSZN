@@ -431,32 +431,48 @@ export const getPublicUrl = (key, version = R2_CURRENT_VERSION) => {
 /**
  * Elimina múltiples archivos de R2.
  */
-export const deleteFromR2 = async (keys, version = 'v1') => {
+export const deleteFromR2 = async (keys, explicitVersion = null) => {
     if (!keys || keys.length === 0) return;
 
-    const { client, bucket } = getClientAndBucket(version);
-    const sanitizedKeys = keys.map(k => k.startsWith('/') ? k.substring(1) : k);
-    const objects = sanitizedKeys.map(key => ({ Key: key }));
+    // Group keys by their correct version
+    const versionGroups = { v1: [], v2: [], v3: [] };
 
-    console.log(`[R2 Storage] Deleting ${objects.length} from ${bucket} (${version})`);
-
-    try {
-        const command = new DeleteObjectsCommand({
-            Bucket: bucket,
-            Delete: {
-                Objects: objects,
-                Quiet: false
-            }
-        });
-
-        const response = await client.send(command);
-        console.log(`✅ [R2 Storage] Deleted items from ${version}:`, response.Deleted?.length || 0);
-
-        if (response.Errors?.length > 0) {
-            console.error(`❌ [R2 Storage] Errors in ${version}:`, response.Errors);
+    for (const k of keys) {
+        let cleanKey = k.startsWith('/') ? k.substring(1) : k;
+        if (explicitVersion) {
+            versionGroups[explicitVersion].push(cleanKey);
+        } else {
+            // Probe to find which bucket this key actually lives in
+            const { key: resolvedKey, version: foundVersion } = await resolveScavengerKey(cleanKey, R2_CURRENT_VERSION);
+            versionGroups[foundVersion].push(resolvedKey);
         }
-    } catch (error) {
-        console.error(`Error al eliminar de R2 (${version}):`, error);
+    }
+
+    // Delete from each group
+    for (const v of ['v1', 'v2', 'v3']) {
+        if (versionGroups[v].length === 0) continue;
+
+        const { client, bucket } = getClientAndBucket(v);
+        if (!client) continue;
+
+        const objects = versionGroups[v].map(key => ({ Key: key }));
+        console.log(`[R2 Storage] Deleting ${objects.length} from ${bucket} (${v})`);
+
+        try {
+            const command = new DeleteObjectsCommand({
+                Bucket: bucket,
+                Delete: { Objects: objects, Quiet: false }
+            });
+
+            const response = await client.send(command);
+            console.log(`✅ [R2 Storage] Deleted items from ${v}:`, response.Deleted?.length || 0);
+
+            if (response.Errors?.length > 0) {
+                console.error(`❌ [R2 Storage] Errors in ${v}:`, response.Errors);
+            }
+        } catch (error) {
+            console.error(`Error al eliminar de R2 (${v}):`, error);
+        }
     }
 };
 

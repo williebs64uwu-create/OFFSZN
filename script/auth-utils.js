@@ -716,7 +716,7 @@ window.AuthUtils = {
                     fileType: file.type || 'application/octet-stream',
                     folder: folder,
                     fileSize: file.size,
-                    version: 'v2' // Always use v2 for new uploads
+                    version: 'v3' // Always use v3 for new uploads
                 })
             });
 
@@ -748,7 +748,7 @@ window.AuthUtils = {
     /**
      * Deletes one or more files from Cloudflare R2 via API.
      * @param {string|string[]} keys Single key or array of keys to delete.
-     * @param {string} version Optional R2 version ('v1' or 'v2')
+     * @param {string} version Optional explicit version. If null, backend uses Scavenger probe to find it.
      * @returns {Promise<boolean>} True if operation completed.
      */
     deleteFromR2: async function (keys, version = null) {
@@ -757,16 +757,10 @@ window.AuthUtils = {
         if (keysArray.length === 0) return true;
 
         // Clean keys: Ensure only the path part is sent (no query params, no base URL)
-        const v1Keys = [];
-        const v2Keys = [];
-
-        keysArray.forEach(k => {
-            if (!k || typeof k !== 'string') return;
-
+        const cleanKeys = keysArray.map(k => {
+            if (!k || typeof k !== 'string') return null;
             let key = k;
-            let detectedVersion = version;
-
-            // Extract key from full URL if needed
+            
             if (k.startsWith('http')) {
                 const r2Base = '.r2.cloudflarestorage.com/';
                 if (k.includes(r2Base)) {
@@ -777,54 +771,32 @@ window.AuthUtils = {
                         key = urlObj.pathname.substring(1);
                     } catch (e) { }
                 }
-
-                // Auto-detect version from URL if not explicitly provided
-                if (!detectedVersion) {
-                    if (k.includes('offsznlatbucket') || k.includes('42fc23b1767793610255470d2b453e92')) {
-                        detectedVersion = 'v2';
-                    } else if (k.includes('offszn-storage') || k.includes('41d0f49121d02c88f71fdb4da54a791d') || k.includes('pub-')) {
-                        detectedVersion = 'v1';
-                    }
-                }
             }
 
             // Cleanup Key
             if (key.includes('?')) key = key.split('?')[0];
             while (key.startsWith('/')) key = key.substring(1);
+            
+            return key;
+        }).filter(k => k !== null);
 
-            // Default fallback if still no version
-            if (!detectedVersion) detectedVersion = 'v1';
+        if (cleanKeys.length === 0) return true;
 
-            if (detectedVersion === 'v2') v2Keys.push(key);
-            else v1Keys.push(key);
-        });
-
-        const deleteBatch = async (batchKeys, batchVersion) => {
-            if (batchKeys.length === 0) return true;
-            try {
-                const token = this.getAccessToken();
-                const response = await fetch(`${this._apiUrl}/r2/delete-files`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': token ? `Bearer ${token}` : undefined
-                    },
-                    body: JSON.stringify({ keys: batchKeys, version: batchVersion })
-                });
-                return response.ok;
-            } catch (error) {
-                console.error(`AuthUtils: Error deleting batch (${batchVersion}):`, error);
-                return false;
-            }
-        };
-
-        // Parallel execution for both versions
-        const results = await Promise.all([
-            deleteBatch(v1Keys, 'v1'),
-            deleteBatch(v2Keys, 'v2')
-        ]);
-
-        return results.every(res => res);
+        try {
+            const token = this.getAccessToken();
+            const response = await fetch(`${this._apiUrl}/r2/delete-files`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : undefined
+                },
+                body: JSON.stringify({ keys: cleanKeys, version: version })
+            });
+            return response.ok;
+        } catch (error) {
+            console.error(`AuthUtils: Error deleting from R2:`, error);
+            return false;
+        }
     },
 
     /**
