@@ -567,7 +567,7 @@ function setupModalListeners() {
                     fileType: file.type || 'audio/mpeg',
                     folder: 'temp-previews',
                     fileSize: file.size,
-                    version: 'v2'
+                    version: 'v3'
                 })
             });
 

@@ -105,7 +105,7 @@ export const resolveScavengerKey = async (initialKey, version = R2_CURRENT_VERSI
     }
 
     // --- PROBING PHASE (V2 then V1) ---
-    const versionsToTry = ['v2', 'v1', 'v3'].filter(v => v !== version);
+    const versionsToTry = ['v3', 'v2', 'v1'].filter(v => v !== version);
     versionsToTry.unshift(version); 
 
     console.log(`[R2-Scavenger] 🧭 Probing ${variations.size} variations for: ${uuid || 'unknown'}`);
@@ -419,7 +419,10 @@ export const getPublicUrl = (key, version = R2_CURRENT_VERSION) => {
     }
 
     const { bucket } = getClientAndBucket(version);
-    const endpoint = version === 'v1' ? R2_ENDPOINT : R2_ENDPOINT_V2;
+    let endpoint;
+    if (version === 'v1') endpoint = R2_ENDPOINT;
+    else if (version === 'v3') endpoint = R2_ENDPOINT_V3;
+    else endpoint = R2_ENDPOINT_V2;
 
     const baseUrl = endpoint.replace('https://', `https://${bucket}.`);
     return `${baseUrl}/${cleanKey}`;

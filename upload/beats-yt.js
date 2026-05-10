@@ -1864,7 +1864,7 @@ async function uploadToR2(file, folder = 'uploads', onProgress = null) {
                 fileType: file.type || 'application/octet-stream',
                 folder: folder,
                 fileSize: file.size,
-                version: 'v2' // 🔥 ALWAYS use Account 2
+                version: 'v3' // 🔥 ALWAYS use Account 3 (Scale)
             })
         });
 
@@ -2258,8 +2258,8 @@ window.handlePublish = async function () {
             wav_url,
             stems_url,
             // stems_link: uploaderState.stemsLink || null, // stems_link is not in the schema, we'll rely on license_settings jsonb for this if needed
-            r2_version: 'v2',
-            storage_version: 'v2',
+            r2_version: 'v3',
+            storage_version: 'v3',
             price_basic: licensesState.offszn_basic.enabled ? licensesState.offszn_basic.price : null,
             price_premium: licensesState.offszn_premium.enabled ? licensesState.offszn_premium.price : null,
             price_stems: licensesState.offszn_unlimited.enabled ? licensesState.offszn_unlimited.price : null,

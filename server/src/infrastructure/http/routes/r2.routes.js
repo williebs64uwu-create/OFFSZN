@@ -101,8 +101,8 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
 
         // Siempre usar el bucket principal
         const bucket = R2_BUCKET_NAME;
-        // 🔥 NEW: Default to current version (v2) for new uploads
-        const version = req.body.version || 'v2';
+        // 🔥 Default to current version (v3) for new uploads
+        const version = req.body.version || 'v3';
 
         const uploadUrl = await getPresignedUploadUrl(finalKey, finalFileType, version);
 

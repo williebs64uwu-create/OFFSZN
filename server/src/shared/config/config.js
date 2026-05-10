@@ -74,4 +74,4 @@ export const IMAGEKIT_PRIVATE_KEY = cleanConfigValue(process.env.IMAGEKIT_PRIVAT
 export const IMAGEKIT_URL_ENDPOINT = cleanConfigValue(process.env.IMAGEKIT_URL_ENDPOINT);
 
 // Storage Strategy
-export const R2_CURRENT_VERSION = 'v2';
+export const R2_CURRENT_VERSION = 'v3';
