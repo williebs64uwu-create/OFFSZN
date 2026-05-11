@@ -192,8 +192,8 @@ async function fetchData() {
         if (leaderboardRes.ok) {
             const lbData = await leaderboardRes.json();
             const willieId = '0382a813-85c7-46c3-8d2c-61a5692adffd';
-            window.topProducers = Array.isArray(lbData) ? lbData.filter(p => 
-                String(p.id) !== willieId && 
+            window.topProducers = Array.isArray(lbData) ? lbData.filter(p =>
+                String(p.id) !== willieId &&
                 (p.nickname || '').toLowerCase() !== 'willieinspired' &&
                 (p.nickname || '').toLowerCase() !== 'willie inspired'
             ) : [];
@@ -264,13 +264,13 @@ async function fetchData() {
         }
     } catch (error) {
         console.error('❌ Error fetching explore data:', error);
-        
+
         // Hide skeletons and show error even if fetch fails early
         ['explore-list-skeleton', 'explore-pw-skeleton', 'explore-leaderboard-skeleton'].forEach(id => {
             const sk = document.getElementById(id);
             if (sk) sk.style.display = 'none';
         });
-        
+
         showErrorState();
     }
 }
@@ -296,6 +296,9 @@ function renderExploreFeed() {
         startHeroSlider();
         heroProducts.forEach(p => usedProductIds.add(p.id));
     }
+
+    // --- NEW: Inject Top Slim Banner ---
+    injectTopBanner();
 
     // 3. THE LIST GRID (Section 2: Trending / Fresh) - 2 Columns
     const listGridContainer = document.createElement('div');
@@ -362,17 +365,8 @@ function renderExploreFeed() {
         container.appendChild(createShelfRow('Presets de voces', presets, 'standard'));
     }
 
-    /* GSAP Entrance Animation Removed as per user request (instante loading preferred)
-    if (window.gsap) {
-        gsap.from(container.querySelectorAll('.explore-row, .explore-list-outer'), {
-            opacity: 0,
-            duration: 0.8,
-            stagger: 0.15,
-            ease: 'power2.out',
-            delay: 0.2
-        });
-    }
-    */
+    // 7. BOTTOM MARKETING SECTION (Section 5: Final CTAs)
+    injectStudioToolsBanner();
 }
 
 /**
@@ -406,8 +400,8 @@ function renderTwoColLists(category = 'Todo') {
     let limitTrends = 5;
     const willieId = '0382a813-85c7-46c3-8d2c-61a5692adffd';
     const allTrends = [...filtered]
-        .filter(p => 
-            String(p.producer_id) !== willieId && 
+        .filter(p =>
+            String(p.producer_id) !== willieId &&
             (p.producer_nickname || '').toLowerCase() !== 'willieinspired' &&
             (p.producer_nickname || '').toLowerCase() !== 'willie inspired'
         )
@@ -420,8 +414,8 @@ function renderTwoColLists(category = 'Todo') {
     // B. Super Fresh (Showing newest first, regardless of trending status)
     let limitFresh = 5;
     const allFresh = [...filtered]
-        .filter(p => 
-            String(p.producer_id) !== willieId && 
+        .filter(p =>
+            String(p.producer_id) !== willieId &&
             (p.producer_nickname || '').toLowerCase() !== 'willieinspired' &&
             (p.producer_nickname || '').toLowerCase() !== 'willie inspired'
         )
@@ -568,8 +562,8 @@ function createListItemHtml(item, index, type) {
     // 🔥 R2 Signing Optimization (Match product-core.js)
     const storageVer = item.storage_version || item.r2_version || 'v2';
     // 🔥 ENHANCED R2 DETECTION: Use storage_version as primary signal, fallback to path analysis
-    const isR2 = (storageVer !== 'supabase') && window.AuthUtils && 
-                (window.AuthUtils.isR2Url(rawImg) || storageVer === 'v2' || storageVer === 'v1');
+    const isR2 = (storageVer !== 'supabase') && window.AuthUtils &&
+        (window.AuthUtils.isR2Url(rawImg) || storageVer === 'v2' || storageVer === 'v1');
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
     let initialSrc = rawImg;
@@ -1781,9 +1775,306 @@ async function toggleFollow(producerId, btn) {
 }
 
 // 🔥 R2 SIGNING UTILITY MOVED TO AUTH-UTILS.JS FOR GLOBAL AVAILABILITY
+/**
+ * Injects a slim, premium purple banner at the very top of the page (above navbar).
+ */
+function injectTopBanner() {
+    // Prevent double injection
+    if (document.querySelector('.top-announcement-banner')) return;
+
+    const topBanner = document.createElement('div');
+    topBanner.className = 'top-announcement-banner';
+    topBanner.style.width = '100%';
+    topBanner.style.background = '#000'; // Pure black background for the outer container
+    topBanner.style.position = 'relative';
+    topBanner.style.zIndex = '1001'; // Above navbar (usually 1000)
+    topBanner.style.overflow = 'hidden';
+    topBanner.style.display = 'none'; // Initially hidden for GSAP
+    
+    topBanner.innerHTML = `
+        <style>
+            .top-announcement-banner {
+                border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+            }
+            .top-banner-link {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 12px;
+                background: linear-gradient(90deg, #4c1d95 0%, #6d28d9 50%, #4c1d95 100%);
+                padding: 10px 20px;
+                text-decoration: none;
+                color: #fff;
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                position: relative;
+            }
+            .top-banner-link:hover {
+                filter: brightness(1.2);
+                background: linear-gradient(90deg, #5b21b6 0%, #7c3aed 50%, #5b21b6 100%);
+                box-shadow: inset 0 -2px 10px rgba(139, 92, 246, 0.4);
+            }
+            .top-banner-link .btn-pill {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                background: #fff;
+                color: #6d28d9;
+                padding: 4px 14px;
+                border-radius: 20px;
+                font-size: 0.75rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                flex-shrink: 0;
+            }
+            .top-banner-link:hover .btn-pill {
+                background: #f3f4f6;
+            }
+            .banner-text {
+                font-size: 0.9rem;
+                font-weight: 700;
+                letter-spacing: -0.2px;
+                white-space: nowrap;
+            }
+            @media (max-width: 768px) {
+                .banner-text {
+                    font-size: 0.7rem;
+                    letter-spacing: -0.4px;
+                }
+                .top-banner-link {
+                    padding: 8px 10px;
+                    gap: 8px;
+                }
+                .bi-megaphone-fill {
+                    display: none;
+                }
+                .top-banner-link .btn-pill {
+                    padding: 3px 10px;
+                    font-size: 0.65rem;
+                }
+            }
+            @media (max-width: 480px) {
+                .banner-text {
+                    font-size: 0.65rem;
+                }
+                .top-banner-link .btn-pill {
+                    padding: 2px 8px;
+                    font-size: 0.6rem;
+                }
+            }
+        </style>
+        <a href="/upload/beats-yt" class="top-banner-link auth-protected">
+            <i class="bi bi-megaphone-fill" style="font-size: 0.9rem;"></i>
+            <span class="banner-text">Sube tus beats a YouTube y a tu tienda al mismo tiempo</span>
+            <div class="btn-pill">
+                PROBAR <i class="bi bi-arrow-right"></i>
+            </div>
+        </a>
+    `;
+
+// Inject as the absolute first child of body
+document.body.prepend(topBanner);
+
+// GSAP Entrance Animation
+if (window.gsap) {
+    topBanner.style.display = 'block';
+    gsap.from(topBanner, {
+        y: -50,
+        opacity: 0,
+        duration: 0.8,
+        ease: 'power3.out',
+        delay: 0.5
+    });
+} else {
+    topBanner.style.display = 'block';
+}
+}
 
 
-// Make globally available for onclick handlers
-window.toggleFollow = toggleFollow;
-window.handleAddToCart = window.handleAddToCart; // Ensure it might be needed but cart.js exposes it
+/**
+ * Injects the premium 'Studio Tools' banner highlighting AI video generation.
+ */
+function injectStudioToolsBanner() {
+    const container = document.getElementById('explore-rows-container');
+    if (!container || document.querySelector('.studio-tools-banner')) return;
 
+    const studioBanner = document.createElement('div');
+    studioBanner.className = 'studio-tools-banner';
+    studioBanner.style.width = '100%';
+    studioBanner.style.padding = '0 1.5rem';
+    studioBanner.style.marginTop = '80px';
+    studioBanner.style.marginBottom = '20px';
+
+    studioBanner.innerHTML = `
+        <style>
+            .studio-card {
+                background: linear-gradient(135deg, #0f0f0f 0%, #050505 100%);
+                border: 1px solid rgba(255,255,255,0.05);
+                border-radius: 24px;
+                padding: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 40px;
+                max-width: 1350px;
+                margin: 0 auto;
+                position: relative;
+                overflow: hidden;
+            }
+            .studio-card::before {
+                content: '';
+                position: absolute;
+                top: -50%;
+                right: -10%;
+                width: 400px;
+                height: 400px;
+                background: radial-gradient(circle, rgba(109, 40, 217, 0.1) 0%, transparent 70%);
+                pointer-events: none;
+            }
+            .studio-info {
+                flex: 1;
+                z-index: 1;
+            }
+            .studio-badge-row {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            .badge-nuevo {
+                background: #6d28d9;
+                color: #fff;
+                font-size: 0.65rem;
+                font-weight: 800;
+                padding: 4px 10px;
+                border-radius: 6px;
+                text-transform: uppercase;
+            }
+            .studio-tools-label {
+                color: #666;
+                font-size: 0.75rem;
+                font-weight: 500;
+            }
+            .studio-title {
+                font-size: 2.2rem;
+                font-weight: 800;
+                color: #fff;
+                margin-bottom: 16px;
+                letter-spacing: -1px;
+                line-height: 1.1;
+            }
+            .studio-desc {
+                color: #aaa;
+                font-size: 1rem;
+                line-height: 1.6;
+                margin-bottom: 32px;
+                max-width: 480px;
+            }
+            .studio-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                background: #fff;
+                color: #000;
+                padding: 12px 28px;
+                border-radius: 30px;
+                font-weight: 700;
+                text-decoration: none;
+                transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            .studio-btn:hover {
+                transform: scale(1.05);
+                background: #f3f4f6;
+            }
+            .studio-visual {
+                flex: 1;
+                position: relative;
+                max-width: 500px;
+                z-index: 1;
+            }
+            .video-mockup {
+                background: #1a1a1a;
+                border-radius: 16px;
+                aspect-ratio: 16/9;
+                border: 1px solid rgba(255,255,255,0.1);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            }
+            .video-mockup i {
+                font-size: 3rem;
+                color: #ff0000;
+            }
+            .ai-powered-pill {
+                position: absolute;
+                bottom: -15px;
+                left: -15px;
+                background: rgba(20,20,20,0.8);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(255,255,255,0.1);
+                padding: 8px 16px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #fff;
+                font-size: 0.75rem;
+                font-weight: 600;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            }
+            .ai-powered-pill i {
+                font-size: 0.9rem;
+                color: #8b5cf6;
+            }
+
+            @media (max-width: 900px) {
+                .studio-card {
+                    flex-direction: column;
+                    padding: 30px;
+                    text-align: center;
+                    gap: 30px;
+                }
+                .studio-badge-row {
+                    justify-content: center;
+                }
+                .studio-desc {
+                    margin-left: auto;
+                    margin-right: auto;
+                }
+                .studio-title {
+                    font-size: 1.8rem;
+                }
+                .studio-visual {
+                    width: 100%;
+                }
+            }
+        </style>
+        <div class="studio-card">
+            <div class="studio-info">
+                <div class="studio-badge-row">
+                    <span class="badge-nuevo">NUEVO</span>
+                    <span class="studio-tools-label">Studio Tools</span>
+                </div>
+                <h2 class="studio-title">Genera Videos para YouTube</h2>
+                <p class="studio-desc">Transforma tus Beats en visualizers profesionales en segundos. Listo para subir y monetizar.</p>
+                <a href="/upload/beats-yt" class="studio-btn auth-protected">
+                    Probar ahora <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            <div class="studio-visual">
+                <div class="video-mockup">
+                    <i class="bi bi-youtube"></i>
+                    <div class="ai-powered-pill">
+                        <i class="bi bi-magic"></i>
+                        AI Powered
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    container.appendChild(studioBanner);
+}
