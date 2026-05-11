@@ -231,9 +231,10 @@ export const getClientAndBucket = (version = R2_CURRENT_VERSION) => {
     // If V1 is requested but credentials are missing, fallback to V2
     // console.log(`[R2-DEBUG] getClientAndBucket called with version: ${version}`);
     if (version === 'v3') {
+        if (!s3ClientV3) console.warn('[R2 Storage] WARNING: s3ClientV3 is NULL');
         return { 
             client: s3ClientV3 || s3ClientV2, 
-            bucket: R2_BUCKET_NAME_V3 || 'offszn-v3' 
+            bucket: R2_BUCKET_NAME_V3 || 'bucket3lat' 
         };
     }
     if (version === 'v2') {

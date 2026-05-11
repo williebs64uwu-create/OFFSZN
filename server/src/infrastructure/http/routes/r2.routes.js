@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { 
-    getPresignedUploadUrl, 
-    getPresignedDownloadUrl, 
-    getPublicUrl, 
-    deleteFromR2, 
+import {
+    getPresignedUploadUrl,
+    getPresignedDownloadUrl,
+    getPublicUrl,
+    deleteFromR2,
     copyFileInR2,
     existsInR2,
     getClientAndBucket
@@ -149,14 +149,14 @@ router.post('/r2/download-url', async (req, res) => {
                         key = parts.slice(objectIndex + 2).join('/');
                     }
                 }
-            } catch (e) {}
+            } catch (e) { }
         }
-        
+
         // Limpiar slash inicial y bucket names accidentales (Solo nombres de bucket reales)
         if (typeof key === 'string') {
             // Solo quitar el nombre del bucket si viene al inicio (como en una URL de Supabase o R2 path)
             // No quitar folder prefixes como 'secure-products' o 'products' que son parte del key en R2.
-            const realBucketNames = ['offsznlatbucket', 'offszn-storage']; 
+            const realBucketNames = ['offsznlatbucket', 'offszn-storage'];
             for (const b of realBucketNames) {
                 const norm = key.startsWith('/') ? key : `/${key}`;
                 if (norm.startsWith(`/${b}/`)) {
@@ -208,7 +208,7 @@ router.post('/r2/download-url', async (req, res) => {
         }
 
         const finalExpiresIn = isPublic ? 86400 : (expiresIn || 3600);
-        
+
         try {
             const downloadUrl = await getPresignedDownloadUrl(key, finalExpiresIn, finalVersion);
             if (!downloadUrl) {
@@ -258,9 +258,9 @@ router.post('/r2/bulk-sign', async (req, res) => {
                             const objIdx = parts.indexOf('object');
                             if (objIdx !== -1 && parts.length > objIdx + 2) key = parts.slice(objIdx + 2).join('/');
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                 }
-                
+
                 if (typeof key === 'string') {
                     const realBucketNames = ['offsznlatbucket', 'offszn-storage'];
                     for (const b of realBucketNames) {
@@ -357,10 +357,10 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
 
         // 2. Determinar orden de búsqueda (Prioridad segun ?v=)
         // V3 Added in preparation for future scale
-        let versionsToTry = ['v2', 'v1', 'v3']; 
+        let versionsToTry = ['v2', 'v1', 'v3'];
         if (req.query.v === 'v1') versionsToTry = ['v1', 'v2', 'v3'];
         if (req.query.v === 'v3') versionsToTry = ['v3', 'v2', 'v1'];
-        
+
         // 2. Limpieza agresiva del Key (Quitar buckets si vienen en el path)
         let cleanKey = key;
         const knownBuckets = ['offsznlatbucket', 'offszn-storage', 'offszn-storage/'];
@@ -379,22 +379,17 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         // Path base "puro" (solo uuid/archivo o solo archivo)
         const purePath = uuid ? `${uuid}/${filename}` : filename;
 
-        // 🔥 FAST PATH: Try the exact key on the preferred version FIRST (covers 95%+ of traffic)
+        // 🔥 FAST PATH: Try the exact key on ALL versions (v2 → v1 → v3)
         let foundVersion = null;
         let foundKey = null;
-        const preferredVersion = versionsToTry[0]; // v2 by default
 
-        if (await existsInR2(cleanKey, preferredVersion)) {
-            foundVersion = preferredVersion;
-            foundKey = cleanKey;
-        }
-
-        // 🔥 FAST PATH 2: Try exact key on secondary version
-        if (!foundKey && versionsToTry.length > 1) {
-            const secondVersion = versionsToTry[1];
-            if (await existsInR2(cleanKey, secondVersion)) {
-                foundVersion = secondVersion;
+        for (const tryVersion of versionsToTry) {
+            const exists = await existsInR2(cleanKey, tryVersion);
+            // console.log(`   - Checking ${tryVersion}: ${cleanKey} -> ${exists ? '✅' : '❌'}`);
+            if (exists) {
+                foundVersion = tryVersion;
                 foundKey = cleanKey;
+                break;
             }
         }
 
@@ -430,8 +425,8 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
                 while (pClean.startsWith('/')) pClean = pClean.substring(1);
                 return pClean;
             })
-            // Remove the exact cleanKey since we already tried it above
-            .filter(p => p !== cleanKey);
+                // Remove the exact cleanKey since we already tried it above
+                .filter(p => p !== cleanKey);
 
             for (const version of versionsToTry) {
                 for (const pattern of uniquePatterns) {
@@ -482,7 +477,7 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         // 5. STREAMING CON SOPORTE PARA RANGE (Crucial para Audio)
         const { client, bucket } = getClientAndBucket(foundVersion);
         const range = req.headers.range;
-        
+
         const getParams = { Bucket: bucket, Key: foundKey };
         if (range) {
             getParams.Range = range;
@@ -568,7 +563,7 @@ router.post('/admin/r2-fix-paths', async (req, res) => {
         try {
             // Buscamos el nombre del archivo (la parte final de la ruta)
             const filename = entry.originalKey.split('/').pop();
-            
+
             // Buscamos productos que tengan ese archivo en su audio_url o image_url
             // Usamos ILIKE %path% para que lo encuentre aunque tenga el dominio al principio
             let { data: products } = await supabase
