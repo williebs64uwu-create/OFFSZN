@@ -99,7 +99,7 @@
                 const diffTime = endDate - now;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-                // Show modal if it's jdagust or if subscription is ending soon (e.g. < 15 days)
+                // Show modal if subscription is ending soon (e.g. < 15 days)
                 // We also check if they've seen it this session
                 const hasSeenModal = sessionStorage.getItem('offszn_sub_modal_seen');
 

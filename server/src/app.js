@@ -28,6 +28,7 @@ import requestRoutes from './infrastructure/http/routes/request.routes.js';
 import youtubeRoutes from './infrastructure/http/routes/youtube.routes.js';
 import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
 import studioRoutes from './infrastructure/http/routes/studio.routes.js';
+import { runSubscriptionScavenger } from './infrastructure/services/subscription-scavenger.js';
 
 import imagekitRoutes from './infrastructure/http/routes/imagekit.routes.js';
 import { submitNegotiation, respondNegotiation, generatePurchaseToken, validatePurchaseToken, reportIssue } from './infrastructure/http/controllers/NegotiationController.js';
@@ -936,5 +937,11 @@ app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en el puerto ${PORT}`)
     console.log(`🌐 Accede a tu web en: http://localhost:${PORT}`)
     console.log(`TIME: ${new Date().toISOString()}`)
-    // Touching again
-})
+
+    // --- START AUTOMATED TASKS ---
+    // Run scavenger on startup to clean any missed expirations
+    runSubscriptionScavenger();
+    
+    // Schedule to run every 12 hours
+    setInterval(runSubscriptionScavenger, 12 * 60 * 60 * 1000);
+});

@@ -230,28 +230,26 @@ async function fetchData() {
             window.topPWProducers = [];
             const lb = window.topProducers || [];
 
-            // 🔥 VIP BOOST: User jdagust (Starter)
-            const vipId = '91dbeab3-deae-443c-b5c9-af14448884dc';
+            // 🔥 VIP BOOST: User bajoperfilbp (Starter)
+            const vipId = 'c6d82b6d-4e1e-4064-9782-291d854311d5';
             let vipProducer = Array.isArray(allProducers) ? allProducers.find(p => String(p.id) === vipId) : null;
             if (!vipProducer) vipProducer = lb.find(p => String(p.id) === vipId);
 
             if (!vipProducer) {
                 vipProducer = {
                     id: vipId,
-                    nickname: 'jdagust',
-                    name: 'jdagust',
-                    avatar_url: 'https://ik.imagekit.io/6gzqp4xam/avatars/avatar_91dbeab3-deae-443c-b5c9-af14448884dc_f0ciUJIfE?tr=width-500,height-500,cropType-maintain_ratio,focus-face&v=1774637251819',
-                    followers_count: 5,
-                    products_count: 4,
+                    nickname: 'bajoperfilbp',
+                    name: 'Bajo Perfil',
+                    avatar_url: 'https://ik.imagekit.io/6gzqp4xam/avatars/c6d82b6d-4e1e-4064-9782-291d854311d5.jpg',
+                    followers_count: 50,
+                    products_count: 6,
                     plan: 'starter'
                 };
             }
 
             if (vipProducer) {
-                const tracks = allProducts.filter(p => String(p.producer_id) === vipId);
-                if (tracks.length > 0) {
-                    window.topPWProducers.push(vipProducer);
-                }
+                // Force inclusion
+                window.topPWProducers.push(vipProducer);
             }
 
             for (let i = 0; i < lb.length; i++) {
