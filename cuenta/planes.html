@@ -1153,18 +1153,34 @@
                 const sub = await response.json();
 
                 if (sub && sub.status !== 'none' && sub.status !== 'expired') {
-                    updatePlanButtons(sub.plan_id.replace('plan_', ''), sub.status);
+                    updatePlanButtons(sub.plan_id.replace('plan_', ''), sub.status, sub);
+                } else {
+                    // Update for Free Plan
+                    updatePlanButtons('free', 'active', null);
                 }
             } catch (err) {
                 console.error('Error checking plan status:', err);
             }
         }
 
-        function updatePlanButtons(activePlan, status) {
+        function updatePlanButtons(activePlan, status, subData) {
             const plans = ['free', 'starter', 'pro'];
+            const planLevels = { 'free': 0, 'starter': 1, 'pro': 2 };
+            const activeLevel = planLevels[activePlan] !== undefined ? planLevels[activePlan] : -1;
+
             plans.forEach(function(p) {
                 const btn = document.getElementById('btn-plan-' + p);
                 if (!btn) return;
+                
+                // Clear any existing dynamic message
+                let existingMsg = btn.parentElement.querySelector('.plan-status-msg');
+                if (existingMsg) existingMsg.remove();
+                
+                // Hide static notes under the button if they exist (like "Cancela cuando quieras" in PRO)
+                let staticNote = btn.nextElementSibling;
+                if (staticNote && staticNote.tagName.toLowerCase() === 'p') {
+                    staticNote.style.display = 'none';
+                }
 
                 if (activePlan.includes(p)) {
                     if (status === 'canceled') {
@@ -1176,16 +1192,68 @@
                         btn.style.background = '#fff';
                         btn.style.color = '#000';
                         btn.onclick = () => handleSubscriptionReactivate();
+                        
+                        if (subData && subData.expiry) {
+                            const dateStr = new Date(subData.expiry).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+                            const msg = document.createElement('div');
+                            msg.className = 'plan-status-msg';
+                            msg.style.fontSize = '12px';
+                            // color varies by plan theme (pro has white bg so text should be darker)
+                            msg.style.color = p === 'pro' ? '#444' : '#888';
+                            msg.style.marginTop = '10px';
+                            msg.style.textAlign = 'center';
+                            msg.style.lineHeight = '1.4';
+                            msg.innerHTML = `Seguirás teniendo tus beneficios hasta el ${dateStr}.<br>Puedes renovar tu suscripción cuando quieras.`;
+                            btn.parentElement.appendChild(msg);
+                        }
                     } else {
                         // Truly active
-                        btn.innerText = 'Tu Plan Actual';
+                        if (p === 'free') {
+                            btn.innerText = 'Tu Plan Actual';
+                            btn.disabled = true;
+                            btn.style.opacity = '0.6';
+                            btn.style.cursor = 'default';
+                            btn.style.background = '#222';
+                            btn.style.color = '#888';
+                            btn.onclick = null;
+                        } else {
+                            btn.innerText = 'Cancelar Suscripción';
+                            btn.disabled = false;
+                            btn.style.opacity = '1';
+                            btn.style.cursor = 'pointer';
+                            btn.style.background = p === 'pro' ? '#111' : '#222';
+                            btn.style.color = '#fff';
+                            btn.onclick = () => handleSubscriptionCancel();
+
+                            if (subData && subData.expiry) {
+                                const dateStr = new Date(subData.expiry).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+                                const msg = document.createElement('div');
+                                msg.className = 'plan-status-msg';
+                                msg.style.fontSize = '12px';
+                                msg.style.color = p === 'pro' ? '#444' : '#888';
+                                msg.style.marginTop = '10px';
+                                msg.style.textAlign = 'center';
+                                msg.style.lineHeight = '1.4';
+                                msg.innerHTML = `Renovación automática el ${dateStr}.`;
+                                btn.parentElement.appendChild(msg);
+                            }
+                        }
+                    }
+                } else {
+                    const currentLevel = planLevels[p];
+                    if (currentLevel < activeLevel) {
+                        btn.innerText = 'Bloqueado';
                         btn.disabled = true;
-                        btn.style.opacity = '0.6';
-                        btn.style.cursor = 'default';
-                        btn.style.background = '#222';
-                        btn.style.color = '#888';
-                        btn.style.background = '#222';
+                        btn.style.opacity = '0.3';
+                        btn.style.cursor = 'not-allowed';
+                        btn.style.background = 'transparent';
+                        btn.style.color = p === 'pro' ? '#000' : '#666';
                         btn.onclick = null;
+                    } else {
+                        // Keep default behavior for upgrade
+                        if (staticNote && staticNote.tagName.toLowerCase() === 'p') {
+                            staticNote.style.display = 'block';
+                        }
                     }
                 }
             });
@@ -1233,6 +1301,29 @@
                     alert(data.error || 'Error al reactivar.');
                 }
             } catch(e) { alert('Fallo de conexión.'); }
+        }
+
+        async function handleSubscriptionCancel() {
+            const confirmed = confirm('¿Estás seguro de que deseas cancelar tu suscripción? Seguirás teniendo acceso a tus beneficios hasta el final de tu periodo de facturación actual.');
+            if (!confirmed) return;
+
+            const tokenStr = localStorage.getItem('sb-qtjpvztpgfymjhhpoouq-auth-token');
+            if (!tokenStr) return;
+
+            try {
+                const token = JSON.parse(tokenStr).access_token;
+                const resp = await fetch('/api/subscriptions/cancel', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    alert(data.message);
+                    checkPlanStatus(); // Refresh UI
+                } else {
+                    alert(data.error || 'Error al cancelar.');
+                }
+            } catch (e) { alert('Fallo de conexión.'); }
         }
 
         // === INIT ===

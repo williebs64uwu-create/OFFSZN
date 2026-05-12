@@ -1463,82 +1463,28 @@ window.playTrackById = function (id) {
 
 // --- Missing Helpers Restored ---
 // --- Missing Helpers Restored ---
-const likeProcessing = new Set();
+// --- Optimized Like Handler ---
 async function handleLike(id, btn, ownerId) {
-    if (!id || likeProcessing.has(id)) return;
+    if (!id || !window.FavoritesManager) return;
 
-    if (window.FavoritesManager) {
-        likeProcessing.add(id);
-        const isLikedBefore = window.FavoritesManager.isLiked(id);
+    const isLikedBefore = window.FavoritesManager.isLiked(id);
+    const idStr = String(id);
 
-        // Robust check for the button element
-        const targetBtn = (btn && typeof btn.querySelector === 'function') ? btn : null;
-
-        // Determine current count from ANY matching card
-        let currentCount = 0;
-        const allCards = document.querySelectorAll(`[data-product-id="${id}"]`);
-
-        allCards.forEach(card => {
-            const likeBtn = card.querySelector('.card-like-btn, .post-like-btn, .like-btn');
-            if (likeBtn) {
-                const counter = likeBtn.querySelector('.like-count, .like-counter');
-                if (counter && currentCount === 0) {
-                    currentCount = parseInt(counter.textContent) || 0;
-                }
+    // 1. Instant Counter Update (Local UI)
+    const allCards = document.querySelectorAll(`[data-product-id="${idStr}"]`);
+    allCards.forEach(card => {
+        const likeBtn = card.querySelector('.card-like-btn, .post-like-btn, .like-btn');
+        if (likeBtn) {
+            const counter = likeBtn.querySelector('.like-count, .like-counter');
+            if (counter) {
+                let currentCount = parseInt(counter.textContent) || 0;
+                counter.textContent = isLikedBefore ? Math.max(0, currentCount - 1) : currentCount + 1;
             }
-        });
-
-        const newCount = isLikedBefore ? Math.max(0, currentCount - 1) : currentCount + 1;
-
-        // Optimistically update ALL counters for this product
-        allCards.forEach(card => {
-            const likeBtn = card.querySelector('.card-like-btn, .post-like-btn, .like-btn');
-            if (likeBtn) {
-                const counter = likeBtn.querySelector('.like-count, .like-counter');
-                if (counter) counter.textContent = newCount;
-            }
-        });
-
-        // --- NEW: Unlike Animation Trigger ---
-        if (isLikedBefore && targetBtn) {
-            targetBtn.classList.add('unliking');
-            const icon = targetBtn.querySelector('i');
-            if (icon) {
-                icon.className = 'bi bi-heartbreak-fill';
-                icon.style.color = '#ef4444';
-            }
-
-            setTimeout(() => {
-                targetBtn.classList.remove('unliking');
-                // Icon and color will be updated by window.FavoritesManager subscription
-                // Force sync icons if needed:
-                const isCurrentlyLiked = window.FavoritesManager.isLiked(id);
-                if (icon) {
-                    icon.className = isCurrentlyLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
-                    if (targetBtn.classList.contains('post-like-btn')) {
-                        icon.style.color = isCurrentlyLiked ? '#ef4444' : '';
-                    }
-                }
-            }, 600);
         }
+    });
 
-        try {
-            await window.FavoritesManager.toggleLike(id, btn, ownerId);
-        } catch (err) {
-            console.error('[Explore] Like failed:', err);
-            // Revert counters on all cards
-            allCards.forEach(card => {
-                const likeBtn = card.querySelector('.card-like-btn, .post-like-btn, .like-btn');
-                if (likeBtn) {
-                    const counter = likeBtn.querySelector('.like-count, .like-counter');
-                    if (counter) counter.textContent = currentCount;
-                }
-            });
-        } finally {
-            // Processing done, allow next click after a short delay
-            setTimeout(() => likeProcessing.delete(id), 500);
-        }
-    }
+    // 2. Delegate to FavoritesManager (Handles global UI, caching, and debounced server sync)
+    window.FavoritesManager.toggleLike(id, btn, ownerId);
 }
 
 // Backward compatibility alias

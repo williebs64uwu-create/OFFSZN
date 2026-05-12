@@ -8,8 +8,28 @@ window.FavoritesManager = (function () {
     let isInitialized = false;
     let subscribers = [];
 
+    // Persist to localStorage for zero-latency initial state
+    const CACHE_KEY = 'offszn_liked_ids';
+
+    // 1. Load from cache immediately
+    function loadFromCache() {
+        try {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (cached) {
+                const ids = JSON.parse(cached);
+                likedItemIds = new Set(ids.map(String));
+                // Trigger initial notification so UI updates immediately
+                setTimeout(() => notifySubscribers(), 0);
+            }
+        } catch (e) {
+            console.warn("Failed to load likes from cache", e);
+        }
+    }
+    loadFromCache();
+
     // Throttling: Track IDs currently being toggled
     let pendingToggles = new Set();
+    let toggleQueues = new Map(); // productId -> timeoutId
 
     // Cache for producer metadata (badges, plans, etc)
     let producerMap = new Map();
@@ -97,6 +117,14 @@ window.FavoritesManager = (function () {
                         background: rgba(255,255,255,0.1);
                         color: #fff;
                     }
+                    .bi-heart-fill.liked-pop {
+                        animation: heart-pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    }
+                    @keyframes heart-pop {
+                        0% { transform: scale(1); }
+                        50% { transform: scale(1.4); }
+                        100% { transform: scale(1); }
+                    }
                     /* Smooth Removal Animation */
                     .fav-fade-out {
                         opacity: 0;
@@ -169,6 +197,9 @@ window.FavoritesManager = (function () {
 
                 likedItemIds = new Set(visibleProducts.map(p => String(p.id)));
 
+                // Save to cache
+                localStorage.setItem(CACHE_KEY, JSON.stringify([...likedItemIds]));
+
                 // Cache full objects for rendering later (optional optimization)
                 cachedFavorites = visibleProducts;
 
@@ -186,7 +217,7 @@ window.FavoritesManager = (function () {
         return initPromise;
     }
 
-    // 2. Toggle Like (Throttled)
+    // 2. Toggle Like (Professional Optimistic UI + Debounced Sync)
     async function toggleLike(targetId, buttonElement = null, targetOwnerId = null) {
         const token = window.getAccessToken ? window.getAccessToken() : null;
         if (!token) {
@@ -202,94 +233,86 @@ window.FavoritesManager = (function () {
         }
 
         const idStr = String(targetId);
+        const isCurrentlyLiked = likedItemIds.has(idStr);
+        const nextState = !isCurrentlyLiked;
 
-        // THROTTLING CHECK
-        if (pendingToggles.has(idStr)) {
-            return;
-        }
-
-        pendingToggles.add(idStr); // Lock
-
-        const isLikedOriginal = likedItemIds.has(idStr);
-
-        // Optimistic UI Update
-        if (isLikedOriginal) {
-            likedItemIds.delete(idStr);
-        } else {
+        // --- 🚀 INSTANT OPTIMISTIC UI ---
+        if (nextState) {
             likedItemIds.add(idStr);
+        } else {
+            likedItemIds.delete(idStr);
         }
+
+        // Sync to cache immediately
+        localStorage.setItem(CACHE_KEY, JSON.stringify([...likedItemIds]));
+        
+        // Notify all UI listeners (updates icons globally)
         notifySubscribers();
 
-        // Visual Feedback
+        // Specific Button Feedback (Immediate)
         if (buttonElement) {
-            // Toggle active class
-            buttonElement.classList.toggle('active', !isLikedOriginal);
-
-            // Toggle icon classes
-            // Detect if buttonElement is already the <i> or contains one
+            buttonElement.classList.toggle('liked', nextState);
             const icon = buttonElement.tagName === 'I' ? buttonElement : buttonElement.querySelector('i');
             if (icon) {
-                if (isLikedOriginal) {
-                    icon.classList.remove('bi-heart-fill');
-                    icon.classList.add('bi-heart');
-                    icon.style.color = '';
-                } else {
-                    icon.classList.remove('bi-heart');
-                    icon.classList.add('bi-heart-fill');
-                    icon.style.color = '#ef4444';
-                }
-            }
-        }
-
-        try {
-            const res = await fetch(`/api/products/${targetId}/like`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (res.status === 401 || res.status === 403) {
-                // Token was sent but server rejected it (expired/invalid)
-                if (window.AuthUtils) window.AuthUtils._cachedToken = null;
-                localStorage.removeItem('authToken');
-                document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Lax;`;
+                icon.className = nextState ? 'bi bi-heart-fill liked-pop' : 'bi bi-heart';
+                icon.style.color = nextState ? '#ef4444' : '';
                 
-                if (window.showGuestModal) {
-                    window.showGuestModal(
-                        "Sesión expirada",
-                        "Tu sesión ha expirado o es inválida. Por favor inicia sesión nuevamente."
-                    );
-                } else {
-                    window.location.href = '/pages/register.html';
+                // If unliking, we can remove the class after animation or just let it swap
+                if (nextState) {
+                    setTimeout(() => icon.classList.remove('liked-pop'), 300);
                 }
-                throw new Error('Unauthorized');
             }
-
-            if (!res.ok) throw new Error('API Error');
-
-            const data = await res.json();
-
-            // Correct state if mismatch (e.g. race condition)
-            if (data.liked && !likedItemIds.has(idStr)) {
-                likedItemIds.add(idStr);
-                notifySubscribers();
-            } else if (!data.liked && likedItemIds.has(idStr)) {
-                likedItemIds.delete(idStr);
-                notifySubscribers();
-            }
-
-        } catch (err) {
-            // Revert on error
-            if (isLikedOriginal) likedItemIds.add(idStr);
-            else likedItemIds.delete(idStr);
-            notifySubscribers();
-        } finally {
-            setTimeout(() => {
-                pendingToggles.delete(idStr);
-            }, 500);
         }
+
+        // --- ⚡ DEBOUNCED SERVER SYNC ---
+        // If the user clicks 10 times, we only send the FINAL state after 800ms of inactivity
+        if (toggleQueues.has(idStr)) {
+            clearTimeout(toggleQueues.get(idStr));
+        }
+
+        const timeoutId = setTimeout(async () => {
+            toggleQueues.delete(idStr);
+            
+            try {
+                // Verify the state hasn't changed back while waiting
+                const finalState = likedItemIds.has(idStr);
+                
+                const res = await fetch(`/api/products/${targetId}/like`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    // Tell the server if we want to FORCE a certain state (optional but safer)
+                    body: JSON.stringify({ liked: finalState })
+                });
+
+                if (res.status === 401 || res.status === 403) {
+                    // Revert and redirect
+                    localStorage.removeItem('authToken');
+                    window.location.reload();
+                    return;
+                }
+
+                if (!res.ok) throw new Error('API Error');
+                const data = await res.json();
+
+                // Re-sync if server disagrees (rare race condition)
+                if (data.liked !== likedItemIds.has(idStr)) {
+                    if (data.liked) likedItemIds.add(idStr);
+                    else likedItemIds.delete(idStr);
+                    localStorage.setItem(CACHE_KEY, JSON.stringify([...likedItemIds]));
+                    notifySubscribers();
+                }
+
+            } catch (err) {
+                console.error("Failed to sync like with server:", err);
+                // We don't necessarily revert here to avoid flickering on poor connections
+                // unless it's a persistent failure.
+            }
+        }, 800);
+
+        toggleQueues.set(idStr, timeoutId);
     }
 
     // Helper: Get Access Token (Internal) - REMOVED (Now using global AuthUtils)
@@ -882,9 +905,23 @@ window.FavoritesManager = (function () {
 })();
 
 // --- REFINED INITIALIZATION ---
-document.addEventListener('DOMContentLoaded', () => {
-    window.addEventListener('offszn-session-ready', (e) => {
-        if (e.detail.session) window.FavoritesManager.init();
+(function() {
+    const runInit = () => {
+        if (window.FavoritesManager && typeof window.FavoritesManager.init === 'function') {
+            window.FavoritesManager.init();
+        }
+    };
+
+    // 1. Try immediately if we have a token
+    if (localStorage.getItem('authToken') || (window.AuthUtils && window.AuthUtils.getAccessToken())) {
+        runInit();
+    }
+
+    // 2. Also listen for standard events
+    document.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('offszn-session-ready', (e) => {
+            if (e.detail.session) runInit();
+        });
+        if (window.supabaseClient) runInit();
     });
-    if (window.supabaseClient) window.FavoritesManager.init();
-});
+})();

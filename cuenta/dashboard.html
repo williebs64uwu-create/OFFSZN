@@ -2976,12 +2976,6 @@
                 });
                 const sub = await response.json();
 
-                if (!sub || sub.status === 'none' || sub.status === 'expired') {
-                    document.getElementById('subscription-status-card').style.display = 'none';
-                    return;
-                }
-
-                // Show card & setup UI
                 const card = document.getElementById('subscription-status-card');
                 const badge = document.getElementById('sub-badge');
                 const planName = document.getElementById('sub-plan-name');
@@ -2989,15 +2983,48 @@
                 const progressFill = document.getElementById('sub-progress-fill');
                 const progressPct = document.getElementById('sub-progress-pct');
                 const mainAction = document.getElementById('sub-main-action');
+                const progText = document.getElementById('sub-progress-text');
+                const refundLink = document.getElementById('sub-refund-link');
 
                 card.style.display = 'block';
+
+                if (!sub || sub.status === 'none' || sub.status === 'expired') {
+                    // PLAN FREE logic
+                    card.classList.remove('canceled');
+                    badge.className = 'sub-badge status-active';
+                    badge.textContent = 'Activa';
+                    planName.textContent = 'PLAN FREE';
+                    
+                    // Fallback to 0 if products not loaded yet
+                    const uploadCount = window.lastFetchedProducts ? window.lastFetchedProducts.length : 0;
+                    const maxUploads = 30; 
+                    
+                    if (uploadCount >= maxUploads) {
+                        expiryDate.innerHTML = `<span style="color:#ef4444; font-weight: 600;">¡Límite alcanzado! (${maxUploads}/${maxUploads} kits)</span>`;
+                    } else {
+                        expiryDate.innerHTML = `<span style="color:#888;">${uploadCount} de ${maxUploads} kits subidos</span>`;
+                    }
+
+                    if (progText) progText.textContent = 'Límite de subidas';
+                    
+                    const progress = Math.min(100, Math.max(0, (uploadCount / maxUploads) * 100));
+                    if (progressFill) progressFill.style.width = `${progress}%`;
+                    if (progressPct) progressPct.textContent = `${Math.round(progress)}%`;
+
+                    mainAction.innerHTML = '<i class="bi bi-star-fill"></i> <span>Mejorar Plan</span>';
+                    mainAction.className = 'sub-link primary';
+                    mainAction.onclick = () => window.location.href = '/cuenta/planes.html';
+                    
+                    if (refundLink) refundLink.style.display = 'none';
+
+                    return;
+                }
 
                 // Set Plan Name
                 const isPro = sub.plan_id.includes('pro');
                 planName.textContent = isPro ? 'PRO Plan' : 'Starter Plan';
 
                 // Set Status & Theme
-                const progText = document.getElementById('sub-progress-text');
                 if (sub.status === 'canceled') {
                     card.classList.add('canceled');
                     badge.className = 'sub-badge status-canceled';
