@@ -243,10 +243,16 @@ async function fetchData() {
         }
 
         if (allProducts.length > 0) {
+            const willieId = '0382a813-85c7-46c3-8d2c-61a5692adffd';
             // Select Hero products (top activity)
             heroProducts = [...allProducts]
+                .filter(p => 
+                    String(p.producer_id) !== willieId &&
+                    (p.producer_nickname || '').toLowerCase() !== 'willieinspired' &&
+                    (p.producer_nickname || '').toLowerCase() !== 'willie inspired'
+                )
                 .sort((a, b) => (b.plays_count || 0) - (a.plays_count || 0))
-                .slice(0, 4);
+                .slice(0, 6);
 
             // Populate Top 3 PW Producers who have tracks
             window.topPWProducers = [];
@@ -737,8 +743,14 @@ function startHeroSlider() {
         <div class="wavs-hero-track" id="wavs-hero-track">
             ${heroProducts.map((p, i) => renderHeroSlideHtml(p, i)).join('')}
         </div>
-        <div class="wavs-hero-indicators">
-            ${heroProducts.map((_, i) => `<div class="wavs-hero-indicator ${i === currentHeroIndex ? 'active' : ''}" onclick="window.navToHero(${i})"></div>`).join('')}
+        <div class="wavs-hero-controls">
+            <div class="wavs-hero-indicators">
+                ${heroProducts.map((_, i) => `<div class="wavs-hero-indicator ${i === currentHeroIndex ? 'active' : ''}" onclick="window.navToHero(${i})"></div>`).join('')}
+            </div>
+            <div class="wavs-hero-arrows desktop-only">
+                <button class="wavs-nav-btn prev" onclick="window.navHeroPrev()"><i class="bi bi-arrow-left"></i></button>
+                <button class="wavs-nav-btn next" onclick="window.navHeroNext()"><i class="bi bi-arrow-right"></i></button>
+            </div>
         </div>
     `;
 
@@ -947,6 +959,20 @@ window.navToHero = function (index) {
     performHeroTransition(index);
     if (heroTimer) clearInterval(heroTimer);
     heroTimer = setInterval(() => moveToNextHero(), EXPLORE_CONFIG.HERO_ROTATE_MS);
+};
+
+window.navHeroPrev = () => {
+    if (!heroProducts || heroProducts.length === 0) return;
+    let nextIndex = currentHeroIndex - 1;
+    if(nextIndex < 0) nextIndex = heroProducts.length - 1;
+    window.navToHero(nextIndex);
+};
+
+window.navHeroNext = () => {
+    if (!heroProducts || heroProducts.length === 0) return;
+    let nextIndex = currentHeroIndex + 1;
+    if(nextIndex >= heroProducts.length) nextIndex = 0;
+    window.navToHero(nextIndex);
 };
 
 window.changePW = function (direction) {
