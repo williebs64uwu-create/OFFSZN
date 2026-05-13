@@ -67,10 +67,15 @@ async function loadSidebarData(userId) {
 
 async function fetchFollowingList(userId) {
     try {
-        // 1. Get IDs of users I follow
+        // 1. Use FollowManager to ensure we have the latest IDs
+        if (window.FollowManager) {
+            await window.FollowManager.init();
+        }
+
+        const token = (await supabaseClient.auth.getSession()).data.session.access_token;
         const response = await fetch('/api/me/following', {
             headers: {
-                'Authorization': `Bearer ${(await supabaseClient.auth.getSession()).data.session.access_token}`
+                'Authorization': `Bearer ${token}`
             }
         });
 

@@ -6,7 +6,7 @@
 window.FavoritesManager = (function () {
     let likedItemIds = new Set();
     let isInitialized = false;
-    let subscribers = [];
+    let subscribers = new Set();
 
     // Persist to localStorage for zero-latency initial state
     const CACHE_KEY = 'offszn_liked_ids';
@@ -811,8 +811,13 @@ window.FavoritesManager = (function () {
     }
 
     function isLiked(id) { return likedItemIds.has(String(id)); }
-    function subscribe(cb) { subscribers.push(cb); cb(likedItemIds); }
-    function notifySubscribers() { subscribers.forEach(cb => cb(likedItemIds)); }
+    function subscribe(callback) {
+        subscribers.add(callback);
+        // 🔥 IMPROVEMENT: Call immediately with current state for instant UI sync
+        callback(new Set(likedItemIds));
+        return () => subscribers.delete(callback);
+    }
+    function notifySubscribers() { subscribers.forEach(cb => cb(new Set(likedItemIds))); }
 
     // --- REALTIME SYNC & ANIMATION ---
     function handleRealtimeUpdates(currentIds) {

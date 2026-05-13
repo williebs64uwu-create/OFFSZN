@@ -132,17 +132,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const token = window.getAccessToken(); // Use GLOBAL
     if (token) {
         // Fetch both following list and current user identity in parallel
+        // NOTE: FollowManager now handles the following list more efficiently
         window.profileInitPromise = Promise.all([
-            fetch('/api/me/following', { headers: window.AuthUtils.getAuthHeaderObj() })
-                .then(r => r.ok ? r.json() : [])
-                .catch(err => []),
-            fetch('/api/me', { headers: window.AuthUtils.getAuthHeaderObj() })
-                .then(r => r.ok ? r.json() : null)
-                .catch(err => null)
-        ]).then(([ids, me]) => {
-            if (Array.isArray(ids)) window.currentUserFollowing = new Set(ids);
+            window.FollowManager?.init(),
+            window.FavoritesManager?.init(),
+            window.AuthUtils.getMe()
+        ]).then(([_, __, me]) => {
             if (me && me.id) window.currentUserId = me.id;
-            // console.log("Profile Init Data Loaded:", { following: window.currentUserFollowing.size, me: window.currentUserId });
         });
     }
 
@@ -663,60 +659,35 @@ async function renderHeader(user, categoryCounts = null) {
         } else {
             followBtn.style.display = 'inline-block';
 
-            // Initial Check (Instant because we awaited the data)
-            const isFollowing = window.currentUserFollowing && window.currentUserFollowing.has(user.id);
-            updateButtonVisuals(followBtn, isFollowing);
+            // Subscribe to FollowManager for real-time sync
+            if (window.FollowManager) {
+                window.FollowManager.subscribe((followedIds) => {
+                    const isFollowing = followedIds.has(String(user.id));
+                    window.FollowManager.updateButtonVisuals(followBtn, isFollowing);
+                    
+                    // Update Count Optimistically if it's the main header button
+                    if (fCountEl) {
+                        // We use the count from the user object as base, then adjust
+                        const baseCount = user.followers_count || 0;
+                        const isActuallyFollowing = window.currentUserFollowing && window.currentUserFollowing.has(user.id);
+                        
+                        let current = baseCount;
+                        // If our current state is different from what was loaded, adjust
+                        if (isFollowing && !isActuallyFollowing) current++;
+                        if (!isFollowing && isActuallyFollowing) current = Math.max(0, current - 1);
+
+                        const label = current === 1 ? 'Seguidor' : 'Seguidores';
+                        fCountEl.innerHTML = `${current} <span style="font-weight: 400;">${label}</span>`;
+                    }
+                });
+            }
         }
 
-        followBtn.onclick = async () => {
-            const token = window.getAccessToken ? window.getAccessToken() : null;
-            if (!token) {
-                if (window.showGuestModal) {
-                    window.showGuestModal(
-                        "¡Sigue a este productor!",
-                        "Crea una cuenta para seguir a tus artistas favoritos, recibir notificaciones de nuevos lanzamientos y más!."
-                    );
-                } else {
-                    window.location.href = '/pages/login.html';
-                }
-                return;
+        followBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (window.FollowManager) {
+                window.FollowManager.toggleFollow(user.id, followBtn);
             }
-
-            const isFollowing = followBtn.classList.contains('following-state');
-            const method = isFollowing ? 'DELETE' : 'POST';
-
-            followBtn.disabled = true;
-            try {
-                const res = await fetch(`/api/users/${user.id}/follow`, {
-                    method: method,
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    const newState = !isFollowing;
-
-                    // Global Sync
-                    syncFollowState(user.id, newState); // updates this button + cache + others
-
-                    // Update Main Count specifically
-                    if (fCountEl) {
-                        if (data.followersCount !== undefined) {
-                            fCountEl.innerText = `${data.followersCount} Seguidores`;
-                        } else {
-                            // Fallback
-                            let current = parseInt(fCountEl.innerText) || 0;
-                            if (newState) current++; else current = Math.max(0, current - 1);
-                            const label = current === 1 ? 'Seguidor' : 'Seguidores';
-                            fCountEl.innerText = `${current} ${label}`;
-                        }
-                    }
-                } else if (res.status === 400) {
-                    const data = await res.json();
-                    showToast(data.error || "No puedes realizar esta acción");
-                }
-            } catch (e) { console.error(e); }
-            finally { followBtn.disabled = false; }
         };
     }
 }
@@ -2075,8 +2046,12 @@ function syncFollowState(targetId, isFollowing) {
 
 // Global Event Listener for Hover Card Sync
 window.addEventListener('follow-state-changed', (e) => {
+    // If e.detail has followedIds (from new FollowManager)
+    if (e.detail.followedIds) {
+        // Handled by subscribers now
+        return;
+    }
     const { userId, isFollowing } = e.detail;
-    // console.log("Global Follow Sync:", userId, isFollowing);
     syncFollowState(userId, isFollowing);
 });
 

@@ -104,21 +104,19 @@ function initGlobalListeners() {
         });
     }
 
-    if (window.FavoritesManager) {
-        window.FavoritesManager.subscribe((likedSet) => {
-            // Unify syncing logic similar to search.js syncLikes()
-            const allHearts = document.querySelectorAll('.card-like-btn, .post-like-btn, .like-btn');
-            allHearts.forEach(btn => {
-                const id = btn.closest('[data-product-id]')?.dataset.productId;
-                if (id) {
-                    const isLiked = likedSet.has(String(id));
-                    btn.classList.toggle('liked', isLiked);
-                    const icon = btn.querySelector('i');
-                    if (icon && !btn.classList.contains('unliking')) {
-                        icon.className = isLiked ? 'bi bi-heart-fill' : 'bi bi-heart';
-                        if (btn.classList.contains('post-like-btn')) {
-                            icon.style.color = isLiked ? '#ef4444' : '';
-                        }
+    if (window.FollowManager) {
+        window.FollowManager.subscribe((followedIds) => {
+            const allFollowBtns = document.querySelectorAll('.lb-follow-btn-sp, .artist-follow-btn, .follow-btn');
+            allFollowBtns.forEach(btn => {
+                const targetId = btn.dataset.targetId || btn.closest('[data-artist-id]')?.dataset.artistId;
+                if (targetId) {
+                    const isFollowing = followedIds.has(String(targetId));
+                    if (window.FollowManager.updateButtonVisuals) {
+                        window.FollowManager.updateButtonVisuals(btn, isFollowing);
+                    } else {
+                        // Fallback if helper not exposed yet
+                        btn.classList.toggle('following', isFollowing);
+                        btn.textContent = isFollowing ? 'Siguiendo' : 'Seguir';
                     }
                 }
             });
@@ -142,14 +140,7 @@ async function fetchData() {
     }
 
     // Initialize user state promises
-    let userPromises = [];
-    if (token) {
-        userPromises = [
-            fetch(`${API_URL}/me/following`, { headers: { 'Authorization': `Bearer ${token}` } })
-                .then(r => r.ok ? r.json() : [])
-                .catch(() => []),
-        ];
-    } else {
+    if (!token) {
         // 🔒 ZERO LATENCY GUEST: Skip waiting for user data
         window.currentUserFollowing = new Set();
     }
@@ -158,12 +149,20 @@ async function fetchData() {
         // Fetch Content + User Data in Parallel
         const promises = [
             fetch(`${API_URL}/products`),
-            fetch(`${API_URL}/producers`),
+            fetch(`${API_URL}/producers?limit=100`),
             fetch(`${API_URL}/leaderboard`),
         ];
 
+        // Push manager inits and profile fetch to the parallel queue
         if (token) {
-            promises.push(userPromises[0]);
+            promises.push(
+                window.FollowManager ? window.FollowManager.init() : Promise.resolve(),
+                window.FavoritesManager ? window.FavoritesManager.init() : Promise.resolve(),
+                token ? 
+                fetch(`${API_URL}/me`, { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(r => r.ok ? r.json() : null) : 
+                Promise.resolve(null)
+            );
         }
 
         const timeout = new Promise((_, reject) =>
@@ -177,18 +176,30 @@ async function fetchData() {
         const productsRes = results[0];
         const producersRes = results[1];
         const leaderboardRes = results[2];
-        const followingData = token ? results[3] : [];
+
+        if (token) {
+            const profileData = results[5]; // profile is at index 5
+            if (profileData) {
+                window.currentUserProfile = profileData;
+                window.currentUserId = profileData.id;
+            }
+        }
 
         // Process Content
         if (productsRes.ok) {
-            allProducts = await productsRes.json();
+            const prodData = await productsRes.json();
+            allProducts = Array.isArray(prodData) ? prodData : (prodData.products || []);
+
             // 🔥 FILTER DELETED: Ensure they don't show up in Explore
             allProducts = allProducts.filter(p =>
                 p.status !== 'deleted' &&
                 !(p.public_slug && p.public_slug.startsWith('deleted'))
             );
         }
-        if (producersRes.ok) allProducers = await producersRes.json();
+        if (producersRes.ok) {
+            const prodData = await producersRes.json();
+            allProducers = Array.isArray(prodData) ? prodData : (prodData.producers || []);
+        }
         if (leaderboardRes.ok) {
             const lbData = await leaderboardRes.json();
             const willieId = '0382a813-85c7-46c3-8d2c-61a5692adffd';
@@ -201,11 +212,22 @@ async function fetchData() {
             window.topProducers = window.topProducers || [];
         }
 
-        // Process User State (Reliable)
-        if (followingData && Array.isArray(followingData)) {
-            window.currentUserFollowing = new Set(followingData);
-        } else {
-            window.currentUserFollowing = window.currentUserFollowing || new Set();
+        // 🔥 WARM HOVER CARD CACHE: Pre-populate with data we already have
+        if (allProducers.length > 0 && window.HC_Cache) {
+            allProducers.forEach(p => {
+                const cacheData = {
+                    id: p.id,
+                    nickname: p.nickname,
+                    avatar_url: p.avatar_url,
+                    is_verified: p.is_verified || p.is_producer || p.plan === 'pro' || p.plan === 'starter',
+                    stats: {
+                        products: p.products_count || 0,
+                        followers: p.followers_count || 0
+                    }
+                };
+                window.HC_Cache.set(String(p.id), cacheData);
+                if (p.nickname) window.HC_Cache.set(p.nickname, cacheData);
+            });
         }
 
         // --- NEW: Fetch Reposts ---
@@ -588,12 +610,21 @@ function createListItemHtml(item, index, type) {
     const link = type === 'product' ? getProductUrl(item) : `/@${item.nickname}`;
 
     if (type === 'producer') {
+        const artistData = { 
+            id: item.id, 
+            nickname: item.nickname, 
+            avatar_url: item.avatar_url, 
+            is_verified: item.is_verified || item.is_producer,
+            r2_version: item.r2_version || item.storage_version || 'v1'
+        };
+        const artistJson = JSON.stringify(artistData).replace(/'/g, "&apos;");
+
         return `
             <div class="list-item-smart" data-id="${item.id}" data-type="producer" onclick="window.location.href='${link}'">
                 <div class="list-item-index">${index}</div>
-                <img ${imgAttr} data-r2-version="${storageVer}" data-artist="${item.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" class="list-item-img circle" alt="cover">
+                <img ${imgAttr} data-r2-version="${storageVer}" data-artist='${artistJson}' onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" class="list-item-img circle" alt="cover">
                 <div class="list-item-info">
-                    <div class="list-item-name" data-artist="${item.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${name}</div>
+                    <div class="list-item-name" data-artist='${artistJson}' onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${name}</div>
                     <div class="list-item-sub">${sub}</div>
                 </div>
                 <div class="list-item-value">
@@ -607,13 +638,22 @@ function createListItemHtml(item, index, type) {
     const audioUrl = getProductAudio(item);
     const hasAudio = !!audioUrl;
 
+    const artistData = { 
+        id: item.producer_id, 
+        nickname: item.producer_nickname, 
+        avatar_url: item.producer_avatar, 
+        is_verified: item.producer_verified,
+        r2_version: item.producer_r2_version || item.r2_version || 'v1'
+    };
+    const artistJson = JSON.stringify(artistData).replace(/'/g, "&apos;");
+
     return `
         <div class="list-item-smart" data-id="${item.id}" data-type="product">
             <div class="list-item-index">${index}</div>
             <img ${imgAttr} data-r2-version="${storageVer}" data-product-id="${item.id}" class="list-item-img" alt="cover" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
             <div class="list-item-info" onclick="event.stopPropagation(); window.handleInfoClick(event, '${item.id}', '${link}')">
                 <div class="list-item-name">${name}</div>
-                <div class="list-item-sub" data-artist="${item.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${sub}</div>
+                <div class="list-item-sub" data-artist='${artistJson}' onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${sub}</div>
             </div>
             <div class="list-item-waveform skeleton-waveform"></div>
             <div class="list-item-value">
@@ -1596,7 +1636,7 @@ function renderLeaderboard(producers) {
     const top10 = producers.slice(0, 10);
 
     const createProducerCardHtml = (p) => {
-        const isFollowing = window.currentUserFollowing && window.currentUserFollowing.has(p.id);
+        const isFollowing = window.FollowManager ? window.FollowManager.isFollowing(p.id) : false;
         const btnClass = isFollowing ? 'lb-follow-btn-sp following' : 'lb-follow-btn-sp';
         const btnText = isFollowing ? 'Siguiendo' : 'Seguir';
 
@@ -1622,7 +1662,7 @@ function renderLeaderboard(producers) {
                     ${safeNickname}
                 </div>
                 <div class="producer-score-sp">${(p.score || 0).toLocaleString()} pts</div>
-                <button class="${btnClass}" onclick="event.stopPropagation(); toggleFollow('${p.id}', this)">
+                <button class="${btnClass}" data-target-id="${p.id}" onclick="event.stopPropagation(); window.FollowManager.toggleFollow('${p.id}', this)">
                     ${btnText}
                 </button>
             </div>
@@ -1657,68 +1697,6 @@ function renderLeaderboard(producers) {
     `;
 }
 
-/**
- * Handle Follow Action
- */
-async function toggleFollow(producerId, btn) {
-    const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
-    // ... rest of function
-
-
-    if (!token) {
-        // Redirect to login or show modal
-        window.location.href = '/pages/login.html';
-        return;
-    }
-
-    const isFollowing = btn.classList.contains('following');
-    const method = isFollowing ? 'DELETE' : 'POST';
-
-    // Optimistic UI Update
-    btn.disabled = true;
-    if (isFollowing) {
-        btn.classList.remove('following');
-        btn.innerHTML = '<i class="bi bi-plus"></i> Seguir';
-    } else {
-        btn.classList.add('following');
-        btn.innerText = 'Siguiendo';
-    }
-
-    try {
-        const res = await fetch(`/api/users/${producerId}/follow`, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-
-        if (!res.ok) {
-            throw new Error('Action failed');
-        }
-
-        // Update Global State
-        if (isFollowing) {
-            window.currentUserFollowing.delete(producerId);
-        } else {
-            window.currentUserFollowing.add(producerId);
-        }
-
-    } catch (err) {
-        console.error("Follow error:", err);
-        // Revert UI on error
-        if (isFollowing) {
-            btn.classList.add('following');
-            btn.innerText = 'Siguiendo';
-        } else {
-            btn.classList.remove('following');
-            btn.innerHTML = '<i class="bi bi-plus"></i> Seguir';
-        }
-        alert("Error al seguir usuario via API."); // Simple feedback
-    } finally {
-        btn.disabled = false;
-    }
-}
 
 // 🔥 R2 SIGNING UTILITY MOVED TO AUTH-UTILS.JS FOR GLOBAL AVAILABILITY
 /**

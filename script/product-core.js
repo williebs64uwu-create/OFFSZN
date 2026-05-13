@@ -357,7 +357,8 @@ function injectDynamicSEO(product) {
     const safeProducerName = escapeHTML(producerName);
 
     // 2. Set Document Title (MOST IMPORTANT for Google)
-    document.title = `${safeProductName} - ${safeProducerName} | OFFSZN`;
+    // We use raw names because document.title treats them as plain text (no HTML escaping needed)
+    document.title = `${product.name} - ${producerName} | OFFSZN`;
 
     // 3. Set or Update Meta Description
     let metaDesc = document.querySelector('meta[name="description"]');
@@ -404,7 +405,7 @@ function injectDynamicSEO(product) {
     // 6. Set Twitter Card Tags
     const twitterTags = {
         'twitter:card': 'summary_large_image',
-        'twitter:title': `${safeProductName} - ${safeProducerName} | OFFSZN`,
+        'twitter:title': `${product.name} - ${producerName} | OFFSZN`,
         'twitter:description': descText,
         'twitter:image': coverUrl
     };
@@ -423,8 +424,8 @@ function injectDynamicSEO(product) {
     const schema = {
         '@context': 'https://schema.org',
         '@type': 'Product',
-        'name': safeProductName,
-        'description': escapeHTML(product.description || descText),
+        'name': product.name,
+        'description': product.description || descText,
         'image': coverUrl,
         'brand': { '@type': 'Brand', 'name': 'OFFSZN' },
         'creator': { '@type': 'Person', 'name': producerName },

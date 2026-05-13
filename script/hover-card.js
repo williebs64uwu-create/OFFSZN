@@ -140,9 +140,13 @@ window.showArtistCard = async function (event, element) {
     try {
         initialData = JSON.parse(dataStr);
     } catch (e) {
-        // If it's not JSON, it's either an ID or a nickname.
-        // We'll treat it as a nickname since that's what window.HC_Cache.get expects first.
-        initialData = { nickname: dataStr };
+        // If it's not JSON, check if it's a UUID
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(dataStr);
+        if (isUuid) {
+            initialData = { id: dataStr };
+        } else {
+            initialData = { nickname: dataStr };
+        }
     }
 
     setupHoverCard();
@@ -150,7 +154,10 @@ window.showArtistCard = async function (event, element) {
 
     // RESOLVE DATA (Move up)
     let fullData = initialData;
-    let cached = window.HC_Cache.get(initialData.id || initialData.nickname);
+    
+    // Robust Cache Lookup (Stringify ID to match explore.js warming)
+    const identifier = initialData.id ? String(initialData.id) : initialData.nickname;
+    let cached = identifier ? window.HC_Cache.get(identifier) : null;
 
     if (cached && !(cached instanceof Promise)) {
         fullData = { ...initialData, ...cached };
@@ -247,13 +254,15 @@ window.showArtistCard = async function (event, element) {
     // ASYNC FETCH (If needed)
     try {
         const fetchData = async () => {
-            // Force fetch if stats are missing, zero (placeholders), or we don't have full info
+            // Force fetch if stats are missing, or we only have a partial initialData
             const hasRealStats = cached && !(cached instanceof Promise) && cached.stats && (cached.stats.products !== undefined);
 
             if (!hasRealStats) {
-                let fetchProm = cached instanceof Promise ? cached : null;
+                let fetchProm = (cached instanceof Promise) ? cached : null;
                 if (!fetchProm) {
-                    const identifier = initialData.id || initialData.nickname;
+                    const identifier = fullData.id ? String(fullData.id) : fullData.nickname;
+                    if (!identifier) return;
+
                     fetchProm = fetch(`/api/users/${identifier}`)
                         .then(r => r.ok ? r.json() : null)
                         .then(data => {
@@ -274,8 +283,9 @@ window.showArtistCard = async function (event, element) {
                 const pData = await fetchProm;
                 if (pData) {
                     fullData = { ...fullData, ...pData };
-                    window.HC_Cache.set(initialData.nickname, fullData);
-                    if (fullData.id) window.HC_Cache.set(fullData.id, fullData); // ID cache
+                    // Cache by nickname and stringified ID
+                    if (fullData.nickname) window.HC_Cache.set(fullData.nickname, fullData);
+                    if (fullData.id) window.HC_Cache.set(String(fullData.id), fullData); 
                     renderCardContent(card, fullData);
                 }
             }
@@ -308,57 +318,33 @@ window.showArtistCard = async function (event, element) {
         nameEl.onclick = (e) => { e.stopPropagation(); const u = getRedirectUrl(); if (u) window.location.href = u; };
 
         // Follow Action
-        btn.onclick = async (e) => {
+        btn.onclick = (e) => {
             e.stopPropagation();
-            const token = window.getAccessToken(); // GLOBAL
-            if (!token) { window.location.href = '/pages/login.html'; return; } // Fixed path
-
-            // Toggle state
-            const oldState = isFollowing;
-            const newState = !isFollowing;
-            isFollowing = newState;
-
-            // Optimistic Update
-            updateHC_ButtonVisuals(btn, newState);
-
-            // Update stats visually
-            let s = fullData.stats || { followers: 0, products: 0 };
-            if (newState) s.followers++; else s.followers = Math.max(0, s.followers - 1);
-            fullData.stats = s;
-            renderCardContent(card, fullData);
-
-            // Sync Global
-            syncHC_FollowState(targetId, newState);
-
-            btn.disabled = true;
-            try {
-                const method = newState ? 'POST' : 'DELETE';
-                const res = await fetch(`/api/users/${targetId}/follow`, {
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (!res.ok) {
-                    throw new Error('Request failed');
-                }
-                // Success - data is synced
-            } catch (err) {
-                console.error(err);
-                showHC_Toast("Error de conexión");
-
-                // Revert
-                isFollowing = oldState;
-                updateHC_ButtonVisuals(btn, oldState);
-                if (newState) s.followers--; else s.followers++;
-                renderCardContent(card, fullData);
-                syncHC_FollowState(targetId, oldState);
-            } finally {
-                btn.disabled = false;
+            if (window.FollowManager) {
+                window.FollowManager.toggleFollow(targetId, btn);
             }
         };
+
+        // Subscribe for real-time sync while card is visible
+        const unsubscribe = window.FollowManager?.subscribe((followedIds) => {
+            const isFollowing = followedIds.has(String(targetId));
+            window.FollowManager.updateButtonVisuals(btn, isFollowing);
+            
+            // Update stats visually
+            let s = fullData.stats || { followers: 0, products: 0 };
+            const isActuallyFollowing = window.currentUserFollowing && window.currentUserFollowing.has(targetId);
+            
+            let current = s.followers;
+            if (isFollowing && !isActuallyFollowing) current++;
+            if (!isFollowing && isActuallyFollowing) current = Math.max(0, current - 1);
+            
+            const renderData = { ...fullData, stats: { ...s, followers: current } };
+            renderCardContent(card, renderData);
+        });
+
+        // Store unsubscribe on card to call when hidden
+        card._unsubscribeFollow = unsubscribe;
+
 
     } catch (e) {
         console.warn("Hover card error:", e);
@@ -367,7 +353,25 @@ window.showArtistCard = async function (event, element) {
 
 function renderCardContent(card, data) {
     card.querySelector('.ahc-name').innerHTML = `${data.nickname} ${data.is_verified ? '<i class="bi bi-patch-check-fill" style="color:#3b82f6; margin-left:4px;"></i>' : ''}`;
-    card.querySelector('.ahc-avatar').src = data.avatar_url || `https://ui-avatars.com/api/?name=${data.nickname}&background=333&color=fff`;
+    
+    // Avatar Logic (with R2 support)
+    const avatarEl = card.querySelector('.ahc-avatar');
+    const rawUrl = data.avatar_url || `https://ui-avatars.com/api/?name=${data.nickname}&background=333&color=fff`;
+    
+    // Set immediate placeholder or current
+    if (!avatarEl.src || avatarEl.src.includes('ui-avatars')) {
+        avatarEl.src = rawUrl;
+    }
+
+    if (data.avatar_url && window.getAuthorizedUrl) {
+        window.getAuthorizedUrl(data.avatar_url, data.r2_version || 'v2').then(url => {
+            if (url) avatarEl.src = url;
+        }).catch(() => {
+            avatarEl.src = rawUrl;
+        });
+    } else {
+        avatarEl.src = rawUrl;
+    }
 
     const statsEl = card.querySelector('.ahc-stats');
     if (data.stats && (data.stats.products !== undefined || data.stats.followers !== undefined)) {
@@ -386,6 +390,10 @@ window.hideArtistCard = function (event, element) {
     // Delay to allow moving mouse to the card
     window.hc_hoverTimeout = setTimeout(() => {
         if (card) {
+            if (card._unsubscribeFollow) {
+                card._unsubscribeFollow();
+                card._unsubscribeFollow = null;
+            }
             card.classList.remove('active');
             setTimeout(() => { if (!card.classList.contains('active')) card.style.display = 'none'; }, 100);
         }

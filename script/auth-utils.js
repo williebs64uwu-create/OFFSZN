@@ -333,6 +333,21 @@ window.AuthUtils = {
         return { id, nickname };
     },
 
+    /**
+     * Alias for getCurrentUser (Common naming convention)
+     */
+    getMe: function () {
+        return this.getCurrentUser();
+    },
+
+    /**
+     * Helper to get standard Auth header object.
+     */
+    getAuthHeaderObj: function () {
+        const token = this.getAccessToken();
+        return token ? { 'Authorization': `Bearer ${token}` } : {};
+    },
+
     _urlCache: {}, // In-memory cache
     _signingQueue: [], // Queue for batching: { key, version, resolve, reject }
     _batchTimeout: null,
