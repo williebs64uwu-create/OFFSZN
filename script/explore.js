@@ -1430,7 +1430,7 @@ function createProductCardHtml(product, format = 'standard') {
             <div class="card-info">
                 <div class="card-title">${cleanName(product.name)}</div>
                 <div class="card-producer" data-artist="${product.producer_id}" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(product.producer_nickname || product.producer_handle || 'artista')}'" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${artist}</div>
-                <button class="card-buy-btn" onclick="event.stopPropagation(); addToCart('${product.id}')">
+                <button class="card-buy-btn" onclick="handleAddToCart(event, '${product.id}')">
                     <i class="bi bi-bag"></i> ${priceDisplay}
                 </button>
             </div>
