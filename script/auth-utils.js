@@ -1171,3 +1171,22 @@ window.addEventListener('error', function (e) {
         } catch (err) { }
     }
 }, true); // Use capture phase to catch all images before they bubble
+
+// ==================== GLOBAL COMPATIBILITY ==================== //
+window.getAccessToken = () => window.AuthUtils.getAccessToken();
+window.getAuthHeaderObj = () => window.AuthUtils.getAuthHeaderObj();
+window.getAuthorizedUrl = (path, version, productId) => window.AuthUtils.getAuthorizedUrl(path, version, productId);
+window.isR2Url = (path) => window.AuthUtils.isR2Url(path);
+window.getFormattedSupabaseUrl = (path) => window.AuthUtils.getFormattedSupabaseUrl(path);
+window.getBadgeHtml = (plan, isVerified) => window.AuthUtils.getBadgeHtml(plan, isVerified);
+
+// Add to AuthUtils object
+window.AuthUtils.getBadgeHtml = function(plan, isVerified) {
+    if (!isVerified && !plan) return '';
+    let color = '#00f2ff'; // Default Celeste (Instagram style)
+    if (plan === 'pro') color = '#fbbf24'; // Gold
+    else if (plan === 'starter') color = '#a855f7'; // Purple
+    return `<i class="bi bi-patch-check-fill" style="color: ${color}; font-size: 1em;" title="Verificado"></i>`;
+};
+
+

@@ -17,34 +17,26 @@
 #artist-hover-card {
     position: fixed;
     display: none;
-    /* Hidden by default */
     flex-direction: column;
-    /* Force column layout */
-    background: #18181b;
-    /* Zinc-900 */
-    border: 1px solid #27272a;
-    /* Zinc-800 */
-    border-radius: 12px;
-    padding: 16px;
-    width: 260px;
-    /* Slightly wider */
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    background: #050505; 
+    border: 1px solid #1a1a1a; 
+    border-radius: 12px; /* Slightly more square for premium feel */
+    padding: 12px; /* Reduced from 16px */
+    width: 240px; /* Reduced from 260px */
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
     z-index: 9999;
     color: #fff;
-
-    /* Transition Logic */
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
     transition: none;
-    /* Instant hide */
     pointer-events: none;
+    backdrop-filter: blur(12px);
 }
 
 #artist-hover-card.active {
     opacity: 1;
     transform: translateY(0);
     transition: opacity 0.2s ease, transform 0.2s ease;
-    /* Smooth show */
     pointer-events: auto;
     display: flex !important;
 }
@@ -52,81 +44,102 @@
 .ahc-header {
     display: flex;
     flex-direction: row;
-    /* Explicit row */
     align-items: center;
     gap: 12px;
-    margin-bottom: 16px;
-    /* increased spacing */
+    margin-bottom: 12px;
 }
 
 .ahc-avatar {
-    width: 56px;
-    /* Larger avatar */
-    height: 56px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     object-fit: cover;
-    background: #222;
-    border: 1px solid #333;
-    flex-shrink: 0;
+    background: #111;
+    border: 1px solid #222;
 }
 
 .ahc-info {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    overflow: hidden;
+    flex: 1;
+    min-width: 0;
 }
 
 .ahc-name {
+    color: #fff;
+    font-size: 0.95rem;
     font-weight: 700;
-    font-size: 1rem;
     display: flex;
     align-items: center;
     gap: 4px;
-    color: #fff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .ahc-stats {
-    font-size: 0.8rem;
-    color: #a1a1aa;
-    /* Zinc-400 */
-    margin-top: 4px;
+    color: #888;
+    font-size: 0.75rem;
+    margin-top: 2px;
 }
 
-.ahc-btn-follow {
-    background: #8A2BE2;
-    color: #fff;
-    border: none;
+.ahc-follow-btn {
+    width: 100%;
+    padding: 8px;
     border-radius: 8px;
-    padding: 8px 0;
-    /* Keep moderate height */
-    font-size: 0.9rem;
-    font-weight: 600;
+    border: 1px solid #333;
+    background: transparent;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    height: 36px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.ahc-btn-follow:hover {
-    filter: brightness(1.1);
-    transform: translateY(-1px);
-}
-
-.ahc-btn-follow.following-state {
-    background: transparent;
-    border: 1px solid #444;
-    color: #ccc;
-}
-
-.ahc-btn-follow.following-state:hover {
+.ahc-follow-btn:hover {
+    background: #fff;
+    color: #000;
     border-color: #fff;
-    color: #fff;
+}
+
+.ahc-follow-btn.following {
+    background: #222;
+    border-color: #333;
+    color: #888;
+}
+
+/* Skeletons */
+.ahc-skeleton {
+    background: linear-gradient(90deg, #111 25%, #1a1a1a 50%, #111 75%);
+    background-size: 200% 100%;
+    animation: ahc-shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes ahc-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.ahc-skeleton-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+}
+
+.ahc-skeleton-name {
+    width: 100px;
+    height: 14px;
+    margin-bottom: 6px;
+}
+
+.ahc-skeleton-stats {
+    width: 60px;
+    height: 10px;
+}
+
+.ahc-skeleton-btn {
+    width: 100%;
+    height: 32px;
+    border-radius: 8px;
 }

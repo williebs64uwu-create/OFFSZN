@@ -181,40 +181,27 @@ window.FollowManager = (function () {
         
         btn.classList.toggle('following-state', isFollowing);
         
-        // Add pop animation class
         const icon = btn.querySelector('i');
-        if (isFollowing) {
-            btn.innerHTML = 'Siguiendo';
-            btn.classList.add('following');
-            btn.classList.add('following-state');
-            
-            // Apply neutral following styles if not already styled by specific classes
-            if (!btn.classList.contains('lb-follow-btn-sp') && !btn.classList.contains('artist-follow-btn')) {
-                btn.style.background = 'transparent';
-                btn.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-                btn.style.color = '#aaa';
-            }
-            
-            if (icon) icon.className = 'bi bi-person-check-fill followed-pop';
-        } else {
-            btn.innerHTML = '<i class="bi bi-person-plus-fill"></i> Seguir';
-            btn.classList.remove('following');
-            btn.classList.remove('following-state');
+        const span = btn.querySelector('span');
 
-            // Apply brand styles if not already styled by specific classes
-            if (!btn.classList.contains('lb-follow-btn-sp') && !btn.classList.contains('artist-follow-btn')) {
-                btn.style.background = '#8A2BE2'; // Brand Purple
-                btn.style.border = 'none';
-                btn.style.color = '#fff';
+        if (isFollowing) {
+            if (span) span.textContent = 'Siguiendo';
+            else btn.innerText = 'Siguiendo';
+            
+            if (icon) {
+                icon.className = 'bi bi-person-check-fill followed-pop';
+                setTimeout(() => icon.classList.remove('followed-pop'), 300);
+            }
+        } else {
+            if (span) span.textContent = 'Seguir';
+            else {
+                btn.innerHTML = '<i class="bi bi-person-plus-fill"></i> Seguir';
             }
             
             if (icon) icon.className = 'bi bi-person-plus-fill';
         }
-        
-        if (isFollowing && icon) {
-            setTimeout(() => icon.classList.remove('followed-pop'), 300);
-        }
     }
+
 
     // Inject Pop Animation CSS
     const style = document.createElement('style');

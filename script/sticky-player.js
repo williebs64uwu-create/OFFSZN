@@ -739,28 +739,50 @@ window.StickyPlayer = (function () {
     function updateListButton(track, playing) {
         if (!track || !track.id) return;
 
-        // Selector: Matches any button containing "btn-play-waveform-" AND the track ID
-        // We use a regex match on the ID list to ensure we don't match partial IDs (e.g. ID 1 matching 10)
         const tid = String(track.id);
+        
+        // 1. Waveform list buttons
         const btns = document.querySelectorAll(`[id^="btn-play-waveform-"]`);
-
         btns.forEach(btn => {
             const idParts = btn.id.split('-');
-            // Typical ID format: btn-play-waveform-ID-suffix
-            // We check if the ID part matches our track ID
             if (idParts.includes(tid)) {
                 btn.innerHTML = playing ?
                     '<i class="bi bi-pause-fill"></i>' :
                     '<i class="bi bi-play-fill"></i>';
             }
         });
+
+        // 2. Centered Quick Play buttons (Explore cards)
+        const cardWrappers = document.querySelectorAll(`.product-card-wrapper[data-product-id="${tid}"]`);
+        cardWrappers.forEach(wrapper => {
+            const playBtn = wrapper.querySelector('.quick-play-btn');
+            if (playBtn) {
+                // Icon Logic: Larger icons inside
+                playBtn.innerHTML = playing ?
+                    '<i class="bi bi-pause-fill"></i>' :
+                    '<i class="bi bi-play-fill"></i>';
+                
+                // Persistence Logic: 
+                // Always add is-active if it's the current track (stays visible)
+                playBtn.classList.add('is-active');
+
+                // Toggle is-playing state
+                if (playing) {
+                    playBtn.classList.add('is-playing');
+                } else {
+                    playBtn.classList.remove('is-playing');
+                }
+            }
+        });
     }
 
     function resetAllListButtons() {
-        // Resets ALL play buttons in the DOM to the "Play" state
-        const allPlayBtns = document.querySelectorAll('[id^="btn-play-"]');
+        // Resets ALL play buttons in the DOM
+        const allPlayBtns = document.querySelectorAll('[id^="btn-play-"], .quick-play-btn');
         allPlayBtns.forEach(btn => {
             btn.innerHTML = '<i class="bi bi-play-fill" style="margin-left:2px;"></i>';
+            btn.classList.remove('is-playing');
+            btn.classList.remove('is-active'); // Remove persistence on reset
         });
     }
 

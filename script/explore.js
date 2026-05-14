@@ -1061,6 +1061,9 @@ function renderProducerOfTheWeek() {
                     <div class="pw-featured-img-wrapper">
                         <img ${imgAttr} 
                              data-r2-version="${storageVer}"
+                             data-artist="${featured.id}" 
+                             onmouseenter="showArtistCard(event, this)" 
+                             onmouseleave="hideArtistCard(event, this)"
                              class="pw-featured-img" alt="${artistName}">
                         
                         ${topTrackId ? `
@@ -1073,11 +1076,9 @@ function renderProducerOfTheWeek() {
                     </div>
 
                     <div class="pw-featured-content">
-                        <div class="pw-featured-name" style="display: flex; align-items: center; gap: 8px;">
+                        <div class="pw-featured-name" data-artist="${featured.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)" style="display: flex; align-items: center; gap: 8px;">
                             ${artistName}
-                            ${featured.plan ? `
-                                <i class="bi bi-patch-check-fill" style="font-size: 0.95rem; color: ${featured.plan === 'pro' ? '#fbbf24' : (featured.plan === 'starter' ? '#a855f7' : '#1DB954')}"></i>
-                            ` : ''}
+                            ${featured.is_verified ? (window.getBadgeHtml ? window.getBadgeHtml(featured.plan, true) : `<i class="bi bi-patch-check-fill" style="color: #00f2ff; font-size: 0.95rem;"></i>`) : ''}
                         </div>
                         <div class="pw-featured-stats">
                             <div class="pw-stat-row">
@@ -1272,7 +1273,7 @@ function createShelfRow(title, items, format = 'standard', subtitle = '') {
     initShelfNavigation(row, rowId, stepSize);
     setTimeout(() => {
         // Support both standard and premium formats
-        const cards = row.querySelectorAll('.product-card-smart, .preset-card-premium');
+        const cards = row.querySelectorAll('.product-card-wrapper, .product-card-smart, .preset-card-premium');
         cards.forEach(card => {
             const id = card.dataset.productId;
             const item = items.find(i => String(i.id) === String(id));
@@ -1394,13 +1395,13 @@ function createProductCardHtml(product, format = 'standard') {
         const price = isTrulyFree ? 'GRATIS' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : `$${priceValue}`);
 
         return `
-            <div class="preset-card-premium" data-product-id="${product.id}">
+            <div class="preset-card-premium" data-product-id="${product.id}" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
                 <img ${productImg.attr} alt="${product.name}">
                 <div class="preset-overlay">
                     <span class="preset-tag">PRESET</span>
                     <h3 class="preset-title">${cleanName(product.name)}</h3>
                     <div class="preset-info">
-                        <span class="preset-sub">${artist}</span>
+                        <span class="preset-sub" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${artist}</span>
                         <span class="preset-price">${price}</span>
                     </div>
                 </div>
@@ -1413,27 +1414,64 @@ function createProductCardHtml(product, format = 'standard') {
     }
 
     const pType = (product.product_type || '').toLowerCase();
-    const isFreeFormat = (product.is_free === true || String(product.is_free) === 'true') || (Number(product.price_basic) === 0);
+    const isTrulyFree = (product.is_free === true || String(product.is_free) === 'true') || (Number(product.price_basic) === 0);
+    const isBeat = pType === 'beat';
+    const isKit = pType === 'drum kit' || pType.includes('kit') || pType.includes('pack');
+    
     let rawPrice = product.price_basic !== undefined && product.price_basic !== null ? product.price_basic : '29.99';
-    const priceDisplay = isFreeFormat ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(rawPrice) || 0) : `$${parseFloat(rawPrice).toFixed(2)}`);
+    const priceDisplay = (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(rawPrice) || 0) : `$${parseFloat(rawPrice).toFixed(2)}`);
 
-    return `
-        <div class="product-card-smart" data-product-id="${product.id}">
-            <div class="card-cover-wrapper">
-                <img ${productImg.attr} alt="${product.name}">
-                <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
-                <div class="plays-badge"><i class="bi bi-music-note"></i> ${product.likes_count || 0}</div>
-                <button class="card-like-btn ${isLiked ? 'liked' : ''}">
-                    <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
-                </button>
-            </div>
-            <div class="card-info">
-                <div class="card-title">${cleanName(product.name)}</div>
-                <div class="card-producer" data-artist="${product.producer_id}" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(product.producer_nickname || product.producer_handle || 'artista')}'" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${artist}</div>
+    // Download Gate Config
+    const downloadUrl = product.download_url || product.mp3_url || product.zip_url || '';
+    const producerName = (product.producer_nickname || 'artista').replace(/'/g, "\\'");
+    const gateCall = `event.stopPropagation(); window.openDownloadGateModal('${downloadUrl}', '${producerName}', '${product.id}')`;
+
+    let actionButtonsHtml = '';
+
+    if (isBeat && isTrulyFree) {
+        // Beat with free tagged version: [Price Button] [Download Icon]
+        actionButtonsHtml = `
+            <div class="card-action-row">
                 <button class="card-buy-btn" onclick="handleAddToCart(event, '${product.id}')">
                     <i class="bi bi-bag"></i> ${priceDisplay}
                 </button>
+                <button class="card-download-icon-btn" onclick="${gateCall}" title="Descarga Gratuita con Tag">
+                    <i class="bi bi-download"></i>
+                </button>
             </div>
+        `;
+    } else if (isTrulyFree) {
+        // Free Kits / Packs: [Descargar]
+        actionButtonsHtml = `
+            <button class="card-buy-btn" onclick="${gateCall}">
+                <i class="bi bi-download"></i> ${isKit ? 'DESCARGAR' : 'GRATIS'}
+            </button>
+        `;
+    } else {
+        // Standard Paid Item
+        actionButtonsHtml = `
+            <button class="card-buy-btn" onclick="handleAddToCart(event, '${product.id}')">
+                <i class="bi bi-bag"></i> ${priceDisplay}
+            </button>
+        `;
+    }
+
+    return `
+        <div class="product-card-wrapper" data-product-id="${product.id}">
+            <div class="product-card-smart">
+                <div class="card-cover-wrapper" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
+                    <img ${productImg.attr} alt="${product.name}">
+                    <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
+                </div>
+                <div class="card-info">
+                    <div class="card-title">${cleanName(product.name)}</div>
+                    <div class="card-producer" data-artist="${product.producer_id}" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(product.producer_nickname || product.producer_handle || 'artista')}'" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
+                        ${artist}
+                        ${product.producer_is_verified ? (window.getBadgeHtml ? window.getBadgeHtml(product.producer_plan, true) : `<i class="bi bi-patch-check-fill" style="color: #00f2ff; font-size: 0.85rem; margin-left: 4px;"></i>`) : ''}
+                    </div>
+                </div>
+            </div>
+            ${actionButtonsHtml}
         </div>
     `;
 }
@@ -1711,6 +1749,7 @@ function renderLeaderboard(producers) {
             <div class="producer-info-sp">
                 <div class="producer-name-sp" data-artist="${p.id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
                     ${safeNickname}
+                    ${p.is_verified ? (window.getBadgeHtml ? window.getBadgeHtml(p.plan, true) : `<i class="bi bi-patch-check-fill" style="color: #00f2ff; font-size: 0.85rem;"></i>`) : ''}
                 </div>
                 <div class="producer-score-sp">${(p.score || 0).toLocaleString()} pts</div>
                 <button class="${btnClass}" data-target-id="${p.id}" onclick="event.stopPropagation(); window.FollowManager.toggleFollow('${p.id}', this)">
@@ -1777,7 +1816,7 @@ function injectTopBanner() {
                 justify-content: center;
                 gap: 12px;
                 background: linear-gradient(90deg, #4c1d95 0%, #6d28d9 50%, #4c1d95 100%);
-                padding: 10px 20px;
+                padding: 6px 20px; /* Slimmer banner */
                 text-decoration: none;
                 color: #fff;
                 transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);

@@ -584,10 +584,9 @@ const CartManager = {
                 }
                 const licName = this.escapeHTML(rawLicName);
                 
-                // Robust check for FREE status
+                // Robust check for FREE status — only when actual price is 0
+                // Note: is_free means "has free download option", NOT "license is free"
                 const isFree = item.isPromotionFree || 
-                             item.product.is_free === true || 
-                             (item.product.is_free && String(item.product.is_free) !== 'false') ||
                              (displayPrice === 0 || displayPrice === null);
                 const imgId = `cart-row-img-${item.product.id}`;
                 const safeName = this.escapeHTML(item.product.name);
