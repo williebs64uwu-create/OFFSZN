@@ -1,39 +1,51 @@
 import os
+import glob
 
 def replace_navbar(filepath):
-    with open(filepath, 'r', encoding='utf-8') as f:
-        content = f.read()
-        
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except UnicodeDecodeError:
+        try:
+            with open(filepath, 'r', encoding='latin-1') as f:
+                content = f.read()
+        except Exception as e:
+            print(f"Error reading {filepath}: {e}")
+            return
+
+    # Look for the marker
     start_marker = '<!-- ==================== EXTRACTED NAVBAR ===================='
-    end_marker = '</header>'
-    
     start_idx = content.find(start_marker)
     if start_idx == -1:
-        print(f"Start marker not found in {filepath}")
-        return
+        return # No marker, skip
         
-    main_idx = content.find('<main', start_idx)
-    if main_idx == -1:
-        main_idx = content.find('<!-- ==================== SIDE PANELS', start_idx)
-        if main_idx == -1:
-             print(f"End boundary not found in {filepath}")
-             return
-             
-    end_idx = content.rfind('</header>', start_idx, main_idx)
+    # Check if already has a placeholder
+    if 'navbar-placeholder' in content[start_idx:start_idx+500]:
+        print(f"Skipping {filepath} - already has placeholder")
+        return
+
+    # Find the end of the header tag
+    header_end_marker = '</header>'
+    end_idx = content.find(header_end_marker, start_idx)
     
     if end_idx == -1:
-        print(f"</header> not found before boundary in {filepath}")
+        print(f"End marker </header> not found in {filepath}")
         return
         
-    end_idx += len('</header>') 
+    end_idx += len(header_end_marker)
     
-    replacement = """<!-- ==================== DYNAMIC NAVBAR ==================== -->
-  <div id="navbar-placeholder">
-    <!-- Static shell to prevent flash before JS loads -->
-    <div style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;"></div>
-  </div>
-  <script src="/script/load-navbar.js?v=21"></script>"""
+    # Check what's already there to avoid duplicates
+    has_load_navbar = 'load-navbar.js' in content
+    has_navbar_js = 'navbar.js' in content
     
+    replacement = '<!-- ==================== DYNAMIC NAVBAR ==================== -->\n    <div id="navbar-placeholder"></div>'
+    
+    if not has_load_navbar:
+        replacement += '\n    <script src="/script/load-navbar.js?v=33" defer></script>'
+    
+    if not has_navbar_js:
+        replacement += '\n    <script src="/script/navbar.js?v=33" type="module"></script>'
+
     new_content = content[:start_idx] + replacement + content[end_idx:]
     
     with open(filepath, 'w', encoding='utf-8') as f:
@@ -41,5 +53,10 @@ def replace_navbar(filepath):
         
     print(f"Successfully replaced navbar in {filepath}")
 
-replace_navbar('c:/Users/Willie/Desktop/OFFSZN/comunidad/feed.html')
-replace_navbar('c:/Users/Willie/Desktop/OFFSZN/comunidad/productores.html')
+# Find all HTML files recursively
+html_files = glob.glob('**/*.html', recursive=True)
+
+for html_file in html_files:
+    if 'node_modules' in html_file or '.git' in html_file:
+        continue
+    replace_navbar(html_file)
