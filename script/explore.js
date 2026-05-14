@@ -328,6 +328,20 @@ function renderExploreFeed() {
     // --- NEW: Inject Top Slim Banner ---
     injectTopBanner();
 
+    // NEW: TOP PLAYLIST
+    const topPlaylistItems = allProducts
+        .filter(p => p.visibility === 'public' && (p.product_type || '').toLowerCase() === 'beat' && (p.producer_nickname || '').toLowerCase() !== 'koimatorru')
+        .sort((a,b) => {
+            const score = p => (p.views_count || 0) + (p.plays_count || 0) * 2 + (p.stats_likes || 0) * 5;
+            return score(b) - score(a);
+        })
+        .slice(0, 15);
+    
+    if (topPlaylistItems.length > 0) {
+        container.appendChild(createShelfRow('TOP PLAYLIST', topPlaylistItems, 'standard', 'El top 100 beats de Offszn'));
+        topPlaylistItems.forEach(p => usedProductIds.add(p.id));
+    }
+
     // 3. THE LIST GRID (Section 2: Trending / Fresh) - 2 Columns
     const listGridContainer = document.createElement('div');
     listGridContainer.id = 'explore-list-grid-wrapper';
@@ -1218,7 +1232,7 @@ window.navToHero = (index) => {
 /**
  * Shelf Components
  */
-function createShelfRow(title, items, format = 'standard') {
+function createShelfRow(title, items, format = 'standard', subtitle = '') {
     const row = document.createElement('div');
     row.className = 'explore-row';
     const rowId = `row-${Math.random().toString(36).substr(2, 9)}`;
@@ -1233,7 +1247,10 @@ function createShelfRow(title, items, format = 'standard') {
 
     row.innerHTML = `
         <div class="row-header">
-            <h2 class="row-title">${title}</h2>
+            <div class="row-title-container">
+                <h2 class="row-title">${title}</h2>
+                ${subtitle ? `<span class="row-subtitle" style="font-size: 0.9rem; color: rgba(255,255,255,0.5); font-weight: 500; display: block; margin-top: 2px;">${subtitle}</span>` : ''}
+            </div>
             <div class="row-actions">
                 <div class="view-all" onclick="window.location.href='${viewAllUrl}'">
                     Ver todos <i class="bi bi-arrow-right"></i>
@@ -1395,19 +1412,27 @@ function createProductCardHtml(product, format = 'standard') {
         return ''; // Experimental social format removed in favor of standard kits design
     }
 
+    const pType = (product.product_type || '').toLowerCase();
+    const isFreeFormat = (product.is_free === true || String(product.is_free) === 'true') || (Number(product.price_basic) === 0);
+    let rawPrice = product.price_basic !== undefined && product.price_basic !== null ? product.price_basic : '29.99';
+    const priceDisplay = isFreeFormat ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(rawPrice) || 0) : `$${parseFloat(rawPrice).toFixed(2)}`);
+
     return `
         <div class="product-card-smart" data-product-id="${product.id}">
             <div class="card-cover-wrapper">
                 <img ${productImg.attr} alt="${product.name}">
                 <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
+                <div class="plays-badge"><i class="bi bi-music-note"></i> ${product.likes_count || 0}</div>
                 <button class="card-like-btn ${isLiked ? 'liked' : ''}">
                     <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}"></i>
-                    <span class="like-count">${product.likes_count || 0}</span>
                 </button>
             </div>
             <div class="card-info">
                 <div class="card-title">${cleanName(product.name)}</div>
                 <div class="card-producer" data-artist="${product.producer_id}" onclick="event.stopPropagation(); window.location.href='/@${encodeURIComponent(product.producer_nickname || product.producer_handle || 'artista')}'" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">${artist}</div>
+                <button class="card-buy-btn" onclick="event.stopPropagation(); addToCart('${product.id}')">
+                    <i class="bi bi-bag"></i> ${priceDisplay}
+                </button>
             </div>
         </div>
     `;

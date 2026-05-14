@@ -1,5 +1,11 @@
 /* CSS for the Explore (Home) Page - Fixed Boundaries & Visibility */
 
+body {
+    background-color: #050505 !important;
+    background-image: none !important;
+    background-attachment: fixed;
+}
+
 #explore-feed {
     padding-top: 20px;
     padding-bottom: 60px;
@@ -7,6 +13,8 @@
     /* SYNC WITH NAVBAR */
     margin: 0 auto;
     /* CENTER CONTENT */
+    position: relative;
+    z-index: 1;
 }
 
 /* ==========================================================================
@@ -14,12 +22,12 @@
    ========================================================================== */
 
 #explore-hero-container {
-    margin: 0 1.5rem 60px 1.5rem;
+    margin: 0 2rem 48px 2rem;
     position: relative;
     border-radius: 24px;
-    /* Refined radius */
     overflow: hidden;
     background: #000;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05); /* Premium depth */
 }
 
 .wavs-hero-track {
@@ -31,7 +39,7 @@
 .wavs-hero {
     flex: 0 0 100%;
     width: 100%;
-    height: 360px;
+    height: 300px;
     /* Aligned height */
     background-size: cover;
     background-position: center;
@@ -911,21 +919,16 @@
 }
 
 
-/* Subtlest gradient on the right to indicate more content */
-.shelf-inner::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: -1px;
-    bottom: 0;
-    width: 60px;
-    /* Narrower for sublte hint */
-    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.8));
-    pointer-events: none;
-    z-index: 2;
-    mask-image: linear-gradient(to right, transparent, black);
-    opacity: 0.4;
-    /* More subtle */
+/* KILL ALL CAROUSEL FADE MASKS - ABSOLUTE CLEAN LOOK */
+.shelf-wrapper::after,
+.shelf-inner::after,
+.shelf-container::after,
+.explore-row::after {
+    display: none !important;
+    content: none !important;
+    background: none !important;
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
 }
 
 /* Navigation Arrows - GLOBAL/LEGACY (Restoring for Producers etc) */
@@ -1040,10 +1043,12 @@
     scroll-snap-stop: always;
     position: relative;
     z-index: 1;
-    padding: 16px;
-    /* Spotify-style card padding */
-    border-radius: 16px;
-    background: transparent;
+    padding: 12px;
+    /* Tighter padding like the reference */
+    border-radius: 14px;
+    background: #0a0a0a; /* Almost black */
+    border: 1px solid rgba(255, 255, 255, 0.05); /* Clean border */
+    transition: all 0.3s ease;
 }
 
 @media (max-width: 768px) {
@@ -1051,7 +1056,7 @@
         flex: 0 0 150px;
         /* Even smaller for mobile horizontal scroll */
         width: 150px;
-        padding: 12px;
+        padding: 10px;
         /* Reduced padding on mobile */
     }
 
@@ -1063,7 +1068,8 @@
 }
 
 .product-card-smart:hover {
-    background: #1a1a1a;
+    background: #111111; /* Slight elevation on hover */
+    border: 1px solid rgba(255, 255, 255, 0.1);
     /* Modern Spotify dark hover */
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
     /* translateY removed */
@@ -1214,7 +1220,7 @@
 
 .card-like-btn.liked {
     color: #ef4444;
-    opacity: 1;
+    opacity: 1 !important;
 }
 
 .card-info {
@@ -1226,17 +1232,63 @@
 .card-title {
     color: #fff;
     font-size: 0.95rem;
-    /* Slightly smaller for 6-card grid */
     font-weight: 700;
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 1;
-    /* Limit to 1 line for cleaner look in dense grid */
     line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
     margin-top: 4px;
+}
+
+/* Reference Style Buy Button */
+.card-buy-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px 0;
+    background: #f4f4f5;
+    color: #000;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: 8px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.card-buy-btn:hover {
+    background: #ffffff;
+    transform: translateY(-2px);
+}
+
+.card-buy-btn:active {
+    transform: translateY(0);
+}
+
+/* Reference Style Plays/Note Badge */
+.plays-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 3;
+    pointer-events: none;
 }
 
 .card-producer {
