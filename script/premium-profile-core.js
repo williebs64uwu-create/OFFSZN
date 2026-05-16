@@ -46,7 +46,7 @@
                 PremiumRender.renderLicenses('premium-licenses-grid', 'licencias-section', user.license_settings);
                 
                 const services = user.socials?.custom_services || [];
-                PremiumRender.renderServices('services-shelf', 'services-section', services, userNickname, isOwner);
+                PremiumRender.renderServices('services-shelf', 'services-section', services, userNickname, isOwner, user.avatar_url);
 
                 // Polling for ProfLoader (Navbar/Footer)
                 initLoaderUI(user);

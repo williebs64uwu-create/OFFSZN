@@ -429,3 +429,81 @@ export const downloadWithMetadata = async (req, res) => {
         }
     }
 };
+
+/**
+ * YouTube Smart Match using NVIDIA NIM (Gemma 2)
+ * Compares a video title with a list of products semantically
+ */
+export const youtubeSmartMatch = async (req, res) => {
+    const { videoTitle, products } = req.body;
+
+    if (!videoTitle || !products || !Array.isArray(products)) {
+        return res.status(400).json({ error: 'videoTitle y products (array) son requeridos' });
+    }
+
+    if (!nvidiaAi) {
+        return res.status(503).json({ error: 'Servicio de IA de NVIDIA no configurado' });
+    }
+
+    try {
+        const productList = products.map((p, i) => `ID:${i} | Name: "${p.name}"`).join('\n');
+        
+        const systemPrompt = `Eres un experto en organización de catálogos musicales y marketing en YouTube. 
+Tu tarea es encontrar qué producto de una lista coincide MEJOR con el título de un video de YouTube.
+REGLAS CRÍTICAS:
+1. Responde ÚNICAMENTE con el ID del producto que mejor coincida.
+2. Si no hay una coincidencia clara (semántica o textual), responde "NONE".
+3. EXCLUSIÓN DE NO-BEATS: Si el video parece ser un Vlog, Tutorial, Detrás de cámaras, o un Short de contenido no musical (charlando, etc.), responde "NONE".
+4. Limpieza de Títulos: Ignora "Official Video", "prod by", "Beat", "Instrumental", "Type Beat", etc.
+5. Multilenguaje: Detecta si el título está en inglés (ej. "Summer Vibes") y emparéjalo con el beat equivalente (ej. "Summer Breeze").
+6. Rigurosidad: Es mejor no vincular (responder "NONE") que vincular un video de contenido aleatorio a un beat.`;
+
+        const userPrompt = `TÍTULO DEL VIDEO: "${videoTitle}"\n\nLISTA DE PRODUCTOS:\n${productList}\n\nID del mejor match:`;
+
+        let reply = "";
+        try {
+            const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${process.env.NVIDIA_NIM_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "google/gemma-3n-e4b-it",
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt }
+                    ],
+                    temperature: 0.1,
+                    max_tokens: 10
+                })
+            });
+
+            if (!response.ok) {
+                console.warn(`NVIDIA API error: ${response.status}`);
+                return res.status(200).json({ success: true, matchIndex: -1 });
+            }
+
+            const data = await response.json();
+            reply = data.choices[0].message.content.trim();
+        } catch (error) {
+            console.error("NIM Fetch Error:", error);
+            return res.status(200).json({ success: true, matchIndex: -1 });
+        }
+
+        if (reply.includes("NONE") || reply === "") {
+            return res.status(200).json({ success: true, matchIndex: -1 });
+        }
+
+        const matchId = parseInt(reply.replace(/[^0-9]/g, ''));
+        if (isNaN(matchId) || matchId < 0 || matchId >= products.length) {
+            return res.status(200).json({ success: true, matchIndex: -1 });
+        }
+
+        return res.status(200).json({ success: true, matchIndex: matchId });
+
+    } catch (error) {
+        console.error('[YouTube Smart Match Error]:', error);
+        return res.status(500).json({ error: 'Error en el matching inteligente' });
+    }
+};

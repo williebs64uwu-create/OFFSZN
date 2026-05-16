@@ -67,12 +67,38 @@ const ProfLoader = {
             if (playlists.length === 0 && playlistsLink) {
                 playlistsLink.style.display = 'none';
             } else if (playlists.length === 1 && playlistsLink) {
-                // If only 1 playlist, link directly to it
-                playlistsLink.href = `/playlist.html?id=${playlists[0].id}`;
+                // If only 1 playlist, link directly to it using clean URL
+                const pl = playlists[0];
+                const plSlug = pl.slug || (pl.title ? pl.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : '');
+                if (plSlug && user.nickname) {
+                    playlistsLink.href = `/@${user.nickname}/${plSlug}`;
+                }
             }
 
             // 3. ABOUT LINK (Points to FAQ by default in navbar.html)
             
+            // 4. NAVIGATION STRATEGY: Ensure links work on subpages
+            const currentPath = window.location.pathname;
+            const profileBase = `/@${user.nickname}`;
+            const isMainProfile = currentPath === profileBase || currentPath === `${profileBase}/`;
+
+            if (!isMainProfile) {
+                // If we are on /servicio/ or /@nickname/playlist-slug, links must be absolute
+                if (beatsLink) beatsLink.href = `${profileBase}#products-section`;
+                
+                // If we have services, link to section. If not, it's already hidden.
+                if (servicesLink && services.length > 0) {
+                    servicesLink.href = `${profileBase}#services-section`;
+                }
+                
+                // If there's only 1 playlist, it already has its direct link from code above. 
+                // If > 1, link to section on profile.
+                if (playlistsLink && playlists.length > 1) {
+                    playlistsLink.href = `${profileBase}#playlists-section`;
+                }
+                
+                if (aboutLink) aboutLink.href = `${profileBase}#faq-section`;
+            }
         } catch (err) {
             console.error("Error loading professional navbar:", err);
         }

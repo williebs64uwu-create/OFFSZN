@@ -1,8 +1,14 @@
 import express from 'express';
-import { generateSample, chatWithIA, getChatHistory, getStudioHistory, downloadWithMetadata } from '../controllers/AiStudioController.js';
+import { generateSample, chatWithIA, getChatHistory, getStudioHistory, downloadWithMetadata, youtubeSmartMatch } from '../controllers/AiStudioController.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 
 const router = express.Router();
+
+/**
+ * @route   POST /api/studio/match-youtube
+ * @desc    AI-powered matching between YouTube titles and products
+ */
+router.post('/match-youtube', authenticateTokenMiddleware, youtubeSmartMatch);
 
 /**
  * @route   GET /api/studio/download

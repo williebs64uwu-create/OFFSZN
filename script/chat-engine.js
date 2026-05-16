@@ -111,18 +111,21 @@ async function initChat() {
     // Handle ?user=nickname parameter ASAP
     const urlParams = new URLSearchParams(window.location.search);
     const targetNickname = urlParams.get('user');
-    const initialMsg = urlParams.get('msg');
+    const targetUserId = urlParams.get('to');
+    const initialMsg = urlParams.get('msg') || urlParams.get('text');
     const directConvId = urlParams.get('convId');
 
-    if (targetNickname) {
+    if (targetNickname || targetUserId) {
         // Find target user but don't AWAIT yet for the UI reveal
-        const targetPromise = supabase
-            .from('users')
-            .select('id, nickname, avatar_url')
-            .eq('nickname', targetNickname)
-            .single();
+        let query = supabase.from('users').select('id, nickname, avatar_url');
+        
+        if (targetNickname) {
+            query = query.eq('nickname', targetNickname).single();
+        } else {
+            query = query.eq('id', targetUserId).single();
+        }
 
-        targetPromise.then(async ({ data: targetUser, error }) => {
+        query.then(async ({ data: targetUser, error }) => {
             if (targetUser && !error) {
                 await startNewChat(targetUser);
                 if (initialMsg) {

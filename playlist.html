@@ -11,7 +11,7 @@
     <script>window.supabaseClient = null;</script>
     <script src="/script/config.js"></script>
     <script src="/script/auth-utils.js"></script>
-    <script src="/components/offszn_perfiles_profesionales/loader.js?v=15"></script>
+    <script src="/components/offszn_perfiles_profesionales/loader.js?v=20"></script>
     
     <link rel="stylesheet" href="/css/navbar.css">
     <link rel="stylesheet" href="/css/footer.css">
@@ -130,6 +130,7 @@
             margin-bottom: 24px;
             background: linear-gradient(to bottom, #fff, #bbb);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -507,7 +508,9 @@
 
         async function getSafeImageUrl(path, version = 'v2', productId = null) {
             if (!path) return '/images/portada-default.png';
-            if (path.startsWith('http') && !path.includes('supabase.co')) return path;
+            // Skip only truly external public URLs (ImageKit, Cloudinary, etc.)
+            // R2 URLs need to go through getAuthorizedUrl for proxying
+            if (path.startsWith('http') && !path.includes('supabase.co') && !path.includes('r2.cloudflarestorage.com')) return path;
             let targetVersion = version;
             if (path.includes('r2-public') || path.includes('nuclear')) targetVersion = 'v1';
             else if (path.includes('r2-v2')) targetVersion = 'v2';

@@ -17,7 +17,7 @@ import userRoutes from './infrastructure/http/routes/user.routes.js';
 import adminRoutes from './infrastructure/http/routes/admin.routes.js';
 // import chatbotRouter from './routes/chatbot.js';
 import profileRoutes from './infrastructure/http/routes/profile.routes.js';
-import reelsRoutes from './infrastructure/http/routes/reels.routes.js';
+// import reelsRoutes from './infrastructure/http/routes/reels.routes.js';
 import { handleMercadoPagoWebhook } from './infrastructure/http/controllers/OrderController.js';
 import chatRoutes from './infrastructure/http/routes/chat.routes.js';
 import paypalRoutes from './infrastructure/http/routes/paypal.routes.js';
@@ -26,6 +26,7 @@ import subscriptionRoutes from './infrastructure/http/routes/subscription.routes
 import subscriptionV2Routes from './infrastructure/http/routes/subscription-v2.routes.js';
 import requestRoutes from './infrastructure/http/routes/request.routes.js';
 import youtubeRoutes from './infrastructure/http/routes/youtube.routes.js';
+import youtubeSyncRoutes from './infrastructure/http/routes/youtube-sync.routes.js';
 import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
 import studioRoutes from './infrastructure/http/routes/studio.routes.js';
 import { runSubscriptionScavenger } from './infrastructure/services/subscription-scavenger.js';
@@ -155,7 +156,8 @@ app.use(helmet({
                 "https://offszn-oc7c.onrender.com", "https://*.onrender.com",
                 "http://localhost:*",
                 "https://*.googleapis.com", "https://accounts.google.com", "https://apis.google.com",
-                "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com"
+                "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com",
+                "https://get.geojs.io", "https://*.geojs.io", "https://ipapi.co"
             ],
             frameSrc: ["'self'",
                 "https://www.youtube.com", "https://www.youtube-nocookie.com",
@@ -230,7 +232,7 @@ app.use('/api', globalLimiter);
 
 // --- RESTO DE RUTAS API (Omitidas para evitar borrado accidental) ---
 // (Líneas 139-173 del archivo original que fueron movidas o borradas se restauran a continuación)
-app.use('/api/reels', reelsRoutes);
+// app.use('/api/reels', reelsRoutes);
 app.post('/api/orders/mercadopago-webhook', handleMercadoPagoWebhook);
 app.post('/api/negotiate', submitNegotiation);
 app.post('/api/negotiate/respond', respondNegotiation);
@@ -304,9 +306,10 @@ app.use('/api', chatRoutes);
 // C. SPECIFIC PREFIX ROUTERS
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/reels', reelsRoutes);
+// app.use('/api/reels', reelsRoutes);
 app.use('/api', paypalRoutes);
 app.use('/api', youtubeRoutes);
+app.use('/api', youtubeSyncRoutes);
 
 // --- 3. CLEAN URLS & STATIC FILES (MIDDLEWARE) ---
 
@@ -879,7 +882,7 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
             html = html.replace(/{{USER_BIO}}/g, user.bio || 'Productor Musical');
             html = html.replace('</head>', `
                 <script>window.OFFSZN_USER_ID = "${user.id}";</script>
-                <script src="/components/offszn_perfiles_profesionales/loader.js?v=15" defer></script>
+                <script src="/components/offszn_perfiles_profesionales/loader.js?v=20"></script>
             </head>`);
         }
 

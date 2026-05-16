@@ -1,0 +1,2418 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube (Beta) | OFFSZN</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#050505">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/superpowers.css">
+    <!-- Scripts -->
+    <script src="/script/youtube-importer.js"></script>
+    <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+    <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+
+    <style>
+        /* ===== SIDEBAR PROFILE CARD ===== */
+        .sidebar-profile-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 20px 0 20px 0;
+            border-bottom: 1px solid #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-avatar-wrapper {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #333;
+            margin-bottom: 8px;
+            background: #000;
+            position: relative;
+        }
+
+        .sidebar-avatar {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .sidebar-username {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Geist', sans-serif;
+            margin-bottom: 8px;
+            text-align: center;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sidebar-profile-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 18px;
+            border-radius: 100px;
+            border: 1px solid #333;
+            background: transparent;
+            color: #aaa;
+            font-size: 12px;
+            font-weight: 500;
+            font-family: 'Geist', sans-serif;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .sidebar-profile-btn:hover {
+            border-color: #fff;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-profile-btn i {
+            font-size: 11px;
+        }
+
+        @keyframes sidebarPulse {
+            0% {
+                background-color: rgba(255, 255, 255, 0.03);
+            }
+
+            50% {
+                background-color: rgba(255, 255, 255, 0.08);
+            }
+
+            100% {
+                background-color: rgba(255, 255, 255, 0.03);
+            }
+        }
+
+        .sidebar-profile-card .skeleton,
+        .sidebar-profile-card .skeleton-text {
+            animation: sidebarPulse 2s infinite ease-in-out;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* ===== SIDEBAR STYLES (B&W PREMIUM) ===== */
+        .sidebar-stub {
+            width: 220px;
+            background: #000;
+            border-right: 1px solid #1a1a1a;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding-top: 30px;
+            padding-left: 15px;
+            padding-right: 15px;
+            gap: 6px;
+        }
+
+        .sidebar-icon-btn {
+            width: 100%;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 12px;
+            gap: 14px;
+            color: #888;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            position: relative;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .sidebar-icon-btn i {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+            display: inline-block;
+            color: #666;
+            transition: 0.2s;
+        }
+
+        .sidebar-icon-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .sidebar-icon-btn.active {
+            color: #000 !important;
+            background: #fff !important;
+            font-weight: 700;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+        }
+
+        .sidebar-icon-btn.active i {
+            color: #000 !important;
+        }
+
+        .sidebar-icon-btn[data-title]:hover::after,
+        .sidebar-icon-btn[title]:hover::after {
+            display: none;
+        }
+
+        /* Dashboard Layout Integration */
+        :root {
+            --sidebar-width: 220px;
+            --accent-purple: #8b5cf6;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --card-bg: rgba(15, 15, 15, 0.6);
+            --bg-black: #050505;
+        }
+
+        body {
+            background: var(--bg-black);
+            color: #fff;
+            font-family: 'Geist', sans-serif;
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* MAIN CONTENT AREA */
+        .main-content-elite {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 60px;
+            max-width: 1200px;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .skeleton {
+            background: #1a1a1a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            transform: translateX(-100%);
+            background-image: linear-gradient(90deg, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0.03) 50%, rgba(255, 255, 255, 0) 100%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* MODAL (Standard Elite) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .elite-modal {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 28px;
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            font-size: 24px;
+            color: #666;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        /* CLEAN STUDIO AESTHETIC */
+        body {
+            background-color: #050505;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .main-content-elite {
+            padding: 40px 60px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .header-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .beta-badge {
+            font-size: 0.75rem;
+            background: rgba(147, 51, 234, 0.1);
+            color: #a855f7;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            border: 1px solid rgba(147, 51, 234, 0.3);
+        }
+
+        .header-desc {
+            color: #888;
+            font-size: 0.95rem;
+            max-width: 600px;
+            line-height: 1.5;
+            margin-bottom: 40px;
+        }
+
+        /* Minimal Quota */
+        .quota-minimal {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .quota-minimal-text {
+            font-size: 0.85rem;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .quota-minimal-bar {
+            flex: 1;
+            max-width: 300px;
+            height: 4px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .quota-minimal-fill {
+            height: 100%;
+            background: #fff;
+            width: 0%;
+            transition: 1s ease-out;
+        }
+
+        .quota-btn {
+            font-size: 0.75rem;
+            color: #000;
+            background: #fff;
+            padding: 8px 16px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .quota-btn:hover {
+            background: #e0e0e0;
+        }
+
+        /* List Layout */
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .list-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .btn-scan {
+            background: transparent;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px 18px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-scan:hover {
+            background: #111;
+            border-color: #555;
+        }
+
+        .btn-scan:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .yt-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .yt-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background: transparent;
+            border-bottom: 1px solid #111;
+            transition: 0.2s;
+            gap: 20px;
+            border-radius: 8px;
+        }
+
+        .yt-row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .yt-thumb {
+            width: 72px;
+            height: 40px;
+            background: #111;
+            border-radius: 4px;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 1px solid #222;
+        }
+
+        .yt-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .yt-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .yt-title {
+            margin: 0;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #eee;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .yt-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: #888;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #f59e0b;
+        }
+
+        .btn-link {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-link:hover {
+            background: #e0e0e0;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: auto;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #0a0a0a;
+            border: 1px solid #222;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 480px;
+            min-height: 400px;
+            padding: 36px;
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            color: #666;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        /* Custom Scrollbar for Catalog */
+        #catalog-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #catalog-list::-webkit-scrollbar-track {
+            background: #111;
+            border-radius: 4px;
+        }
+
+        #catalog-list::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        #catalog-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Bulk Progress Logs */
+        .bulk-log-container {
+            background: #000;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.75rem;
+            color: #888;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .bulk-log-entry {
+            display: flex;
+            gap: 10px;
+            opacity: 0;
+            transform: translateX(-10px);
+            animation: logFadeIn 0.3s forwards;
+        }
+
+        @keyframes logFadeIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .log-time {
+            color: #444;
+        }
+
+        .log-success {
+            color: #10b981;
+        }
+
+        .log-info {
+            color: #fff;
+        }
+
+        .log-accent {
+            color: #ff0000;
+        }
+
+        /* YouTube Red */
+    </style>
+</head>
+
+<body>
+    <!-- SIDEBAR (Standard) -->
+    <div class="sidebar-stub">
+
+        <!-- Profile Card -->
+        <div class="sidebar-profile-card" id="sidebarProfileCard">
+            <div class="sidebar-avatar-wrapper skeleton" id="sidebarAvatarSkeleton"
+                style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 8px; background: #1a1a1a;">
+                <img id="sidebarAvatar" src="" alt="Avatar" class="sidebar-avatar"
+                    style="display:none; width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <span id="sidebarUsername" class="sidebar-username skeleton-text"
+                style="width: 100px; height: 18px; display: inline-block; border-radius: 4px; margin-bottom: 8px;"></span>
+            <div id="sidebarBtnSkeleton" class="skeleton"
+                style="width: 110px; height: 30px; border-radius: 100px; background: #1a1a1a;"></div>
+            <a id="sidebarProfileLink" href="/explorar.html" class="sidebar-profile-btn" style="display:none;">
+                Ir a mi perfil <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+
+        <!-- 1. GESTIÓN -->
+        <a href="/cuenta/dashboard.html" class="sidebar-icon-btn" data-title="Dashboard"><i
+                class="bi bi-house-door-fill"></i>
+            <span>Dashboard</span></a>
+        <a href="/cuenta/mis-kits" class="sidebar-icon-btn" data-title="Catálogo"><i class="bi bi-folder2-open"></i>
+            <span>Catálogo</span></a>
+        <a href="/cuenta/subir-kit.html" class="sidebar-icon-btn" data-title="Subir"><i
+                class="bi bi-cloud-arrow-up-fill"></i>
+            <span>Subir</span></a>
+
+        <!-- 2. NEGOCIO -->
+        <a href="admin-licencias.html" class="sidebar-icon-btn" data-title="Licencias"><i
+                class="bi bi-file-earmark-music-fill"></i> <span>Licencias</span></a>
+        <a href="negociar.html" class="sidebar-icon-btn" data-title="Negociar"><i class="bi bi-chat-left-dots-fill"></i>
+            <span>Negociar</span></a>
+        <a href="cupones.html" class="sidebar-icon-btn" data-title="Cupones"><i
+                class="bi bi-ticket-perforated-fill"></i> <span>Cupones</span></a>
+        <a href="colaboraciones.html" class="sidebar-icon-btn" data-title="Colaboraciones"><i
+                class="bi bi-people-fill"></i> <span>Colaboraciones</span></a>
+
+        <!-- 3. ACADEMIA -->
+        <a href="/cuenta/cursos.html" class="sidebar-icon-btn" data-title="Cursos"><i
+                class="bi bi-mortarboard-fill"></i> <span>Cursos</span></a>
+        <a href="/cuenta/analiticas.html" class="sidebar-icon-btn" data-title="Estadísticas"><i
+                class="bi bi-bar-chart-fill"></i> <span>Estadísticas</span></a>
+
+        <!-- 4. SOCIAL -->
+        <a href="youtube.html" class="sidebar-icon-btn active" data-title="YouTube (Beta)"><i class="bi bi-youtube"></i>
+            <span>YouTube (Beta)</span></a>
+
+        <!-- UPGRADE BUTTON (ROCKET) -->
+        <a href="planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan" style="color:#fff; margin-top: 10px;">
+            <i class="bi bi-star-fill" style="color: #fff;"></i> <span style="color: #fff;">Mejorar Plan</span>
+        </a>
+    </div>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content-elite" id="main-sync-ui">
+
+        <header>
+            <div class="header-title">
+                YouTube Sync <span class="beta-badge">BETA</span>
+            </div>
+            <p class="header-desc">Encuentra videos sin link de compra en tu canal y vincúlalos a tus beats en un click.
+            </p>
+
+            <!-- NEW: Primary Bulk Action at Top -->
+            <div
+                style="margin-top: 24px; padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid #111; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div
+                        style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-magic" style="color: #fff; font-size: 1.1rem;"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; font-size: 0.9rem; font-weight: 700;">Sincronización Inteligente</h4>
+                        <p style="margin: 0; font-size: 0.75rem; color: #666;">Analiza todo tu canal, limpia links
+                            externos y vincula OFFSZN automáticamente.</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-scan" id="btnBulkAiSync" onclick="startBulkAiSync()"
+                        style="background: #fff; color: #000; border-color: #fff; font-weight: 700; padding: 10px 24px; display: flex; align-items: center; gap: 10px;">
+                        <i class="bi bi-stars" style="color: #6a0dad; font-size: 1.1rem;"></i>
+                        Sincronizar Canal con IA
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Clean List Section -->
+        <section style="margin-top: 30px;">
+            <div class="list-header"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 class="list-title" style="font-size: 1.1rem; font-weight: 700; margin: 0;">Videos Pendientes
+                    </h2>
+                    <p style="font-size: 0.8rem; color: #666; margin: 0;">Gestiona la vinculación de tus beats con tus
+                        videos de YouTube.</p>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div style="margin-bottom: 16px; position: relative;">
+                <i class="bi bi-search"
+                    style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #555; font-size: 0.85rem;"></i>
+                <input type="text" id="yt-search" placeholder="Buscar entre tus videos..." oninput="filterVideos()"
+                    style="width: 100%; padding: 10px 14px 10px 38px; background: #111; border: 1px solid #222; border-radius: 100px; color: #fff; font-size: 0.85rem; font-family: inherit; outline: none; transition: border-color 0.2s;"
+                    onfocus="this.style.borderColor='#444'" onblur="this.style.borderColor='#222'">
+            </div>
+
+            <div id="yt-video-list" class="yt-list-container">
+                <div id="yt-connect-prompt"
+                    style="padding: 60px 40px; text-align: center; border: 1px dashed #222; border-radius: 16px; background: rgba(255,255,255,0.01);">
+                    <div
+                        style="background: rgba(255, 0, 0, 0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <i class="bi bi-youtube" style="color: #ff0000; font-size: 30px;"></i>
+                    </div>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Conecta tu canal de YouTube</h3>
+                    <p style="color: #666; font-size: 0.85rem; margin-bottom: 24px;">Para ver tus videos y
+                        sincronizarlos, primero debes conectar tu cuenta.</p>
+                    <button class="btn-link" id="btnConnectNowStatic" onclick="scanChannel()"
+                        style="margin: 0 auto; background: #fff; color: #000; padding: 10px 24px;">
+                        Conectar Ahora
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div id="yt-pagination"
+                style="display: none; margin-top: 16px; display: flex; justify-content: center; gap: 12px; align-items: center;">
+                <button class="btn-scan" id="btnPrevPage" onclick="changePage(-1)" disabled><i
+                        class="bi bi-chevron-left"></i> Anterior</button>
+                <span id="pageIndicator" style="font-size: 0.8rem; color: #666;">1 / 1</span>
+                <button class="btn-scan" id="btnNextPage" onclick="changePage(1)">Siguiente <i
+                        class="bi bi-chevron-right"></i></button>
+            </div>
+        </section>
+
+        <!-- NEW: Synchronized Videos Section (Persistent Report) -->
+        <section id="synced-reports-section" style="margin-top: 60px; padding-top: 40px; border-top: 1px solid #111;">
+            <div class="list-header"
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 class="list-title" style="font-size: 1.1rem; font-weight: 700; margin: 0; color: #fff;">Videos
+                        Sincronizados</h2>
+                    <p style="font-size: 0.8rem; color: #666; margin: 0;">Historial de videos optimizados y vinculados a
+                        OFFSZN.</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div id="synced-count-badge"
+                        style="background: #fff; color: #000; font-size: 0.75rem; padding: 4px 12px; border-radius: 100px; font-weight: 800; letter-spacing: 0.5px;">
+                        0 VIDEOS
+                    </div>
+                    <button class="btn-scan" onclick="exportSyncReport()"
+                        style="padding: 6px 16px; font-size: 0.75rem; border-color: #222; background: transparent; color: #fff; display: flex; align-items: center; gap: 6px; border-radius: 100px;">
+                        <i class="bi bi-file-earmark-arrow-down"></i> Generar Reporte
+                    </button>
+                </div>
+            </div>
+
+            <div id="yt-synced-list" class="yt-list-container" style="min-height: 100px;">
+                <!-- Skeletons will be injected here -->
+            </div>
+
+            <!-- Synced Pagination -->
+            <div id="yt-synced-pagination"
+                style="display: none; margin-top: 20px; display: flex; justify-content: center; gap: 12px; align-items: center;">
+                <button class="btn-scan" id="btnPrevSynced" onclick="changeSyncedPage(-1)" disabled
+                    style="padding: 6px 14px;"><i class="bi bi-chevron-left"></i></button>
+                <span id="syncedPageIndicator" style="font-size: 0.8rem; color: #666;">1 / 1</span>
+                <button class="btn-scan" id="btnNextSynced" onclick="changeSyncedPage(1)" style="padding: 6px 14px;"><i
+                        class="bi bi-chevron-right"></i></button>
+            </div>
+        </section>
+    </main>
+    </main>
+
+    <!-- Modal: Beat Selection -->
+    <div class="modal-overlay" id="syncModal">
+        <div class="modal-content">
+            <i class="bi bi-x modal-close" onclick="closeSyncModal()"></i>
+            <h2 style="margin-top: 0; font-size: 1.5rem; letter-spacing: -1px; margin-bottom: 8px;">Vincular Beat</h2>
+            <p style="color: #888; font-size: 0.9rem; margin-bottom: 24px;">Selecciona el producto de tu catálogo para
+                vincularlo a este video.</p>
+
+            <div id="catalog-list"
+                style="max-height: 380px; overflow-y: auto; margin-bottom: 20px; padding-right: 10px;">
+                <!-- Skeleton Catalog -->
+                <div class="skeleton" style="height: 60px; border-radius: 12px; margin-bottom: 10px;"></div>
+            </div>
+
+            <!-- Pre-Sync Editor (Hidden by default) -->
+            <div id="sync-editor-box" style="display:none; border-top: 1px solid #222; padding-top: 20px;">
+                <label
+                    style="color: #666; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                    Descripción a Sincronizar <i class="bi bi-pencil" style="font-size: 0.7rem; opacity: 0.5;"></i>
+                </label>
+                <textarea id="sync-desc-preview"
+                    style="width: 100%; height: 120px; background: #111; border: 1px solid #333; border-radius: 8px; color: #fff; padding: 10px; font-size: 0.8rem; font-family: inherit; resize: none; margin-bottom: 20px;"></textarea>
+
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-link"
+                        style="flex:1; border: 1px solid #333; background: transparent; color: #888; justify-content: center;"
+                        onclick="backToCatalog()">Atrás</button>
+                    <button class="btn-link" style="flex:2; background: #fff; color: #000; justify-content: center;"
+                        id="btnConfirmSyncFinal" onclick="executeFinalSync()">Sincronizar Ahora</button>
+                </div>
+            </div>
+
+            <button class="btn-link" style="width: 100%; justify-content: center;" id="btnContinueToPreview" disabled
+                onclick="showSyncPreview()">Siguiente</button>
+        </div>
+    </div>
+
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
+    <script src="/script/auth-utils.js"></script>
+
+    <script>
+        // Safely Initialize Supabase
+        const supabaseUrl = window.SUPABASE_URL || window.env?.SUPABASE_URL;
+        const supabaseKey = window.SUPABASE_ANON_KEY || window.env?.SUPABASE_ANON_KEY;
+        const sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        let userProducts = [];
+        let selectedProductId = null;
+        let currentSyncBtn = null;
+
+        // 📡 CROSS-TAB SYNC: BroadcastChannel for real-time progress sharing
+        const syncChannel = new BroadcastChannel('yt_sync_stream');
+
+        syncChannel.onmessage = (event) => {
+            const { type, data } = event.data;
+            const progModal = document.getElementById('bulkProgressModal');
+
+            if (type === 'SYNC_PROGRESS') {
+                if (progModal && progModal.style.display !== 'flex') {
+                    progModal.style.display = 'flex';
+                    progModal.classList.add('show');
+                    // Lock tab if remote sync is active
+                    window.onbeforeunload = () => "Sincronización en curso en otra pestaña.";
+                }
+
+                if (data.logs) {
+                    const logContainer = document.getElementById('bulk-log-list');
+                    if (logContainer) {
+                        logContainer.innerHTML = '';
+                        data.logs.forEach(log => {
+                            const entry = document.createElement('div');
+                            entry.className = 'bulk-log-entry';
+                            entry.innerHTML = `<span class="log-${log.type}">${log.msg}</span>`;
+                            logContainer.appendChild(entry);
+                        });
+                        logContainer.scrollTop = logContainer.scrollHeight;
+                    }
+                }
+
+                if (data.pct !== undefined) document.getElementById('bulk-progress-fill').style.width = data.pct + '%';
+                if (data.label) document.getElementById('bulk-progress-label').textContent = data.label;
+                if (data.status) {
+                    const statusEl = document.getElementById('bulk-status-dynamic');
+                    statusEl.textContent = data.status;
+                    if (data.status.includes('VINCULADO')) statusEl.style.color = '#10b981';
+                }
+            }
+
+            if (type === 'SYNC_FINISHED') {
+                window.onbeforeunload = null;
+                // Final state UI update
+                document.getElementById('bulk-status-text').textContent = 'FINALIZADO';
+                document.getElementById('bulk-header-active').style.display = 'none';
+                document.getElementById('bulk-header-finished').style.display = 'block';
+                document.getElementById('btnFinishBulk').style.display = 'flex';
+                if (data.count) {
+                    const successP = document.querySelector('#bulk-header-finished p');
+                    if (successP) successP.textContent = `${data.count} videos fueron sincronizados con éxito.`;
+                }
+            }
+
+            if (type === 'SYNC_ABORTED') {
+                window.onbeforeunload = null;
+                localStorage.removeItem('yt_sync_current_state');
+                if (progModal) {
+                    progModal.classList.remove('show');
+                    setTimeout(() => progModal.style.display = 'none', 300);
+                }
+            }
+        };
+
+        async function init() {
+            try {
+                const { data: { user } } = await sb.auth.getUser();
+                if (!user) return;
+
+                // 🛑 ACCESS CONTROL: Willie + Planes de Pago (Starter/Pro)
+                const isWillie = user.email === 'williebeatsyt@gmail.com';
+
+                // Load Profile
+                const { data: profile } = await sb.from('users')
+                    .select('nickname, avatar_url, r2_version, id, plan')
+                    .eq('id', user.id)
+                    .single();
+
+                window.hasProAccess = isWillie || (profile && (profile.plan === 'starter' || profile.plan === 'pro'));
+
+                // Actualización UI si no tiene acceso
+                if (!window.hasProAccess) {
+                    const proCheckoutUrl = '/cuenta/checkout-v2.html?plan=pro&currency=USD&interval=monthly';
+
+                    const btnAi = document.getElementById('btnBulkAiSync');
+                    if (btnAi) {
+                        btnAi.innerHTML = '<i class="bi bi-star-fill" style="color: #FFD700; font-size: 1.1rem;"></i> Mejorar a Pro';
+                        btnAi.onclick = () => { window.location.href = proCheckoutUrl; };
+                    }
+
+                    const btnConnect = document.getElementById('btnConnectNowStatic');
+                    if (btnConnect) {
+                        btnConnect.innerHTML = '<i class="bi bi-star-fill" style="color: #FFD700;"></i> Mejorar a Pro';
+                        btnConnect.onclick = () => { window.location.href = proCheckoutUrl; };
+                    }
+                }
+
+                if (profile) {
+                    window.currentUserName = profile.nickname;
+                    updateSidebarUI(profile.nickname, profile.avatar_url, profile.r2_version, profile.id);
+
+                    // Update wait section links
+                    const profileLink = document.getElementById('modal-wait-profile-link');
+                    if (profileLink) profileLink.href = `/@${profile.nickname}`;
+                }
+
+                // REAL THING 2: Fetch Catalog
+                loadCatalog(user.id);
+
+                // REAL THING 3: Load Persisted Syncs (Report)
+                loadSyncedVideos(user.id);
+
+                // 🔄 RESTORE SYNC STATE: If a sync is active in another tab
+                const savedState = localStorage.getItem('yt_sync_current_state');
+                if (savedState) {
+                    const state = JSON.parse(savedState);
+                    // Heartbeat check: Only restore if the master tab updated it within the last 8 seconds
+                    if (state && state.logs && state.logs.length > 0) {
+                        const now = Date.now();
+                        const lastUpdated = state.last_updated || 0;
+                        if (now - lastUpdated < 8000) {
+                            syncChannel.onmessage({ data: { type: 'SYNC_PROGRESS', data: state } });
+                        } else {
+                            // It's a dead/ghost state from a closed tab. Clean it up.
+                            localStorage.removeItem('yt_sync_current_state');
+                        }
+                    }
+                }
+
+            } catch (e) { console.warn('Init error:', e); }
+        }
+
+        async function initQuota() {
+            // Disabled as per user request
+            return;
+        }
+
+        let allSyncedVideos = [];
+        let syncedCurrentPage = 1;
+        const syncedLimit = 5;
+
+        async function loadSyncedVideos(userId) {
+            const container = document.getElementById('yt-synced-list');
+            const badge = document.getElementById('synced-count-badge');
+
+            // Show Skeletons
+            container.innerHTML = `
+                <div class="yt-row skeleton" style="height: 64px; margin-bottom: 8px; border-radius: 8px;"></div>
+                <div class="yt-row skeleton" style="height: 64px; margin-bottom: 8px; border-radius: 8px;"></div>
+                <div class="yt-row skeleton" style="height: 64px; margin-bottom: 8px; border-radius: 8px;"></div>
+            `;
+
+            try {
+                const { data: syncs, error } = await sb
+                    .from('youtube_sync')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('synced_at', { ascending: false });
+
+                if (error) throw error;
+                allSyncedVideos = syncs || [];
+
+                if (allSyncedVideos.length === 0) {
+                    container.innerHTML = `
+                        <div style="padding: 40px; text-align: center; border: 1px dashed #111; border-radius: 12px; color: #444; font-size: 0.85rem;">
+                            Aún no has sincronizado ningún video.
+                        </div>
+                    `;
+                    badge.textContent = '0 VIDEOS';
+                    document.getElementById('yt-synced-pagination').style.display = 'none';
+                    return;
+                }
+
+                badge.textContent = `${allSyncedVideos.length} VIDEO${allSyncedVideos.length > 1 ? 'S' : ''}`;
+                syncedCurrentPage = 1;
+                renderSyncedPage();
+
+                // Sync the local set for badges in pending list
+                syncedVideoIds = new Set(allSyncedVideos.map(s => s.video_id));
+
+            } catch (e) {
+                console.error('Error loading sync report:', e);
+                container.innerHTML = '<p style="color:red; font-size:0.8rem; text-align:center; padding:20px;">Error al cargar el historial.</p>';
+            }
+        }
+
+        function formatRelativeDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+            const diffInDays = Math.floor(diffInSeconds / 86400);
+
+            if (diffInDays === 0) return 'Hoy';
+            if (diffInDays === 1) return 'Ayer';
+            if (diffInDays < 7) return `hace ${diffInDays} días`;
+
+            const diffInWeeks = Math.floor(diffInDays / 7);
+            if (diffInWeeks === 1) return 'hace 1 semana';
+            if (diffInWeeks < 4) return `hace ${diffInWeeks} semanas`;
+
+            const diffInMonths = Math.floor(diffInDays / 30);
+            if (diffInMonths === 1) return 'hace 1 mes';
+            if (diffInMonths < 12) return `hace ${diffInMonths} meses`;
+
+            return date.toLocaleDateString();
+        }
+
+        function renderSyncedPage() {
+            const container = document.getElementById('yt-synced-list');
+            const start = (syncedCurrentPage - 1) * syncedLimit;
+            const end = start + syncedLimit;
+            const pageItems = allSyncedVideos.slice(start, end);
+            const totalPages = Math.ceil(allSyncedVideos.length / syncedLimit);
+
+            let html = '';
+            pageItems.forEach(s => {
+                const relativeDate = formatRelativeDate(s.synced_at);
+                html += `
+                <div class="yt-row" style="background: rgba(255,255,255,0.01); border-color: rgba(255,255,255,0.03); padding: 14px 20px; border-radius: 12px; margin-bottom: 8px;">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.05); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.1);">
+                        <i class="bi bi-check-lg" style="font-size: 1rem; color: #fff;"></i>
+                    </div>
+                    <div class="yt-info" style="margin-left: 14px;">
+                        <h4 class="yt-title" style="color: #fff; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px;">${s.video_title || 'Video Sincronizado'}</h4>
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.72rem; color: #666;">
+                            <span style="display: flex; align-items: center; gap: 4px;"><i class="bi bi-calendar3"></i> ${relativeDate}</span>
+                            <span style="color: #222;">•</span>
+                            <span style="color: #fff; font-weight: 700; opacity: 0.9; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.3px;">Sincronizado</span>
+                        </div>
+                    </div>
+                    <a href="https://youtube.com/watch?v=${s.video_id}" target="_blank" class="btn-link" style="background: #111; color: #fff; border: 1px solid #222; padding: 8px 16px; font-size: 0.72rem; font-weight: 700; border-radius: 100px; text-decoration: none !important; transition: all 0.2s;">
+                        <i class="bi bi-youtube" style="color: #ff0000;"></i> Ver Video
+                    </a>
+                </div>
+                `;
+            });
+            container.innerHTML = html;
+
+            // Pagination UI
+            document.getElementById('yt-synced-pagination').style.display = totalPages > 1 ? 'flex' : 'none';
+            document.getElementById('syncedPageIndicator').textContent = `${syncedCurrentPage} / ${totalPages}`;
+            document.getElementById('btnPrevSynced').disabled = syncedCurrentPage === 1;
+            document.getElementById('btnNextSynced').disabled = syncedCurrentPage === totalPages;
+        }
+
+        function changeSyncedPage(dir) {
+            syncedCurrentPage += dir;
+            renderSyncedPage();
+        }
+
+        function generateGlobalSyncReport() {
+            exportSyncReport();
+        }
+
+        async function loadCatalog(userId) {
+            const { data: products } = await sb.from('products')
+                .select('id, name, public_slug, image_url, storage_version, producer_nickname')
+                .eq('producer_id', userId)
+                .neq('status', 'deleted')
+                .order('created_at', { ascending: false });
+
+            userProducts = products || [];
+            renderCatalog();
+        }
+
+        async function renderCatalog() {
+            const container = document.getElementById('catalog-list');
+            if (userProducts.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#555; padding:20px;">No tienes productos aún.</p>';
+                return;
+            }
+
+            let html = '';
+            for (const p of userProducts) {
+                let imgUrl = p.image_url;
+                if (imgUrl && !imgUrl.startsWith('http') && window.AuthUtils) {
+                    imgUrl = await window.AuthUtils.getAuthorizedUrl(imgUrl, p.storage_version, p.id);
+                } else if (!imgUrl) {
+                    imgUrl = 'https://via.placeholder.com/150';
+                }
+
+                html += `
+                <div class="yt-row catalog-item" style="cursor:pointer; margin-bottom:8px; background: #111; padding: 8px 12px; border: 1px solid #222;" onclick="selectProduct(${p.id}, '${p.public_slug}', '${p.producer_nickname}', this)">
+                    <div class="yt-thumb" style="width: 40px; height: 40px; border-radius: 4px;">
+                        <img src="${imgUrl}" alt="Cover">
+                    </div>
+                    <div class="yt-info">
+                        <span class="yt-title" style="font-size:0.85rem;">${p.name}</span>
+                    </div>
+                    <i class="bi bi-check-circle-fill" style="margin-left:auto; color:#10b981; display:none;"></i>
+                </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        let selectedProductSlug = null;
+        let selectedProductNickname = null;
+        function selectProduct(id, slug, nickname, el) {
+            selectedProductId = id;
+            selectedProductSlug = slug;
+            selectedProductNickname = nickname;
+            document.querySelectorAll('.catalog-item i').forEach(i => i.style.display = 'none');
+            document.querySelectorAll('.catalog-item').forEach(i => i.style.borderColor = '#222');
+
+            el.querySelector('i').style.display = 'block';
+            el.style.borderColor = '#fff';
+            document.getElementById('btnContinueToPreview').disabled = false;
+        }
+
+        function backToCatalog() {
+            document.getElementById('catalog-list').style.display = 'block';
+            document.getElementById('sync-editor-box').style.display = 'none';
+            document.getElementById('btnContinueToPreview').style.display = 'flex';
+        }
+
+        function showSyncPreview() {
+            if (!selectedProductSlug || !currentVideoId) return;
+            const videoData = window.loadedYouTubeVideos[currentVideoId];
+            if (!videoData) return;
+
+            const area = document.getElementById('sync-desc-preview');
+            const originalDesc = videoData.snippet.description || '';
+            const nickname = selectedProductNickname || window.currentUserName || 'null';
+            const purchaseLink = `https://offszn.lat/@${nickname}/${selectedProductSlug}`;
+
+            let newDesc = `💰 Compra este beat aquí: ${purchaseLink}\n\n${originalDesc}`;
+            area.value = newDesc;
+
+            document.getElementById('catalog-list').style.display = 'none';
+            document.getElementById('sync-editor-box').style.display = 'block';
+            document.getElementById('btnContinueToPreview').style.display = 'none';
+        }
+        function handleAuthClick() {
+            scanChannel();
+        }
+        async function executeFinalSync() {
+            const btn = document.getElementById('btnConfirmSyncFinal');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Sincronizando...';
+            btn.disabled = true;
+
+            try {
+                const videoData = window.loadedYouTubeVideos[currentVideoId];
+                const newDescription = document.getElementById('sync-desc-preview');
+
+                await gapi.client.youtube.videos.update({
+                    part: 'snippet',
+                    resource: {
+                        id: currentVideoId,
+                        snippet: {
+                            title: videoData.snippet.title,
+                            description: newDescription.value,
+                            categoryId: videoData.snippet.categoryId || '10'
+                        }
+                    }
+                });
+
+                // Save to Supabase for persistence (Report)
+                const { data: { user } } = await sb.auth.getUser();
+                if (user) {
+                    await sb.from('youtube_sync').upsert({
+                        user_id: user.id,
+                        video_id: currentVideoId,
+                        product_id: selectedProductId,
+                        video_title: videoData.snippet.title,
+                        synced_at: new Date().toISOString()
+                    });
+                    syncedVideoIds.add(currentVideoId);
+                    loadSyncedVideos(user.id); // Refresh the report list
+                }
+
+                // Update Local UI
+                if (currentSyncBtn) {
+                    const row = currentSyncBtn.closest('.yt-row');
+                    if (row) {
+                        row.style.borderStyle = 'solid';
+                        row.style.borderColor = 'rgba(16, 185, 129, 0.3)';
+
+                        const statusDiv = row.querySelector('.yt-status');
+                        if (statusDiv) {
+                            statusDiv.querySelector('.dot').style.background = '#10b981';
+                            statusDiv.querySelector('span').textContent = 'Vinculado y Actualizado';
+                            statusDiv.querySelector('span').style.color = '#10b981';
+                        }
+
+                        currentSyncBtn.outerHTML = `<a href="https://youtube.com/watch?v=${currentVideoId}" target="_blank" class="btn-link" onclick="event.stopPropagation()" style="background: transparent; color: #10b981; border: 1px solid #10b981; text-decoration: none; font-size: 0.75rem;"><i class="bi bi-youtube"></i> Ver en YouTube</a>`;
+                    }
+                }
+
+                closeSyncModal();
+
+                // Success Modal
+                const successModal = document.getElementById('successModal');
+                const successLink = document.getElementById('successYoutubeLink');
+                if (successLink) successLink.href = `https://youtube.com/watch?v=${currentVideoId}`;
+                successModal.style.display = 'flex';
+                successModal.style.opacity = '1';
+                setTimeout(() => successModal.classList.add('show'), 10);
+
+            } catch (e) {
+                console.error('Sync Error:', e);
+                alert('Falló la sincronización: ' + (e.result?.error?.message || e.message));
+            } finally {
+                btn.innerHTML = original;
+                btn.disabled = false;
+            }
+        }
+
+        async function updateSidebarUI(name, avatar, version, uid) {
+            const avatarEl = document.getElementById('sidebarAvatar');
+            const avatarSkel = document.getElementById('sidebarAvatarSkeleton');
+            const nameEl = document.getElementById('sidebarUsername');
+            const btnSkel = document.getElementById('sidebarBtnSkeleton');
+            const linkEl = document.getElementById('sidebarProfileLink');
+
+            window.currentUserName = name;
+            if (nameEl && name) {
+                nameEl.textContent = name;
+                nameEl.classList.remove('skeleton-text');
+                nameEl.style.background = 'none';
+                nameEl.style.width = 'auto';
+            }
+
+            if (linkEl && name) {
+                linkEl.href = '/@' + name;
+                linkEl.style.display = 'inline-flex';
+                if (btnSkel) btnSkel.style.display = 'none';
+            }
+
+            if (avatarEl && avatar) {
+                try {
+                    let finalSrc = avatar;
+                    if (window.AuthUtils && window.AuthUtils.getAuthorizedUrl) {
+                        finalSrc = await window.AuthUtils.getAuthorizedUrl(avatar, version, uid);
+                    }
+                    avatarEl.src = finalSrc;
+                    avatarEl.onload = () => {
+                        avatarEl.style.display = 'block';
+                        if (avatarSkel) avatarSkel.classList.remove('skeleton');
+                    };
+                } catch (e) { avatarEl.src = avatar; avatarEl.style.display = 'block'; }
+            }
+        }
+
+        // ===== ACCORDION =====
+        window.toggleAccordion = function (videoId) {
+            const content = document.getElementById(`acc-${videoId}`);
+            if (!content) return;
+            const row = content.previousElementSibling;
+            if (content.style.display === 'none' || !content.style.display) {
+                content.style.display = 'flex';
+                if (row) row.style.background = 'rgba(255,255,255,0.02)';
+            } else {
+                content.style.display = 'none';
+                if (row) row.style.background = 'transparent';
+            }
+        };
+
+        // ===== PAGINATION & SEARCH STATE =====
+        let allVideos = [];
+        let filteredVideos = [];
+        let currentPage = 0;
+        let syncedVideoIds = new Set();
+        const PAGE_SIZE = 5;
+
+        function showSkeletons() {
+            const list = document.getElementById('yt-video-list');
+            list.innerHTML = '';
+            for (let i = 0; i < PAGE_SIZE; i++) {
+                list.innerHTML += `
+                    <div class="yt-row" style="border-bottom: 1px solid #111;">
+                        <div class="yt-thumb skeleton" style="width:72px; height:40px; border-radius:4px;"></div>
+                        <div class="yt-info" style="gap:8px;">
+                            <div class="skeleton" style="height:14px; width:60%; border-radius:4px;"></div>
+                            <div class="skeleton" style="height:10px; width:30%; border-radius:4px;"></div>
+                        </div>
+                        <div class="skeleton" style="width:80px; height:32px; border-radius:100px;"></div>
+                    </div>`;
+            }
+        }
+
+        function renderPage() {
+            const list = document.getElementById('yt-video-list');
+            list.innerHTML = '';
+            const source = filteredVideos.length > 0 || document.getElementById('yt-search').value ? filteredVideos : allVideos;
+
+            // Sort: pending first
+            source.sort((a, b) => {
+                const aSynced = syncedVideoIds.has(a.id);
+                const bSynced = syncedVideoIds.has(b.id);
+                if (aSynced && !bSynced) return 1;
+                if (!aSynced && bSynced) return -1;
+                return 0;
+            });
+
+            const totalPages = Math.max(1, Math.ceil(source.length / PAGE_SIZE));
+            if (currentPage >= totalPages) currentPage = totalPages - 1;
+            const start = currentPage * PAGE_SIZE;
+            const pageItems = source.slice(start, start + PAGE_SIZE);
+
+            if (source.length === 0) {
+                list.innerHTML = '<p style="color:#666; font-size:0.85rem; padding:30px; text-align:center;">No se encontraron videos.</p>';
+                document.getElementById('yt-pagination').style.display = 'none';
+                return;
+            }
+
+            for (const video of pageItems) {
+                const isSynced = syncedVideoIds.has(video.id);
+                const imgUrl = video.snippet.thumbnails?.medium?.url || '';
+                const container = document.createElement('div');
+                container.className = 'yt-row-container';
+                // Green border if synced
+                container.style.border = isSynced ? '1px solid rgba(16, 185, 129, 0.1)' : 'none';
+                container.style.borderBottom = isSynced ? '1px solid rgba(16, 185, 129, 0.1)' : '1px solid #111';
+                container.style.borderRadius = isSynced ? '16px' : '0';
+                container.style.marginBottom = isSynced ? '10px' : '0';
+                container.style.background = isSynced ? 'rgba(16, 185, 129, 0.02)' : 'transparent';
+                container.dataset.title = video.snippet.title.toLowerCase();
+
+                container.innerHTML = `
+                    <div class="yt-row" style="border-bottom: none; padding: 16px;">
+                        <div class="yt-thumb">
+                            <img src="${imgUrl}" alt="Thumbnail">
+                        </div>
+                        <div class="yt-info">
+                            <div class="yt-title" style="display:flex; align-items:center; gap:8px;">
+                                ${video.snippet.title}
+                                ${isSynced ? '<span style="background:rgba(16,185,129,0.1); color:#10b981; font-size:9px; padding:2px 8px; border-radius:100px; border:1px solid rgba(16,185,129,0.2); font-weight:700;">VINCULADO</span>' : ''}
+                            </div>
+                            <div class="yt-status" style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; margin-top: 4px;">
+                                <div class="dot" style="width: 6px; height: 6px; border-radius: 50%; background: ${isSynced ? '#10b981' : '#f59e0b'};"></div>
+                                <span style="color: ${isSynced ? '#10b981' : '#888'}; font-weight: 500;">
+                                    ${isSynced ? 'Enlace activo en YouTube' : 'Pendiente de vincular'}
+                                </span>
+                            </div>
+                        </div>
+                        ${isSynced
+                        ? `<a href="https://youtube.com/watch?v=${video.id}" target="_blank" class="btn-link" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid #222; font-size: 0.72rem; border-radius: 100px; padding: 8px 16px; text-decoration: none !important;">
+                                <i class="bi bi-youtube" style="color:#ff0000;"></i> Ver Video
+                               </a>`
+                        : (window.hasProAccess
+                            ? `<button class="btn-link" onclick="openSyncModal(this, '${video.id}')" style="background: #fff; color: #000; font-weight: 700; border: none; font-size: 0.75rem; border-radius: 100px; padding: 8px 20px;">
+                                <i class="bi bi-link-45deg"></i> Vincular
+                               </button>`
+                            : `<button class="btn-link" onclick="window.location.href='/cuenta/checkout-v2.html?plan=pro&currency=USD&interval=monthly'" style="background: #fff; color: #000; font-weight: 700; border: none; font-size: 0.75rem; border-radius: 100px; padding: 8px 20px;">
+                                <i class="bi bi-star-fill" style="color: #FFD700;"></i> Mejorar a Pro
+                               </button>`)
+                    }
+                    </div>
+                `;
+                list.appendChild(container);
+            }
+
+            // Update pagination
+            const pag = document.getElementById('yt-pagination');
+            pag.style.display = source.length > PAGE_SIZE ? 'flex' : 'none';
+            document.getElementById('pageIndicator').textContent = `${currentPage + 1} / ${totalPages}`;
+            document.getElementById('btnPrevPage').disabled = currentPage === 0;
+            document.getElementById('btnNextPage').disabled = currentPage >= totalPages - 1;
+        }
+
+        function changePage(dir) {
+            currentPage += dir;
+            renderPage();
+        }
+
+        function filterVideos() {
+            const q = document.getElementById('yt-search').value.toLowerCase().trim();
+            if (!q) { filteredVideos = []; }
+            else { filteredVideos = allVideos.filter(v => v.snippet.title.toLowerCase().includes(q)); }
+            currentPage = 0;
+            renderPage();
+        }
+
+        async function ensureYouTubeAuth() {
+            const SYNC_SCOPES = 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.force-ssl';
+
+            if (window.gapi && window.gapi.client && typeof gapi.client.getToken === 'function' && gapi.client.getToken()) {
+                return true;
+            }
+
+            return new Promise((resolve, reject) => {
+                if (window._googleRequestAuth) {
+                    if (window._googleTokenClient) {
+                        window._googleTokenClient.callback = (resp) => {
+                            if (resp && resp.access_token) resolve(true);
+                            else reject(new Error('Autenticación cancelada o fallida'));
+                        };
+                        window._googleTokenClient.requestAccessToken({ scope: SYNC_SCOPES, prompt: 'consent' });
+                    } else {
+                        window._googleRequestAuth((resp) => {
+                            if (resp && resp.access_token) resolve(true);
+                            else reject(new Error('Autenticación cancelada o fallida'));
+                        });
+                    }
+                } else {
+                    reject(new Error('El script de Google Auth no está cargado'));
+                }
+            });
+        }
+
+        async function scanChannel(btnElement = null, isBulk = false) {
+            const btn = btnElement || document.getElementById('btnBulkSync');
+            const original = btn ? btn.innerHTML : '';
+
+            try {
+                // 1. Auth First
+                await ensureYouTubeAuth();
+
+                // 2. Only show skeletons AFTER auth
+                if (btn && !isBulk) {
+                    btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Escaneando...';
+                    btn.disabled = true;
+                }
+                showSkeletons();
+
+                // Get user's 'Uploads' playlist ID (Cost: 1 quota unit)
+                const channelResp = await gapi.client.youtube.channels.list({
+                    part: 'contentDetails',
+                    mine: true
+                });
+
+                if (!channelResp.result.items || channelResp.result.items.length === 0) {
+                    throw new Error("No se pudo obtener el canal de YouTube.");
+                }
+
+                const uploadsPlaylistId = channelResp.result.items[0].contentDetails.relatedPlaylists.uploads;
+
+                let items = [];
+                let pageToken = null;
+                let fetchCount = 0;
+
+                // Fetch up to 500 videos (10 pages of 50) from Uploads playlist (Cost: 1 quota unit per page instead of 100)
+                while (fetchCount < 10) {
+                    const response = await gapi.client.youtube.playlistItems.list({
+                        part: 'snippet',
+                        playlistId: uploadsPlaylistId,
+                        maxResults: 50,
+                        pageToken: pageToken || undefined
+                    });
+
+                    if (response.result.items && response.result.items.length > 0) {
+                        items = items.concat(response.result.items);
+                    }
+
+                    pageToken = response.result.nextPageToken;
+                    fetchCount++;
+                    if (!pageToken) break;
+                }
+
+                if (!items || items.length === 0) {
+                    document.getElementById('yt-video-list').innerHTML = '<p style="color:#888; font-size: 0.9rem; padding: 20px; text-align:center;">No se encontraron videos en tu canal.</p>';
+                    if (btn) { btn.innerHTML = original; btn.disabled = false; }
+                    return;
+                }
+
+                window.loadedYouTubeVideos = {};
+                allVideos = [];
+
+                // Fetch detailed info in chunks of 50 (YouTube limit)
+                for (let i = 0; i < items.length; i += 50) {
+                    const chunk = items.slice(i, i + 50);
+                    const videoIds = chunk.map(item => item.snippet.resourceId.videoId).join(',');
+                    const vidResponse = await gapi.client.youtube.videos.list({ part: 'snippet,status', id: videoIds });
+
+                    if (vidResponse.result.items) {
+                        for (const video of vidResponse.result.items) {
+                            // 🔒 PRIVACY FILTER: Only PUBLIC videos
+                            if (video.status?.privacyStatus === 'public') {
+                                window.loadedYouTubeVideos[video.id] = video;
+                                allVideos.push(video);
+                            }
+                        }
+                    }
+                }
+
+                currentPage = 0;
+                filteredVideos = [];
+                document.getElementById('yt-search').value = '';
+
+                // Fetch existing syncs from DB to show badges
+                const { data: { user } } = await sb.auth.getUser();
+                if (user) {
+                    const { data: syncs } = await sb
+                        .from('youtube_sync')
+                        .select('video_id')
+                        .eq('user_id', user.id);
+
+                    syncedVideoIds = new Set((syncs || []).map(s => s.video_id));
+                }
+
+                renderPage();
+
+            } catch (e) {
+                console.error('Error scanning channel:', e);
+                const isQuotaError = e.result?.error?.code === 403 || e.message?.includes('quota');
+
+                // Si el usuario canceló o hubo error, mostramos de nuevo el prompt de conectar
+                document.getElementById('yt-video-list').innerHTML = `
+                    <div id="yt-connect-prompt" style="padding: 60px 40px; text-align: center; border: 1px dashed #222; border-radius: 16px; background: rgba(255,255,255,0.01);">
+                        <div style="background: rgba(255, 0, 0, 0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                            <i class="bi bi-exclamation-triangle" style="color: #ff4444; font-size: 30px;"></i>
+                        </div>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 8px;">${isQuotaError ? 'Límite de YouTube Alcanzado' : 'Conexión Interrumpida'}</h3>
+                        <p style="color: #666; font-size: 0.85rem; margin-bottom: 24px;">
+                            ${isQuotaError
+                        ? 'Has alcanzado el límite diario de peticiones de YouTube. Por favor, intenta de nuevo mañana o usa la sincronización manual.'
+                        : 'Hubo un problema o cancelaste la conexión. Inténtalo de nuevo para ver tus videos.'}
+                        </p>
+                        ${window.hasProAccess
+                        ? `<button class="btn-link" onclick="scanChannel()" style="margin: 0 auto; background: #fff; color: #000; padding: 10px 24px;">
+                                Reintentar Conexión
+                               </button>`
+                        : `<button class="btn-link" onclick="window.location.href='/cuenta/checkout-v2.html?plan=pro&currency=USD&interval=monthly'" style="margin: 0 auto; background: #fff; color: #000; padding: 10px 24px;">
+                                <i class="bi bi-star-fill" style="color: #FFD700;"></i> Mejorar a Pro
+                               </button>`
+                    }
+                    </div>
+                `;
+                // IMPORTANT: RESET BUTTON IF FAILED (and not bulk, bulk has its own finally)
+                if (btn && !isBulk) {
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                }
+                throw e; // Pass to parent catch
+            } finally {
+                // Success path for single scan
+                if (btn && !isBulk) {
+                    btn.innerHTML = original;
+                    btn.disabled = false;
+                }
+            }
+        }
+
+        // ===== BULK SMART SYNC LOGIC =====
+        async function startBulkSmartSync() {
+            const btn = document.getElementById('btnBulkSync');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Procesando Canal...';
+            btn.disabled = true;
+
+            try {
+                // 1. Auth and Scan (tell scanChannel it's a bulk operation)
+                await scanChannel(btn, true);
+
+                // Update text after scan finished successfully
+                btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Analizando Beats...';
+
+                // If scanChannel failed or didn't load videos, allVideos will be empty
+                if (!allVideos || allVideos.length === 0) {
+                    // Message already shown in scanChannel
+                    return;
+                }
+
+                // 2. Fetch all products from OFFSZN via global supabase instance (sb)
+                const { data: { user } } = await sb.auth.getUser();
+                if (!user) throw new Error("No hay sesión de usuario activa");
+
+                const { data: products, error } = await sb
+                    .from('products')
+                    .select('name, public_slug, producer_nickname')
+                    .eq('producer_id', user.id);
+
+                if (error) throw error;
+                if (!products || products.length === 0) {
+                    alert("No tienes beats en tu catálogo de OFFSZN para sincronizar.");
+                    btn.innerHTML = original; btn.disabled = false;
+                    return;
+                }
+
+                // 2. Matching Logic
+                const matches = [];
+                allVideos.forEach(video => {
+                    if (syncedVideoIds.has(video.id)) return;
+
+                    const title = video.snippet.title.toLowerCase();
+                    products.forEach(product => {
+                        const productName = (product.name || '').toLowerCase().trim();
+                        if (!productName) return;
+
+                        // 🎯 REFINED MATCH: Whole word/phrase matching to avoid "weird" partial matches
+                        const escapedName = productName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const regex = new RegExp(`(^|[^a-z0-9])${escapedName}([^a-z0-9]|$)`, 'i');
+
+                        if (regex.test(title)) {
+                            matches.push({ video, product });
+                        }
+                    });
+                });
+
+                if (matches.length === 0) {
+                    alert("No se encontraron coincidencias automáticas en tu canal.");
+                    btn.innerHTML = original; btn.disabled = false;
+                    return;
+                }
+
+                // Show Confirmation Modal (Custom instead of confirm)
+                document.getElementById('bulkConfirmDesc').textContent = `Se han detectado ${matches.length} videos que coinciden con tus beats de OFFSZN. ¿Deseas actualizarlos todos?`;
+                const bulkAccepted = await new Promise(resolve => {
+                    window._resolveBulkConfirm = resolve;
+                    const m = document.getElementById('bulkConfirmModal');
+                    m.style.display = 'flex';
+                    setTimeout(() => m.classList.add('show'), 10);
+                });
+
+                if (!bulkAccepted) {
+                    btn.innerHTML = original; btn.disabled = false;
+                    return;
+                }
+
+                // Show Progress Modal
+                const progModal = document.getElementById('bulkProgressModal');
+                const logContainer = document.getElementById('bulk-log-list');
+                const progFill = document.getElementById('bulk-progress-fill');
+                const progLabel = document.getElementById('bulk-progress-label');
+
+                logContainer.innerHTML = '';
+                progFill.style.width = '0%';
+                progLabel.textContent = `0 / ${matches.length} procesados`;
+                progModal.style.display = 'flex';
+                setTimeout(() => progModal.classList.add('show'), 10);
+
+                const addLog = (msg, type = 'info') => {
+                    const entry = document.createElement('div');
+                    entry.className = 'bulk-log-entry';
+                    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                    entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-${type}">${msg}</span>`;
+                    logContainer.appendChild(entry);
+                    logContainer.scrollTop = logContainer.scrollHeight;
+                };
+
+                addLog(`Iniciando sincronización masiva de ${matches.length} videos...`, 'success');
+
+                // 3. Execution
+                let updatedCount = 0;
+                let competitorLinksRemoved = 0;
+
+                for (const item of matches) {
+                    const { video, product } = item;
+                    addLog(`Optimizando: ${video.snippet.title.substring(0, 30)}...`, 'info');
+
+                    let desc = video.snippet.description || '';
+                    let newDesc = desc;
+
+                    // Remove competitor links
+                    let removedOnThis = 0;
+                    COMPETITOR_PATTERNS.forEach(pattern => {
+                        if (pattern.test(newDesc)) {
+                            newDesc = newDesc.replace(pattern, '');
+                            removedOnThis++;
+                            competitorLinksRemoved++;
+                        }
+                    });
+
+                    if (removedOnThis > 0) addLog(`  - Limpiando ${removedOnThis} links externos`, 'accent');
+
+                    // Inject OFFSZN link
+                    const nickname = product.producer_nickname || window.currentUserName || 'null';
+                    const purchaseLink = `https://offszn.lat/@${nickname}/${product.public_slug}`;
+                    const syncText = `💰 Compra este beat aquí: ${purchaseLink}\n\n`;
+
+                    if (!newDesc.includes(purchaseLink)) {
+                        newDesc = syncText + newDesc.trim();
+                        addLog(`  - Inyectando link: offszn.lat/@${nickname}`, 'success');
+                    }
+
+                    addLog(`  - Actualizando descripción en YouTube...`, 'info');
+
+                    // Update YouTube video
+                    await gapi.client.youtube.videos.update({
+                        part: 'snippet',
+                        resource: {
+                            id: video.id,
+                            snippet: {
+                                ...video.snippet,
+                                description: newDesc,
+                                categoryId: video.snippet.categoryId
+                            }
+                        }
+                    });
+
+                    // Save to Supabase for persistence
+                    // Save to Supabase for persistence
+                    const { data: userData } = await sb.auth.getUser();
+                    if (userData && userData.user) {
+                        const user = userData.user;
+                        await sb.from('youtube_sync').upsert({
+                            user_id: user.id,
+                            video_id: video.id,
+                            product_id: product.id || product.item_id,
+                            video_title: video.snippet.title,
+                            synced_at: new Date().toISOString()
+                        });
+                        syncedVideoIds.add(video.id);
+                    }
+
+                    updatedCount++;
+                    const pct = (updatedCount / matches.length) * 100;
+                    progFill.style.width = pct + '%';
+                    progLabel.textContent = `${updatedCount} / ${matches.length} procesados`;
+                    addLog(`  - ¡Sincronizado con éxito!`, 'success');
+                }
+
+                addLog(`¡Sincronización finalizada! ${updatedCount} videos optimizados.`, 'success');
+
+                // Final UI state
+                document.getElementById('bulk-status-text').textContent = 'FINALIZADO';
+                document.getElementById('bulk-status-text').style.color = '#10b981';
+                document.getElementById('bulk-header-active').style.display = 'none';
+                document.getElementById('bulk-header-finished').style.display = 'block';
+                document.getElementById('btnFinishBulk').style.display = 'flex';
+
+                // Final UI Refresh
+                const { data: refreshData } = await sb.auth.getUser();
+                if (refreshData && refreshData.user) loadSyncedVideos(refreshData.user.id);
+
+            } catch (e) {
+                console.error('Bulk Sync Error:', e);
+                alert("Error en proceso masivo: " + e.message);
+            } finally {
+                btn.innerHTML = original;
+                btn.disabled = false;
+            }
+        }
+
+        // ===== AI-POWERED SMART MATCH (NVIDIA NIM) =====
+        async function startBulkAiSync() {
+            const btn = document.getElementById('btnBulkAiSync');
+            const original = btn.innerHTML;
+
+            try {
+                // 1. Auth First
+                await ensureYouTubeAuth();
+
+                // Set this tab as the "Master" running the sync loop
+                window.isMasterSync = true;
+                window.addEventListener('unload', () => {
+                    if (window.isMasterSync) {
+                        localStorage.removeItem('yt_sync_current_state');
+                        syncChannel.postMessage({ type: 'SYNC_ABORTED' });
+                    }
+                });
+
+                // 2. Immediate Modal Opening for UX
+                const progModal = document.getElementById('bulkProgressModal');
+                const logContainer = document.getElementById('bulk-log-list');
+                const progFill = document.getElementById('bulk-progress-fill');
+                const progLabel = document.getElementById('bulk-progress-label');
+
+                logContainer.innerHTML = '';
+                progFill.style.width = '0%';
+                progLabel.textContent = `Iniciando análisis inteligente...`;
+                progModal.style.display = 'flex';
+                setTimeout(() => progModal.classList.add('show'), 10);
+
+                let syncLogs = [];
+                const addLog = (msg, type = 'info') => {
+                    const entry = document.createElement('div');
+                    entry.className = 'bulk-log-entry';
+                    entry.innerHTML = `<span class="log-${type}">${msg}</span>`;
+                    logContainer.appendChild(entry);
+                    logContainer.scrollTop = logContainer.scrollHeight;
+
+                    // 📡 Broadcast & Persist Log
+                    syncLogs.push({ msg, type });
+                    const state = {
+                        logs: syncLogs,
+                        label: progLabel.textContent,
+                        pct: parseFloat(progFill.style.width),
+                        status: document.getElementById('bulk-status-dynamic').textContent,
+                        last_updated: Date.now()
+                    };
+                    localStorage.setItem('yt_sync_current_state', JSON.stringify(state));
+                    syncChannel.postMessage({ type: 'SYNC_PROGRESS', data: state });
+                };
+
+                // 🔒 PROTECT PROCESS: Prevent tab close
+                window.onbeforeunload = () => "Sincronización en curso. ¿Deseas salir?";
+
+                addLog(`Conexión exitosa con YouTube API.`, 'success');
+                addLog(`Escaneando videos públicos del canal...`, 'info');
+
+                btn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Analizando...';
+                btn.disabled = true;
+
+                // 3. Scan Channel
+                await scanChannel(btn, true);
+                if (!allVideos || allVideos.length === 0) {
+                    addLog(`No se encontraron videos públicos para procesar.`, 'accent');
+                    setTimeout(() => closeBulkModal(), 3000);
+                    return;
+                }
+
+                addLog(`Canal escaneado: ${allVideos.length} videos detectados.`, 'success');
+                addLog(`Cargando catálogo de beats...`, 'info');
+
+                // 4. Fetch Products
+                const { data: userData } = await sb.auth.getUser();
+                if (!userData || !userData.user) throw new Error("No hay sesión activa");
+                const user = userData.user;
+
+                const { data: products } = await sb.from('products')
+                    .select('id, name, public_slug, producer_nickname')
+                    .eq('producer_id', user.id)
+                    .neq('status', 'deleted');
+
+                if (!products || products.length === 0) {
+                    addLog(`Error: No tienes beats en tu catálogo para vincular.`, 'accent');
+                    setTimeout(() => closeBulkModal(), 4000);
+                    return;
+                }
+
+                addLog(`Catálogo cargado: ${products.length} beats disponibles.`, 'success');
+                const videosToProcess = allVideos.filter(v => !syncedVideoIds.has(v.id));
+                const alreadySyncedCount = allVideos.length - videosToProcess.length;
+
+                if (alreadySyncedCount > 0) {
+                    addLog(`⚡ Eficiencia: Omitiendo ${alreadySyncedCount} videos que ya están en tu base de datos.`, 'success');
+                }
+
+                if (videosToProcess.length === 0) {
+                    addLog(`¡Todo al día! No hay videos nuevos por sincronizar.`, 'success');
+                    progFill.style.width = '100%';
+                    progLabel.textContent = `${allVideos.length} / ${allVideos.length} procesados`;
+                    setTimeout(() => closeBulkModal(), 3000);
+                    return;
+                }
+
+                addLog(`🤖 Iniciando motor de IA NVIDIA Gemma-3 para ${videosToProcess.length} videos nuevos...`, 'success');
+
+                const sleep = ms => new Promise(res => setTimeout(res, ms));
+
+                let matches = [];
+                // Process in chunks of 3 to speed up but respect rate limits
+                const CHUNK_SIZE = 3;
+                let processedCount = 0;
+
+                for (let i = 0; i < videosToProcess.length; i += CHUNK_SIZE) {
+                    const chunk = videosToProcess.slice(i, i + CHUNK_SIZE);
+
+                    // Log current chunk
+                    const currentLabel = `${alreadySyncedCount + processedCount + 1} / ${allVideos.length} procesados`;
+                    progLabel.textContent = currentLabel;
+                    addLog(`Analizando lote de ${chunk.length} videos simultáneamente...`, 'info');
+
+                    // Process chunk in parallel
+                    const chunkPromises = chunk.map(async (video) => {
+                        try {
+                            const token = (await sb.auth.getSession()).data.session?.access_token;
+                            const aiResp = await fetch('/api/studio/match-youtube', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({
+                                    videoTitle: video.snippet.title,
+                                    products: products
+                                })
+                            });
+
+                            const resData = await aiResp.json();
+                            if (resData.success && resData.matchIndex !== -1) {
+                                const match = products[resData.matchIndex];
+                                return { video, match, success: true };
+                            }
+                            return { video, success: false };
+                        } catch (e) {
+                            console.error('AI Match Error for video:', video.id, e);
+                            return { video, success: false };
+                        }
+                    });
+
+                    const results = await Promise.all(chunkPromises);
+
+                    // Handle results
+                    results.forEach(res => {
+                        processedCount++;
+                        if (res.success) {
+                            matches.push({ video: res.video, product: res.match });
+                            addLog(`   ✨ MATCH IA: "${res.match.name}" en "${res.video.snippet.title.substring(0, 20)}..."`, 'success');
+
+                            // Visual Status Update
+                            document.getElementById('bulk-status-dynamic').textContent = `VINCULADO: ${res.match.name.toUpperCase()}`;
+                            document.getElementById('bulk-status-dynamic').style.color = '#10b981';
+                        } else {
+                            addLog(`   ❌ Sin coincidencia para "${res.video.snippet.title.substring(0, 20)}..."`, 'accent');
+                        }
+                    });
+
+                    // ⏱️ RATE LIMIT PROTECTION: Delay between chunks
+                    await sleep(800);
+
+                    // Update main progress label
+                    const totalProcessedSoFar = alreadySyncedCount + processedCount;
+                    const pct = (totalProcessedSoFar / allVideos.length * 100);
+                    progFill.style.width = pct + '%';
+                    progLabel.textContent = `${totalProcessedSoFar} / ${allVideos.length} procesados`;
+
+                    // Update dynamic status messages
+                    const statusLabel = document.getElementById('bulk-status-dynamic');
+                    let currentStatusText = "";
+                    if (statusLabel) {
+                        if (pct < 20) currentStatusText = "ANALIZANDO TU CANAL...";
+                        else if (pct < 40) currentStatusText = "REVISANDO DESCRIPCIONES...";
+                        else if (pct < 60) currentStatusText = "VIENDO TÍTULOS QUE COINCIDEN...";
+                        else if (pct < 80) currentStatusText = "REVISANDO PALABRAS CLAVE...";
+                        else if (pct < 100) currentStatusText = "YA CASI LO TENEMOS...";
+
+                        // Only override if we didn't just set "VINCULADO"
+                        if (!statusLabel.textContent.includes('VINCULADO')) {
+                            statusLabel.textContent = currentStatusText;
+                        } else {
+                            currentStatusText = statusLabel.textContent; // keep the VINCULADO broadcast
+                        }
+                    }
+
+                    // 📡 Manual Broadcast for non-log updates (progress/status)
+                    const stateProgress = {
+                        logs: syncLogs,
+                        label: progLabel.textContent,
+                        pct: pct,
+                        status: currentStatusText,
+                        last_updated: Date.now()
+                    };
+                    localStorage.setItem('yt_sync_current_state', JSON.stringify(stateProgress));
+                    syncChannel.postMessage({
+                        type: 'SYNC_PROGRESS',
+                        data: stateProgress
+                    });
+                }
+
+                if (matches.length === 0) {
+                    addLog(`No se encontraron coincidencias automáticas ni por IA.`, 'accent');
+                    setTimeout(() => closeBulkModal(), 3000);
+                    return;
+                }
+
+                // Show Confirmation
+                addLog(`¡Análisis finalizado! Se encontraron ${matches.length} vinculaciones inteligentes.`, 'success');
+                closeBulkModal();
+
+                document.getElementById('bulkConfirmDesc').textContent = `La IA ha detectado ${matches.length} vinculaciones inteligentes. ¿Deseas actualizarlos todos en YouTube?`;
+                const bulkAccepted = await new Promise(resolve => {
+                    window._resolveBulkConfirm = resolve;
+                    const m = document.getElementById('bulkConfirmModal');
+                    m.style.display = 'flex';
+                    setTimeout(() => m.classList.add('show'), 10);
+                });
+
+                if (bulkAccepted) {
+                    await executeBulkUpdates(matches);
+                }
+
+            } catch (e) {
+                console.error('AI Sync Error:', e);
+                // Don't alert if it's just a cancellation
+                if (!e.message.includes('cancelada')) {
+                    alert("Error en proceso IA: " + e.message);
+                }
+            } finally {
+                btn.innerHTML = original;
+                btn.disabled = false;
+            }
+        }
+
+        async function executeBulkUpdates(matches) {
+            const progModal = document.getElementById('bulkProgressModal');
+            const logContainer = document.getElementById('bulk-log-list');
+            const progFill = document.getElementById('bulk-progress-fill');
+            const progLabel = document.getElementById('bulk-progress-label');
+
+            logContainer.innerHTML = '';
+            progFill.style.width = '0%';
+            progModal.style.display = 'flex';
+            setTimeout(() => progModal.classList.add('show'), 10);
+
+            let updateLogs = [];
+            const addLog = (msg, type = 'info') => {
+                const entry = document.createElement('div');
+                entry.className = 'bulk-log-entry';
+                entry.innerHTML = `<span class="log-${type}">${msg}</span>`;
+                logContainer.appendChild(entry);
+                logContainer.scrollTop = logContainer.scrollHeight;
+
+                // 📡 Broadcast
+                updateLogs.push({ msg, type });
+                syncChannel.postMessage({
+                    type: 'SYNC_PROGRESS',
+                    data: {
+                        logs: updateLogs,
+                        label: progLabel.textContent,
+                        pct: parseFloat(progFill.style.width),
+                        status: "ACTUALIZANDO YOUTUBE..."
+                    }
+                });
+            };
+
+            addLog(`🚀 Iniciando actualizaciones en YouTube...`, 'success');
+
+            const COMPETITOR_PATTERNS = [
+                /https?:\/\/(www\.)?beatstars\.com\/\S+/gi,
+                /https?:\/\/bstrs\.co\/\S+/gi,
+                /https?:\/\/(www\.)?airbit\.com\/\S+/gi,
+                /https?:\/\/traktrain\.com\/\S+/gi
+            ];
+
+            let updatedCount = 0;
+            for (const item of matches) {
+                const { video, product } = item;
+                let newDesc = video.snippet.description || '';
+
+                COMPETITOR_PATTERNS.forEach(p => newDesc = newDesc.replace(p, ''));
+
+                const nickname = product.producer_nickname || window.currentUserName || 'null';
+                const purchaseLink = `https://offszn.lat/@${nickname}/${product.public_slug}`;
+                const syncText = `💰 Compra este beat aquí: ${purchaseLink}\n\n`;
+
+                if (!newDesc.includes(purchaseLink)) {
+                    newDesc = syncText + newDesc.trim();
+                }
+
+                await gapi.client.youtube.videos.update({
+                    part: 'snippet',
+                    resource: {
+                        id: video.id,
+                        snippet: { ...video.snippet, description: newDesc }
+                    }
+                });
+
+                const { data: { user } } = await sb.auth.getUser();
+                if (user) {
+                    await sb.from('youtube_sync').upsert({
+                        user_id: user.id, video_id: video.id, product_id: product.id,
+                        video_title: video.snippet.title, synced_at: new Date().toISOString()
+                    });
+                    syncedVideoIds.add(video.id);
+                }
+
+                updatedCount++;
+                progFill.style.width = (updatedCount / matches.length * 100) + '%';
+                progLabel.textContent = `${updatedCount} / ${matches.length} completados`;
+                addLog(`✅ Sincronizado: ${video.snippet.title.substring(0, 25)}...`, 'success');
+            }
+
+            addLog(`Sincronización finalizada con éxito.`, 'success');
+            document.getElementById('bulk-status-dynamic').textContent = "¡LISTO!";
+
+            // Show summary in modal
+            const headerActive = document.getElementById('bulk-header-active');
+            const headerFinished = document.getElementById('bulk-header-finished');
+            if (headerActive) headerActive.style.display = 'none';
+            if (headerFinished) {
+                headerFinished.style.display = 'block';
+                const successText = headerFinished.querySelector('p');
+                if (successText) successText.textContent = `${matches.length} videos fueron sincronizados con éxito.`;
+            }
+
+            // Add report button to modal if not exists
+            if (!document.getElementById('btnModalReport')) {
+                const btnReport = document.createElement('button');
+                btnReport.id = 'btnModalReport';
+                btnReport.className = 'btn-scan';
+                btnReport.style.width = '100%';
+                btnReport.style.marginTop = '12px';
+                btnReport.style.justifyContent = 'center';
+                btnReport.style.height = '50px';
+                btnReport.style.border = '1px solid #222';
+                btnReport.style.background = 'transparent';
+                btnReport.style.color = '#fff';
+                btnReport.innerHTML = '<i class="bi bi-file-earmark-arrow-down"></i> Ver Reporte (.txt)';
+                btnReport.onclick = () => exportSyncReport(matches);
+
+                const finishBtn = document.getElementById('btnFinishBulk');
+                if (finishBtn) finishBtn.parentNode.insertBefore(btnReport, finishBtn);
+            }
+
+            const finishBtn = document.getElementById('btnFinishBulk');
+            if (finishBtn) finishBtn.style.display = 'flex';
+
+            // Show skeletons in report section while loading
+            const syncedContainer = document.getElementById('yt-synced-list');
+            if (syncedContainer) {
+                syncedContainer.innerHTML = `
+                    <div class="yt-row skeleton" style="height: 64px; margin-bottom: 8px; border-radius: 8px;"></div>
+                    <div class="yt-row skeleton" style="height: 64px; margin-bottom: 8px; border-radius: 8px;"></div>
+                `;
+            }
+
+            // Reload global history
+            const { data: finalData } = await sb.auth.getUser();
+            if (finalData && finalData.user) {
+                await loadSyncedVideos(finalData.user.id);
+
+                // UX: Scroll to report section
+                setTimeout(() => {
+                    const reportSection = document.getElementById('yt-synced-list').closest('section');
+                    if (reportSection) {
+                        reportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 500);
+            }
+
+            // Show finished header
+            document.getElementById('bulk-status-text').textContent = 'FINALIZADO';
+            document.getElementById('bulk-header-active').style.display = 'none';
+            document.getElementById('bulk-header-finished').style.display = 'block';
+            document.getElementById('btnFinishBulk').style.display = 'flex';
+
+            // 📡 Broadcast Finish
+            syncChannel.postMessage({
+                type: 'SYNC_FINISHED',
+                data: { count: matches.length }
+            });
+            localStorage.removeItem('yt_sync_current_state');
+            window.isMasterSync = false;
+            window.onbeforeunload = null;
+
+            // ✅ UNLOCK: Clear protective alert
+            window.onbeforeunload = null;
+        }
+
+        let currentVideoId = null;
+
+        function openSyncModal(btn, videoId) {
+            currentSyncBtn = btn;
+            currentVideoId = videoId;
+            const modal = document.getElementById('syncModal');
+
+            // Reset modal to catalog step
+            backToCatalog();
+            selectedProductId = null;
+            selectedProductSlug = null;
+            document.getElementById('btnContinueToPreview').disabled = true;
+            document.querySelectorAll('.catalog-item i').forEach(i => i.style.display = 'none');
+            document.querySelectorAll('.catalog-item').forEach(i => i.style.borderColor = '#222');
+
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('show'), 10);
+        }
+
+        function closeSyncModal() {
+            const modal = document.getElementById('syncModal');
+            modal.classList.remove('show');
+            setTimeout(() => { modal.style.display = 'none'; }, 300);
+        }
+
+        // syncModal: only closeable via X button (no overlay click)
+
+        // REMOVED old btnConfirmSync logic as it's now executeFinalSync
+
+
+        function exportSyncReport(providedData = null) {
+            const list = providedData || allSyncedVideos;
+            if (!list || list.length === 0) {
+                alert("No hay datos para exportar.");
+                return;
+            }
+
+            let text = "OFFSZN - REPORTE DE SINCRONIZACIÓN YOUTUBE\n";
+            text += "==========================================\n";
+            text += `Fecha: ${new Date().toLocaleString()}\n`;
+            text += `Total de videos: ${list.length}\n\n`;
+
+            list.forEach((item, index) => {
+                // Determine title and ID based on object structure (live match vs DB record)
+                const title = item.video_title || (item.video ? item.video.snippet.title : "Sin título");
+                const videoId = item.video_id || (item.video ? item.video.id : "");
+                const productName = item.product_name || (item.product ? item.product.name : "Beat OFFSZN");
+                const youtubeLink = videoId ? `https://youtube.com/watch?v=${videoId}` : "Link no disponible";
+
+                text += `${index + 1}. ${title}\n`;
+                text += `   🎼 Beat: ${productName}\n`;
+                text += `   ▶ Link: ${youtubeLink}\n`;
+                text += "   ------------------------------------------\n";
+            });
+
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `OFFSZN_YouTube_Report_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        init();
+    </script>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="successModal" style="display: none; z-index: 10001;">
+        <div class="modal-content"
+            style="max-width: 400px; text-align: center; padding: 40px 24px; display: flex; flex-direction: column; align-items: center;">
+            <i class="bi bi-x modal-close" onclick="closeSuccessModal()"></i>
+            <div
+                style="width: 70px; height: 70px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 34px; margin-bottom: 24px; box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <h2 style="margin: 0 0 12px 0; font-size: 1.35rem; color: #fff;">¡Sincronización Exitosa!</h2>
+            <p style="color: #aaa; font-size: 0.9rem; margin: 0 0 30px 0; line-height: 1.6;">El link de compra de OFFSZN
+                se ha inyectado correctamente en la descripción de tu video en YouTube.</p>
+            <div style="display: flex; gap: 14px; justify-content: center; width: 100%;">
+                <button class="btn-link"
+                    style="flex: 1; justify-content: center; border: 1px solid #333; background: transparent; color: #fff;"
+                    onclick="closeSuccessModal()">Cerrar</button>
+                <a id="successYoutubeLink" href="#" target="_blank" class="btn-link"
+                    style="flex: 1; justify-content: center; background: #10b981; color: #000; border: none; text-decoration: none; font-size: 0.85rem;"><i
+                        class="bi bi-youtube"></i> Ver en YouTube</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Confirm Modal -->
+    <div class="modal-overlay" id="bulkConfirmModal" style="display: none; z-index: 10003;">
+        <div class="modal-content"
+            style="max-width: 450px; padding: 40px; text-align: center; border: 1px solid rgba(255,255,255,0.05); background: #000;">
+            <div
+                style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.05)); color: #a855f7; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 24px; border: 1px solid rgba(168, 85, 247, 0.2); box-shadow: 0 0 30px rgba(168, 85, 247, 0.1);">
+                <i class="bi bi-stars"></i>
+            </div>
+            <h2 id="bulkConfirmTitle" style="margin: 0 0 12px 0; font-size: 1.6rem; letter-spacing: -1px;">
+                Sincronización Inteligente</h2>
+            <p id="bulkConfirmDesc" style="color: #888; font-size: 0.95rem; margin-bottom: 34px; line-height: 1.6;">
+                Detectamos coincidencias entre tu canal y OFFSZN. Vamos a inyectar tus links de compra automáticamente.
+            </p>
+
+            <div style="display: flex; gap: 14px; width: 100%;">
+                <button class="btn-link"
+                    style="flex: 1; justify-content: center; border: 1px solid #222; background: transparent; color: #666;"
+                    onclick="closeBulkConfirm(false)">Cancelar</button>
+                <button class="btn-link"
+                    style="flex: 1; justify-content: center; background: #fff; color: #000; border: none; font-weight: 700; box-shadow: 0 10px 20px rgba(255,255,255,0.05);"
+                    onclick="closeBulkConfirm(true)">Iniciar Sincronización</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Progress Modal -->
+    <div class="modal-overlay" id="bulkProgressModal" style="display: none; z-index: 10002;">
+        <div class="modal-content"
+            style="max-width: 700px; padding: 60px; background: #111; border: 1px solid rgba(255,255,255,0.05); border-radius: 32px; text-align: center;">
+            <div id="bulk-header-active">
+                <h2 style="margin-top: 0; font-size: 2.2rem; letter-spacing: -2px; margin-bottom: 40px;">
+                    Sincronizando...</h2>
+            </div>
+
+            <div id="bulk-header-finished" style="display: none; text-align: center; margin-bottom: 30px;">
+                <div
+                    style="width: 60px; height: 60px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 16px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <i class="bi bi-check-lg"></i>
+                </div>
+                <h2 style="margin: 0; font-size: 1.8rem; letter-spacing: -1.5px;">¡Canal Optimizado!</h2>
+                <p style="color: #10b981; font-size: 0.9rem; margin-top: 4px; font-weight: 500;">Todo tu canal está
+                    ahora vinculado a OFFSZN</p>
+            </div>
+
+            <div id="bulk-status-dynamic"
+                style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 2px; color: #a855f7; font-weight: 800; margin-bottom: 12px; display: block;">
+                ANALIZANDO TU CANAL...
+            </div>
+
+            <div
+                style="margin-bottom: 16px; display: flex; justify-content: space-between; font-size: 0.9rem; font-family: 'Inter', sans-serif;">
+                <span id="bulk-progress-label" style="color: #444; font-weight: 500;">0 / 0 procesados</span>
+                <span id="bulk-status-text"
+                    style="color: #fff; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem; opacity: 0.4;">PROCESANDO...</span>
+            </div>
+            <div
+                style="width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 100px; overflow: hidden; margin-bottom: 40px; position: relative;">
+                <div id="bulk-progress-fill"
+                    style="width: 0%; height: 100%; background: linear-gradient(90deg, #a855f7, #fff); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);">
+                </div>
+            </div>
+
+            <!-- Wait Section -->
+            <div
+                style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 30px; margin-top: 20px;">
+                <h3 style="font-size: 1rem; margin-bottom: 15px; color: #888; font-weight: 600;">¿Qué hacer mientras
+                    espero?</h3>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <a href="/cuenta/mis-kits" target="_blank"
+                        style="background: #fff !important; color: #000 !important; padding: 12px 24px; font-size: 0.8rem; font-weight: 700; border-radius: 100px; text-decoration: none !important; display: flex; align-items: center; gap: 8px; transition: none !important; border: none !important;">
+                        <i class="bi bi-cloud-arrow-up" style="color: #000 !important;"></i> Subir otro beat
+                    </a>
+                    <a id="modal-wait-profile-link" href="#" target="_blank"
+                        style="background: #fff !important; color: #000 !important; padding: 12px 24px; font-size: 0.8rem; font-weight: 700; border-radius: 100px; text-decoration: none !important; display: flex; align-items: center; gap: 8px; transition: none !important; border: none !important;">
+                        <i class="bi bi-person-circle" style="color: #000 !important;"></i> Ver mi perfil
+                    </a>
+                </div>
+            </div>
+
+            <!-- Logs container removed for cleaner UI -->
+            <div id="bulk-log-list" style="display: none;"></div>
+
+            <button id="btnFinishBulk" class="btn-link"
+                style="width: 100%; justify-content: center; margin-top: 30px; display: none; background: #fff; color: #000; border: none; font-weight: 700; height: 50px;"
+                onclick="closeBulkModal()">
+                Entendido
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function closeSuccessModal() {
+            const m = document.getElementById('successModal');
+            m.classList.remove('show');
+            setTimeout(() => { m.style.display = 'none'; }, 300);
+        }
+
+        function closeBulkModal() {
+            const m = document.getElementById('bulkProgressModal');
+            m.classList.remove('show');
+            setTimeout(() => {
+                m.style.display = 'none';
+                document.getElementById('btnFinishBulk').style.display = 'none';
+
+                // Remove modal report button if exists
+                const btnReport = document.getElementById('btnModalReport');
+                if (btnReport) btnReport.remove();
+
+                document.getElementById('bulk-header-active').style.display = 'block';
+                document.getElementById('bulk-header-finished').style.display = 'none';
+                document.getElementById('bulk-status-text').textContent = 'En progreso...';
+
+                // Auto-scroll to synced section
+                const section = document.getElementById('synced-reports-section');
+                if (section) {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 300);
+        }
+
+        function closeBulkConfirm(accepted) {
+            const m = document.getElementById('bulkConfirmModal');
+            m.classList.remove('show');
+            setTimeout(() => { m.style.display = 'none'; }, 300);
+            if (window._resolveBulkConfirm) window._resolveBulkConfirm(accepted);
+        }
+    </script>
+</body>
+
+</html>

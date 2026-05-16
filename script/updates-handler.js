@@ -5,8 +5,8 @@
  */
 
 (function () {
-    const CURRENT_UPDATE_ID = 'update_v10_secondary_btn';
-    const DISCORD_URL = 'https://discord.gg/aDwUGzfJX8';
+    const CURRENT_UPDATE_ID = 'update_v11_giveaway_1mo';
+    const FORM_URL = 'https://forms.gle/3ZA5sMZVyShhsHQZA';
 
     const UpdatesHandler = {
         init: async function () {
@@ -72,44 +72,15 @@
                     <div class="updates-modal-card">
                         <button class="update-close-x" id="btn-update-close-x" aria-label="Cerrar">&times;</button>
                         <div class="updates-modal-header">
-                            <h2 class="updates-modal-title">Nuevas Funciones !</h2>
-                            <p class="updates-modal-subtitle">¡Estuvimos trabajando para que tengas mejor experiencia!</p>
+                            <h2 class="updates-modal-title" style="margin-bottom: 8px;">¡Gana una suscripción de OFFSZN por 1 mes!</h2>
+                            <p class="updates-modal-subtitle" style="margin-bottom: 24px;">Queremos conocer tu opinión sobre el futuro de OFFSZN. Completa el formulario para participar.</p>
                         </div>
-                        
-                        <div class="updates-list">
-                            <a href="/perfilpro.html" target="_blank" class="update-item-row">
-                                <div class="update-icon"><i class="bi bi-collection-play"></i></div>
-                                <div class="update-content">
-                                    <span class="update-name">Playlists y Bundles</span>
-                                    <span class="update-action-hint">Probar ahora &rarr;</span>
-                                </div>
-                            </a>
-                            
-                            <a href="/perfilpro.html" target="_blank" class="update-item-row">
-                                <div class="update-icon"><i class="bi bi-sliders"></i></div>
-                                <div class="update-content">
-                                    <span class="update-name">Servicios (Mezcla y Master)</span>
-                                    <span class="update-action-hint">Probar ahora &rarr;</span>
-                                </div>
-                            </a>
-                            
-                            <a href="/perfilpro.html" target="_blank" class="update-item-row">
-                                <div class="update-icon"><i class="bi bi-spotify"></i></div>
-                                <div class="update-content">
-                                    <span class="update-name">Catálogo Spotify</span>
-                                    <span class="update-action-hint">Probar ahora &rarr;</span>
-                                </div>
-                            </a>
-                        </div>
-
-                        <div class="update-divider"></div>
                         
                         <div class="updates-actions">
-                            <p class="community-prompt">¿Quieres dar ideas para actualizaciones?</p>
-                            <a href="${DISCORD_URL}" target="_blank" class="btn-update-discord" id="btn-update-discord">
-                                <i class="bi bi-discord"></i> Unirme a la comunidad
+                            <a href="${FORM_URL}" target="_blank" class="btn-update-discord" id="btn-update-discord" style="justify-content: center; text-decoration: none;">
+                                Participar
                             </a>
-                            <button class="btn-update-dismiss" id="btn-update-dismiss">Vale, entiendo</button>
+                            <button class="btn-update-dismiss" id="btn-update-dismiss">Quizás más tarde</button>
                         </div>
                     </div>
                 </div>
@@ -125,6 +96,7 @@
             }, 500);
 
             // Bind events
+            document.getElementById('btn-update-discord').addEventListener('click', () => this.markAsSeen());
             document.getElementById('btn-update-dismiss').addEventListener('click', () => this.markAsSeen());
             document.getElementById('btn-update-close-x').addEventListener('click', () => this.markAsSeen());
         },

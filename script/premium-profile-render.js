@@ -75,7 +75,7 @@ window.PremiumRender = {
     /**
      * Renders the services shelf (Explore style)
      */
-    renderServices: function(containerId, sectionId, services, userNickname, isOwner) {
+    renderServices: function(containerId, sectionId, services, userNickname, isOwner, userAvatar) {
         const container = document.getElementById(containerId);
         const section = document.getElementById(sectionId);
         if (!container || !section) return;
@@ -97,16 +97,16 @@ window.PremiumRender = {
             }
 
             container.innerHTML = services.map((s, i) => {
-                const img = s.image_url || '/images/portada-default.png';
+                const img = s.image_url || userAvatar || '/images/portada-default.png';
                 const slug = (s.title || 'servicio').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
                 const code = window.IdObfuscator ? window.IdObfuscator.encodeId(s.id) : s.id;
                 
-                // If service has an external link, use it. Otherwise use internal /servicio/ link.
-                const link = s.link ? s.link : `${window.location.origin}/servicio/${slug}-${code}-${userNickname}`;
+                const serviceSlug = `${slug}-${code}-${userNickname}`;
+                const link = `/servicio/${serviceSlug}`;
 
                 return `
                     <div class="shelf-card" onclick="window.location.href='${link}'">
-                        <img src="${img}" class="shelf-card-img" onerror="this.src='/images/portada-default.png'">
+                        <img src="${img}" class="shelf-card-img" onerror="this.src='${userAvatar || '/images/portada-default.png'}'">
                         <div class="shelf-card-info">
                             <div class="shelf-card-title">${s.title || s.name}</div>
                             <div class="shelf-card-sub">${s.category || 'Servicio profesional'} • Desde $${s.price || s.price_basic || '0'}</div>
@@ -130,7 +130,8 @@ window.PremiumRender = {
             
             container.innerHTML = playlists.map((p, i) => {
                 const img = p.cover_url ? (p.cover_url.startsWith('http') ? p.cover_url : `https://offszn.lat/api/r2-public/${p.cover_url}`) : '/images/portada-default.png';
-                const link = `/playlist.html?id=${p.id}`;
+                const finalSlug = p.slug || (p.title ? p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : '');
+                const link = finalSlug ? `/@${userNickname}/${finalSlug}` : `/playlist.html`;
 
                 return `
                     <div class="shelf-card" onclick="window.location.href='${link}'">

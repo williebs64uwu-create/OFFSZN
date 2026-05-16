@@ -115,7 +115,7 @@ export const createProduct = async (req, res) => {
         const PLAN_LIMITS = { free: 30, starter: 60, pro: Infinity };
 
         const { data: profile } = await supabase
-            .from('profiles')
+            .from('users')
             .select('plan')
             .eq('id', userId)
             .single();

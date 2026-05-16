@@ -19,6 +19,10 @@
   <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- jsvectormap -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world.js"></script>
 
   <style>
     /* ===== SIDEBAR PROFILE CARD ===== */
@@ -575,16 +579,22 @@
     }
 
     .skeleton-row {
-      height: 74px;
+      height: 20px;
       width: 100%;
-      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
     }
 
-    .skeleton-text {
-      height: 20px;
-      width: 100px;
-      background: #222;
-      border-radius: 4px;
+    /* WORLD MAP CUSTOM TOOLTIP */
+    .jvm-tooltip {
+      background-color: #080808 !important;
+      border: 1px solid #333 !important;
+      border-radius: 8px !important;
+      padding: 8px 12px !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+      font-family: 'Geist', sans-serif !important;
+      color: #fff !important;
+      z-index: 10000 !important;
     }
 
     /* ===== PRICING MODAL (Standardized) ===== */
@@ -751,8 +761,8 @@
 
     <!-- 4. SOCIAL -->
 
-    <a href="reels.html" class="sidebar-icon-btn" data-title="Reels"><i class="bi bi-camera-reels-fill"></i>
-      <span>Reels</span></a>
+    <a href="youtube.html" class="sidebar-icon-btn" data-title="YouTube (Beta)"><i class="bi bi-youtube"></i>
+      <span>YouTube (Beta)</span></a>
 
     <!-- UPGRADE BUTTON (ROCKET) -->
     <a href="planes.html" class="sidebar-icon-btn" data-title="Mejorar Plan" style="color:#fff; margin-top: 10px;"><i
@@ -865,6 +875,35 @@
 
     </div>
 
+    <!-- WORLD MAP SECTION -->
+    <div class="elite-card" style="margin-top: 24px; padding: 30px;">
+      <div class="card-header">
+        <span class="card-title"><i class="bi bi-globe-americas" style="margin-right: 8px; opacity: 0.5;"></i>Tu Audiencia Global</span>
+        <span style="font-size: 12px; color: #555;" id="mapTotalVisitors">Cargando...</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 30px;" id="mapGrid">
+        <!-- SVG Map Container -->
+        <div id="worldMapContainer" style="width: 100%; height: 500px; background: #080808; border-radius: 12px; border: 1px solid #1a1a1a; overflow: hidden; position: relative;">
+          <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+            <div class="skeleton" style="width: 95%; height: 85%; border-radius: 8px;"></div>
+          </div>
+        </div>
+
+        <!-- Country Ranking -->
+        <div style="display: flex; flex-direction: column; gap: 0;">
+          <div style="font-size: 13px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Top Países</div>
+          <div id="countryRankingList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;">
+            <!-- Skeletons -->
+            <div class="skeleton" style="height: 48px; border-radius: 8px; background: #1a1a1a;"></div>
+            <div class="skeleton" style="height: 48px; border-radius: 8px; background: #1a1a1a;"></div>
+            <div class="skeleton" style="height: 48px; border-radius: 8px; background: #1a1a1a;"></div>
+            <div class="skeleton" style="height: 48px; border-radius: 8px; background: #1a1a1a;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- PRICING MODAL -->
@@ -923,57 +962,75 @@
       // else 'all', remain null
 
       try {
-        // --- 0) FETCH USER'S PRODUCTS FIRST (Needed for filtering logs) ---
-        const { data: userProducts, error: prodErr } = await window.supabaseClient
-          .from('products')
-          .select('id, name, cover_url, image_url, storage_version')
-          .eq('producer_id', userId)
-          .eq('status', 'approved');
+        // --- 0) FETCH USER'S PRODUCTS & INITIAL DATA IN PARALLEL ---
+        const [prodRes, viewsRes, ordersRes] = await Promise.all([
+          window.supabaseClient
+            .from('products')
+            .select('id, name, image_url, storage_version, cover_url')
+            .eq('producer_id', userId)
+            .eq('status', 'approved'),
+          
+          window.supabaseClient
+            .from('page_views')
+            .select('viewed_at')
+            .eq('user_id', userId)
+            .gte('viewed_at', startDate ? startDate.toISOString() : '2020-01-01T00:00:00Z'),
 
-        const productIds = userProducts?.map(p => p.id) || [];
+          window.supabaseClient
+            .from('orders')
+            .select('id, amount, total_price, created_at')
+            .eq('producer_id', userId)
+            .gte('created_at', startDate ? startDate.toISOString() : '2020-01-01T00:00:00Z')
+        ]);
 
-        // --- A) PAGE VIEWS (Traffic to Profile/Products) ---
-        // Simplified: traffic to producer's products and profile
-        let viewsQuery = window.supabaseClient
-          .from('page_views')
-          .select('viewed_at')
-          .eq('user_id', userId);
+        const userProducts = prodRes.data || [];
+        const rawViews = viewsRes.data || [];
+        const rawOrders = ordersRes.data || [];
+        const productIds = userProducts.map(p => p.id).filter(Boolean);
 
-        if (startDate) viewsQuery = viewsQuery.gte('viewed_at', startDate.toISOString());
-        const { data: rawViews } = await viewsQuery;
-
-        // --- B) REAL PLAYS (listening_history) ---
+        // --- B) REAL PLAYS (listening_history) - Optimized Chunks ---
         let rawPlays = [];
         if (productIds.length > 0) {
-          let playsQuery = window.supabaseClient
-            .from('listening_history')
-            .select('played_at')
-            .in('product_id', productIds);
+          const chunkSize = 100; // Increased from 10 to 100
+          const playPromises = [];
+          for (let i = 0; i < productIds.length; i += chunkSize) {
+            const chunk = productIds.slice(i, i + chunkSize);
+            let playsQuery = window.supabaseClient
+              .from('listening_history')
+              .select('played_at')
+              .in('product_id', chunk);
 
-          if (startDate) playsQuery = playsQuery.gte('played_at', startDate.toISOString());
-          const { data } = await playsQuery;
-          rawPlays = data || [];
+            if (startDate) playsQuery = playsQuery.gte('played_at', startDate.toISOString());
+            playPromises.push(playsQuery);
+          }
+          const playResults = await Promise.all(playPromises);
+          playResults.forEach(res => { if (res.data) rawPlays.push(...res.data); });
         }
 
-        // --- C) ORDERS (Revenue & Free) ---
-        let ordersQuery = window.supabaseClient
-          .from('orders')
-          .select('id, amount, total_price, created_at')
-          .eq('producer_id', userId);
-
-        if (startDate) ordersQuery = ordersQuery.gte('created_at', startDate.toISOString());
-        const { data: rawOrders } = await ordersQuery;
-
-        // --- D) TOP PRODUCTS ---
+        // --- D) TOP PRODUCTS - Optimized Single Query with filter ---
         let topProductsData = [];
-        if (rawOrders && rawOrders.length > 0) {
-          const orderIds = rawOrders.map(o => o.id);
-          const { data: rawOrderItems } = await window.supabaseClient
-            .from('order_items')
-            .select('product_id, price')
-            .in('order_id', orderIds);
+        if (rawOrders.length > 0) {
+          // Instead of fetching items for every order in chunks, 
+          // we can query order_items where order_id belongs to the producer's orders.
+          // Since we already have rawOrders, we can use their IDs.
+          const orderIds = rawOrders.map(o => o.id).filter(Boolean);
+          let rawOrderItems = [];
 
-          if (rawOrderItems) {
+          const orderChunkSize = 200; // Increased from 10 to 200
+          const itemPromises = [];
+          for (let i = 0; i < orderIds.length; i += orderChunkSize) {
+            const chunk = orderIds.slice(i, i + orderChunkSize);
+            itemPromises.push(
+              window.supabaseClient
+                .from('order_items')
+                .select('product_id, price')
+                .in('order_id', chunk)
+            );
+          }
+          const itemResults = await Promise.all(itemPromises);
+          itemResults.forEach(res => { if (res.data) rawOrderItems.push(...res.data); });
+
+          if (rawOrderItems.length > 0) {
             const productStats = {};
             rawOrderItems.forEach(item => {
               if (!productStats[item.product_id]) productStats[item.product_id] = { count: 0, revenue: 0 };
@@ -986,7 +1043,7 @@
               .slice(0, 5);
 
             topProductsData = sortedIds.map(id => {
-              const details = userProducts?.find(p => p.id == id);
+              const details = userProducts.find(p => p.id == id);
               const stats = productStats[id];
               return {
                 id: details?.id,
@@ -1001,11 +1058,11 @@
         }
 
         // --- PROCESS DATA ---
-        const chartData = processChartData(rawViews || [], rawOrders || [], startDate, period);
-        const freeDownloads = rawOrders ? rawOrders.filter(o => (o.amount || o.total_price || 0) <= 0).length : 0;
-        const totalPlaysCount = rawPlays ? rawPlays.length : 0;
-        const totalVisitsCount = rawViews ? rawViews.length : 0;
-        const totalOrdersCount = rawOrders ? rawOrders.length : 0;
+        const chartData = processChartData(rawViews, rawOrders, startDate, period);
+        const freeDownloads = rawOrders.filter(o => (o.amount || o.total_price || 0) <= 0).length;
+        const totalPlaysCount = rawPlays.length;
+        const totalVisitsCount = rawViews.length;
+        const totalOrdersCount = rawOrders.length;
 
         // --- RENDER UI ---
         hideSkeletons();
@@ -1307,6 +1364,144 @@
 
 
 
+  </script>
+
+  <!-- World Map Engine -->
+  <script>
+    const COUNTRY_NAMES = {
+      'US': '🇺🇸 Estados Unidos', 'PE': '🇵🇪 Perú', 'CO': '🇨🇴 Colombia', 'MX': '🇲🇽 México',
+      'AR': '🇦🇷 Argentina', 'CL': '🇨🇱 Chile', 'ES': '🇪🇸 España', 'VE': '🇻🇪 Venezuela',
+      'EC': '🇪🇨 Ecuador', 'BR': '🇧🇷 Brasil', 'BO': '🇧🇴 Bolivia', 'PY': '🇵🇾 Paraguay',
+      'UY': '🇺🇾 Uruguay', 'CR': '🇨🇷 Costa Rica', 'PA': '🇵🇦 Panamá', 'GT': '🇬🇹 Guatemala',
+      'HN': '🇭🇳 Honduras', 'SV': '🇸🇻 El Salvador', 'NI': '🇳🇮 Nicaragua', 'DO': '🇩🇴 Rep. Dominicana',
+      'CU': '🇨🇺 Cuba', 'PR': '🇵🇷 Puerto Rico', 'GB': '🇬🇧 Reino Unido', 'FR': '🇫🇷 Francia',
+      'DE': '🇩🇪 Alemania', 'IT': '🇮🇹 Italia', 'PT': '🇵🇹 Portugal', 'CA': '🇨🇦 Canadá',
+      'JP': '🇯🇵 Japón', 'KR': '🇰🇷 Corea del Sur', 'AU': '🇦🇺 Australia', 'IN': '🇮🇳 India',
+      'RU': '🇷🇺 Rusia', 'CN': '🇨🇳 China', 'ZA': '🇿🇦 Sudáfrica', 'NG': '🇳🇬 Nigeria',
+      'EG': '🇪🇬 Egipto', 'MA': '🇲🇦 Marruecos', 'PH': '🇵🇭 Filipinas', 'TH': '🇹🇭 Tailandia',
+      'ID': '🇮🇩 Indonesia', 'PK': '🇵🇰 Pakistán', 'BD': '🇧🇩 Bangladesh', 'TR': '🇹🇷 Turquía',
+      'PL': '🇵🇱 Polonia', 'NL': '🇳🇱 Países Bajos', 'BE': '🇧🇪 Bélgica', 'SE': '🇸🇪 Suecia',
+      'CH': '🇨🇭 Suiza', 'AT': '🇦🇹 Austria', 'RO': '🇷🇴 Rumanía', 'GR': '🇬🇷 Grecia'
+    };
+
+    async function loadWorldMap() {
+      const container = document.getElementById('worldMapContainer');
+      const rankingList = document.getElementById('countryRankingList');
+      const totalLabel = document.getElementById('mapTotalVisitors');
+
+      // 1. Get user
+      let userId = null;
+      if (window.currentUser) userId = window.currentUser.id;
+      else if (window.supabaseClient) {
+        const { data: { user } } = await window.supabaseClient.auth.getUser();
+        if (user) userId = user.id;
+      }
+      if (!userId) { totalLabel.textContent = 'Sin datos'; return; }
+
+      // 2. Query analytics_events grouped by country
+      const { data: events, error } = await window.supabaseClient
+        .from('analytics_events')
+        .select('country_code')
+        .eq('producer_id', userId);
+
+      // Count by country
+      const countryMap = {};
+      let total = 0;
+      (events || []).forEach(e => {
+        const cc = (e.country_code || 'US').toUpperCase();
+        countryMap[cc] = (countryMap[cc] || 0) + 1;
+        total++;
+      });
+
+      if (total === 0) {
+        totalLabel.textContent = 'Aún sin visitas registradas';
+      } else {
+        totalLabel.textContent = `${total.toLocaleString()} interacciones totales`;
+      }
+
+      // Clear the skeleton
+      container.innerHTML = '<div id="world-map" style="width: 100%; height: 100%;"></div>';
+
+      // Ensure jsVectorMap library is loaded before initializing
+      if (typeof jsVectorMap === 'undefined') {
+        setTimeout(loadWorldMap, 200);
+        return;
+      }
+
+      // Format data for jsvectormap heatmap
+      const map = new jsVectorMap({
+        selector: '#world-map',
+        map: 'world',
+        backgroundColor: 'transparent',
+        zoomOnScroll: true,
+        zoomButtons: true,
+        regionStyle: {
+          initial: {
+            fill: '#0a0a0a', // Darker base
+            fillOpacity: 1,
+            stroke: '#1a1a1a', // Sharp, thin divisions
+            strokeWidth: 0.5,
+            strokeOpacity: 1
+          },
+          hover: {
+            fill: '#ffffff',
+            fillOpacity: 0.2
+          }
+        },
+        visualizeData: {
+          scale: ['#111111', '#ffffff'], // High contrast white glow for top countries
+          values: countryMap,
+        },
+        onRegionTooltipShow(event, tooltip, code) {
+          const count = countryMap[code] || 0;
+          const name = COUNTRY_NAMES[code] || tooltip.text();
+          tooltip.text(
+            `<div style="text-align: center; min-width: 120px; padding: 4px;">
+              <span style="font-weight: 700; color: #fff; font-size: 14px;">${name}</span>
+              <div style="margin: 8px 0; height: 1px; background: rgba(255,255,255,0.1); width: 100%;"></div>
+              <span style="color: #fff; font-size: 13px; font-family: 'Geist';">${count.toLocaleString()} visitas</span>
+            </div>`,
+            true
+          );
+        }
+      });
+
+      // 4. Render ranking - PREMIUM STYLE
+      const sorted = Object.entries(countryMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 12); // Show more countries
+
+      if (sorted.length === 0) {
+        rankingList.innerHTML = `
+          <div style="text-align: center; padding: 60px 20px; color: #333;">
+            <i class="bi bi-globe" style="font-size: 40px; display: block; margin-bottom: 15px; opacity: 0.2;"></i>
+            <span style="font-size: 14px; font-weight: 500;">Sin datos geográficos suficientes</span>
+          </div>`;
+        return;
+      }
+
+      rankingList.innerHTML = sorted.map(([code, count], i) => {
+        const pct = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+        const name = COUNTRY_NAMES[code] || code;
+        const barWidth = Math.max(2, (count / sorted[0][1]) * 100);
+        return `
+          <div class="country-rank-item" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+            <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 10px; font-weight: 800; color: #666;">${i + 1}</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <span style="font-size: 13px; font-weight: 600; color: #eee; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${name}</span>
+                <span style="font-size: 12px; color: #888; font-weight: 700;">${pct}%</span>
+              </div>
+              <div style="height: 4px; background: rgba(255,255,255,0.03); border-radius: 10px; overflow: hidden;">
+                <div style="height: 100%; width: ${barWidth}%; background: linear-gradient(90deg, #333, #fff); border-radius: 10px; transition: width 1s ease-out;"></div>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // Load map after analytics data
+    setTimeout(() => loadWorldMap(), 1000);
   </script>
 
 

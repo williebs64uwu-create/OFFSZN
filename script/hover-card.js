@@ -81,11 +81,11 @@
             const cardWidth = 240; 
             
             // Check space above
-            let top = rect.top - cardHeight - 12;
+            let top = rect.top - cardHeight - 4;
             
             // If no space above, show below
             if (top < 10) {
-                top = rect.bottom + 12;
+                top = rect.bottom + 4;
             }
             
             // Final check: If it overflows the bottom, nudge it up
@@ -170,6 +170,14 @@
                 .single();
 
             if (error) throw error;
+
+            // 🔥 FIX: followers_count is NOT a column in 'users', we must count it manually
+            const { count: fCount } = await window.supabaseClient
+                .from('followers')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', id);
+            
+            data.followers_count = fCount || 0;
             
             window.HC_Cache.set(String(id), data);
             return data;
@@ -205,7 +213,7 @@
         const nickname = data.nickname || 'Unknown';
         const avatarUrl = data.avatar_url || '/images/default-avatar.png';
         const isVerified = data.is_verified || !!data.plan;
-        const followerCount = data.followers_count || 0;
+        const baseFollowerCount = data.followers_count || 0;
         const profileUrl = data.username ? `/@${data.username}` : `/artist/${artistId}`;
 
         // Verified Badge (Using Centralized Logic)
@@ -219,8 +227,8 @@
                         ${escapeHTML(nickname)}
                         ${badgeHtml}
                     </div>
-                    <div class="ahc-stats">
-                        ${formatNumber(followerCount)} Seguidores
+                    <div class="ahc-stats" id="ahc-follower-count">
+                        ${formatNumber(baseFollowerCount)} Seguidores
                     </div>
                 </div>
             </div>
@@ -232,36 +240,32 @@
 
 
         const btn = card.querySelector('#ahc-follow-btn');
+        const statsEl = card.querySelector('#ahc-follower-count');
+
         if (btn && window.FollowManager) {
-            const isFollowing = window.FollowManager.isFollowing(artistId);
-            updateButtonVisuals(btn, isFollowing);
+            // Initial state
+            const initiallyFollowing = window.FollowManager.isFollowing(artistId);
+            updateButtonVisuals(btn, initiallyFollowing);
 
             btn.onclick = (e) => {
                 e.stopPropagation();
                 window.FollowManager.toggleFollow(artistId, btn);
             };
 
-            btn.onmouseenter = () => {
-                if (window.FollowManager.isFollowing(artistId)) {
-                    const span = btn.querySelector('span');
-                    const icon = btn.querySelector('i');
-                    if (span) span.textContent = 'Dejar de seguir';
-                    if (icon) icon.className = 'bi bi-person-x-fill';
-                }
-            };
-            btn.onmouseleave = () => {
-                if (window.FollowManager.isFollowing(artistId)) {
-                    const span = btn.querySelector('span');
-                    const icon = btn.querySelector('i');
-                    if (span) span.textContent = 'Siguiendo';
-                    if (icon) icon.className = 'bi bi-person-check-fill';
-                }
-            };
-
-            // Sync
+            // Sync with FollowManager updates
             unsubscribeFollow = window.FollowManager.subscribe((followedIdsSet) => {
-                const newState = followedIdsSet.has(String(artistId));
-                updateButtonVisuals(btn, newState);
+                const isFollowing = followedIdsSet.has(String(artistId));
+                updateButtonVisuals(btn, isFollowing);
+
+                // 🔥 OPTIMISTIC COUNT UPDATE
+                if (statsEl) {
+                    let displayCount = baseFollowerCount;
+                    // If the user's initial state on load was different from current state, adjust count
+                    if (isFollowing && !initiallyFollowing) displayCount++;
+                    if (!isFollowing && initiallyFollowing) displayCount = Math.max(0, displayCount - 1);
+                    
+                    statsEl.textContent = `${formatNumber(displayCount)} Seguidores`;
+                }
             });
         }
         
