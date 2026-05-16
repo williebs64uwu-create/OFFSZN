@@ -245,6 +245,11 @@ async function loadUserProfile(username) {
         renderHeader(user, window.profileCategoryCounts);
         injectProfileSEO(user);
 
+        // --- ⚡️ TRACK PROFILE VIEW ---
+        if (window.AnalyticsTracker) {
+            window.AnalyticsTracker.track(user.id, 'view_profile');
+        }
+
         // ⚡️ FAST REVEAL: Show the header immediately (Nickname, Avatar, etc.)
         if (profileRoot) {
             profileRoot.classList.add('header-data-ready');

@@ -19,37 +19,35 @@
             // 2. Obtener país en "local" usando API gratuita y anónima (sin keys) o timezone
             this.countryCode = localStorage.getItem('offszn_country_code');
             if (!this.countryCode) {
-                try {
-                    // API 1: GeoJS (Fast, Anonymous)
-                    const res = await fetch('https://get.geojs.io/v1/ip/country.json');
-                    const data = await res.json();
-                    if (data && data.country) {
-                        this.countryCode = data.country;
-                    } else {
-                        throw new Error("GeoJS failed");
-                    }
-                } catch (e) {
+                const providers = [
+                    { url: 'https://get.geojs.io/v1/ip/country.json', key: 'country' },
+                    { url: 'https://ipapi.co/json/', key: 'country_code' },
+                    { url: 'https://ipinfo.io/json', key: 'country' }
+                ];
+
+                for (const provider of providers) {
                     try {
-                        // API 2: ipapi.co (Fallback)
-                        const res2 = await fetch('https://ipapi.co/json/');
-                        const data2 = await res2.json();
-                        if (data2 && data2.country_code) {
-                            this.countryCode = data2.country_code;
-                        } else {
-                            throw new Error("ipapi failed");
+                        const res = await fetch(provider.url);
+                        const data = await res.json();
+                        if (data && data[provider.key]) {
+                            this.countryCode = data[provider.key];
+                            break;
                         }
-                    } catch (e2) {
-                        // Fallback local aproximado usando la zona horaria del PC
-                        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                        if (tz.includes('Lima')) this.countryCode = 'PE';
-                        else if (tz.includes('Bogota')) this.countryCode = 'CO';
-                        else if (tz.includes('Buenos_Aires')) this.countryCode = 'AR';
-                        else if (tz.includes('Santiago')) this.countryCode = 'CL';
-                        else if (tz.includes('Mexico_City')) this.countryCode = 'MX';
-                        else if (tz.includes('Madrid')) this.countryCode = 'ES';
-                        else if (tz.includes('Caracas')) this.countryCode = 'VE';
-                        else this.countryCode = 'US'; // Default genérico
+                    } catch (e) {
+                        console.warn(`Tracker: Provider ${provider.url} failed.`);
                     }
+                }
+
+                if (!this.countryCode) {
+                    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    if (tz.includes('Lima')) this.countryCode = 'PE';
+                    else if (tz.includes('Bogota')) this.countryCode = 'CO';
+                    else if (tz.includes('Buenos_Aires')) this.countryCode = 'AR';
+                    else if (tz.includes('Santiago')) this.countryCode = 'CL';
+                    else if (tz.includes('Mexico_City')) this.countryCode = 'MX';
+                    else if (tz.includes('Madrid')) this.countryCode = 'ES';
+                    else if (tz.includes('Caracas')) this.countryCode = 'VE';
+                    else this.countryCode = 'US';
                 }
                 
                 if (this.countryCode) {

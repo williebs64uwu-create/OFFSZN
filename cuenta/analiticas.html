@@ -882,9 +882,9 @@
         <span style="font-size: 12px; color: #555;" id="mapTotalVisitors">Cargando...</span>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 30px;" id="mapGrid">
+      <div style="display: flex; flex-direction: column; gap: 32px;" id="mapGrid">
         <!-- SVG Map Container -->
-        <div id="worldMapContainer" style="width: 100%; height: 500px; background: #080808; border-radius: 12px; border: 1px solid #1a1a1a; overflow: hidden; position: relative;">
+        <div id="worldMapContainer" style="width: 100%; height: 500px; background: #080808; border-radius: 16px; border: 1px solid #222; overflow: hidden; position: relative; box-shadow: inset 0 0 40px rgba(0,0,0,0.5);">
           <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
             <div class="skeleton" style="width: 95%; height: 85%; border-radius: 8px;"></div>
           </div>
@@ -892,13 +892,16 @@
 
         <!-- Country Ranking -->
         <div style="display: flex; flex-direction: column; gap: 0;">
-          <div style="font-size: 13px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">Top Países</div>
-          <div id="countryRankingList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <div style="font-size: 11px; font-weight: 800; color: #555; text-transform: uppercase; letter-spacing: 2px;">Ranking Geográfico</div>
+            <div style="font-size: 11px; color: #444; font-weight: 500;">Basado en las últimas 5,000 interacciones</div>
+          </div>
+          <div id="countryRankingList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px;">
             <!-- Skeletons -->
-            <div class="skeleton" style="height: 48px; border-radius: 8px; background: #1a1a1a;"></div>
-            <div class="skeleton" style="height: 48px; border-radius: 8px; background: #1a1a1a;"></div>
-            <div class="skeleton" style="height: 48px; border-radius: 8px; background: #1a1a1a;"></div>
-            <div class="skeleton" style="height: 48px; border-radius: 8px; background: #1a1a1a;"></div>
+            <div class="skeleton" style="height: 52px; border-radius: 12px; background: #1a1a1a;"></div>
+            <div class="skeleton" style="height: 52px; border-radius: 12px; background: #1a1a1a;"></div>
+            <div class="skeleton" style="height: 52px; border-radius: 12px; background: #1a1a1a;"></div>
+            <div class="skeleton" style="height: 52px; border-radius: 12px; background: #1a1a1a;"></div>
           </div>
         </div>
       </div>
@@ -915,6 +918,7 @@
       // Wait a tick for stored auth to init
       setTimeout(() => {
         loadAnalyticsData('30d');
+        loadWorldMap(); // Initial map load
       }, 500);
     });
 
@@ -991,7 +995,7 @@
         // --- B) REAL PLAYS (listening_history) - Optimized Chunks ---
         let rawPlays = [];
         if (productIds.length > 0) {
-          const chunkSize = 100; // Increased from 10 to 100
+          const chunkSize = 50; // Reduced from 100 to 50 to avoid URI limit
           const playPromises = [];
           for (let i = 0; i < productIds.length; i += chunkSize) {
             const chunk = productIds.slice(i, i + chunkSize);
@@ -1010,13 +1014,10 @@
         // --- D) TOP PRODUCTS - Optimized Single Query with filter ---
         let topProductsData = [];
         if (rawOrders.length > 0) {
-          // Instead of fetching items for every order in chunks, 
-          // we can query order_items where order_id belongs to the producer's orders.
-          // Since we already have rawOrders, we can use their IDs.
           const orderIds = rawOrders.map(o => o.id).filter(Boolean);
           let rawOrderItems = [];
 
-          const orderChunkSize = 200; // Increased from 10 to 200
+          const orderChunkSize = 50; // Reduced from 200 to 50 to avoid URI limit
           const itemPromises = [];
           for (let i = 0; i < orderIds.length; i += orderChunkSize) {
             const chunk = orderIds.slice(i, i + orderChunkSize);
@@ -1069,6 +1070,7 @@
         renderBentoStats(totalPlaysCount, freeDownloads, totalVisitsCount, totalVisitsCount, totalOrdersCount);
         renderChart(chartData.labels, chartData.views, chartData.sales, period);
         renderTopProducts(topProductsData);
+        loadWorldMap(period); // Refresh map with same period
 
       } catch (err) {
         console.warn("Analytics Error:", err);
@@ -1384,7 +1386,7 @@
       'CH': '🇨🇭 Suiza', 'AT': '🇦🇹 Austria', 'RO': '🇷🇴 Rumanía', 'GR': '🇬🇷 Grecia'
     };
 
-    async function loadWorldMap() {
+    async function loadWorldMap(period = 'all') {
       const container = document.getElementById('worldMapContainer');
       const rankingList = document.getElementById('countryRankingList');
       const totalLabel = document.getElementById('mapTotalVisitors');
@@ -1398,11 +1400,30 @@
       }
       if (!userId) { totalLabel.textContent = 'Sin datos'; return; }
 
-      // 2. Query analytics_events grouped by country
-      const { data: events, error } = await window.supabaseClient
+      // Determine Date Range for Map
+      let startDate = null;
+      const end = new Date();
+      if (period === '7d') {
+        startDate = new Date();
+        startDate.setDate(end.getDate() - 7);
+      } else if (period === '30d') {
+        startDate = new Date();
+        startDate.setDate(end.getDate() - 30);
+      }
+
+      // 2. Query analytics_events grouped by country - Optimized for performance
+      let query = window.supabaseClient
         .from('analytics_events')
         .select('country_code')
-        .eq('producer_id', userId);
+        .eq('producer_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(5000);
+
+      if (startDate) {
+        query = query.gte('created_at', startDate.toISOString());
+      }
+
+      const { data: events, error } = await query;
 
       // Count by country
       const countryMap = {};
@@ -1414,9 +1435,9 @@
       });
 
       if (total === 0) {
-        totalLabel.textContent = 'Aún sin visitas registradas';
+        totalLabel.textContent = 'Sin interacciones en este periodo';
       } else {
-        totalLabel.textContent = `${total.toLocaleString()} interacciones totales`;
+        totalLabel.textContent = `${total.toLocaleString()} interacciones en total`;
       }
 
       // Clear the skeleton
@@ -1437,19 +1458,19 @@
         zoomButtons: true,
         regionStyle: {
           initial: {
-            fill: '#0a0a0a', // Darker base
+            fill: '#0f0f0f', 
             fillOpacity: 1,
-            stroke: '#1a1a1a', // Sharp, thin divisions
-            strokeWidth: 0.5,
+            stroke: '#555', // CLEARER DIVISIONS
+            strokeWidth: 1.2, 
             strokeOpacity: 1
           },
           hover: {
             fill: '#ffffff',
-            fillOpacity: 0.2
+            fillOpacity: 1 // FULL GLOW ON HOVER
           }
         },
         visualizeData: {
-          scale: ['#111111', '#ffffff'], // High contrast white glow for top countries
+          scale: ['#1a1a1a', '#ffffff'], // Brighter base for visibility
           values: countryMap,
         },
         onRegionTooltipShow(event, tooltip, code) {

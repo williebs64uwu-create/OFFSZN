@@ -157,7 +157,8 @@ app.use(helmet({
                 "http://localhost:*",
                 "https://*.googleapis.com", "https://accounts.google.com", "https://apis.google.com",
                 "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com",
-                "https://get.geojs.io", "https://*.geojs.io", "https://ipapi.co"
+                "https://get.geojs.io", "https://*.geojs.io", "https://ipapi.co",
+                "https://api.ipify.org", "https://ipinfo.io"
             ],
             frameSrc: ["'self'",
                 "https://www.youtube.com", "https://www.youtube-nocookie.com",
