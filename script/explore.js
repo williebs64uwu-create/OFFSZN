@@ -1395,7 +1395,7 @@ function createProductCardHtml(product, format = 'standard') {
         const price = isTrulyFree ? 'GRATIS' : (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(priceValue) || 0) : `$${priceValue}`);
 
         return `
-            <div class="preset-card-premium" data-product-id="${product.id}" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
+            <div class="preset-card-premium" data-product-id="${product.id}">
                 <img ${productImg.attr} alt="${product.name}">
                 <div class="preset-overlay">
                     <span class="preset-tag">PRESET</span>
@@ -1459,7 +1459,7 @@ function createProductCardHtml(product, format = 'standard') {
     return `
         <div class="product-card-wrapper" data-product-id="${product.id}">
             <div class="product-card-smart">
-                <div class="card-cover-wrapper" data-artist="${product.producer_id}" onmouseenter="showArtistCard(event, this)" onmouseleave="hideArtistCard(event, this)">
+                <div class="card-cover-wrapper">
                     <img ${productImg.attr} alt="${product.name}">
                     <button class="quick-play-btn"><i class="bi bi-play-fill"></i></button>
                 </div>

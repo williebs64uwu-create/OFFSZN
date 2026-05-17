@@ -46,11 +46,13 @@
         if (!rawData) return;
 
         let artistId = null;
+        let initialData = null;
         try {
             // Attempt to parse as JSON first (legacy/some parts might pass object)
             if (rawData.startsWith('{')) {
                 const data = JSON.parse(rawData);
-                artistId = data.id || data.user_id;
+                artistId = data.id || data.user_id || data.producer_id;
+                initialData = data;
             } else {
                 // If not JSON, it's a raw ID string
                 artistId = rawData;
@@ -75,22 +77,17 @@
                 unsubscribeFollow = null;
             }
 
-            // Position (Always above or below based on space)
+            // Position (Always below or above based on space)
             const rect = element.getBoundingClientRect();
             const cardHeight = 140; // Max estimated height
             const cardWidth = 240; 
             
-            // Check space above
-            let top = rect.top - cardHeight - 4;
+            // Show below by default, with a small offset
+            let top = rect.bottom + 8;
             
-            // If no space above, show below
-            if (top < 10) {
-                top = rect.bottom + 4;
-            }
-            
-            // Final check: If it overflows the bottom, nudge it up
+            // If no space below, show above
             if (top + cardHeight > window.innerHeight - 10) {
-                top = window.innerHeight - cardHeight - 10;
+                top = rect.top - cardHeight - 8;
             }
 
             // Horizontal centering
@@ -109,11 +106,15 @@
             // Fetch Real Data
             fetchArtist(artistId).then(fullData => {
                 if (activeArtistId === artistId) {
-                    renderContent(card, fullData);
+                    if (fullData) {
+                        renderContent(card, fullData);
+                    } else {
+                        renderContent(card, initialData || { id: artistId, nickname: 'Productor' });
+                    }
                 }
             }).catch(() => {
                 if (activeArtistId === artistId) {
-                    renderContent(card, { id: artistId }); // Fallback with basic ID
+                    renderContent(card, initialData || { id: artistId, nickname: 'Productor' }); // Fallback
                 }
             });
     };
@@ -133,7 +134,7 @@
                     unsubscribeFollow = null;
                 }
             }
-        }, 300);
+        }, 30);
     };
 
     /**
@@ -209,12 +210,12 @@
     function renderContent(card, data) {
         if (!data) return;
         
-        const artistId = data.id || data.user_id;
-        const nickname = data.nickname || 'Unknown';
-        const avatarUrl = data.avatar_url || '/images/default-avatar.png';
-        const isVerified = data.is_verified || !!data.plan;
+        const artistId = data.id || data.user_id || data.producer_id;
+        const nickname = data.nickname || data.producer_nickname || data.name || 'Productor';
+        const avatarUrl = data.avatar_url || data.producer_avatar || '/images/default-avatar.png';
+        const isVerified = data.is_verified || data.producer_is_verified || !!data.plan;
         const baseFollowerCount = data.followers_count || 0;
-        const profileUrl = data.username ? `/@${data.username}` : `/artist/${artistId}`;
+        const profileUrl = data.username ? `/@${data.username}` : (data.nickname ? `/@${data.nickname}` : `/artist/${artistId}`);
 
         // Verified Badge (Using Centralized Logic)
         const badgeHtml = window.getBadgeHtml ? window.getBadgeHtml(data.plan, isVerified) : '';
@@ -232,7 +233,7 @@
                     </div>
                 </div>
             </div>
-            <button class="ahc-btn-follow" id="ahc-follow-btn">
+            <button class="ahc-follow-btn" id="ahc-follow-btn">
                 <i class="bi bi-person-plus"></i>
                 <span>Seguir</span>
             </button>
