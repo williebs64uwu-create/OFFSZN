@@ -952,8 +952,8 @@ export const capturePayPalOrder = async (req, res) => {
                             <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
                                 <h2 style="color: #10B981; margin-bottom:20px;">¡Gracias por tu compra!</h2>
                                 <p style="color:#ccc; line-height:1.6;">Hola <b>${userNickname}</b>, procesamos correctamente el pago por <b style="color:#fff;">${item.product.name}</b>.</p>
-                                <p style="color:#888; line-height:1.5;">Puedes encontrar y descargar todos tus archivos desde la sección "Mis Transacciones" en tu cuenta.</p>
-                                <a href="https://offszn.lat/cuenta/transacciones" style="display:inline-block; background:#10B981; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER MIS DESCARGAS</a>
+                                <p style="color:#888; line-height:1.5;">Puedes encontrar y descargar todos tus archivos desde la sección "Mis Compras" en tu cuenta.</p>
+                                <a href="https://offszn.lat/mis-compras" style="display:inline-block; background:#10B981; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER MIS DESCARGAS</a>
                                 <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
                                 <p style="font-size:0.75rem; color:#555;">Este es un recibo automático de OFFSZN.</p>
                             </div>
@@ -975,7 +975,7 @@ export const capturePayPalOrder = async (req, res) => {
                                     <div style="background:#111; border:1px solid #333; border-radius:10px; padding:20px; margin:20px 0;">
                                         <p style="color:#888; margin:0;"><b style="color:#fff;">Monto de la Variante:</b> $${item.variant_price} USD</p>
                                     </div>
-                                    <a href="https://offszn.lat/cuenta/dashboard" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:10px;">GESTIONAR MI DASHBOARD</a>
+                                    <a href="https://offszn.lat/transacciones" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:10px;">GESTIONAR MI DASHBOARD</a>
                                     <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
                                     <p style="font-size:0.75rem; color:#555;">¡Sigue así! OFFSZN.</p>
                                 </div>

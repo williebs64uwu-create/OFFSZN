@@ -334,7 +334,7 @@ export const createFreeOrder = async (req, res) => {
                                 <h1>Hola, ${userNickname}</h1>
                                 <p>Tu nuevo recurso ha sido añadido con éxito a tu colección de <strong>OFFSZN</strong>.</p>
                                 
-                                <a href="https://offszn.lat/cuenta/transacciones" class="button">Ver mis descargas</a>
+                                <a href="https://offszn.lat/mis-compras" class="button">Ver mis descargas</a>
 
                                 <p style="font-size: 14px; color: #444444; margin-top: 20px;">
                                     Recuerda que puedes acceder a tus archivos en cualquier momento desde tu panel de usuario.

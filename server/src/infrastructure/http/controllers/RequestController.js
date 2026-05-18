@@ -373,7 +373,7 @@ export const respondRequest = async (req, res) => {
                     <h2 style="color: #8B5CF6; margin-bottom:20px;">¡Respuesta a tu Solicitud!</h2>
                     <p style="color:#ccc; line-height:1.6;">El productor <b>${prodName}</b> ha respondido a tu solicitud aportando una maqueta de muestra.</p>
                     <p style="color:#888; line-height:1.5;">Tienes 24 horas para revisarla y decidir si quieres comprar la pista.</p>
-                    <a href="https://offszn.lat/cuenta/solicitudes.html" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">ESCUCHAR PREVIEW</a>
+                    <a href="https://offszn.lat/comunidad/feed" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">ESCUCHAR PREVIEW</a>
                     <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
                     <p style="font-size:0.75rem; color:#555;">Este es un mensaje automático de OFFSZN.</p>
                 </div>
