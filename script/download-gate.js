@@ -328,9 +328,10 @@ window.completeGate = async function (url, productId, guestEmail = null, product
         const a = document.createElement('a');
         a.href = finalUrl;
         try {
-            a.download = typeof finalUrl === 'string' ? finalUrl.split('/').pop().split('?')[0] : 'descarga-offszn.mp3';
+            const ext = (typeof finalUrl === 'string' && finalUrl.split('?')[0].includes('.')) ? finalUrl.split('?')[0].split('.').pop() : 'mp3';
+            a.download = typeof finalUrl === 'string' ? finalUrl.split('/').pop().split('?')[0] : `descarga-offszn.${ext}`;
         } catch (e) {
-            a.download = 'descarga-offszn.mp3';
+            a.download = 'descarga-offszn';
         }
         a.target = '_blank';
         document.body.appendChild(a);

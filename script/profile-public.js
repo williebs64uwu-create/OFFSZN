@@ -2673,7 +2673,9 @@ async function renderTrending(items, user, collabStats = {}) {
                 dlBtn.onclick = (e) => {
                     e.stopPropagation();
                     if (window.openDownloadGateModal) {
-                        const dlUrl = prod.free_download_url || getProductAudio(prod) || '';
+                        const dlUrl = (pType !== 'beat')
+                            ? (prod.kit_url || prod.download_url_mp3 || prod.mp3_url || prod.audio_url || '')
+                            : (prod.download_url_mp3 || prod.mp3_url || prod.audio_url || prod.kit_url || '');
                         window.downloadGateProductRegistry = window.downloadGateProductRegistry || new Map();
                         window.downloadGateProductRegistry.set(String(prod.id), prod);
                         window.openDownloadGateModal(dlUrl, user.nickname, prod.id, prod);
@@ -2972,7 +2974,9 @@ async function renderProductList(items, user, collabStats = {}) {
             e.stopPropagation();
             if (isTrulyFree || freeDLAvaliable) {
                 if (window.openDownloadGateModal) {
-                    const dlUrl = prod.free_download_url || getProductAudio(prod) || '';
+                    const dlUrl = (pType !== 'beat')
+                        ? (prod.kit_url || prod.download_url_mp3 || prod.mp3_url || prod.audio_url || '')
+                        : (prod.download_url_mp3 || prod.mp3_url || prod.audio_url || prod.kit_url || '');
                     window.downloadGateProductRegistry = window.downloadGateProductRegistry || new Map();
                     window.downloadGateProductRegistry.set(String(prod.id), prod);
                     window.openDownloadGateModal(dlUrl, user.nickname, prod.id, prod);

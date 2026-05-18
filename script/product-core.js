@@ -191,7 +191,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             localStorage.removeItem('offszn_auto_download_trigger');
 
             const producerName = product.producer?.nickname || 'Productor';
-            const downloadUrl = product.download_url;
+            const downloadUrl = (product.product_type && product.product_type.toLowerCase() !== 'beat')
+                ? (product.kit_url || product.download_url_mp3 || product.mp3_url || product.audio_url || '')
+                : (product.download_url_mp3 || product.mp3_url || product.audio_url || product.kit_url || '');
             if (downloadUrl) {
                 setTimeout(() => {
                     openDownloadGateModal(downloadUrl, producerName, product.id);
@@ -1728,7 +1730,7 @@ async function renderBeatSpecifics(product) {
                     freeBtn.style.color = '#ccc';
                     freeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA GRATIS MP3 CON TAG';
                     freeBtn.onclick = () => {
-                        const urlToDownload = product.download_url_mp3 || product.audio_url || product.mp3_url;
+                        const urlToDownload = product.download_url_mp3 || product.mp3_url || product.audio_url || product.kit_url;
                         if (window.openDownloadGateModal) window.openDownloadGateModal(urlToDownload, product.producer?.nickname, product.id);
                         else window.open(urlToDownload, '_blank');
                     };
@@ -1761,7 +1763,7 @@ async function renderBeatSpecifics(product) {
                 freeBtn.style.width = '100%';
                 freeBtn.innerHTML = '<i class="bi bi-download"></i> DESCARGA GRATIS MP3';
                 freeBtn.onclick = () => {
-                    const urlToDownload = product.download_url_mp3 || product.audio_url || product.mp3_url;
+                    const urlToDownload = product.download_url_mp3 || product.mp3_url || product.audio_url || product.kit_url;
                     if (window.openDownloadGateModal) window.openDownloadGateModal(urlToDownload, product.producer?.nickname, product.id);
                     else window.open(urlToDownload, '_blank');
                 };
@@ -2195,7 +2197,9 @@ function renderGenericSpecifics(product) {
     if (isTrulyFree) {
         buyBtn.innerHTML = 'DESCARGAR GRATIS';
         buyBtn.onclick = () => {
-            const downloadUrl = product.download_url || product.audio_url;
+            const downloadUrl = (product.product_type && product.product_type.toLowerCase() !== 'beat')
+                ? (product.kit_url || product.download_url_mp3 || product.mp3_url || product.audio_url || '')
+                : (product.download_url_mp3 || product.mp3_url || product.audio_url || product.kit_url || '');
             window.open(downloadUrl, '_blank');
         };
     } else {

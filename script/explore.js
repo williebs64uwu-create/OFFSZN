@@ -1425,7 +1425,9 @@ function createProductCardHtml(product, format = 'standard') {
     window.downloadGateProductRegistry = window.downloadGateProductRegistry || new Map();
     window.downloadGateProductRegistry.set(String(product.id), product);
 
-    const downloadUrl = product.download_url || product.mp3_url || product.zip_url || '';
+    const downloadUrl = (pType !== 'beat')
+        ? (product.kit_url || product.download_url_mp3 || product.mp3_url || product.audio_url || '')
+        : (product.download_url_mp3 || product.mp3_url || product.audio_url || product.kit_url || '');
     const producerName = (product.producer_nickname || 'artista').replace(/'/g, "\\'");
     const gateCall = `event.stopPropagation(); window.openDownloadGateModal('${downloadUrl}', '${producerName}', '${product.id}')`;
 
