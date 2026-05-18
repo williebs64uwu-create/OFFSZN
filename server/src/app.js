@@ -883,7 +883,7 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
             html = html.replace(/{{USER_BIO}}/g, user.bio || 'Productor Musical');
             html = html.replace('</head>', `
                 <script>window.OFFSZN_USER_ID = "${user.id}";</script>
-                <script src="/components/offszn_perfiles_profesionales/loader.js?v=20"></script>
+                <script src="/components/offszn_perfiles_profesionales/loader.js?v=22"></script>
             </head>`);
         }
 

@@ -1,0 +1,247 @@
+/**
+ * editor.css
+ * Estilos puros para la interfaz de administración del Builder.
+ * Aislado del resto de OFFSZN para evitar conflictos.
+ */
+
+:root {
+    --bg-editor: #0f0f0f;
+    --bg-sidebar: #161616;
+    --border-editor: #2a2a2a;
+    --text-editor: #ededed;
+    --text-muted: #888888;
+    --accent-editor: #ffffff;
+    --hover-editor: #222222;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    display: flex;
+    height: 100vh;
+    background-color: var(--bg-editor);
+    color: var(--text-editor);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow: hidden;
+}
+
+/* SIDEBAR */
+.builder-sidebar {
+    width: 320px;
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-editor);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+
+.sidebar-header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-editor);
+}
+
+.sidebar-header h2 {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-save {
+    background: var(--accent-editor);
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.btn-save:hover { opacity: 0.8; }
+
+.sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-editor);
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 12px 0;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+.tab-btn.active {
+    color: var(--accent-editor);
+    border-bottom-color: var(--accent-editor);
+}
+
+.sidebar-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.btn-add-section {
+    width: 100%;
+    background: transparent;
+    border: 1px dashed var(--border-editor);
+    color: var(--text-muted);
+    padding: 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+    transition: all 0.2s;
+}
+.btn-add-section:hover {
+    border-color: var(--text-muted);
+    color: var(--text-editor);
+}
+
+/* CANVAS (PREVIEW) */
+.builder-canvas {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #000; /* Fondo súper oscuro para contrastar la preview */
+    position: relative;
+}
+
+.canvas-toolbar {
+    width: 100%;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--border-editor);
+    background: var(--bg-editor);
+    position: relative;
+}
+
+.device-toggles {
+    display: flex;
+    background: var(--bg-sidebar);
+    border-radius: 6px;
+    padding: 4px;
+}
+
+.device-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.device-btn.active {
+    background: #333;
+    color: #fff;
+}
+
+.preview-url {
+    position: absolute;
+    right: 24px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* DEVICE SIMULATOR */
+.preview-device {
+    margin-top: 40px;
+    background: #080808;
+    border: 1px solid var(--border-editor);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+    overflow-y: auto;
+}
+
+.preview-device.desktop {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: calc(100vh - 50px) !important;
+    border-radius: 0 !important;
+    margin-top: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Scrollbar Premium Global del Editor */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #0f0f0f; 
+}
+::-webkit-scrollbar-thumb {
+    background: #2a2a2a; 
+    border-radius: 99px;
+    border: 2px solid #0f0f0f;
+    background-clip: padding-box;
+    transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #444; 
+}
+
+.preview-device.mobile {
+    width: 360px;
+    height: 780px;
+    border-radius: 36px;
+    border: 10px solid #1a1a1a;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none !important; /* Firefox */
+    overflow-x: hidden !important; /* Block horizontal scroll on simulator */
+    overflow-y: auto !important;
+    cursor: grab;
+    position: relative;
+}
+.preview-device.mobile::-webkit-scrollbar,
+.preview-device.mobile *::-webkit-scrollbar {
+    display: none !important; /* Safari/Chrome */
+}
+
+/* Touch indicator for mobile simulator */
+.touch-indicator {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(1);
+    z-index: 99999;
+    transition: transform 0.1s ease, opacity 0.2s ease;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+.touch-indicator.pressing {
+    transform: translate(-50%, -50%) scale(0.85);
+}
+
+/* El lienzo donde se inyecta la tienda */
+.store-root {
+    width: 100%;
+    min-height: 100%;
+    position: relative;
+}

@@ -128,7 +128,7 @@ async function run() {
                         image_url: newImageUrl,
                         audio_url: newAudioUrl,
                         r2_version: newVer,
-                        storage_version: 'r2'
+                        storage_version: prod.storage_version || 'r2'
                     })
                     .eq('id', prod.id);
                 

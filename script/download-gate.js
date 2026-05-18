@@ -10,10 +10,17 @@ window.closeDownloadGateModal = function () {
         setTimeout(() => backdrop.style.display = 'none', 300);
     }
 }
+window.downloadGateProductRegistry = window.downloadGateProductRegistry || new Map();
 
-window.openDownloadGateModal = function (url, producerName, productId) {
-    const product = window.currentProductData;
-    const producerId = product?.producer_id;
+window.openDownloadGateModal = function (url, producerName, productId, productData = null) {
+    const product = productData || (productId && window.downloadGateProductRegistry ? window.downloadGateProductRegistry.get(String(productId)) : null) || window.currentProductData;
+    let producerId = product?.producer_id;
+    if (!producerId && product?.producer) {
+        producerId = Array.isArray(product.producer) ? product.producer[0]?.id : product.producer?.id;
+    }
+    if (!producerId && product?.user_id) {
+        producerId = product.user_id;
+    }
     const currentUserId = window.currentUserId;
 
     // Check if already following or if it's the owner
@@ -101,7 +108,7 @@ window.openDownloadGateModal = function (url, producerName, productId) {
             if (actionBtn) {
                 actionBtn.onclick = () => {
                     const emailValue = emailInput.value;
-                    completeGate(url, productId, emailValue);
+                    completeGate(url, productId, emailValue, product);
                 };
             }
         } else {
@@ -200,14 +207,14 @@ window.openDownloadGateModal = function (url, producerName, productId) {
 
     const actionBtn = document.getElementById('btn-gate-action');
     if (actionBtn) {
-        actionBtn.onclick = () => completeGate(url, productId);
+        actionBtn.onclick = () => completeGate(url, productId, null, product);
     }
 
     backdrop.style.display = 'flex';
     setTimeout(() => backdrop.classList.add('active'), 10);
 }
 
-window.completeGate = async function (url, productId, guestEmail = null) {
+window.completeGate = async function (url, productId, guestEmail = null, productData = null) {
     const btn = document.getElementById('btn-gate-action');
     const originalHTML = btn.innerHTML;
 
@@ -232,11 +239,14 @@ window.completeGate = async function (url, productId, guestEmail = null) {
     btn.innerHTML = '<div class="spinner" style="width:20px; height:20px; border-width:2px; margin:0 auto;"></div>';
 
     try {
-        const product = window.currentProductData;
-        let producerObj = product?.producer;
-        if (Array.isArray(producerObj)) producerObj = producerObj[0];
-
-        const producerId = producerObj?.id;
+        const product = productData || (productId && window.downloadGateProductRegistry ? window.downloadGateProductRegistry.get(String(productId)) : null) || window.currentProductData;
+        let producerId = product?.producer_id;
+        if (!producerId && product?.producer) {
+            producerId = Array.isArray(product.producer) ? product.producer[0]?.id : product.producer?.id;
+        }
+        if (!producerId && product?.user_id) {
+            producerId = product.user_id;
+        }
         const currentUserId = window.currentUserId;
 
         // 2. Registro de Invitado (AWAIT para asegurar concurrencia)
@@ -296,7 +306,7 @@ window.completeGate = async function (url, productId, guestEmail = null) {
                     const headers = { 'Content-Type': 'application/json' };
                     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-                    const versionToUse = window.currentProductData?.storage_version || window.currentProductData?.r2_version || 'v2';
+                    const versionToUse = product?.storage_version || product?.r2_version || 'v2';
                     const res = await fetch('/api/r2/download-url', {
                         method: 'POST',
                         headers: headers,

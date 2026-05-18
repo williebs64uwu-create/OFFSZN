@@ -134,84 +134,53 @@
     .tabs-header {
       display: flex;
       justify-content: center;
-      gap: 28px;
-      margin-bottom: 40px;
-      padding-bottom: 12px;
+      align-items: center;
+      margin-bottom: 30px;
       position: relative;
+      z-index: 10;
       width: 100%;
-      text-align: center;
     }
     
     .tabs-inner {
       display: flex;
-      gap: 28px;
-      justify-content: center;
-    }
-
-    /* Line only spans the tabs, not full width */
-    .tabs-header::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      width: auto;
-      min-width: 0;
-      height: 1px;
-      background: rgba(255,255,255,0.1);
-      /* The pseudo will stretch to the flex container's content width */
-    }
-
-    .tabs-header {
-      display: flex;
-      justify-content: center;
-      width: 100%;
-      margin-bottom: 40px;
-    }
-
-    .tabs-inner {
-      display: flex;
-      gap: 28px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      padding-bottom: 12px;
-      position: relative;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 6px;
+      border-radius: 99px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .tab-trigger {
-      background: none;
+      background: transparent;
       border: none;
-      color: var(--text-secondary);
-      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.4);
+      padding: 10px 24px;
+      border-radius: 99px;
+      font-size: 0.85rem;
       font-weight: 700;
       cursor: pointer;
-      position: relative;
-      transition: color 0.3s ease;
+      transition: all 0.3s ease;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 0;
+    }
+
+    .tab-trigger:hover {
+      color: rgba(255, 255, 255, 0.8);
     }
 
     .tab-trigger.active {
-      color: #fff;
-    }
-
-    .tab-trigger.active::after {
-      content: '';
-      position: absolute;
-      bottom: -13px;
-      left: 0;
-      width: 100%;
-      height: 2px;
       background: #fff;
+      color: #000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .products-container-modular {
       margin: 0 auto;
-      width: fit-content;
+      width: 100%;
       max-width: 100%;
       display: flex;
       flex-direction: column;
       padding: 0 20px;
+      overflow: hidden;
     }
 
     /* Row header with arrows + Ver todos */
@@ -470,8 +439,9 @@
 
     .premium-lic-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
+      justify-content: center;
+      gap: 20px;
       max-width: 1200px;
       margin: 0 auto;
     }
@@ -479,8 +449,8 @@
     .lic-card-premium {
       background: #0d0d0d;
       border: 1px solid var(--glass-border);
-      border-radius: 32px;
-      padding: 48px 32px;
+      border-radius: 24px;
+      padding: 32px 24px;
       transition: all 0.4s ease;
       position: relative;
       display: flex;
@@ -633,20 +603,21 @@
     @media (max-width: 768px) {
       .hero { 
         height: auto; 
-        min-height: 50vh; 
-        padding: 80px 5% 40px; 
+        min-height: 80vh; 
+        padding: 100px 5% 60px; 
       }
       .hero-title {
-        font-size: 3.5rem !important;
-        line-height: 1.1;
-        margin-bottom: 20px;
+        font-size: 2.8rem !important;
+        line-height: 1.0;
+        margin-bottom: 16px;
       }
       .hero-subtitle {
-        font-size: 1rem;
-        padding: 0 20px;
+        font-size: 0.95rem;
+        padding: 0 10px;
+        max-width: 90%;
       }
       .tabs-section {
-        margin-bottom: 40px !important;
+        margin-bottom: 60px !important;
       }
       .section-header h2 {
         font-size: 2.2rem !important;
@@ -654,44 +625,180 @@
       .section-header {
         margin-bottom: 24px !important;
         text-align: center;
-        padding: 0 20px;
+        padding: 0 16px;
       }
       .faq-question {
-        padding: 20px;
-        font-size: 1rem;
+        padding: 16px 20px;
+        font-size: 0.95rem;
+      }
+      .faq-answer {
+        padding: 0 20px;
+      }
+      .faq-item.active .faq-answer {
+        padding-bottom: 20px;
       }
       .faq-section {
         margin-bottom: 60px !important;
+        padding: 60px 16px;
       }
       #playlists-section, #about-section {
         padding: 30px 0 !important;
       }
       .premium-lic-section {
         margin-bottom: 40px !important;
+        padding: 60px 16px;
+      }
+      .premium-lic-grid { 
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: 16px;
+        padding-bottom: 20px;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+      }
+      .premium-lic-grid::-webkit-scrollbar {
+        display: none;
+      }
+      .lic-card-premium {
+        min-width: 280px;
+        flex: 0 0 auto;
+        scroll-snap-align: center;
+        padding: 32px 24px;
+        border-radius: 24px;
+      }
+      .lic-card-premium.featured {
+        transform: none !important;
+      }
+      .lic-price-tag {
+        font-size: 3rem;
+        margin-bottom: 20px;
+      }
+
+      .products-container-modular {
+        padding: 0 16px;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden;
+      }
+      .tabs-header {
+        gap: 16px;
+        margin-bottom: 20px;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+      }
+      .tabs-inner {
+        max-width: 100%;
+        width: max-content;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .tabs-inner::-webkit-scrollbar {
+        display: none;
+      }
+      .tab-trigger {
+        padding: 8px 16px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .products-shelf { 
+        justify-content: flex-start !important;
+        gap: 12px !important; 
+        padding: 4px 4px 16px 4px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none !important;
+        width: auto !important;
+        max-width: 100% !important;
+      }
+      .products-shelf::-webkit-scrollbar {
+        display: none !important;
       }
       .premium-product-card { 
-        flex: 0 0 calc(50% - 8px) !important;
-        width: calc(50% - 8px) !important;
-        padding: 8px;
+        flex: 0 0 140px !important;
+        width: 140px !important;
+        padding: 8px !important;
+        border-radius: 12px;
       }
-      .premium-lic-grid { grid-template-columns: 1fr !important; }
-      .products-shelf { gap: 16px; }
+      .explore-play-action {
+        opacity: 1 !important;
+        transform: none !important;
+        width: 32px;
+        height: 32px;
+      }
+      .explore-play-action i {
+        font-size: 1rem !important;
+      }
+      .explore-product-name {
+        font-size: 0.75rem;
+      }
+      .explore-product-author {
+        font-size: 0.65rem;
+      }
+
+      /* Horizontal touch shelf for services */
+      .explore-row {
+        padding: 0 16px;
+        margin-bottom: 60px !important;
+      }
+      .row-title {
+        font-size: 1.6rem;
+      }
+      .shelf-container {
+        justify-content: flex-start !important;
+        gap: 12px;
+        padding: 4px 4px 16px 4px;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .shelf-container::-webkit-scrollbar {
+        display: none !important;
+      }
+      .shelf-card {
+        flex: 0 0 140px;
+        width: 140px;
+        padding: 8px;
+        border-radius: 16px;
+      }
+      .shelf-card-title {
+        font-size: 0.8rem;
+      }
+      .shelf-card-sub {
+        font-size: 0.7rem;
+      }
+
+      /* Stacked footer for mobile */
+      .rendered-footer {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+        padding: 24px 16px;
+      }
+      .footer-brand {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      /* Absolute scrollbar hiding */
+      body::-webkit-scrollbar,
+      #app::-webkit-scrollbar {
+        display: none !important;
+      }
     }
 
     @media (max-width: 480px) {
       .hero {
-        min-height: 45vh;
-        padding: 70px 5% 30px;
+        min-height: 80vh;
       }
       .hero-title {
         font-size: 2.8rem !important;
-      }
-      .tabs-header {
-        gap: 16px;
-        flex-wrap: wrap;
-      }
-      .tab-trigger {
-        font-size: 0.75rem;
       }
     }
 

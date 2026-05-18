@@ -26,12 +26,7 @@ export async function generarLicencia(purchaseData) {
     const isDrumKit = productType === 'drumkit' || productType === 'loopkit' || productType === 'preset';
 
     const licenseType = (purchaseData.licenseType || 'basic').toLowerCase();
-    const licenseName = isDrumKit ?
-      (productType === 'loopkit' ? 'Standard Loop Kit License' :
-        productType === 'preset' ? 'Standard Preset License' : 'Standard Kit License')
-      : getLicenseName(licenseType);
-    const price = `$${parseFloat(amount).toFixed(2)} USD`;
-
+    
     // --- FALLBACK DEFAULTS (Matches admin-licencias logic) ---
     const DEFAULT_CONFIGS = {
       basic: {
@@ -59,11 +54,59 @@ export async function generarLicencia(purchaseData) {
 
     // 1. Process Logic: Data to Text Mapping
     const settings = licenseSettings || {};
-    // Find the config block that matches the license (search by key or by .name)
-    let config = settings[licenseType] || Object.values(settings).find(s => s.name?.toLowerCase().includes(licenseType)) || {};
+
+    // Normalize licenseType keyword to resolve custom settings keys
+    let normalizedKey = 'basic';
+    const typeLow = licenseType.toLowerCase();
+    if (typeLow.includes('exclusive')) {
+      normalizedKey = 'exclusive';
+    } else if (typeLow.includes('unlimited')) {
+      normalizedKey = 'unlimited';
+    } else if (typeLow.includes('trackout') || typeLow.includes('stems') || typeLow.includes('unlimited lease')) {
+      normalizedKey = 'stems';
+    } else if (typeLow.includes('premium') || typeLow.includes('wav')) {
+      normalizedKey = 'premium';
+    } else {
+      normalizedKey = 'basic';
+    }
+
+    // Try to find matching user configuration block
+    let config = {};
+    if (normalizedKey === 'basic') {
+      config = settings['offszn_basic'] || settings['basic'] || {};
+    } else if (normalizedKey === 'premium') {
+      config = settings['offszn_premium'] || settings['premium'] || {};
+    } else if (normalizedKey === 'stems') {
+      config = settings['offszn_stems'] || settings['stems'] || settings['offszn_trackout'] || settings['trackout'] || {};
+    } else if (normalizedKey === 'unlimited') {
+      config = settings['offszn_exclusive'] || settings['exclusive'] || settings['offszn_unlimited'] || settings['unlimited'] || {};
+    } else if (normalizedKey === 'exclusive') {
+      config = settings['offszn_exclusive'] || settings['exclusive'] || {};
+    }
+
+    // If still empty, do a fallback scan by name match
+    if (!config || Object.keys(config).length === 0) {
+      config = Object.values(settings).find(s => {
+        const sName = s.name?.toLowerCase() || '';
+        return sName.includes(typeLow) || typeLow.includes(sName);
+      }) || {};
+    }
+
+    const licenseName = isDrumKit ?
+      (productType === 'loopkit' ? 'Standard Loop Kit License' :
+        productType === 'preset' ? 'Standard Preset License' : 'Standard Kit License')
+      : (config.name || getLicenseName(normalizedKey));
+
+    const price = `$${parseFloat(amount || 0).toFixed(2)} USD`;
 
     // Merge with defaults if specific properties are missing (using basic as the floor)
-    const defaults = DEFAULT_CONFIGS[licenseType.includes('premium') ? 'premium' : (licenseType.includes('unlimited') ? 'unlimited' : 'basic')];
+    let defaultsKey = 'basic';
+    if (normalizedKey === 'premium') {
+      defaultsKey = 'premium';
+    } else if (normalizedKey === 'stems' || normalizedKey === 'unlimited' || normalizedKey === 'exclusive') {
+      defaultsKey = 'unlimited';
+    }
+    const defaults = DEFAULT_CONFIGS[defaultsKey];
 
     // Files Delivered Logic
     const files = config.files || defaults.files;
@@ -193,7 +236,8 @@ IN WITNESS WHEREOF, the parties have executed this Agreement as of the date of p
 
 
     // --- ISSUANCE & VERIFICATION DATA ---
-    const verificationHash = btoa(orderId + buyerEmail).substring(0, 16).toUpperCase();
+    const safeHashString = `${orderId || '0'}:${buyerEmail || 'N/A'}`.replace(/[^\x00-\x7F]/g, "");
+    const verificationHash = btoa(safeHashString).substring(0, 16).toUpperCase();
     // Add internal metadata to the PDF document
     pdfDoc.setProducer('OFFSZN Platform');
     pdfDoc.setCreator('OFFSZN Legal Engine');

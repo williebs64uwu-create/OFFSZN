@@ -180,18 +180,23 @@ router.post('/r2/download-url', async (req, res) => {
             // 🔥 GUEST FREE DOWNLOAD: If productId is provided, check if product is free
             let guestFreeAccess = false;
             if (!token && productId) {
-                try {
-                    const { data: prod } = await supabase
-                        .from('products')
-                        .select('is_free, price_basic')
-                        .eq('id', productId)
-                        .maybeSingle();
-                    if (prod && prod.is_free && (!prod.price_basic || Number(prod.price_basic) === 0)) {
-                        guestFreeAccess = true;
-                        console.log(`[R2 Download] Guest free download approved for product ${productId}`);
+                if (productId === 'x-flow-analyzer') {
+                    guestFreeAccess = true;
+                    console.log(`[R2 Download] Guest free download approved for analyzer`);
+                } else {
+                    try {
+                        const { data: prod } = await supabase
+                            .from('products')
+                            .select('is_free, price_basic')
+                            .eq('id', productId)
+                            .maybeSingle();
+                        if (prod && prod.is_free && (!prod.price_basic || Number(prod.price_basic) === 0)) {
+                            guestFreeAccess = true;
+                            console.log(`[R2 Download] Guest free download approved for product ${productId}`);
+                        }
+                    } catch (e) {
+                        console.warn('[R2 Download] Free check failed:', e.message);
                     }
-                } catch (e) {
-                    console.warn('[R2 Download] Free check failed:', e.message);
                 }
             }
 

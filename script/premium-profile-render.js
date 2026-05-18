@@ -165,11 +165,19 @@ window.PremiumRender = {
         const baseSettings = settings || {};
 
         ['basic', 'premium', 'trackout', 'unlimited'].forEach(key => {
-            const userLic = baseSettings[key] || {};
+            let userLic = {};
+            if (key === 'trackout') {
+                userLic = baseSettings['trackout'] || baseSettings['exclusive'] || baseSettings['offszn_exclusive'] || {};
+            } else {
+                userLic = baseSettings[key] || baseSettings[`offszn_${key}`] || {};
+            }
             const sysLic = systemDefaults[key];
             finalSettings[key] = {
                 ...sysLic,
                 ...userLic,
+                enabled: userLic.enabled !== false,
+                name: userLic.name || sysLic.name,
+                price: userLic.price !== undefined ? userLic.price : sysLic.price,
                 usage: {
                     streams: userLic.usage?.streams || userLic.streams || sysLic.usage.streams,
                     sales: userLic.usage?.sales || userLic.sales || sysLic.usage.sales

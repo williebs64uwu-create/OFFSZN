@@ -1423,6 +1423,16 @@
 
                         </div>
 
+                        <!-- SECTION 2.5: FAVORITE -->
+                        <div style="margin-top: 1.5rem; margin-bottom: 1.5rem;">
+                            <label class="toggle-pro" style="background: rgba(255, 255, 255, 0.02); display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: border-color 0.2s, background-color 0.2s;" id="favToggleContainer">
+                                <span style="font-size: 0.85rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+                                    <i class="bi bi-star-fill" style="color: #666; transition: color 0.2s;" id="favStarIcon"></i> MARCAR COMO FAVORITO
+                                </span>
+                                <input type="checkbox" id="checkFavorite" style="accent-color: #fff; transform: scale(1.2); cursor: pointer;">
+                            </label>
+                        </div>
+
                         <!-- SECTION 3: ADVANCED OPTIONS (Accordion) -->
                         <div class="advanced-accordion" id="advancedAccordion">
                             <div class="advanced-header" onclick="toggleAdvanced()">
@@ -1634,6 +1644,15 @@
                 // Set default thankYou
                 els.thankYou.value = data.thankYou || defaults[tab].thankYou;
 
+                // Sync Favorite Switch
+                const isFav = !!data.is_favorite;
+                const checkFavorite = document.getElementById('checkFavorite');
+                const favStarIcon = document.getElementById('favStarIcon');
+                if (checkFavorite) checkFavorite.checked = isFav;
+                if (favStarIcon) {
+                    favStarIcon.style.setProperty('color', isFav ? '#ffd700' : '#666', 'important');
+                }
+
 
 
                 toggleUnlimitedLock(tab === 'unlimited');
@@ -1686,7 +1705,9 @@
 
             function updatePreview() {
                 // Sincronizar texto de la tarjeta con los inputs en tiempo real
-                els.pBadge.innerText = (els.name.value || "LICENCIA").toUpperCase();
+                const checkFavorite = document.getElementById('checkFavorite');
+                const isFav = checkFavorite ? checkFavorite.checked : false;
+                els.pBadge.innerHTML = (els.name.value || "LICENCIA").toUpperCase() + (isFav ? ' <i class="bi bi-star-fill animate__animated animate__heartBeat" style="color: #ffd700; margin-left: 6px;"></i>' : '');
                 els.pPrice.innerText = `$${els.price.value || "0.00"}`;
 
                 els.pStreams.innerText = formatNumber(els.streams.value);
@@ -1765,6 +1786,11 @@
                 d.publishing = parseInt(els.publishing.value) || 0;
                 d.royalties = parseInt(els.royalties.value) || 0;
                 d.thankYou = els.thankYou.value;
+                
+                const checkFavorite = document.getElementById('checkFavorite');
+                if (checkFavorite) {
+                    d.is_favorite = checkFavorite.checked;
+                }
             }
 
             // --- VALIDATION & LISTENERS ---
@@ -1787,6 +1813,29 @@
                         this.value = this.value.replace(/\n\s*\n\s*\n/g, '\n\n');
 
                         thankYouCounter.innerText = `${this.value.length}/200`;
+                        updatePreview();
+                    });
+                }
+
+                const checkFavorite = document.getElementById('checkFavorite');
+                if (checkFavorite) {
+                    checkFavorite.addEventListener('change', function () {
+                        const isChecked = this.checked;
+                        const star = document.getElementById('favStarIcon');
+                        
+                        if (isChecked) {
+                            if (star) star.style.setProperty('color', '#ffd700', 'important');
+                            // Enforce mutual exclusivity
+                            for (const key in currentLicenses) {
+                                if (key !== currentTab) {
+                                    currentLicenses[key].is_favorite = false;
+                                }
+                            }
+                            currentLicenses[currentTab].is_favorite = true;
+                        } else {
+                            if (star) star.style.setProperty('color', '#666', 'important');
+                            currentLicenses[currentTab].is_favorite = false;
+                        }
                         updatePreview();
                     });
                 }
@@ -1914,24 +1963,35 @@
 
                     if (data && data.license_settings) {
                         const saved = data.license_settings;
+                        const keyMap = {
+                            basic: ['offszn_basic', 'basic'],
+                            premium: ['offszn_premium', 'premium'],
+                            trackout: ['offszn_unlimited', 'trackout'],
+                            unlimited: ['offszn_exclusive', 'unlimited']
+                        };
 
                         for (const key in defaults) {
-                            if (saved[key]) {
+                            const dbKeys = keyMap[key];
+                            const dbKey = dbKeys.find(dk => saved[dk] !== undefined);
+                            const savedData = dbKey ? saved[dbKey] : null;
+
+                            if (savedData) {
                                 // Mezclamos lo guardado con el default para que si falta un campo (como el precio), use el default
                                 currentLicenses[key] = {
                                     ...defaults[key],
-                                    ...saved[key],
-                                    // Validacin extra de precio: si es null, vaco o NaN, forzar default
-                                    price: (saved[key].price !== null && saved[key].price !== undefined && saved[key].price !== '' && !isNaN(saved[key].price)) ? saved[key].price : defaults[key].price,
-                                    name: (saved[key].name && saved[key].name.trim() !== "") ? saved[key].name : defaults[key].name,
-                                    publishing: saved[key].publishing ?? defaults[key].publishing,
-                                    royalties: saved[key].royalties ?? defaults[key].royalties,
-                                    credits: saved[key].credits ?? defaults[key].credits,
-                                    thankYou: saved[key].thankYou ?? defaults[key].thankYou
+                                    ...savedData,
+                                    // Validacion extra de precio: si es null, vacio o NaN, forzar default
+                                    price: (savedData.price !== null && savedData.price !== undefined && savedData.price !== '' && !isNaN(savedData.price)) ? parseFloat(savedData.price) : defaults[key].price,
+                                    name: (savedData.name && savedData.name.trim() !== "") ? savedData.name : defaults[key].name,
+                                    enabled: (savedData.enabled !== undefined && savedData.enabled !== null && savedData.enabled !== "") ? (savedData.enabled !== false && savedData.enabled !== 'false') : defaults[key].enabled,
+                                    publishing: savedData.publishing ?? defaults[key].publishing,
+                                    royalties: savedData.royalties ?? defaults[key].royalties,
+                                    credits: savedData.credits ?? defaults[key].credits,
+                                    thankYou: savedData.thankYou ?? defaults[key].thankYou,
+                                    is_favorite: !!savedData.is_favorite
                                 };
                             }
                         }
-                        // console.log("Sincronización Elite Completada ?"); // ?? CLEANUP
                     }
                 } catch (err) {
                     // console.error("Error cargando configuración:", err); // Modificado para evitar leaks de logs en prod
@@ -1951,7 +2011,8 @@
                     publishing: 50,
                     royalties: 50,
                     credits: '',
-                    thankYou: 'Felicidades por tu licencia! ?? Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ??'
+                    thankYou: 'Felicidades por tu licencia! ?? Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ??',
+                    is_favorite: false
                 },
                 'premium': {
                     name: 'Premium Lease',
@@ -1964,7 +2025,8 @@
                     publishing: 50,
                     royalties: 50,
                     credits: '',
-                    thankYou: 'Felicidades por tu licencia! ?? Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ??'
+                    thankYou: 'Felicidades por tu licencia! ?? Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ??',
+                    is_favorite: false
                 },
                 'trackout': {
                     name: 'Trackout Lease',
@@ -1977,7 +2039,8 @@
                     publishing: 50,
                     royalties: 50,
                     credits: '',
-                    thankYou: 'Felicidades por tu licencia! ?? Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ??'
+                    thankYou: 'Felicidades por tu licencia! ?? Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ??',
+                    is_favorite: false
                 },
                 'unlimited': {
                     name: 'Unlimited License',
@@ -1990,7 +2053,8 @@
                     publishing: 50,
                     royalties: 50,
                     credits: '',
-                    thankYou: 'Felicidades por tu licencia! ?? Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ??'
+                    thankYou: 'Felicidades por tu licencia! ?? Esta instrumental tiene el potencial de llevar tu tema al siguiente nivel. Estoy emocionado por escuchar lo que crearás; la constancia y calidad siempre ganan. A romperla en el estudio! ??',
+                    is_favorite: false
                 }
             };
 
@@ -2015,6 +2079,14 @@
                 els.publishing.value = defaults.publishing;
                 els.royalties.value = defaults.royalties;
                 els.thankYou.value = defaults.thankYou;
+
+                // Reset Favorite
+                const checkFavorite = document.getElementById('checkFavorite');
+                if (checkFavorite) checkFavorite.checked = defaults.is_favorite;
+                const star = document.getElementById('favStarIcon');
+                if (star) {
+                    star.style.setProperty('color', defaults.is_favorite ? '#ffd700' : '#666', 'important');
+                }
 
                 updatePreview();
                 validateAll();
@@ -2212,11 +2284,61 @@
                 btn.innerHTML = '<div class="spinner-border text-dark" role="status" style="width: 1rem; height: 1rem;"></div> Guardando...';
 
                 try {
-                    if (!window.currentUser) throw new Error("No User");
+                    // Map frontend license keys back to the standard DB key formats before saving
+                    const dbLicenseSettings = {
+                        offszn_basic: {
+                            id: 'offszn_basic',
+                            name: currentLicenses.basic.name,
+                            price: parseFloat(currentLicenses.basic.price),
+                            enabled: currentLicenses.basic.enabled,
+                            publishing: currentLicenses.basic.publishing,
+                            royalties: currentLicenses.basic.royalties,
+                            thankYou: currentLicenses.basic.thankYou,
+                            usage: currentLicenses.basic.usage,
+                            files: currentLicenses.basic.files,
+                            is_favorite: !!currentLicenses.basic.is_favorite
+                        },
+                        offszn_premium: {
+                            id: 'offszn_premium',
+                            name: currentLicenses.premium.name,
+                            price: parseFloat(currentLicenses.premium.price),
+                            enabled: currentLicenses.premium.enabled,
+                            publishing: currentLicenses.premium.publishing,
+                            royalties: currentLicenses.premium.royalties,
+                            thankYou: currentLicenses.premium.thankYou,
+                            usage: currentLicenses.premium.usage,
+                            files: currentLicenses.premium.files,
+                            is_favorite: !!currentLicenses.premium.is_favorite
+                        },
+                        offszn_unlimited: {
+                            id: 'offszn_unlimited',
+                            name: currentLicenses.trackout.name,
+                            price: parseFloat(currentLicenses.trackout.price),
+                            enabled: currentLicenses.trackout.enabled,
+                            publishing: currentLicenses.trackout.publishing,
+                            royalties: currentLicenses.trackout.royalties,
+                            thankYou: currentLicenses.trackout.thankYou,
+                            usage: currentLicenses.trackout.usage,
+                            files: currentLicenses.trackout.files,
+                            is_favorite: !!currentLicenses.trackout.is_favorite
+                        },
+                        offszn_exclusive: {
+                            id: 'offszn_exclusive',
+                            name: currentLicenses.unlimited.name,
+                            price: parseFloat(currentLicenses.unlimited.price),
+                            enabled: currentLicenses.unlimited.enabled,
+                            publishing: currentLicenses.unlimited.publishing,
+                            royalties: currentLicenses.unlimited.royalties,
+                            thankYou: currentLicenses.unlimited.thankYou,
+                            usage: currentLicenses.unlimited.usage,
+                            files: currentLicenses.unlimited.files,
+                            is_favorite: !!currentLicenses.unlimited.is_favorite
+                        }
+                    };
 
                     await window.supabaseClient
                         .from('users')
-                        .update({ license_settings: currentLicenses })
+                        .update({ license_settings: dbLicenseSettings })
                         .eq('id', window.currentUser.id);
 
                     // ?? CLEANUP: Logs eliminados para producci?n

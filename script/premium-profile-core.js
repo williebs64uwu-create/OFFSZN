@@ -1,10 +1,9 @@
 /**
  * Premium Profile - Core Engine
- * Handles data fetching, event listeners, and initialization.
+ * Handles data fetching, section compiling, and RendererEngine initialization.
  */
 
 (function() {
-    let currentCategory = 'BEATS';
     let allProducts = [];
     let isOwner = false;
     let userNickname = "";
@@ -17,70 +16,233 @@
             return;
         }
 
+        window.IS_LIVE_PROFILE = true;
+
         AuthUtils.initSupabase();
         const supabase = window.supabaseClient;
 
-        // Register GSAP Plugins
-        if (window.ScrollTrigger) {
-            gsap.registerPlugin(ScrollTrigger);
-        }
-
         try {
-            // 1. Parallel Data Fetch
-            const [userRes, productsRes, currentUser] = await Promise.all([
+            // 1. Fetch live data from Supabase
+            const [userRes, productsRes, configRes, currentUser] = await Promise.all([
                 supabase.from('users').select('*').eq('id', userId).single(),
                 supabase.from('products').select('*').eq('producer_id', userId).eq('visibility', 'public').order('created_at', { ascending: false }),
+                supabase.from('store_configs').select('config_json').eq('user_id', userId).maybeSingle(),
                 AuthUtils.getCurrentUser()
             ]);
 
             isOwner = currentUser && currentUser.id === userId;
+            window.IS_OWNER = isOwner;
 
-            if (userRes.data) {
-                const user = userRes.data;
-                userNickname = user.nickname || "Artista";
+            if (!userRes.data) {
+                console.error("❌ User not found");
+                hideInitialLoader();
+                return;
+            }
+
+            const user = userRes.data;
+            userNickname = user.nickname || "Artista";
+            window.builderNickname = userNickname;
+            window.userNickname = userNickname;
+
+            const userAvatar = user.avatar_url || "";
+            const userBio = user.bio || "";
+            const userEmail = user.email || (currentUser ? currentUser.email : "contacto@offszn.lat");
+            const socials = user.socials || {};
+            const playlists = socials.playlists || [];
+            const services = socials.custom_services || [];
+
+            // 2. Parse License Settings with safe defaults
+            const systemDefaults = {
+                basic: { name: 'Basic Lease', price: 20, enabled: true, usage: { streams: '50000', sales: '2000', radio: 'No Permitido' }, files: { mp3: true, wav: false, stems: false }, publishing: 50, royalties: 50, is_favorite: false },
+                premium: { name: 'Premium Lease', price: 50, enabled: true, usage: { streams: '500000', sales: '5000', radio: '2 Estaciones' }, files: { mp3: true, wav: true, stems: false }, publishing: 50, royalties: 50, is_favorite: false },
+                trackout: { name: 'Trackout Lease', price: 100, enabled: true, usage: { streams: '1000000', sales: '10000', radio: 'ILIMITADO' }, files: { mp3: true, wav: true, stems: true }, publishing: 50, royalties: 50, is_favorite: false },
+                unlimited: { name: 'Unlimited License', price: 300, enabled: true, usage: { streams: 'UNLIMITED', sales: 'UNLIMITED', radio: 'ILIMITADO' }, files: { mp3: true, wav: true, stems: true }, publishing: 50, royalties: 50, is_favorite: false }
+            };
+
+            let finalSettings = [];
+            const baseSettings = user.license_settings || {};
+
+            ['basic', 'premium', 'trackout', 'unlimited'].forEach((key, index) => {
+                let userLic = {};
+                if (key === 'trackout') {
+                    userLic = baseSettings['offszn_unlimited'] || baseSettings['trackout'] || {};
+                } else if (key === 'unlimited') {
+                    userLic = baseSettings['offszn_exclusive'] || baseSettings['unlimited'] || {};
+                } else {
+                    userLic = baseSettings[`offszn_${key}`] || baseSettings[key] || {};
+                }
+                const sysLic = systemDefaults[key];
                 
-                // Set globals if needed for templates
-                window.userNickname = userNickname; 
+                // If the license specifically exists in the database, respect its true enabled state.
+                // If it doesn't exist, default to system defaults (which is true in systemDefaults).
+                const enabled = (userLic.enabled !== undefined) ? (userLic.enabled !== false && userLic.enabled !== 'false' && userLic.enabled !== "") : true;
 
-                // Render Sections
-                PremiumRender.renderLicenses('premium-licenses-grid', 'licencias-section', user.license_settings);
-                
-                const services = user.socials?.custom_services || [];
-                PremiumRender.renderServices('services-shelf', 'services-section', services, userNickname, isOwner, user.avatar_url);
+                if (enabled) {
+                    finalSettings.push({
+                        id: key,
+                        nombre: userLic.name || sysLic.name,
+                        precio: userLic.price !== undefined ? userLic.price : sysLic.price,
+                        isFeatured: (key === 'premium') || (index === 1),
+                        publishing: userLic.publishing !== undefined ? userLic.publishing : sysLic.publishing,
+                        royalties: userLic.royalties !== undefined ? userLic.royalties : sysLic.royalties,
+                        files: {
+                            mp3: true,
+                            wav: userLic.files?.wav !== undefined ? !!userLic.files?.wav : sysLic.files.wav,
+                            stems: userLic.files?.stems !== undefined ? !!userLic.files?.stems : sysLic.files.stems
+                        },
+                        is_favorite: !!userLic.is_favorite,
+                        usage: {
+                            streams: userLic.usage?.streams || userLic.streams || sysLic.usage.streams,
+                            sales: userLic.usage?.sales || userLic.sales || sysLic.usage.sales,
+                            radio: userLic.usage?.radio || userLic.radio || sysLic.usage.radio
+                        }
+                    });
+                }
+            });
 
-                // Polling for ProfLoader (Navbar/Footer)
-                initLoaderUI(user);
+            // Sort favorites to the top
+            finalSettings.sort((a, b) => (b.is_favorite ? 1 : 0) - (a.is_favorite ? 1 : 0));
 
-                // Update Contact Email
-                const contactEmail = user.email || (currentUser ? currentUser.email : "contacto@offszn.lat");
-                const emailEl = document.getElementById('dynamic-contact-email');
-                if (emailEl) {
-                    emailEl.innerText = contactEmail;
-                    emailEl.href = `mailto:${contactEmail}`;
+            // 3. Setup dynamic theme properties
+            let configJson = null;
+            if (configRes && configRes.data && configRes.data.config_json) {
+                configJson = configRes.data.config_json;
+            }
+
+            const theme = (configJson && configJson.theme) || {};
+            const appEl = document.getElementById('app');
+            if (appEl) {
+                if (theme.primaryColor) {
+                    appEl.style.setProperty('--theme-primary', theme.primaryColor);
+                    document.documentElement.style.setProperty('--accent-white', theme.primaryColor);
+                }
+                if (theme.backgroundColor) {
+                    appEl.style.setProperty('--theme-bg', theme.backgroundColor);
+                    document.documentElement.style.setProperty('--bg-dark', theme.backgroundColor);
+                }
+                if (theme.fontFamily) {
+                    appEl.style.setProperty('--theme-font', theme.fontFamily);
+                    document.documentElement.style.setProperty('--font-family', theme.fontFamily);
+                    document.body.style.fontFamily = theme.fontFamily;
                 }
             }
 
-            if (productsRes.data) {
-                allProducts = productsRes.data;
-                initTabs();
+            // Products list
+            allProducts = productsRes.data || [];
+            window.currentTabProducts = allProducts.filter(p => (p.product_type || '').toUpperCase() === 'BEAT');
+
+            // 4. Compile dynamic sections list
+            let sectionsList = [];
+            if (configJson && configJson.sections && configJson.sections.length > 0) {
+                sectionsList = JSON.parse(JSON.stringify(configJson.sections));
+            } else {
+                // Fallback default premium layout
+                sectionsList = [
+                    { id: 'sec-navbar', type: 'navbar', props: {} },
+                    { id: 'sec-hero', type: 'hero', props: {} },
+                    { id: 'sec-products', type: 'products', props: {} },
+                    { id: 'sec-licenses', type: 'licenses', props: {} },
+                    { id: 'sec-services', type: 'services', props: {} },
+                    { id: 'sec-playlists', type: 'playlists', props: {} },
+                    { id: 'sec-faq', type: 'faq', props: {} },
+                    { id: 'sec-footer', type: 'footer', props: {} }
+                ];
             }
 
-            // 5. Check Subscription Status (Specifically for jdagust/Ending subscriptions)
+            // Populates real live DB values for each active section
+            const compiledSections = sectionsList.map(sec => {
+                const section = { ...sec };
+                section.props = section.props || {};
+
+                switch (section.type) {
+                    case 'navbar':
+                        // Use customized links from builder config if they exist
+                        if (!section.props.links || section.props.links.length === 0) {
+                            const enabledLinks = ['BEATS'];
+                            if (finalSettings.length > 0) enabledLinks.push('SOBRE MI'); // Map to licencias/sobrediseño
+                            if (services.length > 0) enabledLinks.push('SERVICIOS');
+                            if (playlists.length > 0) enabledLinks.push('PLAYLISTS');
+                            enabledLinks.push('FAQ');
+                            section.props.links = enabledLinks;
+                        }
+                        if (!section.props.logoText) {
+                            section.props.logoText = userNickname;
+                        }
+                        if (!section.props.avatarUrl) {
+                            section.props.avatarUrl = userAvatar;
+                        }
+                        break;
+
+                    case 'hero':
+                        // Use customized hero title and subtitle from builder if they exist
+                        if (!section.props.title) {
+                            section.props.title = userNickname;
+                        }
+                        if (!section.props.subtitle) {
+                            section.props.subtitle = userBio;
+                        }
+                        if (!section.props.avatarUrl) {
+                            section.props.avatarUrl = userAvatar;
+                        }
+                        break;
+
+                    case 'products':
+                        section.props.products = allProducts;
+                        section.props.userNickname = userNickname;
+                        break;
+
+                    case 'licenses':
+                        section.props.licenses = finalSettings;
+                        break;
+
+                    case 'services':
+                        section.props.services = services;
+                        section.props.userAvatar = userAvatar;
+                        break;
+
+                    case 'playlists':
+                        section.props.playlists = playlists;
+                        break;
+
+                    case 'faq':
+                        section.props.email = userEmail;
+                        break;
+
+                    case 'footer':
+                        section.props.socials = socials;
+                        break;
+                }
+                return section;
+            });
+
+            // 5. Render Everything with RendererEngine
+            const mainApp = document.getElementById('app');
+            const state = {
+                sections: compiledSections,
+                theme: theme
+            };
+            const engine = new window.RendererEngine(mainApp, state);
+            engine.render(state);
+
+            // No need to load duplicate static nav/footers anymore as engine renders them dynamically
+
+            // Check Subscription Status
             if (isOwner) {
                 checkSubscriptionStatus(supabase, currentUser.id);
             }
 
-            // Finish Loading
-            // Particles
+            // Fire Particles Background
             if (window.initParticles) window.initParticles();
 
-            // Scroll Animations
-            initScrollAnimations();
+            // Bind grab drag scroll
+            if (window.bindDragScroll) {
+                window.bindDragScroll();
+            }
 
             hideInitialLoader();
         } catch (err) {
             console.error("❌ Error loading profile data:", err);
-            hideInitialLoader(); // At least show the page even if empty
+            hideInitialLoader();
         }
     });
 
@@ -99,8 +261,6 @@
                 const diffTime = endDate - now;
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-                // Show modal if subscription is ending soon (e.g. < 15 days)
-                // We also check if they've seen it this session
                 const hasSeenModal = sessionStorage.getItem('offszn_sub_modal_seen');
 
                 if (diffDays <= 15 && !hasSeenModal) {
@@ -132,16 +292,15 @@
             loader.style.opacity = '0';
             setTimeout(() => {
                 loader.style.visibility = 'hidden';
+                loader.style.display = 'none';
             }, 500);
         }
         
-        // Animación entrada Hero
-        const tl = gsap.timeline();
-        tl.to('#hero-content', { autoAlpha: 1, y: 0, duration: 1.2, ease: 'power4.out' });
-        
-        // Animación sutil para los tabs si ya están listos
-        if (document.querySelector('.tab-trigger')) {
-            tl.from('.tab-trigger', { autoAlpha: 0, y: 15, stagger: 0.08, duration: 0.8, ease: 'back.out(1.7)' }, "-=0.6");
+        const heroContent = document.getElementById('hero-content');
+        if (heroContent) {
+            heroContent.style.opacity = '1';
+            heroContent.style.transform = 'translateY(0)';
+            heroContent.style.transition = 'all 0.5s ease-out';
         }
     }
 
@@ -151,9 +310,6 @@
             if (window.ProfLoader) {
                 window.ProfLoader.init(user);
                 clearInterval(checkLoader);
-                
-                // Inicializar comportamientos del Nav
-                setupSmoothNav();
                 initNavbarScroll();
             } else if (attempts++ > 50) {
                 clearInterval(checkLoader);
@@ -161,57 +317,6 @@
         }, 100);
     }
 
-    function setupSmoothNav() {
-        const navLinks = document.querySelectorAll('.nav-link');
-        navLinks.forEach(link => {
-            link.onclick = (e) => {
-                const targetId = link.getAttribute('href');
-                if (targetId && targetId.startsWith('#')) {
-                    e.preventDefault();
-                    const targetEl = document.querySelector(targetId);
-                    if (targetEl) {
-                        const offset = 80; // Navbar height offset
-                        const targetPos = targetEl.getBoundingClientRect().top + window.pageYOffset - offset;
-                        
-                        window.scrollTo({
-                            top: targetPos,
-                            behavior: 'smooth'
-                        });
-                    }
-                }
-            };
-        });
-    }
-
-    function initScrollAnimations() {
-        if (!window.ScrollTrigger) return;
-
-        // Revelar secciones sutilmente al hacer scroll
-        const sections = [
-            '#products-section',
-            '#services-section',
-            '#licencias-section',
-            '#playlists-section',
-            '#faq-section'
-        ];
-
-        sections.forEach(sel => {
-            const el = document.querySelector(sel);
-            if (!el) return;
-
-            gsap.from(el, {
-                scrollTrigger: {
-                    trigger: el,
-                    start: "top 85%", // Empieza cuando el tope de la sección llega al 85% del viewport
-                    toggleActions: "play none none none"
-                },
-                autoAlpha: 0,
-                y: 40,
-                duration: 1,
-                ease: "power2.out"
-            });
-        });
-    }
     function initNavbarScroll() {
         const checkNav = setInterval(() => {
             const nav = document.querySelector('.prof-nav');
@@ -224,134 +329,52 @@
         }, 100);
     }
 
-    function initTabs() {
-        const categories = ['BEATS', 'DRUMKITS', 'LOOPKITS', 'PRESETS'];
-        const tabsContainer = document.getElementById('product-tabs');
-        if (!tabsContainer) return;
-
-        let visibleCategories = categories.filter(cat => {
-            if (isOwner) return true;
-            const count = allProducts.filter(p => {
-                const type = (p.product_type || '').toUpperCase();
-                if (cat === 'BEATS') return type === 'BEAT';
-                if (cat === 'DRUMKITS') return type === 'DRUMKIT';
-                if (cat === 'LOOPKITS') return type === 'LOOPKIT';
-                if (cat === 'PRESETS') return type.includes('PRESET') || type === 'TEMPLATE';
-                return false;
-            }).length;
-            return count > 0;
+    // --- PUBLIC DRAG TO SCROLL ENGINE ---
+    window.bindDragScroll = function(rootEl) {
+        const parent = rootEl || document;
+        const horizontalContainers = parent.querySelectorAll('.products-shelf, .premium-lic-grid, .shelf-container, .filter-pills, .tabs-inner');
+        
+        horizontalContainers.forEach(el => {
+            if (el.dataset.dragBound) return;
+            el.dataset.dragBound = 'true';
+            
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+            
+            el.style.cursor = 'grab';
+            
+            el.addEventListener('mousedown', (e) => {
+                if (e.target.closest('button, a, input, select, textarea, .explore-heart-action, .explore-play-action, .tab-trigger, .pill')) {
+                    return;
+                }
+                isDown = true;
+                el.style.cursor = 'grabbing';
+                startX = e.pageX - el.offsetLeft;
+                scrollLeft = el.scrollLeft;
+                e.stopPropagation();
+                e.preventDefault();
+            });
+            
+            el.addEventListener('mouseleave', () => {
+                isDown = false;
+                el.style.cursor = 'grab';
+            });
+            
+            el.addEventListener('mouseup', () => {
+                isDown = false;
+                el.style.cursor = 'grab';
+            });
+            
+            el.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.stopPropagation();
+                e.preventDefault();
+                const x = e.pageX - el.offsetLeft;
+                const walk = (x - startX) * 1.5;
+                el.scrollLeft = scrollLeft - walk;
+            });
         });
-
-        if (visibleCategories.length > 0) {
-            document.getElementById('products-section').style.display = 'block';
-            tabsContainer.innerHTML = `<div class="tabs-inner">` + visibleCategories.map(cat => 
-                `<button class="tab-trigger" onclick="switchTab('${cat}')">${cat}</button>`
-            ).join('') + `</div>`;
-            switchTab(visibleCategories[0]);
-            initShelfNavigation('products-grid', 'products-prev', 'products-next');
-        }
-    }
-
-    function initShelfNavigation(shelfId, prevId, nextId) {
-        const shelf = document.getElementById(shelfId);
-        const prevBtn = document.getElementById(prevId);
-        const nextBtn = document.getElementById(nextId);
-        
-        if (!shelf || !prevBtn || !nextBtn) return;
-
-        const updateArrows = () => {
-            if (shelf.scrollLeft <= 5) {
-                prevBtn.classList.add('disabled');
-            } else {
-                prevBtn.classList.remove('disabled');
-            }
-            if (shelf.scrollLeft >= shelf.scrollWidth - shelf.clientWidth - 5) {
-                nextBtn.classList.add('disabled');
-            } else {
-                nextBtn.classList.remove('disabled');
-            }
-        };
-
-        prevBtn.onclick = () => {
-            const card = shelf.querySelector('.premium-product-card');
-            const scrollAmount = card ? (card.clientWidth + 16) * 2 : 400;
-            shelf.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-        };
-        nextBtn.onclick = () => {
-            const card = shelf.querySelector('.premium-product-card');
-            const scrollAmount = card ? (card.clientWidth + 16) * 2 : 400;
-            shelf.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-        };
-        
-        shelf.addEventListener('scroll', updateArrows);
-        window.addEventListener('resize', updateArrows);
-        setTimeout(updateArrows, 100);
-    }
-
-    // --- EXPOSED FUNCTIONS ---
-    window.switchTab = function(cat) {
-        const filtered = allProducts.filter(p => {
-            const type = (p.product_type || '').toUpperCase();
-            if (cat === 'BEATS') return type === 'BEAT';
-            if (cat === 'DRUMKITS') return type === 'DRUMKIT';
-            if (cat === 'LOOPKITS') return type === 'LOOPKIT';
-            if (cat === 'PRESETS') return type.includes('PRESET') || type === 'TEMPLATE';
-            return false;
-        });
-
-        window.currentTabProducts = filtered; // For StickyPlayer
-        
-        // Limit to 5 products max as requested
-        const maxProducts = filtered.slice(0, 5);
-        PremiumRender.renderProducts('products-grid', maxProducts, cat, userNickname, isOwner);
-        
-        document.querySelectorAll('.tab-trigger').forEach(t => {
-            t.classList.toggle('active', t.innerText === cat);
-        });
-
-        // Animación de entrada para los nuevos productos cargados
-        gsap.from(".premium-product-card", {
-            autoAlpha: 0,
-            y: 30,
-            stagger: 0.06,
-            duration: 0.7,
-            ease: "power3.out",
-            clearProps: "opacity,visibility,transform"
-        });
-
-        const viewAllBtn = document.getElementById('view-all-products');
-        if (viewAllBtn) {
-            const catMap = { 'BEATS': 'beat', 'DRUMKITS': 'drumkit', 'LOOPKITS': 'loopkit', 'PRESETS': 'preset' };
-            viewAllBtn.onclick = () => window.location.href = `/search.html?cat=${catMap[cat]}&producer=${userNickname}`;
-        }
-        
-        // Reset scroll position when switching tabs
-        const shelf = document.getElementById('products-grid');
-        if (shelf) {
-            shelf.scrollLeft = 0;
-            setTimeout(() => shelf.dispatchEvent(new Event('scroll')), 50);
-        }
-    };
-
-    window.handlePlay = function(e, index) {
-        if (e) e.stopPropagation();
-        if (window.StickyPlayer && window.currentTabProducts && window.currentTabProducts[index]) {
-            const productsWithMeta = window.currentTabProducts.map(p => ({
-                ...p,
-                artist_users: { nickname: userNickname }
-            }));
-            window.StickyPlayer.loadTrack(productsWithMeta[index], productsWithMeta);
-        }
-    };
-
-    window.handleLike = async function(e, productId, producerId) {
-        if (e) e.stopPropagation();
-        if (!window.FavoritesManager) return;
-        
-        const btn = document.getElementById(`like-btn-${productId}`);
-        
-        // toggleLike handles auth check, guest modal, api call and UI icon toggle
-        await window.FavoritesManager.toggleLike(productId, btn);
     };
 
     window.toggleFaq = function(btn) {

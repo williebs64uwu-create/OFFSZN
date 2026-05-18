@@ -328,20 +328,6 @@ function renderExploreFeed() {
     // --- NEW: Inject Top Slim Banner ---
     injectTopBanner();
 
-    // NEW: TOP PLAYLIST
-    const topPlaylistItems = allProducts
-        .filter(p => p.visibility === 'public' && (p.product_type || '').toLowerCase() === 'beat' && (p.producer_nickname || '').toLowerCase() !== 'koimatorru')
-        .sort((a,b) => {
-            const score = p => (p.views_count || 0) + (p.plays_count || 0) * 2 + (p.stats_likes || 0) * 5;
-            return score(b) - score(a);
-        })
-        .slice(0, 15);
-    
-    if (topPlaylistItems.length > 0) {
-        container.appendChild(createShelfRow('TOP PLAYLIST', topPlaylistItems, 'standard', 'El top 100 beats de Offszn'));
-        topPlaylistItems.forEach(p => usedProductIds.add(p.id));
-    }
-
     // 3. THE LIST GRID (Section 2: Trending / Fresh) - 2 Columns
     const listGridContainer = document.createElement('div');
     listGridContainer.id = 'explore-list-grid-wrapper';
@@ -386,6 +372,20 @@ function renderExploreFeed() {
     if (recs.length > 0) {
         container.appendChild(createShelfRow('Recomendados para ti', recs));
         recs.forEach(p => usedProductIds.add(p.id));
+    }
+
+    // NEW: TOP PLAYLIST (Moved here below Recomendados para ti)
+    const topPlaylistItems = allProducts
+        .filter(p => p.visibility === 'public' && (p.product_type || '').toLowerCase() === 'beat' && (p.producer_nickname || '').toLowerCase() !== 'koimatorru')
+        .sort((a,b) => {
+            const score = p => (p.views_count || 0) + (p.plays_count || 0) * 2 + (p.stats_likes || 0) * 5;
+            return score(b) - score(a);
+        })
+        .slice(0, 15);
+    
+    if (topPlaylistItems.length > 0) {
+        container.appendChild(createShelfRow('TOP PLAYLIST', topPlaylistItems, 'standard', 'El top 100 beats de Offszn'));
+        topPlaylistItems.forEach(p => usedProductIds.add(p.id));
     }
 
     // 5. SHELF: KITS (Section 4: Kits & Sounds) - Excluding Presets
@@ -1422,6 +1422,9 @@ function createProductCardHtml(product, format = 'standard') {
     const priceDisplay = (window.CurrencyManager ? window.CurrencyManager.format(parseFloat(rawPrice) || 0) : `$${parseFloat(rawPrice).toFixed(2)}`);
 
     // Download Gate Config
+    window.downloadGateProductRegistry = window.downloadGateProductRegistry || new Map();
+    window.downloadGateProductRegistry.set(String(product.id), product);
+
     const downloadUrl = product.download_url || product.mp3_url || product.zip_url || '';
     const producerName = (product.producer_nickname || 'artista').replace(/'/g, "\\'");
     const gateCall = `event.stopPropagation(); window.openDownloadGateModal('${downloadUrl}', '${producerName}', '${product.id}')`;

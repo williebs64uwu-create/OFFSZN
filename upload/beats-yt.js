@@ -97,7 +97,16 @@ async function initLicenses() {
                     console.log('✅ [LICENSES] Settings found in Supabase.');
                     // Merge Supabase settings with defaults, handling legacy non-prefixed keys
                     Object.keys(data.license_settings).forEach(id => {
-                        const targetId = id.startsWith('offszn_') ? id : `offszn_${id}`;
+                        let targetId = id;
+                        if (!id.startsWith('offszn_')) {
+                            const legacyMap = {
+                                basic: 'offszn_basic',
+                                premium: 'offszn_premium',
+                                trackout: 'offszn_unlimited',
+                                unlimited: 'offszn_exclusive'
+                            };
+                            targetId = legacyMap[id] || `offszn_${id}`;
+                        }
                         if (settings[targetId]) {
                             settings[targetId].price = data.license_settings[id].price;
                             settings[targetId].enabled = data.license_settings[id].enabled;

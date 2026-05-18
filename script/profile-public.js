@@ -2674,7 +2674,9 @@ async function renderTrending(items, user, collabStats = {}) {
                     e.stopPropagation();
                     if (window.openDownloadGateModal) {
                         const dlUrl = prod.free_download_url || getProductAudio(prod) || '';
-                        window.openDownloadGateModal(dlUrl, user.nickname, prod.id);
+                        window.downloadGateProductRegistry = window.downloadGateProductRegistry || new Map();
+                        window.downloadGateProductRegistry.set(String(prod.id), prod);
+                        window.openDownloadGateModal(dlUrl, user.nickname, prod.id, prod);
                     } else {
                         window.location.href = seoLink;
                     }
@@ -2964,6 +2966,23 @@ async function renderProductList(items, user, collabStats = {}) {
         const dlIcon = document.createElement('i');
         dlIcon.className = 'bi bi-download';
         dlBtn.appendChild(dlIcon);
+
+        const freeDLAvaliable = (prod.free_download_type && prod.free_download_type !== 'none') || (window.AuthUtils && window.AuthUtils.canFreeDownload && window.AuthUtils.canFreeDownload(prod));
+        dlBtn.onclick = (e) => {
+            e.stopPropagation();
+            if (isTrulyFree || freeDLAvaliable) {
+                if (window.openDownloadGateModal) {
+                    const dlUrl = prod.free_download_url || getProductAudio(prod) || '';
+                    window.downloadGateProductRegistry = window.downloadGateProductRegistry || new Map();
+                    window.downloadGateProductRegistry.set(String(prod.id), prod);
+                    window.openDownloadGateModal(dlUrl, user.nickname, prod.id, prod);
+                } else {
+                    window.location.href = seoLink;
+                }
+            } else {
+                window.location.href = seoLink;
+            }
+        };
         actionsDiv.appendChild(dlBtn);
 
         const shareBtn = document.createElement('button');

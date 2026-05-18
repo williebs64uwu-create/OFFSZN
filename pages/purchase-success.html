@@ -587,31 +587,55 @@
           };
 
           const licKey = mapToKey(licName);
-          const settings = p.user?.license_settings?.[licKey];
+          let settings = p.user?.license_settings?.[licKey];
+          if (!settings) {
+            const prefixMap = {
+              'basic': 'offszn_basic',
+              'premium': 'offszn_premium',
+              'trackout': 'offszn_unlimited',
+              'unlimited': 'offszn_exclusive',
+              'exclusive': 'offszn_exclusive'
+            };
+            const altKey = prefixMap[licKey];
+            if (altKey) {
+              settings = p.user?.license_settings?.[altKey];
+            }
+          }
 
-          if (settings && settings.files) {
-            // Caso 1: Producer configuró archivos específicos
-            if (settings.files.mp3) {
-              buttonsHtml += `
-                <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'mp3', '${licName}')">
-                  <i class="bi bi-music-note-beamed"></i> MP3
-                </button>`;
+          const nameLow = licName.toLowerCase();
+          let hasMp3 = true;
+          let hasWav = settings?.files?.wav || false;
+          let hasStems = settings?.files?.stems || false;
+
+          // Smart Industry Overrides: If license name implies WAV or STEMS access
+          if (nameLow.includes('unlimited') || nameLow.includes('exclusive')) {
+            hasWav = true;
+            hasStems = true;
+          } else if (nameLow.includes('premium') || nameLow.includes('wav') || nameLow.includes('stems') || nameLow.includes('trackout')) {
+            hasWav = true;
+            if (nameLow.includes('stems') || nameLow.includes('trackout')) {
+              hasStems = true;
             }
-            if (settings.files.wav) {
-              buttonsHtml += `
-                <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'wav', '${licName}')">
-                  <i class="bi bi-file-earmark-music"></i> WAV
-                </button>`;
-            }
-            if (settings.files.stems) {
-              buttonsHtml += `
-                <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'stems', '${licName}')">
-                  <i class="bi bi-layers-half"></i> STEMS
-                </button>`;
-            }
-          } else {
-            // Caso 2: Sin configuración (Fallback conservador: MP3)
-            buttonsHtml = `<button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'mp3', '${licName}')"><i class="bi bi-download"></i> Descargar</button>`;
+          }
+
+          // Generate appropriate buttons
+          buttonsHtml += `
+            <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'mp3', '${licName}')">
+              <i class="bi bi-music-note-beamed"></i> MP3
+            </button>`;
+
+          if (hasWav) {
+            buttonsHtml += `
+              <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'wav', '${licName}')">
+                <i class="bi bi-file-earmark-music"></i> WAV
+              </button>`;
+          }
+
+          if (hasStems) {
+            buttonsHtml += `
+              <button class="btn-download" onclick="downloadFile('${order.transaction_id}', '${p.id}', 'stems', '${licName}')">
+                <i class="bi bi-layers-half"></i> STEMS
+              </button>`;
           }
         } else {
           // Caso 3: No es Beat (Drumkits/etc)

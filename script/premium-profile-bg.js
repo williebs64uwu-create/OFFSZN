@@ -5,24 +5,31 @@
  */
 
 window.initParticles = function() {
+    if (window.particlesAnimationId) {
+        cancelAnimationFrame(window.particlesAnimationId);
+    }
+
     const canvas = document.getElementById('particles-bg');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     
     let width, height;
     let particles = [];
-    let mouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-    let targetMouse = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
     
     function resize() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = canvas.parentElement.offsetHeight || window.innerHeight;
+        width = canvas.width = canvas.parentElement ? canvas.parentElement.offsetWidth : window.innerWidth;
+        height = canvas.height = canvas.parentElement ? canvas.parentElement.offsetHeight : window.innerHeight;
     }
     
-    window.addEventListener('resize', resize);
+    window.removeEventListener('resize', window._particlesResizeHandler);
+    window._particlesResizeHandler = resize;
+    window.addEventListener('resize', window._particlesResizeHandler);
     resize();
 
-    // Crear particulas (100 para un look limpio pero premium)
+    let mouse = { x: width / 2, y: height / 2 };
+    let targetMouse = { x: width / 2, y: height / 2 };
+
+    // Crear particulas
     const particleCount = 100;
     for (let i = 0; i < particleCount; i++) {
         particles.push({
@@ -36,10 +43,23 @@ window.initParticles = function() {
         });
     }
 
-    document.addEventListener('mousemove', (e) => {
-        targetMouse.x = e.clientX;
-        targetMouse.y = e.clientY;
-    });
+    if (!window._particlesMouseHandlerAdded) {
+        document.addEventListener('mousemove', (e) => {
+            if(window._particlesTargetMouse) {
+                const activeCanvas = document.getElementById('particles-bg');
+                if (activeCanvas) {
+                    const rect = activeCanvas.getBoundingClientRect();
+                    window._particlesTargetMouse.x = e.clientX - rect.left;
+                    window._particlesTargetMouse.y = e.clientY - rect.top;
+                } else {
+                    window._particlesTargetMouse.x = e.clientX;
+                    window._particlesTargetMouse.y = e.clientY;
+                }
+            }
+        });
+        window._particlesMouseHandlerAdded = true;
+    }
+    window._particlesTargetMouse = targetMouse;
 
     function animate() {
         ctx.clearRect(0, 0, width, height);
@@ -49,17 +69,14 @@ window.initParticles = function() {
         mouse.y += (targetMouse.y - mouse.y) * 0.05;
 
         particles.forEach(p => {
-            // Movimiento natural
             p.x += p.speedX;
             p.y += p.speedY;
             
-            // Loop infinito
             if (p.x < 0) p.x = width;
             if (p.x > width) p.x = 0;
             if (p.y < 0) p.y = height;
             if (p.y > height) p.y = 0;
 
-            // Desplazamiento por el mouse (Paralaje)
             let offsetX = (mouse.x - width / 2) * p.parallaxFactor;
             let offsetY = (mouse.y - height / 2) * p.parallaxFactor;
 
@@ -69,7 +86,7 @@ window.initParticles = function() {
             ctx.fill();
         });
         
-        requestAnimationFrame(animate);
+        window.particlesAnimationId = requestAnimationFrame(animate);
     }
-    animate();
+    window.particlesAnimationId = requestAnimationFrame(animate);
 };;

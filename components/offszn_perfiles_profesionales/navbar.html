@@ -1,15 +1,55 @@
 <nav class="prof-nav">
-    <a href="/" id="nav-user-link" class="user-nav-info">
-        <img src="https://offszn.lat/images/default-avatar.png" id="nav-avatar" class="user-nav-avatar" alt="Avatar">
-        <span id="nav-nickname" class="user-nav-name">Cargando...</span>
-    </a>
+    <div class="nav-left-group">
+        <button id="mobile-hamburger-btn" class="mobile-hamburger-btn" aria-label="Menu">
+            <i class="bi bi-list"></i>
+        </button>
+        <a href="/" id="nav-user-link" class="user-nav-info">
+            <img src="https://offszn.lat/images/default-avatar.png" id="nav-avatar" class="user-nav-avatar" alt="Avatar">
+            <span id="nav-nickname" class="user-nav-name">Cargando...</span>
+        </a>
+    </div>
+
     <div class="nav-links">
         <a href="#products-section" id="nav-link-beats" class="nav-link">Beats</a>
         <a href="#services-section" id="nav-link-services" class="nav-link">Servicios</a>
         <a href="#playlists-section" id="nav-link-playlists" class="nav-link">Playlists</a>
         <a href="#faq-section" id="nav-link-about" class="nav-link">Sobre mi</a>
     </div>
+
+    <div class="nav-right-extreme">
+        <a href="#" class="nav-cart-trigger" id="nav-cart-btn" title="Carrito" onclick="if(window.CartManager) { window.CartManager.openCart(); } else { event.preventDefault(); }">
+            <i class="bi bi-cart3"></i>
+            <span id="cart-count-badge" class="cart-badge-circle" style="display:none;">0</span>
+        </a>
+    </div>
 </nav>
+
+<!-- Mobile Navigation Drawer -->
+<div id="mobile-nav-drawer" class="mobile-drawer">
+    <div class="drawer-backdrop" id="mobile-drawer-backdrop"></div>
+    <div class="drawer-content">
+        <div class="drawer-header">
+            <span class="drawer-title">Navegación</span>
+            <button id="drawer-close-btn" class="drawer-close" aria-label="Cerrar">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="drawer-links">
+            <a href="#products-section" id="mobile-link-beats" class="drawer-link">
+                <i class="bi bi-music-note-beamed"></i> Beats
+            </a>
+            <a href="#services-section" id="mobile-link-services" class="drawer-link">
+                <i class="bi bi-briefcase"></i> Servicios
+            </a>
+            <a href="#playlists-section" id="mobile-link-playlists" class="drawer-link">
+                <i class="bi bi-music-note-list"></i> Playlists
+            </a>
+            <a href="#faq-section" id="mobile-link-about" class="drawer-link">
+                <i class="bi bi-info-circle"></i> Sobre mi
+            </a>
+        </div>
+    </div>
+</div>
 
 <style>
     .prof-nav {
@@ -18,11 +58,44 @@
         align-items: center;
         justify-content: space-between;
         width: 100%;
-        background: #000;
-        border-bottom: none;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         position: sticky;
         top: 0;
         z-index: 100;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .prof-nav.scrolled {
+        background: rgba(0, 0, 0, 0.9);
+        padding: 12px 40px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .nav-left-group {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .mobile-hamburger-btn {
+        display: none;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.6rem;
+        cursor: pointer;
+        padding: 4px;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.2s;
+    }
+
+    .mobile-hamburger-btn:hover {
+        opacity: 0.8;
     }
 
     .user-nav-info {
@@ -69,35 +142,237 @@
         opacity: 1;
     }
 
+    .nav-right-extreme {
+        display: flex;
+        align-items: center;
+    }
+
+    .nav-cart-trigger {
+        position: relative;
+        color: #fff;
+        font-size: 1.3rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.2s;
+    }
+
+    .nav-cart-trigger:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: scale(1.05);
+    }
+
+    .cart-badge-circle {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        background: #ff3300;
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 800;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        border: 1px solid #000;
+    }
+
+    /* Mobile Drawer System */
+    .mobile-drawer {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: none;
+    }
+
+    .mobile-drawer.active {
+        display: block;
+    }
+
+    .drawer-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(12px);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .mobile-drawer.active .drawer-backdrop {
+        opacity: 1;
+    }
+
+    .drawer-content {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 80%;
+        max-width: 320px;
+        background: #0c0c0e;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 32px 24px;
+        display: flex;
+        flex-direction: column;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .mobile-drawer.active .drawer-content {
+        transform: translateX(0);
+    }
+
+    .drawer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+    }
+
+    .drawer-title {
+        font-size: 0.8rem;
+        font-weight: 800;
+        color: #666;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+
+    .drawer-close {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #888;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: all 0.2s;
+    }
+
+    .drawer-close:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .drawer-links {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .drawer-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
+        text-decoration: none;
+        padding: 14px 18px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        transition: all 0.25s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .drawer-link i {
+        font-size: 1.1rem;
+        color: #888;
+        transition: color 0.2s;
+    }
+
+    .drawer-link:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.12);
+        padding-left: 24px;
+    }
+
+    .drawer-link:hover i {
+        color: #fff;
+    }
+
+    /* Media Queries */
     @media (max-width: 900px) {
         .prof-nav {
-            padding: 14px 16px;
+            padding: 14px 20px;
         }
+
+        .prof-nav.scrolled {
+            padding: 10px 20px;
+        }
+
+        .nav-left-group {
+            gap: 10px;
+        }
+
+        .mobile-hamburger-btn {
+            display: flex;
+            font-size: 1.4rem;
+        }
+
+        .user-nav-info {
+            gap: 8px;
+        }
+
+        .user-nav-avatar {
+            width: 30px;
+            height: 30px;
+        }
+
+        .nav-links {
+            display: none;
+        }
+
         .user-nav-name {
-            font-size: 0.8rem;
-            max-width: 100px;
+            font-size: 0.85rem;
+            max-width: 140px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        .nav-links {
-            gap: 12px;
-        }
-        .nav-link {
-            font-size: 0.7rem;
-        }
     }
 
     @media (max-width: 480px) {
-        .nav-links {
-            gap: 8px;
+        .prof-nav {
+            padding: 10px 12px;
         }
+
+        .prof-nav.scrolled {
+            padding: 8px 12px;
+        }
+
+        .mobile-hamburger-btn {
+            font-size: 1.3rem;
+        }
+
         .user-nav-name {
-            display: none;
+            font-size: 0.78rem;
+            max-width: 100px;
         }
+
         .user-nav-avatar {
-            width: 32px;
-            height: 32px;
+            width: 26px;
+            height: 26px;
+        }
+
+        .nav-cart-trigger {
+            width: 34px;
+            height: 34px;
+            font-size: 1.15rem;
         }
     }
 </style>

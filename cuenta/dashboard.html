@@ -2309,12 +2309,26 @@
                     let price = def.price;
                     let name = def.name;
 
-                    // Override if user settings exist
-                    if (settings && settings[def.id]) {
-                        price = parseFloat(settings[def.id].price) || def.price;
+                    // Override if user settings exist, supporting both prefixed and non-prefixed keys
+                    let userConfig = null;
+                    if (settings) {
+                        const offsznKey = `offszn_${def.id}`;
+                        userConfig = settings[offsznKey] || settings[def.id];
+                        // Special synonym maps
+                        if (!userConfig) {
+                            if (def.id === 'unlimited') {
+                                userConfig = settings['offszn_exclusive'] || settings['exclusive'] || settings['offszn_unlimited'];
+                            } else if (def.id === 'trackout') {
+                                userConfig = settings['offszn_stems'] || settings['stems'] || settings['offszn_trackout'];
+                            }
+                        }
+                    }
+
+                    if (userConfig) {
+                        price = parseFloat(userConfig.price) || def.price;
                         // Use custom name if available and not empty
-                        if (settings[def.id].name && settings[def.id].name.trim() !== "") {
-                            name = settings[def.id].name;
+                        if (userConfig.name && userConfig.name.trim() !== "") {
+                            name = userConfig.name;
                         }
                     }
 

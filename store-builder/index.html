@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Builder - OFFSZN</title>
+    
+    <!-- Fuentes y Iconos Base -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- Estilos Aislados del Builder -->
+    <link rel="stylesheet" href="./css/editor.css">
+    <link rel="stylesheet" href="./css/theme-base.css">
+    <style>
+        .touch-indicator {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="builder-sidebar">
+        <div class="sidebar-header">
+            <h2 style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.5px; margin: 0; color: #fff;">
+                <span style="background: linear-gradient(135deg, #0cbc87 0%, #00f2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; letter-spacing: -1px; font-size: 1.3rem;">OFFSZN</span>
+                <span style="font-weight: 300; font-size: 0.85rem; color: #666; border-left: 1px solid #333; padding-left: 8px; margin-left: 4px; text-transform: uppercase; letter-spacing: 1px;">Builder</span>
+            </h2>
+            <button class="btn-save" id="btnSaveStore">Publicar</button>
+        </div>
+
+        <div class="sidebar-tabs">
+            <button class="tab-btn active" data-tab="blocks">Bloques</button>
+            <button class="tab-btn" data-tab="theme">Diseño</button>
+            <button class="tab-btn" data-tab="settings">Ajustes</button>
+        </div>
+
+        <div class="sidebar-content panel-active" id="blocks-panel">
+            <div class="section-list" id="activeSections">
+                <!-- Los bloques activos (arrastrables) aparecerán aquí -->
+            </div>
+            <button class="btn-add-section"><i class="bi bi-plus-lg"></i> Añadir Sección</button>
+        </div>
+
+        <div class="sidebar-content" id="theme-panel" style="display: none; padding: 20px;">
+            <h3>Colores Globales</h3>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; color:#aaa; font-size:12px;">Color Principal</label>
+                <input type="color" id="themePrimaryColor" style="width:100%; height:40px; border:none; border-radius:8px; cursor:pointer;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display:block; margin-bottom:5px; color:#aaa; font-size:12px;">Color de Fondo</label>
+                <input type="color" id="themeBgColor" style="width:100%; height:40px; border:none; border-radius:8px; cursor:pointer;">
+            </div>
+        </div>
+
+        <div class="sidebar-content" id="settings-panel" style="display: none; padding: 20px;">
+            <p style="color:#666; font-size:14px;">Ajustes generales de la tienda en desarrollo.</p>
+        </div>
+    </aside>
+
+    <!-- LIENZO DE PREVISUALIZACIÓN (Panel Derecho) -->
+    <main class="builder-canvas">
+        <div class="canvas-toolbar">
+            <div class="device-toggles">
+                <button class="device-btn active" data-device="desktop"><i class="bi bi-display"></i></button>
+                <button class="device-btn" data-device="mobile"><i class="bi bi-phone"></i></button>
+            </div>
+            <span class="preview-url" id="previewUrlSpan">willieinspired.offszn.lat</span>
+        </div>
+
+        <!-- Contenedor que simula la ventana del dispositivo -->
+        <div class="preview-device desktop" id="previewDevice">
+            <div class="store-root" id="storeRenderRoot">
+                <!-- El engine.js inyectará el HTML renderizado aquí -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts Globales (Para Auth y BD) -->
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/script/premium-profile-bg.js"></script>
+    
+    <!-- Inicializar Supabase Localmente en el Builder -->
+    <script>
+        window.supabase = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    </script>
+
+    <!-- Scripts Aislados (Arquitectura Limpia) -->
+    <script type="module">
+        import { StoreState } from './js/core/state.js';
+        import { RendererEngine } from './js/renderer/engine.js';
+        
+        let storeState;
+        let renderer;
+        let currentUser = null;
+
+        // 1. Estado Base por Defecto
+        const defaultState = {
+            theme: {
+                primaryColor: '#ffffff',
+                backgroundColor: '#000000',
+                fontFamily: "'Plus Jakarta Sans', sans-serif"
+            },
+            sections: [
+                { id: 'nav_1', type: 'navbar', props: { logoText: 'MI TIENDA', links: ['BEATS', 'SERVICIOS'] } },
+                { id: 'hero_1', type: 'hero', props: { title: 'MI TIENDA', subtitle: 'La mejor calidad de sonido.' } },
+                { id: 'products_1', type: 'products', props: { products: [] } },
+                { id: 'licenses_1', type: 'licenses', props: { licenses: [] } },
+                { id: 'services_1', type: 'services', props: { services: [] } },
+                { id: 'faq_1', type: 'faq', props: { email: 'contacto@mitienda.com' } },
+                { id: 'footer_1', type: 'footer', props: { showBranding: true } }
+            ]
+        };
+
+        // 2. Cargar Estado desde Supabase
+        async function loadUserStore() {
+            try {
+                // Obtener usuario actual
+                const { data: { session }, error: sessionError } = await window.supabase.auth.getSession();
+                if (sessionError || !session) {
+                    console.warn("No hay usuario autenticado. Usando demo...");
+                    initBuilder(defaultState);
+                    return;
+                }
+                
+                currentUser = session.user;
+                console.log("Usuario detectado:", currentUser.id);
+
+                // Buscar datos reales del usuario en public.users
+                const { data: userData } = await window.supabase
+                    .from('users')
+                    .select('nickname, avatar_url, bio, role, license_settings, socials')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                // Buscar productos reales del usuario en public.products
+                const { data: productsData } = await window.supabase
+                    .from('products')
+                    .select('*')
+                    .eq('producer_id', currentUser.id)
+                    .eq('visibility', 'public')
+                    .order('created_at', { ascending: false });
+
+                const productsArray = productsData || [];
+                const servicesArray = userData?.socials?.custom_services || [];
+
+                const userEmail = currentUser.email;
+                const userNickname = userData?.nickname || currentUser.user_metadata?.nickname || currentUser.user_metadata?.display_name || 'MI TIENDA';
+                window.userNickname = userNickname;
+                const userAvatar = userData?.avatar_url || null;
+                const userBio = userData?.bio || userData?.role || 'La mejor calidad de sonido.';
+                const userSocials = userData?.socials || {};
+                
+                // Actualizar el subdominio dinámicamente en la barra del preview
+                if (userNickname !== 'MI TIENDA') {
+                    document.getElementById('previewUrlSpan').textContent = `${userNickname.toLowerCase()}.offszn.lat`;
+                }
+                
+                // Mapear license_settings (JSONB) al arreglo de licencias con fallbacks de sistema
+                let licensesArray = [];
+                const systemDefaults = {
+                    basic: { name: 'Basic Lease', price: 20, enabled: true, usage: { streams: '50000', sales: '2000', radio: 'No Permitido' }, files: { mp3: true, wav: false, stems: false }, publishing: 50, royalties: 50, is_favorite: false },
+                    premium: { name: 'Premium Lease', price: 50, enabled: true, usage: { streams: '500000', sales: '5000', radio: '2 Estaciones' }, files: { mp3: true, wav: true, stems: false }, publishing: 50, royalties: 50, is_favorite: false },
+                    trackout: { name: 'Trackout Lease', price: 100, enabled: true, usage: { streams: '1000000', sales: '10000', radio: 'ILIMITADO' }, files: { mp3: true, wav: true, stems: true }, publishing: 50, royalties: 50, is_favorite: false },
+                    unlimited: { name: 'Unlimited License', price: 300, enabled: true, usage: { streams: 'UNLIMITED', sales: 'UNLIMITED', radio: 'ILIMITADO' }, files: { mp3: true, wav: true, stems: true }, publishing: 50, royalties: 50, is_favorite: false }
+                };
+
+                let finalSettings = {};
+                const baseSettings = userData?.license_settings || {};
+
+                ['basic', 'premium', 'trackout', 'unlimited'].forEach(key => {
+                    let userLic = {};
+                    if (key === 'trackout') {
+                        userLic = baseSettings['offszn_unlimited'] || baseSettings['trackout'] || {};
+                    } else if (key === 'unlimited') {
+                        userLic = baseSettings['offszn_exclusive'] || baseSettings['unlimited'] || {};
+                    } else {
+                        userLic = baseSettings[`offszn_${key}`] || baseSettings[key] || {};
+                    }
+                    const sysLic = systemDefaults[key];
+                    finalSettings[key] = {
+                        ...sysLic,
+                        ...userLic,
+                        enabled: (userLic.enabled !== undefined) ? (userLic.enabled !== false && userLic.enabled !== 'false' && userLic.enabled !== "") : true,
+                        name: userLic.name || sysLic.name,
+                        price: userLic.price !== undefined ? userLic.price : sysLic.price,
+                        publishing: userLic.publishing !== undefined ? userLic.publishing : sysLic.publishing,
+                        royalties: userLic.royalties !== undefined ? userLic.royalties : sysLic.royalties,
+                        files: {
+                            mp3: true,
+                            wav: userLic.files?.wav !== undefined ? !!userLic.files?.wav : sysLic.files.wav,
+                            stems: userLic.files?.stems !== undefined ? !!userLic.files?.stems : sysLic.files.stems
+                        },
+                        is_favorite: !!userLic.is_favorite,
+                        usage: {
+                            streams: userLic.usage?.streams || userLic.streams || sysLic.usage.streams,
+                            sales: userLic.usage?.sales || userLic.sales || sysLic.usage.sales,
+                            radio: userLic.usage?.radio || userLic.radio || sysLic.usage.radio
+                        }
+                    };
+                });
+
+                const activeKeys = Object.keys(finalSettings).filter(k => finalSettings[k].enabled);
+                licensesArray = activeKeys.map((key, i) => {
+                    const lic = finalSettings[key];
+                    const isFeatured = (key === 'premium') || (activeKeys.length > 1 && i === 1);
+                    return {
+                        id: key,
+                        nombre: lic.name,
+                        precio: lic.price,
+                        isFeatured: isFeatured,
+                        publishing: lic.publishing,
+                        royalties: lic.royalties,
+                        files: lic.files,
+                        is_favorite: lic.is_favorite,
+                        usage: lic.usage
+                    };
+                });
+
+                // Sort favorites to the top
+                licensesArray.sort((a, b) => (b.is_favorite ? 1 : 0) - (a.is_favorite ? 1 : 0));
+
+                // Actualizar estado por defecto con información real de la base de datos
+                const defaultHero = defaultState.sections.find(s => s.type === 'hero');
+                if (defaultHero) {
+                    defaultHero.props.title = userNickname;
+                    defaultHero.props.subtitle = userBio;
+                }
+                const defaultNav = defaultState.sections.find(s => s.type === 'navbar');
+                if (defaultNav) {
+                    defaultNav.props.logoText = userNickname;
+                    defaultNav.props.avatarUrl = userAvatar;
+                }
+                const defaultFaq = defaultState.sections.find(s => s.type === 'faq');
+                if (defaultFaq) {
+                    defaultFaq.props.email = userEmail;
+                }
+                const defaultLicenses = defaultState.sections.find(s => s.type === 'licenses');
+                if (defaultLicenses) {
+                    defaultLicenses.props.licenses = licensesArray;
+                }
+                const defaultFooter = defaultState.sections.find(s => s.type === 'footer');
+                if (defaultFooter) {
+                    defaultFooter.props.socials = userSocials;
+                }
+                const defaultProducts = defaultState.sections.find(s => s.type === 'products');
+                if (defaultProducts) {
+                    defaultProducts.props.products = productsArray;
+                    defaultProducts.props.userNickname = userNickname;
+                }
+                const defaultServices = defaultState.sections.find(s => s.type === 'services');
+                if (defaultServices) {
+                    defaultServices.props.services = servicesArray;
+                    defaultServices.props.userNickname = userNickname;
+                    defaultServices.props.userAvatar = userAvatar;
+                }
+
+                // Buscar su configuración de tienda guardada
+                const { data, error } = await window.supabase
+                    .from('store_configs')
+                    .select('config_json')
+                    .eq('user_id', currentUser.id)
+                    .single();
+
+                if (error || !data) {
+                    console.log("No tiene tienda guardada, usando default personalizado.");
+                    initBuilder(defaultState);
+                } else {
+                    console.log("Tienda cargada con éxito. Aplicando actualizaciones en tiempo real...");
+                    const config = data.config_json;
+                    if (!config.sections) config.sections = [];
+                    
+                    // Inyectar/actualizar dinámicamente las propiedades de la BD sobre el JSON guardado
+                    const savedLicensesSec = config.sections.find(s => s.type === 'licenses');
+                    if (savedLicensesSec) {
+                        savedLicensesSec.props.licenses = licensesArray;
+                    }
+                    const savedNavbarSec = config.sections.find(s => s.type === 'navbar');
+                    if (savedNavbarSec) {
+                        savedNavbarSec.props.logoText = userNickname;
+                        savedNavbarSec.props.avatarUrl = userAvatar;
+                    }
+                    const savedHeroSec = config.sections.find(s => s.type === 'hero');
+                    if (savedHeroSec) {
+                        savedHeroSec.props.title = userNickname;
+                        savedHeroSec.props.subtitle = userBio;
+                    }
+                    const savedFaqSec = config.sections.find(s => s.type === 'faq');
+                    if (savedFaqSec) {
+                        savedFaqSec.props.email = userEmail;
+                    }
+                    const savedFooterSec = config.sections.find(s => s.type === 'footer');
+                    if (savedFooterSec) {
+                        savedFooterSec.props.socials = userSocials;
+                    }
+
+                    // Buscar o inyectar dinámicamente sección de productos (Beats)
+                    let savedProductsSec = config.sections.find(s => s.type === 'products');
+                    if (!savedProductsSec) {
+                        const heroIdx = config.sections.findIndex(s => s.type === 'hero');
+                        savedProductsSec = { id: 'products_1', type: 'products', props: { products: [] } };
+                        if (heroIdx !== -1) {
+                            config.sections.splice(heroIdx + 1, 0, savedProductsSec);
+                        } else {
+                            config.sections.splice(1, 0, savedProductsSec);
+                        }
+                    }
+                    savedProductsSec.props.products = productsArray;
+                    savedProductsSec.props.userNickname = userNickname;
+
+                    // Buscar o inyectar dinámicamente sección de servicios
+                    let savedServicesSec = config.sections.find(s => s.type === 'services');
+                    if (!savedServicesSec) {
+                        const licIdx = config.sections.findIndex(s => s.type === 'licenses');
+                        savedServicesSec = { id: 'services_1', type: 'services', props: { services: [] } };
+                        if (licIdx !== -1) {
+                            config.sections.splice(licIdx + 1, 0, savedServicesSec);
+                        } else {
+                            const faqIdx = config.sections.findIndex(s => s.type === 'faq');
+                            if (faqIdx !== -1) {
+                                config.sections.splice(faqIdx, 0, savedServicesSec);
+                            } else {
+                                config.sections.splice(config.sections.length - 2, 0, savedServicesSec);
+                            }
+                        }
+                    }
+                    savedServicesSec.props.services = servicesArray;
+                    savedServicesSec.props.userNickname = userNickname;
+                    savedServicesSec.props.userAvatar = userAvatar;
+                    
+                    initBuilder(config);
+                }
+            } catch (err) {
+                console.error("Error cargando la tienda:", err);
+                initBuilder(defaultState);
+            }
+        }
+
+        // 3. Inicializar Motores con el Estado Final
+        let initialLoadFinished = false;
+        window.hasUnsavedChanges = false;
+
+        function initBuilder(initialState) {
+            storeState = new StoreState(initialState);
+            renderer = new RendererEngine(document.getElementById('storeRenderRoot'), storeState);
+
+            storeState.subscribe((newState) => {
+                renderer.render(newState);
+                updateSidebarUI(newState);
+                if (initialLoadFinished) {
+                    window.hasUnsavedChanges = true;
+                }
+                // Inicializar partículas si hay canvas
+                if (window.initParticles) setTimeout(window.initParticles, 100);
+                setTimeout(() => {
+                    if (window.bindDragScroll) window.bindDragScroll(document.getElementById('storeRenderRoot'));
+                }, 150);
+            });
+
+            renderer.render(initialState);
+            updateSidebarUI(storeState.get()); // UI Inicial
+            window.StoreState = storeState; // Para debugging
+            
+            // Inicializar partículas si hay canvas en el render inicial
+            if (window.initParticles) setTimeout(window.initParticles, 100);
+
+            setTimeout(() => {
+                initialLoadFinished = true;
+                window.hasUnsavedChanges = false;
+                if (window.bindDragScroll) window.bindDragScroll(document.getElementById('storeRenderRoot'));
+            }, 250);
+        }
+
+        // Listener global de clicks para acordeones FAQ en el Preview
+        document.getElementById('storeRenderRoot').addEventListener('click', (e) => {
+            const questionBtn = e.target.closest('.faq-question');
+            if (questionBtn) {
+                const item = questionBtn.closest('.faq-item');
+                if (item) {
+                    const isActive = item.classList.contains('active');
+                    // Cerrar todos los demás items
+                    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('active'));
+                    // Alternar el actual
+                    if (!isActive) item.classList.add('active');
+                }
+            }
+        });
+
+        // Lógica de pestañas del sidebar
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.sidebar-content').forEach(p => p.style.display = 'none');
+                
+                e.target.classList.add('active');
+                const tab = e.target.dataset.tab;
+                document.getElementById(tab + '-panel').style.display = 'block';
+            });
+        });
+
+        // Lógica de toggle de dispositivo (Mobile / Desktop)
+        document.querySelectorAll('.device-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const currentBtn = e.currentTarget;
+                document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+                currentBtn.classList.add('active');
+                
+                const device = currentBtn.dataset.device;
+                const previewDevice = document.getElementById('previewDevice');
+                
+                if (device === 'mobile') {
+                    previewDevice.classList.remove('desktop');
+                    previewDevice.classList.add('mobile');
+                } else {
+                    previewDevice.classList.remove('mobile');
+                    previewDevice.classList.add('desktop');
+                }
+                
+                // Disparar redimensionamiento del canvas de partículas
+                if (window.initParticles) setTimeout(window.initParticles, 150);
+            });
+        });
+
+        // Eventos de inputs de Tema
+        document.getElementById('themePrimaryColor').addEventListener('input', (e) => {
+            if(storeState) storeState.updateThemeProp('primaryColor', e.target.value);
+        });
+        document.getElementById('themeBgColor').addEventListener('input', (e) => {
+            if(storeState) storeState.updateThemeProp('backgroundColor', e.target.value);
+        });
+
+        function updateSidebarUI(state) {
+            if (state.theme) {
+                if (state.theme.primaryColor) {
+                    document.getElementById('themePrimaryColor').value = state.theme.primaryColor;
+                }
+                if (state.theme.backgroundColor) {
+                    document.getElementById('themeBgColor').value = state.theme.backgroundColor;
+                }
+            }
+
+            // Actualizar bloques activos en el panel
+            const blocksPanel = document.getElementById('activeSections');
+            blocksPanel.innerHTML = '';
+            
+            if (state.sections) {
+                state.sections.forEach((sec, idx) => {
+                    const el = document.createElement('div');
+                    el.style.padding = '12px';
+                    el.style.background = '#1a1a1a';
+                    el.style.border = '1px solid #333';
+                    el.style.marginBottom = '8px';
+                    el.style.borderRadius = '8px';
+                    el.style.display = 'flex';
+                    el.style.justifyContent = 'space-between';
+                    el.style.alignItems = 'center';
+                    
+                    const label = document.createElement('span');
+                    label.style.color = '#fff';
+                    label.style.fontSize = '12px';
+                    label.style.fontWeight = '700';
+                    label.innerText = sec.type.toUpperCase();
+                    
+                    const icon = document.createElement('i');
+                    icon.className = 'bi bi-grip-vertical';
+                    icon.style.color = '#666';
+                    icon.style.cursor = 'grab';
+
+                    el.appendChild(label);
+                    el.appendChild(icon);
+                    blocksPanel.appendChild(el);
+                });
+            }
+        }
+
+        // 4. Guardar Estado en Supabase
+        let isSavingStore = false;
+        document.getElementById('btnSaveStore').addEventListener('click', async () => {
+            if (!currentUser) {
+                alert("Debes iniciar sesión para guardar.");
+                return;
+            }
+
+            const btn = document.getElementById('btnSaveStore');
+            btn.textContent = "Guardando...";
+            isSavingStore = true;
+            
+            const currentState = storeState.get();
+            
+            const { error } = await window.supabase
+                .from('store_configs')
+                .upsert({ 
+                    user_id: currentUser.id, 
+                    config_json: currentState,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id' });
+
+            if (error) {
+                console.error("Error guardando:", error);
+                alert("Error al guardar la tienda.");
+                btn.textContent = "Publicar";
+            } else {
+                btn.textContent = "Publicar";
+                window.hasUnsavedChanges = false; // Reset unsaved changes!
+                document.getElementById('publish-success-modal').style.display = 'flex';
+            }
+            setTimeout(() => { isSavingStore = false; }, 100);
+        });
+
+        // Prevenir pérdida de datos al recargar - SOLO si hay cambios reales sin guardar!
+        window.addEventListener('beforeunload', (e) => {
+            if (window.hasUnsavedChanges && !isSavingStore) {
+                e.preventDefault();
+                e.returnValue = 'Es posible que los cambios no guardados se pierdan.';
+            }
+        });
+
+        // --- DRAG TO SCROLL ENGINE ---
+        window.bindDragScroll = function(rootEl) {
+            const parent = rootEl || document;
+            const horizontalContainers = parent.querySelectorAll('.products-shelf, .premium-lic-grid, .shelf-container, .filter-pills, .tabs-inner');
+            
+            horizontalContainers.forEach(el => {
+                if (el.dataset.dragBound) return;
+                el.dataset.dragBound = 'true';
+                
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+                
+                el.style.cursor = 'grab';
+                
+                el.addEventListener('mousedown', (e) => {
+                    // Ignore clicks on buttons/inputs/links/actions
+                    if (e.target.closest('button, a, input, select, textarea, .explore-heart-action, .explore-play-action, .tab-trigger, .pill')) {
+                        return;
+                    }
+                    isDown = true;
+                    el.style.cursor = 'grabbing';
+                    startX = e.pageX - el.offsetLeft;
+                    scrollLeft = el.scrollLeft;
+                    e.stopPropagation(); // Avoid triggering parent container scrolls
+                    e.preventDefault();
+                });
+                
+                el.addEventListener('mouseleave', () => {
+                    isDown = false;
+                    el.style.cursor = 'grab';
+                });
+                
+                el.addEventListener('mouseup', () => {
+                    isDown = false;
+                    el.style.cursor = 'grab';
+                });
+                
+                el.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
+                    e.stopPropagation();
+                    e.preventDefault();
+                    const x = e.pageX - el.offsetLeft;
+                    const walk = (x - startX) * 1.5;
+                    el.scrollLeft = scrollLeft - walk;
+                });
+            });
+        };
+
+        // Simulator drag scroll (works in both mobile and desktop views)
+        const previewDevice = document.getElementById('previewDevice');
+
+        let deviceIsDown = false;
+        let deviceStartY;
+        let deviceScrollTop;
+
+        previewDevice.addEventListener('mousedown', (e) => {
+            if (e.target.closest('button, a, input, select, textarea, .explore-heart-action, .explore-play-action, .tab-trigger, .pill')) {
+                return;
+            }
+
+            deviceIsDown = true;
+            deviceStartY = e.pageY - previewDevice.offsetTop;
+            deviceScrollTop = previewDevice.scrollTop;
+            e.preventDefault();
+        });
+
+        previewDevice.addEventListener('mousemove', (e) => {
+            if (!deviceIsDown) return;
+            const y = e.pageY - previewDevice.offsetTop;
+            const walkY = (y - deviceStartY) * 1.5;
+            previewDevice.scrollTop = deviceScrollTop - walkY;
+        });
+
+        previewDevice.addEventListener('mouseup', () => {
+            deviceIsDown = false;
+        });
+
+        previewDevice.addEventListener('mouseleave', () => {
+            deviceIsDown = false;
+        });
+
+        // Arrancar
+        loadUserStore();
+    </script>
+    <div id="publish-success-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
+        <div style="background: #111; border: 1px solid rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; text-align: center; max-width: 400px; width: 90%;">
+            <div style="width: 60px; height: 60px; background: rgba(12, 188, 135, 0.1); color: #0cbc87; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 20px;">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <h2 style="color: #fff; font-size: 24px; font-weight: 700; margin-bottom: 10px;">¡Cambios Publicados!</h2>
+            <p style="color: #888; font-size: 14px; margin-bottom: 30px;">Tu tienda ha sido actualizada exitosamente y ya está visible para todos.</p>
+            <button onclick="window.open('/@' + (window.userNickname && window.userNickname !== 'MI TIENDA' ? window.userNickname.toLowerCase() : ''), '_blank')" style="background: #fff; color: #000; border: none; padding: 14px 24px; border-radius: 99px; font-weight: 700; width: 100%; cursor: pointer; transition: all 0.2s;">
+                Ver mi perfil
+            </button>
+            <button onclick="document.getElementById('publish-success-modal').style.display='none'" style="background: transparent; color: #888; border: none; padding: 14px 24px; font-weight: 600; width: 100%; cursor: pointer; margin-top: 10px;">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</body>
+</html>

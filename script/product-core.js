@@ -1599,12 +1599,12 @@ async function renderBeatSpecifics(product) {
 
             // --- 4. Resolve Enabled Status ---
             let isEnabled = factLic.enabled;
-            if (prodLic.enabled !== undefined) {
-                isEnabled = prodLic.enabled;
+            if (prodLic.enabled !== undefined && prodLic.enabled !== null) {
+                isEnabled = (prodLic.enabled !== false && prodLic.enabled !== 'false' && prodLic.enabled !== "");
             } else if (product[colMap[key]] !== undefined && product[colMap[key]] !== null) {
                 isEnabled = parseFloat(product[colMap[key]]) > 0;
-            } else if (userLic.enabled !== undefined) {
-                isEnabled = userLic.enabled;
+            } else if (userLic.enabled !== undefined && userLic.enabled !== null) {
+                isEnabled = (userLic.enabled !== false && userLic.enabled !== 'false' && userLic.enabled !== "");
             }
 
             return {

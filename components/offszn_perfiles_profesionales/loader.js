@@ -33,7 +33,7 @@ const ProfLoader = {
         if (!container) return;
 
         try {
-            const resp = await fetch('/components/offszn_perfiles_profesionales/navbar.html?v=55');
+            const resp = await fetch('/components/offszn_perfiles_profesionales/navbar.html?v=60');
             const html = await resp.text();
 
             if (html.includes('Te perdiste') || html.includes('<title>404')) {
@@ -98,6 +98,72 @@ const ProfLoader = {
                 }
                 
                 if (aboutLink) aboutLink.href = `${profileBase}#faq-section`;
+            }
+
+            // 5. BIND MOBILE DRAWER EVENTS
+            const hamburgerBtn = container.querySelector('#mobile-hamburger-btn');
+            const closeBtn = container.querySelector('#drawer-close-btn');
+            const backdrop = container.querySelector('#mobile-drawer-backdrop');
+            const drawer = container.querySelector('#mobile-nav-drawer');
+
+            const openDrawer = () => {
+                if (drawer) drawer.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            };
+
+            const closeDrawer = () => {
+                if (drawer) drawer.classList.remove('active');
+                document.body.style.overflow = '';
+            };
+
+            if (hamburgerBtn) hamburgerBtn.addEventListener('click', openDrawer);
+            if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+            if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+            // Hide/show mobile drawer links dynamically
+            const mobBeatsLink = container.querySelector('#mobile-link-beats');
+            const mobServicesLink = container.querySelector('#mobile-link-services');
+            const mobPlaylistsLink = container.querySelector('#mobile-link-playlists');
+            const mobAboutLink = container.querySelector('#mobile-link-about');
+
+            if (mobServicesLink && services.length === 0) {
+                mobServicesLink.style.display = 'none';
+            }
+            if (mobPlaylistsLink && playlists.length === 0) {
+                mobPlaylistsLink.style.display = 'none';
+            } else if (playlists.length === 1 && mobPlaylistsLink) {
+                const pl = playlists[0];
+                const plSlug = pl.slug || (pl.title ? pl.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : '');
+                if (plSlug && user.nickname) {
+                    mobPlaylistsLink.href = `/@${user.nickname}/${plSlug}`;
+                }
+            }
+
+            if (!isMainProfile) {
+                if (mobBeatsLink) mobBeatsLink.href = `${profileBase}#products-section`;
+                if (mobServicesLink && services.length > 0) mobServicesLink.href = `${profileBase}#services-section`;
+                if (mobPlaylistsLink && playlists.length > 1) mobPlaylistsLink.href = `${profileBase}#playlists-section`;
+                if (mobAboutLink) mobAboutLink.href = `${profileBase}#faq-section`;
+            }
+
+            // Close drawer automatically on link click
+            const drawerLinks = container.querySelectorAll('.drawer-link');
+            drawerLinks.forEach(link => {
+                link.addEventListener('click', closeDrawer);
+            });
+
+            // 6. SYNC CART BADGE IMMEDIATELY
+            const cartBadge = container.querySelector('#cart-count-badge');
+            if (cartBadge) {
+                const count = (window.CartManager && window.CartManager.state && window.CartManager.state.items) 
+                    ? window.CartManager.state.items.length 
+                    : 0;
+                cartBadge.innerText = count;
+                cartBadge.style.display = count > 0 ? 'flex' : 'none';
+                
+                if (window.CartManager && window.CartManager.ui) {
+                    window.CartManager.ui.countBadge = cartBadge;
+                }
             }
         } catch (err) {
             console.error("Error loading professional navbar:", err);

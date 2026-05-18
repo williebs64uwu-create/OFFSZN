@@ -400,21 +400,23 @@ export const handleFreeGuestDownload = async (req, res) => {
         try {
             if (!isAnalyzer) {
                 await supabase.rpc('increment_product_downloads', { row_id: product.id });
-            }
-            const { data: newOrder } = await supabase.from('orders').insert([{
-                guest_email: guestEmail,
-                status: 'completed',
-                total_price: 0,
-                producer_id: product.producer_id,
-                product_id: parseInt(productId),
-                transaction_id: `GUEST-${Date.now()}`
-            }]).select('id').single();
+                const { data: newOrder } = await supabase.from('orders').insert([{
+                    guest_email: guestEmail,
+                    status: 'completed',
+                    total_price: 0,
+                    producer_id: product.producer_id,
+                    product_id: parseInt(productId),
+                    transaction_id: `GUEST-${Date.now()}`
+                }]).select('id').single();
 
-            if (newOrder) {
-                orderId = newOrder.id;
-                await supabase.from('order_items').insert([{ order_id: orderId, product_id: parseInt(productId), price_at_purchase: 0, quantity: 1 }]);
-                await supabase.from('download_logs').insert([{ order_id: orderId, product_id: parseInt(productId), ip_address: req.ip || '0.0.0.0', user_agent: req.headers['user-agent'] || 'Guest' }]);
-                await supabase.from('free_downloads').insert([{ product_id: parseInt(productId), email: guestEmail, ip_address: req.ip || '0.0.0.0' }]);
+                if (newOrder) {
+                    orderId = newOrder.id;
+                    await supabase.from('order_items').insert([{ order_id: orderId, product_id: parseInt(productId), price_at_purchase: 0, quantity: 1 }]);
+                    await supabase.from('download_logs').insert([{ order_id: orderId, product_id: parseInt(productId), ip_address: req.ip || '0.0.0.0', user_agent: req.headers['user-agent'] || 'Guest' }]);
+                    await supabase.from('free_downloads').insert([{ product_id: parseInt(productId), email: guestEmail, ip_address: req.ip || '0.0.0.0' }]);
+                }
+            } else {
+                console.log(`[GuestDownload] Analyzer free guest download recorded for ${guestEmail}`);
             }
         } catch (dbErr) { console.error("[GuestDownload] DB Error:", dbErr.message); }
 

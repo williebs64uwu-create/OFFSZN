@@ -1130,18 +1130,29 @@ window.StickyPlayer = (function () {
 
             const licenseKeys = ['basic', 'premium', 'trackout', 'unlimited', 'exclusive'];
             return licenseKeys.map(key => {
-                // 🔥 FIX: Support 'offszn_' prefix (new system) and standard keys (legacy/external)
-                const offsznKey = `offszn_${key}`;
-                const prodLic = productLicenses[offsznKey] || productLicenses[key] || {};
-                const userLic = (producerSettings && (producerSettings[offsznKey] || producerSettings[key])) 
-                    ? (producerSettings[offsznKey] || producerSettings[key]) 
+                // Map UI keys to standard DB key formats
+                let dbKey = `offszn_${key}`;
+                if (key === 'trackout') {
+                    dbKey = 'offszn_unlimited';
+                } else if (key === 'unlimited') {
+                    dbKey = 'offszn_exclusive';
+                } else if (key === 'exclusive') {
+                    dbKey = 'offszn_exclusive';
+                }
+
+                const prodLic = productLicenses[dbKey] || productLicenses[key] || {};
+                const userLic = (producerSettings && (producerSettings[dbKey] || producerSettings[key])) 
+                    ? (producerSettings[dbKey] || producerSettings[key]) 
                     : {};
-                const factLic = FACTORY_DEFAULTS[key] || { name: 'License', price: 0, enabled: false };
+                
+                // Fallback factory settings matching key
+                const factKey = (key === 'exclusive') ? 'unlimited' : key;
+                const factLic = FACTORY_DEFAULTS[factKey] || { name: 'License', price: 0, enabled: false };
 
                 return {
                     id: key,
                     name: prodLic.name || userLic.name || factLic.name,
-                    price: (prodLic.price !== undefined && prodLic.price !== null) ? prodLic.price : (userLic.price !== undefined && userLic.price !== null) ? userLic.price : factLic.price,
+                    price: (prodLic.price !== undefined && prodLic.price !== null) ? parseFloat(prodLic.price) : (userLic.price !== undefined && userLic.price !== null) ? parseFloat(userLic.price) : factLic.price,
                     enabled: (prodLic.enabled !== undefined) ? prodLic.enabled : (userLic.enabled !== undefined) ? userLic.enabled : factLic.enabled,
                     streams: userLic.streams || factLic.streams,
                     sales: userLic.sales || factLic.sales,

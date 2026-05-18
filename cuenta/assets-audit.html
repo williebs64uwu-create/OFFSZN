@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditoría de Assets | OFFSZN Admin</title>
+
+    <!-- Supabase Config & Auth Utils -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
+    <script src="/env.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="../images/LOGO-OFFSZN.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <script src="/script/auth-utils.js?v=12"></script>
+    <script src="../script/auth-guard.js"></script>
+
+    <style>
+        :root {
+            --bg-black: #050505;
+            --bg-card: #0c0c0c;
+            --bg-card-hover: #121212;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: #8a8a8f;
+            --accent-green: #30d158;
+            --accent-red: #ff453a;
+            --accent-blue: #0a84ff;
+            --accent-yellow: #ffd60a;
+            --glass: rgba(12, 12, 12, 0.7);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-black);
+            color: var(--text-primary);
+            font-family: 'Geist', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .radial-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 50% 10%, rgba(10, 132, 255, 0.03), transparent 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        header {
+            border-bottom: 1px solid var(--border);
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 16px 40px;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand img { height: 32px; }
+        .brand h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+        }
+
+        .btn:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--border-hover); }
+        .btn-primary { background: #ffffff; color: #000000; border: 1px solid #ffffff; }
+        .btn-primary:hover { background: rgba(255, 255, 255, 0.9); color: #000000; }
+        .btn-danger { border-color: var(--accent-red); color: var(--accent-red); }
+        .btn-danger:hover { background: rgba(255, 69, 58, 0.1); }
+
+        main {
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 32px 40px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: transparent;
+        }
+        .metric-card.loaded::before { background: var(--accent-green); }
+        .metric-card.failed::before { background: var(--accent-red); }
+
+        .metric-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
+        .metric-value { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+
+        .toolbar {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+            gap: 16px; background: var(--bg-card); border: 1px solid var(--border);
+            padding: 16px 20px; border-radius: 12px;
+        }
+
+        .search-box { position: relative; flex: 1; max-width: 400px; min-width: 250px; }
+        .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 14px; }
+        .search-box input {
+            width: 100%; background: var(--bg-black); border: 1px solid var(--border); border-radius: 8px;
+            padding: 10px 14px 10px 40px; color: var(--text-primary); font-family: inherit; font-size: 14px; outline: none;
+        }
+        .search-box input:focus { border-color: #ffffff; }
+
+        .filter-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+        .pill {
+            padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer;
+        }
+        .pill:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.08); }
+        .pill.active { background: #ffffff; color: #000000; border-color: #ffffff; }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        /* Error state formatting */
+        .product-card[data-has-error="true"] {
+            border-color: rgba(255, 69, 58, 0.5);
+            box-shadow: 0 4px 20px rgba(255, 69, 58, 0.1);
+        }
+
+        .card-cover-wrapper {
+            aspect-ratio: 16/9;
+            width: 100%;
+            background: #111;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-cover {
+            width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s ease;
+        }
+
+        .cover-spinner { position: absolute; font-size: 24px; color: var(--text-secondary); animation: spin 1s infinite linear; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .status-pill {
+            position: absolute; top: 12px; right: 12px; padding: 4px 10px; border-radius: 20px;
+            font-size: 10px; font-weight: 800; text-transform: uppercase; backdrop-filter: blur(8px); z-index: 10;
+        }
+        .status-ok { background: rgba(48, 209, 88, 0.2); color: var(--accent-green); border: 1px solid rgba(48, 209, 88, 0.3); }
+        .status-err { background: rgba(255, 69, 58, 0.2); color: var(--accent-red); border: 1px solid rgba(255, 69, 58, 0.3); }
+
+        .card-body { padding: 16px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+
+        .card-title {
+            font-size: 16px; font-weight: 700; line-height: 1.4;
+            display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        .asset-row {
+            display: flex; flex-direction: column; gap: 8px;
+            background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; border: 1px solid var(--border);
+        }
+        
+        .asset-row.error-row {
+            background: rgba(255, 69, 58, 0.05); border-color: rgba(255, 69, 58, 0.2);
+        }
+
+        .asset-header { display: flex; justify-content: space-between; align-items: center; }
+        .asset-label { font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; }
+        .asset-status { font-size: 11px; font-weight: 600; }
+
+        .asset-input-group { display: flex; gap: 8px; }
+        .asset-input {
+            flex: 1; background: var(--bg-black); border: 1px solid var(--border); color: #fff;
+            padding: 8px; border-radius: 6px; font-family: monospace; font-size: 11px;
+        }
+        .asset-input:focus { border-color: var(--accent-blue); outline: none; }
+        
+        .btn-save {
+            background: rgba(255, 255, 255, 0.1); border: none; color: #fff; padding: 0 12px;
+            border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: background 0.2s;
+        }
+        .btn-danger { border-color: var(--accent-red); color: var(--accent-red); background: rgba(255, 69, 58, 0.05); }
+        .btn-danger:hover { background: rgba(255, 69, 58, 0.2); }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            z-index: 1000; display: none; align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: var(--bg-card); border: 1px solid var(--border);
+            width: 90%; max-width: 600px; border-radius: 16px; padding: 24px;
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .progress-bar-container {
+            width: 100%; height: 8px; background: rgba(255,255,255,0.1);
+            border-radius: 4px; overflow: hidden; margin-top: 10px;
+        }
+        .progress-bar-fill {
+            height: 100%; width: 0%; background: var(--accent-blue);
+            transition: width 0.3s ease;
+        }
+        .log-console {
+            background: #000; border: 1px solid var(--border);
+            border-radius: 8px; height: 200px; overflow-y: auto;
+            padding: 12px; font-family: monospace; font-size: 11px;
+            display: flex; flex-direction: column; gap: 4px; color: #ccc;
+        }
+        .log-entry.ok { color: var(--accent-green); }
+        .log-entry.err { color: var(--accent-red); }
+        .log-entry.info { color: var(--accent-blue); }
+
+        audio { width: 100%; height: 32px; border-radius: 6px; margin-top: 4px; }
+        audio::-webkit-media-controls-panel { background-color: var(--bg-black); }
+        audio::-webkit-media-controls-current-time-display,
+        audio::-webkit-media-controls-time-remaining-display { color: var(--text-primary); }
+
+    </style>
+</head>
+
+<body>
+    <div class="radial-glow"></div>
+
+    <header>
+        <div class="header-container">
+            <div class="brand">
+                <img src="../images/LOGO-OFFSZN.png" alt="OFFSZN">
+                <h1>Verificador Manual de Assets (Covers y Audio)</h1>
+            </div>
+            <div class="nav-actions">
+                <a href="/cuenta/dashboard" class="btn"><i class="bi bi-arrow-left"></i> Volver a Dashboard</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Productos Activos</div>
+                <div id="metric-total" class="metric-value">0</div>
+            </div>
+            <div class="metric-card loaded">
+                <div class="metric-label">Portadas Sanas</div>
+                <div id="metric-covers-ok" class="metric-value">0</div>
+            </div>
+            <div class="metric-card loaded">
+                <div class="metric-label">Audios Sanos</div>
+                <div id="metric-audio-ok" class="metric-value">0</div>
+            </div>
+            <div class="metric-card failed">
+                <div class="metric-label">Assets Rotos (404)</div>
+                <div id="metric-failed" class="metric-value">0</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <div style="display:flex; gap: 16px; flex: 1;">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="search-input" placeholder="Buscar por ID o nombre...">
+                </div>
+                <div class="filter-pills">
+                    <button class="pill active" data-filter="all">Todos</button>
+                    <button class="pill" data-filter="errors">Solo Errores (404)</button>
+                </div>
+            </div>
+            
+            <div class="bulk-actions">
+                <button class="btn btn-primary" onclick="startBatchFix()"><i class="bi bi-magic"></i> Batch Fix (Absolutos a Relativos)</button>
+            </div>
+        </div>
+
+        <!-- Progress Banner -->
+        <div id="scan-progress" style="display:none; background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:16px 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:13px; font-weight:700;" id="scan-label">Escaneando...</span>
+                <span style="font-size:12px; color:var(--text-secondary)" id="scan-count">0 / 0</span>
+            </div>
+            <div style="width:100%; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden;">
+                <div id="scan-bar" style="height:100%; width:0%; background:var(--accent-blue); transition:width 0.2s;"></div>
+            </div>
+        </div>
+
+        <div id="products-grid" class="products-grid"></div>
+    </main>
+
+    <!-- Modal de Procesamiento Batch -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content">
+            <h3 style="font-size: 18px; font-weight: 700;">Corrección Automática en Lote</h3>
+            <p style="font-size: 13px; color: var(--text-secondary);" id="modal-status-text">Analizando rutas absolutas en portadas y audios...</p>
+            
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progress-bar-fill"></div>
+            </div>
+            
+            <div class="log-console" id="log-console"></div>
+            
+            <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+                <button class="btn" id="btn-modal-close" style="display: none;" onclick="location.reload()">Cerrar y Recargar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = window.SUPABASE_URL;
+        const supabaseKey = window.SUPABASE_ANON_KEY;
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        let products = [];
+        let stats = { total: 0, coversOk: 0, audiosOk: 0, failedTotal: 0 };
+        let currentFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadProducts();
+
+            document.getElementById('search-input').addEventListener('input', applyFilters);
+            const pills = document.querySelectorAll('.pill');
+            pills.forEach(pill => {
+                pill.addEventListener('click', () => {
+                    pills.forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+                    currentFilter = pill.getAttribute('data-filter');
+                    applyFilters();
+                });
+            });
+        });
+
+        async function loadProducts() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('products')
+                    .select('id, name, image_url, audio_url, storage_version, r2_version')
+                    .neq('status', 'deleted')
+                    .order('id', { ascending: false });
+
+                if (error) throw error;
+                products = data || [];
+                stats.total = products.length;
+                document.getElementById('metric-total').textContent = stats.total;
+
+                await renderProductsGrid();
+            } catch (err) {
+                console.error('Error:', err);
+                alert('Error cargando productos: ' + err.message);
+            }
+        }
+
+        async function renderProductsGrid() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+
+            // First, render all cards visually empty (fast)
+            for (const prod of products) {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.id = `card-${prod.id}`;
+                card.setAttribute('data-id', prod.id);
+                card.setAttribute('data-title', prod.name.toLowerCase());
+                card.setAttribute('data-has-error', 'false');
+
+                card.innerHTML = `
+                    <div class="card-cover-wrapper" id="cover-wrap-${prod.id}">
+                        <i class="bi bi-arrow-repeat cover-spinner" id="spinner-${prod.id}"></i>
+                        <span class="status-pill" id="badge-${prod.id}">PENDIENTE</span>
+                        <img class="card-cover" id="img-${prod.id}" style="opacity: 0;">
+                    </div>
+                    <div class="card-body">
+                        <div style="display:flex; justify-content: space-between; align-items: start; gap: 8px;">
+                            <div class="card-title">${prod.name}</div>
+                            <div style="font-size: 11px; color: var(--text-secondary); background: #222; padding: 2px 6px; border-radius: 4px;">ID: ${prod.id}</div>
+                        </div>
+                        
+                        <div class="asset-row" id="row-cover-${prod.id}">
+                            <div class="asset-header">
+                                <span class="asset-label">Portada (image_url)</span>
+                                <span class="asset-status" id="cover-status-${prod.id}">En cola...</span>
+                            </div>
+                            <div class="asset-input-group">
+                                <input type="text" class="asset-input" id="input-cover-${prod.id}" value="${prod.image_url || ''}">
+                                <button class="btn-save" onclick="saveAsset(${prod.id}, 'image_url')">Guardar</button>
+                            </div>
+                        </div>
+
+                        <div class="asset-row" id="row-audio-${prod.id}">
+                            <div class="asset-header">
+                                <span class="asset-label">Audio (audio_url)</span>
+                                <span class="asset-status" id="audio-status-${prod.id}">En cola...</span>
+                            </div>
+                            <audio id="audio-${prod.id}" controls preload="none"></audio>
+                            <div class="asset-input-group" style="margin-top: 4px;">
+                                <input type="text" class="asset-input" id="input-audio-${prod.id}" value="${prod.audio_url || ''}">
+                                <button class="btn-save" onclick="saveAsset(${prod.id}, 'audio_url')">Guardar</button>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+                            <button class="btn btn-danger" onclick="deleteProduct(${prod.id}, '${prod.name.replace(/'/g, "\\'")}')" style="font-size: 10px; padding: 4px 10px;">
+                                <i class="bi bi-trash"></i> Eliminar Beat Test
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            }
+
+            // Start scanning 1 by 1
+            scanOneByOne();
+        }
+
+        async function scanOneByOne() {
+            const progressEl = document.getElementById('scan-progress');
+            const labelEl = document.getElementById('scan-label');
+            const countEl = document.getElementById('scan-count');
+            const barEl = document.getElementById('scan-bar');
+            progressEl.style.display = 'block';
+
+            for (let i = 0; i < products.length; i++) {
+                const prod = products[i];
+                const num = i + 1;
+                const pct = Math.round((num / products.length) * 100);
+                labelEl.textContent = `Verificando: ${prod.name.substring(0,30)}...`;
+                countEl.textContent = `${num} / ${products.length}`;
+                barEl.style.width = pct + '%';
+
+                await verifySingle(prod);
+                updateMetrics();
+                applyFilters();
+            }
+
+            labelEl.textContent = '✅ Escaneo completado';
+            barEl.style.background = 'var(--accent-green)';
+        }
+
+        function loadImageWithTimeout(img, url, ms) {
+            return new Promise(resolve => {
+                const timer = setTimeout(() => { img.src = ''; resolve(false); }, ms);
+                img.onload = () => { clearTimeout(timer); resolve(true); };
+                img.onerror = () => { clearTimeout(timer); resolve(false); };
+                img.src = url;
+            });
+        }
+
+        async function verifySingle(prod) {
+            const ver = prod.storage_version || 'v2';
+            // -- COVER --
+            try {
+                const url = await window.getAuthorizedUrl(prod.image_url, ver, prod.id);
+                if (!url) throw 0;
+                const img = document.getElementById(`img-${prod.id}`);
+                const ok = await loadImageWithTimeout(img, url, 8000);
+                const sp = document.getElementById(`spinner-${prod.id}`);
+                const bg = document.getElementById(`badge-${prod.id}`);
+                if (ok) {
+                    sp.style.display='none'; img.style.opacity='1';
+                    bg.className='status-pill status-ok'; bg.textContent='COVER OK';
+                    document.getElementById(`cover-status-${prod.id}`).textContent='✅ OK';
+                    document.getElementById(`cover-status-${prod.id}`).style.color='var(--accent-green)';
+                    stats.coversOk++;
+                } else {
+                    sp.className='bi bi-image'; sp.style.animation='none';
+                    bg.className='status-pill status-err'; bg.textContent='COVER 404';
+                    markCardError(prod.id,'cover');
+                }
+            } catch(e) { markCardError(prod.id,'cover'); }
+
+            // -- AUDIO --
+            try {
+                const url = await window.getAuthorizedUrl(prod.audio_url, ver, prod.id);
+                if (!url) throw 0;
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                
+                const res = await fetch(url, { method:'HEAD', signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (res.ok) {
+                    document.getElementById(`audio-status-${prod.id}`).textContent='✅ OK';
+                    document.getElementById(`audio-status-${prod.id}`).style.color='var(--accent-green)';
+                    document.getElementById(`audio-${prod.id}`).src = url;
+                    stats.audiosOk++;
+                } else { markCardError(prod.id,'audio'); }
+            } catch(e) { markCardError(prod.id,'audio'); }
+        }
+
+        function markCardError(id, type) {
+            const card = document.getElementById(`card-${id}`);
+            const row = document.getElementById(`row-${type}-${id}`);
+            const statusText = document.getElementById(`${type}-status-${id}`);
+            
+            card.setAttribute('data-has-error', 'true');
+            row.classList.add('error-row');
+            statusText.textContent = '❌ ERROR 404';
+            statusText.style.color = 'var(--accent-red)';
+            
+            // Increment only once per card for the total failed metric
+            if (!card.dataset.countedFail) {
+                card.dataset.countedFail = 'true';
+                stats.failedTotal++;
+                updateMetrics();
+                applyFilters(); // Re-filter if we are in "Only Errors" mode
+            }
+        }
+
+        function updateMetrics() {
+            document.getElementById('metric-covers-ok').textContent = stats.coversOk;
+            document.getElementById('metric-audio-ok').textContent = stats.audiosOk;
+            document.getElementById('metric-failed').textContent = stats.failedTotal;
+        }
+
+        function applyFilters() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const cards = document.querySelectorAll('.product-card');
+
+            cards.forEach(card => {
+                const title = card.getAttribute('data-title');
+                const id = card.getAttribute('data-id');
+                const hasError = card.getAttribute('data-has-error') === 'true';
+
+                const matchesSearch = title.includes(query) || id.includes(query);
+                const matchesPill = currentFilter === 'all' || (currentFilter === 'errors' && hasError);
+
+                card.style.display = (matchesSearch && matchesPill) ? 'flex' : 'none';
+            });
+        }
+
+        window.saveAsset = async function(id, fieldName) {
+            const inputId = fieldName === 'image_url' ? `input-cover-${id}` : `input-audio-${id}`;
+            const newValue = document.getElementById(inputId).value.trim();
+            const btn = event.target;
+            
+            btn.textContent = '...';
+            btn.style.opacity = '0.5';
+
+            try {
+                const updateData = {};
+                updateData[fieldName] = newValue;
+
+                const { error } = await supabaseClient
+                    .from('products')
+                    .update(updateData)
+                    .eq('id', id);
+
+                if (error) throw error;
+                
+                btn.style.background = 'var(--accent-green)';
+                btn.textContent = 'OK!';
+                
+                // Recargar tarjeta individual o todo después de 1 seg
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+
+            } catch(e) {
+                alert('Error al guardar: ' + e.message);
+                btn.style.background = '';
+                btn.textContent = 'Guardar';
+                btn.style.opacity = '1';
+            }
+        };
+
+        window.deleteProduct = async function(id, name) {
+            if (!confirm(`⚠️ ALERTA: ¿Estás seguro que deseas ELIMINAR el producto "${name}" (ID: ${id})?\n\nEsto lo marcará como 'deleted' en la base de datos y desaparecerá de la tienda.`)) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('products')
+                    .update({ status: 'deleted' })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                const card = document.getElementById(`card-${id}`);
+                card.style.opacity = '0.2';
+                card.style.pointerEvents = 'none';
+                setTimeout(() => card.remove(), 500);
+
+            } catch (err) {
+                alert('Error al eliminar: ' + err.message);
+            }
+        };
+
+        // BATCH UPDATE LOGIC FOR ABSOLUTE URLs
+        window.startBatchFix = async function() {
+            // Find products that have absolute http URLs
+            const needsFix = products.filter(p => {
+                return (p.image_url && p.image_url.startsWith('http')) || 
+                       (p.audio_url && p.audio_url.startsWith('http'));
+            });
+
+            if (needsFix.length === 0) {
+                alert('🎉 ¡Genial! No se encontraron productos con rutas absolutas HTTP. Todas están optimizadas.');
+                return;
+            }
+
+            if (!confirm(`Se encontraron ${needsFix.length} productos con rutas absolutas (lentas).\n¿Iniciar corrección automática para convertirlas a relativas dinámicas?`)) return;
+
+            const overlay = document.getElementById('modal-overlay');
+            const fill = document.getElementById('progress-bar-fill');
+            const statusText = document.getElementById('modal-status-text');
+            const consoleBox = document.getElementById('log-console');
+            const btnClose = document.getElementById('btn-modal-close');
+
+            overlay.style.display = 'flex';
+            consoleBox.innerHTML = '';
+            btnClose.style.display = 'none';
+
+            addLog(`🚀 Iniciando corrección masiva de ${needsFix.length} productos...`, 'info');
+
+            let processed = 0, success = 0, failed = 0;
+
+            for (const prod of needsFix) {
+                processed++;
+                const pct = Math.round((processed / needsFix.length) * 100);
+                fill.style.width = `${pct}%`;
+                statusText.textContent = `Procesando: ${processed} de ${needsFix.length} (${pct}%)`;
+
+                try {
+                    let updateData = {};
+                    let logs = [];
+                    
+                    if (prod.image_url && prod.image_url.startsWith('http')) {
+                        updateData.image_url = stripToRelativeKey(prod.image_url);
+                        logs.push(`Cover ➔ ${updateData.image_url}`);
+                    }
+                    if (prod.audio_url && prod.audio_url.startsWith('http')) {
+                        updateData.audio_url = stripToRelativeKey(prod.audio_url);
+                        logs.push(`Audio ➔ ${updateData.audio_url}`);
+                    }
+
+                    if (Object.keys(updateData).length > 0) {
+                        const { error } = await supabaseClient
+                            .from('products')
+                            .update(updateData)
+                            .eq('id', prod.id);
+
+                        if (error) throw error;
+                        
+                        success++;
+                        addLog(`✅ ID ${prod.id} corregido: ${logs.join(' | ')}`, 'ok');
+                    }
+                } catch(e) {
+                    failed++;
+                    addLog(`❌ Error ID ${prod.id}: ${e.message}`, 'err');
+                }
+
+                consoleBox.scrollTop = consoleBox.scrollHeight;
+                await new Promise(r => setTimeout(r, 80)); // Rate limit
+            }
+
+            addLog(`\n✨ Finalizado. Exitosos: ${success}, Fallidos: ${failed}`, 'info');
+            statusText.textContent = `Proceso terminado.`;
+            btnClose.style.display = 'block';
+        };
+
+        function addLog(text, type) {
+            const el = document.createElement('div');
+            el.className = `log-entry ${type}`;
+            el.textContent = text;
+            document.getElementById('log-console').appendChild(el);
+        }
+
+        function stripToRelativeKey(url) {
+            if (!url) return null;
+            let clean = url.split('?')[0]; // Remove query params
+            
+            // Si ya no empieza con http, no hacemos nada
+            if (!clean.startsWith('http')) return clean;
+
+            const patterns = [
+                '/api/r2-public/',
+                '/api/admin/r2-proxy/',
+                '/public/products/',
+                '/public/avatars/',
+                '/products/covers/',
+                '/beats/mp3/',
+                '/storage/v1/object/public/products/',
+                '/storage/v1/object/public/'
+            ];
+            for (const pt of patterns) {
+                if (clean.includes(pt)) {
+                    clean = clean.substring(clean.indexOf(pt) + pt.length);
+                    break; // stop at first match
+                }
+            }
+            
+            // For safety, simply return the part AFTER the bucket prefix
+            if (clean.startsWith('products/')) clean = clean.substring(9);
+            if (clean.startsWith('audio/')) clean = clean.substring(6);
+            if (clean.startsWith('covers/')) clean = clean.substring(7);
+            
+            // Si DESPUÉS de todo sigue empezando con http (porque no hizo match con ningún patrón),
+            // extraemos agresivamente desde el primer UUID que encontremos.
+            if (clean.startsWith('http')) {
+                const uuidMatch = clean.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+                if (uuidMatch) {
+                    clean = clean.substring(uuidMatch.index);
+                }
+            }
+            
+            return clean;
+        }
+    </script>
+</body>
+</html>
