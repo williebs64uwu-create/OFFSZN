@@ -91,12 +91,12 @@ export const callbackPayPal = async (req, res) => {
     try {
         if (ppError) {
             console.error('[PayPalOAuth] User denied or error:', ppError);
-            return res.redirect('/cuenta/transacciones?paypal=error&msg=denied');
+            return res.redirect('/transacciones?paypal=error&msg=denied');
         }
 
         if (!state || state !== savedState) {
             console.error('[PayPalOAuth] Invalid state:', { received: state, saved: savedState });
-            return res.redirect('/cuenta/transacciones?paypal=error&msg=invalid_state');
+            return res.redirect('/transacciones?paypal=error&msg=invalid_state');
         }
 
         const userId = state.split('_')[0];
@@ -156,11 +156,11 @@ export const callbackPayPal = async (req, res) => {
 
         if (updateError) throw updateError;
 
-        res.redirect('/cuenta/transacciones?paypal=success');
+        res.redirect('/transacciones?paypal=success');
 
     } catch (err) {
         console.error('[PayPalOAuth] Callback Error:', err);
-        res.redirect(`/cuenta/transacciones?paypal=error&msg=${encodeURIComponent(err.message)}`);
+        res.redirect(`/transacciones?paypal=error&msg=${encodeURIComponent(err.message)}`);
     }
 };
 
