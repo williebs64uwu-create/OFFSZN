@@ -544,12 +544,17 @@ export class RendererEngine {
                     const iconClass = customInfo.icon || defaultIcons[link.toUpperCase()] || 'bi-link';
                     
                     let iconHtml = '';
+                    let processedIconClass = iconClass;
+                    if (iconClass.startsWith('bi-') && !iconClass.startsWith('bi ')) {
+                        processedIconClass = 'bi ' + iconClass;
+                    }
+
                     if (iconClass.startsWith('http://') || iconClass.startsWith('https://') || iconClass.startsWith('/') || iconClass.startsWith('data:image')) {
                         iconHtml = `<img src="${iconClass}" style="width: 16px; height: 16px; object-fit: contain; display: inline-block; vertical-align: middle;" />`;
                     } else if (iconClass.trim().startsWith('<svg')) {
                         iconHtml = `<span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;">${iconClass}</span>`;
                     } else {
-                        iconHtml = `<i class="${iconClass}" style="font-size: 1rem; line-height: 1; vertical-align: middle;"></i>`;
+                        iconHtml = `<i class="${processedIconClass}" style="font-size: 1rem; line-height: 1; vertical-align: middle;"></i>`;
                     }
                     
                     let innerContent = labelText;
@@ -569,12 +574,17 @@ export class RendererEngine {
                     const iconClass = customInfo.icon || defaultIcons[link.toUpperCase()] || 'bi-link';
                     
                     let iconHtml = '';
+                    let processedIconClass = iconClass;
+                    if (iconClass.startsWith('bi-') && !iconClass.startsWith('bi ')) {
+                        processedIconClass = 'bi ' + iconClass;
+                    }
+
                     if (iconClass.startsWith('http://') || iconClass.startsWith('https://') || iconClass.startsWith('/') || iconClass.startsWith('data:image')) {
                         iconHtml = `<img src="${iconClass}" style="width: 18px; height: 18px; object-fit: contain; margin-right: 12px; display: inline-block; vertical-align: middle;" />`;
                     } else if (iconClass.trim().startsWith('<svg')) {
                         iconHtml = `<span style="width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; vertical-align: middle;">${iconClass}</span>`;
                     } else {
-                        iconHtml = `<i class="${iconClass}" style="font-size: 1.1rem; margin-right: 12px; vertical-align: middle;"></i>`;
+                        iconHtml = `<i class="${processedIconClass}" style="font-size: 1.1rem; margin-right: 12px; vertical-align: middle;"></i>`;
                     }
 
                     return `

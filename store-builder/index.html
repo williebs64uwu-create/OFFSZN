@@ -765,45 +765,7 @@
                         <input type="text" id="editNavLogoText" maxlength="25" style="width: 100%; padding: 12px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; font-size: 13px; transition: border-color 0.2s;" value="${logoVal}">
                     </div>
                     
-                    <!-- 2. ALINEACIÓN (Siempre visible) -->
-                    <div style="margin-bottom: 20px;">
-                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Alineación de Enlaces</label>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #161616; padding: 4px; border-radius: 8px; border: 1px solid #282828;">
-                            <button type="button" class="align-segment-btn ${linksAlign === 'left' ? 'active' : ''}" data-align="left" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-                                <i class="bi bi-align-left" style="font-size: 14px;"></i>
-                                <span style="font-size: 11px; font-weight: 700;">Izquierda</span>
-                            </button>
-                            <button type="button" class="align-segment-btn ${linksAlign === 'center' ? 'active' : ''}" data-align="center" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-                                <i class="bi bi-align-center" style="font-size: 14px;"></i>
-                                <span style="font-size: 11px; font-weight: 700;">Centro</span>
-                            </button>
-                            <button type="button" class="align-segment-btn ${linksAlign === 'right' ? 'active' : ''}" data-align="right" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
-                                <i class="bi bi-align-right" style="font-size: 14px;"></i>
-                                <span style="font-size: 11px; font-weight: 700;">Derecha</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 3. ESTILO (Siempre visible) -->
-                    <div style="margin-bottom: 20px;">
-                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Estilo de Enlaces</label>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #161616; padding: 4px; border-radius: 8px; border: 1px solid #282828;">
-                            <button type="button" class="style-segment-btn ${linksStyle === 'text' ? 'active' : ''}" data-style="text" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                                <i class="bi bi-justify" style="font-size: 14px;"></i>
-                                <span style="font-size: 11px; font-weight: 700;">Texto</span>
-                            </button>
-                            <button type="button" class="style-segment-btn ${linksStyle === 'icon-text' ? 'active' : ''}" data-style="icon-text" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                                <i class="bi bi-file-music" style="font-size: 14px;"></i>
-                                <span style="font-size: 11px; font-weight: 700;">Mixto</span>
-                            </button>
-                            <button type="button" class="style-segment-btn ${linksStyle === 'icon' ? 'active' : ''}" data-style="icon" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                                <i class="bi bi-music-note-beamed" style="font-size: 14px;"></i>
-                                <span style="font-size: 11px; font-weight: 700;">Iconos</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- 4. VISIBILIDAD DE BOTONES (Siempre visible, no acordeón) -->
+                    <!-- 2. VISIBILIDAD DE BOTONES (Siempre visible, no acordeón) -->
                     <div style="margin-bottom: 24px;">
                         <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Visibilidad de Botones</label>
                         <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -825,88 +787,7 @@
                         </div>
                     </div>
 
-                    <!-- 5. ACORDEÓN: DISEÑO AVANZADO (Fondo y Bordes) -->
-                    <div class="sidebar-accordion" id="navAccordionEstetico">
-                        <div class="sidebar-accordion-header" onclick="toggleSidebarAccordion(this)">
-                            <div class="sidebar-accordion-title">
-                                <i class="bi bi-palette-fill"></i>
-                                <span>Ajustes de Fondo y Bordes</span>
-                            </div>
-                            <i class="bi bi-chevron-down sidebar-accordion-arrow"></i>
-                        </div>
-                        <div class="sidebar-accordion-content">
-                            <!-- Switch Fondo Transparente -->
-                            <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 14px; border-radius: 8px; border: 1px solid #282828;">
-                                <div style="display: flex; flex-direction: column;">
-                                    <span style="font-size: 12px; font-weight: 600; color: #fff;">Fondo Transparente</span>
-                                    <span style="font-size: 9px; color: #666;">Quita el fondo y el desenfoque</span>
-                                </div>
-                                <label class="switch-toggle large">
-                                    <input type="checkbox" id="editNavTransparentBg" ${transparentBg ? 'checked' : ''}>
-                                    <span class="slider-toggle"></span>
-                                </label>
-                            </div>
-
-                            <!-- Controles del Fondo (Color, Opacidad, Blur) -->
-                            <div id="navBgControlsContainer" style="display: ${transparentBg ? 'none' : 'block'}; margin-top: 12px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                    <span style="font-size: 11px; color: #aaa; font-weight: 600;">Color de Fondo</span>
-                                    <div style="display: flex; align-items: center; gap: 8px;">
-                                        <span id="bgColorHexDisplay" style="font-size: 11px; color: #666; font-family: monospace;">${navBgColor}</span>
-                                        <input type="color" id="editNavBgColor" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: transparent; cursor: pointer; padding: 0;" value="${navBgColor}">
-                                    </div>
-                                </div>
-
-                                <div style="margin-bottom: 12px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Opacidad del Fondo</span>
-                                        <span id="navBgOpacityValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${navBgOpacity}%</span>
-                                    </div>
-                                    <input type="range" id="editNavBgOpacity" min="0" max="100" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${navBgOpacity}">
-                                </div>
-
-                                <div style="margin-bottom: 12px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                        <div style="display: flex; flex-direction: column;">
-                                            <span style="font-size: 11px; color: #aaa; font-weight: 600;">Desenfoque de Cristal (Efecto Glass)</span>
-                                            <span style="font-size: 9px; color: #666; font-weight: 400; line-height: 1;">Añade desenfoque premium translúcido al fondo</span>
-                                        </div>
-                                        <span id="navBgBlurValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${navBgBlur}px</span>
-                                    </div>
-                                    <input type="range" id="editNavBgBlur" min="0" max="40" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${navBgBlur}">
-                                </div>
-                            </div>
-
-                            <!-- Controles del Borde (Color, Grosor, Opacidad) -->
-                            <div style="border-top: 1px solid #282828; padding-top: 12px; margin-top: 12px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                    <span style="font-size: 11px; color: #aaa; font-weight: 600;">Color de Borde</span>
-                                    <div style="display: flex; align-items: center; gap: 8px;">
-                                        <span id="borderColorHexDisplay" style="font-size: 11px; color: #666; font-family: monospace;">${navBorderColor}</span>
-                                        <input type="color" id="editNavBorderColor" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: transparent; cursor: pointer; padding: 0;" value="${navBorderColor}">
-                                    </div>
-                                </div>
-
-                                <div style="margin-bottom: 12px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Grosor del Borde Inferior</span>
-                                        <span id="navBorderWidthValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${borderWidth}px</span>
-                                    </div>
-                                    <input type="range" id="editNavBorderWidth" min="0" max="5" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${borderWidth}">
-                                </div>
-
-                                <div style="margin-bottom: 12px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Opacidad del Borde</span>
-                                        <span id="navBorderOpacityValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${navBorderOpacity}%</span>
-                                    </div>
-                                    <input type="range" id="editNavBorderOpacity" min="0" max="100" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${navBorderOpacity}">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 6. ACORDEÓN: ENLACES PERSONALIZADOS -->
+                    <!-- 3. ACORDEÓN: ENLACES PERSONALIZADOS -->
                     <div class="sidebar-accordion" id="navAccordionEnlaces">
                         <div class="sidebar-accordion-header" onclick="toggleSidebarAccordion(this)">
                             <div class="sidebar-accordion-title">
@@ -918,6 +799,131 @@
                         <div class="sidebar-accordion-content">
                             <div id="navLinksCustomList">
                                 ${visibleLinksHtml}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. ACORDEÓN: OPCIONES AVANZADAS -->
+                    <div class="sidebar-accordion" id="navAccordionEstetico">
+                        <div class="sidebar-accordion-header" onclick="toggleSidebarAccordion(this)">
+                            <div class="sidebar-accordion-title">
+                                <i class="bi bi-gear-fill"></i>
+                                <span>Opciones Avanzadas</span>
+                            </div>
+                            <i class="bi bi-chevron-down sidebar-accordion-arrow"></i>
+                        </div>
+                        <div class="sidebar-accordion-content">
+                            
+                            <!-- ALINEACIÓN -->
+                            <div style="margin-bottom: 20px;">
+                                <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Alineación de Enlaces</label>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #161616; padding: 4px; border-radius: 8px; border: 1px solid #282828;">
+                                    <button type="button" class="align-segment-btn ${linksAlign === 'left' ? 'active' : ''}" data-align="left" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                                        <i class="bi bi-align-left" style="font-size: 14px;"></i>
+                                        <span style="font-size: 11px; font-weight: 700;">Izq.</span>
+                                    </button>
+                                    <button type="button" class="align-segment-btn ${linksAlign === 'center' ? 'active' : ''}" data-align="center" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                                        <i class="bi bi-align-center" style="font-size: 14px;"></i>
+                                        <span style="font-size: 11px; font-weight: 700;">Centro</span>
+                                    </button>
+                                    <button type="button" class="align-segment-btn ${linksAlign === 'right' ? 'active' : ''}" data-align="right" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                                        <i class="bi bi-align-right" style="font-size: 14px;"></i>
+                                        <span style="font-size: 11px; font-weight: 700;">Der.</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- ESTILO -->
+                            <div style="margin-bottom: 20px;">
+                                <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Estilo de Enlaces</label>
+                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #161616; padding: 4px; border-radius: 8px; border: 1px solid #282828;">
+                                    <button type="button" class="style-segment-btn ${linksStyle === 'text' ? 'active' : ''}" data-style="text" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                                        <i class="bi bi-justify" style="font-size: 14px;"></i>
+                                        <span style="font-size: 11px; font-weight: 700;">Texto</span>
+                                    </button>
+                                    <button type="button" class="style-segment-btn ${linksStyle === 'icon-text' ? 'active' : ''}" data-style="icon-text" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                                        <i class="bi bi-file-music" style="font-size: 14px;"></i>
+                                        <span style="font-size: 11px; font-weight: 700;">Mixto</span>
+                                    </button>
+                                    <button type="button" class="style-segment-btn ${linksStyle === 'icon' ? 'active' : ''}" data-style="icon" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                                        <i class="bi bi-music-note-beamed" style="font-size: 14px;"></i>
+                                        <span style="font-size: 11px; font-weight: 700;">Iconos</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- FONDO Y BORDES -->
+                            <div style="border-top: 1px solid #282828; padding-top: 16px;">
+                                <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 12px;">Fondo y Bordes</label>
+                                
+                                <!-- Switch Fondo Transparente -->
+                                <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 14px; border-radius: 8px; border: 1px solid #282828; margin-bottom: 12px;">
+                                    <div style="display: flex; flex-direction: column;">
+                                        <span style="font-size: 12px; font-weight: 600; color: #fff;">Fondo Transparente</span>
+                                        <span style="font-size: 9px; color: #666;">Quita el fondo y el desenfoque</span>
+                                    </div>
+                                    <label class="switch-toggle large">
+                                        <input type="checkbox" id="editNavTransparentBg" ${transparentBg ? 'checked' : ''}>
+                                        <span class="slider-toggle"></span>
+                                    </label>
+                                </div>
+
+                                <!-- Controles del Fondo (Color, Opacidad, Blur) -->
+                                <div id="navBgControlsContainer" style="display: ${transparentBg ? 'none' : 'block'};">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Color de Fondo</span>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span id="bgColorHexDisplay" style="font-size: 11px; color: #666; font-family: monospace;">${navBgColor}</span>
+                                            <input type="color" id="editNavBgColor" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: transparent; cursor: pointer; padding: 0;" value="${navBgColor}">
+                                        </div>
+                                    </div>
+
+                                    <div style="margin-bottom: 12px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <span style="font-size: 11px; color: #aaa; font-weight: 600;">Opacidad del Fondo</span>
+                                            <span id="navBgOpacityValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${navBgOpacity}%</span>
+                                        </div>
+                                        <input type="range" id="editNavBgOpacity" min="0" max="100" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${navBgOpacity}">
+                                    </div>
+
+                                    <div style="margin-bottom: 12px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <div style="display: flex; flex-direction: column;">
+                                                <span style="font-size: 11px; color: #aaa; font-weight: 600;">Desenfoque Cristal</span>
+                                                <span style="font-size: 9px; color: #666; font-weight: 400; line-height: 1;">Efecto translúcido (blur)</span>
+                                            </div>
+                                            <span id="navBgBlurValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${navBgBlur}px</span>
+                                        </div>
+                                        <input type="range" id="editNavBgBlur" min="0" max="40" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${navBgBlur}">
+                                    </div>
+                                </div>
+
+                                <!-- Controles del Borde (Color, Grosor, Opacidad) -->
+                                <div style="border-top: 1px solid #282828; padding-top: 12px; margin-top: 12px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Color de Borde</span>
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <span id="borderColorHexDisplay" style="font-size: 11px; color: #666; font-family: monospace;">${navBorderColor}</span>
+                                            <input type="color" id="editNavBorderColor" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: transparent; cursor: pointer; padding: 0;" value="${navBorderColor}">
+                                        </div>
+                                    </div>
+
+                                    <div style="margin-bottom: 12px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <span style="font-size: 11px; color: #aaa; font-weight: 600;">Grosor del Borde</span>
+                                            <span id="navBorderWidthValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${borderWidth}px</span>
+                                        </div>
+                                        <input type="range" id="editNavBorderWidth" min="0" max="5" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${borderWidth}">
+                                    </div>
+
+                                    <div style="margin-bottom: 12px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                            <span style="font-size: 11px; color: #aaa; font-weight: 600;">Opacidad del Borde</span>
+                                            <span id="navBorderOpacityValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${navBorderOpacity}%</span>
+                                        </div>
+                                        <input type="range" id="editNavBorderOpacity" min="0" max="100" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${navBorderOpacity}">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
