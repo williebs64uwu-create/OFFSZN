@@ -224,7 +224,10 @@
             const engine = new window.RendererEngine(mainApp, state);
             engine.render(state);
 
-            // No need to load duplicate static nav/footers anymore as engine renders them dynamically
+            // Notify CartManager and others that the DOM has been populated
+            setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('offszn-navbar-loaded'));
+            }, 100);
 
             // Check Subscription Status
             if (isOwner) {

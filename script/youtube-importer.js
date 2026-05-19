@@ -20,7 +20,7 @@
                     // Note: API key is not strictly needed for the token flow if using GIS client
                 });
                 await gapi.client.load('youtube', 'v3');
-                
+
                 // 🔥 Restore token if available to prevent 403 on auto-import
                 const savedToken = sessionStorage.getItem('yt_access_token');
                 if (savedToken) {
@@ -85,7 +85,7 @@
                     clearInterval(checkPopupClosed);
                     return;
                 }
-                
+
                 // If the main document has focus, the popup MIGHT be closed.
                 // But it could just be the user clicking on the background momentarily
                 // while the popup is still open. 
@@ -105,7 +105,7 @@
                     focusCount = 0;
                 }
             }, 1000); // Check every second
-            
+
         } catch (e) {
             console.error("❌ [GIS] Error starting auth:", e);
             if (callback) callback({ error: e.message });
@@ -121,7 +121,7 @@
                 btn.style.pointerEvents = 'auto';
             }
             console.log("📹 Importer: Buttons Enabled");
-            
+
             // 🔥 Check for automatic import from Dashboard
             handleAutoImport();
         }
@@ -237,7 +237,7 @@
     async function listUserVideos() {
         const listEl = document.getElementById('yt-video-list');
         const loader = document.getElementById('yt-loader');
-        
+
         if (listEl) listEl.innerHTML = '';
         if (loader) loader.style.display = 'block';
 
@@ -331,7 +331,7 @@
         const detected = detectMetadata(title, description);
         const bpmUsed = detected.bpm;
         const keyUsed = detected.key;
-        
+
         // Prepend extracted hashtags to tags to prioritize them
         if (detected.hashtags && detected.hashtags.length > 0) {
             // New tags list starting with hashtags
@@ -378,11 +378,11 @@
             if (found) {
                 keyInput.value = found.value;
                 if (window.uploaderState) window.uploaderState.key = found.value;
-                
+
                 // Update Custom UI Trigger
                 const display = document.getElementById('keyDisplay');
                 if (display) display.innerHTML = `<span>${found.text.trim()}</span>`;
-                
+
                 // Select in list visually
                 const list = document.getElementById('keyOptionsList');
                 if (list) {
@@ -409,7 +409,7 @@
                 const blob = await response.blob();
                 // Use the videoId in the filename to avoid collisions and track imports
                 const file = new File([blob], `youtube_${videoId}.jpg`, { type: 'image/jpeg' });
-                
+
                 // Update UI preview
                 const preview = document.getElementById('coverPreview');
                 if (preview) {
@@ -418,10 +418,10 @@
                 }
                 const dropZone = document.getElementById('coverDropZone');
                 if (dropZone) dropZone.classList.add('has-image');
-                
+
                 const cardPreview = document.getElementById('previewCardCover');
                 if (cardPreview) cardPreview.innerHTML = `<img src="${preview.src}" style="width:100%;height:100%;object-fit:cover;">`;
-                
+
                 // --- DEFERRED UPLOAD LOGIC ---
                 // We no longer upload immediately to R2 to avoid orphaning files.
                 // Instead, we just set uploaderState.cover as a File object.
@@ -442,16 +442,16 @@
 
                     // SYNC with formData for Beats.html logic
                     if (window.formData) {
-                        window.formData.coverBlob = file; 
+                        window.formData.coverBlob = file;
                     }
 
                     // If we are editing, schedule the old cover for deletion
                     if (window.uploaderState.editId && window.originalProductData) {
-                         if (window.originalProductData.image_url) {
+                        if (window.originalProductData.image_url) {
                             const oldUrl = window.uploaderState.old_raw_cover || window.originalProductData.image_url;
                             console.log('🧹 [YOUTUBE IMPORTER] Scheduling previous cover for cleanup:', oldUrl);
-                            window.uploaderState.old_raw_cover = oldUrl; 
-                         }
+                            window.uploaderState.old_raw_cover = oldUrl;
+                        }
                     }
                 }
             } catch (err) {
@@ -471,7 +471,7 @@
         if (!text) return null;
         // Normalize text
         const clean = text.replace(/[\(\)\[\]\-_]/g, ' ');
-        
+
         // 1. Explicit BPM pattern: "140 BPM", "140bpm", "BPM: 140", "BPM 140"
         const explicitRegex = /(?:BPM[:\s-]*)(\d{2,3})|(\d{2,3})(?:\s?BPM)/gi;
         let match = explicitRegex.exec(clean);
@@ -499,7 +499,7 @@
         const rootRaw = "[A-G]";
         const accRaw = "(?:#|b|flat|sharp| sostenido| bemol)?";
         const scaleRaw = "(?:maj|major|mayor|major|M|min|minor|menor|m)";
-        
+
         // Regex construction
         const regex = new RegExp(`\\b(${rootRaw})(${accRaw})\\s?(${scaleRaw})\\b`, 'gi');
         const match = regex.exec(text);
@@ -512,7 +512,7 @@
         // Normalize accidentals
         if (acc.includes('flat') || acc.includes('bemol') || acc === 'b') {
             // Dropdown usually uses sharps
-            const flatMap = {'Ab':'G#', 'Bb':'A#', 'Db':'C#', 'Eb':'D#', 'Gb':'F#'};
+            const flatMap = { 'Ab': 'G#', 'Bb': 'A#', 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#' };
             const mapped = flatMap[root + 'b'] || root + 'b';
             root = mapped[0];
             acc = mapped[1] || '';
@@ -530,7 +530,7 @@
         const searchText = `${title} ${description}`;
         const bpm = detectBPM(searchText);
         const key = detectKey(searchText);
-        
+
         // Extract hashtags from description
         const hashtags = [];
         if (description) {
@@ -540,7 +540,7 @@
                 hashtags.push(match[1]);
             }
         }
-        
+
         return { bpm, key, hashtags };
     }
 
@@ -555,7 +555,7 @@
     // 🔥 Loader Exports (Explicitly global for HTML script tags)
     window.gapiLoaded = gapiLoaded;
     window.gisLoaded = gisLoaded;
-    
+
     // Case-insensitive fallbacks for common typos in script tags
     window.gapiloaded = gapiLoaded;
     window.gisloaded = gisLoaded;

@@ -970,7 +970,7 @@
         const [prodRes, viewsRes, ordersRes] = await Promise.all([
           window.supabaseClient
             .from('products')
-            .select('id, name, image_url, storage_version, cover_url')
+            .select('id, name, image_url, storage_version')
             .eq('producer_id', userId)
             .eq('status', 'approved'),
           
@@ -1024,7 +1024,7 @@
             itemPromises.push(
               window.supabaseClient
                 .from('order_items')
-                .select('product_id, price')
+                .select('product_id, price_at_purchase')
                 .in('order_id', chunk)
             );
           }
@@ -1036,7 +1036,7 @@
             rawOrderItems.forEach(item => {
               if (!productStats[item.product_id]) productStats[item.product_id] = { count: 0, revenue: 0 };
               productStats[item.product_id].count++;
-              productStats[item.product_id].revenue += (item.price || 0);
+              productStats[item.product_id].revenue += (item.price_at_purchase || 0);
             });
 
             const sortedIds = Object.keys(productStats)
@@ -1051,7 +1051,7 @@
                 name: details?.name || 'Producto Eliminado',
                 sales: stats.count,
                 revenue: stats.revenue,
-                img: details?.cover_url || details?.image_url,
+                img: details?.image_url,
                 storage_version: details?.storage_version
               };
             });

@@ -16,7 +16,7 @@ window.PremiumRender = {
             cleanPath = path.substring(9);
         }
 
-        if (storageVer !== 'supabase' || path.includes('covers/')) {
+        if (storageVer !== 'supabase') {
             return `https://offszn.lat/api/r2-public/products/${cleanPath}`;
         }
 

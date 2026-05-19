@@ -16,6 +16,172 @@
         .touch-indicator {
             display: none !important;
         }
+        .btn-block-action {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            color: #ccc;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-block-action:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .btn-block-action:disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+        }
+        .btn-edit-action:hover {
+            background: #ffffff !important;
+            color: #000000 !important;
+            border-color: #ffffff !important;
+        }
+        .btn-delete-action:hover {
+            background: rgba(255, 68, 68, 0.15) !important;
+            border-color: rgba(255, 68, 68, 0.3) !important;
+            color: #ff4444 !important;
+        }
+        .section-block-item:hover {
+            background: rgba(255, 255, 255, 0.04) !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+        
+        /* Premium Switch Toggles & Pixel-Perfect Alignment */
+        .switch-toggle {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+            margin: 0;
+            cursor: pointer;
+        }
+        .switch-toggle input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+        .slider-toggle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #1a1a1a;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 20px;
+            border: 1px solid #333;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .slider-toggle::before {
+            content: "";
+            position: absolute;
+            height: 12px;
+            width: 12px;
+            left: 3px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #666;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50%;
+        }
+        
+        /* Active (Checked) State */
+        .switch-toggle input:checked + .slider-toggle {
+            background-color: #ffffff !important;
+            border-color: #ffffff !important;
+        }
+        .switch-toggle input:checked + .slider-toggle::before {
+            transform: translate(16px, -50%);
+            background-color: #000000 !important;
+        }
+
+        /* Large Toggle (used for Explore, Cart & Brandings) */
+        .switch-toggle.large {
+            width: 44px;
+            height: 24px;
+        }
+        .switch-toggle.large .slider-toggle {
+            border-radius: 24px;
+        }
+        .switch-toggle.large .slider-toggle::before {
+            height: 16px;
+            width: 16px;
+            left: 3px;
+        }
+        .switch-toggle.large input:checked + .slider-toggle::before {
+            transform: translate(20px, -50%);
+        }
+
+        /* Premium Sidebar Accordion / Collapsible Panel */
+        .sidebar-accordion {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            background: #161616;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s ease;
+        }
+        .sidebar-accordion-header:hover {
+            background: #1d1d1d;
+        }
+        .sidebar-accordion-title {
+            font-size: 11px;
+            color: #aaa;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar-accordion-title i {
+            font-size: 14px;
+            color: #0cbc87;
+        }
+        .sidebar-accordion-arrow {
+            font-size: 12px;
+            color: #666;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar-accordion.open .sidebar-accordion-arrow {
+            transform: rotate(180deg);
+            color: #fff;
+        }
+        .sidebar-accordion-content {
+            padding: 16px;
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            border-top: 1px solid #222;
+            background: #111;
+        }
+        .sidebar-accordion.open .sidebar-accordion-content {
+            display: flex;
+        }
     </style>
 </head>
 <body>
@@ -23,7 +189,7 @@
     <aside class="builder-sidebar">
         <div class="sidebar-header">
             <h2 style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.5px; margin: 0; color: #fff;">
-                <span style="background: linear-gradient(135deg, #0cbc87 0%, #00f2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; letter-spacing: -1px; font-size: 1.3rem;">OFFSZN</span>
+                <span style="background: linear-gradient(135deg, #0cbc87 0%, #00f2fe 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; letter-spacing: -1px; font-size: 1.3rem;">OFFSZN</span>
                 <span style="font-weight: 300; font-size: 0.85rem; color: #666; border-left: 1px solid #333; padding-left: 8px; margin-left: 4px; text-transform: uppercase; letter-spacing: 1px;">Builder</span>
             </h2>
             <button class="btn-save" id="btnSaveStore">Publicar</button>
@@ -57,6 +223,16 @@
         <div class="sidebar-content" id="settings-panel" style="display: none; padding: 20px;">
             <p style="color:#666; font-size:14px;">Ajustes generales de la tienda en desarrollo.</p>
         </div>
+
+        <div class="sidebar-content" id="edit-section-panel" style="display: none; padding: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-editor); padding-bottom: 15px;">
+                <button id="btnBackToBlocks" style="background: none; border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background-color: rgba(255,255,255,0.05); transition: all 0.2s;"><i class="bi bi-arrow-left" style="font-size: 1.1rem;"></i></button>
+                <h3 id="editPanelTitle" style="font-size: 13px; font-weight: 800; color: #fff; text-transform: uppercase; margin: 0; letter-spacing: 0.5px;">Editar Sección</h3>
+            </div>
+            <div id="editSectionForm" style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- Campos dinámicos inyectados -->
+            </div>
+        </div>
     </aside>
 
     <!-- LIENZO DE PREVISUALIZACIÓN (Panel Derecho) -->
@@ -85,6 +261,14 @@
     <!-- Inicializar Supabase Localmente en el Builder -->
     <script>
         window.supabase = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        
+        // Helper global para los acordeones colapsables en la barra de edición lateral
+        window.toggleSidebarAccordion = function(header) {
+            const accordion = header.closest('.sidebar-accordion');
+            if (accordion) {
+                accordion.classList.toggle('open');
+            }
+        };
     </script>
 
     <!-- Scripts Aislados (Arquitectura Limpia) -->
@@ -431,6 +615,568 @@
             if(storeState) storeState.updateThemeProp('backgroundColor', e.target.value);
         });
 
+        function moveSection(from, to) {
+            const state = storeState.get();
+            const sections = [...state.sections];
+            const item = sections.splice(from, 1)[0];
+            sections.splice(to, 0, item);
+            storeState.set({ ...state, sections });
+        }
+
+        function deleteSection(id) {
+            const state = storeState.get();
+            const sections = state.sections.filter(s => s.id !== id);
+            storeState.set({ ...state, sections });
+        }
+
+        function openSectionEditor(sec) {
+            const tabsHeader = document.querySelector('.sidebar-tabs');
+            if (tabsHeader) tabsHeader.style.display = 'none';
+
+            // Ocultar todos los paneles
+            document.getElementById('blocks-panel').style.display = 'none';
+            document.getElementById('theme-panel').style.display = 'none';
+            document.getElementById('settings-panel').style.display = 'none';
+
+            // Mostrar panel de edición
+            const editPanel = document.getElementById('edit-section-panel');
+            editPanel.style.display = 'block';
+
+            // Título del panel
+            document.getElementById('editPanelTitle').textContent = `Editar ${sec.type.toUpperCase()}`;
+
+            // Renderizar formulario
+            const form = document.getElementById('editSectionForm');
+            form.innerHTML = '';
+
+            if (sec.type === 'hero') {
+                form.innerHTML = `
+                    <div>
+                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;">Título Principal</label>
+                        <input type="text" id="editHeroTitle" style="width: 100%; padding: 10px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 13px;" value="${sec.props.title || ''}">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;">Subtítulo o Biografía</label>
+                        <textarea id="editHeroSubtitle" rows="4" style="width: 100%; padding: 10px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 13px; resize: vertical;">${sec.props.subtitle || ''}</textarea>
+                    </div>
+                `;
+                document.getElementById('editHeroTitle').oninput = (e) => {
+                    storeState.updateSection(sec.id, { title: e.target.value });
+                };
+                document.getElementById('editHeroSubtitle').oninput = (e) => {
+                    storeState.updateSection(sec.id, { subtitle: e.target.value });
+                };
+            } else if (sec.type === 'navbar') {
+                const logoVal = sec.props.logoText || '';
+                const activeLinks = sec.props.links || [];
+                const allLinks = ['BEATS', 'SERVICIOS', 'PLAYLISTS', 'SOBRE MI', 'FAQ'];
+                
+                const linksAlign = sec.props.linksAlign || 'center';
+                const linksStyle = sec.props.linksStyle || 'text';
+                const showCart = sec.props.showCart !== false;
+                const showExplore = sec.props.showExplore !== false;
+                
+                // Color, background opacity, blur and border
+                const navBgColor = sec.props.bgColor || '#000000';
+                const navBgOpacity = sec.props.bgOpacity !== undefined ? sec.props.bgOpacity : 70;
+                const navBgBlur = sec.props.bgBlur !== undefined ? sec.props.bgBlur : 12;
+                const navBorderColor = sec.props.borderColor || '#ffffff';
+                const navBorderOpacity = sec.props.borderOpacity !== undefined ? sec.props.borderOpacity : 5;
+                const transparentBg = sec.props.transparentBg === true;
+                const borderWidth = sec.props.borderWidth !== undefined ? sec.props.borderWidth : 1;
+                
+                const linkCustomizations = sec.props.linkCustomizations || {};
+                const defaultIcons = {
+                    'BEATS': 'bi-music-note-beamed',
+                    'SERVICIOS': 'bi-briefcase',
+                    'PLAYLISTS': 'bi-music-note-list',
+                    'SOBRE MI': 'bi-person-fill',
+                    'FAQ': 'bi-question-circle'
+                };
+                
+                let visibleLinksHtml = '';
+                allLinks.forEach(link => {
+                    const checked = activeLinks.includes(link) ? 'checked' : '';
+                    const customInfo = linkCustomizations[link] || {};
+                    const labelText = customInfo.text || link;
+                    const iconClass = customInfo.icon || defaultIcons[link] || 'bi-link';
+                    
+                    const presetsList = [
+                        { icon: 'bi-music-note-beamed', title: 'Corchea' },
+                        { icon: 'bi-briefcase', title: 'Portafolio' },
+                        { icon: 'bi-music-note-list', title: 'Playlist' },
+                        { icon: 'bi-person-fill', title: 'Usuario' },
+                        { icon: 'bi-question-circle', title: 'Dudas' },
+                        { icon: 'bi-spotify', title: 'Spotify' },
+                        { icon: 'bi-youtube', title: 'YouTube' },
+                        { icon: 'bi-instagram', title: 'Instagram' },
+                        { icon: 'bi-envelope', title: 'Contacto' },
+                        { icon: 'bi-disc', title: 'Vinilo' }
+                    ];
+
+                    let chipsHtml = presetsList.map(p => {
+                        const isActive = iconClass === p.icon;
+                        const bg = isActive ? 'rgba(255, 255, 255, 0.08)' : '#222';
+                        const border = isActive ? 'var(--theme-primary, #fff)' : '#333';
+                        const color = isActive ? '#fff' : '#aaa';
+                        return `<button type="button" class="icon-preset-chip" data-link="${link}" data-icon="${p.icon}" title="${p.title}" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: ${bg}; border: 1px solid ${border}; border-radius: 6px; color: ${color}; cursor: pointer; transition: all 0.2s; padding: 0;">
+                            <i class="bi ${p.icon}" style="font-size: 14px;"></i>
+                        </button>`;
+                    }).join('');
+                    
+                    visibleLinksHtml += `
+                        <div style="background: #161616; border: 1px solid #282828; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 12px; font-weight: 700; color: #fff;">${link}</span>
+                                <label class="switch-toggle">
+                                    <input type="checkbox" class="editNavLinksCheckbox" value="${link}" ${checked}>
+                                    <span class="slider-toggle"></span>
+                                </label>
+                            </div>
+                            <div class="link-customizer-fields" id="customizer-fields-${link}" style="display: ${checked ? 'block' : 'none'}; margin-top: 10px; border-top: 1px solid #282828; padding-top: 10px;">
+                                <div style="margin-bottom: 8px;">
+                                    <label style="font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 4px;">Etiqueta del Enlace</label>
+                                    <input type="text" class="link-custom-text-input" data-link="${link}" style="width: 100%; padding: 8px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 11px;" value="${labelText}">
+                                </div>
+                                <div>
+                                    <label style="font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 4px;">Icono del Enlace</label>
+                                    <input type="text" class="link-custom-icon-input" id="icon-input-${link}" data-link="${link}" style="width: 100%; padding: 8px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 11px; margin-bottom: 8px;" value="${iconClass}">
+                                    
+                                    <div style="margin-top: 8px; margin-bottom: 4px;">
+                                        <label style="font-size: 9px; color: #888; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 4px;">Preestablecidos (Haz clic para seleccionar)</label>
+                                        <div style="display: flex; gap: 6px; flex-wrap: wrap; background: #0f0f0f; padding: 8px; border-radius: 8px; border: 1px solid #222;">
+                                            ${chipsHtml}
+                                        </div>
+                                    </div>
+                                    <span style="font-size: 9px; color: #666; display: block; margin-top: 4px;">Tip: Puedes usar clases Bootstrap (ej: bi-spotify), un link de Google Icons, o código &lt;svg&gt; inline.</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                form.innerHTML = `
+                    <!-- 1. IDENTIDAD Y LOGO (Siempre visible) -->
+                    <div style="margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; margin: 0;">Texto del Logo</label>
+                            <span id="logoTextCounter" style="font-size: 11px; color: #666; font-weight: 700;">${logoVal.length}/25</span>
+                        </div>
+                        <input type="text" id="editNavLogoText" maxlength="25" style="width: 100%; padding: 12px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; font-size: 13px; transition: border-color 0.2s;" value="${logoVal}">
+                    </div>
+                    
+                    <!-- 2. ALINEACIÓN (Siempre visible) -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Alineación de Enlaces</label>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #161616; padding: 4px; border-radius: 8px; border: 1px solid #282828;">
+                            <button type="button" class="align-segment-btn ${linksAlign === 'left' ? 'active' : ''}" data-align="left" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                                <i class="bi bi-align-left" style="font-size: 14px;"></i>
+                                <span style="font-size: 11px; font-weight: 700;">Izquierda</span>
+                            </button>
+                            <button type="button" class="align-segment-btn ${linksAlign === 'center' ? 'active' : ''}" data-align="center" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                                <i class="bi bi-align-center" style="font-size: 14px;"></i>
+                                <span style="font-size: 11px; font-weight: 700;">Centro</span>
+                            </button>
+                            <button type="button" class="align-segment-btn ${linksAlign === 'right' ? 'active' : ''}" data-align="right" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                                <i class="bi bi-align-right" style="font-size: 14px;"></i>
+                                <span style="font-size: 11px; font-weight: 700;">Derecha</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3. ESTILO (Siempre visible) -->
+                    <div style="margin-bottom: 20px;">
+                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Estilo de Enlaces</label>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #161616; padding: 4px; border-radius: 8px; border: 1px solid #282828;">
+                            <button type="button" class="style-segment-btn ${linksStyle === 'text' ? 'active' : ''}" data-style="text" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                                <i class="bi bi-justify" style="font-size: 14px;"></i>
+                                <span style="font-size: 11px; font-weight: 700;">Texto</span>
+                            </button>
+                            <button type="button" class="style-segment-btn ${linksStyle === 'icon-text' ? 'active' : ''}" data-style="icon-text" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                                <i class="bi bi-file-music" style="font-size: 14px;"></i>
+                                <span style="font-size: 11px; font-weight: 700;">Mixto</span>
+                            </button>
+                            <button type="button" class="style-segment-btn ${linksStyle === 'icon' ? 'active' : ''}" data-style="icon" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
+                                <i class="bi bi-music-note-beamed" style="font-size: 14px;"></i>
+                                <span style="font-size: 11px; font-weight: 700;">Iconos</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4. VISIBILIDAD DE BOTONES (Siempre visible, no acordeón) -->
+                    <div style="margin-bottom: 24px;">
+                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Visibilidad de Botones</label>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 14px; border-radius: 8px; border: 1px solid #282828;">
+                                <span style="font-size: 12px; font-weight: 600; color: #fff;">Mostrar botón Explorar</span>
+                                <label class="switch-toggle large">
+                                    <input type="checkbox" id="editNavShowExplore" ${showExplore ? 'checked' : ''}>
+                                    <span class="slider-toggle"></span>
+                                </label>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 14px; border-radius: 8px; border: 1px solid #282828;">
+                                <span style="font-size: 12px; font-weight: 600; color: #fff;">Mostrar botón Carrito</span>
+                                <label class="switch-toggle large">
+                                    <input type="checkbox" id="editNavShowCart" ${showCart ? 'checked' : ''}>
+                                    <span class="slider-toggle"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. ACORDEÓN: DISEÑO AVANZADO (Fondo y Bordes) -->
+                    <div class="sidebar-accordion" id="navAccordionEstetico">
+                        <div class="sidebar-accordion-header" onclick="toggleSidebarAccordion(this)">
+                            <div class="sidebar-accordion-title">
+                                <i class="bi bi-palette-fill"></i>
+                                <span>Ajustes de Fondo y Bordes</span>
+                            </div>
+                            <i class="bi bi-chevron-down sidebar-accordion-arrow"></i>
+                        </div>
+                        <div class="sidebar-accordion-content">
+                            <!-- Switch Fondo Transparente -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 14px; border-radius: 8px; border: 1px solid #282828;">
+                                <div style="display: flex; flex-direction: column;">
+                                    <span style="font-size: 12px; font-weight: 600; color: #fff;">Fondo Transparente</span>
+                                    <span style="font-size: 9px; color: #666;">Quita el fondo y el desenfoque</span>
+                                </div>
+                                <label class="switch-toggle large">
+                                    <input type="checkbox" id="editNavTransparentBg" ${transparentBg ? 'checked' : ''}>
+                                    <span class="slider-toggle"></span>
+                                </label>
+                            </div>
+
+                            <!-- Controles del Fondo (Color, Opacidad, Blur) -->
+                            <div id="navBgControlsContainer" style="display: ${transparentBg ? 'none' : 'block'}; margin-top: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-size: 11px; color: #aaa; font-weight: 600;">Color de Fondo</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span id="bgColorHexDisplay" style="font-size: 11px; color: #666; font-family: monospace;">${navBgColor}</span>
+                                        <input type="color" id="editNavBgColor" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: transparent; cursor: pointer; padding: 0;" value="${navBgColor}">
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: 12px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Opacidad del Fondo</span>
+                                        <span id="navBgOpacityValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${navBgOpacity}%</span>
+                                    </div>
+                                    <input type="range" id="editNavBgOpacity" min="0" max="100" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${navBgOpacity}">
+                                </div>
+
+                                <div style="margin-bottom: 12px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                        <div style="display: flex; flex-direction: column;">
+                                            <span style="font-size: 11px; color: #aaa; font-weight: 600;">Desenfoque de Cristal (Efecto Glass)</span>
+                                            <span style="font-size: 9px; color: #666; font-weight: 400; line-height: 1;">Añade desenfoque premium translúcido al fondo</span>
+                                        </div>
+                                        <span id="navBgBlurValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${navBgBlur}px</span>
+                                    </div>
+                                    <input type="range" id="editNavBgBlur" min="0" max="40" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${navBgBlur}">
+                                </div>
+                            </div>
+
+                            <!-- Controles del Borde (Color, Grosor, Opacidad) -->
+                            <div style="border-top: 1px solid #282828; padding-top: 12px; margin-top: 12px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <span style="font-size: 11px; color: #aaa; font-weight: 600;">Color de Borde</span>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span id="borderColorHexDisplay" style="font-size: 11px; color: #666; font-family: monospace;">${navBorderColor}</span>
+                                        <input type="color" id="editNavBorderColor" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: transparent; cursor: pointer; padding: 0;" value="${navBorderColor}">
+                                    </div>
+                                </div>
+
+                                <div style="margin-bottom: 12px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Grosor del Borde Inferior</span>
+                                        <span id="navBorderWidthValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${borderWidth}px</span>
+                                    </div>
+                                    <input type="range" id="editNavBorderWidth" min="0" max="5" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${borderWidth}">
+                                </div>
+
+                                <div style="margin-bottom: 12px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Opacidad del Borde</span>
+                                        <span id="navBorderOpacityValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${navBorderOpacity}%</span>
+                                    </div>
+                                    <input type="range" id="editNavBorderOpacity" min="0" max="100" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${navBorderOpacity}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. ACORDEÓN: ENLACES PERSONALIZADOS -->
+                    <div class="sidebar-accordion" id="navAccordionEnlaces">
+                        <div class="sidebar-accordion-header" onclick="toggleSidebarAccordion(this)">
+                            <div class="sidebar-accordion-title">
+                                <i class="bi bi-link-45deg"></i>
+                                <span>Personalizar Enlaces e Iconos</span>
+                            </div>
+                            <i class="bi bi-chevron-down sidebar-accordion-arrow"></i>
+                        </div>
+                        <div class="sidebar-accordion-content">
+                            <div id="navLinksCustomList">
+                                ${visibleLinksHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const logoInput = document.getElementById('editNavLogoText');
+                const logoCounter = document.getElementById('logoTextCounter');
+                logoInput.oninput = (e) => {
+                    const val = e.target.value.substring(0, 25);
+                    logoCounter.textContent = `${val.length}/25`;
+                    storeState.updateSection(sec.id, { logoText: val });
+                };
+
+                const alignBtns = form.querySelectorAll('.align-segment-btn');
+                alignBtns.forEach(btn => {
+                    btn.onclick = () => {
+                        alignBtns.forEach(b => {
+                            b.style.background = 'transparent';
+                            b.style.color = '#aaa';
+                        });
+                        btn.style.background = '#252525';
+                        btn.style.color = '#fff';
+                        storeState.updateSection(sec.id, { linksAlign: btn.dataset.align });
+                    };
+                    if (btn.classList.contains('active')) {
+                        btn.style.background = '#252525';
+                        btn.style.color = '#fff';
+                    }
+                });
+
+                const styleBtns = form.querySelectorAll('.style-segment-btn');
+                styleBtns.forEach(btn => {
+                    btn.onclick = () => {
+                        styleBtns.forEach(b => {
+                            b.style.background = 'transparent';
+                            b.style.color = '#aaa';
+                        });
+                        btn.style.background = '#252525';
+                        btn.style.color = '#fff';
+                        storeState.updateSection(sec.id, { linksStyle: btn.dataset.style });
+                    };
+                    if (btn.classList.contains('active')) {
+                        btn.style.background = '#252525';
+                        btn.style.color = '#fff';
+                    }
+                });
+
+                // Background, opacity, blur, border customizers
+                const editBg = document.getElementById('editNavBgColor');
+                if (editBg) {
+                    editBg.oninput = (e) => {
+                        document.getElementById('bgColorHexDisplay').textContent = e.target.value.toUpperCase();
+                        storeState.updateSection(sec.id, { bgColor: e.target.value });
+                    };
+                }
+                const editOpacity = document.getElementById('editNavBgOpacity');
+                if (editOpacity) {
+                    editOpacity.oninput = (e) => {
+                        document.getElementById('navBgOpacityValue').textContent = `${e.target.value}%`;
+                        storeState.updateSection(sec.id, { bgOpacity: parseInt(e.target.value) });
+                    };
+                }
+                const editBlur = document.getElementById('editNavBgBlur');
+                if (editBlur) {
+                    editBlur.oninput = (e) => {
+                        document.getElementById('navBgBlurValue').textContent = `${e.target.value}px`;
+                        storeState.updateSection(sec.id, { bgBlur: parseInt(e.target.value) });
+                    };
+                }
+                const editBColor = document.getElementById('editNavBorderColor');
+                if (editBColor) {
+                    editBColor.oninput = (e) => {
+                        document.getElementById('borderColorHexDisplay').textContent = e.target.value.toUpperCase();
+                        storeState.updateSection(sec.id, { borderColor: e.target.value });
+                    };
+                }
+                const editBWidth = document.getElementById('editNavBorderWidth');
+                if (editBWidth) {
+                    editBWidth.oninput = (e) => {
+                        document.getElementById('navBorderWidthValue').textContent = `${e.target.value}px`;
+                        storeState.updateSection(sec.id, { borderWidth: parseInt(e.target.value) });
+                    };
+                }
+                const editBOpacity = document.getElementById('editNavBorderOpacity');
+                if (editBOpacity) {
+                    editBOpacity.oninput = (e) => {
+                        document.getElementById('navBorderOpacityValue').textContent = `${e.target.value}%`;
+                        storeState.updateSection(sec.id, { borderOpacity: parseInt(e.target.value) });
+                    };
+                }
+
+                const editTransparentBg = document.getElementById('editNavTransparentBg');
+                if (editTransparentBg) {
+                    editTransparentBg.onchange = (e) => {
+                        const bgControls = document.getElementById('navBgControlsContainer');
+                        if (bgControls) {
+                            bgControls.style.display = e.target.checked ? 'none' : 'block';
+                        }
+                        storeState.updateSection(sec.id, { transparentBg: e.target.checked });
+                    };
+                }
+
+                document.getElementById('editNavShowExplore').onchange = (e) => {
+                    storeState.updateSection(sec.id, { showExplore: e.target.checked });
+                };
+
+                document.getElementById('editNavShowCart').onchange = (e) => {
+                    storeState.updateSection(sec.id, { showCart: e.target.checked });
+                };
+                
+                const checkboxes = form.querySelectorAll('.editNavLinksCheckbox');
+                checkboxes.forEach(cb => {
+                    cb.onchange = (e) => {
+                        const fields = document.getElementById(`customizer-fields-${cb.value}`);
+                        if (fields) {
+                            fields.style.display = e.target.checked ? 'block' : 'none';
+                        }
+                        const newLinks = [];
+                        checkboxes.forEach(item => {
+                            if (item.checked) newLinks.push(item.value);
+                        });
+                        storeState.updateSection(sec.id, { links: newLinks });
+                    };
+                });
+
+                const textInputs = form.querySelectorAll('.link-custom-text-input');
+                textInputs.forEach(input => {
+                    input.oninput = (e) => {
+                        const linkKey = input.dataset.link.toUpperCase();
+                        const currentCustoms = sec.props.linkCustomizations || {};
+                        currentCustoms[linkKey] = currentCustoms[linkKey] || {};
+                        currentCustoms[linkKey].text = e.target.value;
+                        storeState.updateSection(sec.id, { linkCustomizations: currentCustoms });
+                    };
+                });
+
+                const iconInputs = form.querySelectorAll('.link-custom-icon-input');
+                iconInputs.forEach(input => {
+                    input.oninput = (e) => {
+                        const linkKey = input.dataset.link.toUpperCase();
+                        const currentCustoms = sec.props.linkCustomizations || {};
+                        currentCustoms[linkKey] = currentCustoms[linkKey] || {};
+                        currentCustoms[linkKey].icon = e.target.value;
+                        storeState.updateSection(sec.id, { linkCustomizations: currentCustoms });
+                    };
+                });
+
+                const presetSelects = form.querySelectorAll('.link-icon-presets');
+                presetSelects.forEach(sel => {
+                    sel.onchange = (e) => {
+                        if (!e.target.value) return;
+                        const linkKey = sel.dataset.link.toUpperCase();
+                        const targetInput = document.getElementById(`icon-input-${sel.dataset.link}`);
+                        if (targetInput) {
+                            targetInput.value = e.target.value;
+                        }
+                        const currentCustoms = sec.props.linkCustomizations || {};
+                        currentCustoms[linkKey] = currentCustoms[linkKey] || {};
+                        currentCustoms[linkKey].icon = e.target.value;
+                        storeState.updateSection(sec.id, { linkCustomizations: currentCustoms });
+                    };
+                });
+            } else if (sec.type === 'faq') {
+                form.innerHTML = `
+                    <div>
+                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;">Email de Contacto</label>
+                        <input type="email" id="editFaqEmail" style="width: 100%; padding: 10px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 13px;" value="${sec.props.email || ''}">
+                    </div>
+                `;
+                document.getElementById('editFaqEmail').oninput = (e) => {
+                    storeState.updateSection(sec.id, { email: e.target.value });
+                };
+            } else if (sec.type === 'footer') {
+                const brandingChecked = sec.props.showBranding !== false ? 'checked' : '';
+                form.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 16px; border-radius: 8px; border: 1px solid #282828;">
+                        <span style="font-size: 12px; font-weight: 600; color: #fff;">Mostrar marca de agua de OFFSZN</span>
+                        <label class="switch-toggle large">
+                            <input type="checkbox" id="editFooterBranding" ${brandingChecked}>
+                            <span class="slider-toggle"></span>
+                        </label>
+                    </div>
+                `;
+                document.getElementById('editFooterBranding').onchange = (e) => {
+                    storeState.updateSection(sec.id, { showBranding: e.target.checked });
+                };
+            } else if (sec.type === 'products') {
+                form.innerHTML = `
+                    <div style="color: #888; font-size: 12.5px; line-height: 1.5; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">
+                        <i class="bi bi-info-circle-fill" style="color: #00f2fe; font-size: 1.1rem; display: block; margin-bottom: 8px;"></i>
+                        Tus Beats se sincronizan automáticamente desde tu catálogo oficial. Puedes administrarlos en la sección de Beats.
+                    </div>
+                `;
+            } else if (sec.type === 'licenses') {
+                form.innerHTML = `
+                    <div style="color: #888; font-size: 12.5px; line-height: 1.5; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">
+                        <i class="bi bi-info-circle-fill" style="color: #00f2fe; font-size: 1.1rem; display: block; margin-bottom: 8px;"></i>
+                        Tus Licencias y precios se sincronizan automáticamente de la base de datos de tu perfil. Puedes administrarlas en los Ajustes de Licencias de tu Cuenta.
+                    </div>
+                `;
+            } else if (sec.type === 'services') {
+                form.innerHTML = `
+                    <div style="color: #888; font-size: 12.5px; line-height: 1.5; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">
+                        <i class="bi bi-info-circle-fill" style="color: #00f2fe; font-size: 1.1rem; display: block; margin-bottom: 8px;"></i>
+                        Tus servicios se sincronizan automáticamente de tu perfil. Puedes configurarlos en tu sección de Servicios.
+                    </div>
+                `;
+            }
+        }
+
+        function closeSectionEditor() {
+            const tabsHeader = document.querySelector('.sidebar-tabs');
+            if (tabsHeader) tabsHeader.style.display = 'flex';
+
+            // Ocultar panel de edición
+            document.getElementById('edit-section-panel').style.display = 'none';
+            
+            // Buscar qué tab está activa
+            const activeTabBtn = document.querySelector('.tab-btn.active');
+            if (activeTabBtn) {
+                const tab = activeTabBtn.dataset.tab;
+                document.getElementById(tab + '-panel').style.display = 'block';
+            } else {
+                document.getElementById('blocks-panel').style.display = 'block';
+            }
+        }
+
+        document.getElementById('btnBackToBlocks').onclick = () => {
+            closeSectionEditor();
+        };
+
+        // Enlace para añadir sección
+        const addSectionBtn = document.querySelector('.btn-add-section');
+        if (addSectionBtn) {
+            addSectionBtn.onclick = () => {
+                const type = prompt("¿Qué sección deseas añadir? Escribe una de las siguientes:\n- faq\n- hero\n- navbar\n- footer\n- products\n- licenses\n- services").toLowerCase().trim();
+                const validTypes = ['faq', 'products', 'licenses', 'services', 'hero', 'navbar', 'footer'];
+                if (!type) return;
+                if (!validTypes.includes(type)) {
+                    alert("Tipo de sección no válido. Selecciona faq, hero, navbar, footer, products, licenses o services.");
+                    return;
+                }
+                const state = storeState.get();
+                const newId = `${type}_${Date.now()}`;
+                
+                let newProps = {};
+                if (type === 'hero') newProps = { title: window.userNickname || 'Mi Tienda', subtitle: 'La mejor calidad de sonido.' };
+                if (type === 'navbar') newProps = { logoText: window.userNickname || 'Mi Tienda', links: ['BEATS', 'SERVICIOS'] };
+                if (type === 'faq') newProps = { email: currentUser?.email || 'contacto@mitienda.com' };
+                if (type === 'footer') newProps = { showBranding: true };
+                if (type === 'products') newProps = { products: [], userNickname: window.userNickname || 'Artista' };
+                if (type === 'licenses') newProps = { licenses: [] };
+                if (type === 'services') newProps = { services: [] };
+
+                const sections = [...state.sections, { id: newId, type, props: newProps }];
+                storeState.set({ ...state, sections });
+            };
+        }
+
         function updateSidebarUI(state) {
             if (state.theme) {
                 if (state.theme.primaryColor) {
@@ -444,32 +1190,115 @@
             // Actualizar bloques activos en el panel
             const blocksPanel = document.getElementById('activeSections');
             blocksPanel.innerHTML = '';
-            
             if (state.sections) {
                 state.sections.forEach((sec, idx) => {
                     const el = document.createElement('div');
-                    el.style.padding = '12px';
-                    el.style.background = '#1a1a1a';
-                    el.style.border = '1px solid #333';
-                    el.style.marginBottom = '8px';
-                    el.style.borderRadius = '8px';
-                    el.style.display = 'flex';
-                    el.style.justifyContent = 'space-between';
-                    el.style.alignItems = 'center';
-                    
-                    const label = document.createElement('span');
-                    label.style.color = '#fff';
-                    label.style.fontSize = '12px';
-                    label.style.fontWeight = '700';
-                    label.innerText = sec.type.toUpperCase();
-                    
-                    const icon = document.createElement('i');
-                    icon.className = 'bi bi-grip-vertical';
-                    icon.style.color = '#666';
-                    icon.style.cursor = 'grab';
+                    el.className = 'section-block-item';
+                    el.draggable = true;
+                    el.dataset.index = idx;
+                    el.style.cssText = `
+                        padding: 12px 16px;
+                        background: rgba(255,255,255,0.02);
+                        border: 1px solid rgba(255,255,255,0.06);
+                        margin-bottom: 12px;
+                        border-radius: 12px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        transition: all 0.2s ease;
+                        cursor: grab;
+                    `;
 
-                    el.appendChild(label);
-                    el.appendChild(icon);
+                    // Grupo izquierdo con grip e ícono
+                    const leftGrp = document.createElement('div');
+                    leftGrp.style.cssText = `
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                    `;
+                    
+                    const grip = document.createElement('i');
+                    grip.className = 'bi bi-grip-vertical';
+                    grip.style.cssText = `
+                        color: #555;
+                        font-size: 18px;
+                        transition: color 0.2s;
+                    `;
+                    leftGrp.appendChild(grip);
+
+                    const label = document.createElement('span');
+                    label.style.cssText = `
+                        color: #fff;
+                        font-size: 12px;
+                        font-weight: 700;
+                        letter-spacing: 0.5px;
+                    `;
+                    label.innerText = sec.type.toUpperCase();
+                    leftGrp.appendChild(label);
+                    
+                    // Highlight grip
+                    el.onmouseenter = () => { grip.style.color = '#fff'; };
+                    el.onmouseleave = () => { grip.style.color = '#555'; };
+
+                    // Drag and Drop Event Listeners
+                    el.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', idx);
+                        el.style.opacity = '0.4';
+                        el.style.border = '1px dashed rgba(255,255,255,0.3)';
+                    });
+
+                    el.addEventListener('dragover', (e) => {
+                        if (e.preventDefault) {
+                            e.preventDefault();
+                        }
+                        e.dataTransfer.dropEffect = 'move';
+                        return false;
+                    });
+
+                    el.addEventListener('dragenter', (e) => {
+                        el.style.background = 'rgba(255,255,255,0.06)';
+                        el.style.border = '1px dashed rgba(255,255,255,0.5)';
+                    });
+
+                    el.addEventListener('dragleave', (e) => {
+                        el.style.background = 'rgba(255,255,255,0.02)';
+                        el.style.border = '1px solid rgba(255,255,255,0.06)';
+                    });
+
+                    el.addEventListener('drop', (e) => {
+                        e.stopPropagation();
+                        const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+                        const toIdx = idx;
+                        if (fromIdx !== toIdx) {
+                            moveSection(fromIdx, toIdx);
+                        }
+                        return false;
+                    });
+
+                    el.addEventListener('dragend', (e) => {
+                        el.style.opacity = '1';
+                        updateSidebarUI(storeState.get());
+                    });
+                    
+                    const actions = document.createElement('div');
+                    actions.style.display = 'flex';
+                    actions.style.alignItems = 'center';
+
+                    // Botón editar
+                    const btnEdit = document.createElement('button');
+                    btnEdit.className = 'btn-block-action btn-edit-action';
+                    btnEdit.innerHTML = '<i class="bi bi-pencil-fill" style="font-size:11px;"></i>';
+                    btnEdit.title = 'Editar contenido';
+                    btnEdit.onclick = (e) => {
+                        e.stopPropagation();
+                        openSectionEditor(sec);
+                    };
+
+                    actions.appendChild(btnEdit);
+
+                    el.appendChild(leftGrp);
+                    el.appendChild(actions);
                     blocksPanel.appendChild(el);
                 });
             }

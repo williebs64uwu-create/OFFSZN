@@ -3,6 +3,17 @@
  * Variables dinámicas y estilos limpios para los componentes de la tienda.
  */
 
+* {
+    box-sizing: border-box;
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    overflow-x: clip;
+}
+
 .store-root {
     --theme-bg: #000000;
     --theme-text: #ffffff;
@@ -18,6 +29,8 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: clip;
+    width: 100%;
 }
 
 .store-root h1, .store-root h2, .store-root h3 { margin: 0; font-weight: 800; letter-spacing: -1px; }
@@ -25,19 +38,343 @@
 .store-root a:hover { opacity: 0.7; }
 
 /* 1. NAVBAR */
-.rendered-navbar {
+/* 1. NAVBAR (PROF-NAV) */
+.rendered-navbar.prof-nav {
+    padding: 16px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rendered-navbar.prof-nav.scrolled {
+    background: rgba(0, 0, 0, 0.9);
+    padding: 12px 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.nav-left-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.mobile-hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.6rem;
+    cursor: pointer;
+    padding: 4px;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+
+.mobile-hamburger-btn:hover {
+    opacity: 0.8;
+}
+
+.user-nav-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: #fff;
+}
+
+.user-nav-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #222;
+}
+
+.user-nav-name {
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.nav-links {
+    display: flex;
+    gap: 24px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.85rem;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nav-link:hover {
+    opacity: 1;
+}
+
+.nav-right-extreme {
+    display: flex;
+    align-items: center;
+}
+
+.nav-cart-trigger {
+    position: relative;
+    color: #fff;
+    font-size: 1.3rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s;
+}
+
+.nav-cart-trigger:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.05);
+}
+
+.cart-badge-circle {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #ff3300;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    border: 1px solid #000;
+}
+
+@media (max-width: 900px) {
+    .rendered-navbar.prof-nav {
+        padding: 12px 20px;
+    }
+    .nav-links {
+        display: none;
+    }
+    .mobile-hamburger-btn {
+        display: flex;
+    }
+    .user-nav-name {
+        display: none;
+    }
+}
+
+/* ==========================================================================
+   X. MOBILE DRAWER
+   ========================================================================== */
+.mobile-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: none;
+}
+.mobile-drawer.active {
+    display: block;
+}
+.drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.mobile-drawer.active .drawer-backdrop {
+    opacity: 1;
+}
+.drawer-content {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 80%;
+    max-width: 320px;
+    background: #0c0c0e;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mobile-drawer.active .drawer-content {
+    transform: translateX(0);
+}
+.drawer-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 24px 5%;
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
+    margin-bottom: 40px;
 }
-.rendered-navbar .logo { font-weight: 800; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 8px;}
-.rendered-navbar .links { display: flex; gap: 24px; font-size: 11px; font-weight: 600; letter-spacing: 1px; }
+.drawer-title {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #666;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+.drawer-close {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    color: #888;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s;
+}
+.drawer-close:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+.drawer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.drawer-link {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 1rem; font-weight: 700; color: #fff;
+    text-decoration: none;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: all 0.25s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.drawer-link i { font-size: 1.1rem; color: #888; transition: color 0.2s; }
+.drawer-link:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
+    padding-left: 24px;
+}
+.drawer-link:hover i { color: #fff; }
 
-/* 2. HERO */
+/* ==========================================================================
+   2. FOOTER (PROF-FOOTER)
+   ========================================================================== */
+.rendered-footer.prof-footer {
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #000;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    width: 100%;
+}
+
+.footer-socials {
+    display: flex;
+    gap: 12px;
+}
+
+.footer-socials a {
+    color: #fff;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: transparent;
+}
+
+.footer-socials a:hover {
+    opacity: 1;
+    background: transparent;
+    transform: none;
+}
+
+.footer-socials svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.footer-badge {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.8rem;
+}
+
+.footer-made-with {
+    color: #fff;
+    opacity: 1;
+}
+
+.footer-badge strong {
+    color: #fff;
+    letter-spacing: -0.5px;
+}
+
+.store-root .footer-cta,
+.footer-cta {
+    text-decoration: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 8px 18px !important;
+    border-radius: 100px !important;
+    font-weight: 800 !important;
+    font-size: 0.75rem !important;
+    transition: all 0.2s ease !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    display: inline-block !important;
+}
+
+.store-root .footer-cta:hover,
+.footer-cta:hover {
+    opacity: 0.9 !important;
+    transform: scale(1.05) !important;
+}
+
+@media (max-width: 900px) {
+    .rendered-footer.prof-footer {
+        flex-direction: column;
+        gap: 20px;
+        padding: 24px 20px;
+        text-align: center;
+    }
+    .footer-badge {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+
+/* 3. HERO */
 .hero {
     min-height: 100vh;
     display: flex;

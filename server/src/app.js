@@ -813,7 +813,7 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
         // --- TEMPLATE SELECTION ---
         let templateFile = 'perfil-publico.html';
         if (user.template === 'premium') {
-            templateFile = 'premium-profile.html';
+            templateFile = 'perfil-deploy.html';
         } else if (user.template === 'editor_tienda') {
             templateFile = 'plantilla-editor-tienda.html';
         }
@@ -877,7 +877,14 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
         const schemaTag = `<script type="application/ld+json">${JSON.stringify(personSchema)}</script>`;
 
         // Specific Premium Template Placeholders
-        if (user.template === 'premium' || user.template === 'editor_tienda') {
+        if (user.template === 'premium') {
+            html = html.replace('</head>', `
+                <script>
+                    window.OFFSZN_PROFILE_USER = "${user.nickname}";
+                    window.OFFSZN_USER_ID = "${user.id}";
+                </script>
+            </head>`);
+        } else if (user.template === 'editor_tienda') {
             html = html.replace(/{{USER_NICKNAME}}/g, user.nickname);
             html = html.replace(/{{USER_NAME_HERO}}/g, user.nickname.toUpperCase());
             html = html.replace(/{{USER_BIO}}/g, user.bio || 'Productor Musical');
