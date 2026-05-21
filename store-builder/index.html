@@ -16,6 +16,89 @@
         .touch-indicator {
             display: none !important;
         }
+        .btn-upload-link-icon {
+            flex-grow: 1;
+            padding: 8px 16px;
+            background: #161616;
+            border: 1px solid #282828;
+            border-radius: 6px;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .btn-upload-link-icon:hover {
+            background: #222222;
+            border-color: #383838;
+            color: #ffffff;
+        }
+        /* Segment buttons premium styling (Black & White) */
+        .align-segment-btn.active, .style-segment-btn.active, .cart-style-btn.active {
+            background: #ffffff !important;
+            color: #000000 !important;
+        }
+        .align-segment-btn:not(.active):hover, .style-segment-btn:not(.active):hover, .cart-style-btn:not(.active):hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+            color: #ffffff !important;
+        }
+        .align-segment-btn, .style-segment-btn, .cart-style-btn {
+            padding: 10px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            color: #aaa;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        /* Custom Premium range inputs style (Black & White) */
+        input[type="range"].premium-range {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #282828;
+            border-radius: 2px;
+            outline: none;
+            margin: 10px 0;
+            transition: background 0.2s ease;
+        }
+        input[type="range"].premium-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 1px solid #ffffff;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+        }
+        input[type="range"].premium-range::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+        input[type="range"].premium-range::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 1px solid #ffffff;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            box-shadow: 0 0 4px rgba(0,0,0,0.5);
+        }
+        input[type="range"].premium-range::-moz-range-thumb:hover {
+            transform: scale(1.2);
+        }
         .btn-block-action {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -189,7 +272,7 @@
     <aside class="builder-sidebar">
         <div class="sidebar-header">
             <h2 style="display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.15rem; letter-spacing: -0.5px; margin: 0; color: #fff;">
-                <span style="background: linear-gradient(135deg, #0cbc87 0%, #00f2fe 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; letter-spacing: -1px; font-size: 1.3rem;">OFFSZN</span>
+                <span style="color: #ffffff; font-weight: 900; letter-spacing: -1px; font-size: 1.3rem;">OFFSZN</span>
                 <span style="font-weight: 300; font-size: 0.85rem; color: #666; border-left: 1px solid #333; padding-left: 8px; margin-left: 4px; text-transform: uppercase; letter-spacing: 1px;">Builder</span>
             </h2>
             <button class="btn-save" id="btnSaveStore">Publicar</button>
@@ -463,13 +546,21 @@
                     }
                     const savedNavbarSec = config.sections.find(s => s.type === 'navbar');
                     if (savedNavbarSec) {
-                        savedNavbarSec.props.logoText = userNickname;
-                        savedNavbarSec.props.avatarUrl = userAvatar;
+                        if (savedNavbarSec.props.logoText === undefined) {
+                            savedNavbarSec.props.logoText = userNickname;
+                        }
+                        if (savedNavbarSec.props.avatarUrl === undefined) {
+                            savedNavbarSec.props.avatarUrl = userAvatar;
+                        }
                     }
                     const savedHeroSec = config.sections.find(s => s.type === 'hero');
                     if (savedHeroSec) {
-                        savedHeroSec.props.title = userNickname;
-                        savedHeroSec.props.subtitle = userBio;
+                        if (savedHeroSec.props.title === undefined) {
+                            savedHeroSec.props.title = userNickname;
+                        }
+                        if (savedHeroSec.props.subtitle === undefined) {
+                            savedHeroSec.props.subtitle = userBio;
+                        }
                     }
                     const savedFaqSec = config.sections.find(s => s.type === 'faq');
                     if (savedFaqSec) {
@@ -536,11 +627,6 @@
                 if (initialLoadFinished) {
                     window.hasUnsavedChanges = true;
                 }
-                // Inicializar partículas si hay canvas
-                if (window.initParticles) setTimeout(window.initParticles, 100);
-                setTimeout(() => {
-                    if (window.bindDragScroll) window.bindDragScroll(document.getElementById('storeRenderRoot'));
-                }, 150);
             });
 
             renderer.render(initialState);
@@ -555,6 +641,17 @@
                 window.hasUnsavedChanges = false;
                 if (window.bindDragScroll) window.bindDragScroll(document.getElementById('storeRenderRoot'));
             }, 250);
+        }
+        
+        // Listener de scroll para el simulador
+        const previewDevice = document.getElementById('previewDevice');
+        if (previewDevice) {
+            previewDevice.addEventListener('scroll', () => {
+                const nav = previewDevice.querySelector('.prof-nav');
+                if (nav) {
+                    nav.classList.toggle('scrolled', previewDevice.scrollTop > 50);
+                }
+            });
         }
 
         // Listener global de clicks para acordeones FAQ en el Preview
@@ -648,23 +745,116 @@
             // Renderizar formulario
             const form = document.getElementById('editSectionForm');
             form.innerHTML = '';
+            form.style.overflow = 'hidden';
+            form.style.width = '100%';
+            form.style.position = 'relative';
 
             if (sec.type === 'hero') {
+                const titleVal = sec.props.title || '';
+                const subtitleVal = sec.props.subtitle || '';
+                const showParticles = sec.props.showParticles !== false;
+                const heroBgColor = sec.props.heroBgColor || 'transparent';
+                const paddingTop = sec.props.paddingTop !== undefined ? sec.props.paddingTop : 0;
+                const paddingBottom = sec.props.paddingBottom !== undefined ? sec.props.paddingBottom : 0;
+
                 form.innerHTML = `
-                    <div>
-                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;">Título Principal</label>
-                        <input type="text" id="editHeroTitle" style="width: 100%; padding: 10px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 13px;" value="${sec.props.title || ''}">
-                    </div>
-                    <div>
-                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;">Subtítulo o Biografía</label>
-                        <textarea id="editHeroSubtitle" rows="4" style="width: 100%; padding: 10px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 13px; resize: vertical;">${sec.props.subtitle || ''}</textarea>
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; margin: 0;">Título Principal</label>
+                                <span id="heroTitleCounter" style="font-size: 11px; color: #666; font-weight: 700;">${titleVal.length}/30</span>
+                            </div>
+                            <input type="text" id="editHeroTitle" maxlength="30" style="width: 100%; padding: 10px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 13px;" value="${titleVal}">
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; margin: 0;">Subtítulo o Biografía</label>
+                                <span id="heroSubtitleCounter" style="font-size: 11px; color: #666; font-weight: 700;">${subtitleVal.length}/200</span>
+                            </div>
+                            <textarea id="editHeroSubtitle" rows="4" maxlength="200" style="width: 100%; padding: 10px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 13px; resize: vertical;">${subtitleVal}</textarea>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
+                            <span style="font-size: 12px; font-weight: 600; color: #fff;">Partículas de Fondo</span>
+                            <label class="switch-toggle large">
+                                <input type="checkbox" id="editHeroParticles" ${showParticles ? 'checked' : ''}>
+                                <span class="slider-toggle"></span>
+                            </label>
+                        </div>
+
+                        <div style="background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
+                            <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Color de Fondo</label>
+                            <input type="color" id="editHeroBgColor" style="width: 100%; height: 40px; border: none; border-radius: 6px; background: none; cursor: pointer; margin-bottom: 8px;" value="${heroBgColor !== 'transparent' && heroBgColor.startsWith('#') ? heroBgColor : '#000000'}">
+                            
+                            <label style="font-size: 9px; color: #666; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;">Recomendaciones (Gradientes / Colores)</label>
+                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+                                <button type="button" class="hero-bg-preset" data-bg="transparent" style="background: #222; border: 1px solid #444; border-radius: 4px; height: 24px; cursor: pointer; font-size: 9px; color: #fff;" title="Transparente (Por defecto)">Default</button>
+                                <button type="button" class="hero-bg-preset" data-bg="linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)" style="background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); border: 1px solid #444; border-radius: 4px; height: 24px; cursor: pointer;" title="Purple Galaxy"></button>
+                                <button type="button" class="hero-bg-preset" data-bg="linear-gradient(135deg, #141e30 0%, #243b55 100%)" style="background: linear-gradient(135deg, #141e30 0%, #243b55 100%); border: 1px solid #444; border-radius: 4px; height: 24px; cursor: pointer;" title="Deep Blue"></button>
+                                <button type="button" class="hero-bg-preset" data-bg="linear-gradient(135deg, #000000 0%, #434343 100%)" style="background: linear-gradient(135deg, #000000 0%, #434343 100%); border: 1px solid #444; border-radius: 4px; height: 24px; cursor: pointer;" title="Dark Grey"></button>
+                            </div>
+                        </div>
+
+                        <div style="background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
+                            <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 12px;">Espaciado (Arriba / Abajo)</label>
+                            
+                            <div style="margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <span style="font-size: 10px; color: #aaa;">Arriba (<span id="valPaddingTop">${paddingTop}</span>px)</span>
+                                </div>
+                                <input type="range" id="editHeroPaddingTop" min="0" max="250" value="${paddingTop}" style="width: 100%;">
+                            </div>
+                            
+                            <div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <span style="font-size: 10px; color: #aaa;">Abajo (<span id="valPaddingBottom">${paddingBottom}</span>px)</span>
+                                </div>
+                                <input type="range" id="editHeroPaddingBottom" min="0" max="250" value="${paddingBottom}" style="width: 100%;">
+                            </div>
+                        </div>
                     </div>
                 `;
-                document.getElementById('editHeroTitle').oninput = (e) => {
+                
+                const titleInput = document.getElementById('editHeroTitle');
+                const subtitleInput = document.getElementById('editHeroSubtitle');
+                const titleCounter = document.getElementById('heroTitleCounter');
+                const subtitleCounter = document.getElementById('heroSubtitleCounter');
+
+                titleInput.oninput = (e) => {
+                    titleCounter.textContent = `${e.target.value.length}/30`;
                     storeState.updateSection(sec.id, { title: e.target.value });
                 };
-                document.getElementById('editHeroSubtitle').oninput = (e) => {
+                subtitleInput.oninput = (e) => {
+                    subtitleCounter.textContent = `${e.target.value.length}/200`;
                     storeState.updateSection(sec.id, { subtitle: e.target.value });
+                };
+
+                document.getElementById('editHeroParticles').onchange = (e) => {
+                    storeState.updateSection(sec.id, { showParticles: e.target.checked });
+                };
+
+                document.getElementById('editHeroBgColor').oninput = (e) => {
+                    storeState.updateSection(sec.id, { heroBgColor: e.target.value });
+                };
+
+                document.querySelectorAll('.hero-bg-preset').forEach(btn => {
+                    btn.onclick = (e) => {
+                        const bg = e.target.dataset.bg;
+                        storeState.updateSection(sec.id, { heroBgColor: bg });
+                        if (bg.startsWith('#')) {
+                            document.getElementById('editHeroBgColor').value = bg;
+                        }
+                    };
+                });
+
+                document.getElementById('editHeroPaddingTop').oninput = (e) => {
+                    document.getElementById('valPaddingTop').textContent = e.target.value;
+                    storeState.updateSection(sec.id, { paddingTop: parseInt(e.target.value) });
+                };
+
+                document.getElementById('editHeroPaddingBottom').oninput = (e) => {
+                    document.getElementById('valPaddingBottom').textContent = e.target.value;
+                    storeState.updateSection(sec.id, { paddingBottom: parseInt(e.target.value) });
                 };
             } else if (sec.type === 'navbar') {
                 const logoVal = sec.props.logoText || '';
@@ -674,7 +864,7 @@
                 const linksAlign = sec.props.linksAlign || 'center';
                 const linksStyle = sec.props.linksStyle || 'text';
                 const showCart = sec.props.showCart !== false;
-                const showExplore = sec.props.showExplore !== false;
+                const cartStyle = sec.props.cartStyle || 'icon';
                 
                 // Color, background opacity, blur and border
                 const navBgColor = sec.props.bgColor || '#000000';
@@ -682,7 +872,7 @@
                 const navBgBlur = sec.props.bgBlur !== undefined ? sec.props.bgBlur : 12;
                 const navBorderColor = sec.props.borderColor || '#ffffff';
                 const navBorderOpacity = sec.props.borderOpacity !== undefined ? sec.props.borderOpacity : 5;
-                const transparentBg = sec.props.transparentBg === true;
+                const transparentBg = sec.props.transparentBg !== false;
                 const borderWidth = sec.props.borderWidth !== undefined ? sec.props.borderWidth : 1;
                 
                 const linkCustomizations = sec.props.linkCustomizations || {};
@@ -697,33 +887,24 @@
                 let visibleLinksHtml = '';
                 allLinks.forEach(link => {
                     const checked = activeLinks.includes(link) ? 'checked' : '';
-                    const customInfo = linkCustomizations[link] || {};
+                    const customInfo = linkCustomizations[link.toUpperCase()] || {};
                     const labelText = customInfo.text || link;
-                    const iconClass = customInfo.icon || defaultIcons[link] || 'bi-link';
+                    const iconClass = customInfo.icon || defaultIcons[link.toUpperCase()] || 'bi-link';
                     
-                    const presetsList = [
-                        { icon: 'bi-music-note-beamed', title: 'Corchea' },
-                        { icon: 'bi-briefcase', title: 'Portafolio' },
-                        { icon: 'bi-music-note-list', title: 'Playlist' },
-                        { icon: 'bi-person-fill', title: 'Usuario' },
-                        { icon: 'bi-question-circle', title: 'Dudas' },
-                        { icon: 'bi-spotify', title: 'Spotify' },
-                        { icon: 'bi-youtube', title: 'YouTube' },
-                        { icon: 'bi-instagram', title: 'Instagram' },
-                        { icon: 'bi-envelope', title: 'Contacto' },
-                        { icon: 'bi-disc', title: 'Vinilo' }
-                    ];
+                    // Generate preview HTML
+                    let previewIconHtml = '';
+                    if (iconClass.startsWith('http://') || iconClass.startsWith('https://') || iconClass.startsWith('/') || iconClass.startsWith('data:image')) {
+                        previewIconHtml = `<img src="${iconClass}" style="width: 20px; height: 20px; object-fit: contain;" />`;
+                    } else if (iconClass.trim().startsWith('<svg')) {
+                        previewIconHtml = `<span style="width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; color: #fff;">${iconClass}</span>`;
+                    } else {
+                        let processedIconClass = iconClass;
+                        if (iconClass.startsWith('bi-') && !iconClass.startsWith('bi ')) {
+                            processedIconClass = 'bi ' + iconClass;
+                        }
+                        previewIconHtml = `<i class="${processedIconClass}" style="font-size: 16px; color: #fff;"></i>`;
+                    }
 
-                    let chipsHtml = presetsList.map(p => {
-                        const isActive = iconClass === p.icon;
-                        const bg = isActive ? 'rgba(255, 255, 255, 0.08)' : '#222';
-                        const border = isActive ? 'var(--theme-primary, #fff)' : '#333';
-                        const color = isActive ? '#fff' : '#aaa';
-                        return `<button type="button" class="icon-preset-chip" data-link="${link}" data-icon="${p.icon}" title="${p.title}" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: ${bg}; border: 1px solid ${border}; border-radius: 6px; color: ${color}; cursor: pointer; transition: all 0.2s; padding: 0;">
-                            <i class="bi ${p.icon}" style="font-size: 14px;"></i>
-                        </button>`;
-                    }).join('');
-                    
                     visibleLinksHtml += `
                         <div style="background: #161616; border: 1px solid #282828; border-radius: 8px; padding: 12px; margin-bottom: 10px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -735,20 +916,24 @@
                             </div>
                             <div class="link-customizer-fields" id="customizer-fields-${link}" style="display: ${checked ? 'block' : 'none'}; margin-top: 10px; border-top: 1px solid #282828; padding-top: 10px;">
                                 <div style="margin-bottom: 8px;">
-                                    <label style="font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 4px;">Etiqueta del Enlace</label>
-                                    <input type="text" class="link-custom-text-input" data-link="${link}" style="width: 100%; padding: 8px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 11px;" value="${labelText}">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <label style="font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: 700; margin: 0;">Etiqueta del Enlace</label>
+                                        <span id="label-counter-${link}" style="font-size: 10px; color: #666; font-weight: 700;">${labelText.length}/20</span>
+                                    </div>
+                                    <input type="text" class="link-custom-text-input" data-link="${link}" maxlength="20" style="width: 100%; padding: 8px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 11px;" value="${labelText}">
                                 </div>
                                 <div>
-                                    <label style="font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 4px;">Icono del Enlace</label>
-                                    <input type="text" class="link-custom-icon-input" id="icon-input-${link}" data-link="${link}" style="width: 100%; padding: 8px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 11px; margin-bottom: 8px;" value="${iconClass}">
-                                    
-                                    <div style="margin-top: 8px; margin-bottom: 4px;">
-                                        <label style="font-size: 9px; color: #888; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 4px;">Preestablecidos (Haz clic para seleccionar)</label>
-                                        <div style="display: flex; gap: 6px; flex-wrap: wrap; background: #0f0f0f; padding: 8px; border-radius: 8px; border: 1px solid #222;">
-                                            ${chipsHtml}
+                                    <label style="font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;">Icono del Enlace</label>
+                                    <div style="display: flex; align-items: center; gap: 8px; background: #0f0f0f; padding: 8px; border-radius: 8px; border: 1px solid #222;">
+                                        <!-- Preview Container -->
+                                        <div id="icon-preview-box-${link}" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: #161616; border: 1px solid #282828; border-radius: 6px; flex-shrink: 0;">
+                                            ${previewIconHtml}
                                         </div>
+                                        <!-- Actions -->
+                                        <button type="button" class="btn-upload-link-icon" data-link="${link}">
+                                            <i class="bi bi-upload"></i> Cambiar Icono
+                                        </button>
                                     </div>
-                                    <span style="font-size: 9px; color: #666; display: block; margin-top: 4px;">Tip: Puedes usar clases Bootstrap (ej: bi-spotify), un link de Google Icons, o código &lt;svg&gt; inline.</span>
                                 </div>
                             </div>
                         </div>
@@ -756,66 +941,32 @@
                 });
 
                 form.innerHTML = `
-                    <!-- 1. IDENTIDAD Y LOGO (Siempre visible) -->
-                    <div style="margin-bottom: 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; margin: 0;">Texto del Logo</label>
-                            <span id="logoTextCounter" style="font-size: 11px; color: #666; font-weight: 700;">${logoVal.length}/25</span>
-                        </div>
-                        <input type="text" id="editNavLogoText" maxlength="25" style="width: 100%; padding: 12px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; font-size: 13px; transition: border-color 0.2s;" value="${logoVal}">
-                    </div>
-                    
-                    <!-- 2. VISIBILIDAD DE BOTONES (Siempre visible, no acordeón) -->
-                    <div style="margin-bottom: 24px;">
-                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Visibilidad de Botones</label>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 14px; border-radius: 8px; border: 1px solid #282828;">
-                                <span style="font-size: 12px; font-weight: 600; color: #fff;">Mostrar botón Explorar</span>
-                                <label class="switch-toggle large">
-                                    <input type="checkbox" id="editNavShowExplore" ${showExplore ? 'checked' : ''}>
-                                    <span class="slider-toggle"></span>
-                                </label>
-                            </div>
+                    <div class="sidebar-pane-container" style="display: flex; width: 200%; transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); transform: translateX(0);" id="navEditorPanes">
+                        <!-- PANE 1: VISTA MENU DE OPCIONES -->
+                        <div style="width: 50%; box-sizing: border-box; flex-shrink: 0; padding-right: 8px; display: flex; flex-direction: column; gap: 10px;">
+                            <button type="button" class="nav-menu-item" data-target-pane="logo" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; cursor: pointer; transition: all 0.2s;">
+                                <span style="font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px;"><i class="bi bi-type" style="color: #aaa; font-size: 14px;"></i> Logo de la Tienda</span>
+                                <i class="bi bi-chevron-right" style="font-size: 12px; color: #666;"></i>
+                            </button>
+                            <button type="button" class="nav-menu-item" data-target-pane="links" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; cursor: pointer; transition: all 0.2s;">
+                                <span style="font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px;"><i class="bi bi-link-45deg" style="color: #aaa; font-size: 14px;"></i> Enlaces de Navegación</span>
+                                <i class="bi bi-chevron-right" style="font-size: 12px; color: #666;"></i>
+                            </button>
+                            <button type="button" class="nav-menu-item" data-target-pane="config" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; cursor: pointer; transition: all 0.2s;">
+                                <span style="font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px;"><i class="bi bi-gear" style="color: #aaa; font-size: 14px;"></i> Configuración General</span>
+                                <i class="bi bi-chevron-right" style="font-size: 12px; color: #666;"></i>
+                            </button>
+                            <button type="button" class="nav-menu-item" data-target-pane="announcement" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; cursor: pointer; transition: all 0.2s;">
+                                <span style="font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px;"><i class="bi bi-megaphone" style="color: #aaa; font-size: 14px;"></i> Barra de Anuncios</span>
+                                <i class="bi bi-chevron-right" style="font-size: 12px; color: #666;"></i>
+                            </button>
+                            <button type="button" class="nav-menu-item" data-target-pane="design" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; cursor: pointer; transition: all 0.2s;">
+                                <span style="font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px;"><i class="bi bi-palette" style="color: #aaa; font-size: 14px;"></i> Estilos y Diseños</span>
+                                <i class="bi bi-chevron-right" style="font-size: 12px; color: #666;"></i>
+                            </button>
 
-                            <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 14px; border-radius: 8px; border: 1px solid #282828;">
-                                <span style="font-size: 12px; font-weight: 600; color: #fff;">Mostrar botón Carrito</span>
-                                <label class="switch-toggle large">
-                                    <input type="checkbox" id="editNavShowCart" ${showCart ? 'checked' : ''}>
-                                    <span class="slider-toggle"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 3. ACORDEÓN: ENLACES PERSONALIZADOS -->
-                    <div class="sidebar-accordion" id="navAccordionEnlaces">
-                        <div class="sidebar-accordion-header" onclick="toggleSidebarAccordion(this)">
-                            <div class="sidebar-accordion-title">
-                                <i class="bi bi-link-45deg"></i>
-                                <span>Personalizar Enlaces e Iconos</span>
-                            </div>
-                            <i class="bi bi-chevron-down sidebar-accordion-arrow"></i>
-                        </div>
-                        <div class="sidebar-accordion-content">
-                            <div id="navLinksCustomList">
-                                ${visibleLinksHtml}
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4. ACORDEÓN: OPCIONES AVANZADAS -->
-                    <div class="sidebar-accordion" id="navAccordionEstetico">
-                        <div class="sidebar-accordion-header" onclick="toggleSidebarAccordion(this)">
-                            <div class="sidebar-accordion-title">
-                                <i class="bi bi-gear-fill"></i>
-                                <span>Opciones Avanzadas</span>
-                            </div>
-                            <i class="bi bi-chevron-down sidebar-accordion-arrow"></i>
-                        </div>
-                        <div class="sidebar-accordion-content">
-                            
-                            <!-- ALINEACIÓN -->
-                            <div style="margin-bottom: 20px;">
+                            <!-- ALINEACIÓN DE ENLACES (Directamente debajo de todos) -->
+                            <div style="margin-top: 20px;">
                                 <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Alineación de Enlaces</label>
                                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #161616; padding: 4px; border-radius: 8px; border: 1px solid #282828;">
                                     <button type="button" class="align-segment-btn ${linksAlign === 'left' ? 'active' : ''}" data-align="left" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
@@ -832,96 +983,262 @@
                                     </button>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- ESTILO -->
-                            <div style="margin-bottom: 20px;">
-                                <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Estilo de Enlaces</label>
-                                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #161616; padding: 4px; border-radius: 8px; border: 1px solid #282828;">
-                                    <button type="button" class="style-segment-btn ${linksStyle === 'text' ? 'active' : ''}" data-style="text" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                                        <i class="bi bi-justify" style="font-size: 14px;"></i>
-                                        <span style="font-size: 11px; font-weight: 700;">Texto</span>
-                                    </button>
-                                    <button type="button" class="style-segment-btn ${linksStyle === 'icon-text' ? 'active' : ''}" data-style="icon-text" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                                        <i class="bi bi-file-music" style="font-size: 14px;"></i>
-                                        <span style="font-size: 11px; font-weight: 700;">Mixto</span>
-                                    </button>
-                                    <button type="button" class="style-segment-btn ${linksStyle === 'icon' ? 'active' : ''}" data-style="icon" style="padding: 10px; border: none; background: transparent; border-radius: 6px; color: #aaa; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s;">
-                                        <i class="bi bi-music-note-beamed" style="font-size: 14px;"></i>
-                                        <span style="font-size: 11px; font-weight: 700;">Iconos</span>
-                                    </button>
+                        <!-- PANE 2: DETALLES DE CADA SUB-PANE -->
+                        <div style="width: 50%; box-sizing: border-box; flex-shrink: 0; padding-left: 8px;">
+                            <!-- Header del panel dinámico con Botón Volver -->
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 12px;">
+                                <button type="button" id="btnBackToNavMenu" style="background: none; border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background-color: rgba(255,255,255,0.05); transition: all 0.2s;">
+                                    <i class="bi bi-chevron-left" style="font-size: 12px;"></i>
+                                </button>
+                                <span style="font-size: 11px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px;" id="navPaneDetailTitle">Subpanel</span>
+                            </div>
+
+                            <!-- CONTENIDOS DINAMICOS -->
+                            
+                            <!-- SUB-PANE: LOGO -->
+                            <div id="subpane-logo" class="subpane-content" style="display: none;">
+                                <div style="margin-bottom: 20px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; margin: 0;">Texto del Logo</label>
+                                        <span id="logoTextCounter" style="font-size: 11px; color: #666; font-weight: 700;">${logoVal.length}/25</span>
+                                    </div>
+                                    <input type="text" id="editNavLogoText" maxlength="25" style="width: 100%; padding: 12px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; font-size: 13px; transition: border-color 0.2s;" value="${logoVal}">
                                 </div>
                             </div>
 
-                            <!-- FONDO Y BORDES -->
-                            <div style="border-top: 1px solid #282828; padding-top: 16px;">
-                                <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 12px;">Fondo y Bordes</label>
-                                
-                                <!-- Switch Fondo Transparente -->
-                                <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 14px; border-radius: 8px; border: 1px solid #282828; margin-bottom: 12px;">
-                                    <div style="display: flex; flex-direction: column;">
-                                        <span style="font-size: 12px; font-weight: 600; color: #fff;">Fondo Transparente</span>
-                                        <span style="font-size: 9px; color: #666;">Quita el fondo y el desenfoque</span>
+                            <!-- SUB-PANE: LINKS -->
+                            <div id="subpane-links" class="subpane-content" style="display: none;">
+                                <div style="margin-bottom: 24px;">
+                                    <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Personalizar Enlaces e Iconos</label>
+                                    <div id="navLinksCustomList" style="display: flex; flex-direction: column; gap: 10px;">
+                                        ${visibleLinksHtml}
                                     </div>
-                                    <label class="switch-toggle large">
-                                        <input type="checkbox" id="editNavTransparentBg" ${transparentBg ? 'checked' : ''}>
-                                        <span class="slider-toggle"></span>
-                                    </label>
                                 </div>
+                            </div>
 
-                                <!-- Controles del Fondo (Color, Opacidad, Blur) -->
-                                <div id="navBgControlsContainer" style="display: ${transparentBg ? 'none' : 'block'};">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Color de Fondo</span>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <span id="bgColorHexDisplay" style="font-size: 11px; color: #666; font-family: monospace;">${navBgColor}</span>
-                                            <input type="color" id="editNavBgColor" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: transparent; cursor: pointer; padding: 0;" value="${navBgColor}">
+                            <!-- SUB-PANE: CONFIG -->
+                            <div id="subpane-config" class="subpane-content" style="display: none;">
+                                <div style="display: flex; flex-direction: column; gap: 20px;">
+                                    <!-- ESTILO -->
+                                    <div>
+                                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Estilo de Enlaces</label>
+                                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #161616; padding: 4px; border-radius: 8px; border: 1px solid #282828;">
+                                            <button type="button" class="style-segment-btn ${linksStyle === 'text' ? 'active' : ''}" data-style="text">
+                                                <i class="bi bi-justify" style="font-size: 14px;"></i>
+                                                <span style="font-size: 11px; font-weight: 700;">Texto</span>
+                                            </button>
+                                            <button type="button" class="style-segment-btn ${linksStyle === 'icon-text' ? 'active' : ''}" data-style="icon-text">
+                                                <i class="bi bi-file-music" style="font-size: 14px;"></i>
+                                                <span style="font-size: 11px; font-weight: 700;">Mixto</span>
+                                            </button>
+                                            <button type="button" class="style-segment-btn ${linksStyle === 'icon' ? 'active' : ''}" data-style="icon">
+                                                <i class="bi bi-music-note-beamed" style="font-size: 14px;"></i>
+                                                <span style="font-size: 11px; font-weight: 700;">Iconos</span>
+                                            </button>
                                         </div>
                                     </div>
 
-                                    <div style="margin-bottom: 12px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                            <span style="font-size: 11px; color: #aaa; font-weight: 600;">Opacidad del Fondo</span>
-                                            <span id="navBgOpacityValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${navBgOpacity}%</span>
+                                    <!-- Carrito -->
+                                    <div style="background: #161616; border: 1px solid #282828; border-radius: 8px; padding: 14px; margin-top: 4px;">
+                                        <div style="margin-bottom: 12px;">
+                                            <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;"><i class="bi bi-cart3"></i> ¿Mostrar Botón de Carrito?</label>
+                                            <select id="editNavShowCartSelect" style="width: 100%; padding: 12px; background: #0f0f0f; border: 1px solid #282828; border-radius: 8px; color: #fff; font-size: 13px; appearance: none; cursor: pointer;">
+                                                <option value="false" ${!showCart ? 'selected' : ''}>NO</option>
+                                                <option value="true" ${showCart ? 'selected' : ''}>SI</option>
+                                            </select>
                                         </div>
-                                        <input type="range" id="editNavBgOpacity" min="0" max="100" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${navBgOpacity}">
-                                    </div>
-
-                                    <div style="margin-bottom: 12px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                            <div style="display: flex; flex-direction: column;">
-                                                <span style="font-size: 11px; color: #aaa; font-weight: 600;">Desenfoque Cristal</span>
-                                                <span style="font-size: 9px; color: #666; font-weight: 400; line-height: 1;">Efecto translúcido (blur)</span>
+                                        <div id="cart-customizer-fields" style="display: ${showCart ? 'block' : 'none'}; margin-top: 12px; border-top: 1px solid #282828; padding-top: 12px;">
+                                            <label style="font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Estilo del Carrito</label>
+                                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; background: #0f0f0f; padding: 4px; border-radius: 8px; border: 1px solid #222;">
+                                                <button type="button" class="cart-style-btn ${cartStyle === 'icon' ? 'active' : ''}" data-style="icon">
+                                                    <i class="bi bi-cart3" style="font-size: 12px;"></i>
+                                                    <span style="font-size: 11px; font-weight: 700;">Icono</span>
+                                                </button>
+                                                <button type="button" class="cart-style-btn ${cartStyle === 'button' ? 'active' : ''}" data-style="button">
+                                                    <i class="bi bi-bag-plus-fill" style="font-size: 12px;"></i>
+                                                    <span style="font-size: 11px; font-weight: 700;">Icono + COMPRAR</span>
+                                                </button>
                                             </div>
-                                            <span id="navBgBlurValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${navBgBlur}px</span>
                                         </div>
-                                        <input type="range" id="editNavBgBlur" min="0" max="40" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${navBgBlur}">
+                                    </div>
+                                    <!-- Animación Menú Móvil -->
+                                    <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 14px; border-radius: 8px; border: 1px solid #282828; margin-top: 12px;">
+                                        <div style="display: flex; flex-direction: column;">
+                                            <span style="font-size: 12px; font-weight: 600; color: #fff;">Animación Menú Móvil</span>
+                                            <span style="font-size: 9px; color: #666;">Slide de izquierda a derecha</span>
+                                        </div>
+                                        <label class="switch-toggle large">
+                                            <input type="checkbox" id="editNavDrawerAnimation" ${sec.props.drawerAnimation !== false ? 'checked' : ''}>
+                                            <span class="slider-toggle"></span>
+                                        </label>
                                     </div>
                                 </div>
+                            </div>
 
-                                <!-- Controles del Borde (Color, Grosor, Opacidad) -->
-                                <div style="border-top: 1px solid #282828; padding-top: 12px; margin-top: 12px;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Color de Borde</span>
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <span id="borderColorHexDisplay" style="font-size: 11px; color: #666; font-family: monospace;">${navBorderColor}</span>
-                                            <input type="color" id="editNavBorderColor" style="width: 32px; height: 32px; border: none; border-radius: 6px; background: transparent; cursor: pointer; padding: 0;" value="${navBorderColor}">
+                            <!-- SUB-PANE: ANNOUNCEMENT -->
+                            <div id="subpane-announcement" class="subpane-content" style="display: none;">
+                                <div style="display: flex; flex-direction: column; gap: 16px;">
+                                    <!-- Toggle Barra de Anuncios -->
+                                    <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 14px; border-radius: 8px; border: 1px solid #282828;">
+                                        <div style="display: flex; flex-direction: column;">
+                                            <span style="font-size: 12px; font-weight: 600; color: #fff;">Mostrar Anuncio</span>
+                                            <span style="font-size: 9px; color: #666;">Banner superior en la navbar</span>
                                         </div>
+                                        <label class="switch-toggle large">
+                                            <input type="checkbox" id="editNavShowAnnouncement" ${sec.props.showAnnouncement === true ? 'checked' : ''}>
+                                            <span class="slider-toggle"></span>
+                                        </label>
                                     </div>
 
-                                    <div style="margin-bottom: 12px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                            <span style="font-size: 11px; color: #aaa; font-weight: 600;">Grosor del Borde</span>
-                                            <span id="navBorderWidthValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${borderWidth}px</span>
+                                    <!-- Campos de la barra de anuncios -->
+                                    <div id="navAnnouncementFields" style="display: ${sec.props.showAnnouncement === true ? 'block' : 'none'};">
+                                        <div style="margin-bottom: 14px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                                <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; margin: 0;">Mensaje de la Barra</label>
+                                                <span id="annTextCounter" style="font-size: 11px; color: #666; font-weight: 700;">${(sec.props.announcementText || '').length}/60</span>
+                                            </div>
+                                            <input type="text" id="editNavAnnouncementText" maxlength="60" style="width: 100%; padding: 12px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; font-size: 13px;" value="${sec.props.announcementText || ''}" placeholder="Ej: ¡DESCUENTO DE VERANO: 20% EN LICENCIAS!">
                                         </div>
-                                        <input type="range" id="editNavBorderWidth" min="0" max="5" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${borderWidth}">
-                                    </div>
 
-                                    <div style="margin-bottom: 12px;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                            <span style="font-size: 11px; color: #aaa; font-weight: 600;">Opacidad del Borde</span>
-                                            <span id="navBorderOpacityValue" style="font-size: 11px; color: #666; font-weight: 700; font-family: monospace;">${navBorderOpacity}%</span>
+                                        <div style="margin-bottom: 14px;">
+                                            <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;">Enlace del Anuncio</label>
+                                            <input type="text" id="editNavAnnouncementLink" style="width: 100%; padding: 12px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; font-size: 13px;" value="${sec.props.announcementLink || ''}" placeholder="Ej: #products-section">
                                         </div>
-                                        <input type="range" id="editNavBorderOpacity" min="0" max="100" style="width: 100%; accent-color: #0cbc87; cursor: pointer;" value="${navBorderOpacity}">
+
+                                        <div style="margin-bottom: 20px; background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                                <div style="display: flex; flex-direction: column;">
+                                                    <span style="font-size: 11px; color: #aaa; font-weight: 600;">Grosor del Banner</span>
+                                                    <span style="font-size: 9px; color: #666; font-weight: 400; line-height: 1;">Ajusta el espacio interior</span>
+                                                </div>
+                                                <span id="annPaddingValue" style="font-size: 11px; color: #fff; font-weight: 700; font-family: monospace;">${sec.props.announcementPadding !== undefined ? sec.props.announcementPadding : 8}px</span>
+                                            </div>
+                                            <div style="position: relative; height: 24px; display: flex; align-items: center; margin: 4px 0;">
+                                                <input type="range" id="editNavAnnouncementPadding" class="premium-range" min="4" max="24" value="${sec.props.announcementPadding !== undefined ? sec.props.announcementPadding : 8}" style="width: 100%; margin: 0; z-index: 2; position: relative;">
+                                            </div>
+                                        </div>
+
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                            <div>
+                                                <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;">Fondo</label>
+                                                <div style="display: flex; align-items: center; justify-content: space-between; background: #161616; border: 1px solid #282828; border-radius: 8px; padding: 6px 12px; height: 44px;">
+                                                    <span id="annBgHexDisplay" style="font-size: 11px; color: #666; font-family: monospace;">${sec.props.announcementBg || '#ffffff'}</span>
+                                                    <input type="color" id="editNavAnnouncementBg" style="width: 24px; height: 24px; border: none; border-radius: 4px; background: transparent; cursor: pointer; padding: 0;" value="${sec.props.announcementBg || '#ffffff'}">
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;">Texto</label>
+                                                <div style="display: flex; align-items: center; justify-content: space-between; background: #161616; border: 1px solid #282828; border-radius: 8px; padding: 6px 12px; height: 44px;">
+                                                    <span id="annColorHexDisplay" style="font-size: 11px; color: #666; font-family: monospace;">${sec.props.announcementColor || '#000000'}</span>
+                                                    <input type="color" id="editNavAnnouncementColor" style="width: 24px; height: 24px; border: none; border-radius: 4px; background: transparent; cursor: pointer; padding: 0;" value="${sec.props.announcementColor || '#000000'}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SUB-PANE: DESIGN -->
+                            <div id="subpane-design" class="subpane-content" style="display: none;">
+                                <div style="display: flex; flex-direction: column; gap: 20px;">
+                                    <!-- FONDO Y BORDES -->
+                                    <div>
+                                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 12px;">Fondo y Bordes</label>
+                                        
+                                        <!-- Dropdown Fondo Transparente / Personalizado -->
+                                        <div style="margin-bottom: 20px;">
+                                            <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">¿Personalizar Fondo y Bordes?</label>
+                                            <select id="editNavTransparentBgSelect" style="width: 100%; padding: 12px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; font-size: 13px; appearance: none; cursor: pointer;">
+                                                <option value="transparent" ${transparentBg ? 'selected' : ''}>NO</option>
+                                                <option value="custom" ${!transparentBg ? 'selected' : ''}>SI</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Controles del Fondo (Color, Opacidad, Blur) -->
+                                        <div id="navBgControlsContainer" style="display: ${transparentBg ? 'none' : 'block'};">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #161616; padding: 8px 12px; border-radius: 8px; border: 1px solid #282828;">
+                                                <span style="font-size: 11px; color: #aaa; font-weight: 600;">Color de Fondo</span>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <input type="text" id="bgColorHexText" value="${navBgColor}" style="width: 80px; padding: 6px 10px; background: #0f0f0f; border: 1px solid #282828; border-radius: 6px; color: #fff; font-family: monospace; font-size: 12px; text-transform: uppercase; text-align: center; outline: none; transition: all 0.2s;">
+                                                    <input type="color" id="editNavBgColor" style="width: 24px; height: 24px; border: none; border-radius: 4px; background: transparent; cursor: pointer; padding: 0;" value="${navBgColor.substring(0,7)}">
+                                                </div>
+                                            </div>
+
+
+
+                                            <!-- Desenfoque Cristal Slider -->
+                                            <div style="margin-bottom: 20px; background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                                    <div style="display: flex; flex-direction: column;">
+                                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Desenfoque (translúcido)</span>
+                                                    </div>
+                                                    <span id="navBgBlurValue" style="font-size: 11px; color: #fff; font-weight: 700; font-family: monospace;">${navBgBlur}px</span>
+                                                </div>
+                                                <div style="position: relative; height: 24px; display: flex; align-items: center; margin: 4px 0;">
+                                                    <input type="range" id="editNavBgBlur" class="premium-range" min="0" max="40" value="${navBgBlur}" style="width: 100%; margin: 0; z-index: 2; position: relative;">
+                                                    <!-- Ruler Ticks -->
+                                                    <div style="position: absolute; left: 7px; right: 7px; top: 50%; transform: translateY(-50%); display: flex; justify-content: space-between; pointer-events: none; z-index: 1;">
+                                                        <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                        <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                        <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                        <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                        <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                    </div>
+                                                </div>
+                                                <div style="display: flex; justify-content: space-between; padding: 0 2px; margin-top: 2px;">
+                                                    <span style="font-size: 8px; color: #555; font-family: monospace;">0px</span>
+                                                    <span style="font-size: 8px; color: #555; font-family: monospace;">10px</span>
+                                                    <span style="font-size: 8px; color: #555; font-family: monospace;">20px</span>
+                                                    <span style="font-size: 8px; color: #555; font-family: monospace;">30px</span>
+                                                    <span style="font-size: 8px; color: #555; font-family: monospace;">40px</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Controles del Borde -->
+                                            <div style="border-top: 1px solid #222; padding-top: 16px;">
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: #161616; padding: 8px 12px; border-radius: 8px; border: 1px solid #282828;">
+                                                    <span style="font-size: 11px; color: #aaa; font-weight: 600;">Color de Borde</span>
+                                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                                        <input type="text" id="borderColorHexText" value="${navBorderColor}" style="width: 80px; padding: 6px 10px; background: #0f0f0f; border: 1px solid #282828; border-radius: 6px; color: #fff; font-family: monospace; font-size: 12px; text-transform: uppercase; text-align: center; outline: none; transition: all 0.2s;">
+                                                        <input type="color" id="editNavBorderColor" style="width: 24px; height: 24px; border: none; border-radius: 4px; background: transparent; cursor: pointer; padding: 0;" value="${navBorderColor.substring(0,7)}">
+                                                    </div>
+                                                </div>
+
+                                                <!-- Grosor del Borde Slider -->
+                                                <div style="margin-bottom: 20px; background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Grosor del Borde</span>
+                                                        <span id="navBorderWidthValue" style="font-size: 11px; color: #fff; font-weight: 700; font-family: monospace;">${borderWidth}px</span>
+                                                    </div>
+                                                    <div style="position: relative; height: 24px; display: flex; align-items: center; margin: 4px 0;">
+                                                        <input type="range" id="editNavBorderWidth" class="premium-range" min="0" max="5" value="${borderWidth}" style="width: 100%; margin: 0; z-index: 2; position: relative;">
+                                                        <!-- Ruler Ticks -->
+                                                        <div style="position: absolute; left: 7px; right: 7px; top: 50%; transform: translateY(-50%); display: flex; justify-content: space-between; pointer-events: none; z-index: 1;">
+                                                            <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                            <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                            <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                            <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                            <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                            <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                        </div>
+                                                    </div>
+                                                    <div style="display: flex; justify-content: space-between; padding: 0 2px; margin-top: 2px;">
+                                                        <span style="font-size: 8px; color: #555; font-family: monospace;">0px</span>
+                                                        <span style="font-size: 8px; color: #555; font-family: monospace;">1px</span>
+                                                        <span style="font-size: 8px; color: #555; font-family: monospace;">2px</span>
+                                                        <span style="font-size: 8px; color: #555; font-family: monospace;">3px</span>
+                                                        <span style="font-size: 8px; color: #555; font-family: monospace;">4px</span>
+                                                        <span style="font-size: 8px; color: #555; font-family: monospace;">5px</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 8px; padding: 12px; text-align: center; margin-top: 10px;">
+                                        <span style="font-size: 10px; color: #666; font-weight: 600;">✨ ¡Próximamente más estilos y fuentes premium!</span>
                                     </div>
                                 </div>
                             </div>
@@ -929,111 +1246,326 @@
                     </div>
                 `;
 
+                // Sub-pane sliding event listeners
+                const navEditorPanes = document.getElementById('navEditorPanes');
+                const navMenuItems = form.querySelectorAll('.nav-menu-item');
+                const backToMenuBtn = document.getElementById('btnBackToNavMenu');
+                
+                navMenuItems.forEach(item => {
+                    item.onclick = () => {
+                        const target = item.dataset.targetPane;
+                        
+                        // Hide all subpane content
+                        form.querySelectorAll('.subpane-content').forEach(p => p.style.display = 'none');
+                        
+                        // Show selected subpane
+                        const activeSubpane = document.getElementById(`subpane-${target}`);
+                        if (activeSubpane) {
+                            activeSubpane.style.display = 'block';
+                        }
+                        
+                        // Update title
+                        const titleEl = document.getElementById('navPaneDetailTitle');
+                        if (titleEl) {
+                            const titles = {
+                                'logo': 'Logo de la Tienda',
+                                'links': 'Enlaces de Navegación',
+                                'config': 'Configuración General',
+                                'announcement': 'Barra de Anuncios',
+                                'design': 'Estilos y Diseños'
+                            };
+                            titleEl.textContent = titles[target] || 'Subpanel';
+                        }
+                        
+                        // Slide PANE 2 in
+                        navEditorPanes.style.transform = 'translateX(-50%)';
+                    };
+                });
+                
+                if (backToMenuBtn) {
+                    backToMenuBtn.onclick = () => {
+                        navEditorPanes.style.transform = 'translateX(0)';
+                    };
+                }
+
+                // Logo text event binding
                 const logoInput = document.getElementById('editNavLogoText');
                 const logoCounter = document.getElementById('logoTextCounter');
-                logoInput.oninput = (e) => {
-                    const val = e.target.value.substring(0, 25);
-                    logoCounter.textContent = `${val.length}/25`;
-                    storeState.updateSection(sec.id, { logoText: val });
-                };
+                if (logoInput && logoCounter) {
+                    logoInput.oninput = (e) => {
+                        const val = e.target.value.substring(0, 25);
+                        logoCounter.textContent = `${val.length}/25`;
+                        storeState.updateSection(sec.id, { logoText: val });
+                    };
+                }
 
+                // Alignment event binding
                 const alignBtns = form.querySelectorAll('.align-segment-btn');
                 alignBtns.forEach(btn => {
                     btn.onclick = () => {
-                        alignBtns.forEach(b => {
-                            b.style.background = 'transparent';
-                            b.style.color = '#aaa';
-                        });
-                        btn.style.background = '#252525';
-                        btn.style.color = '#fff';
+                        alignBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
                         storeState.updateSection(sec.id, { linksAlign: btn.dataset.align });
                     };
-                    if (btn.classList.contains('active')) {
-                        btn.style.background = '#252525';
-                        btn.style.color = '#fff';
-                    }
                 });
 
+                // Link style event binding
                 const styleBtns = form.querySelectorAll('.style-segment-btn');
                 styleBtns.forEach(btn => {
                     btn.onclick = () => {
-                        styleBtns.forEach(b => {
-                            b.style.background = 'transparent';
-                            b.style.color = '#aaa';
-                        });
-                        btn.style.background = '#252525';
-                        btn.style.color = '#fff';
+                        styleBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
                         storeState.updateSection(sec.id, { linksStyle: btn.dataset.style });
                     };
-                    if (btn.classList.contains('active')) {
-                        btn.style.background = '#252525';
-                        btn.style.color = '#fff';
-                    }
                 });
 
-                // Background, opacity, blur, border customizers
+                // Cart toggle event binding
+                const showCartSelect = document.getElementById('editNavShowCartSelect');
+                if (showCartSelect) {
+                    showCartSelect.onchange = (e) => {
+                        const isVisible = e.target.value === 'true';
+                        const fields = document.getElementById('cart-customizer-fields');
+                        if (fields) {
+                            fields.style.display = isVisible ? 'block' : 'none';
+                        }
+                        storeState.updateSection(sec.id, { showCart: isVisible });
+                    };
+                }
+
+                // Drawer Animation toggle binding
+                const editDrawerAnimation = document.getElementById('editNavDrawerAnimation');
+                if (editDrawerAnimation) {
+                    editDrawerAnimation.onchange = (e) => {
+                        storeState.updateSection(sec.id, { drawerAnimation: e.target.checked });
+                    };
+                }
+
+                // Cart style event binding
+                const cartStyleBtns = form.querySelectorAll('.cart-style-btn');
+                cartStyleBtns.forEach(btn => {
+                    btn.onclick = () => {
+                        cartStyleBtns.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        storeState.updateSection(sec.id, { cartStyle: btn.dataset.style });
+                    };
+                });
+
+                // Announcement bar bindings
+                const showAnnCb = document.getElementById('editNavShowAnnouncement');
+                if (showAnnCb) {
+                    showAnnCb.onchange = (e) => {
+                        const fields = document.getElementById('navAnnouncementFields');
+                        if (fields) {
+                            fields.style.display = e.target.checked ? 'block' : 'none';
+                        }
+                        storeState.updateSection(sec.id, { showAnnouncement: e.target.checked });
+                    };
+                }
+
+                const editAnnText = document.getElementById('editNavAnnouncementText');
+                if (editAnnText) {
+                    editAnnText.oninput = (e) => {
+                        const counter = document.getElementById('annTextCounter');
+                        if (counter) counter.textContent = `${e.target.value.length}/60`;
+                        storeState.updateSection(sec.id, { announcementText: e.target.value });
+                    };
+                }
+
+                const editAnnPadding = document.getElementById('editNavAnnouncementPadding');
+                if (editAnnPadding) {
+                    editAnnPadding.oninput = (e) => {
+                        document.getElementById('annPaddingValue').textContent = `${e.target.value}px`;
+                        storeState.updateSection(sec.id, { announcementPadding: parseInt(e.target.value) });
+                    };
+                }
+
+                const editAnnLink = document.getElementById('editNavAnnouncementLink');
+                if (editAnnLink) {
+                    editAnnLink.oninput = (e) => {
+                        storeState.updateSection(sec.id, { announcementLink: e.target.value });
+                    };
+                }
+
+                const editAnnBg = document.getElementById('editNavAnnouncementBg');
+                if (editAnnBg) {
+                    editAnnBg.oninput = (e) => {
+                        document.getElementById('annBgHexDisplay').textContent = e.target.value.toUpperCase();
+                        storeState.updateSection(sec.id, { announcementBg: e.target.value });
+                    };
+                }
+
+                const editAnnColor = document.getElementById('editNavAnnouncementColor');
+                if (editAnnColor) {
+                    editAnnColor.oninput = (e) => {
+                        document.getElementById('annColorHexDisplay').textContent = e.target.value.toUpperCase();
+                        storeState.updateSection(sec.id, { announcementColor: e.target.value });
+                    };
+                }
+
+                // ─── NAVBAR STYLE REFRESH (sin re-render) ──────────────────────────
+                // Actualiza solo el <style> dinámico en el preview sin reconstruir el DOM.
+                // Esto elimina el tambaleo al mover sliders de color/blur/borde.
+                const refreshNavStyle = () => {
+                    const styleId = `dynamic-nav-styles-${sec.id || 'main'}`;
+                    const styleEl = document.getElementById(styleId);
+                    if (!styleEl) return;
+
+                    const p = storeState.get().sections.find(s => s.id === sec.id)?.props || {};
+                    const bgColor      = p.bgColor      || '#000000';
+                    const bgBlur       = p.bgBlur       !== undefined ? p.bgBlur       : 12;
+                    const borderColor  = p.borderColor  || '#ffffff';
+                    const borderWidth  = p.borderWidth  !== undefined ? p.borderWidth  : 1;
+                    const transparent  = p.transparentBg !== false;
+
+                    if (transparent) {
+                        styleEl.innerHTML = `
+                            .store-root > .rendered-navbar-wrapper {
+                                position: fixed !important;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                z-index: 100;
+                            }
+                            .store-root > .rendered-navbar-wrapper > .rendered-navbar.prof-nav {
+                                background: transparent !important;
+                                backdrop-filter: none !important;
+                                -webkit-backdrop-filter: none !important;
+                                border-bottom: none !important;
+                                margin-bottom: 0 !important;
+                                box-shadow: none !important;
+                                width: 100% !important;
+                                box-sizing: border-box !important;
+                                position: relative !important;
+                                z-index: 100;
+                            }
+                            .store-root > .rendered-navbar-wrapper > .rendered-navbar.prof-nav.scrolled {
+                                background: transparent !important;
+                                backdrop-filter: none !important;
+                                -webkit-backdrop-filter: none !important;
+                                border-bottom: none !important;
+                                margin-bottom: 0 !important;
+                                box-shadow: none !important;
+                            }
+                        `;
+                    } else {
+                        styleEl.innerHTML = `
+                            .store-root > .rendered-navbar-wrapper {
+                                position: sticky !important;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                z-index: 100;
+                            }
+                            .store-root > .rendered-navbar-wrapper > .rendered-navbar.prof-nav {
+                                background: ${bgColor} !important;
+                                backdrop-filter: blur(${bgBlur}px) !important;
+                                -webkit-backdrop-filter: blur(${bgBlur}px) !important;
+                                border-bottom: ${borderWidth}px solid ${borderColor} !important;
+                                margin-bottom: -${borderWidth}px !important;
+                                box-shadow: none !important;
+                                width: 100% !important;
+                                box-sizing: border-box !important;
+                                position: relative !important;
+                                z-index: 100;
+                            }
+                            .store-root > .rendered-navbar-wrapper > .rendered-navbar.prof-nav.scrolled {
+                                background: ${bgColor} !important;
+                                border-bottom: ${borderWidth}px solid ${borderColor} !important;
+                                margin-bottom: -${borderWidth}px !important;
+                                box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+                                backdrop-filter: blur(${bgBlur}px) !important;
+                                -webkit-backdrop-filter: blur(${bgBlur}px) !important;
+                            }
+                        `;
+                    }
+                };
+
+                // Styling controls bindings (color, blur, border color, width)
                 const editBg = document.getElementById('editNavBgColor');
+                const editBgText = document.getElementById('bgColorHexText');
+                
+                const updateBgColor = (val) => {
+                    let hex = val.trim();
+                    if (!hex.startsWith('#')) hex = '#' + hex;
+                    if (editBg) editBg.value = hex.substring(0, 7);
+                    if (editBgText && document.activeElement !== editBgText) editBgText.value = hex.toUpperCase();
+                    storeState.updateSectionSilent(sec.id, { bgColor: hex });
+                    refreshNavStyle();
+                };
+
                 if (editBg) {
-                    editBg.oninput = (e) => {
-                        document.getElementById('bgColorHexDisplay').textContent = e.target.value.toUpperCase();
-                        storeState.updateSection(sec.id, { bgColor: e.target.value });
-                    };
+                    editBg.oninput = (e) => updateBgColor(e.target.value);
                 }
-                const editOpacity = document.getElementById('editNavBgOpacity');
-                if (editOpacity) {
-                    editOpacity.oninput = (e) => {
-                        document.getElementById('navBgOpacityValue').textContent = `${e.target.value}%`;
-                        storeState.updateSection(sec.id, { bgOpacity: parseInt(e.target.value) });
+                if (editBgText) {
+                    editBgText.oninput = (e) => {
+                        let hex = e.target.value.trim();
+                        if (!hex.startsWith('#')) hex = '#' + hex;
+                        if (editBg && hex.length >= 7) editBg.value = hex.substring(0, 7);
+                        storeState.updateSectionSilent(sec.id, { bgColor: hex });
+                        refreshNavStyle();
                     };
+                    editBgText.onchange = (e) => updateBgColor(e.target.value);
                 }
+
                 const editBlur = document.getElementById('editNavBgBlur');
                 if (editBlur) {
                     editBlur.oninput = (e) => {
                         document.getElementById('navBgBlurValue').textContent = `${e.target.value}px`;
-                        storeState.updateSection(sec.id, { bgBlur: parseInt(e.target.value) });
+                        storeState.updateSectionSilent(sec.id, { bgBlur: parseInt(e.target.value) });
+                        refreshNavStyle();
                     };
                 }
+
                 const editBColor = document.getElementById('editNavBorderColor');
+                const editBColorText = document.getElementById('borderColorHexText');
+                
+                const updateBorderColor = (val) => {
+                    let hex = val.trim();
+                    if (!hex.startsWith('#')) hex = '#' + hex;
+                    if (editBColor) editBColor.value = hex.substring(0, 7);
+                    if (editBColorText && document.activeElement !== editBColorText) editBColorText.value = hex.toUpperCase();
+                    storeState.updateSectionSilent(sec.id, { borderColor: hex });
+                    refreshNavStyle();
+                };
+
                 if (editBColor) {
-                    editBColor.oninput = (e) => {
-                        document.getElementById('borderColorHexDisplay').textContent = e.target.value.toUpperCase();
-                        storeState.updateSection(sec.id, { borderColor: e.target.value });
-                    };
+                    editBColor.oninput = (e) => updateBorderColor(e.target.value);
                 }
+                if (editBColorText) {
+                    editBColorText.oninput = (e) => {
+                        let hex = e.target.value.trim();
+                        if (!hex.startsWith('#')) hex = '#' + hex;
+                        if (editBColor && hex.length >= 7) editBColor.value = hex.substring(0, 7);
+                        storeState.updateSectionSilent(sec.id, { borderColor: hex });
+                        refreshNavStyle();
+                    };
+                    editBColorText.onchange = (e) => updateBorderColor(e.target.value);
+                }
+
                 const editBWidth = document.getElementById('editNavBorderWidth');
                 if (editBWidth) {
                     editBWidth.oninput = (e) => {
                         document.getElementById('navBorderWidthValue').textContent = `${e.target.value}px`;
-                        storeState.updateSection(sec.id, { borderWidth: parseInt(e.target.value) });
-                    };
-                }
-                const editBOpacity = document.getElementById('editNavBorderOpacity');
-                if (editBOpacity) {
-                    editBOpacity.oninput = (e) => {
-                        document.getElementById('navBorderOpacityValue').textContent = `${e.target.value}%`;
-                        storeState.updateSection(sec.id, { borderOpacity: parseInt(e.target.value) });
+                        storeState.updateSectionSilent(sec.id, { borderWidth: parseInt(e.target.value) });
+                        refreshNavStyle();
                     };
                 }
 
-                const editTransparentBg = document.getElementById('editNavTransparentBg');
+                const editTransparentBg = document.getElementById('editNavTransparentBgSelect');
                 if (editTransparentBg) {
                     editTransparentBg.onchange = (e) => {
+                        const isTransparent = e.target.value === 'transparent';
                         const bgControls = document.getElementById('navBgControlsContainer');
                         if (bgControls) {
-                            bgControls.style.display = e.target.checked ? 'none' : 'block';
+                            bgControls.style.display = isTransparent ? 'none' : 'block';
                         }
-                        storeState.updateSection(sec.id, { transparentBg: e.target.checked });
+                        // Actualizar estado silencioso + refrescar style directo (sin re-render)
+                        storeState.updateSectionSilent(sec.id, { transparentBg: isTransparent });
+                        refreshNavStyle();
                     };
                 }
 
-                document.getElementById('editNavShowExplore').onchange = (e) => {
-                    storeState.updateSection(sec.id, { showExplore: e.target.checked });
-                };
-
-                document.getElementById('editNavShowCart').onchange = (e) => {
-                    storeState.updateSection(sec.id, { showCart: e.target.checked });
-                };
-                
+                // Checkboxes event binding
                 const checkboxes = form.querySelectorAll('.editNavLinksCheckbox');
                 checkboxes.forEach(cb => {
                     cb.onchange = (e) => {
@@ -1049,43 +1581,80 @@
                     };
                 });
 
+                // Text customizers event binding
                 const textInputs = form.querySelectorAll('.link-custom-text-input');
                 textInputs.forEach(input => {
                     input.oninput = (e) => {
                         const linkKey = input.dataset.link.toUpperCase();
-                        const currentCustoms = sec.props.linkCustomizations || {};
-                        currentCustoms[linkKey] = currentCustoms[linkKey] || {};
-                        currentCustoms[linkKey].text = e.target.value;
-                        storeState.updateSection(sec.id, { linkCustomizations: currentCustoms });
-                    };
-                });
-
-                const iconInputs = form.querySelectorAll('.link-custom-icon-input');
-                iconInputs.forEach(input => {
-                    input.oninput = (e) => {
-                        const linkKey = input.dataset.link.toUpperCase();
-                        const currentCustoms = sec.props.linkCustomizations || {};
-                        currentCustoms[linkKey] = currentCustoms[linkKey] || {};
-                        currentCustoms[linkKey].icon = e.target.value;
-                        storeState.updateSection(sec.id, { linkCustomizations: currentCustoms });
-                    };
-                });
-
-                const presetSelects = form.querySelectorAll('.link-icon-presets');
-                presetSelects.forEach(sel => {
-                    sel.onchange = (e) => {
-                        if (!e.target.value) return;
-                        const linkKey = sel.dataset.link.toUpperCase();
-                        const targetInput = document.getElementById(`icon-input-${sel.dataset.link}`);
-                        if (targetInput) {
-                            targetInput.value = e.target.value;
+                        const val = e.target.value;
+                        
+                        const counter = document.getElementById(`label-counter-${input.dataset.link}`);
+                        if (counter) {
+                            counter.textContent = `${val.length}/20`;
                         }
+
                         const currentCustoms = sec.props.linkCustomizations || {};
                         currentCustoms[linkKey] = currentCustoms[linkKey] || {};
-                        currentCustoms[linkKey].icon = e.target.value;
+                        currentCustoms[linkKey].text = val;
                         storeState.updateSection(sec.id, { linkCustomizations: currentCustoms });
                     };
                 });
+
+                // Icon upload buttons event binding
+                const uploadBtns = form.querySelectorAll('.btn-upload-link-icon');
+                uploadBtns.forEach(btn => {
+                    btn.onclick = () => {
+                        const linkKey = btn.dataset.link.toUpperCase();
+                        const fileInput = document.createElement('input');
+                        fileInput.type = 'file';
+                        fileInput.accept = '.jpg,.jpeg,.png,.ico,.webp';
+                        
+                        fileInput.onchange = (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            
+                            const name = file.name.toLowerCase();
+                            const isValidExtension = name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.png') || name.endsWith('.ico') || name.endsWith('.webp');
+                            const isValidMime = file.type && (file.type.startsWith('image/') || file.type === 'image/x-icon' || file.type === 'image/vnd.microsoft.icon');
+                            
+                            if (!isValidExtension && !isValidMime) {
+                                window.showPremiumToast("Formato no soportado. Sube un archivo .jpg, .png, .ico o .webp");
+                                return;
+                            }
+                            
+                            if (file.size > 30 * 1024 * 1024) {
+                                window.showPremiumToast("El archivo es demasiado grande (máximo 30MB).");
+                                return;
+                            }
+                            
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                const base64String = event.target.result;
+                                
+                                const currentCustoms = sec.props.linkCustomizations || {};
+                                const oldIcon = currentCustoms[linkKey]?.icon || '';
+                                if (oldIcon && oldIcon.includes('ik.imagekit.io')) {
+                                    window.pendingIconCleanups = window.pendingIconCleanups || [];
+                                    if (!window.pendingIconCleanups.includes(oldIcon)) {
+                                        window.pendingIconCleanups.push(oldIcon);
+                                    }
+                                }
+
+                                const previewBox = document.getElementById(`icon-preview-box-${btn.dataset.link}`);
+                                if (previewBox) {
+                                    previewBox.innerHTML = `<img src="${base64String}" style="width: 20px; height: 20px; object-fit: contain;" />`;
+                                }
+                                
+                                currentCustoms[linkKey] = currentCustoms[linkKey] || {};
+                                currentCustoms[linkKey].icon = base64String;
+                                storeState.updateSection(sec.id, { linkCustomizations: currentCustoms });
+                            };
+                            reader.readAsDataURL(file);
+                        };
+                        fileInput.click();
+                    };
+                });
+
             } else if (sec.type === 'faq') {
                 form.innerHTML = `
                     <div>
@@ -1183,18 +1752,32 @@
             };
         }
 
+        // Cache de la firma de secciones para no reconstruir el sidebar innecesariamente
+        let _lastSidebarSectionsSig = '';
+
         function updateSidebarUI(state) {
             if (state.theme) {
                 if (state.theme.primaryColor) {
-                    document.getElementById('themePrimaryColor').value = state.theme.primaryColor;
+                    const el = document.getElementById('themePrimaryColor');
+                    if (el && el.value !== state.theme.primaryColor) el.value = state.theme.primaryColor;
                 }
                 if (state.theme.backgroundColor) {
-                    document.getElementById('themeBgColor').value = state.theme.backgroundColor;
+                    const el = document.getElementById('themeBgColor');
+                    if (el && el.value !== state.theme.backgroundColor) el.value = state.theme.backgroundColor;
                 }
             }
 
+            // Calcular firma rápida de las secciones (solo id + tipo)
+            // Solo reconstruimos el panel de bloques si la lista de secciones cambió
+            const sectionsSig = (state.sections || []).map(s => s.id + ':' + s.type).join('|');
+            
             // Actualizar bloques activos en el panel
             const blocksPanel = document.getElementById('activeSections');
+            if (sectionsSig === _lastSidebarSectionsSig) {
+                // Sin cambios en la lista → no tocar el DOM del sidebar
+                return;
+            }
+            _lastSidebarSectionsSig = sectionsSig;
             blocksPanel.innerHTML = '';
             if (state.sections) {
                 state.sections.forEach((sec, idx) => {
@@ -1319,29 +1902,118 @@
             }
 
             const btn = document.getElementById('btnSaveStore');
+            const originalText = btn.textContent;
             btn.textContent = "Guardando...";
+            btn.disabled = true;
             isSavingStore = true;
             
-            const currentState = storeState.get();
-            
-            const { error } = await window.supabase
-                .from('store_configs')
-                .upsert({ 
-                    user_id: currentUser.id, 
-                    config_json: currentState,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id' });
+            try {
+                const currentState = JSON.parse(JSON.stringify(storeState.get()));
+                
+                // Get Supabase Session Token
+                const { data: { session } } = await window.supabase.auth.getSession();
+                const token = session?.access_token;
+                
+                if (!token) {
+                    throw new Error("No se pudo obtener el token de sesión.");
+                }
 
-            if (error) {
-                console.error("Error guardando:", error);
-                alert("Error al guardar la tienda.");
-                btn.textContent = "Publicar";
-            } else {
-                btn.textContent = "Publicar";
+                // Find navbar section in state
+                const navbarSection = currentState.sections.find(s => s.type === 'navbar');
+                if (navbarSection && navbarSection.props && navbarSection.props.linkCustomizations) {
+                    const customInfo = navbarSection.props.linkCustomizations;
+                    const linksToUpload = [];
+
+                    // Scan for any icons in Base64
+                    for (const [linkKey, info] of Object.entries(customInfo)) {
+                        if (info.icon && info.icon.startsWith('data:image')) {
+                            linksToUpload.push({ key: linkKey, dataUrl: info.icon });
+                        }
+                    }
+
+                    if (linksToUpload.length > 0) {
+                        btn.textContent = "Subiendo iconos...";
+                        
+                        // Upload all base64 icons to ImageKit in parallel
+                        const uploadPromises = linksToUpload.map(async (item) => {
+                            const res = await fetch('/api/imagekit/store-icon', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({ image: item.dataUrl })
+                            });
+                            
+                            if (!res.ok) {
+                                throw new Error(`Error subiendo icono para ${item.key}`);
+                            }
+                            
+                            const data = await res.json();
+                            if (!data.success || !data.url) {
+                                throw new Error(data.error || `Error subiendo icono para ${item.key}`);
+                            }
+                            
+                            return { key: item.key, url: data.url };
+                        });
+
+                        const uploadedResults = await Promise.all(uploadPromises);
+                        
+                        // Update state clone with the final ImageKit URLs
+                        uploadedResults.forEach(res => {
+                            customInfo[res.key].icon = res.url;
+                        });
+                        
+                        // Update the active store state so the simulator/local state reflects the uploaded URLs too
+                        storeState.set(currentState);
+                    }
+                }
+
+                btn.textContent = "Guardando tienda...";
+                
+                const { error } = await window.supabase
+                    .from('store_configs')
+                    .upsert({ 
+                        user_id: currentUser.id, 
+                        config_json: currentState,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id' });
+
+                if (error) {
+                    throw error;
+                }
+
+                // Successful save! Perform cleanup of replaced/deleted files from ImageKit
+                if (window.pendingIconCleanups && window.pendingIconCleanups.length > 0) {
+                    console.log("Cleaning up old ImageKit icons:", window.pendingIconCleanups);
+                    window.pendingIconCleanups.forEach(url => {
+                        fetch('/api/imagekit/cleanup', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ url })
+                        }).catch(err => {
+                            console.error("Failed to clean up icon:", url, err);
+                        });
+                    });
+                    window.pendingIconCleanups = [];
+                }
+
+                btn.textContent = originalText;
+                btn.disabled = false;
                 window.hasUnsavedChanges = false; // Reset unsaved changes!
                 document.getElementById('publish-success-modal').style.display = 'flex';
+
+            } catch (err) {
+                console.error("Error al publicar:", err);
+                alert("Error al guardar la tienda: " + err.message);
+                btn.textContent = originalText;
+                btn.disabled = false;
+            } finally {
+                isSavingStore = false;
             }
-            setTimeout(() => { isSavingStore = false; }, 100);
         });
 
         // Prevenir pérdida de datos al recargar - SOLO si hay cambios reales sin guardar!
@@ -1402,37 +2074,94 @@
         };
 
         // Simulator drag scroll (works in both mobile and desktop views)
-        const previewDevice = document.getElementById('previewDevice');
+        {
+            const previewDeviceNode = document.getElementById('previewDevice');
+            if (previewDeviceNode) {
+                let deviceIsDown = false;
+                let deviceStartY;
+                let deviceScrollTop;
 
-        let deviceIsDown = false;
-        let deviceStartY;
-        let deviceScrollTop;
+                previewDeviceNode.addEventListener('mousedown', (e) => {
+                    if (e.target.closest('button, a, input, select, textarea, .explore-heart-action, .explore-play-action, .tab-trigger, .pill')) {
+                        return;
+                    }
 
-        previewDevice.addEventListener('mousedown', (e) => {
-            if (e.target.closest('button, a, input, select, textarea, .explore-heart-action, .explore-play-action, .tab-trigger, .pill')) {
+                    deviceIsDown = true;
+                    deviceStartY = e.pageY - previewDeviceNode.offsetTop;
+                    deviceScrollTop = previewDeviceNode.scrollTop;
+                    e.preventDefault();
+                });
+
+                previewDeviceNode.addEventListener('mousemove', (e) => {
+                    if (!deviceIsDown) return;
+                    const y = e.pageY - previewDeviceNode.offsetTop;
+                    const walkY = (y - deviceStartY) * 1.5;
+                    previewDeviceNode.scrollTop = deviceScrollTop - walkY;
+                });
+
+                previewDeviceNode.addEventListener('mouseup', () => {
+                    deviceIsDown = false;
+                });
+
+                previewDeviceNode.addEventListener('mouseleave', () => {
+                    deviceIsDown = false;
+                });
+            }
+        }
+
+        // --- PREMIUM TOAST SYSTEM (Black & White, non-stacking) ---
+        window.showPremiumToast = function(message) {
+            let toast = document.getElementById('premium-toast');
+            if (toast) {
+                toast.querySelector('.toast-msg').textContent = message;
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+                clearTimeout(window.premiumToastTimeout);
+                window.premiumToastTimeout = setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-20px)';
+                }, 3000);
                 return;
             }
 
-            deviceIsDown = true;
-            deviceStartY = e.pageY - previewDevice.offsetTop;
-            deviceScrollTop = previewDevice.scrollTop;
-            e.preventDefault();
-        });
+            toast = document.createElement('div');
+            toast.id = 'premium-toast';
+            toast.style.position = 'fixed';
+            toast.style.top = '24px';
+            toast.style.right = '24px';
+            toast.style.background = '#161616';
+            toast.style.border = '1px solid #333';
+            toast.style.borderRadius = '8px';
+            toast.style.padding = '12px 18px';
+            toast.style.color = '#fff';
+            toast.style.fontSize = '12px';
+            toast.style.fontWeight = '600';
+            toast.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+            toast.style.zIndex = '99999';
+            toast.style.display = 'flex';
+            toast.style.alignItems = 'center';
+            toast.style.gap = '10px';
+            toast.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-20px)';
 
-        previewDevice.addEventListener('mousemove', (e) => {
-            if (!deviceIsDown) return;
-            const y = e.pageY - previewDevice.offsetTop;
-            const walkY = (y - deviceStartY) * 1.5;
-            previewDevice.scrollTop = deviceScrollTop - walkY;
-        });
+            toast.innerHTML = `
+                <i class="bi bi-exclamation-circle-fill" style="color: #ff5252; font-size: 14px;"></i>
+                <span class="toast-msg">${message}</span>
+            `;
 
-        previewDevice.addEventListener('mouseup', () => {
-            deviceIsDown = false;
-        });
+            document.body.appendChild(toast);
 
-        previewDevice.addEventListener('mouseleave', () => {
-            deviceIsDown = false;
-        });
+            // Trigger reflow for transition animation
+            toast.offsetHeight;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+
+            window.premiumToastTimeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-20px)';
+            }, 3000);
+        };
 
         // Arrancar
         loadUserStore();

@@ -411,10 +411,25 @@ export class RendererEngine {
     constructor(rootElement, storeState) {
         this.root = typeof rootElement === 'string' ? document.querySelector(rootElement) : rootElement;
         this.storeState = storeState;
+        // Cache: almacena el hash (JSON.stringify) de las props de cada sección
+        // para saber si realmente cambió y necesita re-renderizarse
+        this._sectionPropsCache = {};
+        // Cache del orden anterior de sección IDs para evitar reordenamientos innecesarios
+        this._lastSectionOrder = [];
+    }
+
+    // Genera un hash rápido de las props de una sección
+    _hashProps(section) {
+        try {
+            return JSON.stringify({ type: section.type, props: section.props });
+        } catch (e) {
+            return Math.random().toString(); // fallback: siempre re-render
+        }
     }
 
     render(state) {
         const finalState = state || this.storeState || {};
+
         // 1. Aplicar Variables de Tema Dinámicas
         if (finalState.theme) {
             if (finalState.theme.primaryColor) {
@@ -425,19 +440,81 @@ export class RendererEngine {
             }
         }
 
-        // 2. Limpiar Root
-        this.root.innerHTML = '';
-
-        // 3. Renderizar Secciones en orden
-        if (finalState.sections && finalState.sections.length > 0) {
-            finalState.sections.forEach(sec => {
-                const html = this.generateHtmlForSection(sec);
-                if (html) {
-                    this.root.appendChild(html);
-                }
-            });
-        } else {
+        if (!finalState.sections || finalState.sections.length === 0) {
             this.root.innerHTML = '<div style="padding: 100px; text-align: center; color: #666;">Tienda Vacía. Añade bloques.</div>';
+            this._sectionPropsCache = {};
+            return;
+        }
+
+        // 2. Limpiar mensaje vacío si existía
+        const emptyMsg = this.root.querySelector('[style*="Tienda Vacía"]');
+        if (emptyMsg) this.root.innerHTML = '';
+
+        const newIds = finalState.sections.map(s => s.id);
+        const newCache = {};
+
+        // 3. Remover secciones que ya no existen (fueron eliminadas por el usuario)
+        Array.from(this.root.children).forEach(child => {
+            const sid = child.dataset?.sectionId;
+            if (sid && !newIds.includes(sid)) {
+                this.root.removeChild(child);
+                // Limpiar drawer huérfano si era navbar
+                const drawer = this.root.querySelector('#mobile-nav-drawer');
+                if (drawer) drawer.remove();
+            }
+        });
+
+        // 4. Para cada sección: comparar hash de props, solo re-renderizar si cambió
+        let needsParticlesInit = false;
+
+        finalState.sections.forEach((sec) => {
+            const hash = this._hashProps(sec);
+            newCache[sec.id] = hash;
+            const existingNode = this.root.querySelector(`[data-section-id="${sec.id}"]`);
+
+            if (existingNode && this._sectionPropsCache[sec.id] === hash) {
+                // ✅ Props idénticas → NO tocar el DOM. Cero trabajo.
+                return;
+            }
+
+            // ⚡ Props cambiaron (o es nueva sección) → regenerar solo ESTA sección
+            const newNode = this.generateHtmlForSection(sec);
+            if (newNode) {
+                if (existingNode) {
+                    this.root.replaceChild(newNode, existingNode);
+                } else {
+                    this.root.appendChild(newNode);
+                }
+
+                // Si fue el hero y tiene partículas, necesitamos re-inicializarlas
+                if (sec.type === 'hero' && sec.props.showParticles !== false) {
+                    needsParticlesInit = true;
+                }
+            }
+        });
+
+        // 5. Asegurar el orden correcto SOLO si el orden de IDs cambió
+        // Comparar orden actual del DOM vs. orden deseado
+        const currentDomOrder = Array.from(this.root.children)
+            .map(c => c.dataset?.sectionId)
+            .filter(Boolean);
+        const desiredOrder = finalState.sections.map(s => s.id);
+        const orderChanged = desiredOrder.some((id, i) => currentDomOrder[i] !== id);
+
+        if (orderChanged) {
+            // Solo reordenar si el orden realmente es diferente
+            desiredOrder.forEach(id => {
+                const el = this.root.querySelector(`[data-section-id="${id}"]`);
+                if (el) this.root.appendChild(el);
+            });
+        }
+
+        // 6. Guardar cache para la próxima comparación
+        this._sectionPropsCache = newCache;
+
+        // 7. Re-inicializar scripts dependientes si sus secciones fueron regeneradas
+        if (needsParticlesInit && window.initParticles) {
+            setTimeout(window.initParticles, 50);
         }
     }
 
@@ -448,9 +525,9 @@ export class RendererEngine {
         
         switch (section.type) {
             case 'navbar':
-                div.className = 'rendered-navbar prof-nav'; // Agregada clase de su navbar
+                div.className = 'rendered-navbar-wrapper'; // ALWAYS rendered-navbar-wrapper for consistent layout context
                 const userNickname = window.builderNickname || 'Artista';
-                const logoText = (section.props.logoText || userNickname).substring(0, 25);
+                const logoText = (section.props.logoText !== undefined ? section.props.logoText : userNickname).substring(0, 25);
                 
                 // Alignments and Styles
                 const linksAlign = section.props.linksAlign || 'center'; // default centered
@@ -458,24 +535,10 @@ export class RendererEngine {
                 
                 // Background & Glassmorphism Properties
                 const navBgColor = section.props.bgColor || '#000000';
-                const navBgOpacity = section.props.bgOpacity !== undefined ? section.props.bgOpacity : 70; // percentage
                 const navBgBlur = section.props.bgBlur !== undefined ? section.props.bgBlur : 12; // px
                 const navBorderColor = section.props.borderColor || '#ffffff';
-                const navBorderOpacity = section.props.borderOpacity !== undefined ? section.props.borderOpacity : 5; // percentage
-                const transparentBg = section.props.transparentBg === true;
+                const transparentBg = section.props.transparentBg !== false;
                 const borderWidth = section.props.borderWidth !== undefined ? section.props.borderWidth : 1;
-                
-                // Convert HEX to RGBA helper
-                const hexToRgba = (hex, alpha) => {
-                    hex = hex.replace('#', '');
-                    const r = parseInt(hex.substring(0, 2), 16) || 0;
-                    const g = parseInt(hex.substring(2, 4), 16) || 0;
-                    const b = parseInt(hex.substring(4, 6), 16) || 0;
-                    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-                };
-                
-                const rgbaBg = hexToRgba(navBgColor, navBgOpacity / 100);
-                const rgbaBorder = hexToRgba(navBorderColor, navBorderOpacity / 100);
                 
                 // Inject custom dynamic style block for full theme-base.css compatibility (handles scrolled classes correctly)
                 const styleId = `dynamic-nav-styles-${section.id || 'main'}`;
@@ -486,27 +549,68 @@ export class RendererEngine {
                     document.head.appendChild(styleEl);
                 }
 
-                let backgroundStyle = `background: ${rgbaBg} !important;`;
-                let backdropFilterStyle = `backdrop-filter: blur(${navBgBlur}px) !important; -webkit-backdrop-filter: blur(${navBgBlur}px) !important;`;
-                
                 if (transparentBg) {
-                    backgroundStyle = `background: transparent !important;`;
-                    backdropFilterStyle = `backdrop-filter: none !important; -webkit-backdrop-filter: none !important;`;
+                    // Personalizar = NO -> Completamente transparente, sin bordes, sin desenfoque (OFF)
+                    styleEl.innerHTML = `
+                        .store-root > .rendered-navbar-wrapper {
+                            position: fixed !important;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            z-index: 100;
+                        }
+                        .store-root > .rendered-navbar-wrapper > .rendered-navbar.prof-nav {
+                            background: transparent !important;
+                            backdrop-filter: none !important;
+                            -webkit-backdrop-filter: none !important;
+                            border-bottom: none !important;
+                            margin-bottom: 0 !important;
+                            box-shadow: none !important;
+                            width: 100% !important;
+                            box-sizing: border-box !important;
+                            position: relative !important;
+                            z-index: 100;
+                        }
+                        .store-root > .rendered-navbar-wrapper > .rendered-navbar.prof-nav.scrolled {
+                            background: transparent !important;
+                            backdrop-filter: none !important;
+                            -webkit-backdrop-filter: none !important;
+                            border-bottom: none !important;
+                            margin-bottom: 0 !important;
+                            box-shadow: none !important;
+                        }
+                    `;
+                } else {
+                    styleEl.innerHTML = `
+                        .store-root > .rendered-navbar-wrapper {
+                            position: sticky !important;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            z-index: 100;
+                        }
+                        .store-root > .rendered-navbar-wrapper > .rendered-navbar.prof-nav {
+                            background: ${navBgColor} !important;
+                            backdrop-filter: blur(${navBgBlur}px) !important;
+                            -webkit-backdrop-filter: blur(${navBgBlur}px) !important;
+                            border-bottom: ${borderWidth}px solid ${navBorderColor} !important;
+                            margin-bottom: -${borderWidth}px !important;
+                            box-shadow: none !important;
+                            width: 100% !important;
+                            box-sizing: border-box !important;
+                            position: relative !important;
+                            z-index: 100;
+                        }
+                        .store-root > .rendered-navbar-wrapper > .rendered-navbar.prof-nav.scrolled {
+                            background: ${navBgColor} !important;
+                            border-bottom: ${borderWidth}px solid ${navBorderColor} !important;
+                            margin-bottom: -${borderWidth}px !important;
+                            box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+                            backdrop-filter: blur(${navBgBlur}px) !important;
+                            -webkit-backdrop-filter: blur(${navBgBlur}px) !important;
+                        }
+                    `;
                 }
-
-                let borderStyle = `border-bottom: ${borderWidth}px solid ${rgbaBorder} !important;`;
-
-                styleEl.innerHTML = `
-                    .rendered-navbar.prof-nav {
-                        ${backgroundStyle}
-                        ${backdropFilterStyle}
-                        ${borderStyle}
-                    }
-                    .rendered-navbar.prof-nav.scrolled {
-                        background: ${transparentBg ? 'transparent' : hexToRgba(navBgColor, Math.min(1.0, (navBgOpacity + 20) / 100))} !important;
-                        ${transparentBg ? 'backdrop-filter: none !important; -webkit-backdrop-filter: none !important;' : ''}
-                    }
-                `;
                 
                 // Dynamic style injection for alignment
                 let alignStyles = 'display: flex; align-items: center; gap: 24px;';
@@ -550,7 +654,11 @@ export class RendererEngine {
                     }
 
                     if (iconClass.startsWith('http://') || iconClass.startsWith('https://') || iconClass.startsWith('/') || iconClass.startsWith('data:image')) {
-                        iconHtml = `<img src="${iconClass}" style="width: 16px; height: 16px; object-fit: contain; display: inline-block; vertical-align: middle;" />`;
+                        let src = iconClass;
+                        if (iconClass.includes('ik.imagekit.io')) {
+                            src = iconClass.includes('?') ? `${iconClass}&tr=w-32,h-32,f-webp` : `${iconClass}?tr=w-32,h-32,f-webp`;
+                        }
+                        iconHtml = `<img src="${src}" style="width: 16px; height: 16px; object-fit: contain; display: inline-block; vertical-align: middle;" />`;
                     } else if (iconClass.trim().startsWith('<svg')) {
                         iconHtml = `<span style="width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;">${iconClass}</span>`;
                     } else {
@@ -564,7 +672,7 @@ export class RendererEngine {
                         innerContent = `${iconHtml}<span style="margin-left:6px; display: inline-block; vertical-align: middle;">${labelText}</span>`;
                     }
                     
-                    return `<a href="${href}" class="nav-link" style="display: inline-flex; align-items: center; text-decoration: none; text-transform: uppercase; font-weight: 600; font-size: 0.85rem; opacity: 0.7; transition: opacity 0.2s; color: #fff; vertical-align: middle;">${innerContent}</a>`;
+                    return `<a href="${href}" class="nav-link" style="display: inline-flex; align-items: center; text-decoration: none; text-transform: none; font-weight: 600; font-size: 0.85rem; opacity: 0.7; transition: opacity 0.2s; color: #fff; vertical-align: middle;">${innerContent}</a>`;
                 }).join('');
 
                 let mobileLinksHtml = (section.props.links || []).map(link => {
@@ -580,16 +688,32 @@ export class RendererEngine {
                     }
 
                     if (iconClass.startsWith('http://') || iconClass.startsWith('https://') || iconClass.startsWith('/') || iconClass.startsWith('data:image')) {
-                        iconHtml = `<img src="${iconClass}" style="width: 18px; height: 18px; object-fit: contain; margin-right: 12px; display: inline-block; vertical-align: middle;" />`;
+                        let src = iconClass;
+                        if (iconClass.includes('ik.imagekit.io')) {
+                            src = iconClass.includes('?') ? `${iconClass}&tr=w-36,h-36,f-webp` : `${iconClass}?tr=w-36,h-36,f-webp`;
+                        }
+                        iconHtml = `<img src="${src}" style="width: 18px; height: 18px; object-fit: contain; margin-right: 12px; display: inline-block; vertical-align: middle;" />`;
                     } else if (iconClass.trim().startsWith('<svg')) {
                         iconHtml = `<span style="width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; vertical-align: middle;">${iconClass}</span>`;
                     } else {
                         iconHtml = `<i class="${processedIconClass}" style="font-size: 1.1rem; margin-right: 12px; vertical-align: middle;"></i>`;
                     }
 
+                    let innerContent = labelText;
+                    if (section.props.linksStyle === 'icon' && iconHtml) {
+                        innerContent = iconHtml;
+                    } else if (section.props.linksStyle === 'icon-text' && iconHtml) {
+                        innerContent = `<div style="display: flex; align-items: center; gap: 12px;">${iconHtml}<span>${labelText}</span></div>`;
+                    } else if (section.props.linksStyle === 'text') {
+                        innerContent = labelText;
+                    } else if (iconHtml) {
+                        innerContent = `<div style="display: flex; align-items: center; gap: 12px;">${iconHtml}<span>${labelText}</span></div>`;
+                    }
+
                     return `
                         <a href="${href}" class="drawer-link" onclick="const drawer = document.getElementById('mobile-nav-drawer'); if(drawer) { drawer.classList.remove('active'); document.body.style.overflow = ''; }">
-                            ${iconHtml}${labelText}
+                            ${innerContent}
+                            <i class="bi bi-chevron-right" style="color: #444; font-size: 0.8rem;"></i>
                         </a>
                     `;
                 }).join('');
@@ -598,14 +722,14 @@ export class RendererEngine {
                     ? `<img src="${section.props.avatarUrl}" alt="Avatar" style="width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:10px;">` 
                     : `<i class="bi bi-fire" style="color: #ff3300; font-size: 18px; margin-right:10px;"></i>`;
                 
-                div.innerHTML = `
-                    <div class="nav-left-group" style="display: flex; align-items: center; gap: 16px; position: relative; z-index: 10;">
-                        <button class="mobile-hamburger-btn" aria-label="Menu" onclick="const drawer = document.getElementById('mobile-nav-drawer'); if(drawer) { drawer.classList.add('active'); document.body.style.overflow = 'hidden'; }">
-                            <i class="bi bi-list"></i>
+                const navbarInnerHtml = `
+                    <div class="nav-left-group" style="display: flex; align-items: center; gap: 6px; position: relative; z-index: 10;">
+                        <button class="mobile-hamburger-btn" aria-label="Menu" style="width: 28px; height: 28px; padding: 0; align-items: center; justify-content: center; flex-shrink: 0;" onclick="const drawer = document.getElementById('mobile-nav-drawer'); if(drawer) { drawer.classList.add('active'); document.body.style.overflow = 'hidden'; const banner = document.querySelector('.nav-announcement-bar'); if(banner) { drawer.style.top = banner.offsetHeight + 'px'; } else { drawer.style.top = '0px'; } }">
+                            <i class="bi bi-list" style="font-size: 1.4rem; line-height: 1;"></i>
                         </button>
                         <a href="${window.IS_LIVE_PROFILE ? `/@${userNickname}` : '#'}" id="nav-user-link" class="user-nav-info" style="display: flex; align-items: center; text-decoration: none;">
                             ${section.props.avatarUrl ? `<img src="${section.props.avatarUrl}" id="nav-avatar" class="user-nav-avatar" alt="Avatar">` : `<img src="https://offszn.lat/images/default-avatar.png" id="nav-avatar" class="user-nav-avatar" alt="Avatar">`}
-                            <span id="nav-nickname" class="user-nav-name" style="margin-left: 12px; font-weight: 800; font-size: 1rem; color: #fff; text-transform: uppercase; letter-spacing: 0.5px;">${logoText}</span>
+                            <span id="nav-nickname" class="user-nav-name" style="margin-left: ${logoText ? '2px' : '0px'}; font-weight: 800; font-size: 1rem; color: #fff; text-transform: none; letter-spacing: 0.5px; ${logoText ? '' : 'display: none;'}">${logoText}</span>
                         </a>
                     </div>
                     
@@ -614,19 +738,21 @@ export class RendererEngine {
                     </div>
                     
                     <div class="nav-right-extreme" style="display: flex; align-items: center; position: relative; z-index: 10;">
-                        ${section.props.showExplore !== false ? `
-                        <a href="/explorar.html" class="nav-text-btn" style="color:#aaa; font-size:0.85rem; font-weight:600; text-decoration:none; margin-right: 12px; display: flex; align-items: center; gap: 4px;">
-                            Explorar <i class="bi bi-arrow-right-short" style="font-size: 1.1rem; line-height: 1;"></i>
-                        </a>
-                        ` : ''}
-
                         <!-- Carrito -->
-                        ${section.props.showCart !== false ? `
-                        <a href="#" class="nav-cart-trigger" id="nav-cart-btn" title="Carrito" onclick="if(typeof toggleCartPanel === 'function') { toggleCartPanel(event); } else if(window.CartManager) { window.CartManager.openCart(); } else { event.preventDefault(); }">
-                            <i class="bi bi-cart3"></i>
-                            <span id="cart-count-badge" class="cart-badge-circle" style="display:none;">0</span>
-                        </a>
-                        ` : ''}
+                        ${section.props.showCart !== false ? (
+                            section.props.cartStyle === 'button' ? `
+                            <a href="#" class="nav-cart-trigger-btn" id="nav-cart-btn" onclick="if(typeof toggleCartPanel === 'function') { toggleCartPanel(event); } else if(window.CartManager) { window.CartManager.openCart(); } else { event.preventDefault(); }">
+                                <i class="bi bi-cart3" style="font-size: 0.95rem; color: #000000; line-height: 1;"></i>
+                                <span style="letter-spacing: 0.5px; font-weight: 800; color: #000000;">COMPRAR</span>
+                                <span id="cart-count-badge" class="cart-badge-pill" style="display: none;">0</span>
+                            </a>
+                            ` : `
+                            <a href="#" class="nav-cart-trigger" id="nav-cart-btn" title="Carrito" onclick="if(typeof toggleCartPanel === 'function') { toggleCartPanel(event); } else if(window.CartManager) { window.CartManager.openCart(); } else { event.preventDefault(); }">
+                                <i class="bi bi-cart3"></i>
+                                <span id="cart-count-badge" class="cart-badge-circle" style="display:none;">0</span>
+                            </a>
+                            `
+                        ) : ''}
 
                         <!-- Auth section standard -->
                         <div id="nav-auth-section" style="display: none; align-items: center; gap: 12px; margin-left: 12px;">
@@ -658,16 +784,21 @@ export class RendererEngine {
                             <a href="/pages/register.html" class="btn-join" style="background:#fff; color:#000; font-size:0.8rem; font-weight:700; padding:6px 12px; border-radius:20px; text-decoration:none;">Únete</a>
                         </div>
                     </div>
+                `;
 
-                    <!-- Mobile Navigation Drawer -->
-                    <div id="mobile-nav-drawer" class="mobile-drawer">
+                // Drawer HTML — se monta fuera del navbar para evitar el containing block de backdrop-filter
+                const drawerHtml = `
+                    <div id="mobile-nav-drawer" class="mobile-drawer ${section.props.drawerAnimation === false ? 'drawer-no-animation' : ''}">
                         <div class="drawer-backdrop" onclick="const drawer = document.getElementById('mobile-nav-drawer'); if(drawer) { drawer.classList.remove('active'); document.body.style.overflow = ''; }"></div>
                         <div class="drawer-content">
-                            <div class="drawer-header">
-                                <span class="drawer-title">Navegación</span>
-                                <button id="drawer-close-btn" class="drawer-close" aria-label="Cerrar" onclick="const drawer = document.getElementById('mobile-nav-drawer'); if(drawer) { drawer.classList.remove('active'); document.body.style.overflow = ''; }">
-                                    <i class="bi bi-x"></i>
+                            <div class="drawer-header" style="display: flex; align-items: center; gap: 6px; margin-bottom: 32px; padding: 0;">
+                                <button id="drawer-close-btn" class="drawer-close" aria-label="Cerrar" onclick="const drawer = document.getElementById('mobile-nav-drawer'); if(drawer) { drawer.classList.remove('active'); document.body.style.overflow = ''; }" style="width: 28px; height: 28px; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.2s;">
+                                    <i class="bi bi-x" style="color: #fff; font-size: 1.4rem; line-height: 1;"></i>
                                 </button>
+                                <div class="user-nav-info" style="display: flex; align-items: center; text-decoration: none;">
+                                    ${section.props.avatarUrl ? `<img src="${section.props.avatarUrl}" class="user-nav-avatar" alt="Avatar">` : `<img src="https://offszn.lat/images/default-avatar.png" class="user-nav-avatar" alt="Avatar">`}
+                                    <span class="user-nav-name" style="margin-left: ${logoText ? '2px' : '0px'}; font-weight: 800; font-size: 1rem; color: #fff; text-transform: none; letter-spacing: 0.5px; ${logoText ? '' : 'display: none;'}">${logoText}</span>
+                                </div>
                             </div>
                             <div class="drawer-links">
                                 ${mobileLinksHtml}
@@ -675,12 +806,86 @@ export class RendererEngine {
                         </div>
                     </div>
                 `;
+
+                const showAnnouncement = section.props.showAnnouncement === true;
+                const announcementText = section.props.announcementText || '';
+                const announcementLink = section.props.announcementLink || '';
+                const announcementBg = section.props.announcementBg || '#ffffff';
+                const announcementColor = section.props.announcementColor || '#000000';
+                const announcementPadding = section.props.announcementPadding !== undefined ? section.props.announcementPadding : 8;
+
+                let annHtml = '';
+                if (showAnnouncement && announcementText) {
+                    const linkAttr = announcementLink ? `href="${announcementLink}"` : '';
+                    const tagType = announcementLink ? 'a' : 'div';
+                    annHtml = `
+                        <${tagType} ${linkAttr} class="nav-announcement-bar" style="background: ${announcementBg}; color: ${announcementColor}; text-align: center; padding: ${announcementPadding}px 16px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-decoration: none; display: block; transition: filter 0.2s; z-index: 101; text-transform: uppercase;" ${announcementLink ? 'onmouseenter="this.style.filter=\'brightness(0.9)\'" onmouseleave="this.style.filter=\'none\'"' : ''}>
+                            ${announcementText}
+                        </${tagType}>
+                    `;
+                }
+                div.className = 'rendered-navbar-wrapper';
+                div.style.cssText = '';
+                div.innerHTML = `
+                    ${annHtml}
+                    <div class="rendered-navbar prof-nav" style="position: relative; border-top: none; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        ${navbarInnerHtml}
+                    </div>
+                `;
+                // Montar el drawer como hijo directo de this.root para que position:fixed
+                // funcione relativo al viewport (live) o al frame del simulador (builder)
+                const rootRef = this.root;
+                setTimeout(() => {
+                    const old = rootRef.querySelector('#mobile-nav-drawer');
+                    if (old) old.remove();
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = drawerHtml;
+                    const node = tmp.firstElementChild;
+                    if (node) rootRef.appendChild(node);
+                }, 0);
+
                 return div;
 
             case 'hero':
                 div.className = 'hero';
+                const showParticles = section.props.showParticles !== false;
+                const heroBgColor = section.props.heroBgColor || 'transparent';
+                const paddingTop = section.props.paddingTop !== undefined ? section.props.paddingTop : 0;
+                const paddingBottom = section.props.paddingBottom !== undefined ? section.props.paddingBottom : 0;
+
+                let heroStyle = '';
+                if (heroBgColor !== 'transparent') {
+                    heroStyle += `background: ${heroBgColor} !important; `;
+                }
+                if (paddingTop > 0 || paddingBottom > 0) {
+                    heroStyle += `padding-top: ${paddingTop}px !important; padding-bottom: ${paddingBottom}px !important; min-height: auto !important;`;
+                }
+
+                const dynamicHeroId = `dynamic-hero-${section.id || 'main'}`;
+                let heroStyleEl = document.getElementById(dynamicHeroId);
+                if (!heroStyleEl) {
+                    heroStyleEl = document.createElement('style');
+                    heroStyleEl.id = dynamicHeroId;
+                    document.head.appendChild(heroStyleEl);
+                }
+                heroStyleEl.innerHTML = `
+                    .hero[data-section-id="${section.id}"] {
+                        ${heroStyle}
+                    }
+                    @media (max-width: 768px) {
+                        .hero[data-section-id="${section.id}"] .hero-title {
+                            font-size: clamp(2.5rem, 8vw, 4rem) !important;
+                            word-wrap: break-word;
+                        }
+                        .hero[data-section-id="${section.id}"] .hero-subtitle {
+                            font-size: 1rem !important;
+                            padding: 0 15px;
+                        }
+                    }
+                `;
+
                 div.innerHTML = `
-                    <canvas id="particles-bg"></canvas>
+                    ${showParticles ? '<canvas id="particles-bg"></canvas>' : ''}
                     <div class="hero-content">
                         <h1 class="hero-title">${section.props.title || 'Tu Tienda'}</h1>
                         <p class="hero-subtitle">${section.props.subtitle || ''}</p>
@@ -825,8 +1030,14 @@ export class RendererEngine {
                         <h2>Licencias</h2>
                         <p>Derechos de uso profesional para tu carrera.</p>
                     </div>
-                    <div class="premium-lic-grid">
-                        ${licensesHtml}
+                    <div style="position: relative; max-width: 100%; display: flex; align-items: center;">
+                        <button class="lic-slider-btn lic-prev-btn" onclick="const grid = this.nextElementSibling; grid.scrollBy({left: -300, behavior: 'smooth'})" style="position: absolute; left: 10px; z-index: 10; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"><i class="bi bi-chevron-left" style="font-size: 1.2rem;"></i></button>
+                        
+                        <div class="premium-lic-grid" style="flex: 1;">
+                            ${licensesHtml}
+                        </div>
+                        
+                        <button class="lic-slider-btn lic-next-btn" onclick="const grid = this.previousElementSibling; grid.scrollBy({left: 300, behavior: 'smooth'})" style="position: absolute; right: 10px; z-index: 10; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"><i class="bi bi-chevron-right" style="font-size: 1.2rem;"></i></button>
                     </div>
                 `;
                 return div;

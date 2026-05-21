@@ -35,7 +35,7 @@ export class StoreState {
         this.notify();
     }
 
-    // Actualizar un bloque específico
+    // Actualizar un bloque específico (con re-render inteligente - solo la sección que cambió)
     updateSection(sectionId, newProps) {
         const idx = this.state.sections.findIndex(s => s.id === sectionId);
         if (idx > -1) {
@@ -44,6 +44,19 @@ export class StoreState {
                 ...newProps
             };
             this.notify();
+        }
+    }
+
+    // Actualizar un bloque SIN re-render (solo persiste el estado)
+    // Ideal para cambios de estilo en tiempo real (colores, blur, bordes)
+    updateSectionSilent(sectionId, newProps) {
+        const idx = this.state.sections.findIndex(s => s.id === sectionId);
+        if (idx > -1) {
+            this.state.sections[idx].props = {
+                ...this.state.sections[idx].props,
+                ...newProps
+            };
+            // No se llama notify() — evita el re-render completo del DOM
         }
     }
 

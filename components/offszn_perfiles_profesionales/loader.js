@@ -52,9 +52,14 @@ const ProfLoader = {
             const playlistsLink = container.querySelector('#nav-link-playlists');
             const aboutLink = container.querySelector('#nav-link-about');
 
-            if (nickname) nickname.textContent = (user.nickname || '').toUpperCase();
+            if (nickname) nickname.textContent = user.nickname || '';
             if (avatar && user.avatar_url) avatar.src = user.avatar_url;
             if (userLink) userLink.href = `/@${user.nickname}`;
+
+            const drawerAvatar = container.querySelector('#drawer-avatar');
+            const drawerNickname = container.querySelector('#drawer-nickname');
+            if (drawerNickname) drawerNickname.textContent = user.nickname || '';
+            if (drawerAvatar && user.avatar_url) drawerAvatar.src = user.avatar_url;
 
             // 1. SERVICES VISIBILITY
             const services = user.socials?.custom_services || [];

@@ -29,23 +29,28 @@
     <div class="drawer-backdrop" id="mobile-drawer-backdrop"></div>
     <div class="drawer-content">
         <div class="drawer-header">
-            <span class="drawer-title">Navegación</span>
             <button id="drawer-close-btn" class="drawer-close" aria-label="Cerrar">
-                <i class="bi bi-x"></i>
+                <i class="bi bi-x" style="color: #fff; font-size: 1.6rem;"></i>
             </button>
+            <img src="https://offszn.lat/images/default-avatar.png" id="drawer-avatar" class="user-nav-avatar" style="width: 22px !important; height: 22px !important; border-radius: 50%; object-fit: cover; flex-shrink: 0;" alt="Avatar">
+            <span id="drawer-nickname" style="font-weight: 800; font-size: 0.8rem; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">Cargando...</span>
         </div>
         <div class="drawer-links">
             <a href="#products-section" id="mobile-link-beats" class="drawer-link">
-                <i class="bi bi-music-note-beamed"></i> Beats
+                <span style="display: flex; align-items: center; gap: 12px;"><i class="bi bi-music-note-beamed"></i> BEATS</span>
+                <i class="bi bi-chevron-right" style="color: #444; font-size: 0.8rem;"></i>
             </a>
             <a href="#services-section" id="mobile-link-services" class="drawer-link">
-                <i class="bi bi-briefcase"></i> Servicios
+                <span style="display: flex; align-items: center; gap: 12px;"><i class="bi bi-briefcase"></i> SERVICIOS</span>
+                <i class="bi bi-chevron-right" style="color: #444; font-size: 0.8rem;"></i>
             </a>
             <a href="#playlists-section" id="mobile-link-playlists" class="drawer-link">
-                <i class="bi bi-music-note-list"></i> Playlists
+                <span style="display: flex; align-items: center; gap: 12px;"><i class="bi bi-music-note-list"></i> PLAYLISTS</span>
+                <i class="bi bi-chevron-right" style="color: #444; font-size: 0.8rem;"></i>
             </a>
             <a href="#faq-section" id="mobile-link-about" class="drawer-link">
-                <i class="bi bi-info-circle"></i> Sobre mi
+                <span style="display: flex; align-items: center; gap: 12px;"><i class="bi bi-info-circle"></i> SOBRE MI</span>
+                <i class="bi bi-chevron-right" style="color: #444; font-size: 0.8rem;"></i>
             </a>
         </div>
     </div>
@@ -119,7 +124,7 @@
         font-size: 1rem;
         letter-spacing: 0.5px;
         color: #fff;
-        text-transform: uppercase;
+        text-transform: none;
     }
 
     .nav-links {
@@ -134,7 +139,7 @@
         font-size: 0.85rem;
         opacity: 0.6;
         transition: opacity 0.2s;
-        text-transform: uppercase;
+        text-transform: none;
         letter-spacing: 0.5px;
     }
 
@@ -201,8 +206,7 @@
     .drawer-backdrop {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.85);
-        backdrop-filter: blur(12px);
+        background: rgba(0, 0, 0, 0.5);
         opacity: 0;
         transition: opacity 0.3s ease;
     }
@@ -213,18 +217,16 @@
 
     .drawer-content {
         position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        width: 80%;
-        max-width: 320px;
-        background: #0c0c0e;
-        border-right: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 32px 24px;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%;
+        background: #111111;
+        padding: 20px 24px;
         display: flex;
         flex-direction: column;
         transform: translateX(-100%);
         transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        overflow-y: auto;
+        z-index: 2;
     }
 
     .mobile-drawer.active .drawer-content {
@@ -233,72 +235,57 @@
 
     .drawer-header {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 40px;
-    }
-
-    .drawer-title {
-        font-size: 0.8rem;
-        font-weight: 800;
-        color: #666;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
+        gap: 14px;
+        margin-bottom: 32px;
     }
 
     .drawer-close {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
+        background: none;
+        border: none;
+        color: #fff;
+        cursor: pointer;
+        font-size: 1.6rem;
+        padding: 0;
+        line-height: 1;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #888;
-        cursor: pointer;
-        font-size: 1.2rem;
-        transition: all 0.2s;
+        flex-shrink: 0;
     }
 
     .drawer-close:hover {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.08);
+        color: #aaa;
     }
 
     .drawer-links {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 0;
     }
 
     .drawer-link {
         display: flex;
         align-items: center;
-        gap: 12px;
+        justify-content: space-between;
         font-size: 1rem;
         font-weight: 700;
         color: #fff;
         text-decoration: none;
-        padding: 14px 18px;
-        border-radius: 14px;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.04);
-        transition: all 0.25s ease;
+        padding: 16px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        transition: opacity 0.2s;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
 
     .drawer-link i {
         font-size: 1.1rem;
-        color: #888;
-        transition: color 0.2s;
+        color: #666;
     }
 
     .drawer-link:hover {
-        background: rgba(255, 255, 255, 0.08);
-        border-color: rgba(255, 255, 255, 0.12);
-        padding-left: 24px;
+        opacity: 0.7;
     }
 
     .drawer-link:hover i {

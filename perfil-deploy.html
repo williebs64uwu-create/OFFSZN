@@ -203,9 +203,9 @@
                         return {
                             ...sec,
                             props: {
-                                ...sec.props,
                                 logoText: userData.nickname,
-                                avatarUrl: userData.avatar_url
+                                avatarUrl: userData.avatar_url,
+                                ...(sec.props || {})
                             }
                         };
                     }
@@ -223,6 +223,9 @@
 
                 // 4. Renderizar
                 const rootEl = document.getElementById('storeRenderRoot');
+                // Limpiar el loader de la pantalla para evitar que tome 100vh de espacio
+                rootEl.innerHTML = '';
+                
                 const renderer = new RendererEngine(rootEl, storeLayout);
                 
                 // Actualizar el DOM
@@ -234,6 +237,16 @@
                         window.initParticles();
                     }, 100);
                 }
+
+                // 6. Inicializar scroll del Navbar
+                setTimeout(() => {
+                    const nav = rootEl.querySelector('.prof-nav');
+                    if (nav) {
+                        window.addEventListener('scroll', () => {
+                            nav.classList.toggle('scrolled', window.scrollY > 50);
+                        });
+                    }
+                }, 150);
 
             } catch (error) {
                 console.error("Error al cargar el perfil desplegado:", error);

@@ -1992,6 +1992,17 @@
                                 };
                             }
                         }
+                        // Enforce mutual exclusivity of favorites on load
+                        let foundFavoriteOnLoad = false;
+                        for (const key of ['premium', 'basic', 'trackout', 'unlimited']) {
+                            if (currentLicenses[key] && currentLicenses[key].is_favorite) {
+                                if (foundFavoriteOnLoad) {
+                                    currentLicenses[key].is_favorite = false;
+                                } else {
+                                    foundFavoriteOnLoad = true;
+                                }
+                            }
+                        }
                     }
                 } catch (err) {
                     // console.error("Error cargando configuración:", err); // Modificado para evitar leaks de logs en prod
@@ -2285,7 +2296,19 @@
 
                 try {
                     // Map frontend license keys back to the standard DB key formats before saving
-                    const dbLicenseSettings = {
+                    // Enforce mutual exclusivity of favorites before saving
+                let foundFavoriteOnSave = false;
+                for (const key of ['premium', 'basic', 'trackout', 'unlimited']) {
+                    if (currentLicenses[key] && currentLicenses[key].is_favorite) {
+                        if (foundFavoriteOnSave) {
+                            currentLicenses[key].is_favorite = false;
+                        } else {
+                            foundFavoriteOnSave = true;
+                        }
+                    }
+                }
+
+                const dbLicenseSettings = {
                         offszn_basic: {
                             id: 'offszn_basic',
                             name: currentLicenses.basic.name,

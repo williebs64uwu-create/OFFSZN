@@ -263,4 +263,84 @@ router.post('/banner', authenticateTokenMiddleware, upload.single('imageFile'), 
     }
 });
 
+// ============================================
+// POST /api/imagekit/store-icon — Upload general store builder icon
+// ============================================
+router.post('/store-icon', authenticateTokenMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { image, fileSize } = req.body;
+
+        if (!image) {
+            return res.status(400).json({ error: 'No se proporcionó imagen' });
+        }
+
+        if (fileSize && fileSize > MAX_AVATAR_SIZE) {
+            return res.status(413).json({ error: 'El archivo excede el límite de 30MB' });
+        }
+
+        const fileName = `icon_${Date.now()}_${userId}`;
+        const folder = 'store_icons';
+
+        // Upload to ImageKit
+        const uploadResult = await uploadToImageKit(image, fileName, folder);
+
+        // Build display URL
+        const ikEndpoint = process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/6gzqp4xam';
+        const displayUrl = `${ikEndpoint}${uploadResult.filePath}`;
+
+        res.json({
+            success: true,
+            url: displayUrl,
+            message: 'Icono subido correctamente'
+        });
+    } catch (error) {
+        console.error('❌ Error uploading store icon to ImageKit:', error);
+        res.status(500).json({ error: 'Error al subir el icono' });
+    }
+});
+
+// ============================================
+// POST /api/imagekit/cleanup — Cleanup replaced/unused images from ImageKit
+// ============================================
+router.post('/cleanup', authenticateTokenMiddleware, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { url } = req.body;
+
+        if (!url) {
+            return res.status(400).json({ error: 'No se proporcionó la URL a limpiar' });
+        }
+
+        // Security check: Verify it's an ImageKit URL and contains the user's ID to prevent deleting other users' files
+        if (!url.includes('ik.imagekit.io')) {
+            return res.status(400).json({ error: 'La URL no es de ImageKit' });
+        }
+
+        const filePath = extractPathFromIkUrl(url);
+        if (!filePath) {
+            return res.status(400).json({ error: 'No se pudo extraer la ruta del archivo' });
+        }
+
+        // Ensure the file path contains the userId
+        if (!filePath.includes(`_${userId}`)) {
+            return res.status(403).json({ error: 'No autorizado para eliminar este archivo' });
+        }
+
+        console.log(`🧹 [Store Icon Cleanup] Triggering deletion for: ${filePath}`);
+        // Delete from ImageKit in background
+        deleteFromImageKitByPath(filePath).catch(err => 
+            console.error('❌ Error in background cleanup:', err)
+        );
+
+        res.json({
+            success: true,
+            message: 'Eliminación del icono en cola'
+        });
+    } catch (error) {
+        console.error('❌ Error cleaning up ImageKit file:', error);
+        res.status(500).json({ error: 'Error al eliminar el archivo' });
+    }
+});
+
 export default router;

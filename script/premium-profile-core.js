@@ -165,10 +165,10 @@
                             enabledLinks.push('FAQ');
                             section.props.links = enabledLinks;
                         }
-                        if (!section.props.logoText) {
+                        if (section.props.logoText === undefined) {
                             section.props.logoText = userNickname;
                         }
-                        if (!section.props.avatarUrl) {
+                        if (section.props.avatarUrl === undefined) {
                             section.props.avatarUrl = userAvatar;
                         }
                         break;

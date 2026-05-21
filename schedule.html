@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Horario Semana 9‑16</title>
+  <style>
+    :root {
+      --bg-light: #ffffff;
+      --bg-dark: #1e1e1e;
+      --text-light: #000000;
+      --text-dark: #f0f0f0;
+      --accent: #0066ff;
+    }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-light);
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .dark body {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h1 { text-align: center; margin-bottom: 1rem; }
+    .toggle-btn {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .course-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      overflow-x: auto;
+    }
+    .course-name {
+      flex: 0 0 180px;
+      font-weight: 600;
+    }
+    .weeks {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .week-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 80px;
+    }
+    .week-item label {
+      cursor: pointer;
+    }
+    .week-item input[type="checkbox"] {
+      margin-bottom: 0.25rem;
+    }
+    .checked {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <button class="toggle-btn" onclick="toggleDarkMode()">🌙 Dark</button>
+  <div class="container">
+    <h1>Plan Semanal (9‑16)</h1>
+    <div id="schedule">
+      <!-- Rows will be injected by JavaScript -->
+    </div>
+  </div>
+  <script>
+    const courses = [
+      { name: 'Marketing', day: 'LUNES' },
+      { name: 'Cálculo', day: 'MARTES' },
+      { name: 'PCA', day: 'MARTES' },
+      { name: 'Comunicación', day: 'JUEVES' },
+      { name: 'Sistemas', day: 'VIERNES' },
+      { name: 'Aprendizaje y Liderazgo', day: 'SÁBADO' },
+    ];
+    const weeks = [9,10,11,12,13,14,15,16];
+
+    const scheduleDiv = document.getElementById('schedule');
+
+    courses.forEach(course => {
+      const row = document.createElement('div');
+      row.className = 'course-row';
+
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'course-name';
+      nameDiv.textContent = `${course.name} (${course.day})`;
+      row.appendChild(nameDiv);
+
+      const weeksDiv = document.createElement('div');
+      weeksDiv.className = 'weeks';
+
+      weeks.forEach(w => {
+        const item = document.createElement('div');
+        item.className = 'week-item';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `${course.name.replace(/\s+/g,'_')}_w${w}`;
+        checkbox.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            label.classList.add('checked');
+          } else {
+            label.classList.remove('checked');
+          }
+        });
+
+        const label = document.createElement('label');
+        label.htmlFor = checkbox.id;
+        label.textContent = `S${w}`;
+        label.className = '';
+
+        item.appendChild(checkbox);
+        item.appendChild(label);
+        weeksDiv.appendChild(item);
+      });
+
+      row.appendChild(weeksDiv);
+      scheduleDiv.appendChild(row);
+    });
+
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      const btn = document.querySelector('.toggle-btn');
+      btn.textContent = document.documentElement.classList.contains('dark') ? '☀️ Light' : '🌙 Dark';
+    }
+  </script>
+</body>
+</html>
