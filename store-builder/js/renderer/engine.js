@@ -1058,7 +1058,10 @@ export class RendererEngine {
                     servicesHtml = servicesList.map(s => {
                         const img = s.image_url || producerAvatar || 'https://offszn.lat/images/portada-default.png';
                         if (window.IS_LIVE_PROFILE) {
-                            const serviceSlug = s.slug || (window.IdObfuscator ? window.IdObfuscator.encodeId(s.id) : s.id);
+                            const svcTitleSlug = (s.title || 'servicio').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+                            const svcCode = window.IdObfuscator ? window.IdObfuscator.encodeId(s.id) : s.id;
+                            const svcNick = window.builderNickname || '';
+                            const serviceSlug = svcNick ? `${svcTitleSlug}-${svcCode}-${svcNick}` : (s.slug || svcCode);
                             return `
                                 <div class="shelf-card" onclick="window.location.href='/servicio/${serviceSlug}'" style="cursor: pointer;">
                                     <img src="${img}" class="shelf-card-img" onerror="this.src='https://offszn.lat/images/portada-default.png'">

@@ -294,7 +294,7 @@
     }
 
     function getMyId() {
-        const token = window.getAccessToken ? window.getAccessToken() : null;
+        const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
         if (!token) return null;
         try {
             const payload = JSON.parse(atob(token.split('.')[1]));

@@ -35,7 +35,7 @@ window.FollowManager = (function () {
         if (isInitialized && followedIds.size > 0) return;
         if (initPromise) return initPromise;
 
-        const token = window.getAccessToken ? window.getAccessToken() : null;
+        const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
         if (!token) {
             isInitialized = true;
             return;
@@ -70,7 +70,7 @@ window.FollowManager = (function () {
 
     // Toggle Follow (Optimistic + Debounced)
     async function toggleFollow(targetUserId, buttonElement = null) {
-        const token = window.getAccessToken ? window.getAccessToken() : null;
+        const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;
         if (!token) {
             if (window.showGuestModal) {
                 window.showGuestModal(
