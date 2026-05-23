@@ -88,7 +88,7 @@ if (!window.switchStoreTab) {
             return `https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/${cleanPath}`;
         };
 
-        grid.innerHTML = filtered.slice(0, 6).map((p, idx) => {
+        grid.innerHTML = filtered.map((p, idx) => {
             const img = resolveImg(p.image_url, p.r2_version || p.storage_version);
             if (window.IS_LIVE_PROFILE) {
                 const type = p.product_type?.toLowerCase() || 'beat';
@@ -197,7 +197,7 @@ if (!window.filterStoreByGenre) {
             return `https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/${cleanPath}`;
         };
 
-        grid.innerHTML = genreFiltered.slice(0, 6).map((p, idx) => {
+        grid.innerHTML = genreFiltered.map((p, idx) => {
             const img = resolveImg(p.image_url, p.r2_version || p.storage_version);
             if (window.IS_LIVE_PROFILE) {
                 const type = p.product_type?.toLowerCase() || 'beat';
@@ -709,7 +709,10 @@ export class RendererEngine {
                         innerContent = `${iconHtml}<span style="margin-left:6px; display: inline-block; vertical-align: middle;">${labelText}</span>`;
                     }
 
-                    return `<a href="${href}" class="nav-link" style="display: inline-flex; align-items: center; text-decoration: none; text-transform: none; font-weight: 600; font-size: 0.85rem; opacity: 0.7; transition: opacity 0.2s; color: #fff; vertical-align: middle;">${innerContent}</a>`;
+                    const targetId = linkMap[link.toUpperCase()];
+                    const onClickStr = targetId ? `event.preventDefault(); const t = document.querySelector('${targetId}'); if(t) { const nav = document.querySelector('.rendered-navbar.prof-nav'); const offset = nav ? nav.offsetHeight : 80; window.scrollTo({top: t.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth'}); }` : '';
+
+                    return `<a href="${href}" class="nav-link" onclick="${onClickStr}" style="display: inline-flex; align-items: center; text-decoration: none; text-transform: none; font-weight: 600; font-size: 0.85rem; opacity: 0.7; transition: opacity 0.2s; color: #fff; vertical-align: middle;">${innerContent}</a>`;
                 }).join('');
 
                 let mobileLinksHtml = (section.props.links || []).map(link => {
@@ -747,8 +750,11 @@ export class RendererEngine {
                         innerContent = `<div style="display: flex; align-items: center; gap: 12px;">${iconHtml}<span>${labelText}</span></div>`;
                     }
 
+                    const targetId = linkMap[link.toUpperCase()];
+                    const onClickDrawerStr = targetId ? `event.preventDefault(); const drawer = document.getElementById('mobile-nav-drawer'); if(drawer) { drawer.classList.remove('active'); document.body.style.overflow = ''; } const t = document.querySelector('${targetId}'); if(t) { const nav = document.querySelector('.rendered-navbar.prof-nav'); const offset = nav ? nav.offsetHeight : 80; window.scrollTo({top: t.getBoundingClientRect().top + window.scrollY - offset, behavior: 'smooth'}); }` : `event.preventDefault(); const drawer = document.getElementById('mobile-nav-drawer'); if(drawer) { drawer.classList.remove('active'); document.body.style.overflow = ''; }`;
+
                     return `
-                        <a href="${href}" class="drawer-link" onclick="const drawer = document.getElementById('mobile-nav-drawer'); if(drawer) { drawer.classList.remove('active'); document.body.style.overflow = ''; }">
+                        <a href="${href}" class="drawer-link" onclick="${onClickDrawerStr}">
                             ${innerContent}
                             <i class="bi bi-chevron-right" style="color: #444; font-size: 0.8rem;"></i>
                         </a>
@@ -778,13 +784,13 @@ export class RendererEngine {
                         <!-- Carrito -->
                         ${section.props.showCart !== false ? (
                         section.props.cartStyle === 'button' ? `
-                            <a href="#" class="nav-cart-trigger-btn" id="nav-cart-btn" onclick="if(typeof toggleCartPanel === 'function') { toggleCartPanel(event); } else if(window.CartManager) { window.CartManager.openCart(); } else { event.preventDefault(); }">
+                            <a href="javascript:void(0)" class="nav-cart-trigger-btn" id="nav-cart-btn" onclick="event.preventDefault(); if(window.CartManager) { window.CartManager.openCart(); } else if(typeof toggleCartPanel === 'function') { toggleCartPanel(event); }">
                                 <i class="bi bi-cart3" style="font-size: 0.95rem; color: #000000; line-height: 1;"></i>
                                 <span style="letter-spacing: 0.5px; font-weight: 800; color: #000000;">COMPRAR</span>
                                 <span id="cart-count-badge" class="cart-badge-pill" style="display: none;">0</span>
                             </a>
                             ` : `
-                            <a href="#" class="nav-cart-trigger" id="nav-cart-btn" title="Carrito" onclick="if(typeof toggleCartPanel === 'function') { toggleCartPanel(event); } else if(window.CartManager) { window.CartManager.openCart(); } else { event.preventDefault(); }">
+                            <a href="javascript:void(0)" class="nav-cart-trigger" id="nav-cart-btn" title="Carrito" onclick="event.preventDefault(); if(window.CartManager) { window.CartManager.openCart(); } else if(typeof toggleCartPanel === 'function') { toggleCartPanel(event); }">
                                 <i class="bi bi-cart3"></i>
                                 <span id="cart-count-badge" class="cart-badge-circle" style="display:none;">0</span>
                             </a>
@@ -1068,13 +1074,13 @@ export class RendererEngine {
                         <p>Derechos de uso profesional para tu carrera.</p>
                     </div>
                     <div style="position: relative; max-width: 100%; display: flex; align-items: center;">
-                        <button class="lic-slider-btn lic-prev-btn" onclick="const grid = this.nextElementSibling; grid.scrollBy({left: -300, behavior: 'smooth'})" style="position: absolute; left: 10px; z-index: 10; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"><i class="bi bi-chevron-left" style="font-size: 1.2rem;"></i></button>
+                        <button class="lic-slider-btn lic-prev-btn" onclick="const grid = this.nextElementSibling; grid.scrollBy({left: -300, behavior: 'smooth'})" style="position: absolute; z-index: 10; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"><i class="bi bi-chevron-left" style="font-size: 1.2rem;"></i></button>
                         
                         <div class="premium-lic-grid" style="flex: 1;">
                             ${licensesHtml}
                         </div>
                         
-                        <button class="lic-slider-btn lic-next-btn" onclick="const grid = this.previousElementSibling; grid.scrollBy({left: 300, behavior: 'smooth'})" style="position: absolute; right: 10px; z-index: 10; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"><i class="bi bi-chevron-right" style="font-size: 1.2rem;"></i></button>
+                        <button class="lic-slider-btn lic-next-btn" onclick="const grid = this.previousElementSibling; grid.scrollBy({left: 300, behavior: 'smooth'})" style="position: absolute; z-index: 10; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); color: #fff; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"><i class="bi bi-chevron-right" style="font-size: 1.2rem;"></i></button>
                     </div>
                 `;
                 return div;

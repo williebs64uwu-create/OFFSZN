@@ -8,9 +8,11 @@
     <!-- Fuentes y Iconos Base -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Estilos -->
     <link rel="stylesheet" href="/store-builder/css/theme-base.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
 </head>
 <body>
 
@@ -25,11 +27,21 @@
     <script src="/env.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/script/premium-profile-bg.js"></script>
+    <script src="/script/cart.js?v=23"></script>
     
     <!-- Configuración del entorno de despliegue -->
     <script>
         window.IS_LIVE_PROFILE = true; // Indica que es el entorno de producción
         window.supabase = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+        window.supabaseClient = window.supabase; // Requerido por cart.js
+
+        // Definir closeAllOverlays para que cart.js pueda cerrarse
+        window.closeAllOverlays = function() {
+            const cart = document.getElementById('globalCartPanel');
+            const back = document.getElementById('globalBackdrop');
+            if (cart) cart.classList.remove('active');
+            if (back) back.classList.remove('active');
+        };
     </script>
 
     <!-- Scripts del Renderizador -->
