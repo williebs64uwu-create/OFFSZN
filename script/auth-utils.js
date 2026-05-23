@@ -836,6 +836,402 @@ window.AuthUtils = {
 
         }
 
+    },
+
+
+
+    _getApiUrl: function () {
+
+        return this._apiUrl || `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
+
+    },
+
+
+
+    _parseJwtPayload: function (token) {
+
+        if (!token) return null;
+
+        try {
+
+            const payloadStr = token.split('.')[1];
+
+            if (!payloadStr) return null;
+
+            return JSON.parse(atob(payloadStr));
+
+        } catch (e) {
+
+            return null;
+
+        }
+
+    },
+
+
+
+    getUserId: function () {
+
+        if (window.currentUserId) return window.currentUserId;
+
+        if (window.currentUserProfile?.id) return window.currentUserProfile.id;
+
+
+
+        const lsId = localStorage.getItem('userId');
+
+        if (lsId && lsId !== 'undefined' && lsId !== 'null') return lsId;
+
+
+
+        const token = this.getAccessToken();
+
+        const payload = this._parseJwtPayload(token);
+
+        if (payload?.sub) return payload.sub;
+
+
+
+        return null;
+
+    },
+
+
+
+    isLoggedIn: function () {
+
+        return !!this.getAccessToken() && !!this.getUserId();
+
+    },
+
+
+
+    /** @deprecated Alias kept for older scripts (e.g. explore.js v28) */
+
+    isUserLogged: function () {
+
+        return this.isLoggedIn();
+
+    },
+
+
+
+    getCurrentUser: function () {
+
+        if (window.currentUserProfile) return window.currentUserProfile;
+
+
+
+        try {
+
+            const cached = localStorage.getItem('offszn_user_cache');
+
+            if (cached) return JSON.parse(cached);
+
+        } catch (e) { }
+
+
+
+        const userId = this.getUserId();
+
+        if (!userId) return null;
+
+
+
+        const token = this.getAccessToken();
+
+        const payload = this._parseJwtPayload(token);
+
+        return {
+
+            id: userId,
+
+            email: payload?.email || null,
+
+            nickname: localStorage.getItem('offszn_cached_nickname') || null
+
+        };
+
+    },
+
+
+
+    getCurrentUsername: function () {
+
+        const user = this.getCurrentUser();
+
+        return user?.nickname || localStorage.getItem('offszn_cached_nickname') || null;
+
+    },
+
+
+
+    getSession: async function () {
+
+        if (!window.supabaseClient) this.initSupabase();
+
+        if (!window.supabaseClient) return null;
+
+        const { data } = await window.supabaseClient.auth.getSession();
+
+        return data?.session || null;
+
+    },
+
+
+
+    getMe: async function () {
+
+        const token = this.getAccessToken();
+
+        if (!token) return null;
+
+
+
+        try {
+
+            const res = await fetch(`${this._getApiUrl()}/me`, {
+
+                headers: { 'Authorization': `Bearer ${token}` }
+
+            });
+
+            if (!res.ok) return null;
+
+            const user = await res.json();
+
+            if (user?.id) {
+
+                window.currentUserId = user.id;
+
+                window.currentUserProfile = user;
+
+                try {
+
+                    localStorage.setItem('offszn_user_cache', JSON.stringify(user));
+
+                } catch (e) { }
+
+            }
+
+            return user;
+
+        } catch (e) {
+
+            console.warn('AuthUtils.getMe failed:', e);
+
+            return null;
+
+        }
+
+    },
+
+
+
+    isR2Url: function (pathOrUrl) {
+
+        if (!pathOrUrl || typeof pathOrUrl !== 'string') return false;
+
+        return (
+
+            pathOrUrl.includes('r2.cloudflarestorage.com') ||
+
+            pathOrUrl.includes('pub-') ||
+
+            pathOrUrl.includes('.r2.dev') ||
+
+            (!pathOrUrl.startsWith('http') &&
+
+                !pathOrUrl.startsWith('data:') &&
+
+                !pathOrUrl.startsWith('/images') &&
+
+                !pathOrUrl.startsWith('/assets') &&
+
+                !pathOrUrl.startsWith('/icon') &&
+
+                !pathOrUrl.startsWith('/script') &&
+
+                pathOrUrl.includes('/'))
+
+        );
+
+    },
+
+
+
+    getFormattedSupabaseUrl: function (path) {
+
+        if (!path) return path;
+
+        if (path.startsWith('http') || path.startsWith('data:')) return path;
+
+        const sbUrl = window.SUPABASE_URL || 'https://qtjpvztpgfymjhhpoouq.supabase.co';
+
+        return `${sbUrl}/storage/v1/object/public/products/${path.replace(/^\/+/, '')}`;
+
+    },
+
+
+
+    canFreeDownload: function (prod) {
+
+        if (!prod) return false;
+
+        if (prod.is_free === true) return true;
+
+        return !!(prod.free_download_type && prod.free_download_type !== 'none');
+
+    },
+
+
+
+    getUploadLimitStatus: async function () {
+
+        const fallback = { isLimited: false, count: 0, limit: 30, plan: 'free' };
+
+        const planData = await this.getUserPlanData();
+
+        if (!planData) return fallback;
+
+
+
+        const limit = planData.limits?.max_uploads ?? 30;
+
+        if (limit === Infinity) {
+
+            return { isLimited: false, count: 0, limit: Infinity, plan: planData.plan };
+
+        }
+
+
+
+        const userId = this.getUserId();
+
+        if (!userId || !window.supabaseClient) {
+
+            return { ...fallback, limit, plan: planData.plan };
+
+        }
+
+
+
+        try {
+
+            const countTables = [
+
+                window.supabaseClient.from('products').select('*', { count: 'exact', head: true }).eq('producer_id', userId).neq('status', 'deleted'),
+
+                window.supabaseClient.from('beat_drafts').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+
+                window.supabaseClient.from('drumkit_drafts').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+
+                window.supabaseClient.from('loopkit_drafts').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+
+                window.supabaseClient.from('preset_drafts').select('*', { count: 'exact', head: true }).eq('user_id', userId)
+
+            ];
+
+            const results = await Promise.all(countTables);
+
+            const count = results.reduce((sum, r) => sum + (r.count || 0), 0);
+
+            const status = { isLimited: count >= limit, count, limit, plan: planData.plan };
+
+            try {
+
+                sessionStorage.setItem('offszn_upload_limit_status', JSON.stringify(status));
+
+            } catch (e) { }
+
+            return status;
+
+        } catch (e) {
+
+            console.warn('AuthUtils.getUploadLimitStatus failed:', e);
+
+            return { ...fallback, limit, plan: planData.plan };
+
+        }
+
+    },
+
+
+
+    getYouTubeUploadStatus: async function () {
+
+        const YT_LIMITS = { free: 3, starter: 10, pro: 30 };
+
+        const planData = await this.getUserPlanData();
+
+        const plan = planData?.plan || 'free';
+
+        const limit = YT_LIMITS[plan] ?? YT_LIMITS.free;
+
+        let used = planData?.usage?.youtube_uploads_this_month || 0;
+
+
+
+        const token = this.getAccessToken();
+
+        if (token) {
+
+            try {
+
+                const res = await fetch(`${this._getApiUrl()}/youtube/quota`, {
+
+                    headers: { 'Authorization': `Bearer ${token}` }
+
+                });
+
+                if (res.ok) {
+
+                    const data = await res.json();
+
+                    used = data.used ?? used;
+
+                    const apiLimit = data.limit ?? limit;
+
+                    return {
+
+                        used,
+
+                        limit: apiLimit,
+
+                        remaining: Math.max(0, apiLimit - used),
+
+                        isLimited: used >= apiLimit,
+
+                        plan: data.plan || plan
+
+                    };
+
+                }
+
+            } catch (e) {
+
+                console.warn('AuthUtils.getYouTubeUploadStatus API fallback:', e);
+
+            }
+
+        }
+
+
+
+        return {
+
+            used,
+
+            limit,
+
+            remaining: Math.max(0, limit - used),
+
+            isLimited: used >= limit,
+
+            plan
+
+        };
+
     }
 
 };

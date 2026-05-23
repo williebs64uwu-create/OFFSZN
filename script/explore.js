@@ -232,7 +232,7 @@ async function fetchData() {
 
         // --- NEW: Fetch Reposts ---
         if (token && window.supabaseClient) {
-            const userId = window.AuthUtils.getUserId();
+            const userId = window.AuthUtils?.getUserId?.() || window.currentUserId;
             if (userId) {
                 const { data: rd } = await window.supabaseClient
                     .from('reposts')
@@ -605,7 +605,7 @@ function createListItemHtml(item, index, type) {
     const storageVer = item.storage_version || item.r2_version || 'v2';
     // 🔥 ENHANCED R2 DETECTION: Use storage_version as primary signal, fallback to path analysis
     const isR2 = (storageVer !== 'supabase') && window.AuthUtils &&
-        (window.AuthUtils.isR2Url(rawImg) || storageVer === 'v2' || storageVer === 'v1');
+        ((typeof window.AuthUtils.isR2Url === 'function' && window.AuthUtils.isR2Url(rawImg)) || storageVer === 'v2' || storageVer === 'v1');
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
     let initialSrc = rawImg;
@@ -1631,12 +1631,12 @@ async function toggleRepost(event, productId, btn, producerId) {
     if (event) event.stopPropagation();
     if (!productId || repostProcessing.has(productId)) return;
 
-    if (!window.AuthUtils.isLoggedIn()) {
+    if (!window.AuthUtils?.isLoggedIn?.()) {
         window.location.href = '/login';
         return;
     }
 
-    const userId = window.AuthUtils.getUserId();
+    const userId = window.AuthUtils?.getUserId?.() || window.currentUserId;
     const isRepostedBefore = btn ? btn.classList.contains('active') : window.currentUserReposts.has(String(productId));
 
     repostProcessing.add(productId);
