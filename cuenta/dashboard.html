@@ -2349,15 +2349,15 @@
                 let totalPlays = 0;
 
                 try {
-                    // A. REVENUE & SALES (Total and History)
-                    const { data: orders, error: orderErr } = await supabaseClient
-                        .from('orders')
-                        .select('amount')
-                        .eq('producer_id', userId);
+                    // A. REVENUE & SALES — from order_items (covers PayPal + free + legacy orders)
+                    const { data: salesItems, error: orderErr } = await supabaseClient
+                        .from('order_items')
+                        .select('price_at_purchase, product:products!inner(producer_id)')
+                        .eq('products.producer_id', userId);
 
-                    if (!orderErr && orders) {
-                        orders.forEach(o => {
-                            totalRev += parseFloat(o.amount || 0);
+                    if (!orderErr && salesItems) {
+                        salesItems.forEach(item => {
+                            totalRev += parseFloat(item.price_at_purchase || 0);
                         });
                     }
                 } catch (e) {
@@ -2543,7 +2543,7 @@
                     // B. Fetch All Data in parallel
                     const [resProducts, resOrders, resReceived, resAccepted, resConversations] = await Promise.all([
                         supabaseClient.from('products').select('*').eq('producer_id', userId).eq('status', 'approved').order('created_at', { ascending: false }).limit(5),
-                        supabaseClient.from('orders').select('*').eq('producer_id', userId).order('created_at', { ascending: false }).limit(5),
+                        supabaseClient.from('order_items').select('id, price_at_purchase, created_at, license_name, product:products!inner(id, name, producer_id), order:orders(guest_email, buyer:users(nickname, email))').eq('products.producer_id', userId).order('created_at', { ascending: false }).limit(5),
                         // Received Invites (I am collaborator) - Join products to ensure they exist and are public
                         supabaseClient.from('collab_invitations').select('*, products:product_id(name, visibility, status)').eq('collaborator_id', userId).eq('status', 'pending').order('created_at', { ascending: false }).limit(5),
                         // Accepted Invites (I am inviter) - Join products to ensure they exist and are public
@@ -2575,15 +2575,19 @@
                         });
                     });
 
-                    // 2. Orders
-                    if (resOrders.data) resOrders.data.forEach(o => activities.push({
-                        type: 'sale',
-                        date: new Date(o.created_at),
-                        title: 'Nueva Venta',
-                        desc: 'Licencia vendida',
-                        price: o.amount,
-                        link: '/cuenta/analiticas.html'
-                    }));
+                    // 2. Sales (order_items)
+                    if (resOrders.data) resOrders.data.forEach(item => {
+                        const buyerName = item.order?.buyer?.nickname || item.order?.buyer?.email?.split('@')[0] || item.order?.guest_email?.split('@')[0] || 'Cliente';
+                        const productName = item.product?.name || 'Producto';
+                        activities.push({
+                            type: 'sale',
+                            date: new Date(item.created_at),
+                            title: productName,
+                            desc: `${buyerName} compró tu producto`,
+                            price: item.price_at_purchase,
+                            link: '/transacciones'
+                        });
+                    });
 
                     // 3. Received Invites (Filter out deleted/private products)
                     if (resReceived.data) {

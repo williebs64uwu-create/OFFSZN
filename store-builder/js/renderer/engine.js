@@ -5,7 +5,7 @@
 
 // Global tab switching logic for products in preview
 if (!window.switchStoreTab) {
-    window.switchStoreTab = function(btnEl, cat, sectionId) {
+    window.switchStoreTab = function (btnEl, cat, sectionId) {
         // Alternar clase active en los botones
         const container = btnEl.closest('.tabs-header');
         if (container) {
@@ -95,7 +95,7 @@ if (!window.switchStoreTab) {
                 const identifier = p.public_slug || (window.IdObfuscator ? window.IdObfuscator.encodeId(p.id) : p.id);
                 const link = `/${type}/${identifier}`;
                 const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(String(p.id)) : false;
-                
+
                 return `
                     <div class="premium-product-card" onclick="window.location.href='${link}'" style="cursor: pointer;">
                         <div class="explore-img-container">
@@ -141,9 +141,9 @@ if (!window.switchStoreTab) {
 }
 
 if (!window.filterStoreByGenre) {
-    window.filterStoreByGenre = function(e, genre, sectionId, cat) {
+    window.filterStoreByGenre = function (e, genre, sectionId, cat) {
         if (e) e.stopPropagation();
-        
+
         const pillBtn = e.currentTarget;
         const container = pillBtn.closest('.filter-pills');
         if (container) {
@@ -162,8 +162,8 @@ if (!window.filterStoreByGenre) {
 
         // Filtrar beats por género
         const baseBeats = (allProducts || []).filter(p => (p.product_type || '').toUpperCase() === 'BEAT');
-        const genreFiltered = genre === 'TODOS' 
-            ? baseBeats 
+        const genreFiltered = genre === 'TODOS'
+            ? baseBeats
             : baseBeats.filter(p => p.genre === genre);
 
         if (window.IS_LIVE_PROFILE) {
@@ -203,7 +203,7 @@ if (!window.filterStoreByGenre) {
                 const identifier = p.public_slug || (window.IdObfuscator ? window.IdObfuscator.encodeId(p.id) : p.id);
                 const link = `/${type}/${identifier}`;
                 const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(String(p.id)) : false;
-                
+
                 return `
                     <div class="premium-product-card" onclick="window.location.href='${link}'" style="cursor: pointer;">
                         <div class="explore-img-container">
@@ -249,7 +249,7 @@ if (!window.filterStoreByGenre) {
 }
 
 if (!window.slideStoreShelf) {
-    window.slideStoreShelf = function(sectionId, dir) {
+    window.slideStoreShelf = function (sectionId, dir) {
         const shelf = document.getElementById(`products-grid-${sectionId}`);
         if (!shelf) return;
         const card = shelf.querySelector('.premium-product-card');
@@ -259,7 +259,7 @@ if (!window.slideStoreShelf) {
 }
 
 // --- PREMIUM LICENSE DETAIL MODAL LOGIC ---
-window.closeLicenseDetailsModal = function() {
+window.closeLicenseDetailsModal = function () {
     const modalEl = document.getElementById('lic-detail-modal');
     if (!modalEl) return;
     const overlay = modalEl.querySelector('.lic-modal-overlay');
@@ -274,10 +274,10 @@ window.closeLicenseDetailsModal = function() {
     }, 300);
 };
 
-window.showLicenseDetailsModal = function(e, encodedData) {
+window.showLicenseDetailsModal = function (e, encodedData) {
     if (e) e.stopPropagation();
     const lic = JSON.parse(decodeURIComponent(encodedData));
-    
+
     // Ensure modal container exists
     let modalEl = document.getElementById('lic-detail-modal');
     if (!modalEl) {
@@ -305,7 +305,7 @@ window.showLicenseDetailsModal = function(e, encodedData) {
         modalEl.querySelector('.lic-modal-overlay').addEventListener('click', window.closeLicenseDetailsModal);
         modalEl.querySelector('.lic-modal-close').addEventListener('click', window.closeLicenseDetailsModal);
     }
-    
+
     const contentArea = document.getElementById('lic-modal-content-area');
     if (!contentArea) return;
 
@@ -522,24 +522,24 @@ export class RendererEngine {
     generateHtmlForSection(section) {
         const div = document.createElement('div');
         div.dataset.sectionId = section.id;
-        
+
         switch (section.type) {
             case 'navbar':
                 div.className = 'rendered-navbar-wrapper'; // ALWAYS rendered-navbar-wrapper for consistent layout context
                 const userNickname = window.builderNickname || 'Artista';
                 const logoText = (section.props.logoText !== undefined ? section.props.logoText : userNickname).substring(0, 25);
-                
+
                 // Alignments and Styles
                 const linksAlign = section.props.linksAlign || 'center'; // default centered
                 const linksStyle = section.props.linksStyle || 'text'; // default text
-                
+
                 // Background & Glassmorphism Properties
                 const navBgColor = section.props.bgColor || '#000000';
                 const navBgBlur = section.props.bgBlur !== undefined ? section.props.bgBlur : 12; // px
                 const navBorderColor = section.props.borderColor || '#ffffff';
                 const transparentBg = section.props.transparentBg !== false;
                 const borderWidth = section.props.borderWidth !== undefined ? section.props.borderWidth : 1;
-                
+
                 // Inject custom dynamic style block for full theme-base.css compatibility (handles scrolled classes correctly)
                 const styleId = `dynamic-nav-styles-${section.id || 'main'}`;
                 let styleEl = document.getElementById(styleId);
@@ -551,9 +551,15 @@ export class RendererEngine {
 
                 if (transparentBg) {
                     // Personalizar = NO -> Completamente transparente, sin bordes, sin desenfoque (OFF)
+                    // 🔥 FIX BUILDER: In the builder preview, IS_LIVE_PROFILE is false, so we use
+                    // `sticky` — not `fixed`. With `fixed`, the navbar escapes the scrollable
+                    // `.preview-device` container and glues to the browser viewport, leaving a
+                    // massive black gap where products should be. Only use `fixed` on the real
+                    // live profile page where the store-root IS the full viewport.
+                    const _navWrapPos = window.IS_LIVE_PROFILE ? 'fixed' : 'sticky';
                     styleEl.innerHTML = `
                         .store-root > .rendered-navbar-wrapper {
-                            position: fixed !important;
+                            position: ${_navWrapPos} !important;
                             top: 0;
                             left: 0;
                             width: 100%;
@@ -611,7 +617,7 @@ export class RendererEngine {
                         }
                     `;
                 }
-                
+
                 // Dynamic style injection for alignment
                 let alignStyles = 'display: flex; align-items: center; gap: 24px;';
                 if (linksAlign === 'center') {
@@ -621,7 +627,7 @@ export class RendererEngine {
                 } else if (linksAlign === 'right') {
                     alignStyles += ' margin-right: 32px; margin-left: auto;';
                 }
-                
+
                 // Default Icon mapping
                 const defaultIcons = {
                     'BEATS': 'bi-music-note-beamed',
@@ -630,7 +636,7 @@ export class RendererEngine {
                     'SOBRE MI': 'bi-person-fill',
                     'FAQ': 'bi-question-circle'
                 };
-                
+
                 const linkMap = {
                     'BEATS': '#products-section',
                     'SERVICIOS': '#services-section',
@@ -638,15 +644,15 @@ export class RendererEngine {
                     'SOBRE MI': '#about-section',
                     'FAQ': '#faq-section'
                 };
-                
+
                 const linkCustomizations = section.props.linkCustomizations || {};
-                
+
                 let linksHtml = (section.props.links || []).map(link => {
                     const href = window.IS_LIVE_PROFILE ? (linkMap[link.toUpperCase()] || '#') : '#';
                     const customInfo = linkCustomizations[link.toUpperCase()] || {};
                     const labelText = customInfo.text || link;
                     const iconClass = customInfo.icon || defaultIcons[link.toUpperCase()] || 'bi-link';
-                    
+
                     let iconHtml = '';
                     let processedIconClass = iconClass;
                     if (iconClass.startsWith('bi-') && !iconClass.startsWith('bi ')) {
@@ -664,14 +670,14 @@ export class RendererEngine {
                     } else {
                         iconHtml = `<i class="${processedIconClass}" style="font-size: 1rem; line-height: 1; vertical-align: middle;"></i>`;
                     }
-                    
+
                     let innerContent = labelText;
                     if (linksStyle === 'icon' && iconHtml) {
                         innerContent = iconHtml;
                     } else if (linksStyle === 'icon-text' && iconHtml) {
                         innerContent = `${iconHtml}<span style="margin-left:6px; display: inline-block; vertical-align: middle;">${labelText}</span>`;
                     }
-                    
+
                     return `<a href="${href}" class="nav-link" style="display: inline-flex; align-items: center; text-decoration: none; text-transform: none; font-weight: 600; font-size: 0.85rem; opacity: 0.7; transition: opacity 0.2s; color: #fff; vertical-align: middle;">${innerContent}</a>`;
                 }).join('');
 
@@ -680,7 +686,7 @@ export class RendererEngine {
                     const customInfo = linkCustomizations[link.toUpperCase()] || {};
                     const labelText = customInfo.text || link;
                     const iconClass = customInfo.icon || defaultIcons[link.toUpperCase()] || 'bi-link';
-                    
+
                     let iconHtml = '';
                     let processedIconClass = iconClass;
                     if (iconClass.startsWith('bi-') && !iconClass.startsWith('bi ')) {
@@ -718,10 +724,10 @@ export class RendererEngine {
                     `;
                 }).join('');
 
-                const avatarHtml = section.props.avatarUrl 
-                    ? `<img src="${section.props.avatarUrl}" alt="Avatar" style="width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:10px;">` 
+                const avatarHtml = section.props.avatarUrl
+                    ? `<img src="${section.props.avatarUrl}" alt="Avatar" style="width:32px; height:32px; border-radius:50%; object-fit:cover; margin-right:10px;">`
                     : `<i class="bi bi-fire" style="color: #ff3300; font-size: 18px; margin-right:10px;"></i>`;
-                
+
                 const navbarInnerHtml = `
                     <div class="nav-left-group" style="display: flex; align-items: center; gap: 6px; position: relative; z-index: 10;">
                         <button class="mobile-hamburger-btn" aria-label="Menu" style="width: 28px; height: 28px; padding: 0; align-items: center; justify-content: center; flex-shrink: 0;" onclick="const drawer = document.getElementById('mobile-nav-drawer'); if(drawer) { drawer.classList.add('active'); document.body.style.overflow = 'hidden'; const banner = document.querySelector('.nav-announcement-bar'); if(banner) { drawer.style.top = banner.offsetHeight + 'px'; } else { drawer.style.top = '0px'; } }">
@@ -740,7 +746,7 @@ export class RendererEngine {
                     <div class="nav-right-extreme" style="display: flex; align-items: center; position: relative; z-index: 10;">
                         <!-- Carrito -->
                         ${section.props.showCart !== false ? (
-                            section.props.cartStyle === 'button' ? `
+                        section.props.cartStyle === 'button' ? `
                             <a href="#" class="nav-cart-trigger-btn" id="nav-cart-btn" onclick="if(typeof toggleCartPanel === 'function') { toggleCartPanel(event); } else if(window.CartManager) { window.CartManager.openCart(); } else { event.preventDefault(); }">
                                 <i class="bi bi-cart3" style="font-size: 0.95rem; color: #000000; line-height: 1;"></i>
                                 <span style="letter-spacing: 0.5px; font-weight: 800; color: #000000;">COMPRAR</span>
@@ -752,7 +758,7 @@ export class RendererEngine {
                                 <span id="cart-count-badge" class="cart-badge-circle" style="display:none;">0</span>
                             </a>
                             `
-                        ) : ''}
+                    ) : ''}
 
                         <!-- Auth section standard -->
                         <div id="nav-auth-section" style="display: none; align-items: center; gap: 12px; margin-left: 12px;">
@@ -897,7 +903,7 @@ export class RendererEngine {
                 div.className = 'tabs-section';
                 div.id = 'products-section';
                 div.style.marginBottom = '100px';
-                
+
                 // Guardar los productos reales/mock en window para que el selector de pestañas los use
                 if (!window.builderProducts) window.builderProducts = {};
                 window.builderProducts[section.id] = section.props.products || [];
@@ -913,7 +919,7 @@ export class RendererEngine {
 
                 let tabsHtml = '';
                 let firstActive = '';
-                
+
                 if (showBeats) {
                     tabsHtml += `<button class="tab-trigger ${!firstActive ? 'active' : ''}" onclick="window.switchStoreTab(this, 'BEATS', '${section.id}')">BEATS</button>`;
                     if (!firstActive) firstActive = 'BEATS';
@@ -971,13 +977,13 @@ export class RendererEngine {
                 }
                 div.className = 'premium-lic-section';
                 div.id = 'licencias-section';
-                
+
                 let licensesHtml = '';
                 if (section.props.licenses && section.props.licenses.length > 0) {
                     const sortedLicenses = [...section.props.licenses].sort((a, b) => (b.is_favorite ? 1 : 0) - (a.is_favorite ? 1 : 0));
                     licensesHtml = sortedLicenses.map((lic, index) => {
                         const isFeatured = lic.isFeatured || (sortedLicenses.length > 1 && index === 1);
-                        
+
                         let featuresHtml = '';
                         if (lic.beneficios) {
                             const features = lic.beneficios.split(/[,\n]/);
@@ -1001,11 +1007,11 @@ export class RendererEngine {
                         }
 
                         const licDataAttr = encodeURIComponent(JSON.stringify(lic));
-                        const recommendedStyle = lic.is_favorite 
-                            ? `border: 2px dashed #ffd700; position: relative; box-shadow: 0 0 20px rgba(255,215,0,0.15);` 
+                        const recommendedStyle = lic.is_favorite
+                            ? `border: 2px dashed #ffd700; position: relative; box-shadow: 0 0 20px rgba(255,215,0,0.15);`
                             : '';
-                        const recommendedBadge = lic.is_favorite 
-                            ? `<div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #ffd700; color: #000; font-size: 0.65rem; font-weight: 900; padding: 2px 10px; border-radius: 99px; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 10;">Recomendada</div>` 
+                        const recommendedBadge = lic.is_favorite
+                            ? `<div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #ffd700; color: #000; font-size: 0.65rem; font-weight: 900; padding: 2px 10px; border-radius: 99px; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 10;">Recomendada</div>`
                             : '';
 
                         return `
@@ -1049,7 +1055,7 @@ export class RendererEngine {
                 div.className = 'explore-row';
                 div.id = 'services-section';
                 div.style.marginTop = '60px';
-                
+
                 const servicesList = section.props.services || [];
                 const producerAvatar = section.props.userAvatar || '';
 
@@ -1113,11 +1119,11 @@ export class RendererEngine {
                 div.className = 'explore-row';
                 div.id = 'playlists-section';
                 div.style.padding = '60px 0';
-                
+
                 const playlistsList = section.props.playlists || [];
                 const nickname = window.builderNickname || 'Artista';
                 let playlistsHtml = '';
-                
+
                 if (playlistsList.length > 0) {
                     playlistsHtml = playlistsList.map(p => {
                         const img = p.cover_url ? (p.cover_url.startsWith('http') ? p.cover_url : `https://offszn.lat/api/r2-public/${p.cover_url}`) : 'https://offszn.lat/images/portada-default.png';
@@ -1206,7 +1212,7 @@ export class RendererEngine {
 
             case 'footer':
                 div.className = 'rendered-footer prof-footer';
-                
+
                 const footerSocials = section.props.socials || {};
                 const getSocialUrl = (platform, usernameOrUrl) => {
                     if (!usernameOrUrl) return '#';

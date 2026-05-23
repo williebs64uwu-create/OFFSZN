@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { pipeline } from 'stream';
 import {
     getPresignedUploadUrl,
     getPresignedDownloadUrl,
@@ -357,7 +358,17 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
             res.setHeader('Accept-Ranges', 'bytes');
             if (range) res.status(206);
 
-            return Body.pipe(res);
+            // Clean up when client closes connection to prevent connection pool leaks
+            req.on('close', () => {
+                if (Body && typeof Body.destroy === 'function') Body.destroy();
+            });
+
+            pipeline(Body, res, (err) => {
+                if (err) {
+                    console.error('[R2 Cache Stream Error]:', err.message);
+                }
+            });
+            return;
         }
 
         // 2. Determinar orden de búsqueda (Prioridad segun ?v=)
@@ -510,8 +521,18 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
             headers['Content-Length'] = response.ContentLength;
         }
 
+        // Clean up when client closes connection to prevent connection pool leaks
+        req.on('close', () => {
+            if (response.Body && typeof response.Body.destroy === 'function') response.Body.destroy();
+        });
+
         res.set(headers);
-        response.Body.pipe(res);
+
+        pipeline(response.Body, res, (err) => {
+            if (err) {
+                console.error('[R2 Main Stream Error]:', err.message);
+            }
+        });
 
 
     } catch (error) {

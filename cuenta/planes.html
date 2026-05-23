@@ -1,1550 +1,1689 @@
 <!DOCTYPE html>
+
 <html lang="es">
 
+
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Planes y Precios | OFFSZN</title>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Fonts -->
+
+    <link
+
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap"
+
+        rel="stylesheet">
+
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <!-- Bootstrap Icons -->
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
-    <script src="/env.js"></script>
+
+
+    <!-- Supabase & Auth -->
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
+
+        window.SUPABASE_URL = "https://qtjpvztpgfymjhhpoouq.supabase.co";
+
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw";
+
         window.supabaseClient = null;
+
     </script>
+
     <script src="/script/auth-utils.js?v=11"></script>
-    <!-- auth-guard NOT loaded here — planes.html must be publicly accessible.
-         Guest protection is handled inside goToCheckout() instead. -->
 
-    <style>
-        :root {
-            --bg-dark: #000000;
-            --text-main: #ffffff;
-            --text-secondary: #888888;
-            --card-bg: #0F0F0F;
-            --border-color: #222222;
-            --accent-white: #ffffff;
-            --hover-bg: #1A1A1A;
-        }
+    <script src="../script/auth-guard.js"></script>
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Geist', sans-serif;
-        }
 
-        body {
-            background-color: #000;
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            overflow-x: hidden;
-        }
 
-        /* Nav */
-        .nav-stub {
-            width: 100%;
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            z-index: 10;
-        }
+    <!-- PayPal SDK -->
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            color: #fff;
-            font-weight: 700;
-            font-size: 20px;
-            font-family: 'Geist', sans-serif;
-        }
+    <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
 
-        .btn-back {
-            background: rgba(255, 255, 255, 0.05);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            text-decoration: none;
-            transition: 0.2s;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
+</head>
 
-        .btn-back:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
 
-        /* Header */
-        .header {
-            text-align: center;
-            margin-top: 10px;
-            margin-bottom: 40px;
-            padding: 0 20px;
-        }
 
-        .header h1 {
-            font-family: 'Geist', sans-serif;
-            font-size: 48px;
-            font-weight: 800;
-            margin-bottom: 28px;
-            color: #fff;
-            letter-spacing: -1px;
-        }
+<style>
 
-        /* === STACKED TOGGLES === */
-        .controls-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-        }
+    :root {
 
-        /* Toggle 1: Frequency */
-        .freq-toggle {
-            background: #111;
-            border: 1px solid #222;
-            padding: 4px;
-            border-radius: 14px;
-            display: inline-flex;
-            gap: 4px;
-        }
+        --bg-dark: #000000;
 
-        .freq-opt {
-            padding: 12px 28px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 700;
-            color: #666;
-            transition: all 0.25s ease;
-            user-select: none;
-        }
+        --accent-purple: #8B5CF6;
 
-        .freq-opt:hover {
-            color: #999;
-        }
+        --accent-glow: rgba(139, 92, 246, 0.4);
 
-        .freq-opt.active {
-            background: #fff;
-            color: #000;
-            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
-        }
+        --text-main: #ffffff;
 
-        /* Toggle 2: Currency */
-        .curr-toggle {
-            background: #000;
-            border: 1px solid #222;
-            padding: 3px;
-            border-radius: 100px;
-            display: inline-flex;
-            gap: 2px;
-        }
+        --text-secondary: #888888;
 
-        .curr-opt {
-            padding: 8px 20px;
-            border-radius: 100px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 800;
-            color: #555;
-            transition: all 0.3s ease;
-            min-width: 80px;
-            text-align: center;
-            user-select: none;
-        }
+        --card-bg: #0F0F0F;
 
-        .curr-opt.active {
-            background: #222;
-            color: #fff;
-        }
+        --border-color: #1A1A1A;
 
-        /* Savings badge */
-        .savings-badge {
-            color: #fff;
-            font-size: 13px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        --success: #10B981;
+
+    }
+
+
+
+    * {
+
+        margin: 0;
+
+        padding: 0;
+
+        box-sizing: border-box;
+
+        font-family: 'Inter', sans-serif;
+
+    }
+
+
+
+    body {
+
+        background-color: #000;
+
+        color: var(--text-main);
+
+        min-height: 100vh;
+
+        display: flex;
+
+        flex-direction: column;
+
+        align-items: center;
+
+        overflow-x: hidden;
+
+    }
+
+
+
+    /* Nav Stub */
+
+    .nav-stub {
+
+        width: 100%;
+
+        padding: 5px 40px;
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        max-width: 1200px;
+
+        z-index: 10;
+
+    }
+
+
+
+    .logo {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+        text-decoration: none;
+
+        color: #fff;
+
+        font-weight: 700;
+
+        font-size: 20px;
+
+        font-family: 'Plus Jakarta Sans', sans-serif;
+
+    }
+
+
+
+    .btn-close {
+
+        background: rgba(255, 255, 255, 0.1);
+
+        width: 40px;
+
+        height: 40px;
+
+        border-radius: 50%;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        color: #fff;
+
+        text-decoration: none;
+
+        transition: 0.2s;
+
+        border: 1px solid rgba(255, 255, 255, 0.05);
+
+    }
+
+
+
+    .btn-close:hover {
+
+        background: rgba(255, 255, 255, 0.2);
+
+    }
+
+
+
+    /* Radial Glow - Disabled */
+
+    .radial-glow {
+
+        display: none;
+
+    }
+
+
+
+    /* --- ENTRY ANIMATION --- */
+
+    .entry-anim {
+
+        opacity: 0;
+
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+    }
+
+
+
+    @keyframes fadeInUp {
+
+        from {
+
             opacity: 0;
-            transition: opacity 0.3s ease;
-            padding: 6px 16px;
-            background: #1A1A1A;
-            border-radius: 100px;
-            border: 1px solid #333;
+
+            transform: translateY(30px);
+
         }
 
-        .savings-badge.visible {
+
+
+        to {
+
             opacity: 1;
+
+            transform: translateY(0);
+
         }
 
-        /* === PRICING GRID === */
+    }
+
+
+
+
+
+
+
+    /* Header */
+
+    .header {
+
+        text-align: center;
+
+        margin-top: 8px;
+
+        margin-bottom: 16px;
+
+        padding: 0 20px;
+
+    }
+
+
+
+    .header h1 {
+
+        font-family: 'Plus Jakarta Sans', sans-serif;
+
+        font-size: 42px;
+
+        font-weight: 800;
+
+        margin-bottom: 12px;
+
+        background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+
+        background-clip: text;
+
+        -webkit-background-clip: text;
+
+        -webkit-text-fill-color: transparent;
+
+    }
+
+
+
+    .header p {
+
+        color: var(--text-secondary);
+
+        font-size: 16px;
+
+        max-width: 600px;
+
+        margin: 0 auto;
+
+    }
+
+
+
+    /* Currency Toggle */
+
+    .currency-toggle-wrapper {
+
+        margin-bottom: 24px;
+
+        background: #0A0A0A;
+
+        border: 1px solid #222;
+
+        padding: 4px;
+
+        border-radius: 100px;
+
+        display: inline-flex;
+
+        position: relative;
+
+        overflow: hidden;
+
+        min-width: 200px;
+
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+
+    }
+
+
+
+    .currency-option {
+
+        flex: 1;
+
+        padding: 10px 0;
+
+        border-radius: 100px;
+
+        cursor: pointer;
+
+        font-size: 13px;
+
+        font-weight: 700;
+
+        color: #555;
+
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        z-index: 2;
+
+        position: relative;
+
+        text-align: center;
+
+        width: 100px;
+
+    }
+
+
+
+    .currency-option.active {
+
+        color: #000;
+
+    }
+
+
+
+    .toggle-bg {
+
+        position: absolute;
+
+        top: 4px;
+
+        left: 4px;
+
+        width: calc(50% - 4px);
+
+        height: calc(100% - 8px);
+
+        background: #FFD700;
+
+        border-radius: 100px;
+
+        z-index: 1;
+
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+
+    }
+
+
+
+    /* Pricing Grid */
+
+    .pricing-grid {
+
+        display: grid;
+
+        grid-template-columns: repeat(3, 1fr);
+
+        gap: 20px;
+
+        max-width: 1100px;
+
+        width: 100%;
+
+        padding: 0 20px 40px 20px;
+
+        margin: 0 auto;
+
+    }
+
+
+
+    /* Card Styles - CARD IN CARD (Apple Style) */
+
+    .pricing-card {
+
+        background: #080808;
+
+        border: 1px solid #141414;
+
+        border-radius: 32px;
+
+        padding: 12px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        text-align: left;
+
+        position: relative;
+
+    }
+
+
+
+    .plan-header-box {
+
+        background: #111111;
+
+        border: 1px solid #1A1A1A;
+
+        border-radius: 24px;
+
+        padding: 30px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        z-index: 2;
+
+        position: relative;
+
+    }
+
+
+
+    .pricing-card:hover .plan-header-box {
+
+        transform: translateY(-4px);
+
+        border-color: #333;
+
+    }
+
+
+
+    .pricing-card.starter .plan-header-box {
+
+        border-color: rgba(139, 92, 246, 0.2);
+
+    }
+
+
+
+    .pricing-card.pro .plan-header-box {
+
+        border-color: rgba(255, 215, 0, 0.2);
+
+    }
+
+
+
+    .plan-name {
+
+        font-size: 13px;
+
+        font-weight: 700;
+
+        text-transform: uppercase;
+
+        letter-spacing: 2px;
+
+        margin-bottom: 8px;
+
+        color: #666;
+
+    }
+
+
+
+    .plan-price {
+
+        font-size: 44px;
+
+        font-weight: 800;
+
+        font-family: 'Plus Jakarta Sans', sans-serif;
+
+        color: #fff;
+
+        margin-bottom: 12px;
+
+        display: flex;
+
+        align-items: baseline;
+
+        gap: 4px;
+
+    }
+
+
+
+    .plan-price span {
+
+        font-size: 16px;
+
+        color: #555;
+
+        font-weight: 500;
+
+    }
+
+
+
+    .plan-desc {
+
+        color: #888;
+
+        font-size: 14px;
+
+        line-height: 1.5;
+
+        margin-bottom: 0;
+
+    }
+
+
+
+    .features-container {
+
+        padding: 30px 20px;
+
+        flex: 1;
+
+    }
+
+
+
+    /* Features List */
+
+    .feature-list {
+
+        margin-top: 15px;
+
+        padding-top: 0;
+
+        border-top: none;
+
+        list-style: none;
+
+    }
+
+
+
+    .feature-item {
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 12px;
+
+        margin-bottom: 16px;
+
+        font-size: 14px;
+
+        color: #AAA;
+
+    }
+
+
+
+    .feature-item i {
+
+        font-size: 18px;
+
+        color: #fff;
+
+    }
+
+
+
+    .feature-item .val-gold {
+
+        color: #FFD700;
+
+        font-weight: 600;
+
+    }
+
+
+
+    .feature-item .val-purple {
+
+        color: #A78BFA;
+
+        font-weight: 600;
+
+    }
+
+
+
+    .feature-item .val-dim {
+
+        color: #444;
+
+    }
+
+
+
+    .feature-subhead {
+
+        font-size: 11px;
+
+        font-weight: 800;
+
+        color: #555;
+
+        text-transform: uppercase;
+
+        letter-spacing: 1px;
+
+        margin-bottom: 20px;
+
+        display: block;
+
+    }
+
+
+
+    /* Buttons */
+
+    .btn-plan {
+
+        width: 100%;
+
+        padding: 14px;
+
+        border-radius: 10px;
+
+        font-weight: 700;
+
+        font-size: 14px;
+
+        cursor: pointer;
+
+        transition: 0.2s;
+
+        border: none;
+
+        font-family: 'Plus Jakarta Sans', sans-serif;
+
+        text-align: center;
+
+        text-decoration: none;
+
+    }
+
+
+
+    .btn-basic {
+
+        background: transparent;
+
+        border: 1px solid #222;
+
+        color: #444;
+
+    }
+
+
+
+    .btn-pro {
+
+        background: #FFD700;
+
+        color: #000;
+
+    }
+
+
+
+    .btn-pro:hover {
+
+        background: #e6c200;
+
+    }
+
+
+
+    /* Tags */
+
+    .tag-badge {
+
+        padding: 2px 8px;
+
+        border-radius: 4px;
+
+        font-size: 10px;
+
+        font-weight: 700;
+
+        margin-left: 5px;
+
+        vertical-align: middle;
+
+    }
+
+
+
+    .badge-gold {
+
+        background: rgba(255, 215, 0, 0.2);
+
+        color: #FFD700;
+
+        border: 1px solid rgba(255, 215, 0, 0.3);
+
+    }
+
+
+
+    /* PAYMENT MODAL */
+
+    .modal-overlay {
+
+        position: fixed;
+
+        top: 0;
+
+        left: 0;
+
+        width: 100%;
+
+        height: 100%;
+
+        background: rgba(0, 0, 0, 0.85);
+
+        backdrop-filter: blur(8px);
+
+        z-index: 1000;
+
+        display: none;
+
+        justify-content: center;
+
+        align-items: center;
+
+    }
+
+
+
+    .modal-overlay.active {
+
+        display: flex;
+
+        animation: fadeIn 0.2s ease-out;
+
+    }
+
+
+
+    .payment-modal {
+
+        background: #0F0F0F;
+
+        border: 1px solid #333;
+
+        border-radius: 20px;
+
+        width: 90%;
+
+        max-width: 600px;
+
+        padding: 0;
+
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+
+        overflow: hidden;
+
+        display: flex;
+
+        flex-direction: column;
+
+        max-height: 90vh;
+
+    }
+
+
+
+    .payment-header {
+
+        padding: 24px;
+
+        border-bottom: 1px solid #222;
+
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        background: #111;
+
+    }
+
+
+
+    .payment-body {
+
+        padding: 32px;
+
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 25px;
+
+        overflow-y: auto;
+
+    }
+
+
+
+    .payment-method-btn {
+
+        background: #161616;
+
+        border: 1px solid #333;
+
+        padding: 16px;
+
+        border-radius: 12px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        cursor: pointer;
+
+        transition: 0.2s;
+
+        color: #fff;
+
+        text-align: left;
+
+    }
+
+
+
+    .payment-method-btn:hover {
+
+        border-color: #666;
+
+        background: #222;
+
+    }
+
+
+
+    .payment-method-btn.active {
+
+        border-color: var(--accent-purple);
+
+        background: rgba(139, 92, 246, 0.1);
+
+    }
+
+
+
+    .method-icon {
+
+        font-size: 24px;
+
+        margin-right: 16px;
+
+        width: 32px;
+
+        text-align: center;
+
+    }
+
+
+
+    .method-details {
+
+        display: none;
+
+        background: #000;
+
+        border: 1px solid #222;
+
+        padding: 24px;
+
+        border-radius: 12px;
+
+        margin-top: 12px;
+
+        margin-bottom: 12px;
+
+        position: relative;
+
+        z-index: 10;
+
+    }
+
+
+
+    .method-details.show {
+
+        display: block;
+
+        animation: slideDown 0.3s ease-out;
+
+    }
+
+
+
+    @keyframes fadeIn {
+
+        from {
+
+            opacity: 0;
+
+        }
+
+
+
+        to {
+
+            opacity: 1;
+
+        }
+
+    }
+
+
+
+    @keyframes slideDown {
+
+        from {
+
+            opacity: 0;
+
+            transform: translateY(-10px);
+
+        }
+
+
+
+        to {
+
+            opacity: 1;
+
+            transform: translateY(0);
+
+        }
+
+    }
+
+
+
+    /* Glow Animation for Hook (Subtle) */
+
+    @keyframes textGlow {
+
+        0% {
+
+            text-shadow: 0 0 2px rgba(255, 215, 0, 0.2);
+
+        }
+
+
+
+        50% {
+
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+
+        }
+
+
+
+        100% {
+
+            text-shadow: 0 0 2px rgba(255, 215, 0, 0.2);
+
+        }
+
+    }
+
+
+
+    .hook-glow {
+
+        color: #FFD700;
+
+        font-weight: 800;
+
+        animation: textGlow 3s infinite ease-in-out;
+
+    }
+
+
+
+    /* WhatsApp Button */
+
+    .btn-whatsapp {
+
+        background: #25D366;
+
+        color: #fff;
+
+        border: none;
+
+        width: 100%;
+
+        padding: 12px;
+
+        border-radius: 8px;
+
+        font-weight: 600;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 8px;
+
+        text-decoration: none;
+
+        margin-top: 15px;
+
+        font-size: 14px;
+
+        transition: 0.2s;
+
+    }
+
+
+
+    /* Tooltip / Note styles can be added here if needed */
+
+    .table-note {
+
+        font-size: 11px;
+
+        color: #444;
+
+        margin-top: 5px;
+
+        display: block;
+
+    }
+
+
+
+    @media (max-width: 991px) {
+
         .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            max-width: 1200px;
-            width: 100%;
-            padding: 0 20px 80px 20px;
-            margin-top: 10px;
+
+            grid-template-columns: repeat(3, minmax(280px, 1fr));
+
+            overflow-x: auto;
+
+            scroll-snap-type: x mandatory;
+
+            padding-bottom: 20px;
+
+            -webkit-overflow-scrolling: touch;
+
         }
 
-        @media (max-width: 768px) {
-            .pricing-grid {
-                grid-template-columns: 1fr;
-                padding-bottom: 40px;
-            }
-            /* Ocultar plan Básico ($0) en móvil para ahorrar espacio */
-            .pricing-card:first-child {
-                display: none;
-            }
-        }
+
 
         .pricing-card {
-            background: #000;
-            border: 1px solid #222;
-            border-radius: 20px;
-            padding: 10px;
-            display: flex;
+
+            scroll-snap-align: center;
+
+        }
+
+
+
+        .yape-layout {
+
             flex-direction: column;
-            transition: all 0.3s ease;
-        }
-
-        .pricing-card:hover {
-            border-color: #444;
-        }
-
-        .pricing-card.popular {
-            border-color: #fff;
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.05);
-        }
-
-        .plan-header-box {
-            background: #0A0A0A;
-            border: 1px solid #1A1A1A;
-            border-radius: 16px;
-            padding: 35px 25px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .plan-name {
-            font-size: 13px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #555;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .plan-price {
-            font-size: 52px;
-            font-weight: 800;
-            font-family: 'Geist', sans-serif;
-            color: #fff;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: baseline;
-            gap: 4px;
-            letter-spacing: -2px;
-        }
-
-        .plan-price span {
-            font-size: 15px;
-            color: #666;
-            font-weight: 500;
-            letter-spacing: normal;
-        }
-
-        .billed-note {
-            font-size: 11px;
-            color: #444;
-            margin-bottom: 8px; /* Compacted layout */
-            min-height: 16px;
-            font-weight: 600;
-        }
-
-        .plan-desc {
-            color: #888;
-            font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 0;
-        }
-
-        .features-container {
-            padding: 30px 20px;
-            flex: 1;
-        }
-
-        .feature-subhead {
-            font-size: 12px;
-            font-weight: 800;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 25px;
-            display: block;
-        }
-
-        .feature-list {
-            list-style: none;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 12px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #888;
-            transition: color 0.2s;
-        }
-
-        .feature-item:hover {
-            color: #fff;
-        }
-
-        .feature-item i {
-            font-size: 16px;
-            color: #fff;
-            flex-shrink: 0;
-        }
-
-        .feature-item.check i { color: #fff; }
-        .feature-item.cross i { color: #333; }
-
-        .feature-item b {
-            color: #fff;
-            font-weight: 700;
-        }
-
-        /* Buttons */
-        .btn-plan {
-            width: 100%;
-            padding: 16px;
-            border-radius: 10px;
-            font-weight: 800;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.2s;
-            border: none;
-            font-family: 'Geist', sans-serif;
-            text-align: center;
-            text-decoration: none;
-            margin-top: 4px;
-        }
-
-        .btn-basic {
-            background: transparent;
-            border: 1px solid #222;
-            color: #666;
-        }
-
-        .btn-basic:hover {
-            border-color: #444;
-            color: #999;
-        }
-
-        .btn-upgrade {
-            background: #fff;
-            color: #000;
-        }
-
-        .btn-upgrade:hover {
-            background: #e0e0e0;
-            transform: scale(1.02);
-        }
-
-        .tag-badge {
-            background: #fff;
-            color: #000;
-            padding: 3px 10px;
-            border-radius: 100px;
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-
-        /* Entry Animation */
-        .entry-anim {
-            opacity: 0;
-            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* === WHITE PRO STYLE === */
-        .pricing-card.pro-white {
-            border-color: #fff;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, #000 100%);
-            box-shadow: 0 0 40px rgba(255, 255, 255, 0.05);
-        }
-
-        .pricing-card.pro-white .plan-header-box {
-            background: #fff;
-            border: none;
-        }
-
-        .pricing-card.pro-white .plan-name,
-        .pricing-card.pro-white .plan-price,
-        .pricing-card.pro-white .plan-price span {
-            color: #000 !important;
-        }
-
-        .pricing-card.pro-white .plan-desc {
-            color: rgba(0, 0, 0, 0.7) !important;
-        }
-
-        .pricing-card.pro-white .btn-upgrade {
-            background: #000 !important;
-            color: #fff !important;
-            font-weight: 800;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .pricing-card.pro-white .btn-upgrade:hover {
-            transform: scale(1.02);
-            background: #111 !important;
-        }
-
-        .pricing-card.pro-white .feature-item i {
-            color: #FFD700 !important;
-        }
-
-        .pricing-card.pro-white .tag-badge {
-            background: #000;
-            color: #fff;
-        }
-
-        @media (max-width: 991px) {
-            .pricing-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            .header h1 {
-                font-size: 32px;
-            }
-            .nav-stub {
-                padding: 15px 20px;
-            }
-        }
-
-        /* Support Chat Link */
-        .whatsapp-chat {
-            font-size: 13px;
-            color: #888;
-            text-decoration: none;
-            margin-top: 15px;
-            display: inline-block;
-            transition: color 0.2s;
-            font-weight: 500;
-        }
-
-        .whatsapp-chat:hover {
-            color: #fff !important;
-            text-decoration: underline !important;
-        }
-
-        /* Circular Icons Style */
-        .icon-circle {
-            background: #222;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .icon-circle i {
-            font-size: 12px !important;
-            color: #fff !important;
-            margin: 0 !important;
-        }
-
-        /* Adjust White Plan Icons */
-        .pro-white .icon-circle {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .pro-white .icon-circle i {
-            color: #FFD700 !important;
-        }
-
-        /* === NEW SECTIONS === */
-
-        /* Social Proof Section */
-        .social-proof-section {
-            width: 100%;
-            max-width: 1100px;
-            padding: 80px 20px;
-            text-align: center;
-        }
-
-        .section-title {
-            font-family: 'Geist', sans-serif;
-            font-size: 32px;
-            font-weight: 800;
-            margin-bottom: 12px;
-            color: #fff;
-            letter-spacing: -0.5px;
-        }
-
-        .section-subtitle {
-            color: #888;
-            font-size: 16px;
-            margin-bottom: 50px;
-        }
-
-        .masonry-grid {
-            column-count: 3;
-            column-gap: 20px;
-            width: 100%;
-        }
-
-        @media (max-width: 991px) {
-            .masonry-grid {
-                column-count: 2;
-            }
-        }
-
-        @media (max-width: 600px) {
-            .masonry-grid {
-                column-count: 1;
-            }
-        }
-
-        .user-card {
-            break-inside: avoid;
-            background: #0A0A0A;
-            border: 1px solid #1A1A1A;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            position: relative;
-            overflow: hidden;
-        }
 
-        .user-card:hover {
-            border-color: #333;
-            transform: translateY(-5px);
-            background: #111;
-        }
+            text-align: center !important;
 
-        .user-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            margin-bottom: 15px;
-            object-fit: cover;
-            border: 2px solid #222;
         }
 
-        .user-name {
-            font-size: 16px;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 4px;
-        }
 
-        .user-handle {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 15px;
-        }
 
-        .ig-link {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            color: #fff;
-            background: #1A1A1A;
-            padding: 8px 16px;
-            border-radius: 100px;
-            transition: 0.2s;
-        }
+        .yape-right {
 
-        .user-card:hover .ig-link {
-            background: #fff;
-            color: #000;
-        }
+            text-align: center !important;
 
-        /* FAQ Section */
-        .faq-section {
-            width: 100%;
-            max-width: 800px;
-            padding: 80px 20px;
-            margin: 0 auto;
         }
 
-        .faq-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+    }
 
-        .faq-item {
-            background: #000;
-            border: 1px solid #222;
-            border-radius: 12px;
-            overflow: hidden;
-            transition: border-color 0.2s;
-        }
 
-        .faq-item:hover {
-            border-color: #444;
-        }
 
-        .faq-question {
-            width: 100%;
-            padding: 22px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 16px;
-            font-weight: 600;
-            text-align: left;
-            cursor: pointer;
-            transition: 0.2s;
-        }
+    /* Yape Layout */
 
-        .faq-question i {
-            font-size: 14px;
-            color: #666;
-            transition: transform 0.3s;
-        }
+    .yape-layout {
 
-        .faq-item.active .faq-question i {
-            transform: rotate(180deg);
-        }
+        display: flex;
 
-        .faq-answer {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out, padding 0.3s ease;
-            color: #888;
-            font-size: 14px;
-            line-height: 1.6;
-            padding: 0 25px;
-        }
+        align-items: center;
 
-        .faq-item.active .faq-answer {
-            max-height: 500px;
-            padding-bottom: 25px;
-        }
+        gap: 20px;
 
-        /* Contact Footer */
-        .contact-footer {
-            width: 100%;
-            background: #000;
-            border-top: 1px solid #111;
-            padding: 60px 20px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
+    }
 
-        .contact-email {
-            font-size: 18px;
-            color: #fff;
-            text-decoration: none;
-            font-weight: 600;
-            transition: opacity 0.2s;
-        }
 
-        .contact-email:hover {
-            opacity: 0.7;
-        }
 
-        .footer-wa-btn {
-            background: #fff;
-            color: #000;
-            padding: 12px 30px;
-            border-radius: 100px;
-            text-decoration: none;
-            font-weight: 800;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: transform 0.2s;
-        }
+    .yape-right {
 
-        .footer-wa-btn:hover {
-            transform: scale(1.05);
-        }
+        flex: 1;
 
-        .copyright {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #333;
-        }
+        text-align: left;
 
-        /* === PARTICLES BACKGROUND === */
-        #bg-particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-            pointer-events: none;
-        }
+    }
 
-        .particle {
-            position: absolute;
-            background: #fff;
-            border-radius: 50%;
-            opacity: 0.15;
-            filter: blur(1px);
-            animation: floatParticle linear infinite;
-        }
+</style>
 
-        @keyframes floatParticle {
-            0% { transform: translateY(0) translateX(0); }
-            100% { transform: translateY(-120vh) translateX(30px); }
-        }
-    </style>
 </head>
+
+
 
 <body>
 
-    <div id="bg-particles"></div>
+
+
+    <div class="radial-glow"></div>
+
+
 
     <div class="nav-stub">
-        <a href="/explorar.html" class="logo">
+
+        <a href="/index.html" class="logo">
+
             <img src="/images/LOGO-OFFSZN.png" alt="OFFSZN" style="width: 32px;"> OFFSZN
+
         </a>
-        <a href="javascript:history.back()" class="btn-back">
+
+        <a href="javascript:history.back()" class="btn-close">
+
             <i class="bi bi-x-lg"></i>
+
         </a>
+
     </div>
+
+
 
     <div class="header entry-anim" style="animation-delay: 0.1s;">
-        <h1>Sube de Nivel</h1>
 
-        <div class="controls-wrapper">
-            <!-- Toggle 1: Billing Frequency -->
-            <div class="freq-toggle">
-                <div class="freq-opt active" id="freq-monthly" onclick="setFrequency('monthly')">Mensual</div>
-                <div class="freq-opt" id="freq-annual" onclick="setFrequency('annual')">Anual <i class="bi bi-star-fill" style="margin-left:5px; font-size:10px;"></i></div>
-            </div>
+        <h1>Elige tu experiencia</h1>
 
-            <!-- Toggle 2: Currency -->
-            <div class="curr-toggle">
-                <div class="curr-opt active" id="curr-USD" onclick="setCurrency('USD')">USD $</div>
-                <div class="curr-opt" id="curr-PEN" onclick="setCurrency('PEN')">PEN S/</div>
-            </div>
-
-            <div class="savings-badge" id="savings-badge">
-                <i class="bi bi-star-fill"></i> Ahorra hasta 60% con el plan anual
-            </div>
-        </div>
     </div>
+
+
+
+    <!-- Currency Toggle -->
+
+    <div class="currency-toggle-wrapper entry-anim" style="animation-delay: 0.2s;">
+
+        <div class="toggle-bg" id="toggleBg"></div>
+
+        <div class="currency-option active" onclick="setCurrency('USD')" id="opt-USD">USD $</div>
+
+        <div class="currency-option" onclick="setCurrency('PEN')" id="opt-PEN">PEN S/</div>
+
+    </div>
+
+
 
     <div class="pricing-grid">
-        <!-- BASICO -->
+
+        <!-- BÁSICO -->
+
         <div class="pricing-card entry-anim" style="animation-delay: 0.2s;">
+
             <div class="plan-header-box">
-                <div class="plan-name">Básico</div>
+
+                <div class="plan-name">Básico Plan</div>
+
                 <div class="plan-price" id="price-basic">$0<span>/mes</span></div>
-                <div class="billed-note" id="note-basic"></div>
-                <button id="btn-plan-free" class="btn-plan btn-basic">Plan Actual</button>
+
+                <p class="plan-desc">Para productores que están dando sus primeros pasos.</p>
+
+                <button class="btn-plan btn-basic" style="margin-top: 25px;" disabled>Tu Plan Actual</button>
+
             </div>
 
+
+
             <div class="features-container">
-                <span class="feature-subhead">Características:</span>
+
+                <span class="feature-subhead">Empieza con:</span>
+
                 <ul class="feature-list">
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>30 subidas</b> de productos</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>5% Comisión</b> por venta</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>3</b> automatizaciones de Youtube</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>40 créditos</b> para sonidos con IA</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span>Soporte Estándar</span></li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> 30 subidas de productos</li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> 5% Comisión por Venta</li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> 1 YouTube + OFFSZN / mes</li>
+
+                    <li class="feature-item"><i class="bi bi-x-circle-fill val-dim"></i> <span class="val-dim">0
+
+                            Créditos Mensuales</span></li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> 1 Solicitud / día</li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Soporte Estándar</li>
+
                 </ul>
+
             </div>
+
         </div>
+
+
 
         <!-- STARTER -->
-        <div class="pricing-card entry-anim" style="animation-delay: 0.3s;">
+
+        <div class="pricing-card starter entry-anim" style="animation-delay: 0.3s;">
+
             <div class="plan-header-box">
-                <div class="plan-name">Starter</div>
+
+                <div class="plan-name" style="color:#A78BFA;">Starter Plan</div>
+
                 <div class="plan-price" id="price-starter">$5<span>/mes</span></div>
-                <div class="billed-note" id="note-starter"></div>
-                <button id="btn-plan-starter" onclick="goToCheckout('starter')" class="btn-plan btn-upgrade">Mejorar Plan</button>
+
+                <p class="plan-desc">Desbloquea más libertad y empieza a escalar tu marca.</p>
+
+                <button onclick="goToCheckout('starter')" class="btn-plan"
+
+                    style="background:#8B5CF6; color:#fff; border:none; margin-top: 25px;">Mejorar a Starter</button>
+
             </div>
 
+
+
             <div class="features-container">
+
                 <span class="feature-subhead">Todo en Básico más:</span>
+
                 <ul class="feature-list">
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>60 subidas</b> de productos</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>3% Comisión</b> por venta</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>10</b> automatizaciones de Youtube</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span><b>150 créditos</b> para sonidos con IA</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span> <span>Insignia de Verificación</span></li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i> <span
+
+                            class="val-purple">60 subidas de productos</span></li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i> <span
+
+                            class="val-purple">3% Comisión por Venta</span></li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i> <span
+
+                            class="val-purple">5 YouTube + OFFSZN / mes</span></li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#A78BFA;"></i> <span
+
+                            class="val-purple">60 Créditos Mensuales</span></li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> 5 Solicitudes / día</li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Insignia Morada</li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Soporte Prioritario</li>
+
                 </ul>
-                <a href="https://wa.link/66n1ux" target="_blank" class="whatsapp-chat">Preguntas? Escríbenos por whatsapp</a>
+
             </div>
+
         </div>
+
+
 
         <!-- PRO -->
-        <div class="pricing-card pro-white entry-anim" style="animation-delay: 0.4s;">
+
+        <div class="pricing-card pro entry-anim" style="animation-delay: 0.4s;">
+
             <div class="plan-header-box">
-                <div class="plan-name">PRO <span class="tag-badge">RECOMENDADO</span></div>
+
+                <div class="plan-name" style="color:#FFD700;">PRO Plan <span class="tag-badge badge-gold">POPULAR</span>
+
+                </div>
+
                 <div class="plan-price" id="price-pro">$7<span>/mes</span></div>
-                <div class="billed-note" id="note-pro"></div>
-                <button id="btn-plan-pro" onclick="goToCheckout('pro')" class="btn-plan btn-upgrade">Probar 7 días gratis</button>
-                <p style="font-size: 10px; text-align: center; color: #000; margin-top: 8px; font-weight: 700; opacity: 0.6;">Cancela cuando quieras</p>
+
+                <p class="plan-desc">La experiencia definitiva para los productores Elite.</p>
+
+                <button onclick="goToCheckout('pro')" class="btn-plan btn-pro" style="margin-top: 25px;">Mejorar a
+
+                    PRO</button>
+
             </div>
+
+
 
             <div class="features-container">
+
                 <span class="feature-subhead">Todo en Starter más:</span>
+
                 <ul class="feature-list">
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <span><b>Subidas Ilimitadas</b></span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <span><b>0% Comisión</b> por venta</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <span><b>30</b> automatizaciones de Youtube</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <span><b>300 créditos</b> para sonidos con IA</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <span>Soporte VIP 24/7</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span> <span>Promoción en Feed</span></li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#FFD700;"></i> <span
+
+                            class="val-gold">Subidas ilimitadas de productos</span></li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#FFD700;"></i> <span
+
+                            class="val-gold">0% Comisión por Venta</span></li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#FFD700;"></i> <span
+
+                            class="val-gold">30 YouTube + OFFSZN / mes</span></li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill" style="color:#FFD700;"></i> <span
+
+                            class="val-gold">100 Créditos Mensuales</span></li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Solicitudes Ilimitadas</li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Insignia Dorada</li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Promoción en Feed</li>
+
+                    <li class="feature-item"><i class="bi bi-check-circle-fill"></i> Soporte 24/7 VIP</li>
+
                 </ul>
-                <a href="https://wa.link/jgult2" target="_blank" class="whatsapp-chat">Preguntas? Escríbenos por whatsapp</a>
+
             </div>
+
         </div>
+
+
+
+        <!-- SUCCESS MODAL (After Returning from MP) -->
+
+        <div class="modal-overlay" id="successModal" onclick="if(event.target === this) closeSuccessModal()">
+
+            <div class="payment-modal" style="text-align: center; padding: 40px 20px;">
+
+                <div style="font-size: 50px; color: #10b981; margin-bottom: 20px;">
+
+                    <i class="bi bi-check-circle-fill"></i>
+
+                </div>
+
+                <h3
+
+                    style="color:#fff; font-size:24px; margin-bottom: 10px; font-family: 'Plus Jakarta Sans', sans-serif;">
+
+                    ¡Felicidades!</h3>
+
+                <p style="color:#aaa; font-size:16px; margin-bottom:25px;" id="successMessage">
+
+                    Tu pago ha sido procesado. Ahora eres nivel <strong id="successPlanName"
+
+                        style="color:#fff;">PRO</strong>. Empieza a usar tus beneficios.
+
+                </p>
+
+                <button onclick="window.location.href='/cuenta/dashboard.html'" class="btn-plan btn-pro"
+
+                    style="margin-top: 0;">
+
+                    Ir a mi Dashboard
+
+                </button>
+
+            </div>
+
         </div>
-    </div>
 
-    <!-- SECCIÓN DE PRODUCTORES DESTACADOS -->
-    <section class="social-proof-section entry-anim" style="animation-delay: 0.5s;">
-        <h2 class="section-title">Impulsando el Éxito</h2>
-        <p class="section-subtitle">Únete a cientos de productores que ya están escalando su marca con nosotros.</p>
-        
-        <div class="masonry-grid">
-            <!-- BAJO PERFIL (PRIMERO) -->
-            <a href="https://instagram.com/bajo_perfil_artist" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/c6d82b6d-4e1e-4064-9782-291d854311d5.jpg" class="user-avatar" alt="bajo perfil">
-                <div class="user-name">Bajo Perfil</div>
-                <div class="user-handle">@bajo_perfil_artist</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
 
-            <a href="https://instagram.com/eneko.prod" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/006ef3b7-48d4-43a4-8527-1aaea68292f2.jpg?tr=width-120,height-120" class="user-avatar" alt="eneko">
-                <div class="user-name">eneko.prod</div>
-                <div class="user-handle">@eneko.prod</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
 
-            <a href="https://instagram.com/prodbydielenbeatzz" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/87baed37-f611-4760-8193-ed6b8cf226a5.jpg?tr=width-120,height-120" class="user-avatar" alt="dielen">
-                <div class="user-name">dielenbeatzz</div>
-                <div class="user-handle">@dielenbeatzz</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
+        <!-- Supabase & Auth -->
 
-            <a href="https://instagram.com/willieinspired" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/avatar_0382a813-85c7-46c3-8d2c-61a5692adffd_vkCmhNcg7?tr=width-120,height-120" class="user-avatar" alt="willie">
-                <div class="user-name">willieinspired</div>
-                <div class="user-handle">@willieinspired</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
 
-            <a href="https://instagram.com/maur.ito_" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/07357fbf-eea2-4daf-8b04-f390158df64a.jpg?tr=width-120,height-120" class="user-avatar" alt="roma">
-                <div class="user-name">romabeatz</div>
-                <div class="user-handle">@romabeatz</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
 
-            <a href="https://instagram.com/prod_santi808" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/2d575b37-ea6a-4708-9cd5-e658e99708ff.jpg?tr=width-120,height-120" class="user-avatar" alt="santi">
-                <div class="user-name">prod_santi808</div>
-                <div class="user-handle">@prod_santi808</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
+        <script src="/script/auth-guard.js"></script>
 
-            <a href="https://instagram.com/soydaniel_alonso" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/33475582-34d4-449c-bf91-2d39b2f83125.jpg?tr=width-120,height-120" class="user-avatar" alt="daniel">
-                <div class="user-name">daniel</div>
-                <div class="user-handle">@soydaniel_alonso</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
 
-            <a href="https://instagram.com/blodi.frfr" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/3d1db2f0-7128-443f-a1a9-ceb932c000da.jpg?tr=width-120,height-120" class="user-avatar" alt="blodi">
-                <div class="user-name">blodi</div>
-                <div class="user-handle">@blodi</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
 
-            <a href="https://instagram.com/rick_phxnky" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/3edacfc6-ac46-4ca2-b9e4-2baf4efcb9d9.jpg?tr=width-120,height-120" class="user-avatar" alt="rick">
-                <div class="user-name">rick.phxnky</div>
-                <div class="user-handle">@rick.phxnky</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
+        <script>
 
-            <a href="https://instagram.com/Yaksadv" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/47c6bba8-f454-4e23-bf0e-a7a16d553095.jpg?tr=width-120,height-120" class="user-avatar" alt="gama">
-                <div class="user-name">gama</div>
-                <div class="user-handle">@gama</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
+            // --- CURRENCY STATE ---
 
-            <a href="https://instagram.com/barajaas.330" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/551af656-f77a-423c-9ede-40bfb917b72a.jpg?tr=width-120,height-120" class="user-avatar" alt="andres">
-                <div class="user-name">prodby65_</div>
-                <div class="user-handle">@prodby65_</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
+            // Load saved currency or default to USD
 
-            <a href="https://instagram.com/prod_lilice" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/56c3f8b3-0379-476c-8bee-c79b671069d0.jpg?tr=width-120,height-120" class="user-avatar" alt="federico">
-                <div class="user-name">prod_lilicebeats</div>
-                <div class="user-handle">@prod_lilicebeats</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
+            let currentCurrency = localStorage.getItem('offszn_currency') || 'USD';
 
-            <a href="https://instagram.com/younganxietyy" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/5deec33a-a343-4d1c-a659-607dce6aea21.jpg?tr=width-120,height-120" class="user-avatar" alt="mateo">
-                <div class="user-name">koimattoru</div>
-                <div class="user-handle">@koimattoru</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
 
-            <a href="https://instagram.com/jotad.prod" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/77646b04-7d8e-4296-ae65-bc35f6ecdb2f.jpg?tr=width-120,height-120" class="user-avatar" alt="joce">
-                <div class="user-name">joce</div>
-                <div class="user-handle">@joce</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
 
-            <a href="https://instagram.com/bothsidesmusic" target="_blank" class="user-card">
-                <img src="https://ik.imagekit.io/6gzqp4xam/avatars/96d0a4f0-700f-4fd2-b7bd-cce3a2c2fd50.jpg?tr=width-120,height-120" class="user-avatar" alt="bothsides">
-                <div class="user-name">bothsides</div>
-                <div class="user-handle">@bothsides</div>
-                <div class="ig-link"><i class="bi bi-instagram"></i> Ver Instagram</div>
-            </a>
-        </div>
-    </section>
+            const rates = {
 
-    <!-- PREGUNTAS FRECUENTES -->
-    <section class="faq-section entry-anim" style="animation-delay: 0.6s;">
-        <h2 class="section-title">Preguntas Frecuentes</h2>
-        <p class="section-subtitle">Todo lo que necesitas saber sobre OFFSZN.</p>
+                'USD': { symbol: '$', starter: 5, pro: 7, basic: 0, label: 'USD $' },
 
-        <div class="faq-container">
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    ¿Qué incluye exactamente el Plan PRO?
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-                <div class="faq-answer">
-                    El Plan PRO es nuestra opción más completa. Incluye subidas ilimitadas de productos, 0% de comisión por venta (te quedas con todo el dinero), 300 créditos mensuales para usar en la plataforma, soporte VIP 24/7 y promoción destacada en el feed principal.
-                </div>
-            </div>
+                'PEN': { symbol: 'S/', starter: 19, pro: 25, basic: 0, label: 'PEN S/' }
 
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    ¿Cómo recibo mis pagos por las ventas?
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-                <div class="faq-answer">
-                    Los pagos se procesan de forma segura a través de nuestra pasarela integrada. Una vez que realizas una venta, el dinero se acredita en tu cuenta de OFFSZN y puedes solicitar el retiro a tu cuenta bancaria o PayPal según tu preferencia.
-                </div>
-            </div>
+            };
 
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    ¿Puedo participar si estoy empezando?
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-                <div class="faq-answer">
-                    ¡Por supuesto! El Plan Básico es gratuito y te permite subir hasta 30 productos para que pruebes la plataforma sin riesgos. A medida que crezcas, puedes escalar a Starter o PRO.
-                </div>
-            </div>
 
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    ¿Qué son los Créditos Mensuales?
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-                <div class="faq-answer">
-                    Los créditos son la moneda interna de OFFSZN. Se utilizan para potenciar tus productos, aparecer en secciones destacadas o acceder a herramientas exclusivas del Studio AI. Cada mes recibirás una cantidad fija según tu plan.
-                </div>
-            </div>
 
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    ¿Puedo cancelar mi suscripción cuando quiera?
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-                <div class="faq-answer">
-                    Sí, no hay contratos ni compromisos a largo plazo. Puedes cancelar o cambiar de plan en cualquier momento desde tu panel de configuración.
-                </div>
-            </div>
-        </div>
-    </section>
+            let selectedPlanForModal = 'pro';
 
-    <!-- FOOTER CONTACTO -->
-    <footer class="contact-footer">
-        <div class="section-subtitle">¿Aún tienes dudas?</div>
-        <a href="mailto:soporte@offszn.lat" class="contact-email">soporte@offszn.lat</a>
-        <a href="https://wa.link/jgult2" target="_blank" class="footer-wa-btn">
-            <i class="bi bi-whatsapp"></i> Escríbenos por WhatsApp
-        </a>
-        <div class="copyright">© 2026 OFFSZN. Todos los derechos reservados.</div>
-    </footer>
 
-    <script>
-        // === STATE ===
-        let currentFrequency = 'monthly';
-        let currentCurrency = localStorage.getItem('OFFSZN_CURRENCY') || 'USD';
 
-        // === PRICING DATA ===
-        const pricingData = {
-            'USD': {
-                symbol: '$',
-                monthly: { starter: 5, pro: 7, basic: 0 },
-                annual:  { starter: 20, pro: 30, basic: 0 }
-            },
-            'PEN': {
-                symbol: 'S/',
-                monthly: { starter: 19, pro: 25, basic: 0 },
-                annual:  { starter: 75, pro: 110, basic: 0 }
-            }
-        };
+            // Initialize UI Immediately (No Flash)
 
-        // === FREQUENCY TOGGLE ===
-        function setFrequency(freq) {
-            currentFrequency = freq;
-            document.querySelectorAll('.freq-opt').forEach(function(el) { el.classList.remove('active'); });
-            document.getElementById('freq-' + freq).classList.add('active');
+            const wrapper = document.querySelector('.currency-toggle-wrapper');
 
-            var badge = document.getElementById('savings-badge');
-            if (freq === 'annual') {
-                badge.classList.add('visible');
-            } else {
-                badge.classList.remove('visible');
-            }
-            renderPrices();
-        }
+            wrapper.classList.add('no-transition'); // Disable transition
 
-        // === CURRENCY TOGGLE ===
-        function setCurrency(curr) {
-            currentCurrency = curr;
-            localStorage.setItem('OFFSZN_CURRENCY', curr);
-            document.querySelectorAll('.curr-opt').forEach(function(el) { el.classList.remove('active'); });
-            document.getElementById('curr-' + curr).classList.add('active');
-            renderPrices();
-        }
 
-        // === RENDER PRICES ===
-        function renderPrices() {
-            var data = pricingData[currentCurrency];
-            var sym = data.symbol;
-            var prices = data[currentFrequency];
 
-            if (currentFrequency === 'monthly') {
-                document.getElementById('price-basic').innerHTML = sym + prices.basic + '<span>/mes</span>';
-                document.getElementById('price-starter').innerHTML = sym + prices.starter + '<span>/mes</span>';
-                document.getElementById('price-pro').innerHTML = sym + prices.pro + '<span>/mes</span>';
+            setCurrency(currentCurrency);
 
-                document.getElementById('note-basic').textContent = '';
-                document.getElementById('note-starter').textContent = '';
-                document.getElementById('note-pro').textContent = '';
-            } else {
-                // Annual: show attractive per-month price
-                var starterMonthly = (prices.starter / 12).toFixed(2);
-                var proMonthly = (prices.pro / 12).toFixed(2);
 
-                document.getElementById('price-basic').innerHTML = sym + '0<span>/mes</span>';
-                document.getElementById('price-starter').innerHTML = sym + starterMonthly + '<span>/mes</span>';
-                document.getElementById('price-pro').innerHTML = sym + proMonthly + '<span>/mes</span>';
 
-                document.getElementById('note-basic').textContent = '';
-                document.getElementById('note-starter').textContent = 'Cobrado anualmente (' + sym + prices.starter + '/ano)';
-                document.getElementById('note-pro').textContent = 'Cobrado anualmente (' + sym + prices.pro + '/ano)';
-            }
-        }
+            // Re-enable transition after a small tick
 
-        // === GO TO CHECKOUT ===
-        function goToCheckout(plan) {
-            if (typeof AuthUtils !== 'undefined' && !AuthUtils.isLoggedIn()) {
-                // Save selection to resume after login/signup
-                sessionStorage.setItem('offszn_pending_plan', JSON.stringify({
-                    plan: plan,
-                    currency: currentCurrency,
-                    interval: currentFrequency
-                }));
-                
-                openGuestModal();
-                return;
+            setTimeout(() => {
+
+                wrapper.classList.remove('no-transition');
+
+            }, 50);
+
+
+
+            function setCurrency(curr) {
+
+                currentCurrency = curr;
+
+                localStorage.setItem('offszn_currency', curr);
+
+
+
+                // UI Toggle
+
+                document.querySelectorAll('.currency-option').forEach(el => el.classList.remove('active'));
+
+                document.getElementById('opt-' + curr).classList.add('active');
+
+
+
+                const bg = document.getElementById('toggleBg');
+
+                bg.style.transform = curr === 'PEN' ? 'translateX(100%)' : 'translateX(0)';
+
+
+
+                // Update Text
+
+                const data = rates[curr];
+
+                document.getElementById('price-starter').innerHTML = `${data.symbol}${data.starter}<span>/mes</span>`;
+
+                document.getElementById('price-pro').innerHTML = `${data.symbol}${data.pro}<span>/mes</span>`;
+
+                document.getElementById('price-basic').innerHTML = `${data.symbol}${data.basic}<span>/mes</span>`;
+
             }
 
-            var url = 'checkout-v2.html?plan=' + plan + '&currency=' + currentCurrency + '&interval=' + currentFrequency;
-            window.location.href = url;
-        }
 
-        // === GUEST MODAL LOGIC ===
-        function openGuestModal() {
-            document.getElementById('guest-auth-modal').classList.add('active');
-        }
 
-        function closeGuestModal() {
-            document.getElementById('guest-auth-modal').classList.remove('active');
-        }
+            function goToCheckout(plan) {
 
-        function redirectToAuth(type) {
-            const url = type === 'signup' ? '/pages/register.html' : '/pages/login.html';
-            // We append a redirect back to planes so it resumes automatically
-            window.location.href = url + '?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
-        }
+                window.location.href = `checkout.html?plan=${plan}&currency=${currentCurrency}`;
 
-        // === PLAN STATUS CHECK ===
-        async function checkPlanStatus() {
-            try {
-                const tokenStr = localStorage.getItem('sb-qtjpvztpgfymjhhpoouq-auth-token');
-                if (!tokenStr) return;
-                const token = JSON.parse(tokenStr).access_token;
-
-                // Fetch high-level subscription status
-                const response = await fetch('/api/subscriptions/status', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const sub = await response.json();
-
-                if (sub && sub.status !== 'none' && sub.status !== 'expired') {
-                    updatePlanButtons(sub.plan_id.replace('plan_', ''), sub.status, sub);
-                } else {
-                    // Update for Free Plan
-                    updatePlanButtons('free', 'active', null);
-                }
-            } catch (err) {
-                console.error('Error checking plan status:', err);
             }
-        }
 
-        function updatePlanButtons(activePlan, status, subData) {
-            const plans = ['free', 'starter', 'pro'];
-            const planLevels = { 'free': 0, 'starter': 1, 'pro': 2 };
-            const activeLevel = planLevels[activePlan] !== undefined ? planLevels[activePlan] : -1;
+        </script>
 
-            plans.forEach(function(p) {
-                const btn = document.getElementById('btn-plan-' + p);
-                if (!btn) return;
-                
-                // Clear any existing dynamic message
-                let existingMsg = btn.parentElement.querySelector('.plan-status-msg');
-                if (existingMsg) existingMsg.remove();
-                
-                // Hide static notes under the button if they exist (like "Cancela cuando quieras" in PRO)
-                let staticNote = btn.nextElementSibling;
-                if (staticNote && staticNote.tagName.toLowerCase() === 'p') {
-                    staticNote.style.display = 'none';
+        <!-- Particles Background Script (Vanilla JS - No Dependencies) -->
+
+        <script>
+
+            document.addEventListener("DOMContentLoaded", () => {
+
+                const canvas = document.createElement('canvas');
+
+                const ctx = canvas.getContext('2d');
+
+                canvas.style.position = 'fixed';
+
+                canvas.style.top = '0';
+
+                canvas.style.left = '0';
+
+                canvas.style.width = '100%';
+
+                canvas.style.height = '100%';
+
+                canvas.style.zIndex = '-1'; // Behind everything
+
+                canvas.style.pointerEvents = 'none';
+
+                document.body.prepend(canvas);
+
+
+
+                let particles = [];
+
+                const particleCount = 60; // Enough for subtle effect
+
+
+
+                function resize() {
+
+                    canvas.width = window.innerWidth;
+
+                    canvas.height = window.innerHeight;
+
                 }
 
-                if (activePlan.includes(p)) {
-                    if (status === 'canceled') {
-                        // Special Case: Canceled but active benefits
-                        btn.innerText = 'Reactivar';
-                        btn.disabled = false;
-                        btn.style.opacity = '1';
-                        btn.style.cursor = 'pointer';
-                        btn.style.background = '#fff';
-                        btn.style.color = '#000';
-                        btn.onclick = () => handleSubscriptionReactivate();
-                        
-                        if (subData && subData.expiry) {
-                            const dateStr = new Date(subData.expiry).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-                            const msg = document.createElement('div');
-                            msg.className = 'plan-status-msg';
-                            msg.style.fontSize = '12px';
-                            // color varies by plan theme (pro has white bg so text should be darker)
-                            msg.style.color = p === 'pro' ? '#444' : '#888';
-                            msg.style.marginTop = '10px';
-                            msg.style.textAlign = 'center';
-                            msg.style.lineHeight = '1.4';
-                            msg.innerHTML = `Seguirás teniendo tus beneficios hasta el ${dateStr}.<br>Puedes renovar tu suscripción cuando quieras.`;
-                            btn.parentElement.appendChild(msg);
-                        }
-                    } else {
-                        // Truly active
-                        if (p === 'free') {
-                            btn.innerText = 'Tu Plan Actual';
-                            btn.disabled = true;
-                            btn.style.opacity = '0.6';
-                            btn.style.cursor = 'default';
-                            btn.style.background = '#222';
-                            btn.style.color = '#888';
-                            btn.onclick = null;
-                        } else {
-                            btn.innerText = 'Cancelar Suscripción';
-                            btn.disabled = false;
-                            btn.style.opacity = '1';
-                            btn.style.cursor = 'pointer';
-                            btn.style.background = p === 'pro' ? '#111' : '#222';
-                            btn.style.color = '#fff';
-                            btn.onclick = () => handleSubscriptionCancel();
+                window.addEventListener('resize', resize);
 
-                            if (subData && subData.expiry) {
-                                const dateStr = new Date(subData.expiry).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-                                const msg = document.createElement('div');
-                                msg.className = 'plan-status-msg';
-                                msg.style.fontSize = '12px';
-                                msg.style.color = p === 'pro' ? '#444' : '#888';
-                                msg.style.marginTop = '10px';
-                                msg.style.textAlign = 'center';
-                                msg.style.lineHeight = '1.4';
-                                msg.innerHTML = `Renovación automática el ${dateStr}.`;
-                                btn.parentElement.appendChild(msg);
-                            }
-                        }
+                resize();
+
+
+
+                class Particle {
+
+                    constructor() {
+
+                        this.x = Math.random() * canvas.width;
+
+                        this.y = Math.random() * canvas.height;
+
+                        this.vx = (Math.random() - 0.5) * 0.15; // Slow movement
+
+                        this.vy = (Math.random() - 0.5) * 0.15;
+
+                        this.size = Math.random() * 1.5;
+
+                        this.alpha = Math.random() * 0.4 + 0.1;
+
                     }
-                } else {
-                    const currentLevel = planLevels[p];
-                    if (currentLevel < activeLevel) {
-                        btn.innerText = 'Bloqueado';
-                        btn.disabled = true;
-                        btn.style.opacity = '0.3';
-                        btn.style.cursor = 'not-allowed';
-                        btn.style.background = 'transparent';
-                        btn.style.color = p === 'pro' ? '#000' : '#666';
-                        btn.onclick = null;
-                    } else {
-                        // Keep default behavior for upgrade
-                        if (staticNote && staticNote.tagName.toLowerCase() === 'p') {
-                            staticNote.style.display = 'block';
-                        }
+
+                    update() {
+
+                        this.x += this.vx;
+
+                        this.y += this.vy;
+
+                        if (this.x < 0) this.x = canvas.width;
+
+                        if (this.x > canvas.width) this.x = 0;
+
+                        if (this.y < 0) this.y = canvas.height;
+
+                        if (this.y > canvas.height) this.y = 0;
+
                     }
+
+                    draw() {
+
+                        ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+
+                        ctx.beginPath();
+
+                        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+
+                        ctx.fill();
+
+                    }
+
                 }
+
+
+
+                // Init
+
+                for (let i = 0; i < particleCount; i++) {
+
+                    particles.push(new Particle());
+
+                }
+
+
+
+                function animate() {
+
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    particles.forEach(p => {
+
+                        p.update();
+
+                        p.draw();
+
+                    });
+
+                    requestAnimationFrame(animate);
+
+                }
+
+                animate();
+
             });
-        }
 
-        function toggleFaq(btn) {
-            const item = btn.parentElement;
-            const isActive = item.classList.contains('active');
-            
-            // Cerrar otros
-            document.querySelectorAll('.faq-item').forEach(el => el.classList.remove('active'));
-            
-            if (!isActive) {
-                item.classList.add('active');
-            }
-        }
 
-        // === INITIALIZE ===
-        window.onload = function() {
-            renderPrices();
-            setTimeout(checkPlanStatus, 500);
-        };
 
-        async function handleSubscriptionReactivate() {
-            const confirmed = confirm('¿Deseas reactivar tu suscripción? Se restaurará el acceso completo y la renovación automática.');
-            if (!confirmed) return;
+            // --- SUCCESS MODAL LOGIC & REDIRECTION ---
 
-            const tokenStr = localStorage.getItem('sb-qtjpvztpgfymjhhpoouq-auth-token');
-            if(!tokenStr) return;
-            
-            try {
-                const token = JSON.parse(tokenStr).access_token;
-                const resp = await fetch('/api/subscriptions/reactivate', {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                const data = await resp.json();
-                if (resp.ok) {
-                    alert(data.message);
-                    checkPlanStatus(); // Refresh
-                } else {
-                    alert(data.error || 'Error al reactivar.');
+            document.addEventListener('DOMContentLoaded', () => {
+
+                const urlParams = new URLSearchParams(window.location.search);
+
+                const isUpgradeSuccess = urlParams.get('upgrade') === 'success';
+
+                const planKey = urlParams.get('plan');
+
+
+
+                if (isUpgradeSuccess && planKey) {
+
+                    const planName = planKey === 'starter' ? 'STARTER' : 'PRO';
+
+                    const planColor = planKey === 'starter' ? '#A78BFA' : '#FFD700';
+
+
+
+                    document.getElementById('successPlanName').innerText = planName;
+
+                    document.getElementById('successPlanName').style.color = planColor;
+
+                    document.getElementById('successModal').classList.add('active');
+
+
+
+                    // Clean URL
+
+                    window.history.replaceState({}, document.title, window.location.pathname);
+
                 }
-            } catch(e) { alert('Fallo de conexión.'); }
-        }
 
-        async function handleSubscriptionCancel() {
-            const confirmed = confirm('¿Estás seguro de que deseas cancelar tu suscripción? Seguirás teniendo acceso a tus beneficios hasta el final de tu periodo de facturación actual.');
-            if (!confirmed) return;
+            });
 
-            const tokenStr = localStorage.getItem('sb-qtjpvztpgfymjhhpoouq-auth-token');
-            if (!tokenStr) return;
 
-            try {
-                const token = JSON.parse(tokenStr).access_token;
-                const resp = await fetch('/api/subscriptions/cancel', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await resp.json();
-                if (resp.ok) {
-                    alert(data.message);
-                    checkPlanStatus(); // Refresh UI
-                } else {
-                    alert(data.error || 'Error al cancelar.');
-                }
-            } catch (e) { alert('Fallo de conexión.'); }
-        }
 
-        // === INIT ===
-        setCurrency(currentCurrency);
+            function closeSuccessModal() {
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // 🔥 RESUME PENDING CHECKOUT: If guest selected a plan then logged in/signed up
-            const pendingPlanRaw = sessionStorage.getItem('offszn_pending_plan');
-            if (pendingPlanRaw && AuthUtils && AuthUtils.isLoggedIn()) {
-                try {
-                    const pending = JSON.parse(pendingPlanRaw);
-                    sessionStorage.removeItem('offszn_pending_plan'); // Clear to avoid loops
-                    
-                    console.log("🚀 Resuming pending checkout for:", pending.plan);
-                    const url = `checkout-v2.html?plan=${pending.plan}&currency=${pending.currency}&interval=${pending.interval}`;
-                    window.location.href = url;
-                    return; // Stop further execution as we are redirecting
-                } catch(e) {
-                    console.error("Error resuming pending plan:", e);
-                }
+                document.getElementById('successModal').classList.remove('active');
+
             }
 
-            checkPlanStatus();
-        });
-    </script>
+        </script>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const container = document.getElementById('bg-particles');
-            if (container) {
-                // Generate 25 subtle particles for background effect
-                for (let i = 0; i < 25; i++) {
-                    const el = document.createElement('div');
-                    el.classList.add('particle');
-                    
-                    // Random sizes 1.5px to 4px
-                    const size = Math.random() * 2.5 + 1.5;
-                    el.style.width = `${size}px`;
-                    el.style.height = `${size}px`;
-                    
-                    // Random positions
-                    el.style.left = `${Math.random() * 100}%`;
-                    el.style.top = `${Math.random() * 100 + 100}%`; // Start below screen or near bottom
-                    
-                    // Random animations
-                    el.style.animationDuration = `${Math.random() * 15 + 20}s`; // 20-35s floating
-                    el.style.animationDelay = `${Math.random() * 10}s`;
-                    
-                    container.appendChild(el);
-                }
-            }
-        });
-    </script>
-    <!-- GUEST AUTH MODAL -->
-    <div id="guest-auth-modal" class="premium-modal">
-        <div class="modal-backdrop" onclick="closeGuestModal()"></div>
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeGuestModal()">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 6L6 18M6 6l12 12"></path>
-                </svg>
-            </button>
-
-            <div class="modal-header">
-                <h2>Crea tu cuenta</h2>
-                <p>Necesitas una cuenta en OFFSZN para poder activar y gestionar tu suscripción.</p>
-            </div>
-
-            <div class="modal-actions">
-                <button class="btn-primary" onclick="redirectToAuth('signup')">
-                    Registrarme ahora
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M5 12h14m-7-7l7 7-7 7"></path>
-                    </svg>
-                </button>
-                <button class="btn-secondary" onclick="redirectToAuth('login')">
-                    Ya tengo una cuenta
-                </button>
-            </div>
-            
-            <p class="modal-footer">Tu progreso se guardará y volverás aquí automáticamente.</p>
-        </div>
-    </div>
-
-    <style>
-        /* Premium Modal Styles */
-        .premium-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-
-        .premium-modal.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-backdrop {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-        }
-
-        .modal-content {
-            position: relative;
-            background: #0a0a0a;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 40px;
-            width: 100%;
-            max-width: 440px;
-            text-align: center;
-            transform: translateY(20px);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        .premium-modal.active .modal-content {
-            transform: translateY(0);
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.5);
-            cursor: pointer;
-            padding: 5px;
-            transition: color 0.2s;
-        }
-
-        .close-btn:hover {
-            color: white;
-        }
-
-        .modal-header .logo-circle {
-            width: 64px;
-            height: 64px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 24px;
-        }
-
-        .modal-header h2 {
-            font-size: 28px;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 12px;
-            letter-spacing: -0.02em;
-        }
-
-        .modal-header p {
-            color: rgba(255, 255, 255, 0.6);
-            line-height: 1.6;
-            margin-bottom: 32px;
-        }
-
-        .modal-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .btn-primary {
-            background: white;
-            color: black;
-            border: none;
-            padding: 16px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
-        .btn-primary:hover {
-            background: #f0f0f0;
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 16px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .modal-footer {
-            margin-top: 24px;
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.4);
-        }
-    </style>
 </body>
+
+
+
 </html>

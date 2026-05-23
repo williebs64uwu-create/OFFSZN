@@ -967,7 +967,9 @@
 
       try {
         // --- 0) FETCH USER'S PRODUCTS & INITIAL DATA IN PARALLEL ---
-        const [prodRes, viewsRes, ordersRes] = await Promise.all([
+        const dateFilter = startDate ? startDate.toISOString() : '2020-01-01T00:00:00Z';
+
+        const [prodRes, viewsRes, salesRes] = await Promise.all([
           window.supabaseClient
             .from('products')
             .select('id, name, image_url, storage_version')
@@ -978,18 +980,28 @@
             .from('page_views')
             .select('viewed_at')
             .eq('user_id', userId)
-            .gte('viewed_at', startDate ? startDate.toISOString() : '2020-01-01T00:00:00Z'),
+            .gte('viewed_at', dateFilter)
+            .limit(10000),
 
           window.supabaseClient
-            .from('orders')
-            .select('id, amount, total_price, created_at')
-            .eq('producer_id', userId)
-            .gte('created_at', startDate ? startDate.toISOString() : '2020-01-01T00:00:00Z')
+            .from('order_items')
+            .select('id, price_at_purchase, created_at, product_id, product:products!inner(producer_id)')
+            .eq('products.producer_id', userId)
+            .gte('created_at', dateFilter)
+            .limit(5000)
         ]);
 
         const userProducts = prodRes.data || [];
         const rawViews = viewsRes.data || [];
-        const rawOrders = ordersRes.data || [];
+        const rawSalesItems = salesRes.data || [];
+        // Normalize to order shape for chart helpers
+        const rawOrders = rawSalesItems.map(item => ({
+          id: item.id,
+          amount: item.price_at_purchase,
+          total_price: item.price_at_purchase,
+          created_at: item.created_at,
+          product_id: item.product_id
+        }));
         const productIds = userProducts.map(p => p.id).filter(Boolean);
 
         // --- B) REAL PLAYS (listening_history) - Optimized Chunks ---
@@ -1011,51 +1023,33 @@
           playResults.forEach(res => { if (res.data) rawPlays.push(...res.data); });
         }
 
-        // --- D) TOP PRODUCTS - Optimized Single Query with filter ---
+        // --- D) TOP PRODUCTS — from sales items already fetched ---
         let topProductsData = [];
-        if (rawOrders.length > 0) {
-          const orderIds = rawOrders.map(o => o.id).filter(Boolean);
-          let rawOrderItems = [];
+        if (rawSalesItems.length > 0) {
+          const productStats = {};
+          rawSalesItems.forEach(item => {
+            const pid = item.product_id;
+            if (!productStats[pid]) productStats[pid] = { count: 0, revenue: 0 };
+            productStats[pid].count++;
+            productStats[pid].revenue += (item.price_at_purchase || 0);
+          });
 
-          const orderChunkSize = 50; // Reduced from 200 to 50 to avoid URI limit
-          const itemPromises = [];
-          for (let i = 0; i < orderIds.length; i += orderChunkSize) {
-            const chunk = orderIds.slice(i, i + orderChunkSize);
-            itemPromises.push(
-              window.supabaseClient
-                .from('order_items')
-                .select('product_id, price_at_purchase')
-                .in('order_id', chunk)
-            );
-          }
-          const itemResults = await Promise.all(itemPromises);
-          itemResults.forEach(res => { if (res.data) rawOrderItems.push(...res.data); });
+          const sortedIds = Object.keys(productStats)
+            .sort((a, b) => productStats[b].revenue - productStats[a].revenue)
+            .slice(0, 5);
 
-          if (rawOrderItems.length > 0) {
-            const productStats = {};
-            rawOrderItems.forEach(item => {
-              if (!productStats[item.product_id]) productStats[item.product_id] = { count: 0, revenue: 0 };
-              productStats[item.product_id].count++;
-              productStats[item.product_id].revenue += (item.price_at_purchase || 0);
-            });
-
-            const sortedIds = Object.keys(productStats)
-              .sort((a, b) => productStats[b].revenue - productStats[a].revenue)
-              .slice(0, 5);
-
-            topProductsData = sortedIds.map(id => {
-              const details = userProducts.find(p => p.id == id);
-              const stats = productStats[id];
-              return {
-                id: details?.id,
-                name: details?.name || 'Producto Eliminado',
-                sales: stats.count,
-                revenue: stats.revenue,
-                img: details?.image_url,
-                storage_version: details?.storage_version
-              };
-            });
-          }
+          topProductsData = sortedIds.map(id => {
+            const details = userProducts.find(p => p.id == id);
+            const stats = productStats[id];
+            return {
+              id: details?.id,
+              name: details?.name || 'Producto Eliminado',
+              sales: stats.count,
+              revenue: stats.revenue,
+              img: details?.image_url,
+              storage_version: details?.storage_version
+            };
+          });
         }
 
         // --- PROCESS DATA ---

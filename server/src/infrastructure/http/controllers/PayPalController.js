@@ -663,6 +663,26 @@ export const capturePayPalOrder = async (req, res) => {
                 console.warn("[PayPalCapture] Warning: Cart is empty during capture.");
             }
 
+            // SECURE PRICE RE-CALCULATION (CAPTURE PHASE)
+            const FACTORY_DEFAULTS = {
+                basic: 20.00,
+                premium: 50.00,
+                trackout: 100.00,
+                unlimited: 300.00,
+                exclusive: 500.00
+            };
+
+            const productIds = cartItems.map(item => item.product?.id).filter(Boolean);
+            const { data: dbProducts } = await supabase
+                .from('products')
+                .select('id, price_basic, price_premium, price_stems, price_exclusive, product_type, licenses, producer_id')
+                .in('id', productIds)
+                .or('status.eq.approved,status.eq.published');
+
+            const uniqueProducerIds = [...new Set((dbProducts || []).map(p => p.producer_id).filter(Boolean))];
+            const orderProducerId = uniqueProducerIds.length === 1 ? uniqueProducerIds[0] : null;
+            const orderProductId = cartItems.length === 1 ? cartItems[0].product?.id : null;
+
             // 2. Create Order Record (Main Record)
             const totalPaid = response.result.purchase_units.reduce((acc, unit) => {
                 const capture = unit.payments?.captures?.[0];
@@ -680,7 +700,9 @@ export const capturePayPalOrder = async (req, res) => {
                     status: 'completed',
                     total_price: totalPaid,
                     amount: totalPaid,
-                    guest_email: payerEmail // CORRECT COLUMN: guest_email
+                    guest_email: payerEmail,
+                    producer_id: orderProducerId,
+                    product_id: orderProductId ? parseInt(orderProductId, 10) : null
                 })
                 .select()
                 .single();
@@ -690,22 +712,6 @@ export const capturePayPalOrder = async (req, res) => {
             // 3. Create Transactions and Order Items
             const transactions = [];
             const orderItems = [];
-
-            // SECURE PRICE RE-CALCULATION (CAPTURE PHASE)
-            const FACTORY_DEFAULTS = {
-                basic: 20.00,
-                premium: 50.00,
-                trackout: 100.00,
-                unlimited: 300.00,
-                exclusive: 500.00
-            };
-
-            const productIds = cartItems.map(item => item.product.id);
-            const { data: dbProducts } = await supabase
-                .from('products')
-                .select('id, price_basic, price_premium, price_stems, price_exclusive, product_type, licenses, producer_id')
-                .in('id', productIds)
-                .eq('status', 'approved');
 
             const producerIds = [...new Set(dbProducts.map(p => p.producer_id))];
             const [{ data: producerSettings, error: pSetError }, { data: producerPlans, error: pPlanError }] = await Promise.all([
@@ -717,8 +723,8 @@ export const capturePayPalOrder = async (req, res) => {
             if (pPlanError) console.error("[PayPalCapture] Error fetching producer plans:", pPlanError);
 
             let subtotalForCoupon = 0;
-            dbProducts.forEach(p => {
-                const item = cartItems.find(ci => ci.product.id === p.id);
+            (dbProducts || []).forEach(p => {
+                const item = cartItems.find(ci => String(ci.product?.id) === String(p.id));
                 if (item) {
                     // This is a simplified subtotal for global coupon checks
                     subtotalForCoupon += parseFloat(item.variant_price) || 0;
@@ -782,8 +788,11 @@ export const capturePayPalOrder = async (req, res) => {
             const globalDiscountFactor = subtotalForCoupon > 0 ? (subtotalForCoupon - totalOrderDiscount) / subtotalForCoupon : 1.0;
 
             cartItems.forEach(item => {
-                const dbProd = dbProducts.find(p => p.id === item.product.id);
-                if (!dbProd) return;
+                const dbProd = (dbProducts || []).find(p => String(p.id) === String(item.product?.id));
+                if (!dbProd) {
+                    console.warn(`[PayPalCapture] Skipping item — product ${item.product?.id} not found (approved/published)`);
+                    return;
+                }
 
                 const producer = producerSettings?.find(u => u.id === dbProd.producer_id);
                 let verifiedPrice = 0;
@@ -864,11 +873,19 @@ export const capturePayPalOrder = async (req, res) => {
                 });
             });
 
+            if (cartItems.length > 0 && orderItems.length === 0) {
+                console.error(`[PayPalCapture] CRITICAL: ${cartItems.length} cart item(s) but 0 order_items created. ProductIds: ${productIds.join(',')}`);
+            }
+
             const { error: transError } = await supabase.from('transactions').insert(transactions);
             if (transError) console.error("[PayPalCapture] Error recording transactions:", transError);
 
             const { error: itemsError } = await supabase.from('order_items').insert(orderItems);
-            if (itemsError) console.error("[PayPalCapture] Error recording order items:", itemsError);
+            if (itemsError) {
+                console.error("[PayPalCapture] Error recording order items:", itemsError);
+            } else if (orderItems.length > 0) {
+                console.log(`[PayPalCapture] Recorded ${orderItems.length} order_item(s) for order ${order.id}`);
+            }
 
             // 4. Update Sales Count
             for (const item of cartItems) {

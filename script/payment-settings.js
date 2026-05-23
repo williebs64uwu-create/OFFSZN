@@ -133,7 +133,7 @@ const PaymentSettings = {
                     id,
                     price_at_purchase,
                     created_at,
-                    product:products(id, name, producer_id),
+                    product:products!inner(id, name, producer_id),
                     order:orders(id, transaction_id, status, user_id, guest_email, buyer:users(nickname, email))
                 `)
                 .eq('products.producer_id', this.userId)
@@ -174,54 +174,30 @@ const PaymentSettings = {
         if (!container) return;
 
         container.innerHTML = '';
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 6; i++) {
             const row = document.createElement('div');
-            row.className = 'skeleton-row';
+            row.className = 'transaction-item tx-grid tx-skeleton-item';
 
-            const leftCol = document.createElement('div');
-            leftCol.style.display = 'flex';
-            leftCol.style.alignItems = 'center';
-            leftCol.style.gap = '12px';
+            const cb = document.createElement('div');
+            cb.className = 'skeleton-base tx-skel-checkbox';
 
-            const circle = document.createElement('div');
-            circle.className = 'skeleton-base skeleton-circle';
-            circle.style.width = '40px';
-            circle.style.height = '40px';
+            const status = document.createElement('div');
+            status.className = 'skeleton-base tx-skel-status';
 
-            const info = document.createElement('div');
-            info.style.flex = '1';
-            const text1 = document.createElement('div');
-            text1.className = 'skeleton-base skeleton-text';
-            text1.style.width = '120px';
-            text1.style.marginBottom = '6px';
-            const text2 = document.createElement('div');
-            text2.className = 'skeleton-base skeleton-text';
-            text2.style.width = '160px';
-            text2.style.marginBottom = '0';
-
-            info.appendChild(text1);
-            info.appendChild(text2);
-            leftCol.appendChild(circle);
-            leftCol.appendChild(info);
+            const email = document.createElement('div');
+            email.className = 'skeleton-base tx-skel-email';
+            email.style.width = `${55 + (i % 3) * 12}%`;
 
             const date = document.createElement('div');
-            date.className = 'skeleton-base skeleton-text';
-            date.style.width = '80px';
-            date.style.marginBottom = '0';
-
-            const statusContainer = document.createElement('div');
-            const status = document.createElement('div');
-            status.className = 'skeleton-base skeleton-status';
-            statusContainer.appendChild(status);
+            date.className = 'skeleton-base tx-skel-date';
 
             const amount = document.createElement('div');
-            amount.className = 'skeleton-base skeleton-amount';
+            amount.className = 'skeleton-base tx-skel-amount';
 
-            row.appendChild(leftCol);
-            row.appendChild(date);
-            row.appendChild(statusContainer);
-            row.appendChild(amount);
+            const btn = document.createElement('div');
+            btn.className = 'skeleton-base tx-skel-btn';
 
+            row.append(cb, status, email, date, amount, btn);
             container.appendChild(row);
         }
     },
@@ -382,9 +358,6 @@ const PaymentSettings = {
             // 3.5 Date
             const dateDiv = document.createElement('div');
             dateDiv.className = 'tr-date';
-            dateDiv.style.fontSize = '0.85rem';
-            dateDiv.style.color = '#71717a';
-            dateDiv.style.fontWeight = '500';
             
             const saleDate = new Date(sale.created_at);
             const today = new Date();
@@ -414,12 +387,10 @@ const PaymentSettings = {
 
             // 5. Actions
             const actionDiv = document.createElement('div');
-            actionDiv.style.display = 'flex';
-            actionDiv.style.justifyContent = 'center';
             const detailsBtn = document.createElement('button');
-            detailsBtn.className = 'btn-details';
-            detailsBtn.title = "Ver Detalles";
-            detailsBtn.innerHTML = '<i class="bi bi-three-dots"></i>';
+            detailsBtn.type = 'button';
+            detailsBtn.className = 'btn-view-details';
+            detailsBtn.textContent = 'ver detalles';
             detailsBtn.onclick = () => this.showTransactionDetails(sale);
             actionDiv.appendChild(detailsBtn);
 
@@ -457,13 +428,8 @@ const PaymentSettings = {
         }
 
         if (exportBtn) {
-            if (selectedCount === 0) {
-                exportBtn.style.opacity = '0.5';
-                exportBtn.style.pointerEvents = 'none';
-            } else {
-                exportBtn.style.opacity = '1';
-                exportBtn.style.pointerEvents = 'auto';
-            }
+            const hasRows = (this.data.filteredSales || []).length > 0;
+            exportBtn.disabled = !hasRows;
         }
 
         if (prevBtn) prevBtn.disabled = this.data.currentPage <= 1;
@@ -507,7 +473,7 @@ const PaymentSettings = {
         // Export Button
         const exportBtn = document.getElementById('btn-export-reports');
         if (exportBtn) {
-            exportBtn.onclick = () => this.exportToCSV();
+            exportBtn.onclick = () => this.exportToText();
         }
 
         // Pagination
@@ -539,14 +505,14 @@ const PaymentSettings = {
         if (closeBtn2) closeBtn2.onclick = () => this.closeDetailsModal();
     },
 
-    exportToCSV: function() {
+    exportToText: function() {
         const selectedIds = this.data.selectedSalesIds;
         let toExport = [];
-        
+
         if (selectedIds.size > 0) {
             toExport = this.data.sales.filter(s => selectedIds.has(s.id));
         } else {
-            toExport = this.data.filteredSales;
+            toExport = this.data.filteredSales || [];
         }
 
         if (toExport.length === 0) {
@@ -554,29 +520,39 @@ const PaymentSettings = {
             return;
         }
 
-        const headers = ["Fecha", "Email Comprador", "Producto", "Monto", "Estado", "ID Transaccion"];
-        const rows = toExport.map(s => [
-            new Date(s.created_at).toLocaleString(),
-            s.order?.buyer?.email || s.order?.guest_email || "N/A",
-            s.product?.name || "Eliminado",
-            s.price_at_purchase || 0,
-            this.mapStatus(s.order?.status || 'completed').text,
-            s.order?.transaction_id || "N/A"
-        ]);
+        const lines = [
+            'OFFSZN — Reporte de ventas',
+            `Generado: ${new Date().toLocaleString('es-ES')}`,
+            `Total: ${toExport.length} transacción(es)`,
+            '',
+            '─'.repeat(48)
+        ];
 
-        let csvContent = "data:text/csv;charset=utf-8," 
-            + headers.join(",") + "\n"
-            + rows.map(e => e.join(",")).join("\n");
+        toExport.forEach((s, i) => {
+            const amount = parseFloat(s.price_at_purchase || 0);
+            const monto = amount <= 0 ? 'GRATIS' : `$${amount.toFixed(2)} USD`;
+            lines.push(
+                `${i + 1}. ${s.product?.name || 'Producto eliminado'}`,
+                `   Fecha:     ${new Date(s.created_at).toLocaleString('es-ES')}`,
+                `   Comprador: ${s.order?.buyer?.email || s.order?.guest_email || 'N/A'}`,
+                `   Monto:     ${monto}`,
+                `   Estado:    ${this.mapStatus(s.order?.status || 'completed').text}`,
+                `   ID:        ${s.order?.transaction_id || 'N/A'}`,
+                ''
+            );
+        });
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `reporte_ventas_${new Date().toISOString().split('T')[0]}.csv`);
+        const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `reporte_ventas_${new Date().toISOString().split('T')[0]}.txt`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
 
-        if (window.showToast) window.showToast("Reporte exportado correctamente.", "success");
+        if (window.showToast) window.showToast("Reporte de texto exportado.", "success");
     },
 
     showTransactionDetails: function(sale) {

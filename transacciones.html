@@ -119,32 +119,36 @@
             background: rgba(255, 255, 255, 0.05);
         }
 
-        .btn-export {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            font-weight: 600;
+        .tx-export-text {
+            background: none;
+            border: none;
+            color: #71717a;
+            font-size: 0.85rem;
+            font-weight: 500;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
+            padding: 0;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            transition: color 0.2s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
-        .btn-export:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
+        .tx-export-text:hover:not(:disabled) {
+            color: #fff;
+        }
+
+        .tx-export-text:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
         }
 
         /* Revised Grid */
         .tx-grid {
             display: grid;
-            grid-template-columns: 40px 130px 1fr 100px 100px 50px;
+            grid-template-columns: 36px 120px minmax(140px, 1fr) 72px 72px 108px;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .tx-table-header {
@@ -204,27 +208,83 @@
             text-overflow: ellipsis;
         }
 
+        .tr-date,
+        .tr-amount {
+            font-size: 0.85rem;
+            color: #a1a1aa;
+            text-align: left;
+        }
+
         .tr-amount {
             font-weight: 700;
             color: #fff;
-            text-align: right;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
-        .btn-details {
-            background: none;
-            border: none;
-            color: #666;
+        .btn-view-details {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #a1a1aa;
+            padding: 6px 12px;
+            border-radius: 100px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
             cursor: pointer;
-            font-size: 1.2rem;
-            padding: 4px;
-            transition: color 0.2s;
-            display: flex;
-            justify-content: center;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            white-space: nowrap;
+            width: 100%;
         }
 
-        .btn-details:hover {
+        .btn-view-details:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.22);
             color: #fff;
+        }
+
+        /* Skeleton rows — mismo grid que filas reales */
+        .tx-skeleton-item {
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            pointer-events: none;
+        }
+
+        .tx-skel-checkbox {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+        }
+
+        .tx-skel-status {
+            width: 88px;
+            height: 26px;
+            border-radius: 6px;
+        }
+
+        .tx-skel-email {
+            width: 72%;
+            max-width: 200px;
+            height: 14px;
+            border-radius: 4px;
+        }
+
+        .tx-skel-date {
+            width: 36px;
+            height: 14px;
+            border-radius: 4px;
+        }
+
+        .tx-skel-amount {
+            width: 44px;
+            height: 14px;
+            border-radius: 4px;
+        }
+
+        .tx-skel-btn {
+            width: 88px;
+            height: 28px;
+            border-radius: 100px;
+            justify-self: end;
         }
 
         /* Pagination Footer */
@@ -510,9 +570,7 @@
 
                     <div class="tx-header-actions">
                         <input type="text" id="tx-search-input" class="tx-filter-input" placeholder="Filtrar por email de comprador...">
-                        <button id="btn-export-reports" class="btn-export">
-                            <i class="bi bi-download"></i> Exportar Reporte
-                        </button>
+                        <button type="button" id="btn-export-reports" class="tx-export-text">Exportar reporte (.txt)</button>
                     </div>
 
                     <div class="tx-table-container" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; overflow: hidden;">
@@ -521,7 +579,7 @@
                             <span>Estado</span>
                             <span>Email</span>
                             <span>Fecha</span>
-                            <span style="text-align: right;">Monto</span>
+                            <span>Monto</span>
                             <span></span>
                         </div>
 
