@@ -88,7 +88,7 @@ if (!window.switchStoreTab) {
             return `https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/${cleanPath}`;
         };
 
-        grid.innerHTML = filtered.map((p, idx) => {
+        grid.innerHTML = filtered.slice(0, 6).map((p, idx) => {
             const img = resolveImg(p.image_url, p.r2_version || p.storage_version);
             if (window.IS_LIVE_PROFILE) {
                 const type = p.product_type?.toLowerCase() || 'beat';
@@ -137,6 +137,7 @@ if (!window.switchStoreTab) {
         if (window.bindDragScroll) {
             setTimeout(() => { window.bindDragScroll(grid.parentNode); }, 50);
         }
+        setTimeout(() => { if (window.updateShelfArrows) window.updateShelfArrows(sectionId); }, 100);
     };
 }
 
@@ -196,7 +197,7 @@ if (!window.filterStoreByGenre) {
             return `https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/${cleanPath}`;
         };
 
-        grid.innerHTML = genreFiltered.map((p, idx) => {
+        grid.innerHTML = genreFiltered.slice(0, 6).map((p, idx) => {
             const img = resolveImg(p.image_url, p.r2_version || p.storage_version);
             if (window.IS_LIVE_PROFILE) {
                 const type = p.product_type?.toLowerCase() || 'beat';
@@ -245,6 +246,7 @@ if (!window.filterStoreByGenre) {
         if (window.bindDragScroll) {
             setTimeout(() => { window.bindDragScroll(grid.parentNode); }, 50);
         }
+        setTimeout(() => { if (window.updateShelfArrows) window.updateShelfArrows(sectionId); }, 100);
     };
 }
 
@@ -256,6 +258,34 @@ if (!window.slideStoreShelf) {
         const scrollAmount = card ? (card.clientWidth + 16) * 2 : 400;
         shelf.scrollBy({ left: scrollAmount * dir, behavior: 'smooth' });
     };
+}
+
+if (!window.updateShelfArrows) {
+    window.updateShelfArrows = function(sectionId) {
+        const shelf = document.getElementById(`products-grid-${sectionId}`);
+        const btnPrev = document.getElementById(`btn-prev-${sectionId}`);
+        const btnNext = document.getElementById(`btn-next-${sectionId}`);
+        if (!shelf || !btnPrev || !btnNext) return;
+
+        const canScrollLeft = shelf.scrollLeft > 2;
+        const canScrollRight = Math.ceil(shelf.scrollLeft + shelf.clientWidth) < shelf.scrollWidth - 2;
+
+        btnPrev.style.opacity = canScrollLeft ? '1' : '0.3';
+        btnPrev.style.cursor = canScrollLeft ? 'pointer' : 'not-allowed';
+        btnPrev.disabled = !canScrollLeft;
+
+        btnNext.style.opacity = canScrollRight ? '1' : '0.3';
+        btnNext.style.cursor = canScrollRight ? 'pointer' : 'not-allowed';
+        btnNext.disabled = !canScrollRight;
+    };
+    window.addEventListener('resize', () => {
+        document.querySelectorAll('.products-shelf').forEach(shelf => {
+            if (shelf.id.startsWith('products-grid-')) {
+                const sid = shelf.id.replace('products-grid-', '');
+                window.updateShelfArrows(sid);
+            }
+        });
+    });
 }
 
 // --- PREMIUM LICENSE DETAIL MODAL LOGIC ---
@@ -553,10 +583,10 @@ export class RendererEngine {
                     // Personalizar = NO -> Completamente transparente, sin bordes, sin desenfoque (OFF)
                     // 🔥 FIX BUILDER: In the builder preview, IS_LIVE_PROFILE is false, so we use
                     // `sticky` — not `fixed`. With `fixed`, the navbar escapes the scrollable
-                    // `.preview-device` container and glues to the browser viewport, leaving a
-                    // massive black gap where products should be. Only use `fixed` on the real
-                    // live profile page where the store-root IS the full viewport.
+                    // `.preview-device` container and glues to the browser viewport.
+                    // We add height: 0 so it doesn't push the hero content down, simulating fixed behavior.
                     const _navWrapPos = window.IS_LIVE_PROFILE ? 'fixed' : 'sticky';
+                    const _builderOverlapHack = window.IS_LIVE_PROFILE ? '' : 'height: 0 !important; overflow: visible !important;';
                     styleEl.innerHTML = `
                         .store-root > .rendered-navbar-wrapper {
                             position: ${_navWrapPos} !important;
@@ -564,6 +594,7 @@ export class RendererEngine {
                             left: 0;
                             width: 100%;
                             z-index: 100;
+                            ${_builderOverlapHack}
                         }
                         .store-root > .rendered-navbar-wrapper > .rendered-navbar.prof-nav {
                             background: transparent !important;
@@ -951,11 +982,11 @@ export class RendererEngine {
                                 <div class="view-all" id="view-all-products" style="cursor: pointer;">
                                     Ver todos <i class="bi bi-arrow-right"></i>
                                 </div>
-                                <button class="btn-nav-mini prev" onclick="window.slideStoreShelf('${section.id}', -1)"><i class="bi bi-chevron-left"></i></button>
-                                <button class="btn-nav-mini next" onclick="window.slideStoreShelf('${section.id}', 1)"><i class="bi bi-chevron-right"></i></button>
+                                <button id="btn-prev-${section.id}" class="btn-nav-mini prev" onclick="window.slideStoreShelf('${section.id}', -1)"><i class="bi bi-chevron-left"></i></button>
+                                <button id="btn-next-${section.id}" class="btn-nav-mini next" onclick="window.slideStoreShelf('${section.id}', 1)"><i class="bi bi-chevron-right"></i></button>
                             </div>
                         </div>
-                        <div id="products-grid-${section.id}" class="products-shelf">
+                        <div id="products-grid-${section.id}" class="products-shelf" onscroll="if(window.updateShelfArrows) window.updateShelfArrows('${section.id}')">
                             <!-- Los productos se inyectan dinámicamente aquí -->
                         </div>
                     </div>
