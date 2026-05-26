@@ -364,28 +364,101 @@ window.AuthUtils = {
 
      */
 
-    getAuthorizedUrl: async function (pathOrUrl) {
+    /**
+     * Strips signed R2 URLs / proxy URLs down to the storage key (e.g. products/covers/...).
+     */
+    normalizeR2StoragePath: function (pathOrUrl) {
+        if (!pathOrUrl || typeof pathOrUrl !== 'string') return pathOrUrl;
+
+        let key = pathOrUrl.split('?')[0];
+
+        if (key.startsWith('http')) {
+            if (key.includes('/api/r2-public/')) {
+                key = key.split('/api/r2-public/')[1];
+            } else if (key.includes('.r2.cloudflarestorage.com/')) {
+                key = key.split('.r2.cloudflarestorage.com/')[1];
+            } else {
+                try {
+                    key = new URL(key).pathname;
+                } catch (e) { }
+            }
+        }
+
+        while (key.startsWith('/')) key = key.substring(1);
+
+        const bucketPrefixes = ['offsznlatbucket/', 'offszn-storage/', 'bucket3lat/'];
+        for (const prefix of bucketPrefixes) {
+            if (key.toLowerCase().startsWith(prefix)) {
+                key = key.substring(prefix.length);
+            }
+        }
+
+        return key.replace(/\/\/+/g, '/');
+    },
+
+    isPublicR2Key: function (key) {
+        if (!key) return false;
+        const publicPrefixes = [
+            'products/', 'beats/mp3/', 'mp3_tagged/', 'avatars/', 'public/', 'banners/',
+            'drumkits/', 'temp-previews/', 'covers/', 'audio/',
+            'secure-products/beats/mp3_tagged/'
+        ];
+        return publicPrefixes.some(prefix => key.startsWith(prefix));
+    },
+
+    /** Tagged MP3 previews on the marketplace — guests may stream without signing. */
+    isPreviewAudioKey: function (key) {
+        if (!key || typeof key !== 'string') return false;
+        const k = key.toLowerCase();
+        if (!/\.(mp3|m4a|aac)(\?|$)/.test(k)) return false;
+        const privatePatterns = ['/wav/', 'wav_untagged', '/stems/', '/kits/', '.wav', '.zip', '.rar'];
+        if (privatePatterns.some(p => k.includes(p))) return false;
+        return true;
+    },
+
+    /** Sync public preview URL when possible (no download-url round trip). */
+    resolvePreviewMediaUrl: function (pathOrUrl, version) {
+        if (!pathOrUrl) return null;
+        if (typeof pathOrUrl === 'string' && pathOrUrl.includes('pub-') && pathOrUrl.includes('.r2.dev')) {
+            return pathOrUrl;
+        }
+        if (typeof pathOrUrl === 'string' && pathOrUrl.includes('r2-public/')) {
+            return pathOrUrl;
+        }
+        if (!this.isR2Url(pathOrUrl)) {
+            return pathOrUrl.startsWith('http') ? pathOrUrl : null;
+        }
+        const key = this.normalizeR2StoragePath(pathOrUrl);
+        if (!key) return null;
+        if (this.isPublicR2Key(key) || this.isPreviewAudioKey(key)) {
+            return this.getR2PublicProxyUrl(key, version || 'v2');
+        }
+        return null;
+    },
+
+    getR2PublicProxyUrl: function (key, version) {
+        const apiRoot = this._getApiUrl();
+        const base = apiRoot.replace(/\/api\/?$/, '') || 'https://offszn.lat';
+        const cleanKey = key.startsWith('/') ? key.substring(1) : key;
+        const v = version && version !== 'supabase' ? `?v=${version}` : '';
+        return `${base}/api/r2-public/${cleanKey}${v}`;
+    },
+
+    getAuthorizedUrl: async function (pathOrUrl, version, productId) {
 
         if (!pathOrUrl) return null;
 
-
+        const storageVersion = version || 'v3';
+        const cacheKey = `${pathOrUrl}|${storageVersion}`;
 
         // --- CACHE CHECK ---
-
-        if (this._urlCache[pathOrUrl]) {
-
-            return this._urlCache[pathOrUrl];
-
+        if (this._urlCache[cacheKey]) {
+            return this._urlCache[cacheKey];
         }
 
-
-
-        // 🔥 PREVENT DOUBLE SIGNING: If already contains signature params, return as is
-
+        // Never reuse expired presigned URLs from DB — normalize to key first
         if (typeof pathOrUrl === 'string' && pathOrUrl.includes('X-Amz-Signature')) {
-
-            return pathOrUrl;
-
+            pathOrUrl = this.normalizeR2StoragePath(pathOrUrl);
         }
 
 
@@ -502,14 +575,18 @@ window.AuthUtils = {
 
         if (!key) return pathOrUrl;
 
+        // Public covers, tagged MP3 previews, legacy audio paths — proxy (no auth)
+        if (this.isPublicR2Key(key) || this.isPreviewAudioKey(key)) {
+            const proxyUrl = this.getR2PublicProxyUrl(key, storageVersion);
+            this._urlCache[cacheKey] = proxyUrl;
+            return proxyUrl;
+        }
 
-
-        // --- SIGNING VIA API ---
+        // --- SIGNING VIA API (private assets only) ---
 
         try {
 
-            const token = this.getAccessToken(); // Use self
-
+            const token = this.getAccessToken();
             const response = await fetch(`${this._apiUrl}/r2/download-url`, {
 
                 method: 'POST',
@@ -522,7 +599,7 @@ window.AuthUtils = {
 
                 },
 
-                body: JSON.stringify({ key })
+                body: JSON.stringify({ key, version: storageVersion, productId })
 
             });
 
@@ -542,7 +619,7 @@ window.AuthUtils = {
 
             const { downloadUrl } = await response.json();
 
-            this._urlCache[pathOrUrl] = downloadUrl; // Cache result
+            this._urlCache[cacheKey] = downloadUrl; // Cache result
 
             return downloadUrl;
 
@@ -1361,6 +1438,8 @@ window.addEventListener('currencyChanged', () => window.CurrencyManager.updateAl
 window.getAccessToken = window.AuthUtils.getAccessToken.bind(window.AuthUtils);
 
 window.getAuthorizedUrl = window.AuthUtils.getAuthorizedUrl.bind(window.AuthUtils);
+
+window.resolvePreviewMediaUrl = window.AuthUtils.resolvePreviewMediaUrl.bind(window.AuthUtils);
 
 window.deleteFromR2 = window.AuthUtils.deleteFromR2.bind(window.AuthUtils);
 

@@ -487,7 +487,15 @@ window.StickyPlayer = (function () {
         if (isPublicDirect || isPublicProxied) {
             finalAudioUrl = audioUrl; // Synchronous, keeping gesture alive
         } else {
-            finalAudioUrl = await window.getAuthorizedUrl(audioUrl, trackData.storage_version || trackData.r2_version || 'v2', trackData.id);
+            const syncPreview = window.AuthUtils?.resolvePreviewMediaUrl?.(
+                audioUrl,
+                trackData.storage_version || trackData.r2_version || 'v2'
+            );
+            finalAudioUrl = syncPreview || await window.getAuthorizedUrl(
+                audioUrl,
+                trackData.storage_version || trackData.r2_version || 'v2',
+                trackData.id
+            );
         }
 
         // --- RACE CONDITION CHECK ---

@@ -35,11 +35,20 @@ function stripToRelativeKey(url) {
   if (clean.startsWith('audio/')) clean = clean.substring(6);
   if (clean.startsWith('covers/')) clean = clean.substring(7);
   
-  // If it's still absolute (e.g. Cloudflare R2 direct domain), fallback to grabbing from UUID onwards
-  if (clean.startsWith('http')) {
+  // Cloudflare R2 direct domain (v1/v2/v3) — keep full key path after hostname
+  if (clean.includes('r2.cloudflarestorage.com/')) {
+    clean = clean.split('r2.cloudflarestorage.com/')[1];
+  } else if (clean.startsWith('http')) {
     const uuidMatch = clean.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
     if (uuidMatch) {
       clean = clean.substring(uuidMatch.index);
+    }
+  }
+
+  const bucketPrefixes = ['offsznlatbucket/', 'offszn-storage/', 'bucket3lat/'];
+  for (const prefix of bucketPrefixes) {
+    if (clean.toLowerCase().startsWith(prefix)) {
+      clean = clean.substring(prefix.length);
     }
   }
   

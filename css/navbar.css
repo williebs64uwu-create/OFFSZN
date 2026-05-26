@@ -1015,6 +1015,51 @@
      gap: 12px;
  }
 
+ .user-profile-load-bar {
+     height: 3px;
+     width: 100%;
+     background: rgba(255, 255, 255, 0.06);
+     overflow: hidden;
+     display: none;
+ }
+
+ .user-profile-load-bar.active {
+     display: block;
+ }
+
+ .user-profile-load-bar::after {
+     content: '';
+     display: block;
+     height: 100%;
+     width: 40%;
+     background: linear-gradient(90deg, transparent, #8b5cf6, #a78bfa, transparent);
+     animation: navbarProfileLoad 1s ease-in-out infinite;
+ }
+
+ @keyframes navbarProfileLoad {
+     0% { transform: translateX(-120%); }
+     100% { transform: translateX(320%); }
+ }
+
+ .user-dropdown-header.is-profile-loading {
+     cursor: wait;
+ }
+
+ .user-dropdown-header.is-profile-loading .user-dropdown-header-body {
+     opacity: 0.72;
+ }
+
+ .user-dropdown-avatar-lg.profile-skeleton {
+     background: rgba(255, 255, 255, 0.06) !important;
+     color: transparent !important;
+     animation: navbarProfilePulse 1.2s ease-in-out infinite;
+ }
+
+ @keyframes navbarProfilePulse {
+     0%, 100% { opacity: 0.45; }
+     50% { opacity: 0.9; }
+ }
+
  .user-dropdown-avatar {
      width: 40px;
      height: 40px;

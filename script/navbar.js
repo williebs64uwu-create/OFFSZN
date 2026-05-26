@@ -2052,120 +2052,47 @@ async function updateAuthUI(session) {
 
 
 
-        // 1. TRY CACHE FIRST (Instant Load)
+        bindProfileHeaderNavigation();
+        setNavbarProfileLoading(true);
 
+        const sessionUserId = session.user.id;
+        const cachedUserId = localStorage.getItem('offszn_cached_user_id');
+        if (cachedUserId && cachedUserId !== sessionUserId) {
+            localStorage.removeItem('offszn_cached_nickname');
+            localStorage.removeItem('offszn_cached_avatar');
+            localStorage.removeItem('offszn_cached_credits');
+        }
+        localStorage.setItem('offszn_cached_user_id', sessionUserId);
+
+        // 1. Cache-first paint (never show template demo names)
         const cachedNick = localStorage.getItem('offszn_cached_nickname');
-
         const cachedAvatar = localStorage.getItem('offszn_cached_avatar');
+        const cachedCreditsRaw = localStorage.getItem('offszn_cached_credits');
 
-
-
-        let displayName = cachedNick || session.user.email.split('@')[0];
-
+        let displayName = cachedNick || session.user.email?.split('@')[0] || 'Usuario';
         let displayLetter = displayName.charAt(0).toUpperCase();
-
         let avatarUrl = cachedAvatar || null;
 
-
-
-        // Apply Cached/Default State Immediately
-
         window.currentUserNickname = displayName;
-
         updateUserVisuals(displayName, displayLetter, avatarUrl);
 
-
-
-        // 🚀 NEW: Check for external avatars and internalize them
-
-        if (window.AvatarManager && window.AvatarManager.maybeInternalize) {
-
-            window.AvatarManager.maybeInternalize(session);
-
+        if (cachedCreditsRaw !== null && cachedCreditsRaw !== '') {
+            const parsed = parseInt(cachedCreditsRaw, 10);
+            if (!Number.isNaN(parsed)) updateCreditsDisplay(parsed);
         }
 
-
-
-        // 2. FETCH FRESH DATA (Background)
+        // 2. Fresh profile from DB (shows load bar while fetching)
+        if (window.AvatarManager?.maybeInternalize) {
+            window.AvatarManager.maybeInternalize(session);
+        }
 
         if (typeof window.supabaseClient !== 'undefined') {
-
-            try {
-
-                const { data: profile } = await window.supabaseClient
-
-                    .from('users')
-
-                    .select('nickname, avatar_url')
-
-                    .eq('id', session.user.id)
-
-                    .single();
-
-
-
-                if (profile) {
-
-                    let needsUpdate = false;
-
-
-
-                    if (profile.nickname && profile.nickname !== cachedNick) {
-
-                        displayName = profile.nickname;
-
-                        window.currentUserNickname = displayName;
-
-                        displayLetter = displayName.charAt(0).toUpperCase();
-
-                        localStorage.setItem('offszn_cached_nickname', profile.nickname);
-
-                        needsUpdate = true;
-
-                    }
-
-
-
-                    if (profile.avatar_url && profile.avatar_url !== cachedAvatar) {
-
-                        avatarUrl = profile.avatar_url;
-
-                        localStorage.setItem('offszn_cached_avatar', profile.avatar_url);
-
-                        needsUpdate = true;
-
-                    }
-
-
-
-                    // Only repaint if data changed
-
-                    if (needsUpdate) {
-
-                        updateUserVisuals(displayName, displayLetter, avatarUrl);
-
-                    }
-
-                }
-
-            } catch (err) {
-
-                console.warn("Navbar: Could not fetch profile data", err);
-
-            }
-
-        }
-
-
-
-        // Dynamic Profile Link
-
-        const dropdownHeader = document.querySelector('.user-dropdown-header');
-
-        if (dropdownHeader) {
-
-            dropdownHeader.onclick = () => window.location.href = `/@${displayName}`;
-
+            refreshNavbarProfile(session).catch((err) => {
+                console.warn('Navbar: Could not fetch profile data', err);
+                setNavbarProfileLoading(false);
+            });
+        } else {
+            setNavbarProfileLoading(false);
         }
 
 
@@ -2212,11 +2139,102 @@ async function updateAuthUI(session) {
 
         localStorage.removeItem('offszn_cached_avatar');
 
+        localStorage.removeItem('offszn_cached_credits');
+
+        localStorage.removeItem('offszn_cached_user_id');
+
+        window.currentUserNickname = null;
+
+        setNavbarProfileLoading(false);
+
     }
 
 }
 
+window.goToMyProfile = function (e) {
+    if (e) e.preventDefault();
+    if (window._navbarProfileLoading) return;
+    const nick = window.currentUserNickname;
+    if (!nick || nick === 'Cargando…') return;
+    window.location.href = `/@${encodeURIComponent(nick)}`;
+};
 
+
+
+function setNavbarProfileLoading(isLoading) {
+    window._navbarProfileLoading = !!isLoading;
+    const header = getEl('user-dropdown-header');
+    const bar = getEl('user-profile-load-bar');
+    const avatarLg = document.querySelector('.user-dropdown-avatar-lg');
+    if (header) header.classList.toggle('is-profile-loading', !!isLoading);
+    if (bar) bar.classList.toggle('active', !!isLoading);
+    if (avatarLg) avatarLg.classList.toggle('profile-skeleton', !!isLoading);
+}
+
+function updateCreditsDisplay(balance) {
+    const creditsEl = getEl('dropdown-credits');
+    if (creditsEl) {
+        const n = typeof balance === 'number' && !Number.isNaN(balance) ? balance : 0;
+        creditsEl.textContent = `${n} Créditos`;
+        try {
+            localStorage.setItem('offszn_cached_credits', String(n));
+        } catch (e) { /* ignore */ }
+    }
+}
+
+function bindProfileHeaderNavigation() {
+    const header = getEl('user-dropdown-header');
+    if (!header || header.dataset.bound === '1') return;
+    header.dataset.bound = '1';
+    header.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-subscribe-sm')) return;
+        if (window._navbarProfileLoading) return;
+        const nick = window.currentUserNickname;
+        if (!nick || nick === 'Cargando…') return;
+        window.location.href = `/@${encodeURIComponent(nick)}`;
+    });
+}
+
+let _navbarProfileRefreshPromise = null;
+
+async function refreshNavbarProfile(session) {
+    if (_navbarProfileRefreshPromise) return _navbarProfileRefreshPromise;
+
+    const activeSession = session || (await window.supabaseClient?.auth.getSession())?.data?.session;
+    if (!activeSession?.user?.id || !window.supabaseClient) return null;
+
+    _navbarProfileRefreshPromise = (async () => {
+        setNavbarProfileLoading(true);
+        try {
+            const { data: profile, error } = await window.supabaseClient
+                .from('users')
+                .select('nickname, avatar_url, reward_balance, plan')
+                .eq('id', activeSession.user.id)
+                .single();
+
+            if (error || !profile) return null;
+
+            const displayName = profile.nickname || activeSession.user.email?.split('@')[0] || 'Usuario';
+            const displayLetter = displayName.charAt(0).toUpperCase();
+            window.currentUserNickname = displayName;
+            window.currentUserPlan = profile.plan || 'free';
+
+            if (profile.nickname) localStorage.setItem('offszn_cached_nickname', profile.nickname);
+            if (profile.avatar_url) localStorage.setItem('offszn_cached_avatar', profile.avatar_url);
+            if (typeof profile.reward_balance === 'number') {
+                updateCreditsDisplay(profile.reward_balance);
+            }
+
+            updateUserVisuals(displayName, displayLetter, profile.avatar_url || null);
+            return profile;
+        } finally {
+            setNavbarProfileLoading(false);
+            _navbarProfileRefreshPromise = null;
+        }
+    })();
+
+    return _navbarProfileRefreshPromise;
+}
 
 // Helper to update DOM elements
 
@@ -2442,7 +2460,15 @@ function highlightCurrencyItem(curr) {
 
 window.toggleDropdown = (el) => handleSmartToggle('navbar', el.closest('.dropdown-parent'));
 
-window.toggleUserDropdown = (e) => { e.stopPropagation(); handleSmartToggle('user', document.querySelector('.user-dropdown')); };
+window.toggleUserDropdown = (e) => {
+    e.stopPropagation();
+    const drop = document.querySelector('.user-dropdown');
+    const willOpen = drop && !drop.classList.contains('active');
+    handleSmartToggle('user', drop);
+    if (willOpen && window.currentUserId && window.supabaseClient) {
+        refreshNavbarProfile().catch(() => setNavbarProfileLoading(false));
+    }
+};
 
 window.toggleNotificationDropdown = (e) => { e.stopPropagation(); handleSmartToggle('notif', document.querySelector('.notification-dropdown')); };
 
@@ -2728,7 +2754,14 @@ window.initNavbarUI = async function () {
 
     window._navbarInitialized = true;
 
+    bindProfileHeaderNavigation();
 
+    window.addEventListener('offszn-credits-updated', (ev) => {
+        const balance = ev?.detail?.balance;
+        if (typeof balance === 'number' && !Number.isNaN(balance)) {
+            updateCreditsDisplay(balance);
+        }
+    });
 
     // Restore Currency
 

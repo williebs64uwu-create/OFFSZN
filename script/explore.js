@@ -53,12 +53,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Also listen for SPA navigation events
-document.addEventListener('offszn:page-changed', (e) => {
+document.addEventListener('offszn:page-changed', () => {
     if (isExplorePage()) {
         initExplore();
     }
 });
 let usedProductIds = new Set(); // To prevent repetition
+let _exploreListenersBound = false;
+let _exploreLastFetch = 0;
+const EXPLORE_CACHE_MS = 120000;
 let currentCategory = 'Todo';
 window.activeWavesurfers = [];
 window.currentlyPlaying = null;
@@ -83,11 +86,36 @@ function getProductUrl(product) {
 window.getProductUrl = getProductUrl;
 
 async function initExplore() {
-    initGlobalListeners();
+    if (!_exploreListenersBound) {
+        initGlobalListeners();
+        _exploreListenersBound = true;
+    }
 
-    // 🔥 OPTIMIZATION: Fire all data fetches in parallel
+    const now = Date.now();
+    if (allProducts.length > 0 && (now - _exploreLastFetch) < EXPLORE_CACHE_MS) {
+        renderExploreFeed();
+        return;
+    }
+
     await fetchData();
+    _exploreLastFetch = Date.now();
     renderExploreFeed();
+}
+
+function cleanupWaveSurfers() {
+    if (!window.activeWavesurfers) return;
+    window.activeWavesurfers.forEach(ws => {
+        try { ws.destroy(); } catch (e) { /* already destroyed */ }
+    });
+    window.activeWavesurfers = [];
+}
+
+async function resolveListPreviewUrl(rawAudioUrl, product) {
+    if (!rawAudioUrl) return null;
+    const version = product.storage_version || product.r2_version || 'v2';
+    const syncUrl = window.AuthUtils?.resolvePreviewMediaUrl?.(rawAudioUrl, version);
+    if (syncUrl) return syncUrl;
+    return window.getAuthorizedUrl(rawAudioUrl, version, product.id);
 }
 
 function initGlobalListeners() {
@@ -310,6 +338,12 @@ function renderExploreFeed() {
     const container = document.getElementById('explore-rows-container');
     if (!container) return;
 
+    cleanupWaveSurfers();
+    if (heroTimer) {
+        clearInterval(heroTimer);
+        heroTimer = null;
+    }
+
     // 🔥 Remove static list skeletons
     ['explore-list-skeleton', 'explore-pw-skeleton', 'explore-leaderboard-skeleton'].forEach(id => {
         const sk = document.getElementById(id);
@@ -502,7 +536,11 @@ function renderTwoColLists(category = 'Todo') {
             const rawAudioUrl = getProductAudio(product);
 
             if (container && rawAudioUrl && window.WaveSurfer) {
-                const audioUrl = await window.getAuthorizedUrl(rawAudioUrl, product.storage_version || product.r2_version || 'v2', product.id);
+                const audioUrl = await resolveListPreviewUrl(rawAudioUrl, product);
+                if (!audioUrl) {
+                    container.classList.remove('skeleton-waveform');
+                    return;
+                }
 
                 const ws = WaveSurfer.create({
                     container: container,
@@ -605,7 +643,8 @@ function createListItemHtml(item, index, type) {
     const storageVer = item.storage_version || item.r2_version || 'v2';
     // 🔥 ENHANCED R2 DETECTION: Use storage_version as primary signal, fallback to path analysis
     const isR2 = (storageVer !== 'supabase') && window.AuthUtils &&
-        ((typeof window.AuthUtils.isR2Url === 'function' && window.AuthUtils.isR2Url(rawImg)) || storageVer === 'v2' || storageVer === 'v1');
+        ((typeof window.AuthUtils.isR2Url === 'function' && window.AuthUtils.isR2Url(rawImg)) ||
+            storageVer === 'v2' || storageVer === 'v1' || storageVer === 'v3' || storageVer === 'r2');
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
     let initialSrc = rawImg;
@@ -725,10 +764,19 @@ function getProductAudio(product) {
         if (product.audio_url) return product.audio_url;
     }
 
+    // Prefer relative keys over presigned URLs saved by mistake in DB
+    const pickUrl = (url) => {
+        if (!url) return null;
+        if (typeof url === 'string' && url.includes('X-Amz-Signature') && window.AuthUtils?.normalizeR2StoragePath) {
+            return window.AuthUtils.normalizeR2StoragePath(url);
+        }
+        return url;
+    };
+
     // Comprehensive fallback chain for all products
-    return product.mp3_url ||
-        product.audio_url ||
-        product.download_url_mp3 ||
+    return pickUrl(product.download_url_mp3) ||
+        pickUrl(product.mp3_url) ||
+        pickUrl(product.audio_url) ||
         product.preview_url ||
         product.demo_file ||
         product.tagged_file ||

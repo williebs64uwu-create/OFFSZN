@@ -98,10 +98,24 @@ export const createProduct = async (req, res) => {
             youtube_url
         } = req.body;
 
+        const stripSignedR2ToKey = (url) => {
+            if (!url || typeof url !== 'string') return url;
+            if (!url.includes('r2.cloudflarestorage.com') && !url.includes('X-Amz-Signature')) return url;
+            let key = url.split('?')[0];
+            if (key.includes('.r2.cloudflarestorage.com/')) {
+                key = key.split('.r2.cloudflarestorage.com/')[1];
+            }
+            while (key.startsWith('/')) key = key.substring(1);
+            for (const prefix of ['offsznlatbucket/', 'offszn-storage/', 'bucket3lat/']) {
+                if (key.toLowerCase().startsWith(prefix)) key = key.substring(prefix.length);
+            }
+            return key;
+        };
+
         const finalTitle = name || title;
-        const finalArtwork = image_url || artwork_url;
+        const finalArtwork = stripSignedR2ToKey(image_url || artwork_url);
         const finalIsFree = is_free !== undefined ? is_free : (isFree || false);
-        const finalMp3Url = mp3_url || audio_url;
+        const finalMp3Url = stripSignedR2ToKey(mp3_url || audio_url);
 
         if (!finalTitle || !finalArtwork) {
             return res.status(400).json({ error: 'Faltan datos clave (título o portada).' });

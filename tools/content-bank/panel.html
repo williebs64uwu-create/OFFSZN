@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OFFSZN Content Bank Panel</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0d12;
+        --card: #111522;
+        --muted: rgba(255, 255, 255, 0.65);
+        --text: rgba(255, 255, 255, 0.92);
+        --border: rgba(255, 255, 255, 0.08);
+        --accent: #7c3aed;
+        --accent2: #22c55e;
+        --danger: #ef4444;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+        background: radial-gradient(1000px 600px at 20% 0%, rgba(124, 58, 237, 0.18), transparent 60%),
+          radial-gradient(900px 600px at 100% 30%, rgba(34, 197, 94, 0.14), transparent 55%), var(--bg);
+        color: var(--text);
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 28px 18px 48px;
+      }
+      .top {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: 0.3px;
+      }
+      .sub {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      @media (min-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .card {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02));
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 18px 55px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(8px);
+      }
+      .card h2 {
+        margin: 0 0 12px;
+        font-size: 14px;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.86);
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .row.inline {
+        grid-template-columns: 1fr auto;
+        align-items: end;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        padding: 10px 12px;
+        outline: none;
+      }
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+      .btn {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        padding: 10px 12px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: 140ms ease;
+        user-select: none;
+      }
+      .btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+      .btn.primary {
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.95), rgba(124, 58, 237, 0.55));
+        border-color: rgba(124, 58, 237, 0.55);
+      }
+      .btn.good {
+        background: linear-gradient(135deg, rgba(34, 197, 94, 0.92), rgba(34, 197, 94, 0.55));
+        border-color: rgba(34, 197, 94, 0.6);
+      }
+      .btn.danger {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(239, 68, 68, 0.55));
+        border-color: rgba(239, 68, 68, 0.55);
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+      .out {
+        white-space: pre-wrap;
+        background: rgba(0, 0, 0, 0.28);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        min-height: 120px;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+      }
+      .dot.ok {
+        background: var(--accent2);
+      }
+      .dot.err {
+        background: var(--danger);
+      }
+      .footer {
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="top">
+        <div>
+          <h1>OFFSZN Content Bank Panel</h1>
+          <div class="sub">Enviar captions/hashtags al webhook de n8n para actualizar Notion.</div>
+        </div>
+        <div class="badge">
+          <span id="statusDot" class="dot"></span>
+          <span id="statusText">Listo</span>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h2>Config</h2>
+          <div class="row inline">
+            <div>
+              <label for="webhookUrl">Webhook Production URL</label>
+              <input id="webhookUrl" type="url" placeholder="https://offszn-n8n.onrender.com/webhook/..." />
+            </div>
+            <button id="saveUrlBtn" class="btn primary">Guardar</button>
+          </div>
+          <div class="row">
+            <div>
+              <label for="driveFileId">Drive File ID (opcional)</label>
+              <input id="driveFileId" class="mono" placeholder="Si lo pones, actualiza ese video exacto" />
+            </div>
+          </div>
+          <div class="hint">
+            Si no mandas Drive File ID, el webhook actualiza el último registro con Status = “Listo para publicar”.
+          </div>
+          <div class="footer">
+            <button id="clearBtn" class="btn danger">Limpiar campos</button>
+            <button id="sendBtn" class="btn good">Enviar a Notion</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Contenido</h2>
+          <div class="row">
+            <div>
+              <label for="keyword">Keyword (opcional)</label>
+              <input id="keyword" placeholder="VOCES / PLANTILLA / PRESET ..." />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="captionIG">Caption IG</label>
+              <textarea id="captionIG" placeholder="Pega tu caption de Instagram"></textarea>
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="hashtagsIG">Hashtags IG</label>
+              <input id="hashtagsIG" placeholder="#flstudio #homestudio ..." />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="captionTT">Caption TikTok</label>
+              <textarea id="captionTT" placeholder="Pega tu caption de TikTok"></textarea>
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="hashtagsTT">Hashtags TikTok</label>
+              <input id="hashtagsTT" placeholder="#beats #vocalpreset ..." />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 12px">
+        <h2>Respuesta</h2>
+        <div id="out" class="out mono"></div>
+      </div>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const LS_KEY = "offszn_content_bank_panel_v1";
+      const LS_ONE_TIME_RESET_KEY = "offszn_content_bank_panel_one_time_reset_v1";
+
+      const DEFAULTS = {
+        keyword: "PLANTILLA",
+        captionIG:
+          "No es tu micrófono 🎙️❌ haz esto...\nCanal 1 → plantilla → (antes/después).\nGuárdalo y comenta “PLANTILLA” y te lo envío por privado.",
+        hashtagsIG: "#flstudio #homestudio #productormusical #mezcladevoces #vocalpreset",
+        captionTT:
+          "Si tus voces suenan mal en FL Studio: usa esta plantilla.\nCanal 1 → antes/después.\nComenta “PLANTILLA” y te la mando.",
+        hashtagsTT: "#flstudio #homestudio #mezcladevoces #vocalpreset #productormusical"
+      };
+
+      function setStatus(kind, text) {
+        const dot = $("statusDot");
+        dot.classList.remove("ok", "err");
+        if (kind === "ok") dot.classList.add("ok");
+        if (kind === "err") dot.classList.add("err");
+        $("statusText").textContent = text;
+      }
+
+      function oneTimeReset() {
+        try {
+          const already = localStorage.getItem(LS_ONE_TIME_RESET_KEY);
+          if (already) return;
+          localStorage.removeItem(LS_KEY);
+          localStorage.setItem(LS_ONE_TIME_RESET_KEY, "1");
+        } catch {}
+      }
+
+      function applyDefaultsIfEmpty() {
+        if (!$("keyword").value.trim()) $("keyword").value = DEFAULTS.keyword;
+        if (!$("captionIG").value.trim()) $("captionIG").value = DEFAULTS.captionIG;
+        if (!$("hashtagsIG").value.trim()) $("hashtagsIG").value = DEFAULTS.hashtagsIG;
+        if (!$("captionTT").value.trim()) $("captionTT").value = DEFAULTS.captionTT;
+        if (!$("hashtagsTT").value.trim()) $("hashtagsTT").value = DEFAULTS.hashtagsTT;
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(LS_KEY);
+          if (!raw) return;
+          const s = JSON.parse(raw);
+          if (s.webhookUrl) $("webhookUrl").value = s.webhookUrl;
+          if (s.driveFileId) $("driveFileId").value = s.driveFileId;
+          if (s.keyword) $("keyword").value = s.keyword;
+          if (s.captionIG) $("captionIG").value = s.captionIG;
+          if (s.hashtagsIG) $("hashtagsIG").value = s.hashtagsIG;
+          if (s.captionTT) $("captionTT").value = s.captionTT;
+          if (s.hashtagsTT) $("hashtagsTT").value = s.hashtagsTT;
+        } catch {}
+      }
+
+      function saveState() {
+        const s = {
+          webhookUrl: $("webhookUrl").value.trim(),
+          driveFileId: $("driveFileId").value.trim(),
+          keyword: $("keyword").value.trim(),
+          captionIG: $("captionIG").value,
+          hashtagsIG: $("hashtagsIG").value.trim(),
+          captionTT: $("captionTT").value,
+          hashtagsTT: $("hashtagsTT").value.trim()
+        };
+        localStorage.setItem(LS_KEY, JSON.stringify(s));
+      }
+
+      function clearFields() {
+        $("driveFileId").value = "";
+        $("keyword").value = "";
+        $("captionIG").value = "";
+        $("hashtagsIG").value = "";
+        $("captionTT").value = "";
+        $("hashtagsTT").value = "";
+        saveState();
+      }
+
+      async function send() {
+        const webhookUrl = $("webhookUrl").value.trim();
+        if (!webhookUrl) {
+          setStatus("err", "Falta Webhook URL");
+          return;
+        }
+
+        const payload = {
+          driveFileId: $("driveFileId").value.trim() || undefined,
+          keyword: $("keyword").value.trim() || undefined,
+          captionIG: $("captionIG").value.trim() || undefined,
+          hashtagsIG: $("hashtagsIG").value.trim() || undefined,
+          captionTT: $("captionTT").value.trim() || undefined,
+          hashtagsTT: $("hashtagsTT").value.trim() || undefined
+        };
+
+        Object.keys(payload).forEach((k) => payload[k] === undefined && delete payload[k]);
+
+        setStatus("", "Enviando…");
+        $("out").textContent = "";
+
+        try {
+          const res = await fetch(webhookUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+
+          const text = await res.text();
+          let parsed;
+          try {
+            parsed = JSON.parse(text);
+          } catch {
+            parsed = { raw: text };
+          }
+
+          $("out").textContent = JSON.stringify(
+            {
+              ok: res.ok,
+              status: res.status,
+              response: parsed
+            },
+            null,
+            2
+          );
+
+          if (res.ok) setStatus("ok", "Actualizado");
+          else setStatus("err", "Error HTTP " + res.status);
+
+          saveState();
+        } catch (e) {
+          $("out").textContent = JSON.stringify({ ok: false, error: String(e) }, null, 2);
+          setStatus("err", "Error de red/CORS");
+        }
+      }
+
+      $("saveUrlBtn").addEventListener("click", () => {
+        saveState();
+        setStatus("ok", "Guardado");
+      });
+      $("clearBtn").addEventListener("click", () => {
+        clearFields();
+        setStatus("ok", "Limpio");
+      });
+      $("sendBtn").addEventListener("click", send);
+
+      ["webhookUrl", "driveFileId", "keyword", "hashtagsIG", "hashtagsTT"].forEach((id) => {
+        $(id).addEventListener("change", saveState);
+      });
+      ["captionIG", "captionTT"].forEach((id) => {
+        $(id).addEventListener("input", () => {
+          saveState();
+        });
+      });
+
+      oneTimeReset();
+      loadState();
+      applyDefaultsIfEmpty();
+      saveState();
+    </script>
+  </body>
+</html>

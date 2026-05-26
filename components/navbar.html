@@ -66,9 +66,9 @@
 
                 <div class="mobile-avatar-btn" id="mobile-avatar-btn"
 
-                    onclick="if(window.currentUserNickname) window.location.href = '/@' + window.currentUserNickname;">
+                    onclick="goToMyProfile(event)">
 
-                    <span id="mobile-avatar-initial">W</span>
+                    <span id="mobile-avatar-initial">…</span>
 
                 </div>
 
@@ -316,19 +316,17 @@
 
 
 
-                                <a href="/studio/reels" class="dropdown-item" style="border-radius: 8px;">
+                                <a href="/studio/genera-sonidos.html" class="dropdown-item" style="border-radius: 8px;">
 
-                                    <i class="bi bi-collection-play"></i>
+                                    <i class="bi bi-music-note-beamed"></i>
 
                                     <div class="dropdown-item-content">
 
-                                        <div class="dropdown-item-title">Reels</div>
+                                        <div class="dropdown-item-title">Genera sonidos</div>
 
                                         <div class="dropdown-item-desc" style="font-size: 0.7rem; color: #888;">
 
-                                            Descubre
-
-                                            tendencias visuales</div>
+                                            Genera sonidos para ti</div>
 
                                     </div>
 
@@ -852,39 +850,39 @@
 
                             <div class="user-trigger" onclick="toggleUserDropdown(event)" style="cursor: pointer;">
 
-                                <div id="user-avatar-display" class="user-avatar-placeholder">W</div>
+                                <div id="user-avatar-display" class="user-avatar-placeholder">…</div>
 
                             </div>
 
                             <div class="user-dropdown-menu" style="width: 380px;">
 
-                                <div class="user-dropdown-header" onclick="window.location.href='/perfil-publico.html'"
+                                <div class="user-dropdown-header" id="user-dropdown-header"
 
-                                    style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background-color: #232323; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px 16px; margin-bottom: 12px; cursor: pointer; transition: background-color 0.2s; user-select: none;"
+                                    style="display: flex; flex-direction: column; gap: 0; background-color: #232323; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 0; margin-bottom: 12px; cursor: pointer; transition: background-color 0.2s; user-select: none; overflow: hidden;"
 
-                                    onmouseover="this.style.backgroundColor='#2a2a2a'"
+                                    onmouseover="if(!window._navbarProfileLoading) this.style.backgroundColor='#2a2a2a'"
 
                                     onmouseout="this.style.backgroundColor='#232323'">
 
-                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div id="user-profile-load-bar" class="user-profile-load-bar" aria-hidden="true"></div>
+
+                                    <div class="user-dropdown-header-body" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 24px 16px; width: 100%;">
+
+                                    <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;">
 
                                         <div class="user-dropdown-avatar-lg"
 
-                                            style="width: 48px; height: 48px; font-size: 1.2rem; border-radius: 50%;">W
+                                            style="width: 48px; height: 48px; font-size: 1.2rem; border-radius: 50%; flex-shrink: 0;">…</div>
 
-                                        </div>
-
-                                        <div style="display: flex; flex-direction: column;">
+                                        <div style="display: flex; flex-direction: column; min-width: 0;">
 
                                             <h4 id="dropdown-username"
 
-                                                style="margin: 0; font-size: 1rem; color: #fff; font-weight: 600;">
+                                                style="margin: 0; font-size: 1rem; color: #fff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
 
-                                                Willie
+                                                Cargando…</h4>
 
-                                                Inspired</h4>
-
-                                            <span style="color: #999; font-size: 0.85rem;">0 Créditos</span>
+                                            <span id="dropdown-credits" style="color: #999; font-size: 0.85rem;">… Créditos</span>
 
                                         </div>
 
@@ -894,11 +892,13 @@
 
                                         onclick="event.stopPropagation();"
 
-                                        style="padding: 6px 12px; font-size: 0.8rem;">
+                                        style="padding: 6px 12px; font-size: 0.8rem; flex-shrink: 0;">
 
                                         <i class="bi bi-plus-circle-fill"></i> Suscribirse
 
                                     </a>
+
+                                    </div>
 
                                 </div>
 

@@ -170,8 +170,15 @@ router.post('/r2/download-url', async (req, res) => {
         }
 
         // Definir prefijos públicos (archivos que los invitados pueden ver/oír)
-        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/', 'temp-previews/', 'covers/', 'audio/'];
-        const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix));
+        const publicPrefixes = [
+            'products/', 'beats/mp3/', 'mp3_tagged/', 'avatars/', 'public/', 'banners/',
+            'drumkits/', 'temp-previews/', 'covers/', 'audio/',
+            'secure-products/beats/mp3_tagged/'
+        ];
+        const isPreviewMp3 = /\.(mp3|m4a|aac)$/i.test(key) &&
+            !key.includes('/wav/') && !key.includes('wav_untagged') &&
+            !key.includes('/stems/') && !key.includes('/kits/');
+        const isPublic = publicPrefixes.some(prefix => key.startsWith(prefix)) || isPreviewMp3;
 
         // Si NO es público, verificar si es un producto gratuito o requerir autenticación
         if (!isPublic) {
@@ -240,7 +247,10 @@ router.post('/r2/bulk-sign', async (req, res) => {
             return res.status(400).json({ error: 'Se requiere un array de items' });
         }
 
-        const publicPrefixes = ['products/', 'beats/mp3/', 'avatars/', 'public/', 'banners/', 'drumkits/', 'temp-previews/'];
+        const publicPrefixes = [
+            'products/', 'beats/mp3/', 'mp3_tagged/', 'avatars/', 'public/', 'banners/',
+            'drumkits/', 'temp-previews/', 'secure-products/beats/mp3_tagged/'
+        ];
         const results = {};
 
         // Autenticación única para el lote

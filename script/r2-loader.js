@@ -159,6 +159,11 @@
         observer.observe(document.body, { childList: true, subtree: true });
     }
 
+    window.signR2Images = function (root) {
+        const scope = root && root.querySelectorAll ? root : document;
+        scope.querySelectorAll('img[data-r2-src], img[src*="r2"], [data-r2-bg]').forEach(resolveElement);
+    };
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {

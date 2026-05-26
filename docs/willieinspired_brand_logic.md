@@ -43,6 +43,23 @@ Este documento actúa como la "Skill de Datos" central para Willie Inspired / OF
 
 ---
 
+## 🕒 Horarios y Audiencia (Insights)
+
+### Actividad (Últimos 30 Días / 7 Días)
+- **Horas pico**: 12:00, 15:00, 18:00 (consistente toda la semana).
+
+### Audiencia (Top)
+- **Países**: Argentina 24.5%, México 15.3%, Chile 15%, Perú 10%, España 7.8%.
+- **Edad**: 25-34 (38%), 18-24 (36%).
+- **Género**: 91% hombres.
+
+### Publicación Recomendada (Hora Perú/Lima)
+- **Instagram (modo prueba)**: 18:00.
+- **TikTok (directo)**: 18:00.
+- **Segunda ola (solo si hace falta)**: 21:00 en TikTok.
+
+---
+
 ## 🎯 Estrategia Kuraimokha (Current Goal)
 
 - **Contexto**: Artista conocido, video editado en 20 mins.
@@ -94,4 +111,66 @@ Este documento actúa como la "Skill de Datos" central para Willie Inspired / OF
     - **Instagram**: "Asi se Mezcla voces con cualquier micro 🎙🔥 Pasar 3 horas perdiendo el tiempo en el mixer es cosa del pasado..."
 - **Miniatura (Thumbnail)**: Reciclada de éxito previo: "No culpes al micrófono" + Logos FL + Comparativa micrófonos sobre fondo de FL Studio.
 
+### [Video Reel/TikTok] 32 Presets (Cualquier Micro) - MAYO 2026
+- **Subido**: Hace 12 días.
+- **Resultados Instagram**:
+    - **Alcance**: 10,000 views.
+    - **Interacción**: 668 likes, 606 comentarios, 364 guardados, 173 compartidos.
+    - **Save Rate**: 3.64%.
+    - **Comment Rate**: 6.06%.
+- **Resultados TikTok**:
+    - **Alcance**: 8,000 views.
+    - **Interacción**: 914 likes, 300 comentarios, 367 guardados.
+    - **Save Rate**: 4.59%.
+    - **Comment Rate**: 3.75%.
+- **Copy Usado**:
+    - **Instagram**:
+      "Asi se Mezcla voces con cualquier micro 🎙🔥
 
+      Pasar 3 horas perdiendo el tiempo en el mixer es cosa del pasado. He condensado la cadena de procesos de los mejores artistas en 32 presets listos para usar en 2 clics. 🏺
+
+      Guarda este video para cuando necesites terminar un tema rápido. 💾
+
+      Comenta \"PRESET\" y te mando el acceso a la colección completa por privado. 🚀
+      #productormusical #homestudio #flstudio #vocalpresets #mixandmaster"
+    - **TikTok**:
+      "¿Sigues mezclando voces desde cero en 2026? 💀🎙️
+
+      Aquí tienes el cheat code: 32 presets de artistas diseñados para sonar pro en segundos. No más cadenas de plugins infinitas, solo arrastra y rompe el beat. 🏺🔥
+      El tiempo es dinero, deja de perderlo. ⏳
+
+      Comenta \"PRESET\" para enviártelo ya. 👇
+      #produccionmusical #beatmaker #tipsdeproduccion #autotune #traplatino"
+
+### [Video Reel/TikTok] Deja De Culpar A Tu Micrófono (Grabación) - MAYO 2026
+- **Resultados TikTok**:
+    - **Alcance**: 7,000 views.
+    - **Interacción**: 653 likes, 212 comentarios, 259 guardados.
+    - **Save Rate**: 3.70%.
+    - **Comment Rate**: 3.03%.
+- **Resultados Instagram**:
+    - **Alcance**: 2,600 views.
+    - **Interacción**: 96 likes, 91 comentarios, 35 guardados, 16 compartidos.
+    - **Save Rate**: 1.35%.
+    - **Comment Rate**: 3.50%.
+- **Copy Usado**:
+    - **TikTok**:
+      "Deja de culpar a tu micrófono. 💀🎙️ El problema es que estás grabando mal.
+
+      Si quieres pasar de un sonido de habitación a un sonido de estudio profesional sin gastar miles de dólares, necesitas este cheat code. 🏺✨
+
+      He diseñado la plantilla definitiva para que tus voces encajen en el beat al instante. El tiempo es dinero, no lo pierdas perilleando plugins infinitos. ⏳🔥
+
+      Comenta \"PLANTILLA\" para enviártelo ya. 👇
+
+      #produccionmusical #beatmaker #tipsdeproduccion #autotune #flstudio"
+    - **Instagram**:
+      "Asi dejarás de sonar mal con tu micro 🎙️❌
+
+      La mayoría de los artistas creen que necesitan un Neumann para sonar pro, pero la verdad es que el 90% del sonido está en cómo tratas la señal desde el principio. He creado esta Plantilla de Grabación para que dejes de pelearte con el mixer y empieces a sonar como en las grandes ligas en 2 clics. 🏺🔥
+
+      Guarda este video para tu próxima sesión.
+
+      Comenta \"PLANTILLA\" y te mando el acceso por privado. 🚀
+
+      #productormusical #homestudio #flstudio #vocalpresets #mixandmaster"

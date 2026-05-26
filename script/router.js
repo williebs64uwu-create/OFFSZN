@@ -6,6 +6,8 @@
 const Router = {
     contentId: 'app-main',
     isTransitioning: false,
+    _loadAbort: null,
+    _loadGen: 0,
 
     init() {
         console.log("🚀 SPA Router Initialized");
@@ -39,14 +41,22 @@ const Router = {
     },
 
     async navigate(url) {
-        if (this.isTransitioning) return;
+        if (this._loadAbort) {
+            this._loadAbort.abort();
+        }
 
-        // Update URL immediately for responsiveness
         window.history.pushState({}, '', url);
         await this.loadPage(url, true);
     },
 
     async loadPage(url, scrollUp = true) {
+        const loadGen = ++this._loadGen;
+        if (this._loadAbort) {
+            this._loadAbort.abort();
+        }
+        this._loadAbort = new AbortController();
+        const { signal } = this._loadAbort;
+
         this.isTransitioning = true;
         const main = document.getElementById(this.contentId);
         if (!main) {
@@ -55,12 +65,12 @@ const Router = {
             return;
         }
 
-        // Show loading state (optional subtle opacity?)
-        main.style.opacity = '0.7';
+        main.style.opacity = '0.85';
 
         try {
-            const response = await fetch(url);
+            const response = await fetch(url, { signal, cache: 'default' });
             if (!response.ok) throw new Error("Load failed");
+            if (loadGen !== this._loadGen) return;
 
             const html = await response.text();
             const parser = new DOMParser();
@@ -95,11 +105,14 @@ const Router = {
             if (scrollUp) window.scrollTo(0, 0);
 
         } catch (err) {
+            if (err.name === 'AbortError') return;
             console.error("Router Error:", err);
             window.location.href = url; // Hard reload on error
         } finally {
-            main.style.opacity = '1';
-            this.isTransitioning = false;
+            if (loadGen === this._loadGen) {
+                main.style.opacity = '1';
+                this.isTransitioning = false;
+            }
         }
     },
 

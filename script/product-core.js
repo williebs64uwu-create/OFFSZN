@@ -1060,10 +1060,18 @@ function getProductAudio(product) {
         return product.audio_before_url;
     }
 
-    // Comprehensive fallback chain
-    return product.mp3_url ||
-        product.audio_url ||
-        product.download_url_mp3 ||
+    const pickUrl = (url) => {
+        if (!url) return null;
+        if (typeof url === 'string' && url.includes('X-Amz-Signature') && window.AuthUtils?.normalizeR2StoragePath) {
+            return window.AuthUtils.normalizeR2StoragePath(url);
+        }
+        return url;
+    };
+
+    // Comprehensive fallback chain (relative keys before stale presigned URLs)
+    return pickUrl(product.download_url_mp3) ||
+        pickUrl(product.mp3_url) ||
+        pickUrl(product.audio_url) ||
         product.preview_url ||
         product.demo_file ||
         product.tagged_file ||
@@ -1105,10 +1113,18 @@ window.playProductCover = async function () {
     const isPublicDirect = audioUrl.includes('pub-') && audioUrl.includes('.r2.dev');
     const isPublicProxied = audioUrl.includes('r2-public/');
 
-    if (window.getAuthorizedUrl && !isPublicDirect && !isPublicProxied) {
-        try {
-            finalAudioUrl = await window.getAuthorizedUrl(audioUrl, product.storage_version || product.r2_version || 'v2', product.id);
-        } catch (e) {
+    if (!isPublicDirect && !isPublicProxied) {
+        const syncPreview = window.AuthUtils?.resolvePreviewMediaUrl?.(
+            audioUrl,
+            product.storage_version || product.r2_version || 'v2'
+        );
+        if (syncPreview) {
+            finalAudioUrl = syncPreview;
+        } else if (window.getAuthorizedUrl) {
+            try {
+                finalAudioUrl = await window.getAuthorizedUrl(audioUrl, product.storage_version || product.r2_version || 'v2', product.id);
+            } catch (e) {
+            }
         }
     }
 

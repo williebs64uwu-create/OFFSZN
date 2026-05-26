@@ -128,7 +128,7 @@ export const generateSample = async (req, res) => {
         return res.status(200).json({
             success: true,
             audioUrl: signedUrl,
-            remainingCredits: user.reward_balance
+            remainingCredits: newBalance
         });
 
     } catch (error) {

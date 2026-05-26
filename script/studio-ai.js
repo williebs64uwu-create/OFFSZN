@@ -925,6 +925,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             currentCredits = data?.reward_balance || 0;
             if (creditsDisplay) creditsDisplay.innerHTML = `<i class="fas fa-gem"></i> ${currentCredits} Créditos`;
+
+            window.dispatchEvent(new CustomEvent('offszn-credits-updated', {
+                detail: { balance: currentCredits }
+            }));
             
             checkCreditAvailability();
             fetchHistory(user.id);

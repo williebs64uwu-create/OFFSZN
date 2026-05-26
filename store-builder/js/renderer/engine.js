@@ -3,6 +3,20 @@
  * Toma el estado (JSON) y lo "dibuja" en el contenedor destino.
  */
 
+function normalizeStoreImagePath(path) {
+    if (!path || typeof path !== 'string') return path;
+    if (window.AuthUtils?.normalizeR2StoragePath) {
+        return window.AuthUtils.normalizeR2StoragePath(path);
+    }
+    if (!path.includes('r2.cloudflarestorage.com') && !path.includes('X-Amz-Signature')) return path;
+    let key = path.split('?')[0];
+    if (key.includes('.r2.cloudflarestorage.com/')) {
+        key = key.split('.r2.cloudflarestorage.com/')[1];
+    }
+    while (key.startsWith('/')) key = key.substring(1);
+    return key;
+}
+
 // Global tab switching logic for products in preview
 if (!window.switchStoreTab) {
     window.switchStoreTab = function (btnEl, cat, sectionId) {
@@ -77,13 +91,20 @@ if (!window.switchStoreTab) {
         // Helper para resolver imagen
         const resolveImg = (path, storageVer) => {
             if (!path) return 'https://offszn.lat/images/portada-default.png';
-            if (path.startsWith('http')) return path;
+            path = normalizeStoreImagePath(path);
+            if (path.startsWith('http') && !path.includes('r2-public')) {
+                if (!path.includes('r2.cloudflarestorage.com')) {
+                    return path;
+                }
+                path = normalizeStoreImagePath(path);
+            }
             let cleanPath = path;
             if (path.startsWith('products/')) {
                 cleanPath = path.substring(9);
             }
             if (storageVer !== 'supabase') {
-                return `https://offszn.lat/api/r2-public/products/${cleanPath}`;
+                const ver = storageVer && storageVer !== 'supabase' ? `?v=${storageVer}` : '';
+                return `https://offszn.lat/api/r2-public/products/${cleanPath}${ver}`;
             }
             return `https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/${cleanPath}`;
         };
@@ -186,13 +207,20 @@ if (!window.filterStoreByGenre) {
         // Helper para resolver imagen
         const resolveImg = (path, storageVer) => {
             if (!path) return 'https://offszn.lat/images/portada-default.png';
-            if (path.startsWith('http')) return path;
+            path = normalizeStoreImagePath(path);
+            if (path.startsWith('http') && !path.includes('r2-public')) {
+                if (!path.includes('r2.cloudflarestorage.com')) {
+                    return path;
+                }
+                path = normalizeStoreImagePath(path);
+            }
             let cleanPath = path;
             if (path.startsWith('products/')) {
                 cleanPath = path.substring(9);
             }
             if (storageVer !== 'supabase') {
-                return `https://offszn.lat/api/r2-public/products/${cleanPath}`;
+                const ver = storageVer && storageVer !== 'supabase' ? `?v=${storageVer}` : '';
+                return `https://offszn.lat/api/r2-public/products/${cleanPath}${ver}`;
             }
             return `https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/${cleanPath}`;
         };

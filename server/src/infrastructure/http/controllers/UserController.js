@@ -92,6 +92,20 @@ export const completeOnboarding = async (req, res) => {
         if (paypalEmail) updateData.paypal_email = paypalEmail;
         updateData.onboarding_completed = true;
 
+        // Supabase Auth signup does not hit /api/register — grant welcome credits on first onboarding
+        const WELCOME_CREDITS = 40;
+        const { data: creditRow } = await supabase
+            .from('users')
+            .select('reward_balance, onboarding_completed')
+            .eq('id', userId)
+            .maybeSingle();
+
+        const hadCompletedOnboarding = creditRow?.onboarding_completed === true;
+        const currentCredits = creditRow?.reward_balance ?? 0;
+        if (!hadCompletedOnboarding && currentCredits < WELCOME_CREDITS) {
+            updateData.reward_balance = WELCOME_CREDITS;
+        }
+
         const producerRoles = ['Productor Musical', 'Artista / Cantante', 'Compositor / Songwriter', 'Ingeniero de Mezcla/Master', 'Músico / Instrumentista', 'Otro Rol Musical'];
         updateData.is_producer = role ? producerRoles.includes(role) : false;
 
@@ -914,4 +928,4 @@ export const rateProducerProfile = async (req, res) => {
         console.error("Error en rateProducerProfile:", err.message);
         res.status(500).json({ error: 'Error al procesar la calificación.' });
     }
-};
+};
