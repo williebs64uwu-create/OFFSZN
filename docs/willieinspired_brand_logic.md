@@ -36,6 +36,19 @@ Este documento actúa como la "Skill de Datos" central para Willie Inspired / OF
 4. **Visual**: Foco en la interfaz de FL Studio y el resultado del audio.
 - **Thumbnail Hack**: Reciclar miniaturas ganadoras (ej: "No culpes al micrófono" + logos de FL + comparativa de micros). El contraste y el "pain point" del hardware pobre funcionan siempre.
 
+### 🇺🇸 Formato Gringo (Preset de Artista Específico - Altamente Viral):
+Este formato simplificado funciona excelente para atacar artistas globales o muy de nicho (ej: Drake, Lithe, A$AP Rocky), directo al grano con hooks limpios y CTAs de palabra clave única:
+
+*   **Caso Drake (Vocal Chain):**
+    *   **Hook/Copy**: `[ARTISTA] Vocal Chain! Comment "[PALABRA_CLAVE]" for the [Preset Name] Vocal Preset #drake #vocalpreset #vocalchain #vocalmixing #mixingtips`
+    *   *Ejemplo adaptado:* `Drake Vocal Chain! Comment "Drake" for the Iceman Drake - Janice STFU Vocal Preset 🔥`
+*   **Caso Lithe (Vocal Chain - Prueba Directa):**
+    *   **Hook/Copy**: `[ARTISTA] Vocal Chain! Try out this vocal preset I made on [Canción/Estilo] #vocalpreset #vocalmixing #vocalchain #[artista] #mixingtips`
+    *   *Ejemplo adaptado:* `Lithe Vocal Chain! Try out this vocal preset I made on lithe cannonball 🏺`
+*   **Caso A$AP Rocky (Vocal Preset - CTA Simple):**
+    *   **Hook/Copy**: `[ARTISTA] Vocal Preset! Comment "[PALABRA_CLAVE]" for the preset! #[artista] #vocalpreset #vocalchain #vocalmixing #mixingtips`
+    *   *Ejemplo adaptado:* `A$AP ROCKY Vocal Preset! Comment "Rocky" for the preset! 🪐`
+
 ### 🚫 Reglas de "No-IA-Slop":
 - Evitar descripciones largas.
 - Evitar hashtags genéricos excesivos.
