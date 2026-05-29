@@ -16,7 +16,7 @@ export const subscribePayPalRecurring = async (req, res) => {
         // 1. Obtener Access Token de PayPal
         const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64');
         const baseUrl = PAYPAL_ENVIRONMENT === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
-        
+
         const tokenRes = await fetch(`${baseUrl}/v1/oauth2/token`, {
             method: 'POST',
             headers: {
@@ -25,7 +25,7 @@ export const subscribePayPalRecurring = async (req, res) => {
             },
             body: 'grant_type=client_credentials'
         });
-        
+
         const tokenData = await tokenRes.json();
         if (!tokenData.access_token) {
             throw new Error("Failed to authenticate with PayPal API");
@@ -39,7 +39,7 @@ export const subscribePayPalRecurring = async (req, res) => {
                 'Content-Type': 'application/json'
             }
         });
-        
+
         const subData = await subRes.json();
 
         if (subData.status !== 'ACTIVE' && subData.status !== 'APPROVAL_PENDING') {
@@ -50,7 +50,7 @@ export const subscribePayPalRecurring = async (req, res) => {
         // Como es recurrente, vamos a añadir el tiempo.
         // Si es PRO, PayPal nos dio un trial de 7 días. Si es Starter, un ciclo normal.
         // Asignaremos la fecha del "next_billing_time" que nos da PayPal si existe.
-        
+
         let nextBilling = subData.billing_info?.next_billing_time;
         if (!nextBilling) {
             // Fallback si paypal no lo envió
@@ -60,7 +60,7 @@ export const subscribePayPalRecurring = async (req, res) => {
             } else if (plan === 'pro') {
                 daysToAdd = 7; // Trial
             }
-            
+
             const d = new Date();
             d.setDate(d.getDate() + daysToAdd);
             nextBilling = d.toISOString();
@@ -84,8 +84,8 @@ export const subscribePayPalRecurring = async (req, res) => {
             .update({ plan: plan })
             .eq('id', userId);
 
-        return res.status(200).json({ 
-            success: true, 
+        return res.status(200).json({
+            success: true,
             message: 'Suscripción recurrente (V2) activada con éxito.',
             next_billing: nextBilling
         });
