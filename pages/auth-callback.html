@@ -103,14 +103,18 @@
           const hasCompletedOnboarding = profile && profile.nickname;
           console.log('? Perfil completado:', hasCompletedOnboarding);
 
-          if (redirectParam === 'carrito') {
-            console.log('?? Redirigiendo al carrito...');
-            window.location.replace('/carrito.html');
-          } else if (!hasCompletedOnboarding) {
+          if (!hasCompletedOnboarding) {
             // No tiene nickname -> Es Nuevo o Incompleto -> Welcome (Onboarding)
             console.log('?? Sin onboarding completo -> Welcome');
-            window.location.replace('/pages/welcome.html');
+            const welcomeUrl = redirectParam ? `/pages/welcome.html?redirect=${encodeURIComponent(redirectParam)}` : '/pages/welcome.html';
+            window.location.replace(welcomeUrl);
+          } else if (redirectParam) {
+            // Tiene redirect, respetarlo
+            const target = redirectParam === 'carrito' ? '/carrito.html' : `/${redirectParam}`;
+            console.log(`?? Redirigiendo a destino: ${target}`);
+            window.location.replace(target);
           } else {
+            // Default
             console.log(`Con onboarding completo -> Redirigiendo a /explorar`);
             window.location.replace('/explorar');
           }
