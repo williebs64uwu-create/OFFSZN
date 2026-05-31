@@ -739,13 +739,22 @@
                 const licenseType = escapeHTML((item.license_name || 'Standard').toUpperCase());
                 const safeName = escapeHTML(item.product.name);
 
+                const p = item.product;
+                const coverSrc = await AuthUtils.getAuthorizedUrl(
+                    p.image_url, 
+                    p.storage_version || p.r2_version, 
+                    p.id
+                ) || '/images/default-cover.png';
+                
+                const displayPrice = item.price_at_purchase != null ? `$${item.price_at_purchase}` : '';
+
                 return `
             <div class="item-row" style="flex-wrap: wrap; gap: 15px;">
                 <div style="display: flex; align-items: center; flex: 1; min-width: 250px;">
-                    <img src="${item.product.image_url || '/images/default-cover.png'}" alt="Cover" class="item-img">
+                    <img src="${coverSrc}" alt="Cover" class="item-img" onerror="this.src='/images/default-cover.png'">
                         <div class="item-info">
                             <div class="item-name">${safeName}</div>
-                            <div class="item-price">$${item.price_at_purchase} <span style="font-size: 0.7rem; color: var(--primary); font-weight: 700;">(${licenseType})</span></div>
+                            <div class="item-price">${displayPrice} <span style="font-size: 0.7rem; color: var(--primary); font-weight: 700;">(${licenseType})</span></div>
                         </div>
                 </div>
 

@@ -200,7 +200,6 @@
                     <div class="ahc-skeleton ahc-skeleton-stats"></div>
                 </div>
             </div>
-            <div class="ahc-skeleton ahc-skeleton-btn"></div>
         `;
     }
 
@@ -233,65 +232,28 @@
                     </div>
                 </div>
             </div>
-            <button class="ahc-follow-btn" id="ahc-follow-btn">
-                <i class="bi bi-person-plus"></i>
-                <span>Seguir</span>
-            </button>
         `;
 
 
-        const btn = card.querySelector('#ahc-follow-btn');
         const statsEl = card.querySelector('#ahc-follower-count');
 
-        if (btn && window.FollowManager) {
-            // Initial state
-            const initiallyFollowing = window.FollowManager.isFollowing(artistId);
-            updateButtonVisuals(btn, initiallyFollowing);
-
-            btn.onclick = (e) => {
-                e.stopPropagation();
-                window.FollowManager.toggleFollow(artistId, btn);
-            };
-
-            // Sync with FollowManager updates
+        if (window.FollowManager) {
+            // Sync with FollowManager updates for follower count only
             unsubscribeFollow = window.FollowManager.subscribe((followedIdsSet) => {
                 const isFollowing = followedIdsSet.has(String(artistId));
-                updateButtonVisuals(btn, isFollowing);
 
                 // 🔥 OPTIMISTIC COUNT UPDATE
                 if (statsEl) {
                     let displayCount = baseFollowerCount;
-                    // If the user's initial state on load was different from current state, adjust count
-                    if (isFollowing && !initiallyFollowing) displayCount++;
-                    if (!isFollowing && initiallyFollowing) displayCount = Math.max(0, displayCount - 1);
-                    
+                    // Note: Since we don't have the initial button state, we can just show the base count 
+                    // or we could track initial state if needed. But for simple hover card, base is fine.
                     statsEl.textContent = `${formatNumber(displayCount)} Seguidores`;
                 }
             });
         }
-        
-        // Hide if self
-        const myId = getMyId();
-        if (myId && String(myId) === String(artistId)) {
-            btn.style.display = 'none';
-        }
     }
 
-    function updateButtonVisuals(btn, isFollowing) {
-        if (!btn) return;
-        const icon = btn.querySelector('i');
-        const span = btn.querySelector('span');
-        
-        if (isFollowing) {
-            btn.classList.add('following-state');
-            if (icon) icon.className = 'bi bi-person-check-fill';
-            if (span) span.textContent = 'Siguiendo';
-        } else {
-            btn.classList.remove('following-state');
-            if (icon) icon.className = 'bi bi-person-plus';
-            if (span) span.textContent = 'Seguir';
-        }
-    }
+
 
     function getMyId() {
         const token = window.AuthUtils ? window.AuthUtils.getAccessToken() : null;

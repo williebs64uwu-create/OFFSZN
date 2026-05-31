@@ -1163,7 +1163,8 @@ export const getSecureDownloadUrl = async (req, res) => {
             return res.status(403).json({ error: 'No tienes permiso para acceder a este archivo' });
         }
 
-        if (item.orders.status !== 'completed' && item.orders.status !== 'approved') {
+        const orderStatus = (item.orders.status || '').toLowerCase();
+        if (orderStatus !== 'completed' && orderStatus !== 'approved') {
             console.warn(`[SecureDownload] Order not completed: status=${item.orders.status}`);
             return res.status(403).json({ error: 'El pedido no está completado' });
         }
