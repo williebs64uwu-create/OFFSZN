@@ -353,6 +353,15 @@ app.use((req, res, next) => {
         if (fs.existsSync(possibleHtml)) {
             return res.sendFile(possibleHtml);
         }
+        // Fallback to pages directory for clean URLs like /login, /register, etc.
+        let targetPath = req.path;
+        if (targetPath.endsWith('/purchase-succes')) {
+            targetPath = targetPath.replace('/purchase-succes', '/purchase-success');
+        }
+        const possiblePagesHtml = path.join(rootPath, 'pages', targetPath.replace(/^\/pages/, '') + '.html');
+        if (fs.existsSync(possiblePagesHtml)) {
+            return res.sendFile(possiblePagesHtml);
+        }
     }
 
     next();
