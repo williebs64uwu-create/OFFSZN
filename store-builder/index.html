@@ -709,6 +709,17 @@
                 } else {
                     previewDevice.classList.remove('mobile');
                     previewDevice.classList.add('desktop');
+                    
+                    // 🔥 Cerrar drawer móvil de manera INSTANTÁNEA sin transiciones al cambiar a PC
+                    const drawer = document.getElementById('mobile-nav-drawer');
+                    if (drawer) {
+                        drawer.classList.add('drawer-no-animation');
+                        drawer.classList.remove('active');
+                        setTimeout(() => {
+                            if (drawer) drawer.classList.remove('drawer-no-animation');
+                        }, 100);
+                    }
+                    document.body.style.overflow = '';
                 }
                 
                 // Disparar redimensionamiento del canvas de partículas
@@ -727,6 +738,14 @@
         function moveSection(from, to) {
             const state = storeState.get();
             const sections = [...state.sections];
+            
+            // Bloquear movimiento de navbar o footer
+            if (sections[from].type === 'navbar' || sections[from].type === 'footer') return;
+            
+            // Evitar que otros bloques se pongan por encima del navbar o por debajo del footer
+            if (to <= 0) to = 1;
+            if (to >= sections.length - 1) to = sections.length - 2;
+
             const item = sections.splice(from, 1)[0];
             sections.splice(to, 0, item);
             storeState.set({ ...state, sections });
@@ -734,11 +753,13 @@
 
         function deleteSection(id) {
             const state = storeState.get();
+            const secToDelete = state.sections.find(s => s.id === id);
+            if (secToDelete && (secToDelete.type === 'navbar' || secToDelete.type === 'footer')) return; // No borrar
             const sections = state.sections.filter(s => s.id !== id);
             storeState.set({ ...state, sections });
         }
 
-        function openSectionEditor(sec) {
+        window.openSectionEditor = function(sec) {
             const tabsHeader = document.querySelector('.sidebar-tabs');
             if (tabsHeader) tabsHeader.style.display = 'none';
 
@@ -766,6 +787,7 @@
                 const subtitleVal = sec.props.subtitle || '';
                 const showParticles = sec.props.showParticles !== false;
                 const heroBgColor = sec.props.heroBgColor || 'transparent';
+                const heroBannerUrl = sec.props.heroBannerUrl || '';
                 const paddingTop = sec.props.paddingTop !== undefined ? sec.props.paddingTop : 0;
                 const paddingBottom = sec.props.paddingBottom !== undefined ? sec.props.paddingBottom : 0;
 
@@ -794,6 +816,21 @@
                             </label>
                         </div>
 
+                        <!-- Banner de imagen -->
+                        <div style="background: #161616; padding: 14px; border-radius: 8px; border: 1px solid #282828;">
+                            <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;"><i class="bi bi-image-fill"></i> Imagen de Banner</label>
+                            <p style="font-size: 10px; color: #666; margin-bottom: 10px; line-height: 1.5;">Sube tu imagen o GIF. Se mostrará cubriendo todo el hero.</p>
+                            <div style="margin-bottom: 10px;">
+                                <input type="hidden" id="editHeroBannerUrl" value="${heroBannerUrl}">
+                                <button type="button" id="btnUploadHeroBanner" style="width: 100%; background: #222; border: 1px dashed #444; border-radius: 8px; padding: 12px; color: #fff; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='#333'; this.style.borderColor='#666';" onmouseout="this.style.background='#222'; this.style.borderColor='#444';"><i class="bi bi-cloud-arrow-up-fill" style="margin-right: 6px;"></i> Subir Imagen</button>
+                                <input type="file" id="fileHeroBanner" accept="image/*,video/mp4,image/gif" style="display: none;">
+                            </div>
+                            <div id="heroBannerPreviewWrap" style="display: ${heroBannerUrl ? 'block' : 'none'}; position:relative; width:100%; height:64px; border-radius:6px; overflow:hidden; border:1px solid #333; margin-bottom:4px;">
+                                <img id="heroBannerPreview" src="${heroBannerUrl}" style="width:100%; height:100%; object-fit:cover;">
+                                <button type="button" id="clearHeroBanner" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.8);border:none;border-radius:4px;color:#fff;cursor:pointer;padding:2px 8px;font-size:10px;font-weight:700;">✕ Quitar</button>
+                            </div>
+                        </div>
+
                         <div style="background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
                             <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Color de Fondo</label>
                             <input type="color" id="editHeroBgColor" style="width: 100%; height: 40px; border: none; border-radius: 6px; background: none; cursor: pointer; margin-bottom: 8px;" value="${heroBgColor !== 'transparent' && heroBgColor.startsWith('#') ? heroBgColor : '#000000'}">
@@ -808,20 +845,20 @@
                         </div>
 
                         <div style="background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
-                            <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 12px;">Espaciado (Arriba / Abajo)</label>
+                            <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 12px;">Espaciado</label>
                             
                             <div style="margin-bottom: 12px;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                     <span style="font-size: 10px; color: #aaa;">Arriba (<span id="valPaddingTop">${paddingTop}</span>px)</span>
                                 </div>
-                                <input type="range" id="editHeroPaddingTop" min="0" max="250" value="${paddingTop}" style="width: 100%;">
+                                <input type="range" id="editHeroPaddingTop" class="premium-range" min="0" max="250" value="${paddingTop}" style="width: 100%;">
                             </div>
                             
                             <div>
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                     <span style="font-size: 10px; color: #aaa;">Abajo (<span id="valPaddingBottom">${paddingBottom}</span>px)</span>
                                 </div>
-                                <input type="range" id="editHeroPaddingBottom" min="0" max="250" value="${paddingBottom}" style="width: 100%;">
+                                <input type="range" id="editHeroPaddingBottom" class="premium-range" min="0" max="250" value="${paddingBottom}" style="width: 100%;">
                             </div>
                         </div>
                     </div>
@@ -868,6 +905,74 @@
                     document.getElementById('valPaddingBottom').textContent = e.target.value;
                     storeState.updateSection(sec.id, { paddingBottom: parseInt(e.target.value) });
                 };
+
+                // Banner image URL
+                document.getElementById('editHeroBannerUrl').addEventListener('input', (e) => {
+                    const url = e.target.value.trim();
+                    storeState.updateSection(sec.id, { heroBannerUrl: url });
+                    const wrap = document.getElementById('heroBannerPreviewWrap');
+                    const prev = document.getElementById('heroBannerPreview');
+                    if (url) {
+                        if (wrap) { wrap.style.display = 'block'; }
+                        if (prev) { prev.src = url; }
+                    } else {
+                        if (wrap) { wrap.style.display = 'none'; }
+                    }
+                });
+
+                const fileHeroBanner = document.getElementById('fileHeroBanner');
+                const btnUploadHeroBanner = document.getElementById('btnUploadHeroBanner');
+                if (btnUploadHeroBanner && fileHeroBanner) {
+                    btnUploadHeroBanner.onclick = () => fileHeroBanner.click();
+                    fileHeroBanner.onchange = (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        
+                        const originalText = btnUploadHeroBanner.innerHTML;
+                        btnUploadHeroBanner.innerHTML = '<i class="bi bi-hourglass-split"></i> Subiendo...';
+                        
+                        const reader = new FileReader();
+                        reader.onload = async (ev) => {
+                            const b64 = ev.target.result;
+                            const inputUrl = document.getElementById('editHeroBannerUrl');
+                            const originalVal = inputUrl.value;
+                            
+                            try {
+                                const res = await fetch('/api/upload-imagekit', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ imageBase64: b64, folder: 'store_banners' })
+                                });
+                                const data = await res.json();
+                                if (data.success && data.url) {
+                                    inputUrl.value = data.url;
+                                    inputUrl.dispatchEvent(new Event('input'));
+                                } else {
+                                    alert('Error al subir la imagen. Intenta de nuevo.');
+                                    inputUrl.value = originalVal;
+                                }
+                            } catch (err) {
+                                console.error(err);
+                                alert('Error de red al subir la imagen.');
+                                inputUrl.value = originalVal;
+                            } finally {
+                                btnUploadHeroBanner.innerHTML = originalText;
+                                fileHeroBanner.value = '';
+                            }
+                        };
+                        reader.readAsDataURL(file);
+                    };
+                }
+
+                const clearBannerBtn = document.getElementById('clearHeroBanner');
+                if (clearBannerBtn) {
+                    clearBannerBtn.onclick = () => {
+                        document.getElementById('editHeroBannerUrl').value = '';
+                        storeState.updateSection(sec.id, { heroBannerUrl: '' });
+                        const wrap = document.getElementById('heroBannerPreviewWrap');
+                        if (wrap) wrap.style.display = 'none';
+                    };
+                }
             } else if (sec.type === 'navbar') {
                 const logoVal = sec.props.logoText || '';
                 const activeLinks = sec.props.links || [];
@@ -1054,14 +1159,7 @@
 
                                     <!-- Carrito -->
                                     <div style="background: #161616; border: 1px solid #282828; border-radius: 8px; padding: 14px; margin-top: 4px;">
-                                        <div style="margin-bottom: 12px;">
-                                            <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;"><i class="bi bi-cart3"></i> ¿Mostrar Botón de Carrito?</label>
-                                            <select id="editNavShowCartSelect" style="width: 100%; padding: 12px; background: #0f0f0f; border: 1px solid #282828; border-radius: 8px; color: #fff; font-size: 13px; appearance: none; cursor: pointer;">
-                                                <option value="false" ${!showCart ? 'selected' : ''}>NO</option>
-                                                <option value="true" ${showCart ? 'selected' : ''}>SI</option>
-                                            </select>
-                                        </div>
-                                        <div id="cart-customizer-fields" style="display: ${showCart ? 'block' : 'none'}; margin-top: 12px; border-top: 1px solid #282828; padding-top: 12px;">
+                                        <div>
                                             <label style="font-size: 10px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 8px;">Estilo del Carrito</label>
                                             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; background: #0f0f0f; padding: 4px; border-radius: 8px; border: 1px solid #222;">
                                                 <button type="button" class="cart-style-btn ${cartStyle === 'icon' ? 'active' : ''}" data-style="icon">
@@ -1074,17 +1172,6 @@
                                                 </button>
                                             </div>
                                         </div>
-                                    </div>
-                                    <!-- Animación Menú Móvil -->
-                                    <div style="display: flex; justify-content: space-between; align-items: center; background: #161616; padding: 12px 14px; border-radius: 8px; border: 1px solid #282828; margin-top: 12px;">
-                                        <div style="display: flex; flex-direction: column;">
-                                            <span style="font-size: 12px; font-weight: 600; color: #fff;">Animación Menú Móvil</span>
-                                            <span style="font-size: 9px; color: #666;">Slide de izquierda a derecha</span>
-                                        </div>
-                                        <label class="switch-toggle large">
-                                            <input type="checkbox" id="editNavDrawerAnimation" ${sec.props.drawerAnimation !== false ? 'checked' : ''}>
-                                            <span class="slider-toggle"></span>
-                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -1115,20 +1202,28 @@
                                         </div>
 
                                         <div style="margin-bottom: 14px;">
-                                            <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;">Enlace del Anuncio</label>
-                                            <input type="text" id="editNavAnnouncementLink" style="width: 100%; padding: 12px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; font-size: 13px;" value="${sec.props.announcementLink || ''}" placeholder="Ej: #products-section">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                                <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin: 0;">Enlace del Anuncio</label>
+                                                <span id="annLinkCounter" style="font-size: 11px; color: #666; font-weight: 700;">${(sec.props.announcementLink || '').length}/300</span>
+                                            </div>
+                                            <input type="text" id="editNavAnnouncementLink" maxlength="300" style="width: 100%; padding: 12px; background: #161616; border: 1px solid #282828; border-radius: 8px; color: #fff; font-size: 13px;" value="${sec.props.announcementLink || ''}" placeholder="Ej: #products-section">
                                         </div>
 
                                         <div style="margin-bottom: 20px; background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
                                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                                <div style="display: flex; flex-direction: column;">
-                                                    <span style="font-size: 11px; color: #aaa; font-weight: 600;">Grosor del Banner</span>
-                                                    <span style="font-size: 9px; color: #666; font-weight: 400; line-height: 1;">Ajusta el espacio interior</span>
-                                                </div>
-                                                <span id="annPaddingValue" style="font-size: 11px; color: #fff; font-weight: 700; font-family: monospace;">${sec.props.announcementPadding !== undefined ? sec.props.announcementPadding : 8}px</span>
+                                                <span style="font-size: 11px; color: #aaa; font-weight: 600;">Grosor del Banner</span>
+                                                <span id="annPaddingValue" style="font-size: 11px; color: #fff; font-weight: 700; font-family: monospace;">Nivel ${Math.round((sec.props.announcementPadding !== undefined ? sec.props.announcementPadding : 8) / 4)}</span>
                                             </div>
                                             <div style="position: relative; height: 24px; display: flex; align-items: center; margin: 4px 0;">
-                                                <input type="range" id="editNavAnnouncementPadding" class="premium-range" min="4" max="24" value="${sec.props.announcementPadding !== undefined ? sec.props.announcementPadding : 8}" style="width: 100%; margin: 0; z-index: 2; position: relative;">
+                                                <input type="range" id="editNavAnnouncementPadding" class="premium-range" min="1" max="6" value="${Math.round((sec.props.announcementPadding !== undefined ? sec.props.announcementPadding : 8) / 4)}" style="width: 100%; margin: 0; z-index: 2; position: relative;">
+                                                <div style="position: absolute; left: 7px; right: 7px; top: 50%; transform: translateY(-50%); display: flex; justify-content: space-between; pointer-events: none; z-index: 1;">
+                                                    <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                    <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                    <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                    <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                    <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                    <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -1183,13 +1278,11 @@
                                             <!-- Desenfoque Cristal Slider -->
                                             <div style="margin-bottom: 20px; background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
                                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                                    <div style="display: flex; flex-direction: column;">
-                                                        <span style="font-size: 11px; color: #aaa; font-weight: 600;">Desenfoque (translúcido)</span>
-                                                    </div>
-                                                    <span id="navBgBlurValue" style="font-size: 11px; color: #fff; font-weight: 700; font-family: monospace;">${navBgBlur}px</span>
+                                                    <span style="font-size: 11px; color: #aaa; font-weight: 600;">Intensidad de Desenfoque</span>
+                                                    <span id="navBgBlurValue" style="font-size: 11px; color: #fff; font-weight: 700; font-family: monospace;">Nivel ${Math.round(navBgBlur/8) + 1}</span>
                                                 </div>
                                                 <div style="position: relative; height: 24px; display: flex; align-items: center; margin: 4px 0;">
-                                                    <input type="range" id="editNavBgBlur" class="premium-range" min="0" max="40" value="${navBgBlur}" style="width: 100%; margin: 0; z-index: 2; position: relative;">
+                                                    <input type="range" id="editNavBgBlur" class="premium-range" min="1" max="6" value="${Math.round(navBgBlur/8) + 1}" style="width: 100%; margin: 0; z-index: 2; position: relative;">
                                                     <!-- Ruler Ticks -->
                                                     <div style="position: absolute; left: 7px; right: 7px; top: 50%; transform: translateY(-50%); display: flex; justify-content: space-between; pointer-events: none; z-index: 1;">
                                                         <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
@@ -1197,14 +1290,8 @@
                                                         <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
                                                         <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
                                                         <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
+                                                        <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
                                                     </div>
-                                                </div>
-                                                <div style="display: flex; justify-content: space-between; padding: 0 2px; margin-top: 2px;">
-                                                    <span style="font-size: 8px; color: #555; font-family: monospace;">0px</span>
-                                                    <span style="font-size: 8px; color: #555; font-family: monospace;">10px</span>
-                                                    <span style="font-size: 8px; color: #555; font-family: monospace;">20px</span>
-                                                    <span style="font-size: 8px; color: #555; font-family: monospace;">30px</span>
-                                                    <span style="font-size: 8px; color: #555; font-family: monospace;">40px</span>
                                                 </div>
                                             </div>
 
@@ -1222,10 +1309,10 @@
                                                 <div style="margin-bottom: 20px; background: #161616; padding: 12px; border-radius: 8px; border: 1px solid #282828;">
                                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                                                         <span style="font-size: 11px; color: #aaa; font-weight: 600;">Grosor del Borde</span>
-                                                        <span id="navBorderWidthValue" style="font-size: 11px; color: #fff; font-weight: 700; font-family: monospace;">${borderWidth}px</span>
+                                                        <span id="navBorderWidthValue" style="font-size: 11px; color: #fff; font-weight: 700; font-family: monospace;">Nivel ${borderWidth + 1}</span>
                                                     </div>
                                                     <div style="position: relative; height: 24px; display: flex; align-items: center; margin: 4px 0;">
-                                                        <input type="range" id="editNavBorderWidth" class="premium-range" min="0" max="5" value="${borderWidth}" style="width: 100%; margin: 0; z-index: 2; position: relative;">
+                                                        <input type="range" id="editNavBorderWidth" class="premium-range" min="1" max="6" value="${borderWidth + 1}" style="width: 100%; margin: 0; z-index: 2; position: relative;">
                                                         <!-- Ruler Ticks -->
                                                         <div style="position: absolute; left: 7px; right: 7px; top: 50%; transform: translateY(-50%); display: flex; justify-content: space-between; pointer-events: none; z-index: 1;">
                                                             <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
@@ -1235,14 +1322,6 @@
                                                             <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
                                                             <div style="width: 1px; height: 8px; background: rgba(255,255,255,0.15);"></div>
                                                         </div>
-                                                    </div>
-                                                    <div style="display: flex; justify-content: space-between; padding: 0 2px; margin-top: 2px;">
-                                                        <span style="font-size: 8px; color: #555; font-family: monospace;">0px</span>
-                                                        <span style="font-size: 8px; color: #555; font-family: monospace;">1px</span>
-                                                        <span style="font-size: 8px; color: #555; font-family: monospace;">2px</span>
-                                                        <span style="font-size: 8px; color: #555; font-family: monospace;">3px</span>
-                                                        <span style="font-size: 8px; color: #555; font-family: monospace;">4px</span>
-                                                        <span style="font-size: 8px; color: #555; font-family: monospace;">5px</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1386,14 +1465,17 @@
                 const editAnnPadding = document.getElementById('editNavAnnouncementPadding');
                 if (editAnnPadding) {
                     editAnnPadding.oninput = (e) => {
-                        document.getElementById('annPaddingValue').textContent = `${e.target.value}px`;
-                        storeState.updateSection(sec.id, { announcementPadding: parseInt(e.target.value) });
+                        const level = parseInt(e.target.value);
+                        document.getElementById('annPaddingValue').textContent = `Nivel ${level}`;
+                        storeState.updateSection(sec.id, { announcementPadding: level * 4 });
                     };
                 }
 
                 const editAnnLink = document.getElementById('editNavAnnouncementLink');
                 if (editAnnLink) {
                     editAnnLink.oninput = (e) => {
+                        const counter = document.getElementById('annLinkCounter');
+                        if (counter) counter.textContent = `${e.target.value.length}/300`;
                         storeState.updateSection(sec.id, { announcementLink: e.target.value });
                     };
                 }
@@ -1522,8 +1604,9 @@
                 const editBlur = document.getElementById('editNavBgBlur');
                 if (editBlur) {
                     editBlur.oninput = (e) => {
-                        document.getElementById('navBgBlurValue').textContent = `${e.target.value}px`;
-                        storeState.updateSectionSilent(sec.id, { bgBlur: parseInt(e.target.value) });
+                        const level = parseInt(e.target.value);
+                        document.getElementById('navBgBlurValue').textContent = `Nivel ${level}`;
+                        storeState.updateSectionSilent(sec.id, { bgBlur: (level - 1) * 8 });
                         refreshNavStyle();
                     };
                 }
@@ -1557,8 +1640,9 @@
                 const editBWidth = document.getElementById('editNavBorderWidth');
                 if (editBWidth) {
                     editBWidth.oninput = (e) => {
-                        document.getElementById('navBorderWidthValue').textContent = `${e.target.value}px`;
-                        storeState.updateSectionSilent(sec.id, { borderWidth: parseInt(e.target.value) });
+                        const level = parseInt(e.target.value);
+                        document.getElementById('navBorderWidthValue').textContent = `Nivel ${level}`;
+                        storeState.updateSectionSilent(sec.id, { borderWidth: level - 1 });
                         refreshNavStyle();
                     };
                 }
@@ -1668,15 +1752,121 @@
                 });
 
             } else if (sec.type === 'faq') {
+                const faqEmail = sec.props.email || currentUser?.email || '';
+                const defaultFaqQuestions = [
+                    { q: '¿Cómo recibo mis archivos después de la compra?', a: 'Inmediatamente después del pago, recibirás un correo con los enlaces de descarga directa de tus archivos.' },
+                    { q: '¿Qué incluye cada licencia?', a: 'Dependiendo del nivel, recibes desde el MP3 hasta los Stems para una mezcla profesional.' },
+                    { q: '¿Puedo subir mi canción a Spotify?', a: 'Sí, todas nuestras licencias permiten la distribución en plataformas digitales.' },
+                ];
+                const faqQuestions = (sec.props.questions && sec.props.questions.length > 0) ? sec.props.questions : [...defaultFaqQuestions];
+
+                function renderFaqEditor() {
+                    const currentQs = (storeState.get().sections.find(s => s.id === sec.id)?.props?.questions) || faqQuestions;
+                    const qHtml = currentQs.map((item, i) => `
+                        <div style="background: #0f0f0f; border: 1px solid #282828; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <span style="font-size: 11px; color: #aaa; font-weight: 700; text-transform: uppercase;">Pregunta ${i + 1}</span>
+                                <button type="button" onclick="window._faqDeleteQ(${i})" style="background: transparent; border: 1px solid #333; border-radius: 4px; color: #888; cursor: pointer; font-size: 10px; font-weight: 600; padding: 4px 8px; transition: all 0.2s;" onmouseover="this.style.color='#fff'; this.style.borderColor='#ef4444';" onmouseout="this.style.color='#888'; this.style.borderColor='#333';"><i class="bi bi-trash"></i> Borrar</button>
+                            </div>
+                            
+                            <div style="margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <label style="font-size: 10px; color: #888;">Título de Pregunta</label>
+                                    <span id="faqQCount${i}" style="font-size: 10px; color: #555;">${(item.q || '').length}/100</span>
+                                </div>
+                                <input type="text" data-faq-q="${i}" maxlength="100" placeholder="Ej: ¿Puedo usar los beats en YouTube?" style="width: 100%; padding: 10px; background: #161616; border: 1px solid #282828; border-radius: 6px; color: #fff; font-size: 12px;" value="${(item.q || '').replace(/"/g, '&quot;')}">
+                            </div>
+
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                    <label style="font-size: 10px; color: #888;">Respuesta</label>
+                                    <span id="faqACount${i}" style="font-size: 10px; color: #555;">${(item.a || '').length}/400</span>
+                                </div>
+                                <textarea data-faq-a="${i}" rows="3" maxlength="400" placeholder="Escribe tu respuesta aquí..." style="width: 100%; padding: 10px; background: #161616; border: 1px solid #282828; border-radius: 6px; color: #fff; font-size: 12px; resize: vertical;">${item.a || ''}</textarea>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    const canAdd = currentQs.length < 10;
+                    document.getElementById('faqQuestionsContainer').innerHTML = qHtml + (canAdd
+                        ? `<button type="button" id="faqAddQBtn" style="width:100%; padding: 12px; background: transparent; border: 1px dashed #333; border-radius: 8px; color: #888; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; margin-top: 4px;" onmouseover="this.style.color='#fff'; this.style.borderColor='#666';" onmouseout="this.style.color='#888'; this.style.borderColor='#333';"><i class="bi bi-plus-circle"></i> Agregar Pregunta (${currentQs.length}/10)</button>`
+                        : `<div style="text-align:center;color:#666;font-size:11px;padding:8px; border: 1px dashed #222; border-radius: 8px;">Máximo 10 preguntas alcanzado</div>`
+                    );
+
+                    document.querySelectorAll('[data-faq-q]').forEach(input => {
+                        input.oninput = (e) => {
+                            const idx = parseInt(e.target.dataset.faqQ);
+                            const val = e.target.value;
+                            document.getElementById(`faqQCount${idx}`).textContent = `${val.length}/100`;
+                            const qs = [...(storeState.get().sections.find(s => s.id === sec.id)?.props?.questions || faqQuestions)];
+                            qs[idx] = { ...qs[idx], q: val };
+                            storeState.updateSection(sec.id, { questions: qs });
+                        };
+                    });
+                    document.querySelectorAll('[data-faq-a]').forEach(textarea => {
+                        textarea.oninput = (e) => {
+                            const idx = parseInt(e.target.dataset.faqA);
+                            const val = e.target.value;
+                            document.getElementById(`faqACount${idx}`).textContent = `${val.length}/400`;
+                            const qs = [...(storeState.get().sections.find(s => s.id === sec.id)?.props?.questions || faqQuestions)];
+                            qs[idx] = { ...qs[idx], a: val };
+                            storeState.updateSection(sec.id, { questions: qs });
+                        };
+                    });
+                    const addBtn = document.getElementById('faqAddQBtn');
+                    if (addBtn) {
+                        addBtn.onclick = () => {
+                            const qs = [...(storeState.get().sections.find(s => s.id === sec.id)?.props?.questions || faqQuestions)];
+                            if (qs.length < 10) {
+                                qs.push({ q: '', a: '' });
+                                storeState.updateSection(sec.id, { questions: qs });
+                                renderFaqEditor();
+                            }
+                        };
+                    }
+                }
+
+                window._faqDeleteQ = (idx) => {
+                    const qs = [...(storeState.get().sections.find(s => s.id === sec.id)?.props?.questions || faqQuestions)];
+                    qs.splice(idx, 1);
+                    storeState.updateSection(sec.id, { questions: qs });
+                    renderFaqEditor();
+                };
+
                 form.innerHTML = `
-                    <div>
-                        <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 6px;">Email de Contacto</label>
-                        <input type="email" id="editFaqEmail" style="width: 100%; padding: 10px; background: #222; border: 1px solid #333; border-radius: 6px; color: #fff; font-size: 13px;" value="${sec.props.email || ''}">
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <!-- Email -->
+                        <div style="background: #161616; padding: 14px; border-radius: 8px; border: 1px solid #282828;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label style="font-size: 11px; color: #fff; text-transform: uppercase; font-weight: 700; margin: 0;"><i class="bi bi-envelope-fill"></i> Email de Contacto</label>
+                                <span id="faqEmailCounter" style="font-size: 11px; color: #666; font-weight: 700;">${faqEmail.length}/50</span>
+                            </div>
+                            <input type="email" id="editFaqEmail" maxlength="50" placeholder="tu@email.com" style="width: 100%; padding: 10px; background: #0f0f0f; border: 1px solid #282828; border-radius: 8px; color: #fff; font-size: 13px;" value="${faqEmail}">
+                            <p style="font-size: 10px; color: #555; margin-top: 6px;">Se muestra al pie de la sección FAQ para que tus clientes te contacten.</p>
+                        </div>
+
+                        <!-- Preguntas -->
+                        <div>
+                            <label style="font-size: 11px; color: #fff; text-transform: uppercase; font-weight: 700; display: block; margin-bottom: 10px;"><i class="bi bi-chat-left-text-fill"></i> Preguntas Frecuentes</label>
+                            <div id="faqQuestionsContainer"></div>
+                        </div>
                     </div>
                 `;
+
+                // Initialize if not in state yet
+                if (!sec.props.questions) {
+                    storeState.updateSection(sec.id, { email: faqEmail, questions: faqQuestions });
+                }
+                if (!sec.props.email) {
+                    storeState.updateSection(sec.id, { email: faqEmail });
+                }
+
                 document.getElementById('editFaqEmail').oninput = (e) => {
+                    document.getElementById('faqEmailCounter').textContent = `${e.target.value.length}/50`;
                     storeState.updateSection(sec.id, { email: e.target.value });
                 };
+
+                renderFaqEditor();
             } else if (sec.type === 'footer') {
                 const brandingChecked = sec.props.showBranding !== false ? 'checked' : '';
                 form.innerHTML = `
@@ -1795,7 +1985,8 @@
                 state.sections.forEach((sec, idx) => {
                     const el = document.createElement('div');
                     el.className = 'section-block-item';
-                    el.draggable = true;
+                    const isFixed = sec.type === 'navbar' || sec.type === 'footer';
+                    el.draggable = !isFixed;
                     el.dataset.index = idx;
                     el.style.cssText = `
                         padding: 12px 16px;
@@ -1807,7 +1998,7 @@
                         justify-content: space-between;
                         align-items: center;
                         transition: all 0.2s ease;
-                        cursor: grab;
+                        cursor: ${isFixed ? 'default' : 'grab'};
                     `;
 
                     // Grupo izquierdo con grip e ícono
@@ -1819,10 +2010,10 @@
                     `;
                     
                     const grip = document.createElement('i');
-                    grip.className = 'bi bi-grip-vertical';
+                    grip.className = isFixed ? 'bi bi-lock-fill' : 'bi bi-grip-vertical';
                     grip.style.cssText = `
                         color: #555;
-                        font-size: 18px;
+                        font-size: ${isFixed ? '14px' : '18px'};
                         transition: color 0.2s;
                     `;
                     leftGrp.appendChild(grip);
@@ -1838,18 +2029,23 @@
                     leftGrp.appendChild(label);
                     
                     // Highlight grip
-                    el.onmouseenter = () => { grip.style.color = '#fff'; };
-                    el.onmouseleave = () => { grip.style.color = '#555'; };
+                    if (!isFixed) {
+                        el.onmouseenter = () => { grip.style.color = '#fff'; };
+                        el.onmouseleave = () => { grip.style.color = '#555'; };
+                    }
 
                     // Drag and Drop Event Listeners
-                    el.addEventListener('dragstart', (e) => {
-                        e.dataTransfer.effectAllowed = 'move';
-                        e.dataTransfer.setData('text/plain', idx);
-                        el.style.opacity = '0.4';
-                        el.style.border = '1px dashed rgba(255,255,255,0.3)';
-                    });
+                    if (!isFixed) {
+                        el.addEventListener('dragstart', (e) => {
+                            e.dataTransfer.effectAllowed = 'move';
+                            e.dataTransfer.setData('text/plain', idx);
+                            el.style.opacity = '0.4';
+                            el.style.border = '1px dashed rgba(255,255,255,0.3)';
+                        });
+                    }
 
                     el.addEventListener('dragover', (e) => {
+                        if (isFixed) return false;
                         if (e.preventDefault) {
                             e.preventDefault();
                         }

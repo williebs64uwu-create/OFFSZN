@@ -1,5 +1,5 @@
 /**
- * GLOBAL SPA ROUTER
+ * GLOBAL SPA ROUTER WITH HYPER-PERFORMANCE CACHING & FAST CLICKS
  * Handles seamless page transitions without stopping the audio player.
  */
 
@@ -8,9 +8,10 @@ const Router = {
     isTransitioning: false,
     _loadAbort: null,
     _loadGen: 0,
+    _pageCache: new Map(), // Zero-latency memory cache
 
     init() {
-        console.log("🚀 SPA Router Initialized");
+        console.log("🚀 SPA Router Initialized with Zero-Latency Caching & Fast Click Prioritization");
 
         // Intercept all internal clicks
         document.addEventListener('click', (e) => {
@@ -28,6 +29,25 @@ const Router = {
         window.addEventListener('popstate', () => {
             this.loadPage(window.location.pathname + window.location.search, false);
         });
+
+        // ⚡ Hover / Touch Prefetching for instant click transitions
+        document.addEventListener('mouseover', (e) => {
+            const link = e.target.closest('a');
+            if (!link) return;
+            const url = link.getAttribute('href');
+            if (this.shouldIntercept(url, link)) {
+                this.prefetch(url);
+            }
+        });
+
+        document.addEventListener('touchstart', (e) => {
+            const link = e.target.closest('a');
+            if (!link) return;
+            const url = link.getAttribute('href');
+            if (this.shouldIntercept(url, link)) {
+                this.prefetch(url);
+            }
+        }, { passive: true });
     },
 
     shouldIntercept(url, element) {
@@ -36,8 +56,62 @@ const Router = {
         if (url.startsWith('#')) return false; // Anchor
         if (element.hasAttribute('download') || element.getAttribute('target') === '_blank') return false;
         if (url.startsWith('mailto:') || url.startsWith('tel:')) return false;
-        if (url.includes('.php') || url.includes('.zip') || url.includes('.png')) return false; // Assets
+        if (url.includes('.php') || url.includes('.zip') || url.includes('.png') || url.includes('.mp3') || url.includes('.wav')) return false; // Assets
         return true;
+    },
+
+    async prefetch(url) {
+        if (!url || this._pageCache.has(url)) return;
+
+        try {
+            const response = await fetch(url, { cache: 'default' });
+            if (response.ok) {
+                const html = await response.text();
+                this._pageCache.set(url, html);
+                console.log(`⚡ Prefetched & Cached: ${url}`);
+            }
+        } catch (e) {
+            // Silently ignore prefetch failures
+        }
+    },
+
+    showProgressBar() {
+        let bar = document.getElementById('spa-progress-bar');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'spa-progress-bar';
+            bar.style.position = 'fixed';
+            bar.style.top = '0';
+            bar.style.left = '0';
+            bar.style.height = '3px';
+            bar.style.background = 'linear-gradient(90deg, #b026ff, #ff2a85)';
+            bar.style.boxShadow = '0 0 8px #b026ff, 0 0 12px #ff2a85';
+            bar.style.zIndex = '99999';
+            bar.style.transition = 'width 0.2s ease, opacity 0.2s ease';
+            bar.style.width = '0%';
+            bar.style.opacity = '1';
+            document.body.appendChild(bar);
+        }
+        bar.style.opacity = '1';
+        bar.style.width = '0%';
+        setTimeout(() => {
+            if (bar.style.opacity === '1') {
+                bar.style.width = '75%';
+            }
+        }, 30);
+    },
+
+    hideProgressBar() {
+        const bar = document.getElementById('spa-progress-bar');
+        if (bar) {
+            bar.style.width = '100%';
+            setTimeout(() => {
+                bar.style.opacity = '0';
+                setTimeout(() => {
+                    bar.style.width = '0%';
+                }, 200);
+            }, 50);
+        }
     },
 
     async navigate(url) {
@@ -65,55 +139,75 @@ const Router = {
             return;
         }
 
-        main.style.opacity = '0.85';
+        // Check page cache
+        const cachedHtml = this._pageCache.get(url);
+        let renderedFromCache = false;
+
+        if (cachedHtml) {
+            this.renderPageHTML(cachedHtml, main, scrollUp);
+            renderedFromCache = true;
+            this.isTransitioning = false; // Fast unlock to prioritize next clicks
+        } else {
+            this.showProgressBar();
+            main.style.opacity = '0.85';
+        }
 
         try {
-            const response = await fetch(url, { signal, cache: 'default' });
+            // Perform background revalidation
+            const response = await fetch(url, { signal, cache: 'no-cache' });
             if (!response.ok) throw new Error("Load failed");
             if (loadGen !== this._loadGen) return;
 
             const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-
-            // 1. Update Title
-            document.title = doc.title;
-
-            // 2. Swop Content
-            const newContent = doc.getElementById(this.contentId);
-            if (newContent) {
-                main.innerHTML = newContent.innerHTML;
-
-                // Transfer classes if any
-                main.className = newContent.className;
-            } else {
-                // Fallback: If no #app-main found in target, try replacing the whole body content 
-                // but keep the player and navbar containers if they exist outside.
-                // For now, we assume all pages have #app-main.
-                console.warn("Router: #app-main not found in target page, reloading...");
-                window.location.reload();
-                return;
+            
+            // If content has changed or was never rendered, update DOM and cache
+            if (!renderedFromCache || this._pageCache.get(url) !== html) {
+                this._pageCache.set(url, html);
+                this.renderPageHTML(html, main, !renderedFromCache && scrollUp);
             }
 
-            // 3. Re-inject Scripts
-            this.executeScripts(main);
-
-            // 4. Reset UI States (Close menus)
-            if (window.closeAllOverlays) window.closeAllOverlays();
-            if (window.closeAllUI) window.closeAllUI();
-
-            if (scrollUp) window.scrollTo(0, 0);
-
+            this.hideProgressBar();
         } catch (err) {
             if (err.name === 'AbortError') return;
             console.error("Router Error:", err);
-            window.location.href = url; // Hard reload on error
+            if (!renderedFromCache) {
+                window.location.href = url; // Fallback hard reload
+            }
         } finally {
             if (loadGen === this._loadGen) {
                 main.style.opacity = '1';
                 this.isTransitioning = false;
+                this.hideProgressBar();
             }
         }
+    },
+
+    renderPageHTML(html, main, scrollUp) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        // 1. Update Title
+        document.title = doc.title;
+
+        // 2. Swap Content
+        const newContent = doc.getElementById(this.contentId);
+        if (newContent) {
+            main.innerHTML = newContent.innerHTML;
+            main.className = newContent.className;
+        } else {
+            console.warn("Router: #app-main not found in target page, reloading...");
+            window.location.reload();
+            return;
+        }
+
+        // 3. Re-inject Scripts
+        this.executeScripts(main);
+
+        // 4. Reset UI States (Close menus)
+        if (window.closeAllOverlays) window.closeAllOverlays();
+        if (window.closeAllUI) window.closeAllUI();
+
+        if (scrollUp) window.scrollTo(0, 0);
     },
 
     executeScripts(container) {

@@ -3777,8 +3777,8 @@
                 <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 16px;">
                     <button type="button" class="btn btn-secondary btn-sm ratio-btn active" data-ratio="1:1"
                         onclick="setCropRatio('1:1')">Cuadrado (1:1)</button>
-                    <button type="button" class="btn btn-secondary btn-sm ratio-btn" data-ratio="9:16"
-                        onclick="setCropRatio('9:16')">Vertical (9:16)</button>
+                    <button type="button" class="btn btn-secondary btn-sm ratio-btn" data-ratio="4:5"
+                        onclick="setCropRatio('4:5')">Vertical (4:5)</button>
                 </div>
                 <div class="crop-container" id="cropContainer">
                     <img id="cropImage" class="crop-image">
@@ -5127,8 +5127,17 @@
                 const CROP_SIZE = Math.min(containerW, containerH) * 0.7;
                 boxWidth = CROP_SIZE;
                 boxHeight = CROP_SIZE;
+            } else if (currentCropRatio === '4:5') {
+                // 4:5 ratio
+                boxHeight = containerH * 0.8;
+                boxWidth = boxHeight * (4 / 5);
+
+                if (boxWidth > containerW * 0.8) {
+                    boxWidth = containerW * 0.8;
+                    boxHeight = boxWidth * (5 / 4);
+                }
             } else {
-                // 9:16 ratio
+                // 9:16 ratio (fallback)
                 boxHeight = containerH * 0.8;
                 boxWidth = boxHeight * (9 / 16);
 
@@ -5213,6 +5222,9 @@
                 if (currentCropRatio === '1:1') {
                     canvas.width = 1080;
                     canvas.height = 1080;
+                } else if (currentCropRatio === '4:5') {
+                    canvas.width = 1080;
+                    canvas.height = 1350;
                 } else {
                     canvas.width = 1080;
                     canvas.height = 1920;

@@ -538,6 +538,21 @@ export class RendererEngine {
             // ⚡ Props cambiaron (o es nueva sección) → regenerar solo ESTA sección
             const newNode = this.generateHtmlForSection(sec);
             if (newNode) {
+                // Click-to-edit en el builder
+                if (!window.IS_LIVE_PROFILE) {
+                    newNode.style.cursor = 'pointer';
+                    newNode.style.transition = 'outline 0.2s ease';
+                    newNode.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (window.openSectionEditor) window.openSectionEditor(sec);
+                        const form = document.getElementById('edit-section-panel');
+                        if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+                    newNode.addEventListener('mouseenter', () => newNode.style.outline = '2px dashed rgba(255, 255, 255, 0.5)');
+                    newNode.addEventListener('mouseleave', () => newNode.style.outline = 'none');
+                }
+
                 if (existingNode) {
                     this.root.replaceChild(newNode, existingNode);
                 } else {
@@ -609,20 +624,13 @@ export class RendererEngine {
 
                 if (transparentBg) {
                     // Personalizar = NO -> Completamente transparente, sin bordes, sin desenfoque (OFF)
-                    // 🔥 FIX BUILDER: In the builder preview, IS_LIVE_PROFILE is false, so we use
-                    // `sticky` — not `fixed`. With `fixed`, the navbar escapes the scrollable
-                    // `.preview-device` container and glues to the browser viewport.
-                    // We add height: 0 so it doesn't push the hero content down, simulating fixed behavior.
-                    const _navWrapPos = window.IS_LIVE_PROFILE ? 'fixed' : 'sticky';
-                    const _builderOverlapHack = window.IS_LIVE_PROFILE ? '' : 'height: 0 !important; overflow: visible !important;';
                     styleEl.innerHTML = `
                         .store-root > .rendered-navbar-wrapper {
-                            position: ${_navWrapPos} !important;
+                            position: fixed !important;
                             top: 0;
                             left: 0;
                             width: 100%;
                             z-index: 100;
-                            ${_builderOverlapHack}
                         }
                         .store-root > .rendered-navbar-wrapper > .rendered-navbar.prof-nav {
                             background: transparent !important;
@@ -809,9 +817,8 @@ export class RendererEngine {
                     </div>
                     
                     <div class="nav-right-extreme" style="display: flex; align-items: center; position: relative; z-index: 10;">
-                        <!-- Carrito -->
-                        ${section.props.showCart !== false ? (
-                        section.props.cartStyle === 'button' ? `
+                        <!-- Carrito (Siempre visible) -->
+                        ${section.props.cartStyle === 'button' ? `
                             <a href="javascript:void(0)" class="nav-cart-trigger-btn" id="nav-cart-btn" onclick="event.preventDefault(); if(window.CartManager) { window.CartManager.openCart(); } else if(typeof toggleCartPanel === 'function') { toggleCartPanel(event); }">
                                 <i class="bi bi-cart3" style="font-size: 0.95rem; color: #000000; line-height: 1;"></i>
                                 <span style="letter-spacing: 0.5px; font-weight: 800; color: #000000;">COMPRAR</span>
@@ -822,8 +829,7 @@ export class RendererEngine {
                                 <i class="bi bi-cart3"></i>
                                 <span id="cart-count-badge" class="cart-badge-circle" style="display:none;">0</span>
                             </a>
-                            `
-                    ) : ''}
+                            `}
 
                         <!-- Auth section standard -->
                         <div id="nav-auth-section" style="display: none; align-items: center; gap: 12px; margin-left: 12px;">
@@ -859,7 +865,7 @@ export class RendererEngine {
 
                 // Drawer HTML — se monta fuera del navbar para evitar el containing block de backdrop-filter
                 const drawerHtml = `
-                    <div id="mobile-nav-drawer" class="mobile-drawer ${section.props.drawerAnimation === false ? 'drawer-no-animation' : ''}">
+                    <div id="mobile-nav-drawer" class="mobile-drawer">
                         <div class="drawer-backdrop" onclick="const drawer = document.getElementById('mobile-nav-drawer'); if(drawer) { drawer.classList.remove('active'); document.body.style.overflow = ''; }"></div>
                         <div class="drawer-content">
                             <div class="drawer-header" style="display: flex; align-items: center; gap: 6px; margin-bottom: 32px; padding: 0;">
@@ -921,11 +927,15 @@ export class RendererEngine {
                 div.className = 'hero';
                 const showParticles = section.props.showParticles !== false;
                 const heroBgColor = section.props.heroBgColor || 'transparent';
+                const heroBannerUrl = section.props.heroBannerUrl || '';
                 const paddingTop = section.props.paddingTop !== undefined ? section.props.paddingTop : 0;
                 const paddingBottom = section.props.paddingBottom !== undefined ? section.props.paddingBottom : 0;
 
                 let heroStyle = '';
-                if (heroBgColor !== 'transparent') {
+                if (heroBannerUrl) {
+                    // Banner image takes priority over color
+                    heroStyle += `background-image: url('${heroBannerUrl}') !important; background-size: cover !important; background-position: center !important; background-repeat: no-repeat !important; `;
+                } else if (heroBgColor !== 'transparent') {
                     heroStyle += `background: ${heroBgColor} !important; `;
                 }
                 if (paddingTop > 0 || paddingBottom > 0) {
@@ -943,6 +953,17 @@ export class RendererEngine {
                     .hero[data-section-id="${section.id}"] {
                         ${heroStyle}
                     }
+                    .hero[data-section-id="${section.id}"] .hero-banner-overlay {
+                        position: absolute;
+                        inset: 0;
+                        background: rgba(0,0,0,0.45);
+                        z-index: 0;
+                        display: ${heroBannerUrl ? 'block' : 'none'};
+                    }
+                    .hero[data-section-id="${section.id}"] .hero-content {
+                        position: relative;
+                        z-index: 1;
+                    }
                     @media (max-width: 768px) {
                         .hero[data-section-id="${section.id}"] .hero-title {
                             font-size: clamp(2.5rem, 8vw, 4rem) !important;
@@ -956,6 +977,7 @@ export class RendererEngine {
                 `;
 
                 div.innerHTML = `
+                    ${heroBannerUrl ? '<div class="hero-banner-overlay"></div>' : ''}
                     ${showParticles ? '<canvas id="particles-bg"></canvas>' : ''}
                     <div class="hero-content">
                         <h1 class="hero-title">${section.props.title || 'Tu Tienda'}</h1>
@@ -1233,47 +1255,40 @@ export class RendererEngine {
                 `;
                 return div;
 
-            case 'faq':
+            case 'faq': {
                 div.className = 'faq-section';
                 div.id = 'faq-section';
+                const defaultFaqItems = [
+                    { q: '¿Cómo recibo mis archivos después de la compra?', a: 'Inmediatamente después del pago, recibirás un correo con los enlaces de descarga directa de tus archivos.' },
+                    { q: '¿Qué incluye cada licencia?', a: 'Dependiendo del nivel, recibes desde el MP3 hasta los Stems para una mezcla profesional.' },
+                    { q: '¿Puedo subir mi canción a Spotify?', a: 'Sí, todas nuestras licencias permiten la distribución en plataformas digitales.' },
+                ];
+                const faqItems = (section.props.questions && section.props.questions.length > 0)
+                    ? section.props.questions
+                    : defaultFaqItems;
+                const faqHtml = faqItems.map(item => `
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="window.toggleFaq(this)">
+                            ${item.q} <i class="bi bi-plus"></i>
+                        </button>
+                        <div class="faq-answer">${item.a}</div>
+                    </div>
+                `).join('');
+                const faqEmail = section.props.email || '';
                 div.innerHTML = `
                     <div class="section-header" style="text-align: center; margin-bottom: 40px;">
                         <h2>Preguntas Frecuentes</h2>
                     </div>
-                    <div class="faq-item">
-                        <button class="faq-question" onclick="window.toggleFaq(this)">
-                            ¿Cómo recibo mis archivos después de la compra? <i class="bi bi-plus"></i>
-                        </button>
-                        <div class="faq-answer">
-                            Inmediatamente después del pago, recibirás un correo con los enlaces de descarga directa de tus archivos.
-                        </div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question" onclick="window.toggleFaq(this)">
-                            ¿Qué incluye cada licencia? <i class="bi bi-plus"></i>
-                        </button>
-                        <div class="faq-answer">
-                            Dependiendo del nivel, recibes desde el MP3 hasta los Stems para una mezcla profesional.
-                        </div>
-                    </div>
-                    <div class="faq-item">
-                        <button class="faq-question" onclick="window.toggleFaq(this)">
-                            ¿Puedo subir mi canción a Spotify? <i class="bi bi-plus"></i>
-                        </button>
-                        <div class="faq-answer">
-                            Sí, todas nuestras licencias permiten la distribución en plataformas digitales.
-                        </div>
-                    </div>
+                    ${faqHtml}
                     <div class="contact-footer" style="text-align: center; margin-top: 60px; padding-bottom: 40px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 40px;">
                         <p style="color: rgba(255,255,255,0.5); font-size: 0.95rem; font-weight: 500;">
                             ¿No encontraste lo que buscabas? <span style="color: #fff; margin-left: 5px;">Contáctanos:</span>
-                            <a href="mailto:${section.props.email || 'hola@offszn.lat'}" style="color: #fff; text-decoration: none; font-weight: 700; margin-left: 5px; transition: opacity 0.2s;">
-                                ${section.props.email || 'hola@offszn.lat'}
-                            </a>
+                            ${faqEmail ? `<a href="mailto:${faqEmail}" style="color: #fff; text-decoration: none; font-weight: 700; margin-left: 5px; transition: opacity 0.2s;">${faqEmail}</a>` : ''}
                         </p>
                     </div>
                 `;
                 return div;
+            }
 
             case 'footer':
                 div.className = 'rendered-footer prof-footer';
