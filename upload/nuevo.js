@@ -3,7 +3,7 @@ const MAX_SIZES = {
     PORTADA: 20 * 1024 * 1024, // 20 MB
     MP3: 50 * 1024 * 1024,     // 50 MB
     WAV: 60 * 1024 * 1024,     // 60 MB
-    STEMS: 50 * 1024 * 1024    // 50 MB
+    STEMS: 20 * 1024 * 1024    // 20 MB
 };
 
 // --- Toast Utility (Fallback) ---

@@ -11,7 +11,8 @@ import {
     cancelSubscription,
     reactivateSubscription,
     getSubscriptionStatus,
-    checkRefundEligibility
+    checkRefundEligibility,
+    grantJareemPromo
 } from '../controllers/SubscriptionController.js';
 
 const router = Router();
@@ -78,6 +79,13 @@ router.post(
     '/subscriptions/paypal/subscribe',
     authenticateTokenMiddleware,
     subscribePayPalSubscription
+);
+
+// Promo especial Jareem
+router.post(
+    '/subscriptions/promo/jareem',
+    authenticateTokenMiddleware,
+    grantJareemPromo
 );
 
 export default router;

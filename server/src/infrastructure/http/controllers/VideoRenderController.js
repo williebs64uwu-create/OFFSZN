@@ -90,6 +90,11 @@ export const renderVideo = async (req, res) => {
         outputPath = join(tmpDir, 'output.mp4');
 
         // 5. Run FFmpeg natively (Optimized for Free Tier: 720p, 1 thread, ultrafast, max memory control)
+        const isMp3 = ['audio/mpeg', 'audio/mp3'].includes(audioFile.mimetype);
+        const audioArgs = isMp3 
+            ? ['-c:a', 'copy'] 
+            : ['-c:a', 'aac', '-b:a', '192k']; // Reduce bitrate from 320k to 192k for faster encoding of wav
+
         const ffmpegArgs = [
             '-loop', '1',
             '-r', '1', // Input framerate: Read image only once per second (CRITICAL FOR SPEED)
@@ -105,8 +110,7 @@ export const renderVideo = async (req, res) => {
             '-crf', '28', // Standard quality for 720p
             '-max_muxing_queue_size', '1024',
             '-g', '2', // Frequent keyframes for low framerate compatibility
-            '-c:a', 'aac',
-            '-b:a', '320k',
+            ...audioArgs,
             '-r', '1', // Output framerate: 1 frame per second
             '-pix_fmt', 'yuv420p',
             '-shortest',

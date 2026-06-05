@@ -691,3 +691,59 @@ export const subscribePayPalSubscription = async (req, res) => {
         res.status(500).json({ error: 'Error procesando suscripción PayPal.', details: err.message });
     }
 };
+
+export const grantJareemPromo = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        
+        const { data: user } = await supabase.from('users').select('email, nickname').eq('id', userId).single();
+        if (!user || user.nickname !== 'jareem') {
+            return res.status(403).json({ error: 'Esta promoción es exclusiva.' });
+        }
+
+        const now = new Date();
+        const endDate = new Date(now);
+        endDate.setMonth(endDate.getMonth() + 1);
+
+        const { data: existingSub } = await supabase
+            .from('subscriptions')
+            .select('id')
+            .eq('user_id', userId)
+            .single();
+
+        if (existingSub) {
+            await supabase
+                .from('subscriptions')
+                .update({
+                    plan_id: 'PRO',
+                    status: 'active',
+                    provider: 'manual',
+                    provider_subscription_id: 'PROMO_GIVEAWAY_JAREEM_PRO',
+                    current_period_end: endDate.toISOString(),
+                    created_at: now.toISOString()
+                })
+                .eq('id', existingSub.id);
+        } else {
+            await supabase
+                .from('subscriptions')
+                .insert({
+                    user_id: userId,
+                    plan_id: 'PRO',
+                    status: 'active',
+                    provider: 'manual',
+                    provider_subscription_id: 'PROMO_GIVEAWAY_JAREEM_PRO',
+                    current_period_end: endDate.toISOString()
+                });
+        }
+
+        await supabase
+            .from('users')
+            .update({ plan: 'pro' })
+            .eq('id', userId);
+
+        return res.status(200).json({ success: true, message: 'Promo PRO de 1 mes activada.' });
+    } catch (err) {
+        console.error('Error en grantJareemPromo:', err);
+        return res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+};
