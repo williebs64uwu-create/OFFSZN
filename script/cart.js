@@ -80,7 +80,12 @@ const CartManager = {
       </div>
     </div>
   </div>`;
-            document.body.insertAdjacentHTML('beforeend', cartHtml);
+            const previewContainer = document.getElementById('previewDevice');
+            if (previewContainer) {
+                previewContainer.insertAdjacentHTML('beforeend', cartHtml);
+            } else {
+                document.body.insertAdjacentHTML('beforeend', cartHtml);
+            }
         }
     },
 
@@ -184,7 +189,8 @@ const CartManager = {
         // --- DEFENSIVE ELIGIBILITY CHECK ---
         // Block if NOT free and producer has no payment methods
         const isFree = product.is_free || false;
-        if (!isFree) {
+        const isOwnProduct = this.state.user && String(product.producer_id) === String(this.state.user.id);
+        if (!isFree && !isOwnProduct) {
             let producer = product.producer || (product.producer_id ? { id: product.producer_id } : null);
             if (Array.isArray(producer)) producer = producer[0];
             
@@ -635,10 +641,20 @@ const CartManager = {
                     });
                 }
             });
+            
+            const hasOwnProducts = this.state.user && this.state.items.some(item => String(item.product.producer_id) === String(this.state.user.id));
             if (this.ui.checkoutBtn) {
-                this.ui.checkoutBtn.disabled = false;
-                this.ui.checkoutBtn.style.opacity = '1';
-                this.ui.checkoutBtn.style.pointerEvents = 'auto';
+                if (hasOwnProducts) {
+                    this.ui.checkoutBtn.disabled = true;
+                    this.ui.checkoutBtn.style.opacity = '0.5';
+                    this.ui.checkoutBtn.style.pointerEvents = 'none';
+                    this.ui.checkoutBtn.innerText = 'PROCEDER AL PAGO';
+                } else {
+                    this.ui.checkoutBtn.disabled = false;
+                    this.ui.checkoutBtn.style.opacity = '1';
+                    this.ui.checkoutBtn.style.pointerEvents = 'auto';
+                    this.ui.checkoutBtn.innerText = 'PROCEDER AL PAGO';
+                }
             }
         }
 

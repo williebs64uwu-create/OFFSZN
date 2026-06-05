@@ -576,7 +576,9 @@
                     }
                     const savedFaqSec = config.sections.find(s => s.type === 'faq');
                     if (savedFaqSec) {
-                        savedFaqSec.props.email = userEmail;
+                        if (savedFaqSec.props.email === undefined || savedFaqSec.props.email === null || savedFaqSec.props.email === '') {
+                            savedFaqSec.props.email = userEmail;
+                        }
                     }
                     const savedFooterSec = config.sections.find(s => s.type === 'footer');
                     if (savedFooterSec) {
@@ -703,6 +705,15 @@
                 const device = currentBtn.dataset.device;
                 const previewDevice = document.getElementById('previewDevice');
                 
+                // 🔥 Cerrar el carrito si está abierto al cambiar de dispositivo para evitar glitches
+                const cartPanel = document.getElementById('globalCartPanel');
+                const cartBackdrop = document.getElementById('globalBackdrop');
+                if (cartPanel && cartPanel.classList.contains('active')) {
+                    cartPanel.classList.remove('active');
+                    if (cartBackdrop) cartBackdrop.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+                
                 if (device === 'mobile') {
                     previewDevice.classList.remove('desktop');
                     previewDevice.classList.add('mobile');
@@ -760,6 +771,20 @@
         }
 
         window.openSectionEditor = function(sec) {
+            window.activeSectionId = sec.id;
+
+            // Remove outline from all sections in preview
+            document.querySelectorAll('#storeRenderRoot > div').forEach(el => {
+                el.style.outline = 'none';
+            });
+
+            // Add Canva selected outline to the active preview section
+            const activeEl = document.querySelector(`#storeRenderRoot > div[data-section-id="${sec.id}"]`);
+            if (activeEl) {
+                activeEl.style.outline = '2px solid #3b82f6';
+                activeEl.style.outlineOffset = '-2px';
+            }
+
             const tabsHeader = document.querySelector('.sidebar-tabs');
             if (tabsHeader) tabsHeader.style.display = 'none';
 
@@ -1882,12 +1907,28 @@
                     storeState.updateSection(sec.id, { showBranding: e.target.checked });
                 };
             } else if (sec.type === 'products') {
+                const searchTitleVal = sec.props.searchTitle || 'Empieza tu próximo hit';
                 form.innerHTML = `
-                    <div style="color: #888; font-size: 12.5px; line-height: 1.5; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">
-                        <i class="bi bi-info-circle-fill" style="color: #00f2fe; font-size: 1.1rem; display: block; margin-bottom: 8px;"></i>
-                        Tus Beats se sincronizan automáticamente desde tu catálogo oficial. Puedes administrarlos en la sección de Beats.
+                    <div style="display: flex; flex-direction: column; gap: 16px;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label style="font-size: 11px; color: #aaa; text-transform: uppercase; font-weight: 700; margin: 0;">Título del Buscador</label>
+                                <span id="searchTitleCounter" style="font-size: 11px; color: #666; font-weight: 700;">${searchTitleVal.length}/40</span>
+                            </div>
+                            <input type="text" id="editSearchTitle" maxlength="40" placeholder="Ej: Empieza tu próximo hit" style="width: 100%; padding: 10px; background: #161616; border: 1px solid #282828; border-radius: 6px; color: #fff; font-size: 12px;" value="${searchTitleVal.replace(/"/g, '&quot;')}">
+                        </div>
+                        <div style="color: #888; font-size: 12.5px; line-height: 1.5; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">
+                            <i class="bi bi-info-circle-fill" style="color: #00f2fe; font-size: 1.1rem; display: block; margin-bottom: 8px;"></i>
+                            Tus Beats se sincronizan automáticamente desde tu catálogo oficial. Puedes administrarlos en la sección de Beats.
+                        </div>
                     </div>
                 `;
+
+                document.getElementById('editSearchTitle').oninput = (e) => {
+                    const val = e.target.value;
+                    document.getElementById('searchTitleCounter').textContent = `${val.length}/40`;
+                    storeState.updateSection(sec.id, { searchTitle: val });
+                };
             } else if (sec.type === 'licenses') {
                 form.innerHTML = `
                     <div style="color: #888; font-size: 12.5px; line-height: 1.5; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">
@@ -1906,6 +1947,11 @@
         }
 
         function closeSectionEditor() {
+            window.activeSectionId = null;
+            document.querySelectorAll('#storeRenderRoot > div').forEach(el => {
+                el.style.outline = 'none';
+            });
+
             const tabsHeader = document.querySelector('.sidebar-tabs');
             if (tabsHeader) tabsHeader.style.display = 'flex';
 

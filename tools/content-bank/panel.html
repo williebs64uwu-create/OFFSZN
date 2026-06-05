@@ -266,17 +266,17 @@
     <script>
       const $ = (id) => document.getElementById(id);
       const LS_KEY = "offszn_content_bank_panel_v1";
-      const LS_ONE_TIME_RESET_KEY = "offszn_content_bank_panel_one_time_reset_v1";
 
       const DEFAULTS = {
-        keyword: "MEZCLA",
+        keyword: "FEID",
         captionIG:
-          "No necesitas saber mezclar para sonar bien. 🎙️\nSi demoras +3 horas y sigues sin el sonido ideal… estás empezando mal.\n\nPreset listo para FL Studio (sin mover configuraciones).\nComenta “MEZCLA” y lo pruebo en tu voz por DM.\n\n#flstudio #mezcladevoces #vocalpreset #homestudio #mixingtips #productormusical",
-        hashtagsIG: "#flstudio #mezcladevoces #vocalpreset #homestudio #mixingtips #productormusical",
+          "Preset estilo FEID (Ferxxo) para FL Studio 🏺🔥\nAntes/Después en segundos.\n\nComenta “FEID” y te lo envío por DM.\n\n#feid #ferxxo #flstudio #vocalpreset #vocalchain #reggaeton #mezcladevoces #mixingtips",
+        hashtagsIG: "#feid #ferxxo #flstudio #vocalpreset #vocalchain #reggaeton #mezcladevoces #mixingtips",
         captionTT:
-          "¿Sigues mezclando voces desde cero en 2026? 💀🎙️\nMira el antes/después en segundos.\n\nComenta “MEZCLA” y lo pruebo en tu voz.\n\n#flstudio #vocalpreset #mixingtips #homestudio #produccionmusical #autotune",
-        hashtagsTT: "#flstudio #vocalpreset #mixingtips #homestudio #produccionmusical #autotune"
+          "Preset vocal estilo FEID 🏺🔥\nAntes/Después en 2 clics.\n\nComenta “FEID” y te lo mando.\n\n#feid #ferxxo #flstudio #vocalpreset #vocalchain #reggaeton #mixingtips #produccionmusical",
+        hashtagsTT: "#feid #ferxxo #flstudio #vocalpreset #vocalchain #reggaeton #mixingtips #produccionmusical"
       };
+      const DEFAULTS_SIG = JSON.stringify(DEFAULTS);
 
       function setStatus(kind, text) {
         const dot = $("statusDot");
@@ -284,15 +284,6 @@
         if (kind === "ok") dot.classList.add("ok");
         if (kind === "err") dot.classList.add("err");
         $("statusText").textContent = text;
-      }
-
-      function oneTimeReset() {
-        try {
-          const already = localStorage.getItem(LS_ONE_TIME_RESET_KEY);
-          if (already) return;
-          localStorage.removeItem(LS_KEY);
-          localStorage.setItem(LS_ONE_TIME_RESET_KEY, "1");
-        } catch {}
       }
 
       function applyDefaultsIfEmpty() {
@@ -315,7 +306,19 @@
           if (s.hashtagsIG) $("hashtagsIG").value = s.hashtagsIG;
           if (s.captionTT) $("captionTT").value = s.captionTT;
           if (s.hashtagsTT) $("hashtagsTT").value = s.hashtagsTT;
+          return s;
         } catch {}
+      }
+
+      function syncDefaultsIfChanged(s) {
+        const prevSig = s && typeof s.defaultsSig === "string" ? s.defaultsSig : "";
+        if (prevSig === DEFAULTS_SIG) return;
+        $("keyword").value = DEFAULTS.keyword;
+        $("captionIG").value = DEFAULTS.captionIG;
+        $("hashtagsIG").value = DEFAULTS.hashtagsIG;
+        $("captionTT").value = DEFAULTS.captionTT;
+        $("hashtagsTT").value = DEFAULTS.hashtagsTT;
+        saveState();
       }
 
       function saveState() {
@@ -326,7 +329,8 @@
           captionIG: $("captionIG").value,
           hashtagsIG: $("hashtagsIG").value.trim(),
           captionTT: $("captionTT").value,
-          hashtagsTT: $("hashtagsTT").value.trim()
+          hashtagsTT: $("hashtagsTT").value.trim(),
+          defaultsSig: DEFAULTS_SIG
         };
         localStorage.setItem(LS_KEY, JSON.stringify(s));
       }
@@ -418,8 +422,8 @@
         });
       });
 
-      oneTimeReset();
-      loadState();
+      const s = loadState();
+      syncDefaultsIfChanged(s);
       applyDefaultsIfEmpty();
       saveState();
     </script>

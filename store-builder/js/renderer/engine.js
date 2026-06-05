@@ -17,6 +17,583 @@ function normalizeStoreImagePath(path) {
     return key;
 }
 
+if (!window.initSmartSearch) {
+    window.initSmartSearch = function (sectionId, productsList, userNickname) {
+        const input = document.getElementById(`pssInput-${sectionId}`);
+        const clearBtn = document.getElementById(`pssClearBtn-${sectionId}`);
+        const resultsContainer = document.getElementById(`pssResults-${sectionId}`);
+        const suggestBanner = document.getElementById(`pssSuggestBanner-${sectionId}`);
+        const suggestTitle = document.getElementById(`pssSuggestTitle-${sectionId}`);
+        const suggestSub = document.getElementById(`pssSuggestSub-${sectionId}`);
+
+        if (!input || !resultsContainer) return;
+
+        // Ensure WaveSurfer is loaded
+        if (!window.WaveSurfer && !document.getElementById('wavesurfer-cdn')) {
+            const script = document.createElement('script');
+            script.id = 'wavesurfer-cdn';
+            script.src = 'https://unpkg.com/wavesurfer.js@7';
+            document.head.appendChild(script);
+        }
+
+        // Global wave and play trackers
+        window.activeWavesurfers = window.activeWavesurfers || {};
+        window.currentlyPlayingWs = window.currentlyPlayingWs || null;
+
+        // Debounce helper
+        let debounceTimer = null;
+        function debounce(fn, ms) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(fn, ms);
+        }
+
+        // String Similarity - Levenshtein normalised
+        function similarity(a, b) {
+            a = (a || '').toLowerCase().trim();
+            b = (b || '').toLowerCase().trim();
+            if (a === b) return 1.0;
+            if (a.length === 0 || b.length === 0) return 0.0;
+            const la = a.length, lb = b.length;
+            const dp = Array.from({ length: la + 1 }, () => Array(lb + 1).fill(0));
+            for (let i = 0; i <= la; i++) dp[i][0] = i;
+            for (let j = 0; j <= lb; j++) dp[0][j] = j;
+            for (let i = 1; i <= la; i++) {
+                for (let j = 1; j <= lb; j++) {
+                    const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                    dp[i][j] = Math.min(
+                        dp[i - 1][j] + 1,
+                        dp[i][j - 1] + 1,
+                        dp[i - 1][j - 1] + cost
+                    );
+                }
+            }
+            return 1.0 - (dp[la][lb] / Math.max(la, lb));
+        }
+
+        // Get live link
+        function getLiveLink(p) {
+            const type = p.product_type?.toLowerCase() || 'beat';
+            const identifier = p.public_slug || (window.IdObfuscator ? window.IdObfuscator.encodeId(p.id) : p.id);
+            return `/${type}/${identifier}`;
+        }
+
+        // Helper: Resolve image
+        const resolveImg = (path, storageVer) => {
+            if (!path) return 'https://offszn.lat/images/portada-default.png';
+            if (window.normalizeStoreImagePath) {
+                path = window.normalizeStoreImagePath(path);
+            }
+            if (path.startsWith('http') && !path.includes('r2-public')) return path;
+            let cleanPath = path;
+            if (path.startsWith('products/')) {
+                cleanPath = path.substring(9);
+            }
+            if (storageVer !== 'supabase') {
+                const ver = storageVer && storageVer !== 'supabase' ? `?v=${storageVer}` : '';
+                return `https://offszn.lat/api/r2-public/products/${cleanPath}${ver}`;
+            }
+            return `https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/${cleanPath}`;
+        };
+
+        // Resolve R2 / Storage Preview URL properly to avoid 404
+        function resolveAudioPreview(p) {
+            let path = p.audio_preview_url || p.audio_url || '';
+            if (!path) return '';
+            
+            if (path.startsWith('http')) {
+                // If it's already an absolute HTTP/HTTPS URL, return it
+                return path;
+            }
+
+            if (window.normalizeStoreImagePath) {
+                path = window.normalizeStoreImagePath(path);
+            }
+
+            let cleanPath = path;
+            if (path.startsWith('products/')) {
+                cleanPath = path.substring(9);
+            } else if (path.startsWith('audio/')) {
+                cleanPath = path.substring(6);
+            }
+
+            const storageVer = p.r2_version || p.storage_version;
+            if (storageVer !== 'supabase') {
+                const ver = storageVer && storageVer !== 'supabase' ? `?v=${storageVer}` : '';
+                return `https://offszn.lat/api/r2-public/products/${cleanPath}${ver}`;
+            }
+            return `https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/${cleanPath}`;
+        }
+
+        // Render matching result row
+        function renderRow(p) {
+            const img = resolveImg(p.image_url, p.r2_version || p.storage_version);
+            const audioPreviewUrl = resolveAudioPreview(p);
+            const rawPrice = parseFloat(p.price || p.price_basic || 29.99);
+            const pType = (p.product_type || '').toLowerCase();
+            const isFree = pType !== 'beat' && (p.is_free === true || String(p.is_free) === 'true' || rawPrice === 0);
+            const priceLabel = isFree ? 'FREE' : (window.CurrencyManager ? window.CurrencyManager.format(rawPrice) : '$' + rawPrice.toFixed(2));
+            const link = getLiveLink(p);
+
+            return `
+                <div class="pss-row" data-product-id="${p.id}" style="cursor: pointer;" onclick="window.handlePssRowClick(event, '${link}')">
+                    <!-- Column 1: Portada -->
+                    <img src="${img}" class="pss-portada" alt="${p.name}" onerror="this.src='https://offszn.lat/images/portada-default.png'">
+                    
+                    <!-- Column 2: Nombre del beat + Artista -->
+                    <div class="pss-info">
+                        <div class="pss-name">${p.name}</div>
+                        <div class="pss-artist">${userNickname}</div>
+                    </div>
+                    
+                    <!-- Column 3: Boton PLAY -->
+                    <button class="pss-play-btn" onclick="window.togglePssPlay(event, this, '${p.id}', '${audioPreviewUrl}')">
+                        <i class="bi bi-play-fill"></i>
+                    </button>
+                    
+                    <!-- Column 4: Onda wave (WaveSurfer Container) -->
+                    <div class="pss-wave-container" id="pss-wave-${p.id}" onclick="event.stopPropagation()"></div>
+                    
+                    <!-- Column 5: Duracion -->
+                    <span class="pss-duration" id="pss-dur-${p.id}">--:--</span>
+                    
+                    <!-- Column 6: Precio para comprar -->
+                    <button class="pss-price-btn ${isFree ? 'free' : ''}" onclick="window.handlePssBuy(event, ${p.id})">
+                        ${priceLabel}
+                    </button>
+                    
+                    <!-- Column 7: Compartir -->
+                    <button class="pss-share-btn" title="Compartir" onclick="window.handlePssShare(event, '${p.id}')">
+                        <i class="bi bi-share"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+        // Global functions for PSS row interactions
+        window.handlePssRowClick = function(event, link) {
+            if (event.target.closest('button') || event.target.closest('.pss-wave-container')) {
+                return;
+            }
+            if (window.IS_LIVE_PROFILE) {
+                window.location.href = link;
+            } else {
+                console.log("Builder Simulation: Navigation to product page:", link);
+                alert(`Simulación del constructor: Navegando a la página del producto real en producción: ${link}`);
+            }
+        };
+
+        window.handlePssBuy = function(event, productId) {
+            if (event) event.stopPropagation();
+            
+            const p = productsList.find(prod => String(prod.id) === String(productId));
+            if (!p) return;
+
+            // --- PAYMENT ELIGIBILITY CHECK ---
+            const isFree = p.is_free || false;
+            if (!isFree) {
+                let producer = p.producer || window.currentProfileData || (window.parent && window.parent.currentProfileData);
+                if (Array.isArray(producer)) producer = producer[0];
+                
+                if (producer) {
+                    const has_paypal = producer.paypal_email || (producer.payment_methods && producer.payment_methods.paypal?.enabled);
+                    const has_yape = producer.yape_phone && producer.is_verified;
+
+                    if (!has_paypal && !has_yape) {
+                        const openBlockedPaymentModal = window.openBlockedPaymentModal || (window.parent && window.parent.openBlockedPaymentModal);
+                        if (openBlockedPaymentModal) {
+                            openBlockedPaymentModal(producer, p);
+                        } else {
+                            alert("Este productor aún no ha configurado sus métodos de pago. Por favor, contáctalo directamente para completar tu compra.");
+                        }
+                        return;
+                    }
+                }
+            }
+
+            if (window.CartManager) {
+                window.CartManager.addToCart(p);
+            } else if (window.parent && window.parent.CartManager) {
+                window.parent.CartManager.addToCart(p);
+            } else {
+                console.log("Builder Simulation: Added to cart:", p.name);
+                alert(`Producto "${p.name}" añadido al carrito de compras.`);
+            }
+        };
+
+        window.handlePssShare = function(event, productId) {
+            if (event) event.stopPropagation();
+            const p = productsList.find(prod => String(prod.id) === String(productId));
+            if (!p) return;
+            const shareFn = window.openShareModal || (window.parent && window.parent.openShareModal);
+            if (shareFn) {
+                const user = window.currentProfileData
+                    || (window.parent && window.parent.currentProfileData)
+                    || { nickname: window.builderNickname || 'Artista' };
+                shareFn({ ...p, artist_users: user });
+            } else {
+                let shortLink = window.location.origin + '/producto.html?p=' + p.id;
+                const obf = window.IdObfuscator || (window.parent && window.parent.IdObfuscator);
+                if (obf) {
+                    const code = obf.encodeId(p.id);
+                    if (code) shortLink = window.location.origin + '/producto.html?p=' + code;
+                }
+                navigator.clipboard.writeText(shortLink).then(() => {
+                    const toastObj = window.toast || (window.parent && window.parent.toast);
+                    if (toastObj) toastObj.show('Enlace copiado', 'success', 2500);
+                }).catch(() => {});
+            }
+        };
+
+        if (!window.showPssMenu) {
+            window.showPssMenu = function(event, p, btn) {
+                if (event) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                }
+
+                // Remove existing menus
+                const existing = document.getElementById('pss-dots-menu');
+                if (existing) {
+                    existing.remove();
+                    if (window.pssActiveMenuBtn === btn) {
+                        window.pssActiveMenuBtn = null;
+                        return;
+                    }
+                }
+
+                window.pssActiveMenuBtn = btn;
+
+                const menu = document.createElement('div');
+                menu.id = 'pss-dots-menu';
+                menu.style.cssText = `
+                    position: fixed;
+                    background: #121212;
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 8px;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                    padding: 6px 0;
+                    z-index: 10005;
+                    width: 170px;
+                    display: flex;
+                    flex-direction: column;
+                `;
+
+                const shareItem = document.createElement('button');
+                shareItem.style.cssText = `
+                    background: none;
+                    border: none;
+                    color: #fff;
+                    padding: 10px 16px;
+                    text-align: left;
+                    font-size: 12.5px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    transition: background 0.2s;
+                `;
+                shareItem.innerHTML = `<i class="bi bi-share" style="color: #888;"></i> Compartir`;
+                shareItem.onmouseover = () => shareItem.style.background = 'rgba(255,255,255,0.06)';
+                shareItem.onmouseout = () => shareItem.style.background = 'none';
+                shareItem.onclick = (e) => {
+                    e.stopPropagation();
+                    menu.remove();
+                    const shareFn = window.openShareModal || (window.parent && window.parent.openShareModal);
+                    if (shareFn) {
+                        const user = window.currentProfileData || { nickname: window.builderNickname || 'Artista' };
+                        shareFn({ ...p, artist_users: user });
+                    } else {
+                        let shortLink = window.location.href;
+                        if (window.IdObfuscator) {
+                            const code = window.IdObfuscator.encodeId(p.id);
+                            if (code) shortLink = `${window.location.origin}/producto.html?p=${code}`;
+                        } else if (window.parent && window.parent.IdObfuscator) {
+                            const code = window.parent.IdObfuscator.encodeId(p.id);
+                            if (code) shortLink = `${window.parent.location.origin}/producto.html?p=${code}`;
+                        }
+                        navigator.clipboard.writeText(shortLink).then(() => {
+                            const toastObj = window.toast || (window.parent && window.parent.toast);
+                            if (toastObj) toastObj.show("Enlace copiado al portapapeles", "success", 3000);
+                        }).catch(() => {});
+                    }
+                };
+
+                menu.appendChild(shareItem);
+                document.body.appendChild(menu);
+
+                // Position menu next to button
+                const rect = btn.getBoundingClientRect();
+                menu.style.top = `${rect.bottom + window.scrollY + 6}px`;
+                menu.style.left = `${rect.right - 170 + window.scrollX}px`;
+
+                // Click outside listener
+                const closeMenu = (e) => {
+                    if (!menu.contains(e.target) && e.target !== btn) {
+                        menu.remove();
+                        document.removeEventListener('click', closeMenu);
+                    }
+                };
+                setTimeout(() => {
+                    document.addEventListener('click', closeMenu);
+                }, 10);
+            };
+        }
+
+        window.handlePssDots = function(event, productId) {
+            if (event) event.stopPropagation();
+            const p = productsList.find(prod => String(prod.id) === String(productId));
+            if (!p) return;
+            window.showPssMenu(event, p, event.currentTarget);
+        };
+
+        // IntersectionObserver for lazy loading waveforms
+        const waveObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const row = entry.target;
+                    const productId = row.dataset.productId;
+                    const waveContainer = row.querySelector('.pss-wave-container');
+                    const p = productsList.find(prod => String(prod.id) === String(productId));
+                    
+                    if (waveContainer && p && !window.activeWavesurfers[productId]) {
+                        initWaveform(productId, resolveAudioPreview(p), waveContainer);
+                    }
+                    waveObserver.unobserve(row);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        function initWaveform(productId, audioUrl, container) {
+            if (!window.WaveSurfer) {
+                setTimeout(() => initWaveform(productId, audioUrl, container), 100);
+                return;
+            }
+
+            try {
+                const ws = window.WaveSurfer.create({
+                    container: container,
+                    waveColor: 'rgba(255,255,255,0.18)',
+                    progressColor: '#ffffff',
+                    cursorColor: 'transparent',
+                    height: 32,
+                    barWidth: 2,
+                    barRadius: 2,
+                    barGap: 2,
+                    normalize: true,
+                    backend: 'MediaElement'
+                });
+
+                if (audioUrl) {
+                    ws.load(audioUrl);
+                }
+
+                ws.on('ready', () => {
+                    // Update the duration span
+                    const durEl = document.getElementById(`pss-dur-${productId}`);
+                    if (durEl) {
+                        const d = ws.getDuration();
+                        const mins = Math.floor(d / 60);
+                        const secs = Math.floor(d % 60).toString().padStart(2, '0');
+                        durEl.textContent = `${mins}:${secs}`;
+                    }
+                });
+
+                ws.on('finish', () => {
+                    const row = document.querySelector(`.pss-row[data-product-id="${productId}"]`);
+                    if (row) {
+                        const playBtn = row.querySelector('.pss-play-btn i');
+                        if (playBtn) {
+                            playBtn.className = 'bi bi-play-fill';
+                        }
+                    }
+                    if (window.currentlyPlayingWs === ws) {
+                        window.currentlyPlayingWs = null;
+                    }
+                });
+
+                window.activeWavesurfers[productId] = ws;
+            } catch (err) {
+                console.error("Error creating WaveSurfer instance:", err);
+            }
+        }
+
+        window.togglePssPlay = function(event, btnEl, productId, audioUrl) {
+            if (event) event.stopPropagation();
+
+            if (!window.WaveSurfer) {
+                alert("Cargando el reproductor de audio, por favor espera un momento...");
+                return;
+            }
+
+            let ws = window.activeWavesurfers[productId];
+            const icon = btnEl.querySelector('i');
+
+            if (!ws) {
+                const container = document.getElementById(`pss-wave-${productId}`);
+                if (container) {
+                    initWaveform(productId, audioUrl, container);
+                    setTimeout(() => window.togglePssPlay(null, btnEl, productId, audioUrl), 150);
+                    return;
+                }
+            }
+
+            if (!ws) return;
+
+            if (window.currentlyPlayingWs && window.currentlyPlayingWs !== ws) {
+                window.currentlyPlayingWs.pause();
+                document.querySelectorAll('.pss-play-btn i').forEach(i => {
+                    i.className = 'bi bi-play-fill';
+                });
+            }
+
+            if (ws.isPlaying()) {
+                ws.pause();
+                if (icon) icon.className = 'bi bi-play-fill';
+                window.currentlyPlayingWs = null;
+            } else {
+                ws.play();
+                if (icon) icon.className = 'bi bi-pause-fill';
+                window.currentlyPlayingWs = ws;
+            }
+        };
+
+        // Pagination and listing variables
+        let currentResultsList = [];
+        let itemsShown = 5;
+
+        const verMasContainer = document.getElementById(`pssVerMasContainer-${sectionId}`);
+        const verMasBtn = document.getElementById(`pssVerMasBtn-${sectionId}`);
+
+        function renderIncrementalResults(reset = false) {
+            if (reset) {
+                itemsShown = 5;
+                resultsContainer.innerHTML = '';
+            }
+
+            const chunk = currentResultsList.slice(resultsContainer.children.length, resultsContainer.children.length + itemsShown);
+            if (chunk.length > 0) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = chunk.map(renderRow).join('');
+                
+                // Append each new row individually so we don't break existing wavesurfers
+                while (tempDiv.firstElementChild) {
+                    const row = tempDiv.firstElementChild;
+                    resultsContainer.appendChild(row);
+                    waveObserver.observe(row);
+                }
+            }
+
+            // Show or hide "Ver más"
+            if (resultsContainer.children.length < currentResultsList.length) {
+                verMasContainer.style.display = 'block';
+            } else {
+                verMasContainer.style.display = 'none';
+            }
+        }
+
+        // Main search execution
+        function performSearch(query) {
+            query = query.toLowerCase().trim();
+
+            if (window.activeWavesurfers) {
+                Object.keys(window.activeWavesurfers).forEach(id => {
+                    try {
+                        window.activeWavesurfers[id].destroy();
+                    } catch (e) {}
+                });
+                window.activeWavesurfers = {};
+            }
+            window.currentlyPlayingWs = null;
+
+            if (!query) {
+                // By default: show first 5 products on load
+                clearBtn.style.display = 'none';
+                suggestBanner.style.display = 'none';
+                currentResultsList = productsList;
+                renderIncrementalResults(true);
+                return;
+            }
+
+            clearBtn.style.display = 'block';
+
+            const exactProduct = productsList.find(p => (p.name || '').toLowerCase().trim() === query);
+            if (exactProduct) {
+                const link = getLiveLink(exactProduct);
+                if (window.IS_LIVE_PROFILE) {
+                    window.location.href = link;
+                    return;
+                }
+            }
+
+            const scored = productsList.map(p => {
+                let score = similarity(query, p.name);
+                if ((p.name || '').toLowerCase().includes(query)) {
+                    score += 0.4;
+                }
+                return { product: p, score: score };
+            });
+
+            const matches = scored
+                .filter(m => m.score >= 0.20)
+                .sort((a, b) => b.score - a.score)
+                .map(m => m.product);
+
+            if (matches.length > 0) {
+                suggestBanner.style.display = 'none';
+                currentResultsList = matches;
+                renderIncrementalResults(true);
+            } else {
+                suggestBanner.style.display = 'block';
+                suggestTitle.textContent = 'Sin resultados exactos';
+                suggestSub.textContent = 'Mostrando productos similares y populares';
+
+                let fallbacks = [];
+                const queryWords = query.split(/\s+/);
+                fallbacks = productsList.filter(p => {
+                    const genre = (p.genre || '').toLowerCase();
+                    const type = (p.product_type || '').toLowerCase();
+                    return queryWords.some(w => genre.includes(w) || type.includes(w));
+                });
+
+                if (fallbacks.length === 0) {
+                    fallbacks = productsList.slice(0, 4);
+                }
+
+                currentResultsList = fallbacks;
+                renderIncrementalResults(true);
+            }
+        }
+
+        // Hook up event listeners
+        input.addEventListener('input', (e) => {
+            const query = e.target.value;
+            debounce(() => performSearch(query), 350);
+        });
+
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (debounceTimer) clearTimeout(debounceTimer); // Cancel pending debounced search
+                performSearch(input.value);
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            input.value = '';
+            performSearch('');
+        });
+
+        if (verMasBtn) {
+            verMasBtn.addEventListener('click', () => {
+                renderIncrementalResults(false);
+            });
+        }
+
+        // Initial default load
+        performSearch('');
+    };
+}
+
 // Global tab switching logic for products in preview
 if (!window.switchStoreTab) {
     window.switchStoreTab = function (btnEl, cat, sectionId) {
@@ -121,9 +698,6 @@ if (!window.switchStoreTab) {
                     <div class="premium-product-card" onclick="window.location.href='${link}'" style="cursor: pointer;">
                         <div class="explore-img-container">
                             <img src="${img}" class="explore-main-img" alt="${p.name}" onerror="this.src='https://offszn.lat/images/portada-default.png'">
-                            <button class="explore-heart-action" id="like-btn-${p.id}" onclick="window.handleLike(event, '${p.id}', '${p.producer_id}')">
-                                <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}" style="color: ${isLiked ? '#ef4444' : '#fff'}"></i>
-                            </button>
                             <button class="explore-play-action" onclick="window.handlePlay(event, ${idx})">
                                 <i class="bi bi-play-fill" style="font-size: 1.5rem;"></i>
                             </button>
@@ -140,9 +714,6 @@ if (!window.switchStoreTab) {
                 <div class="premium-product-card">
                     <div class="explore-img-container">
                         <img src="${img}" class="explore-main-img" alt="${p.name}" onerror="this.src='https://offszn.lat/images/portada-default.png'">
-                        <button class="explore-heart-action" onclick="event.stopPropagation()">
-                            <i class="bi bi-heart"></i>
-                        </button>
                         <button class="explore-play-action" onclick="event.stopPropagation()">
                             <i class="bi bi-play-fill" style="font-size: 1.5rem;"></i>
                         </button>
@@ -542,15 +1113,54 @@ export class RendererEngine {
                 if (!window.IS_LIVE_PROFILE) {
                     newNode.style.cursor = 'pointer';
                     newNode.style.transition = 'outline 0.2s ease';
+                    
+                    // Maintain active outline state
+                    if (window.activeSectionId === sec.id) {
+                        newNode.style.outline = '2px solid #3b82f6';
+                        newNode.style.outlineOffset = '-2px';
+                    } else {
+                        newNode.style.outline = 'none';
+                    }
+
                     newNode.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                        // ⚡ Special: clicking the announcement bar opens the announcement subpanel directly
+                        if (e.target.closest('.nav-announcement-bar')) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (window.openSectionEditor) window.openSectionEditor(sec);
+                            const editPanel = document.getElementById('edit-section-panel');
+                            if (editPanel) editPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            setTimeout(() => {
+                                const announcementBtn = document.querySelector('[data-target-pane="announcement"]');
+                                if (announcementBtn) announcementBtn.click();
+                            }, 160);
+                            return;
+                        }
+
+                        const isInteractive = e.target.closest('button, input, select, textarea, a, .pss-row, .play-btn, .faq-question, .tab-trigger, .pill, .explore-play-action, .explore-heart-action');
+                        if (isInteractive) {
+                            if (e.target.closest('a')) {
+                                e.preventDefault();
+                            }
+                        } else {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
                         if (window.openSectionEditor) window.openSectionEditor(sec);
                         const form = document.getElementById('edit-section-panel');
                         if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     });
-                    newNode.addEventListener('mouseenter', () => newNode.style.outline = '2px dashed rgba(255, 255, 255, 0.5)');
-                    newNode.addEventListener('mouseleave', () => newNode.style.outline = 'none');
+                    newNode.addEventListener('mouseenter', () => {
+                        if (window.activeSectionId !== sec.id) {
+                            newNode.style.outline = '2px dashed rgba(255, 255, 255, 0.5)';
+                            newNode.style.outlineOffset = '-2px';
+                        }
+                    });
+                    newNode.addEventListener('mouseleave', () => {
+                        if (window.activeSectionId !== sec.id) {
+                            newNode.style.outline = 'none';
+                        }
+                    });
                 }
 
                 if (existingNode) {
@@ -1046,6 +1656,49 @@ export class RendererEngine {
                             <!-- Los productos se inyectan dinámicamente aquí -->
                         </div>
                     </div>
+
+                    <!-- ===== SMART SEARCH SECTION ===== -->
+                    <div id="profileSearchSection-${section.id}" class="profile-search-section">
+                      <h2 class="pss-section-title" style="text-align: center; margin-bottom: 24px; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.04em; color: #fff;">
+                        ${section.props.searchTitle || 'Empieza tu próximo hit'}
+                      </h2>
+                      <div class="pss-header">
+                        <div class="pss-search-bar" id="pssSearchBar-${section.id}">
+                          <i class="bi bi-search pss-search-icon"></i>
+                          <input
+                            type="text"
+                            id="pssInput-${section.id}"
+                            class="pss-input"
+                            placeholder="Busca un beat, presets, kits..."
+                            autocomplete="off"
+                            spellcheck="false"
+                          />
+                          <button class="pss-clear-btn" id="pssClearBtn-${section.id}" style="display:none;">
+                            <i class="bi bi-x"></i>
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Results List -->
+                      <div id="pssResults-${section.id}" class="pss-results-list"></div>
+
+                      <!-- Ver Más Button Container -->
+                      <div id="pssVerMasContainer-${section.id}" style="text-align: center; margin-top: 24px; display: none;">
+                        <button id="pssVerMasBtn-${section.id}" class="pss-price-btn" style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; padding: 12px 32px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+                          Ver más
+                        </button>
+                      </div>
+
+                      <!-- No Results / Suggestions Banner -->
+                      <div id="pssSuggestBanner-${section.id}" class="pss-suggest-banner" style="display:none;">
+                        <div class="pss-suggest-inner">
+                          <i class="bi bi-emoji-expressionless pss-suggest-icon"></i>
+                          <p class="pss-suggest-title" id="pssSuggestTitle-${section.id}">Sin resultados</p>
+                          <p class="pss-suggest-sub" id="pssSuggestSub-${section.id}">Mostrando los más populares</p>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- ===== END SMART SEARCH SECTION ===== -->
                 `;
 
                 // Render inicial
@@ -1053,6 +1706,11 @@ export class RendererEngine {
                     const btn = div.querySelector('.tab-trigger.active');
                     if (btn && window.switchStoreTab) {
                         window.switchStoreTab(btn, firstActive || 'BEATS', section.id);
+                    }
+                    
+                    // Inicializar PSS (Smart Search)
+                    if (window.initSmartSearch) {
+                        window.initSmartSearch(section.id, allProds, window.builderNickname || 'Artista');
                     }
                 }, 50);
 

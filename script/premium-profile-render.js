@@ -50,15 +50,11 @@ window.PremiumRender = {
             const type = p.product_type?.toLowerCase() || 'beat';
             const identifier = p.public_slug || (window.IdObfuscator ? window.IdObfuscator.encodeId(p.id) : p.id);
             const link = `/${type}/${identifier}`;
-            const isLiked = window.FavoritesManager ? window.FavoritesManager.isLiked(String(p.id)) : false;
 
             return `
                 <div class="premium-product-card" onclick="window.location.href='${link}'">
                     <div class="explore-img-container">
                         <img src="${img}" class="explore-main-img" alt="${p.name}" onerror="this.src='/images/portada-default.png'">
-                        <button class="explore-heart-action" id="like-btn-${p.id}" onclick="handleLike(event, '${p.id}', '${p.producer_id}')">
-                            <i class="bi ${isLiked ? 'bi-heart-fill' : 'bi-heart'}" style="color: ${isLiked ? '#ef4444' : '#fff'}"></i>
-                        </button>
                         <button class="explore-play-action" onclick="handlePlay(event, ${idx})">
                             <i class="bi bi-play-fill" style="font-size: 1.5rem;"></i>
                         </button>
