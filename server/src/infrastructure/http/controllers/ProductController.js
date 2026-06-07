@@ -126,7 +126,7 @@ export const createProduct = async (req, res) => {
         }
 
         // 🔥 PLAN-BASED UPLOAD LIMIT ENFORCEMENT
-        const PLAN_LIMITS = { free: 30, starter: 60, pro: Infinity };
+        const PLAN_LIMITS = { free: 20, starter: 60, pro: Infinity };
 
         const { data: profile } = await supabase
             .from('users')

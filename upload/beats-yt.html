@@ -200,18 +200,26 @@
 
                 console.log(`[BeatsYT Guard] Plan: ${userPlan}, YT: ${ytStatus.used}/${ytStatus.limit}, Upload: ${uploadStatus.count}/${uploadStatus.limit}, hasYT: ${hasYTFeature}`);
 
-                const isBlocked = uploadStatus.isLimited || ytStatus.isLimited || !hasYTFeature;
+                const isProductLimited = uploadStatus.isLimited;
+                const isYTLimited = ytStatus.isLimited || !hasYTFeature;
+                const isBlocked = isProductLimited || isYTLimited;
 
                 if (isBlocked) {
                     console.warn("⛔ Entry Denied: Showing Premium Modal");
                     const modal = document.getElementById('premiumUpgradeModal');
                     if (modal) {
                         modal.style.display = 'flex';
-                        if (ytStatus.isLimited || !hasYTFeature) {
-                            const titleEl = document.getElementById('premiumTitle');
-                            const descEl = document.getElementById('premiumDesc');
+                        const titleEl = document.getElementById('premiumTitle');
+                        const descEl = document.getElementById('premiumDesc');
+
+                        if (isProductLimited) {
+                            // 🗂️ Blocked by PRODUCT CATALOG limit (e.g. 20/20)
+                            if (titleEl) titleEl.innerText = 'Límite de productos alcanzado';
+                            if (descEl) descEl.innerText = `Has alcanzado el límite de ${uploadStatus.limit} productos de tu plan. Elimina algún producto o mejora tu plan para seguir subiendo.`;
+                        } else if (isYTLimited) {
+                            // 📹 Blocked by MONTHLY YOUTUBE VIDEO limit (e.g. 3/3)
                             if (titleEl) titleEl.innerText = 'Límite de videos alcanzado';
-                            if (descEl) descEl.innerText = `Has alcanzado el límite mensual de videos en tu plan actual. Mejora para usar el Auto-Publisher de YouTube sin restricciones.`;
+                            if (descEl) descEl.innerText = `Has alcanzado el límite mensual de ${ytStatus.limit} videos de YouTube en tu plan. Mejora para usar el Auto-Publisher sin restricciones.`;
                         }
                     }
                 } else {

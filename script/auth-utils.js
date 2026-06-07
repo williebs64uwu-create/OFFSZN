@@ -16,7 +16,7 @@ window.PLAN_LIMITS = {
 
         price: 'Free',
 
-        max_uploads: 30,
+        max_uploads: 20,
 
         commission: 0.05,
 
@@ -1165,7 +1165,7 @@ window.AuthUtils = {
 
     getUploadLimitStatus: async function () {
 
-        const fallback = { isLimited: false, count: 0, limit: 30, plan: 'free' };
+        const fallback = { isLimited: false, count: 0, limit: 20, plan: 'free' };
 
         const planData = await this.getUserPlanData();
 
@@ -1173,7 +1173,7 @@ window.AuthUtils = {
 
 
 
-        const limit = planData.limits?.max_uploads ?? 30;
+        const limit = planData.limits?.max_uploads ?? 20;
 
         if (limit === Infinity) {
 

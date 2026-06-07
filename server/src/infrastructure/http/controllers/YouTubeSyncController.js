@@ -8,7 +8,7 @@
 import { supabase } from '../../database/connection.js';
 
 const PLAN_LIMITS = {
-    free: { max_uploads: 30 },
+    free: { max_uploads: 20 },
     starter: { max_uploads: 60 },
     pro: { max_uploads: Infinity }
 };
@@ -33,7 +33,7 @@ export const getQuota = async (req, res) => {
         }
 
         const userPlan = (profile?.plan || 'free').toLowerCase();
-        const limit = PLAN_LIMITS[userPlan]?.max_uploads || 30;
+        const limit = PLAN_LIMITS[userPlan]?.max_uploads || 20;
 
         // 2. Count active products
         const { count, error } = await supabase
