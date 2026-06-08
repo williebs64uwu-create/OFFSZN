@@ -2,88 +2,765 @@
 <html lang="es">
 
 <head>
-    <script src="/env.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.48.1"></script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plugins VST — Los mejores instrumentos y efectos | OFFSZN</title>
-  <meta name="description" content="Descubre y descarga plugins VST para producción musical en OFFSZN. Instrumentos, efectos y herramientas de los mejores desarrolladores.">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://offszn.lat/plugins/vst-plugins.html">
-  <meta name="theme-color" content="#0a0a0a">
-  <!-- Open Graph -->
-  <meta property="og:title" content="Plugins VST — Los mejores instrumentos y efectos | OFFSZN">
-  <meta property="og:description" content="Descubre y descarga plugins VST para producción musical de los mejores desarrolladores de la industria.">
-  <meta property="og:url" content="https://offszn.lat/plugins/vst-plugins.html">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="https://offszn.lat/images/og-default.jpg">
-  <meta property="og:site_name" content="OFFSZN">
-  <meta property="og:locale" content="es_PE">
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Plugins VST — Los mejores instrumentos y efectos | OFFSZN">
-  <meta name="twitter:description" content="Descubre y descarga plugins VST para producción musical de los mejores desarrolladores de la industria.">
-  <meta name="twitter:image" content="https://offszn.lat/images/og-default.jpg">
-  <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/auth-ui.css">
-  <link rel="stylesheet" href="/css/global-overlays.css">
-  <link rel="stylesheet" href="/css/navbar.css">
-  <link rel="stylesheet" href="/css/download-gate.css">
-  <link rel="stylesheet" href="/css/sticky-player.css">
-    <link rel="stylesheet" href="/css/hover-card.css">
-  <link rel="stylesheet" href="/css/empty-state.css">
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONVERTER VST | Convierte Audios Raros a WAV en FL Studio - OFFSZN</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="description" content="Plugin VST gratuito de OFFSZN. Convierte notas de voz de WhatsApp, archivos OGG, M4A y MP4 a WAV/MP3 arrastrando y soltando directo en FL Studio.">
+    <meta name="theme-color" content="#0a0a0a">
+    <!-- Open Graph -->
+    <meta property="og:title" content="CONVERTER VST | Convierte Audios a WAV en FL Studio">
+    <meta property="og:description" content="Plugin VST gratuito. Arrastra audios de WhatsApp y conviértelos a WAV en 1 segundo.">
+    <meta property="og:url" content="https://offszn.lat/plugins/vst-plugins.html">
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="OFFSZN">
+    <meta name="twitter:card" content="summary_large_image">
 
-  <script src="/script/auth-utils.js?v=11"></script>
-  <script src="/script/notifications.js?v=26"></script>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Supabase & Config -->
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>window.supabaseClient = null;</script>
+    <script src="/script/config.js"></script>
+    <script src="/script/auth-utils.js?v=12"></script>
+
+    <style>
+        :root {
+            --accent: #ffffff;
+        }
+
+        .plugin-landing {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Geist', sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ==================== HERO ==================== */
+        .hero-section {
+            padding: 60px 0 40px;
+            text-align: center;
+            animation: heroFadeIn 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes heroFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-top-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            width: 100%;
+        }
+
+        .area-1 {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .area-2 {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .hero-title {
+            font-size: clamp(2.2rem, 6vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: #888;
+            max-width: 550px;
+            margin: 0 auto 40px;
+            line-height: 1.5;
+        }
+
+        .hero-image-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+            animation: heroFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes heroFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .hero-mockup {
+            width: 100%;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+
+        /* CTA Buttons (Matching X Flow Analyzer) */
+        .btn-free-download {
+            background: #fff;
+            color: #000;
+            padding: 12px 28px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #fff;
+            gap: 8px;
+        }
+
+        .btn-free-download:hover {
+            transform: translateY(-2px) scale(1.02);
+            background: #eee;
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-free-download.primary-large {
+            padding: 16px 48px;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+        }
+
+        .btn-serial {
+            background: transparent;
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            gap: 8px;
+            opacity: 0.7;
+            cursor: pointer;
+        }
+
+        .btn-serial:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.4);
+            opacity: 1;
+        }
+
+        /* ==================== CONTENT SECTIONS ==================== */
+        .feature-section {
+            border-top: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .alt-bg {
+            background: #080808;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            padding: 80px 0;
+        }
+
+        .content-grid.reverse {
+            direction: rtl;
+        }
+
+        .content-grid.reverse .text-content {
+            direction: ltr;
+        }
+
+        .feature-tag {
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .text-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 24px;
+            font-weight: 700;
+        }
+
+        .text-content p {
+            color: #aaa;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        .placeholder-img {
+            aspect-ratio: 1/1;
+            background: #111;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            direction: ltr;
+        }
+
+        /* Plugin Mockup inside feature section */
+        .mockup-plugin {
+            background: #0a0a0a;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            width: 280px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .mockup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .mockup-logo {
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mockup-badge {
+            background: #111;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .mockup-drop {
+            background: #050505;
+            border: 1px dashed rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mockup-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .mockup-icon.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        .mockup-main-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .mockup-sub-text {
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .mockup-btn {
+            background: #fff;
+            color: #000;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .mockup-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* ==================== SERIAL KEY SECTION ==================== */
+        .serial-section {
+            padding: 80px 0;
+            text-align: center;
+            background: #000;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            color: #888;
+            font-size: 1.05rem;
+            max-width: 500px;
+            margin: 0 auto 40px;
+        }
+
+        .serial-card {
+            background: #0a0a0a;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .auth-wall {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .auth-wall i {
+            font-size: 3rem;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .serial-display {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .serial-box {
+            background: #000;
+            border: 1px dashed rgba(255,255,255,0.3);
+            padding: 16px 24px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            border-radius: 8px;
+            width: 100%;
+            user-select: all;
+            cursor: pointer;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .serial-box:hover {
+            border-color: rgba(255,255,255,0.6);
+        }
+
+        .btn-auth {
+            background: #fff;
+            color: #000;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            background: #e5e5e5;
+        }
+
+        .btn-download {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-download:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* ==================== TAGLINE (FINAL CTA) ==================== */
+        .tagline-section {
+            padding: 80px 0;
+            text-align: center;
+            background: #000;
+        }
+
+        .tagline-section h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #666);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .content-grid.reverse {
+                direction: ltr;
+            }
+
+            .hero-top-actions {
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .area-1, .area-2 {
+                align-items: center;
+            }
+
+            .tagline-section h2 {
+                font-size: 2rem;
+            }
+
+            .placeholder-img {
+                max-width: 300px;
+                margin: 0 auto;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
     <!-- ==================== DYNAMIC NAVBAR ==================== -->
     <div id="navbar-placeholder">
-        <div
-            style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;">
-        </div>
+        <div style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;"></div>
     </div>
     <script src="/script/load-navbar.js?v=25"></script>
 
-  <main id="app-main">
-    <div class="container">
-      <div class="empty-state-container">
-        <div class="empty-state-icon-wrapper">
-          <i class="bi bi-plug"></i>
-        </div>
-        <h2 class="empty-state-title">Plugins VST en camino</h2>
-        <p class="empty-state-description">
-          Estamos preparando una selección exclusiva de plugins y herramientas para elevar tu producción al siguiente nivel.
-          Próximamente disponibles.
-        </p>
-        <a href="/explorar.html" class="empty-state-btn">
-          <i class="bi bi-search"></i> Explorar Sonidos
-        </a>
-      </div>
-    </div>
-  </main>
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="plugin-landing">
 
-  <!-- ==================== SIDE PANELS ==================== -->
-  <div class="overlay-backdrop" id="globalBackdrop" onclick="closeAllOverlays()"></div>
-  <div id="sticky-player-container"></div>
+        <!-- HERO SECTION (X Flow Analyzer Style) -->
+        <section class="hero-section">
+            <div class="container">
+                <!-- HERO TOP ACTIONS -->
+                <div class="hero-top-actions">
+                    <div class="area-1">
+                        <span style="font-size: 0.8rem; color: #666; font-weight: 600; letter-spacing: 1px;">VERSIÓN 1.0 (BETA)</span>
+                    </div>
+                    <div class="area-2">
+                        <a href="#serial-section" class="btn-free-download"><i class="bi bi-key"></i> OBTENER GRATIS</a>
+                        <a href="https://paypal.me/Yeniaime" target="_blank" class="btn-serial"><i class="bi bi-heart"></i> DONAR</a>
+                    </div>
+                </div>
 
-  <div id="footer-placeholder"></div>
-  <script src="/script/footer.js"></script>
+                <h1 class="hero-title">CONVERTER</h1>
+                <p class="hero-subtitle">Olvídate de páginas web para convertir audios. Arrastra cualquier archivo M4A, OGG o MP4 directo a tu VST y pásalo a FL Studio en 1 segundo.</p>
+                
+                <!-- Hero Mockup: Plugin Initial State -->
+                <div class="hero-image-container">
+                    <div class="mockup-plugin" style="width: 100%; max-width: 400px; margin: 0 auto; padding: 28px;">
+                        <div class="mockup-header">
+                            <div class="mockup-logo"><i class="bi bi-lightning-charge-fill"></i> CONVERTER</div>
+                            <div class="mockup-badge">WAV</div>
+                        </div>
+                        <div class="mockup-drop" style="padding: 50px 30px;">
+                            <div class="mockup-icon"><i class="bi bi-cloud-arrow-down"></i></div>
+                            <div class="mockup-main-text">Arrastra el audio aquí</div>
+                            <div class="mockup-sub-text">o haz clic para examinar<br>M4A, OGG, MP4, OPUS...</div>
+                        </div>
+                        <div style="text-align: center; font-size: 10px; color: rgba(255,255,255,0.3);">
+                            <i class="bi bi-lightning-charge-fill"></i> Potenciado por OFFSZN — Crea tu tienda de beats y kits gratis
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-  <script src="/script/cart.js"></script>
-  <script src="/script/download-gate.js"></script>
-  <script src="/script/sticky-player.js"></script>
-  <script src="/script/notifications.js"></script>
-  <script src="/script/navbar.js?v=20" type="module"></script>
+        <!-- FEATURE 1: ARRASTRAR -->
+        <section class="feature-section alt-bg">
+            <div class="container content-grid reverse">
+                <div class="text-content">
+                    <div class="feature-tag">PASO 1</div>
+                    <h2>Arrastra y suelta</h2>
+                    <p>¿Te mandaron una nota de voz por WhatsApp o un audio raro de iPhone? Arrastra el archivo directo al plugin. Acepta OGG, OPUS, M4A, MP4, y cualquier formato que FL Studio no soporta nativamente.</p>
+                    <p style="margin-top: 15px;">También puedes hacer clic para abrir el explorador de archivos y seleccionarlo manualmente.</p>
+                </div>
+                <div class="image-content">
+                    <div class="placeholder-img">
+                        <!-- Mockup: Hover State -->
+                        <div class="mockup-plugin">
+                            <div class="mockup-header">
+                                <div class="mockup-logo"><i class="bi bi-lightning-charge-fill"></i> CONVERTER</div>
+                                <div class="mockup-badge">WAV</div>
+                            </div>
+                            <div class="mockup-drop" style="border-color: #fff; background: rgba(255,255,255,0.03);">
+                                <div class="mockup-icon active"><i class="bi bi-plus-lg"></i></div>
+                                <div class="mockup-main-text">Suelta para convertir</div>
+                                <div class="mockup-sub-text">Calidad de estudio garantizada</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURE 2: CONVERSIÓN INSTANTÁNEA -->
+        <section class="feature-section">
+            <div class="container content-grid">
+                <div class="text-content">
+                    <div class="feature-tag">PASO 2</div>
+                    <h2>Conversión instantánea</h2>
+                    <p>Usa tecnología FFmpeg interna para convertir audios en milisegundos sin depender de internet. Funciona 100% offline y la interfaz se bloquea automáticamente mientras procesa para evitar interrupciones.</p>
+                    <p style="margin-top: 15px;">Elige entre WAV o MP3. Siempre en la máxima calidad posible.</p>
+                </div>
+                <div class="image-content">
+                    <div class="placeholder-img">
+                        <!-- Mockup: Processing State -->
+                        <div class="mockup-plugin">
+                            <div class="mockup-header">
+                                <div class="mockup-logo"><i class="bi bi-lightning-charge-fill"></i> CONVERTER</div>
+                                <div class="mockup-badge" style="opacity: 0.5;">WAV</div>
+                            </div>
+                            <div class="mockup-drop" style="border-style: solid;">
+                                <div class="mockup-spinner"></div>
+                                <div class="mockup-main-text">Convirtiendo...</div>
+                                <div class="mockup-sub-text">audio_whatsapp.ogg<br>Por favor espera</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURE 3: DRAG TO FL STUDIO -->
+        <section class="feature-section alt-bg">
+            <div class="container content-grid reverse">
+                <div class="text-content">
+                    <div class="feature-tag">PASO 3</div>
+                    <h2>Directo a FL Studio</h2>
+                    <p>Una vez convertido, el archivo aparece como un botón listo para arrastrar. Agárralo y tíralo directamente a tu Playlist o Channel Rack de FL Studio. Sin pasos intermedios, sin guardar en carpetas.</p>
+                    <p style="margin-top: 15px;">También puedes limpiar y subir otro archivo en un solo clic.</p>
+                </div>
+                <div class="image-content">
+                    <div class="placeholder-img">
+                        <!-- Mockup: Ready State -->
+                        <div class="mockup-plugin">
+                            <div class="mockup-header">
+                                <div class="mockup-logo"><i class="bi bi-lightning-charge-fill"></i> CONVERTER</div>
+                                <div class="mockup-badge" style="opacity: 0.5;">WAV</div>
+                            </div>
+                            <div class="mockup-drop" style="border-style: solid; border-color: rgba(255,255,255,0.1); background: transparent; gap: 14px;">
+                                <div class="mockup-icon" style="background: transparent; border: none; font-size: 24px; color: #22c55e;"><i class="bi bi-check2-circle"></i></div>
+                                <div class="mockup-btn" style="background: #fff; color: #000; font-weight: 800; font-size: 12px; letter-spacing: 0.5px;">EXPORTAR AQUI</div>
+                                <div class="mockup-sub-text" style="text-decoration: underline; cursor: pointer;">Limpiar y subir otro</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SERIAL KEY SECTION ==================== -->
+        <section class="serial-section" id="serial-section">
+            <div class="container">
+                <h2 class="section-title">Obtén tu Serial Key</h2>
+                <p class="section-subtitle">Este plugin es 100% gratuito. Inicia sesión en OFFSZN para generar tu clave de activación.</p>
+
+                <div class="serial-card">
+
+                    <!-- ESTADO 1: NO LOGUEADO (AUTH WALL) -->
+                    <div class="auth-wall" id="ui-auth-wall">
+                        <i class="bi bi-lock"></i>
+                        <h3 style="margin:0;">Activa tu plugin</h3>
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 10px;">Inicia sesión con tu cuenta de OFFSZN para obtener tu Serial Key y descargar el instalador.</p>
+                        <a href="/pages/login.html?redirect=/plugins/vst-plugins.html" class="btn-auth">Iniciar Sesión</a>
+                        <a href="/pages/register.html" style="color: rgba(255,255,255,0.4); font-size: 0.8rem; text-decoration: underline; text-underline-offset: 3px;">¿No tienes cuenta? Créala aquí</a>
+                    </div>
+
+                    <!-- ESTADO 2: LOGUEADO Y LISTO -->
+                    <div class="serial-display" id="ui-serial-ready">
+                        <h3 style="margin:0;">Tu Serial Key de Activación</h3>
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 0;">Pega esta clave dentro del plugin la primera vez que lo abras en FL Studio.</p>
+
+                        <div class="serial-box" id="serial-key-text" title="Clic para copiar" onclick="copySerial()">Cargando...</div>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px;">
+                            <button id="btn-generate-serial" class="btn-auth" style="display: none; padding: 12px 20px;">Generar Mi Clave</button>
+                            <a href="#" class="btn-download"><i class="bi bi-windows"></i> Descargar VST3</a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- TAGLINE -->
+        <section class="tagline-section">
+            <div class="container" style="padding: 0 24px;">
+                <h2>Convierte. Arrastra. Produce.<br>Sin fricción.</h2>
+                <div style="margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                    <a href="#serial-section" class="btn-free-download primary-large"><i class="bi bi-key"></i> Obtener Gratis</a>
+                    <a href="https://paypal.me/Yeniaime" target="_blank" class="btn-serial"><i class="bi bi-heart"></i> Donar para apoyar</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== FOOTER ==================== -->
+    <div id="footer-placeholder"></div>
+
+    <!-- SCRIPTS -->
+    <script src="/script/id-obfuscator.js?v=1"></script>
+    <script src="/script/cart.js?v=21"></script>
+    <script src="/script/notifications.js?v=21"></script>
+    <script src="/script/footer.js?v=21"></script>
+    <script src="/script/navbar.js?v=21" type="module"></script>
+
+    <!-- SERIAL KEY LOGIC -->
+    <script>
+        const UI_WALL = document.getElementById('ui-auth-wall');
+        const UI_READY = document.getElementById('ui-serial-ready');
+        const TEXT_SERIAL = document.getElementById('serial-key-text');
+        const BTN_GENERATE = document.getElementById('btn-generate-serial');
+
+        function copySerial() {
+            const text = TEXT_SERIAL.innerText;
+            if (text && text !== 'Cargando...' && text !== 'AÚN NO GENERADO') {
+                navigator.clipboard.writeText(text);
+                const original = TEXT_SERIAL.innerText;
+                TEXT_SERIAL.innerText = '¡COPIADO!';
+                setTimeout(() => TEXT_SERIAL.innerText = original, 2000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for supabase to be ready
+            let retries = 0;
+            while (!window.supabaseClient && retries < 20) {
+                await new Promise(r => setTimeout(r, 200));
+                retries++;
+            }
+
+            if (!window.supabaseClient) {
+                console.warn('Supabase not loaded');
+                return;
+            }
+
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+
+            if (!session) {
+                UI_WALL.style.display = 'flex';
+                UI_READY.style.display = 'none';
+            } else {
+                UI_WALL.style.display = 'none';
+                UI_READY.style.display = 'flex';
+
+                const userId = session.user.id;
+
+                const { data, error } = await window.supabaseClient
+                    .from('plugin_serials')
+                    .select('serial_key')
+                    .eq('user_id', userId)
+                    .eq('plugin_name', 'CONVERTER')
+                    .maybeSingle();
+
+                if (data && data.serial_key) {
+                    TEXT_SERIAL.innerText = data.serial_key;
+                } else {
+                    TEXT_SERIAL.innerText = 'AÚN NO GENERADO';
+                    BTN_GENERATE.style.display = 'inline-block';
+
+                    BTN_GENERATE.onclick = async () => {
+                        BTN_GENERATE.innerText = 'Generando...';
+                        BTN_GENERATE.disabled = true;
+
+                        const p1 = Math.random().toString(36).substring(2, 6).toUpperCase();
+                        const p2 = Math.random().toString(36).substring(2, 6).toUpperCase();
+                        const newSerial = `OFFSZN-${p1}-${p2}`;
+
+                        const { error: insertError } = await window.supabaseClient
+                            .from('plugin_serials')
+                            .insert([{ user_id: userId, serial_key: newSerial, plugin_name: 'CONVERTER' }]);
+
+                        if (!insertError) {
+                            TEXT_SERIAL.innerText = newSerial;
+                            BTN_GENERATE.style.display = 'none';
+                        } else {
+                            alert('Error generando serial. Intenta de nuevo.');
+                            BTN_GENERATE.innerText = 'Generar Mi Clave';
+                            BTN_GENERATE.disabled = false;
+                        }
+                    };
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>
-

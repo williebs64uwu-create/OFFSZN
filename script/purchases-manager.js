@@ -61,8 +61,7 @@ window.PurchasesManager = (function () {
         if (!container) return;
 
         try {
-            // 1. Fetch Regular Orders & Analyzer Sales Concurrently
-            const [ordersRes, analyzerRes] = await Promise.all([
+            const [ordersRes, analyzerRes, pluginsRes] = await Promise.all([
                 window.supabaseClient
                     .from('orders')
                     .select(`
@@ -106,16 +105,23 @@ window.PurchasesManager = (function () {
                     .from('analyzer_sales')
                     .select('*')
                     .eq('user_id', userId)
-                    .eq('status', 'completed')
+                    .eq('status', 'completed'),
+
+                window.supabaseClient
+                    .from('plugin_serials')
+                    .select('*')
+                    .eq('user_id', userId)
             ]);
 
             if (ordersRes.error) throw ordersRes.error;
             if (analyzerRes.error) throw analyzerRes.error;
+            if (pluginsRes.error) throw pluginsRes.error;
 
             const orders = ordersRes.data || [];
             const analyzerSales = analyzerRes.data || [];
+            const pluginSerials = pluginsRes.data || [];
 
-            if (orders.length === 0 && analyzerSales.length === 0) {
+            if (orders.length === 0 && analyzerSales.length === 0 && pluginSerials.length === 0) {
                 renderEmptyState(container);
                 return;
             }
@@ -123,7 +129,8 @@ window.PurchasesManager = (function () {
             // Combine and Sort by Date
             const combined = [
                 ...orders.flatMap(o => (o.order_items || []).map(item => ({ ...item, order: o, type: 'standard' }))),
-                ...analyzerSales.map(s => ({ ...s, type: 'analyzer', created_at: s.created_at }))
+                ...analyzerSales.map(s => ({ ...s, type: 'analyzer', created_at: s.created_at })),
+                ...pluginSerials.map(p => ({ ...p, type: 'plugin', created_at: p.created_at }))
             ].sort((a, b) => {
                 const dateA = new Date(a.type === 'standard' ? a.order.created_at : a.created_at);
                 const dateB = new Date(b.type === 'standard' ? b.order.created_at : b.created_at);
@@ -145,6 +152,8 @@ window.PurchasesManager = (function () {
         items.forEach(item => {
             if (item.type === 'analyzer') {
                 fragment.appendChild(createAnalyzerPurchaseRow(item));
+            } else if (item.type === 'plugin') {
+                fragment.appendChild(createPluginPurchaseRow(item));
             } else {
                 const product = item.products;
                 if (!product) {
@@ -183,6 +192,38 @@ window.PurchasesManager = (function () {
                 <button class="download-btn primary" onclick="window.PurchasesManager.downloadAnalyzer(this)" title="Descargar Instalador">
                     <i class="bi bi-download"></i> Descargar
                 </button>
+            </div>
+        `;
+        return row;
+    }
+
+    function createPluginPurchaseRow(plugin) {
+        const row = document.createElement('div');
+        row.className = 'purchase-row purchases-grid-layout';
+
+        const dateFormatted = new Date(plugin.created_at).toLocaleDateString('es-ES', {
+            day: '2-digit', month: '2-digit', year: 'numeric'
+        });
+
+        const montoHtml = `<span class="badge-free">FREE</span>`;
+
+        row.innerHTML = `
+            <div class="purchase-cover" style="display:flex; align-items:center; justify-content:center; background:#111; font-size:2rem; border-radius:12px; color:#fff;"><i class="bi bi-box-seam"></i></div>
+            <div class="purchase-info">
+                <span class="purchase-name">${plugin.plugin_name}</span>
+                <span class="purchase-producer">OFFSZN</span>
+                <span style="font-size:0.75rem; color:#888;">SOFTWARE / VST</span>
+            </div>
+            <div class="purchase-monto">${montoHtml}</div>
+            <div class="purchase-date">${dateFormatted}</div>
+            <div class="purchase-id" title="ID: ${plugin.id}">${(plugin.id || '').substring(0, 10)}...</div>
+            <div class="purchase-actions" style="display:flex; gap:10px;">
+                <button class="download-btn" onclick="window.PurchasesManager.showSerialKeyModal('${plugin.serial_key}')" title="Ver Serial Key">
+                    <i class="bi bi-key"></i> Serial Key
+                </button>
+                <a href="/plugins/vst-plugins.html" class="download-btn primary" title="Descargar VST3" style="text-decoration:none; display:flex;">
+                    <i class="bi bi-download"></i> Descargar
+                </a>
             </div>
         `;
         return row;
@@ -379,6 +420,29 @@ window.PurchasesManager = (function () {
         document.body.appendChild(modal);
     }
 
+    function showSerialKeyModal(serialKey) {
+        const existing = document.getElementById('serial-key-modal');
+        if (existing) existing.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'serial-key-modal';
+        modal.className = 'contact-producer-overlay';
+        modal.innerHTML = `
+            <div class="contact-producer-card" style="text-align:center; padding: 40px; max-width: 400px;">
+                <button class="contact-producer-close" onclick="this.closest('.contact-producer-overlay').remove()">&times;</button>
+                <div class="contact-producer-icon" style="color:#fff; background: rgba(255,255,255,0.1);"><i class="bi bi-key"></i></div>
+                <h3 style="margin-bottom:10px;">Tu Serial Key</h3>
+                <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom:20px;">Copia esta clave y pégala dentro del plugin para activarlo.</p>
+                <div style="background: #000; border: 1px dashed rgba(255,255,255,0.3); padding: 16px 24px; font-size: 1.5rem; font-weight: 800; letter-spacing: 2px; border-radius: 8px; margin-bottom: 20px; user-select: all;" id="modal-serial-text">
+                    ${serialKey}
+                </div>
+                <button class="btn-auth" style="background:#fff; color:#000; width:100%; border:none; padding:14px; border-radius:10px; font-weight:700; cursor:pointer;" onclick="navigator.clipboard.writeText('${serialKey}'); const t = document.getElementById('modal-serial-text'); const orig = t.innerText; t.innerText = '¡COPIADO!'; setTimeout(() => t.innerText = orig, 2000);">Copiar Serial</button>
+            </div>
+        `;
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+        document.body.appendChild(modal);
+    }
+
     async function downloadAnalyzer(btnElement) {
         if (btnElement?.classList.contains('disabled-cooldown')) return;
         if (btnElement) { btnElement.classList.add('disabled-cooldown'); btnElement.style.opacity = '0.5'; }
@@ -447,7 +511,7 @@ window.PurchasesManager = (function () {
         });
     }
 
-    return { init, downloadFile, generatePDF, downloadAnalyzer, showContactProducerModal };
+    return { init, downloadFile, generatePDF, downloadAnalyzer, showContactProducerModal, showSerialKeyModal };
 })();
 
 // Auto-init
