@@ -1333,7 +1333,7 @@ window.CurrencyManager = {
 
     getCurrency() {
 
-        return localStorage.getItem(this._STORAGE_KEY) || 'PEN';
+        return localStorage.getItem(this._STORAGE_KEY) || 'USD';
 
     },
 
