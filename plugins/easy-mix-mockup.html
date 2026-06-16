@@ -1220,8 +1220,8 @@ function submitSerial() {
                     // Update UI badge
                     const badge = document.getElementById('trial-badge');
                     if (badge) {
-                        if (response.expires_at === 'never') {
-                            badge.style.display = 'none'; // Lifetime, hide badge
+                        if (response.license_type === 'lifetime' || response.license_type === 'subscription' || response.expires_at === 'never') {
+                            badge.style.display = 'none'; // Paid license, hide badge
                         } else {
                             const daysLeft = Math.ceil((new Date(response.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
                             if (daysLeft <= 0) {
@@ -1229,6 +1229,7 @@ function submitSerial() {
                                 badge.style.background = "rgba(255,69,58,0.15)";
                                 badge.style.color = "#ff453a";
                                 badge.style.borderColor = "rgba(255,69,58,0.3)";
+                                badge.style.display = 'flex';
                             } else {
                                 badge.innerHTML = `${daysLeft} Día${daysLeft===1?'':'s'} de Prueba`;
                                 badge.style.background = "rgba(48,209,88,0.15)";
@@ -1286,7 +1287,7 @@ setTimeout(() => {
                             // Update UI badge
                             const badge = document.getElementById('trial-badge');
                             if (badge) {
-                                if (response.expires_at === 'never') {
+                                if (response.license_type === 'lifetime' || response.license_type === 'subscription' || response.expires_at === 'never') {
                                     badge.style.display = 'none';
                                 } else {
                                     const daysLeft = Math.ceil((new Date(response.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
@@ -1295,6 +1296,7 @@ setTimeout(() => {
                                         badge.style.background = "rgba(255,69,58,0.15)";
                                         badge.style.color = "#ff453a";
                                         badge.style.borderColor = "rgba(255,69,58,0.3)";
+                                        badge.style.display = 'flex';
                                         // License expired — revoke after showing the badge
                                         window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
                                         openActivationModal(false);
@@ -1312,7 +1314,7 @@ setTimeout(() => {
                             window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
                             const badge = document.getElementById('trial-badge');
                             if (badge) {
-                                badge.innerHTML = "Licencia Inválida — Activar";
+                                badge.innerHTML = response.error || "Licencia Inválida — Activar";
                                 badge.style.background = "rgba(255,69,58,0.15)";
                                 badge.style.color = "#ff453a";
                                 badge.style.borderColor = "rgba(255,69,58,0.3)";
