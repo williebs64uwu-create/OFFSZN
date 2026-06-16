@@ -242,6 +242,31 @@
             0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
             40% { opacity: 1; transform: scale(1.2); }
         }
+
+        /* ── EXPIRED / HARD LOCK overlay ── */
+        #license-expired-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10,10,12,0.97);
+            z-index: 10000;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            animation: fadeInOverlay 0.35s ease;
+        }
+        @keyframes fadeInOverlay {
+            from { opacity: 0; } to { opacity: 1; }
+        }
+        #license-expired-overlay.active { display: flex; }
+        .exp-icon { font-size: 36px; }
+        .exp-title { font-size: 16px; font-weight: 800; color: #ff453a; letter-spacing: 1px; text-transform: uppercase; }
+        .exp-subtitle { font-size: 11px; color: #8e8e93; text-align: center; max-width: 280px; line-height: 1.6; }
+        .exp-input { width: 260px; padding: 10px 14px; background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 7px; color: #fff; font-size: 12px; font-family: monospace; outline: none; text-align: center; letter-spacing: 1px; }
+        .exp-input:focus { border-color: #ff9f0a; }
+        .exp-btn { width: 260px; padding: 11px; background: linear-gradient(180deg,#ff9f0a,#d68100); color: #fff; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; border: none; border-radius: 7px; cursor: pointer; }
+        .exp-buy { font-size: 10px; color: #ff9f0a; cursor: pointer; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -251,6 +276,16 @@
     <div id="license-loading-overlay">
         <div class="loading-logo">EASY <span>MIX</span></div>
         <div class="loading-dots"><span></span><span></span><span></span></div>
+    </div>
+
+    <!-- EXPIRED / HARD LOCK OVERLAY (no close button) -->
+    <div id="license-expired-overlay">
+        <div class="exp-icon">&#128274;</div>
+        <div class="exp-title" id="exp-title">Licencia Expirada</div>
+        <div class="exp-subtitle" id="exp-subtitle">Tu licencia ha expirado. Ingresa una nueva Serial Key para continuar usando Easy Mix.</div>
+        <input class="exp-input" id="exp-serial-input" type="text" placeholder="EM-XXXX-XXXX-XXXX" spellcheck="false" autocomplete="off">
+        <button class="exp-btn" onclick="submitExpiredSerial()">Activar Nueva Licencia</button>
+        <span class="exp-buy" onclick="window.open && window.open('https://offszn.lat')">Comprar Licencia &rarr;</span>
     </div>
 
     <!-- PRESET MODAL -->
@@ -1372,20 +1407,12 @@ function submitSerial() {
 //  Optimistic: grant access immediately, verify with server
 //  in background, revoke if invalid/expired.
 // ──────────────────────────────────────────────────────────
-function applyLicenseResponse(response) {
+function applyLicenseResponse(response, serial) {
     const badge = document.getElementById('trial-badge');
     if (!response || !response.success) {
-        // Server says invalid
-        try { localStorage.removeItem('offszn_serial'); } catch(e) {}
-        callNative("setLicenseStatus", false);
-        if (badge) {
-            badge.innerHTML = response?.error || "Licencia Inv&#225;lida &#8212; Activar";
-            badge.style.background = "rgba(255,69,58,0.15)";
-            badge.style.color = "#ff453a";
-            badge.style.borderColor = "rgba(255,69,58,0.3)";
-            badge.style.display = 'flex';
-        }
-        openActivationModal(false);
+        // Server says invalid — hard lock
+        const reason = response?.error || 'Licencia inválida o expirada';
+        triggerLicenseExpired('Licencia Inválida', reason);
         return;
     }
     callNative("setLicenseStatus", true);
@@ -1427,7 +1454,6 @@ function startupVerifySerial(serial) {
         openActivationModal(false);
         return;
     }
-    // Optimistic: keep UI unlocked while verifying in background
     const hwid = getOrCreateDeviceId();
     fetch(`${apiBase}/api/plugin/activate`, {
         method: "POST",
@@ -1435,13 +1461,17 @@ function startupVerifySerial(serial) {
         body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
     }).then(res => res.json()).then(response => {
         hideLoadingOverlay();
-        applyLicenseResponse(response);
+        applyLicenseResponse(response, serial);
+        if (response && response.success) {
+            startPeriodicCheck(serial); // begin periodic re-validation
+        }
     }).catch(() => {
         hideLoadingOverlay();
         // Offline — keep unlocked, show offline badge
         callNative("setLicenseStatus", true);
         const badge = document.getElementById('trial-badge');
         if (badge) { badge.innerHTML = "Sin conexi&#243;n &#8212; Acceso local"; badge.style.display = 'flex'; }
+        startPeriodicCheck(serial); // still start checking for when connection returns
     });
 }
 
@@ -1480,11 +1510,95 @@ try {
     if (window.__JUCE__ && window.__JUCE__.backend) {
         window.__JUCE__.backend.addEventListener('license-status', (statusStr) => {
             if (statusStr === 'INVALID' || statusStr === 'EXPIRED') {
-                openActivationModal(false);
+                triggerLicenseExpired('Licencia Bloqueada', 'Tu licencia fue revocada. Contacta soporte o ingresa una nueva key.');
             }
         });
     }
 } catch(e) {}
+
+// ─────────────────────────────────────────────────────────────
+//  HARD LOCK: show the expired overlay (cannot be dismissed)
+// ─────────────────────────────────────────────────────────────
+function triggerLicenseExpired(title, subtitle) {
+    // 1) Cut audio via C++
+    callNative("setLicenseStatus", false);
+    // 2) Clear localStorage so next open also asks for serial
+    try { localStorage.removeItem('offszn_serial'); } catch(e) {}
+    // 3) Show hard-lock overlay
+    const overlay = document.getElementById('license-expired-overlay');
+    if (overlay) {
+        document.getElementById('exp-title').textContent = title || 'Licencia Expirada';
+        document.getElementById('exp-subtitle').textContent = subtitle || 'Tu licencia ha expirado. Ingresa una nueva Serial Key.';
+        overlay.classList.add('active');
+    }
+}
+
+function submitExpiredSerial() {
+    const input = document.getElementById('exp-serial-input');
+    if (!input || !input.value.trim()) return;
+    const serial = input.value.trim();
+    const hwid = getOrCreateDeviceId();
+    fetch(`${apiBase}/api/plugin/activate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
+    }).then(res => res.json()).then(response => {
+        if (response && response.success) {
+            try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+            callNative("saveLicense", serial);
+            callNative("setLicenseStatus", true);
+            // Dismiss overlay
+            const overlay = document.getElementById('license-expired-overlay');
+            if (overlay) overlay.classList.remove('active');
+            input.value = '';
+            // Update badge
+            applyLicenseResponse(response);
+            // Restart periodic checks with the new serial
+            startPeriodicCheck(serial);
+        } else {
+            input.style.borderColor = '#ff453a';
+            setTimeout(() => { input.style.borderColor = ''; }, 2000);
+        }
+    }).catch(() => {
+        // Offline — grant access optimistically
+        try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+        callNative("saveLicense", serial);
+        callNative("setLicenseStatus", true);
+        const overlay = document.getElementById('license-expired-overlay');
+        if (overlay) overlay.classList.remove('active');
+    });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  PERIODIC LICENSE CHECK — every 30 minutes
+//  Silently re-validates with server. If invalid → hard lock.
+// ─────────────────────────────────────────────────────────────
+let _periodicCheckInterval = null;
+
+function startPeriodicCheck(serial) {
+    if (_periodicCheckInterval) clearInterval(_periodicCheckInterval);
+    _periodicCheckInterval = setInterval(() => {
+        let activeSerial = serial;
+        try { activeSerial = localStorage.getItem('offszn_serial') || serial; } catch(e) {}
+        if (!activeSerial) return;
+        const hwid = getOrCreateDeviceId();
+        fetch(`${apiBase}/api/plugin/activate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ serial_key: activeSerial, hwid: hwid, plugin_name: "Easy Mix" })
+        }).then(res => res.json()).then(response => {
+            if (!response || !response.success) {
+                const reason = response?.error || 'Licencia inv&#225;lida';
+                triggerLicenseExpired('Licencia Bloqueada', reason);
+            } else {
+                // Still valid — just update badge silently
+                applyLicenseResponse(response);
+            }
+        }).catch(() => {
+            // Offline — do nothing, keep current state
+        });
+    }, 30 * 60 * 1000); // every 30 minutes
+}
 
 // Hardcoded presets (paste generated json here later)
 const factoryPresets = {
