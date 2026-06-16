@@ -1,6 +1,6 @@
 import { supabase } from '../../database/connection.js';
 import crypto from 'crypto';
-import { sendOffsznEmail } from '../../shared/utils/mailer.js';
+import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 
 // ─── Signing helpers ───────────────────────────────────────────────────────────
 function getPrivateKey() {
