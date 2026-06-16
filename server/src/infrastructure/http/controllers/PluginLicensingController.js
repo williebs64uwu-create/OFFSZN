@@ -143,9 +143,13 @@ export const requestTrial = async (req, res) => {
 };
 
 export const activateSerial = async (req, res) => {
+    console.log("➡️ [API /activate] Request body received:", req.body);
     try {
         const { serial_key, hwid, device_name } = req.body;
-        if (!serial_key || !hwid) return res.status(400).json({ error: 'Falta serial o hwid' });
+        if (!serial_key || !hwid) {
+            console.log("⚠️ [API /activate] Missing serial_key or hwid in body:", { serial_key, hwid });
+            return res.status(400).json({ error: 'Falta serial o hwid' });
+        }
 
         // 1. Find license
         const { data: license, error: licErr } = await supabase
@@ -154,15 +158,20 @@ export const activateSerial = async (req, res) => {
             .eq('serial_key', serial_key)
             .single();
 
-        if (licErr || !license) return res.status(404).json({ error: 'Licencia no encontrada o inválida.' });
+        if (licErr || !license) {
+            console.log("❌ [API /activate] License not found or error:", { serial_key, error: licErr?.message });
+            return res.status(404).json({ error: 'Licencia no encontrada o inválida.' });
+        }
 
         if (license.status !== 'active') {
+            console.log("❌ [API /activate] License inactive:", { serial_key, status: license.status });
             return res.status(403).json({ error: 'Esta licencia está inactiva o suspendida.' });
         }
 
         // 2. Check Expiration
         if (license.expires_at) {
             if (new Date(license.expires_at) < new Date()) {
+                console.log("❌ [API /activate] License expired:", { serial_key, expires_at: license.expires_at });
                 return res.status(403).json({ error: 'La licencia o prueba ha expirado.' });
             }
         }
@@ -173,7 +182,10 @@ export const activateSerial = async (req, res) => {
             .select('*')
             .eq('license_id', license.id);
 
-        if (actErr) throw actErr;
+        if (actErr) {
+            console.error("❌ [API /activate] Activations query error:", actErr);
+            throw actErr;
+        }
 
         const maxActivations = license.license_type === 'subscription' ? 2 : (license.license_type === 'lifetime' ? 1 : 1);
         
@@ -182,6 +194,7 @@ export const activateSerial = async (req, res) => {
 
         if (!isAlreadyActivated) {
             if (activations.length >= maxActivations) {
+                console.log("❌ [API /activate] Activations limit reached:", { serial_key, activeCount: activations.length, max: maxActivations });
                 return res.status(403).json({ error: `Límite de dispositivos alcanzado (Max: ${maxActivations}). Revoca un dispositivo para activar este.` });
             }
 
@@ -193,12 +206,16 @@ export const activateSerial = async (req, res) => {
                     hwid: hwid,
                     device_name: device_name || 'Desconocido'
                 });
+            console.log("📝 [API /activate] New activation registered for hwid:", hwid);
+        } else {
+            console.log("ℹ️ [API /activate] Device already activated:", hwid);
         }
 
         const expiresAtStr = license.expires_at ? new Date(license.expires_at).toISOString() : 'never';
         const payload = `${serial_key}|${expiresAtStr}`;
         const signature = signPayload(payload);
 
+        console.log("✅ [API /activate] Success! Returning payload:", { serial_key, expires_at: expiresAtStr });
         return res.json({
             success: true,
             serial_key: serial_key,
@@ -206,7 +223,7 @@ export const activateSerial = async (req, res) => {
             signature: signature
         });
     } catch (error) {
-        console.error('Error en activateSerial:', error);
+        console.error('💥 [API /activate] Fatal Error:', error);
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 };
