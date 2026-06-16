@@ -1262,6 +1262,8 @@ function submitSerial() {
                 body: JSON.stringify({ serial_key: serial, hwid: effectiveHwid, plugin_name: "Easy Mix" })
             }).then(res => res.json()).then(response => {
                 if (response && response.success) {
+                    // Store serial in localStorage so it persists between sessions
+                    try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
                     callNative("saveLicense", serial);
                     callNative("setLicenseStatus", true);
                     
@@ -1273,13 +1275,13 @@ function submitSerial() {
                         } else {
                             const daysLeft = Math.ceil((new Date(response.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
                             if (daysLeft <= 0) {
-                                badge.innerHTML = "0 Días de Prueba &mdash; Comprar Licencia";
+                                badge.innerHTML = "0 D&#237;as de Prueba &mdash; Comprar Licencia";
                                 badge.style.background = "rgba(255,69,58,0.15)";
                                 badge.style.color = "#ff453a";
                                 badge.style.borderColor = "rgba(255,69,58,0.3)";
                                 badge.style.display = 'flex';
                             } else {
-                                badge.innerHTML = `${daysLeft} Día${daysLeft===1?'':'s'} de Prueba`;
+                                badge.innerHTML = `${daysLeft} D&#237;a${daysLeft===1?'':'s'} de Prueba`;
                                 badge.style.background = "rgba(48,209,88,0.15)";
                                 badge.style.color = "#30d158";
                                 badge.style.borderColor = "rgba(48,209,88,0.3)";
@@ -1294,15 +1296,15 @@ function submitSerial() {
 
                 } else {
                     callNative("setLicenseStatus", false);
-                    alert("Error del servidor: " + (response.error || "Licencia inválida"));
+                    alert("Error del servidor: " + (response.error || "Licencia inv&#225;lida"));
                 }
             }).catch(e => {
-                alert("Error crítico en fetch: " + e.message);
-                // Offline — grant access if serial was already saved
+                // Offline — grant access optimistically if serial was entered
+                try { localStorage.setItem('offszn_serial', serial); } catch(e2) {}
                 callNative("saveLicense", serial);
                 callNative("setLicenseStatus", true);
                 const badge = document.getElementById('trial-badge');
-                if (badge) { badge.innerHTML = "Sin conexión — Acceso offline"; badge.style.display = 'flex'; }
+                if (badge) { badge.innerHTML = "Sin conexi&#243;n &#8212; Acceso offline"; badge.style.display = 'flex'; }
                 closeActivationModal();
             });
         });
@@ -1317,73 +1319,95 @@ function submitSerial() {
 
 // ──────────────────────────────────────────────────────────
 //  STARTUP LICENSE CHECK
-//  Optimistic: if saved serial exists → grant immediately,
-//  then verify in background and revoke if expired.
+//  Priority: localStorage → C++ getSavedLicense → no license
+//  Optimistic: grant access immediately, verify with server
+//  in background, revoke if invalid/expired.
 // ──────────────────────────────────────────────────────────
-setTimeout(() => {
-    if (hasJuceBridge()) {
-        callNative("getSavedLicense").then((serial) => {
-            if (serial && serial.length > 0) {
-                // OPTIMISTIC: grant access right away (C++ already starts as valid=true)
-                // Now verify in background
-                callNative("getHardwareId").then((hwid) => {
-                    fetch(`${apiBase}/api/plugin/activate`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
-                    }).then(res => res.json()).then(response => {
-                        if (response && response.success) {
-                            callNative("setLicenseStatus", true);
-                            // Update UI badge
-                            const badge = document.getElementById('trial-badge');
-                            if (badge) {
-                                if (response.license_type === 'lifetime' || response.license_type === 'subscription' || response.expires_at === 'never') {
-                                    badge.style.display = 'none';
-                                } else {
-                                    const daysLeft = Math.ceil((new Date(response.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
-                                    if (daysLeft <= 0) {
-                                        badge.innerHTML = "0 Días de Prueba &mdash; Comprar Licencia";
-                                        badge.style.background = "rgba(255,69,58,0.15)";
-                                        badge.style.color = "#ff453a";
-                                        badge.style.borderColor = "rgba(255,69,58,0.3)";
-                                        badge.style.display = 'flex';
-                                        // License expired — revoke after showing the badge
-                                        callNative("setLicenseStatus", false);
-                                        openActivationModal(false);
-                                    } else {
-                                        badge.innerHTML = `${daysLeft} Día${daysLeft===1?'':'s'} de Prueba`;
-                                        badge.style.background = "rgba(48,209,88,0.15)";
-                                        badge.style.color = "#30d158";
-                                        badge.style.borderColor = "rgba(48,209,88,0.3)";
-                                        badge.style.display = 'flex';
-                                    }
-                                }
-                            }
-                        } else {
-                            // Server says invalid — revoke
-                            callNative("setLicenseStatus", false);
-                            const badge = document.getElementById('trial-badge');
-                            if (badge) {
-                                badge.innerHTML = response.error || "Licencia Inválida — Activar";
-                                badge.style.background = "rgba(255,69,58,0.15)";
-                                badge.style.color = "#ff453a";
-                                badge.style.borderColor = "rgba(255,69,58,0.3)";
-                                badge.style.display = 'flex';
-                            }
-                            openActivationModal(false);
-                        }
-                    }).catch(e => { 
-                        // Offline — keep valid (optimistic, already true)
-                        const badge = document.getElementById('trial-badge');
-                        if (badge) { badge.innerHTML = "Offline — Acceso Local"; badge.style.display = 'flex'; }
-                    });
-                });
-            } else {
-                // No saved serial at all — must activate
+function applyLicenseResponse(response) {
+    const badge = document.getElementById('trial-badge');
+    if (!response || !response.success) {
+        // Server says invalid
+        try { localStorage.removeItem('offszn_serial'); } catch(e) {}
+        callNative("setLicenseStatus", false);
+        if (badge) {
+            badge.innerHTML = response?.error || "Licencia Inv&#225;lida &#8212; Activar";
+            badge.style.background = "rgba(255,69,58,0.15)";
+            badge.style.color = "#ff453a";
+            badge.style.borderColor = "rgba(255,69,58,0.3)";
+            badge.style.display = 'flex';
+        }
+        openActivationModal(false);
+        return;
+    }
+    callNative("setLicenseStatus", true);
+    if (badge) {
+        if (response.license_type === 'lifetime' || response.license_type === 'subscription' || response.expires_at === 'never') {
+            badge.style.display = 'none';
+        } else {
+            const daysLeft = Math.ceil((new Date(response.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
+            if (daysLeft <= 0) {
+                badge.innerHTML = "0 D&#237;as de Prueba &#8212; Comprar Licencia";
+                badge.style.background = "rgba(255,69,58,0.15)";
+                badge.style.color = "#ff453a";
+                badge.style.borderColor = "rgba(255,69,58,0.3)";
+                badge.style.display = 'flex';
                 callNative("setLicenseStatus", false);
                 openActivationModal(false);
+            } else {
+                badge.innerHTML = `${daysLeft} D&#237;a${daysLeft===1?'':'s'} de Prueba`;
+                badge.style.background = "rgba(48,209,88,0.15)";
+                badge.style.color = "#30d158";
+                badge.style.borderColor = "rgba(48,209,88,0.3)";
+                badge.style.display = 'flex';
             }
-        });
+        }
+    }
+}
+
+function startupVerifySerial(serial) {
+    if (!serial || serial.length === 0) {
+        callNative("setLicenseStatus", false);
+        openActivationModal(false);
+        return;
+    }
+    // Optimistic: keep UI unlocked (C++ already starts valid)
+    const hwid = getOrCreateDeviceId();
+    fetch(`${apiBase}/api/plugin/activate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
+    }).then(res => res.json()).then(response => {
+        applyLicenseResponse(response);
+    }).catch(() => {
+        // Offline — keep unlocked, show offline badge
+        callNative("setLicenseStatus", true);
+        const badge = document.getElementById('trial-badge');
+        if (badge) { badge.innerHTML = "Sin conexi&#243;n &#8212; Acceso local"; badge.style.display = 'flex'; }
+    });
+}
+
+setTimeout(() => {
+    if (hasJuceBridge()) {
+        // 1) Try localStorage first (fastest, most reliable)
+        let localSerial = null;
+        try { localSerial = localStorage.getItem('offszn_serial'); } catch(e) {}
+        
+        if (localSerial && localSerial.length > 0) {
+            startupVerifySerial(localSerial);
+        } else {
+            // 2) Fall back to C++ getSavedLicense
+            callNative("getSavedLicense").then((serial) => {
+                if (serial && serial.length > 0) {
+                    // Also save to localStorage for next time
+                    try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+                    startupVerifySerial(serial);
+                } else {
+                    // 3) No license anywhere — show modal
+                    callNative("setLicenseStatus", false);
+                    openActivationModal(false);
+                }
+            });
+        }
     } else {
         // Browser preview mode — show modal for testing
         openActivationModal(true);
