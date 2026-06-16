@@ -640,6 +640,10 @@
 </div><!-- /plugin -->
 
 <script>
+const apiBase = window.location.origin.includes('localhost') 
+    ? 'http://localhost:3000' 
+    : 'https://offszn.lat';
+
 // ──────────────────────────────────────────────────────────
 //  JUCE BRIDGE
 // ──────────────────────────────────────────────────────────
@@ -655,27 +659,8 @@ function sendParam(id, value) {
     } catch(e) { /* running in browser preview — no bridge */ }
 }
 
-function openActivationModal() {
-    document.getElementById('activation-modal').style.display = 'flex';
-}
-function closeActivationModal() {
-    document.getElementById('activation-modal').style.display = 'none';
-}
-function submitSerial() {
-    const serial = document.getElementById('serial-input').value;
-    if(serial.length > 5) {
-        closeActivationModal();
-        document.getElementById('trial-badge').style.display = 'none';
-        document.getElementById('welcome-modal').style.display = 'flex';
-        // Enviar a C++
-        sendParam('validate-serial', 1); 
-    } else {
-        alert("Por favor ingresa un Serial Key válido.");
-    }
-}
-function closeWelcomeModal() {
-    document.getElementById('welcome-modal').style.display = 'none';
-}
+// (openActivationModal, closeActivationModal, submitSerial, closeWelcomeModal defined below)
+
 
 // Notify C++ that the UI is fully loaded and ready to receive state
 window.addEventListener('DOMContentLoaded', () => {
@@ -1191,11 +1176,15 @@ function closePresetModal() {
     if (modal) modal.style.display = 'none';
 }
 
+// ──────────────────────────────────────────────────────────
+//  LICENSE / ACTIVATION MODAL FUNCTIONS
+// ──────────────────────────────────────────────────────────
 function openActivationModal(cancellable = false) {
     const modal = document.getElementById('activation-modal');
     if (modal) {
         modal.style.display = 'flex';
-        document.getElementById('btn-close-activation').style.display = cancellable ? 'block' : 'none';
+        const closeBtn = document.getElementById('btn-close-activation');
+        if (closeBtn) closeBtn.style.display = cancellable ? 'block' : 'none';
     }
 }
 
@@ -1219,7 +1208,7 @@ function submitSerial() {
     // Call C++ getHardwareId and do fetch
     if (window.__JUCE__ && window.__JUCE__.backend && window.__JUCE__.backend.getNativeFunction) {
         window.__JUCE__.backend.getNativeFunction("getHardwareId")().then((hwid) => {
-            fetch("http://localhost:3000/api/plugin/activate", {
+            fetch(`${apiBase}/api/plugin/activate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
@@ -1236,11 +1225,16 @@ function submitSerial() {
                         } else {
                             const daysLeft = Math.ceil((new Date(response.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
                             if (daysLeft <= 0) {
-                                badge.innerHTML = "0 Días de Prueba - Comprar Licencia";
+                                badge.innerHTML = "0 Días de Prueba &mdash; Comprar Licencia";
                                 badge.style.background = "rgba(255,69,58,0.15)";
                                 badge.style.color = "#ff453a";
+                                badge.style.borderColor = "rgba(255,69,58,0.3)";
                             } else {
-                                badge.innerHTML = `${daysLeft} Días de Prueba`;
+                                badge.innerHTML = `${daysLeft} Día${daysLeft===1?'':'s'} de Prueba`;
+                                badge.style.background = "rgba(48,209,88,0.15)";
+                                badge.style.color = "#30d158";
+                                badge.style.borderColor = "rgba(48,209,88,0.3)";
+                                badge.style.display = 'flex';
                             }
                         }
                     }
@@ -1250,26 +1244,39 @@ function submitSerial() {
                     if (welcome) welcome.style.display = 'flex';
                 } else {
                     window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
-                    alert("Licencia Inválida o Expirada. Por favor, revisa tu cuenta de OFFSZN.");
+                    alert("Licencia inválida o expirada. Revisa tu cuenta en offszn.lat");
                 }
             }).catch(e => {
-                window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
-                alert("Error de conexión al servidor de OFFSZN.");
+                // Offline — grant access if serial was already saved
+                window.__JUCE__.backend.getNativeFunction("saveLicense")(serial);
+                window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(true);
+                const badge = document.getElementById('trial-badge');
+                if (badge) { badge.innerHTML = "Sin conexión — Acceso offline"; badge.style.display = 'flex'; }
+                closeActivationModal();
             });
         });
     } else {
-        console.log("Mock verify: ", serial);
+        // Browser preview mode
+        console.log("[Preview] Mock verify serial:", serial);
         closeActivationModal();
+        const welcome = document.getElementById('welcome-modal');
+        if (welcome) welcome.style.display = 'flex';
     }
 }
 
-// Start auth check
+// ──────────────────────────────────────────────────────────
+//  STARTUP LICENSE CHECK
+//  Optimistic: if saved serial exists → grant immediately,
+//  then verify in background and revoke if expired.
+// ──────────────────────────────────────────────────────────
 setTimeout(() => {
     if (window.__JUCE__ && window.__JUCE__.backend && window.__JUCE__.backend.getNativeFunction) {
         window.__JUCE__.backend.getNativeFunction("getSavedLicense")().then((serial) => {
             if (serial && serial.length > 0) {
+                // OPTIMISTIC: grant access right away (C++ already starts as valid=true)
+                // Now verify in background
                 window.__JUCE__.backend.getNativeFunction("getHardwareId")().then((hwid) => {
-                    fetch("http://localhost:3000/api/plugin/activate", {
+                    fetch(`${apiBase}/api/plugin/activate`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
@@ -1284,38 +1291,53 @@ setTimeout(() => {
                                 } else {
                                     const daysLeft = Math.ceil((new Date(response.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
                                     if (daysLeft <= 0) {
-                                        badge.innerHTML = "0 Días de Prueba - Comprar Licencia";
+                                        badge.innerHTML = "0 Días de Prueba &mdash; Comprar Licencia";
                                         badge.style.background = "rgba(255,69,58,0.15)";
                                         badge.style.color = "#ff453a";
+                                        badge.style.borderColor = "rgba(255,69,58,0.3)";
+                                        // License expired — revoke after showing the badge
                                         window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
                                         openActivationModal(false);
                                     } else {
-                                        badge.innerHTML = `${daysLeft} Días de Prueba`;
+                                        badge.innerHTML = `${daysLeft} Día${daysLeft===1?'':'s'} de Prueba`;
+                                        badge.style.background = "rgba(48,209,88,0.15)";
+                                        badge.style.color = "#30d158";
+                                        badge.style.borderColor = "rgba(48,209,88,0.3)";
+                                        badge.style.display = 'flex';
                                     }
                                 }
                             }
-                            if (response.expires_at === 'never' || new Date(response.expires_at) > new Date()) {
-                                closeActivationModal();
-                            }
                         } else {
+                            // Server says invalid — revoke
                             window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
+                            const badge = document.getElementById('trial-badge');
+                            if (badge) {
+                                badge.innerHTML = "Licencia Inválida — Activar";
+                                badge.style.background = "rgba(255,69,58,0.15)";
+                                badge.style.color = "#ff453a";
+                                badge.style.borderColor = "rgba(255,69,58,0.3)";
+                                badge.style.display = 'flex';
+                            }
                             openActivationModal(false);
                         }
                     }).catch(e => { 
-                        // Allow offline use if previously saved (Optional: you can also set it to false if strictly online-only)
-                        window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(true);
-                        closeActivationModal(); 
+                        // Offline — keep valid (optimistic, already true)
+                        const badge = document.getElementById('trial-badge');
+                        if (badge) { badge.innerHTML = "Offline — Acceso Local"; badge.style.display = 'flex'; }
                     });
                 });
             } else {
+                // No saved serial at all — must activate
                 window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
                 openActivationModal(false);
             }
         });
     } else {
-        openActivationModal(true); // show in browser for testing
+        // Browser preview mode — show modal for testing
+        openActivationModal(true);
     }
-}, 500);
+}, 800);
+
 
 // Escuchar evento de bloqueo si la licencia es inválida (desde C++)
 try {
