@@ -8,16 +8,22 @@ import { v4 as uuidv4 } from 'uuid';
 
 function getPrivateKey() {
     const keyString = process.env.PLUGIN_PRIVATE_KEY;
-    if (!keyString) throw new Error('PLUGIN_PRIVATE_KEY not set in environment.');
-    return crypto.createPrivateKey({
-        key: Buffer.from(keyString, 'base64'),
-        format: 'der',
-        type: 'pkcs8'
-    });
+    if (!keyString) return null;
+    try {
+        return crypto.createPrivateKey({
+            key: Buffer.from(keyString.trim(), 'base64'),
+            format: 'der',
+            type: 'pkcs8'
+        });
+    } catch(e) {
+        console.warn('[Plugin] Could not load PLUGIN_PRIVATE_KEY:', e.message);
+        return null;
+    }
 }
 
 function signPayload(payload) {
     const privateKey = getPrivateKey();
+    if (!privateKey) return 'no-signature';
     const signature = crypto.sign(null, Buffer.from(payload, 'utf8'), privateKey);
     return signature.toString('hex');
 }
