@@ -150,9 +150,11 @@ export const requestTrial = async (req, res) => {
 export const activateSerial = async (req, res) => {
     console.log("➡️ [API /activate] Request body received:", req.body);
     try {
-        const { serial_key, hwid, device_name, user_email } = req.body;
-        if (!serial_key || !hwid) {
-            return res.status(400).json({ error: 'Falta serial o hwid' });
+        const { serial_key, device_name, user_email } = req.body;
+        // hwid is optional — if not provided or null, use a generic fallback
+        const hwid = req.body.hwid || 'device-no-hwid';
+        if (!serial_key) {
+            return res.status(400).json({ error: 'Falta serial key' });
         }
 
         // 1. Find license

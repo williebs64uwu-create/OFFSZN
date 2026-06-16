@@ -1205,7 +1205,6 @@ function hasJuceBridge() {
 function callNative(funcName, ...args) {
     return new Promise((resolve) => {
         if (!window.__JUCE__ || !window.__JUCE__.backend) {
-            alert("callNative: NO HAY JUCE BRIDGE para " + funcName);
             resolve(null);
             return;
         }
@@ -1213,33 +1212,37 @@ function callNative(funcName, ...args) {
         const resultId = Math.floor(Math.random() * 100000000);
         const resultEventName = "__juce__result_" + resultId;
         
-        // Listen for the response from C++
         const onResult = (result) => {
-            window.__JUCE__.backend.removeEventListener(resultEventName, onResult);
+            try { window.__JUCE__.backend.removeEventListener(resultEventName, onResult); } catch(e) {}
             resolve(result);
         };
         
         try {
             window.__JUCE__.backend.addEventListener(resultEventName, onResult);
-        } catch(e) {
-            // If addEventListener is not available, set a short timeout fallback
-        }
+        } catch(e) {}
         
-        // Invoke the native function via the __juce__invoke protocol
         window.__JUCE__.backend.emitEvent("__juce__invoke", {
             name: funcName,
             params: args,
             resultId: resultId
         });
         
-        // Safety timeout in case the response never comes
+        // Safety timeout if response never comes
         setTimeout(() => {
-            try {
-                window.__JUCE__.backend.removeEventListener(resultEventName, onResult);
-            } catch(e) {}
+            try { window.__JUCE__.backend.removeEventListener(resultEventName, onResult); } catch(e) {}
             resolve(null);
-        }, 5000);
+        }, 3000);
     });
+}
+
+// Generate a persistent device ID as HWID fallback when native bridge can't return it
+function getOrCreateDeviceId() {
+    let id = localStorage.getItem('offszn_device_id');
+    if (!id) {
+        id = 'web-' + Math.random().toString(36).substring(2) + '-' + Date.now().toString(36);
+        try { localStorage.setItem('offszn_device_id', id); } catch(e) {}
+    }
+    return id;
 }
 
 function submitSerial() {
@@ -1249,16 +1252,14 @@ function submitSerial() {
         return;
     }
     
-    alert("Iniciando validación para: " + serial);
-    
     if (hasJuceBridge()) {
-        alert("JUCE detectado, obteniendo HWID...");
         callNative("getHardwareId").then((hwid) => {
-            alert("HWID obtenido: " + hwid);
+            // If JUCE can't return hwid, use a persistent browser-generated ID
+            const effectiveHwid = hwid || getOrCreateDeviceId();
             fetch(`${apiBase}/api/plugin/activate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
+                body: JSON.stringify({ serial_key: serial, hwid: effectiveHwid, plugin_name: "Easy Mix" })
             }).then(res => res.json()).then(response => {
                 if (response && response.success) {
                     callNative("saveLicense", serial);
@@ -1290,7 +1291,7 @@ function submitSerial() {
                     closeActivationModal();
                     const welcome = document.getElementById('welcome-modal');
                     if (welcome) welcome.style.display = 'flex';
-                    alert("¡Activación exitosa procesada en UI!");
+
                 } else {
                     callNative("setLicenseStatus", false);
                     alert("Error del servidor: " + (response.error || "Licencia inválida"));
