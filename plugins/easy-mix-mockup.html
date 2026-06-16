@@ -1198,6 +1198,28 @@ function closeWelcomeModal() {
     if (modal) modal.style.display = 'none';
 }
 
+function hasJuceBridge() {
+    return !!(window.__JUCE__ && window.__JUCE__.backend);
+}
+
+function callNative(funcName, ...args) {
+    if (hasJuceBridge()) {
+        const backend = window.__JUCE__.backend;
+        try {
+            if (typeof backend[funcName] === 'function') {
+                const res = backend[funcName](...args);
+                return res instanceof Promise ? res : Promise.resolve(res);
+            } else if (typeof backend.getNativeFunction === 'function') {
+                const res = backend.getNativeFunction(funcName)(...args);
+                return res instanceof Promise ? res : Promise.resolve(res);
+            }
+        } catch (err) {
+            console.error("Error calling native function " + funcName + ":", err);
+        }
+    }
+    return Promise.resolve(null);
+}
+
 function submitSerial() {
     const serial = document.getElementById('serial-input').value.trim();
     if (!serial) {
@@ -1207,10 +1229,9 @@ function submitSerial() {
     
     alert("Iniciando validación para: " + serial);
     
-    // Call C++ getHardwareId and do fetch
-    if (window.__JUCE__ && window.__JUCE__.backend && window.__JUCE__.backend.getNativeFunction) {
+    if (hasJuceBridge()) {
         alert("JUCE detectado, obteniendo HWID...");
-        window.__JUCE__.backend.getNativeFunction("getHardwareId")().then((hwid) => {
+        callNative("getHardwareId").then((hwid) => {
             alert("HWID obtenido: " + hwid);
             fetch(`${apiBase}/api/plugin/activate`, {
                 method: "POST",
@@ -1218,8 +1239,8 @@ function submitSerial() {
                 body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
             }).then(res => res.json()).then(response => {
                 if (response && response.success) {
-                    window.__JUCE__.backend.getNativeFunction("saveLicense")(serial);
-                    window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(true);
+                    callNative("saveLicense", serial);
+                    callNative("setLicenseStatus", true);
                     
                     // Update UI badge
                     const badge = document.getElementById('trial-badge');
@@ -1249,14 +1270,14 @@ function submitSerial() {
                     if (welcome) welcome.style.display = 'flex';
                     alert("¡Activación exitosa procesada en UI!");
                 } else {
-                    window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
+                    callNative("setLicenseStatus", false);
                     alert("Error del servidor: " + (response.error || "Licencia inválida"));
                 }
             }).catch(e => {
                 alert("Error crítico en fetch: " + e.message);
                 // Offline — grant access if serial was already saved
-                window.__JUCE__.backend.getNativeFunction("saveLicense")(serial);
-                window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(true);
+                callNative("saveLicense", serial);
+                callNative("setLicenseStatus", true);
                 const badge = document.getElementById('trial-badge');
                 if (badge) { badge.innerHTML = "Sin conexión — Acceso offline"; badge.style.display = 'flex'; }
                 closeActivationModal();
@@ -1277,19 +1298,19 @@ function submitSerial() {
 //  then verify in background and revoke if expired.
 // ──────────────────────────────────────────────────────────
 setTimeout(() => {
-    if (window.__JUCE__ && window.__JUCE__.backend && window.__JUCE__.backend.getNativeFunction) {
-        window.__JUCE__.backend.getNativeFunction("getSavedLicense")().then((serial) => {
+    if (hasJuceBridge()) {
+        callNative("getSavedLicense").then((serial) => {
             if (serial && serial.length > 0) {
                 // OPTIMISTIC: grant access right away (C++ already starts as valid=true)
                 // Now verify in background
-                window.__JUCE__.backend.getNativeFunction("getHardwareId")().then((hwid) => {
+                callNative("getHardwareId").then((hwid) => {
                     fetch(`${apiBase}/api/plugin/activate`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
                     }).then(res => res.json()).then(response => {
                         if (response && response.success) {
-                            window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(true);
+                            callNative("setLicenseStatus", true);
                             // Update UI badge
                             const badge = document.getElementById('trial-badge');
                             if (badge) {
@@ -1304,7 +1325,7 @@ setTimeout(() => {
                                         badge.style.borderColor = "rgba(255,69,58,0.3)";
                                         badge.style.display = 'flex';
                                         // License expired — revoke after showing the badge
-                                        window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
+                                        callNative("setLicenseStatus", false);
                                         openActivationModal(false);
                                     } else {
                                         badge.innerHTML = `${daysLeft} Día${daysLeft===1?'':'s'} de Prueba`;
@@ -1317,7 +1338,7 @@ setTimeout(() => {
                             }
                         } else {
                             // Server says invalid — revoke
-                            window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
+                            callNative("setLicenseStatus", false);
                             const badge = document.getElementById('trial-badge');
                             if (badge) {
                                 badge.innerHTML = response.error || "Licencia Inválida — Activar";
@@ -1336,7 +1357,7 @@ setTimeout(() => {
                 });
             } else {
                 // No saved serial at all — must activate
-                window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
+                callNative("setLicenseStatus", false);
                 openActivationModal(false);
             }
         });
