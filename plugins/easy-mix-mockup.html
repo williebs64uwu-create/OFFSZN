@@ -1203,40 +1203,43 @@ function hasJuceBridge() {
 }
 
 function callNative(funcName, ...args) {
-    let func = null;
-    let foundLocation = 'none';
-    
-    if (typeof window[funcName] === 'function') {
-        func = window[funcName];
-        foundLocation = 'window';
-    } else if (window.__JUCE__) {
-        if (typeof window.__JUCE__[funcName] === 'function') {
-            func = window.__JUCE__[funcName];
-            foundLocation = 'window.__JUCE__';
-        } else if (window.__JUCE__.backend) {
-            if (typeof window.__JUCE__.backend[funcName] === 'function') {
-                func = window.__JUCE__.backend[funcName];
-                foundLocation = 'window.__JUCE__.backend';
-            } else if (typeof window.__JUCE__.backend.getNativeFunction === 'function') {
-                try {
-                    func = window.__JUCE__.backend.getNativeFunction(funcName);
-                    if (func) foundLocation = 'getNativeFunction';
-                } catch(e) {}
-            }
+    return new Promise((resolve) => {
+        if (!window.__JUCE__ || !window.__JUCE__.backend) {
+            alert("callNative: NO HAY JUCE BRIDGE para " + funcName);
+            resolve(null);
+            return;
         }
-    }
-    
-    alert(`callNative: ${funcName} | found in: ${foundLocation}`);
-    
-    if (func) {
+        
+        const resultId = Math.floor(Math.random() * 100000000);
+        const resultEventName = "__juce__result_" + resultId;
+        
+        // Listen for the response from C++
+        const onResult = (result) => {
+            window.__JUCE__.backend.removeEventListener(resultEventName, onResult);
+            resolve(result);
+        };
+        
         try {
-            const res = func(...args);
-            return res instanceof Promise ? res : Promise.resolve(res);
-        } catch(err) {
-            alert(`Error executing native function ${funcName}: ` + err.message);
+            window.__JUCE__.backend.addEventListener(resultEventName, onResult);
+        } catch(e) {
+            // If addEventListener is not available, set a short timeout fallback
         }
-    }
-    return Promise.resolve(null);
+        
+        // Invoke the native function via the __juce__invoke protocol
+        window.__JUCE__.backend.emitEvent("__juce__invoke", {
+            name: funcName,
+            params: args,
+            resultId: resultId
+        });
+        
+        // Safety timeout in case the response never comes
+        setTimeout(() => {
+            try {
+                window.__JUCE__.backend.removeEventListener(resultEventName, onResult);
+            } catch(e) {}
+            resolve(null);
+        }, 5000);
+    });
 }
 
 function submitSerial() {
