@@ -209,9 +209,11 @@
         <div style="background:var(--panel); border:1px solid var(--border); border-radius:8px; width:280px; padding:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
             <h3 style="color:var(--text); text-align:center; margin-bottom:15px; font-size:12px; font-weight:800; letter-spacing: 1px; text-transform:uppercase;">Cargar Preset</h3>
             <div style="display:flex; flex-direction:column; gap:8px;">
-                <button class="btn" style="padding:8px;" onclick="loadPreset('default')">Init (Reset)</button>
+                <button class="btn" style="padding:8px;" onclick="loadPreset('init')">Init (Reset)</button>
                 <button class="btn" style="padding:8px;" onclick="loadPreset('agresivo')">Voz Agresiva</button>
-                <button class="btn" style="padding:8px;" onclick="loadPreset('radio')">Efecto Radio</button>
+                <button class="btn" style="padding:8px;" onclick="loadPreset('normal')">Normal</button>
+                <button class="btn" style="padding:8px;" onclick="loadPreset('modo pro')">Modo PRO</button>
+                <button class="btn" style="padding:8px;" onclick="loadPreset('offszn trial')">OFFSZN Trial</button>
             </div>
             <div style="height:1px; background:var(--border); margin:15px 0;"></div>
             <button class="btn" style="width:100%; padding:8px; color:#ff9f0a; border-color:#ff9f0a;" onclick="saveCurrentState()">Guardar Preset (Copiar)</button>
@@ -222,7 +224,7 @@
     <!-- ACTIVATION MODAL -->
     <div id="activation-modal" class="activation-modal">
         <div class="act-container">
-            <button class="act-btn-close" onclick="closeActivationModal()">×</button>
+            <button class="act-btn-close" id="btn-close-activation" onclick="closeActivationModal()" style="display: none;">×</button>
             <h3 style="color:var(--text); text-align:center; margin-bottom:5px; font-size:14px; font-weight:800; letter-spacing: 1px;">ACTIVAR LICENCIA</h3>
             <p style="color:var(--dim); font-size:10px; text-align:center; margin-bottom:15px;">Ingresa tu Serial Key para remover el límite de prueba.</p>
             <input type="text" class="act-input" placeholder="EM-XXXX-XXXX-XXXX" id="serial-input">
@@ -1189,9 +1191,146 @@ function closePresetModal() {
     if (modal) modal.style.display = 'none';
 }
 
+function openActivationModal(cancellable = false) {
+    const modal = document.getElementById('activation-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.getElementById('btn-close-activation').style.display = cancellable ? 'block' : 'none';
+    }
+}
+
+function closeActivationModal() {
+    const modal = document.getElementById('activation-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function closeWelcomeModal() {
+    const modal = document.getElementById('welcome-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function submitSerial() {
+    const serial = document.getElementById('serial-input').value.trim();
+    if (!serial) {
+        alert("Por favor, ingresa tu Serial Key de OFFSZN.");
+        return;
+    }
+    
+    // Call C++ getHardwareId and do fetch
+    if (window.__JUCE__ && window.__JUCE__.backend && window.__JUCE__.backend.getNativeFunction) {
+        window.__JUCE__.backend.getNativeFunction("getHardwareId")().then((hwid) => {
+            fetch("http://localhost:3000/api/plugin/activate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
+            }).then(res => res.json()).then(response => {
+                if (response && response.success) {
+                    window.__JUCE__.backend.getNativeFunction("saveLicense")(serial);
+                    window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(true);
+                    
+                    // Update UI badge
+                    const badge = document.getElementById('trial-badge');
+                    if (badge) {
+                        if (response.expires_at === 'never') {
+                            badge.style.display = 'none'; // Lifetime, hide badge
+                        } else {
+                            const daysLeft = Math.ceil((new Date(response.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
+                            if (daysLeft <= 0) {
+                                badge.innerHTML = "0 Días de Prueba - Comprar Licencia";
+                                badge.style.background = "rgba(255,69,58,0.15)";
+                                badge.style.color = "#ff453a";
+                            } else {
+                                badge.innerHTML = `${daysLeft} Días de Prueba`;
+                            }
+                        }
+                    }
+
+                    closeActivationModal();
+                    const welcome = document.getElementById('welcome-modal');
+                    if (welcome) welcome.style.display = 'flex';
+                } else {
+                    window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
+                    alert("Licencia Inválida o Expirada. Por favor, revisa tu cuenta de OFFSZN.");
+                }
+            }).catch(e => {
+                window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
+                alert("Error de conexión al servidor de OFFSZN.");
+            });
+        });
+    } else {
+        console.log("Mock verify: ", serial);
+        closeActivationModal();
+    }
+}
+
+// Start auth check
+setTimeout(() => {
+    if (window.__JUCE__ && window.__JUCE__.backend && window.__JUCE__.backend.getNativeFunction) {
+        window.__JUCE__.backend.getNativeFunction("getSavedLicense")().then((serial) => {
+            if (serial && serial.length > 0) {
+                window.__JUCE__.backend.getNativeFunction("getHardwareId")().then((hwid) => {
+                    fetch("http://localhost:3000/api/plugin/activate", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
+                    }).then(res => res.json()).then(response => {
+                        if (response && response.success) {
+                            window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(true);
+                            // Update UI badge
+                            const badge = document.getElementById('trial-badge');
+                            if (badge) {
+                                if (response.expires_at === 'never') {
+                                    badge.style.display = 'none';
+                                } else {
+                                    const daysLeft = Math.ceil((new Date(response.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
+                                    if (daysLeft <= 0) {
+                                        badge.innerHTML = "0 Días de Prueba - Comprar Licencia";
+                                        badge.style.background = "rgba(255,69,58,0.15)";
+                                        badge.style.color = "#ff453a";
+                                        window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
+                                        openActivationModal(false);
+                                    } else {
+                                        badge.innerHTML = `${daysLeft} Días de Prueba`;
+                                    }
+                                }
+                            }
+                            if (response.expires_at === 'never' || new Date(response.expires_at) > new Date()) {
+                                closeActivationModal();
+                            }
+                        } else {
+                            window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
+                            openActivationModal(false);
+                        }
+                    }).catch(e => { 
+                        // Allow offline use if previously saved (Optional: you can also set it to false if strictly online-only)
+                        window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(true);
+                        closeActivationModal(); 
+                    });
+                });
+            } else {
+                window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
+                openActivationModal(false);
+            }
+        });
+    } else {
+        openActivationModal(true); // show in browser for testing
+    }
+}, 500);
+
+// Escuchar evento de bloqueo si la licencia es inválida (desde C++)
+try {
+    if (window.__JUCE__ && window.__JUCE__.backend) {
+        window.__JUCE__.backend.addEventListener('license-status', (statusStr) => {
+            if (statusStr === 'INVALID' || statusStr === 'EXPIRED') {
+                openActivationModal(false);
+            }
+        });
+    }
+} catch(e) {}
+
 // Hardcoded presets (paste generated json here later)
 const factoryPresets = {
-    "default": {
+    "init": {
         "global-in":50,"global-out":50,
         "noise-thresh":0,"noise-amount":0,"noise-on":1,
         "rider-target":50,"rider-on":0,"cut-lows":0,"cut-lows-on":1,
@@ -1204,7 +1343,15 @@ const factoryPresets = {
         "fx-bitcrusher-mix":0,"fx-phone-mix":0,"fx-endless-vol":0,"fx-flutter-mix":0
     },
     "agresivo": {"global-in":50,"global-out":55.25,"noise-thresh":37,"noise-amount":100,"rider-target":100,"cut-lows":88,"cut-boxy":13.5,"desser":73,"comp-amount":9,"pres-mid":3.75,"pres-high":100,"sat-tape":9,"air-band":100,"stereo-width":100,"stereo-vol":31.75,"rev-length":60.75,"rev-vol":15.25,"rev-lc":8.25,"rev-hc":100,"dly-fdbk":26.25,"dly-vol":9.25,"fx-bitcrusher-bits":16,"fx-bitcrusher-down":1,"fx-bitcrusher-mix":100,"fx-phone-freq":28.5,"fx-phone-q":100,"fx-phone-mix":100,"fx-endless-intensity":11.5,"fx-endless-filter":68.5,"fx-endless-vol":25.5,"fx-flutter-rate":0,"fx-flutter-fdbk":0,"fx-flutter-mix":0,"noise-on":1,"rider-on":1,"lows-on":1,"boxy-on":1,"desser-on":1,"comp-on":1,"pres-on":1,"sat-on":1,"air-on":1,"stereo-on":1,"rev-on":1,"dly-on":1},
-    "radio": {}     // To be defined
+    "normal": {
+        "global-in":50,"global-out":50,"noise-thresh":20,"noise-amount":50,"rider-target":50,"cut-lows":50,"cut-boxy":20,"desser":35,"comp-amount":25,"pres-mid":15,"pres-high":25,"sat-tape":15,"air-band":30,"stereo-width":25,"stereo-vol":15,"rev-length":30,"rev-vol":20,"rev-lc":20,"rev-hc":80,"dly-fdbk":15,"dly-vol":10,"noise-on":0,"rider-on":1,"lows-on":1,"boxy-on":1,"desser-on":1,"comp-on":0,"pres-on":1,"sat-on":1,"air-on":1,"stereo-on":1,"rev-on":1,"dly-on":1
+    },
+    "modo pro": {
+        "global-in":50,"global-out":52,"noise-thresh":40,"noise-amount":80,"rider-target":80,"cut-lows":75,"cut-boxy":40,"desser":60,"comp-amount":40,"pres-mid":25,"pres-high":50,"sat-tape":30,"air-band":60,"stereo-width":50,"stereo-vol":25,"rev-length":45,"rev-vol":25,"rev-lc":30,"rev-hc":90,"dly-fdbk":25,"dly-vol":15,"noise-on":0,"rider-on":1,"lows-on":1,"boxy-on":1,"desser-on":1,"comp-on":0,"pres-on":1,"sat-on":1,"air-on":1,"stereo-on":1,"rev-on":1,"dly-on":1
+    },
+    "offszn trial": {
+        "global-in":50,"global-out":50,"noise-thresh":0,"noise-amount":0,"rider-target":40,"cut-lows":30,"cut-boxy":10,"desser":20,"comp-amount":0,"pres-mid":10,"pres-high":15,"sat-tape":10,"air-band":20,"stereo-width":10,"stereo-vol":10,"rev-length":20,"rev-vol":15,"rev-lc":10,"rev-hc":90,"dly-fdbk":10,"dly-vol":5,"noise-on":0,"rider-on":1,"lows-on":1,"boxy-on":1,"desser-on":1,"comp-on":0,"pres-on":1,"sat-on":1,"air-on":1,"stereo-on":1,"rev-on":1,"dly-on":1
+    }
 };
 
 function loadPreset(presetName) {
