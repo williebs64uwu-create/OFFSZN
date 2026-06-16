@@ -1205,13 +1205,9 @@ function submitSerial() {
         return;
     }
     
-    alert("Iniciando validación para: " + serial);
-    
     // Call C++ getHardwareId and do fetch
     if (window.__JUCE__ && window.__JUCE__.backend && window.__JUCE__.backend.getNativeFunction) {
-        alert("JUCE detectado, obteniendo HWID...");
         window.__JUCE__.backend.getNativeFunction("getHardwareId")().then((hwid) => {
-            alert("HWID obtenido: " + hwid);
             fetch(`${apiBase}/api/plugin/activate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -1247,13 +1243,11 @@ function submitSerial() {
                     closeActivationModal();
                     const welcome = document.getElementById('welcome-modal');
                     if (welcome) welcome.style.display = 'flex';
-                    alert("¡Activación exitosa procesada en UI!");
                 } else {
                     window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(false);
-                    alert("Error del servidor: " + (response.error || "Licencia inválida"));
+                    alert("Licencia inválida o expirada. Revisa tu cuenta en offszn.lat");
                 }
             }).catch(e => {
-                alert("Error crítico en fetch: " + e.message);
                 // Offline — grant access if serial was already saved
                 window.__JUCE__.backend.getNativeFunction("saveLicense")(serial);
                 window.__JUCE__.backend.getNativeFunction("setLicenseStatus")(true);
