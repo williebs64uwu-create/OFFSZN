@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugins VST & AU | OFFSZN</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="description" content="Descubre nuestra colección de plugins VST y AU diseñados para llevar tus producciones al siguiente nivel.">
+    <meta name="theme-color" content="#0a0a0a">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Supabase & Config -->
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>window.supabaseClient = null;</script>
+    <script src="/script/config.js"></script>
+    <script src="/script/auth-utils.js?v=12"></script>
+
+    <style>
+        :root {
+            --bg-color: #050505;
+            --card-bg: #111111;
+            --card-hover: #1a1a1a;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent: #fff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: #fff;
+            font-family: 'Geist', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* ==================== BANNER ==================== */
+        .catalog-banner {
+            background: #050505;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 80px 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .catalog-banner::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            width: 1000px; height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 60%);
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .banner-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 40px;
+        }
+
+        .banner-text {
+            flex: 1;
+            max-width: 550px;
+            z-index: 2;
+        }
+
+        .banner-text h1 {
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #ffffff, #888888);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-banner {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            color: #000;
+            padding: 14px 28px;
+            border-radius: 100px;
+            font-weight: 800;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .btn-banner:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255,255,255,0.1);
+        }
+
+        .banner-images {
+            flex: 1;
+            position: relative;
+            height: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+        }
+
+        .b-img {
+            position: absolute;
+            border-radius: 12px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #111;
+        }
+
+        .b-img-1 {
+            width: 280px;
+            z-index: 3;
+            transform: scale(1.05);
+        }
+        
+        .b-img-2 {
+            width: 240px;
+            left: 5%;
+            z-index: 2;
+            transform: rotate(-8deg) translateY(-20px);
+            opacity: 0.7;
+        }
+
+        .b-img-3 {
+            width: 220px;
+            right: 5%;
+            z-index: 1;
+            transform: rotate(10deg) translateY(30px);
+            opacity: 0.5;
+        }
+
+        .banner-images:hover .b-img-1 { transform: scale(1.12); }
+        .banner-images:hover .b-img-2 { transform: rotate(-12deg) translateY(-30px); opacity: 0.9; }
+        .banner-images:hover .b-img-3 { transform: rotate(15deg) translateY(40px); opacity: 0.9; }
+
+        @media (max-width: 768px) {
+            .banner-container {
+                flex-direction: column;
+                text-align: center;
+            }
+            .banner-text {
+                max-width: 100%;
+            }
+            .banner-images {
+                width: 100%;
+                height: 280px;
+                margin-top: 40px;
+            }
+            .b-img-1 { width: 200px; }
+            .b-img-2 { width: 160px; left: 0; }
+            .b-img-3 { width: 140px; right: 0; }
+        }
+
+        /* ==================== FILTERS ==================== */
+        .filters-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 30px 0;
+            margin-bottom: 20px;
+        }
+
+        .filters-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .filter-btn {
+            background: transparent;
+            color: #888;
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .filter-btn.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        /* ==================== PLUGIN BOUTIQUE STYLE CARDS (DARK) ==================== */
+        .plugins-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+            padding-bottom: 100px;
+        }
+
+        .plugin-card {
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .plugin-card:hover {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .card-image {
+            width: 100%;
+            aspect-ratio: 16/11;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 20px;
+            box-sizing: border-box;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+        
+        .card-image img {
+            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .plugin-card:hover .card-image img {
+            transform: scale(1.05);
+        }
+
+        .pb-hot-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: #fff;
+            color: #000;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 4px;
+            z-index: 10;
+        }
+
+        .card-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .plugin-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin: 0 0 4px 0;
+            line-height: 1.3;
+            color: #fff;
+        }
+
+        .vendor {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 24px;
+            font-weight: 400;
+        }
+
+        .card-footer-pb {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-top: auto;
+        }
+
+        .price-col {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .old-price {
+            font-size: 12px;
+            color: #666;
+            text-decoration: line-through;
+            font-weight: 500;
+        }
+
+        .new-price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .new-price {
+            font-size: 15px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .discount {
+            font-size: 12px;
+            font-weight: 700;
+            color: #30d158;
+        }
+
+        .pb-stars {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .pb-stars i {
+            font-size: 11px;
+            color: #fff;
+        }
+
+        /* ==================== MOCKUPS CSS ==================== */
+        .mockup-plugin {
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .mockup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .mockup-logo {
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mockup-badge {
+            background: #111;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .mockup-drop {
+            background: #050505;
+            border: 1px dashed rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mockup-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .mockup-main-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .filters-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            .plugins-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ==================== DYNAMIC NAVBAR ==================== -->
+    <div id="navbar-placeholder">
+        <div style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;"></div>
+    </div>
+    <script src="/script/load-navbar.js?v=25"></script>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main>
+        <section class="catalog-banner">
+            <div class="container banner-container">
+                <div class="banner-text">
+                    <h1>OPTIMIZA TU FLUJO DE TRABAJO EN SEGUNDOS CON LOS MEJORES PLUGINS.</h1>
+                    <a href="#plugins-grid" class="btn-banner">Explorar Colección <i class="bi bi-arrow-down-short" style="font-size: 1.2rem; margin-left:-4px;"></i></a>
+                </div>
+                <div class="banner-images">
+                    <!-- Plugin 2: X-Flow -->
+                    <img src="/images/PLUGIN.png" class="b-img b-img-2" alt="X Flow">
+                    <!-- Plugin 3: Converter -->
+                    <img src="/images/plugins/CONVERTER.png" class="b-img b-img-3" alt="Converter">
+                    <!-- Plugin 1: Easy Mix (Center) -->
+                    <img src="/images/plugins/easy mixx.png" class="b-img b-img-1" alt="Easy Mix">
+                </div>
+            </div>
+        </section>
+
+        <section class="catalog-section">
+            <div class="container">
+                
+                <!-- Filters -->
+                <div class="filters-bar">
+                    <div class="filters-group" id="category-filters">
+                        <button class="filter-btn active" data-filter="all">Todos</button>
+                        <button class="filter-btn" data-filter="mezcla">Mezcla & Mastering</button>
+                        <button class="filter-btn" data-filter="utilidad">Utilidades</button>
+                    </div>
+                    <div style="color: #666; font-size: 0.9rem; font-weight: 600;" id="results-count">
+                        Mostrando 3 plugins
+                    </div>
+                </div>
+
+                <!-- GRID -->
+                <div class="plugins-grid" id="plugins-grid">
+
+                    <!-- PLUGIN: EASY MIX -->
+                    <a href="/plugins/easy-mix.html" class="plugin-card" data-category="mezcla">
+                        <div class="card-image">
+                            <div class="pb-hot-badge">Hot!</div>
+                            <img src="/images/plugins/easy mixx.png" alt="Easy Mix">
+                        </div>
+                        <div class="card-body">
+                            <h2 class="plugin-title">EASY MIX</h2>
+                            <div class="vendor">Vocal FX by OFFSZN</div>
+                            
+                            <div class="card-footer-pb">
+                                <div class="price-col">
+                                    <span class="old-price">$45.00</span>
+                                    <div class="new-price-row">
+                                        <span class="new-price">$20.00</span>
+                                        <span class="discount">(55% off)</span>
+                                    </div>
+                                </div>
+                                <div class="pb-stars"><i class="bi bi-star-fill"></i> 4.9</div>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- PLUGIN: CROCKER / X-FLOW ANALYZER -->
+                    <a href="/plugins/x-flow-analyzer.html" class="plugin-card" data-category="mezcla">
+                        <div class="card-image">
+                            <div class="pb-hot-badge">Hot!</div>
+                            <img src="/images/PLUGIN.png" alt="X Flow Analyzer">
+                        </div>
+                        <div class="card-body">
+                            <h2 class="plugin-title">CROCKER (X Flow Analyzer)</h2>
+                            <div class="vendor">Analyzer by OFFSZN</div>
+                            
+                            <div class="card-footer-pb">
+                                <div class="price-col">
+                                    <span class="old-price">$30.00</span>
+                                    <div class="new-price-row">
+                                        <span class="new-price">GRATIS</span>
+                                        <span class="discount">(100% off)</span>
+                                    </div>
+                                </div>
+                                <div class="pb-stars"><i class="bi bi-star-fill"></i> 4.7</div>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- PLUGIN: CONVERTER -->
+                    <a href="/plugins/converter.html" class="plugin-card" data-category="utilidad">
+                        <div class="card-image">
+                            <div class="pb-hot-badge">Hot!</div>
+                            <img src="/images/plugins/CONVERTER.png" alt="Converter">
+                        </div>
+                        <div class="card-body">
+                            <h2 class="plugin-title">CONVERTER</h2>
+                            <div class="vendor">Utility by OFFSZN</div>
+                            
+                            <div class="card-footer-pb">
+                                <div class="price-col">
+                                    <span class="old-price">$10.00</span>
+                                    <div class="new-price-row">
+                                        <span class="new-price">GRATIS</span>
+                                        <span class="discount">(100% off)</span>
+                                    </div>
+                                </div>
+                                <div class="pb-stars"><i class="bi bi-star-fill"></i> 4.8</div>
+                            </div>
+                        </div>
+                    </a>
+
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- ==================== FOOTER ==================== -->
+    <div id="footer-placeholder"></div>
+
+    <!-- SCRIPTS -->
+    <script src="/script/id-obfuscator.js?v=1"></script>
+    <script src="/script/cart.js?v=21"></script>
+    <script src="/script/notifications.js?v=21"></script>
+    <script src="/script/footer.js?v=21"></script>
+    <script src="/script/navbar.js?v=21" type="module"></script>
+
+    <!-- FILTER LOGIC -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const filterBtns = document.querySelectorAll('#category-filters .filter-btn');
+            const cards = document.querySelectorAll('#plugins-grid .plugin-card');
+            const resultsCount = document.getElementById('results-count');
+
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Update active button state
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    const filterValue = btn.getAttribute('data-filter');
+                    let visibleCount = 0;
+
+                    // Filter cards
+                    cards.forEach(card => {
+                        const cardCategory = card.getAttribute('data-category');
+                        if (filterValue === 'all' || cardCategory === filterValue) {
+                            card.style.display = 'flex';
+                            visibleCount++;
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+
+                    // Update count
+                    resultsCount.textContent = `Mostrando ${visibleCount} plugin${visibleCount !== 1 ? 's' : ''}`;
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

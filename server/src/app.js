@@ -30,6 +30,7 @@ import requestRoutes from './infrastructure/http/routes/request.routes.js';
 import youtubeRoutes from './infrastructure/http/routes/youtube.routes.js';
 import youtubeSyncRoutes from './infrastructure/http/routes/youtube-sync.routes.js';
 import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
+import pluginLicensingRoutes from './infrastructure/http/routes/plugin-licensing.routes.js';
 import { runSubscriptionScavenger } from './infrastructure/services/subscription-scavenger.js';
 
 import { submitNegotiation, respondNegotiation, generatePurchaseToken, validatePurchaseToken, reportIssue } from './infrastructure/http/controllers/NegotiationController.js';
@@ -295,6 +296,7 @@ app.use('/api/studio', studioRoutes);
 app.use('/api/imagekit', imagekitRoutes);
 app.use('/api', subscriptionRoutes);
 app.use('/api', subscriptionV2Routes);
+app.use('/api/plugin', pluginLicensingRoutes);
 app.use('/api', r2Routes);
 app.use('/api/imagekit', imagekitRoutes);
 
