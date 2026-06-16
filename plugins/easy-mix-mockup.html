@@ -197,12 +197,61 @@
         .act-btn-primary { background: linear-gradient(180deg, #ff9f0a, #d68100); color: #fff; }
         .act-btn-close { position: absolute; top: 10px; right: 15px; background: transparent; border: none; color: var(--dim); font-size: 16px; cursor: pointer; }
         .act-btn-close:hover { color: #fff; }
-        .trial-badge { font-size: 9px; font-weight: 800; color: #30d158; background: rgba(48,209,88,0.15); border: 1px solid rgba(48,209,88,0.3); padding: 4px 8px; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; transition: background 0.2s; }
+        /* Trial badge — hidden by default until license verified */
+        .trial-badge { font-size: 9px; font-weight: 800; color: #30d158; background: rgba(48,209,88,0.15); border: 1px solid rgba(48,209,88,0.3); padding: 4px 8px; border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; display: none; align-items: center; transition: background 0.2s; }
         .trial-badge:hover { background: rgba(48,209,88,0.25); }
+
+        /* Loading overlay */
+        #license-loading-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #0f0f11;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            transition: opacity 0.4s ease;
+        }
+        #license-loading-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loading-logo {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            color: #fff;
+        }
+        .loading-logo span { color: #ff453a; }
+        .loading-dots {
+            display: flex;
+            gap: 7px;
+        }
+        .loading-dots span {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ff9f0a;
+            animation: dotPulse 1.2s infinite ease-in-out;
+        }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dotPulse {
+            0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1.2); }
+        }
     </style>
 </head>
 <body>
 <div class="plugin">
+
+    <!-- LICENSE LOADING OVERLAY -->
+    <div id="license-loading-overlay">
+        <div class="loading-logo">EASY <span>MIX</span></div>
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+    </div>
 
     <!-- PRESET MODAL -->
     <div id="preset-modal" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center;">
@@ -1363,22 +1412,32 @@ function applyLicenseResponse(response) {
         }
     }
 }
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('license-loading-overlay');
+    if (!overlay) return;
+    overlay.classList.add('fade-out');
+    setTimeout(() => { overlay.style.display = 'none'; }, 450);
+}
+
 
 function startupVerifySerial(serial) {
     if (!serial || serial.length === 0) {
+        hideLoadingOverlay();
         callNative("setLicenseStatus", false);
         openActivationModal(false);
         return;
     }
-    // Optimistic: keep UI unlocked (C++ already starts valid)
+    // Optimistic: keep UI unlocked while verifying in background
     const hwid = getOrCreateDeviceId();
     fetch(`${apiBase}/api/plugin/activate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
     }).then(res => res.json()).then(response => {
+        hideLoadingOverlay();
         applyLicenseResponse(response);
     }).catch(() => {
+        hideLoadingOverlay();
         // Offline — keep unlocked, show offline badge
         callNative("setLicenseStatus", true);
         const badge = document.getElementById('trial-badge');
@@ -1398,11 +1457,11 @@ setTimeout(() => {
             // 2) Fall back to C++ getSavedLicense
             callNative("getSavedLicense").then((serial) => {
                 if (serial && serial.length > 0) {
-                    // Also save to localStorage for next time
                     try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
                     startupVerifySerial(serial);
                 } else {
                     // 3) No license anywhere — show modal
+                    hideLoadingOverlay();
                     callNative("setLicenseStatus", false);
                     openActivationModal(false);
                 }
@@ -1410,6 +1469,7 @@ setTimeout(() => {
         }
     } else {
         // Browser preview mode — show modal for testing
+        hideLoadingOverlay();
         openActivationModal(true);
     }
 }, 800);
