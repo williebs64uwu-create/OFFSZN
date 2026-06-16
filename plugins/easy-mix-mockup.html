@@ -1203,22 +1203,37 @@ function hasJuceBridge() {
 }
 
 function callNative(funcName, ...args) {
-    if (hasJuceBridge()) {
-        const backend = window.__JUCE__.backend;
-        try {
-            const directType = typeof backend[funcName];
-            const legacyType = typeof backend.getNativeFunction;
-            alert(`callNative: ${funcName} | direct type: ${directType} | legacy type: ${legacyType}`);
-            
-            if (directType === 'function') {
-                const res = backend[funcName](...args);
-                return res instanceof Promise ? res : Promise.resolve(res);
-            } else if (legacyType === 'function') {
-                const res = backend.getNativeFunction(funcName)(...args);
-                return res instanceof Promise ? res : Promise.resolve(res);
+    let func = null;
+    let foundLocation = 'none';
+    
+    if (typeof window[funcName] === 'function') {
+        func = window[funcName];
+        foundLocation = 'window';
+    } else if (window.__JUCE__) {
+        if (typeof window.__JUCE__[funcName] === 'function') {
+            func = window.__JUCE__[funcName];
+            foundLocation = 'window.__JUCE__';
+        } else if (window.__JUCE__.backend) {
+            if (typeof window.__JUCE__.backend[funcName] === 'function') {
+                func = window.__JUCE__.backend[funcName];
+                foundLocation = 'window.__JUCE__.backend';
+            } else if (typeof window.__JUCE__.backend.getNativeFunction === 'function') {
+                try {
+                    func = window.__JUCE__.backend.getNativeFunction(funcName);
+                    if (func) foundLocation = 'getNativeFunction';
+                } catch(e) {}
             }
-        } catch (err) {
-            alert(`Error in callNative for ${funcName}: ` + err.message);
+        }
+    }
+    
+    alert(`callNative: ${funcName} | found in: ${foundLocation}`);
+    
+    if (func) {
+        try {
+            const res = func(...args);
+            return res instanceof Promise ? res : Promise.resolve(res);
+        } catch(err) {
+            alert(`Error executing native function ${funcName}: ` + err.message);
         }
     }
     return Promise.resolve(null);
