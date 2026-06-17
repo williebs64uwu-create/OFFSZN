@@ -169,7 +169,24 @@ export const activateSerial = async (req, res) => {
             return res.status(403).json({ error: 'La licencia o prueba ha expirado.' });
         }
 
-        // 3. Count activations — use max_devices from DB (default 1)
+        // 3. Prevent Trial Abuse: one trial per HWID ever
+        if (license.license_type === 'trial' && hwid !== 'device-no-hwid') {
+            const { data: pastTrials, error: ptErr } = await supabase
+                .from('plugin_activations')
+                .select('license_id, plugin_licenses!inner(serial_key)')
+                .eq('hwid', hwid)
+                .eq('plugin_licenses.license_type', 'trial');
+            
+            if (!ptErr && pastTrials && pastTrials.length > 0) {
+                // If they have past trials, they can only re-activate the exact same trial key
+                const sameKeyExists = pastTrials.some(pt => pt.plugin_licenses.serial_key === serial_key);
+                if (!sameKeyExists) {
+                    return res.status(403).json({ error: 'Este equipo ya utilizó una prueba gratuita anteriormente.' });
+                }
+            }
+        }
+
+        // 4. Count activations — use max_devices from DB (default 1)
         const maxDevices = license.max_devices || 1;
         const { data: activations, error: actErr } = await supabase
             .from('plugin_activations').select('*').eq('license_id', license.id);
