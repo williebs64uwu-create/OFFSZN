@@ -1417,6 +1417,7 @@ function applyLicenseResponse(response, serial) {
     }
     callNative("setLicenseStatus", true);
     if (badge) {
+        try { localStorage.setItem('offszn_expires', response.expires_at || 'never'); } catch(e) {}
         if (response.license_type === 'lifetime' || response.license_type === 'subscription' || response.expires_at === 'never') {
             badge.style.display = 'none';
         } else {
@@ -1467,11 +1468,24 @@ function startupVerifySerial(serial) {
         }
     }).catch(() => {
         hideLoadingOverlay();
-        // Offline — keep unlocked, show offline badge
-        callNative("setLicenseStatus", true);
-        const badge = document.getElementById('trial-badge');
-        if (badge) { badge.innerHTML = "Sin conexi&#243;n &#8212; Acceso local"; badge.style.display = 'flex'; }
-        startPeriodicCheck(serial); // still start checking for when connection returns
+        // Offline check local expiration date
+        let isExpiredLocally = false;
+        try {
+            const localExpires = localStorage.getItem('offszn_expires');
+            if (localExpires && localExpires !== 'never') {
+                if (new Date(localExpires) < new Date()) isExpiredLocally = true;
+            }
+        } catch(e) {}
+
+        if (isExpiredLocally) {
+            triggerLicenseExpired('Activar Licencia', 'Tu licencia o prueba ha expirado (verificado localmente).');
+        } else {
+            // Offline — keep unlocked, show offline badge
+            callNative("setLicenseStatus", true);
+            const badge = document.getElementById('trial-badge');
+            if (badge) { badge.innerHTML = "Sin conexi&#243;n &#8212; Acceso local"; badge.style.display = 'flex'; }
+            startPeriodicCheck(serial); // still start checking for when connection returns
+        }
     });
 }
 
