@@ -46,4 +46,19 @@ router.get('/download/vst-installer', async (req, res) => {
     }
 });
 
+// 8. Descarga del Instalador VST3 (OFFSZN EASY MIX)
+router.get('/download/easymix-installer', async (req, res) => {
+    try {
+        const url = await getPresignedDownloadUrl('EASY_MIX_V1.exe', 3600, 'v3');
+        if (url) {
+            res.redirect(url);
+        } else {
+            res.status(404).send('Instalador no encontrado en el servidor.');
+        }
+    } catch (error) {
+        console.error('Error generando enlace de descarga de Easy Mix:', error);
+        res.status(500).send('Error interno al generar enlace de descarga.');
+    }
+});
+
 export default router;
