@@ -716,18 +716,41 @@
             </div>
         </section>
 
+        <!-- ==================== SYSTEM REQUIREMENTS ==================== -->
+        <section style="padding: 60px 0; background: #000; border-top: 1px solid rgba(255,255,255,0.05);">
+            <div class="container" style="max-width: 700px; text-align: center;">
+                <h2 class="section-title" style="font-size: 2rem; margin-bottom: 30px;">Requisitos del Sistema</h2>
+                <div style="display: flex; gap: 30px; flex-wrap: wrap; justify-content: center;">
+                    <!-- Windows -->
+                    <div style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); padding: 30px; border-radius: 16px; text-align: left;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#0078D4" viewBox="0 0 16 16"><path d="M6.555 1.375 0 2.237v5.45h6.555zM0 13.795l6.555.933V8.313H0zm7.278-5.4 .026 6.378L16 15.64V8.395zM16 .396 7.304 1.407v6.281H16z"/></svg>
+                            <span style="font-size: 1.1rem; font-weight: 700; color: #fff;">Windows</span>
+                        </div>
+                        <ul style="list-style: none; padding: 0; margin: 0; color: #aaa; font-size: 0.9rem; line-height: 2;">
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> Windows 10 o superior (64-bit)</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> Procesador Intel i5 / AMD Ryzen 5 o superior</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> 4 GB RAM mínimo</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> FL Studio 20.8+ / Ableton 11+ / cualquier DAW con VST3</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> Conexión a internet (solo para activación)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- ==================== SERIAL KEY SECTION ==================== -->
         <section class="serial-section" id="serial-section">
             <div class="container">
                 <h2 class="section-title">Descarga tu Plugin</h2>
-                <p class="section-subtitle">Genera tu licencia personal a continuación y descárgalo completamente gratis.</p>
+                <p class="section-subtitle">Inicia sesión para obtener tu clave gratis automáticamente.</p>
 
                 <div class="serial-card" style="max-width: 800px; margin-bottom: 60px;">
                     
                     <!-- ESTADO 1: NO LOGUEADO (AUTH WALL) -->
                     <div class="auth-wall" id="ui-auth-wall">
-                        <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 10px;">Inicia sesión o regístrate para generar tu llave de acceso y descargar el instalador.</p>
-                        <a href="/pages/login.html?redirect=/plugins/easy-mix.html" class="btn-auth" style="background: transparent; border: 1px solid #fff; color: #fff;">Iniciar Sesión / Registrarse</a>
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 10px;">Crea tu cuenta gratuita o inicia sesión para obtener tu clave de acceso al instante.</p>
+                        <a href="/pages/login.html?redirect=/plugins/easy-mix" class="btn-auth" style="background: transparent; border: 1px solid #fff; color: #fff;">Obtener mi clave gratis</a>
                     </div>
 
                     <!-- ESTADO 2: LOGUEADO Y LISTO -->
@@ -738,8 +761,7 @@
                         <div class="serial-box" id="serial-key-text" title="Clic para copiar" onclick="copySerial()" style="border-color: #ff9f0a; color: #ff9f0a;">Cargando...</div>
 
                         <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px;">
-                            <button id="btn-generate-serial" class="btn-auth" style="display: none; padding: 12px 20px;">Generar Licencia Gratis</button>
-                            <a href="https://offszn.lat/api/download/easymix-installer" class="btn-download" download><i class="bi bi-download"></i> Descargar Instalador VST/AU</a>
+                            <a href="https://offszn.lat/api/download/easymix-installer" class="btn-download" download><i class="bi bi-download"></i> Descargar Instalador (.exe)</a>
                         </div>
                     </div>
 
@@ -907,6 +929,7 @@
 
                 const userId = session.user.id;
 
+                // Check if user already has ANY license for Easy Mix
                 const { data, error } = await window.supabaseClient
                     .from('plugin_licenses')
                     .select('serial_key, status, license_type, expires_at')
@@ -917,44 +940,32 @@
                     .maybeSingle();
 
                 if (data && data.serial_key) {
+                    // User already has a key (trial or paid) — show it
                     TEXT_SERIAL.innerText = data.serial_key;
                 } else {
-                    TEXT_SERIAL.innerText = 'NO TIENES LICENCIA ACTIVA';
-                    BTN_GENERATE.style.display = 'inline-block';
-                    
-                    BTN_GENERATE.onclick = async () => {
-                        try {
-                            BTN_GENERATE.disabled = true;
-                            BTN_GENERATE.innerText = 'Generando...';
-                            TEXT_SERIAL.innerText = 'GENERANDO...';
+                    // No license yet — AUTO-GENERATE a trial immediately
+                    TEXT_SERIAL.innerText = 'GENERANDO TU CLAVE...';
+                    try {
+                        const res = await fetch('/api/plugin/generate-web', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${session.access_token}`
+                            },
+                            body: JSON.stringify({ plugin_name: 'Easy Mix' })
+                        });
 
-                            const res = await fetch('/api/plugin/generate-web', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${session.access_token}`
-                                },
-                                body: JSON.stringify({ plugin_name: 'Easy Mix' })
-                            });
-
-                            const result = await res.json();
-                            
-                            if (result.success) {
-                                TEXT_SERIAL.innerText = result.serial_key;
-                                BTN_GENERATE.style.display = 'none';
-                            } else {
-                                TEXT_SERIAL.innerText = 'ERROR AL GENERAR';
-                                alert(result.error || 'Ocurrió un error');
-                                BTN_GENERATE.disabled = false;
-                                BTN_GENERATE.innerText = 'Generar Licencia Gratis';
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            TEXT_SERIAL.innerText = 'ERROR DE CONEXIÓN';
-                            BTN_GENERATE.disabled = false;
-                            BTN_GENERATE.innerText = 'Generar Licencia Gratis';
+                        const result = await res.json();
+                        
+                        if (result.success) {
+                            TEXT_SERIAL.innerText = result.serial_key;
+                        } else {
+                            TEXT_SERIAL.innerText = 'ERROR AL GENERAR';
                         }
-                    };
+                    } catch (err) {
+                        console.error(err);
+                        TEXT_SERIAL.innerText = 'ERROR DE CONEXIÓN';
+                    }
                 }
             }
         });
