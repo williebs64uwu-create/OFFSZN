@@ -316,14 +316,14 @@
         <div style="background:var(--panel); border:1px solid var(--border); border-radius:8px; width:280px; padding:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
             <h3 style="color:var(--text); text-align:center; margin-bottom:15px; font-size:12px; font-weight:800; letter-spacing: 1px; text-transform:uppercase;">Cargar Preset</h3>
             <div style="display:flex; flex-direction:column; gap:8px;">
-                <button class="btn" style="padding:8px;" onclick="loadPreset('init')">Init (Reset)</button>
-                <button class="btn" style="padding:8px;" onclick="loadPreset('agresivo')">Voz Agresiva</button>
+                <button class="btn" style="padding:8px;" onclick="loadPreset('init')">Reiniciar Parámetros</button>
+                <button class="btn" style="padding:8px;" onclick="loadPreset('agresivo')">Voz Premium</button>
                 <button class="btn" style="padding:8px;" onclick="loadPreset('normal')">Normal</button>
                 <button class="btn" style="padding:8px;" onclick="loadPreset('modo pro')">Modo PRO</button>
                 <button class="btn" style="padding:8px;" onclick="loadPreset('offszn trial')">OFFSZN Trial</button>
             </div>
             <div style="height:1px; background:var(--border); margin:15px 0;"></div>
-            <button class="btn" style="width:100%; padding:8px; color:#ff9f0a; border-color:#ff9f0a;" onclick="saveCurrentState()">Guardar Preset (Copiar)</button>
+            <button class="btn" style="width:100%; padding:9px; background:linear-gradient(135deg, #ff9f0a, #d68100); color:#000; font-weight:800; border:none; border-radius:6px; cursor:pointer;" onclick="saveCurrentState()">GUARDAR PRESET (.JSON)</button>
             <button class="btn active" style="margin-top:8px; width:100%; padding:8px;" onclick="closePresetModal()">Cancelar</button>
         </div>
     </div>
@@ -1724,17 +1724,20 @@ function saveCurrentState() {
         state[k + '-on'] = moduleState[k] ? 1 : 0;
     });
     
-    let jsonStr = JSON.stringify(state);
+    let jsonStr = JSON.stringify(state, null, 4);
     
-    // Copy to clipboard
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(jsonStr).then(() => {
-            alert("¡Estado copiado al portapapeles!\n\nPégalo en mockup.html dentro de 'factoryPresets'.");
-        }).catch(err => {
-            prompt("Copia este texto manualmente:", jsonStr);
-        });
-    } else {
-        prompt("Copia este texto manualmente:", jsonStr);
+    try {
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'EasyMix_VocalPreset.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch(e) {
+        prompt("Copia tu preset manualmente:", jsonStr);
     }
     
     closePresetModal();
