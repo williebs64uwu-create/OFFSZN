@@ -267,6 +267,29 @@
         .exp-input:focus { border-color: #ff9f0a; }
         .exp-btn { width: 260px; padding: 11px; background: linear-gradient(180deg,#ff9f0a,#d68100); color: #fff; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; border: none; border-radius: 7px; cursor: pointer; }
         .exp-buy { font-size: 10px; color: #ff9f0a; cursor: pointer; text-decoration: underline; }
+
+        /* Spinner style for loading buttons */
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+            pointer-events: none;
+        }
+        .btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            top: 0; left: 0; right: 0; bottom: 0;
+            margin: auto;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: button-loading-spinner 1s linear infinite;
+        }
+        @keyframes button-loading-spinner {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -284,8 +307,8 @@
         <div class="exp-title" id="exp-title">Activar Licencia</div>
         <div class="exp-subtitle" id="exp-subtitle">Ingresa tu serial gratis o el full para activarlo.</div>
         <input class="exp-input" id="exp-serial-input" type="text" placeholder="EM-XXXX-XXXX-XXXX" spellcheck="false" autocomplete="off">
-        <button class="exp-btn" onclick="submitExpiredSerial()">Activar Nueva Licencia</button>
-        <span class="exp-buy" onclick="window.open && window.open('https://offszn.lat/plugins/easy-mix#serial-section')">Obtener mi clave gratis &rarr;</span>
+        <button class="exp-btn" id="exp-submit-btn" onclick="submitExpiredSerial()">Activar Nueva Licencia</button>
+        <span class="exp-buy" id="exp-link-btn" onclick="window.open && window.open('https://offszn.lat/plugins/easy-mix')">Comprar Licencia / Suscribirse &rarr;</span>
     </div>
 
     <!-- PRESET MODAL -->
@@ -312,7 +335,7 @@
             <h3 style="color:var(--text); text-align:center; margin-bottom:5px; font-size:14px; font-weight:800; letter-spacing: 1px;">ACTIVAR LICENCIA</h3>
             <p style="color:var(--dim); font-size:10px; text-align:center; margin-bottom:15px;">Ingresa tu Serial Key para remover el límite de prueba.</p>
             <input type="text" class="act-input" placeholder="EM-XXXX-XXXX-XXXX" id="serial-input">
-            <button class="act-btn act-btn-primary" onclick="submitSerial()">Validar Llave</button>
+            <button class="act-btn act-btn-primary" id="act-submit-btn" onclick="submitSerial()">Validar Llave</button>
             <span class="exp-buy" style="display:block; text-align:center; font-size:10px; margin-top:5px;" onclick="window.open && window.open('https://offszn.lat/plugins/easy-mix#serial-section')">Obtener mi clave gratis &rarr;</span>
         </div>
     </div>
@@ -1336,6 +1359,9 @@ function submitSerial() {
         return;
     }
     
+    const btn = document.getElementById('act-submit-btn');
+    if (btn) btn.classList.add('btn-loading');
+    
     if (hasJuceBridge()) {
         callNative("getHardwareId").then((hwid) => {
             // If JUCE can't return hwid, use a persistent browser-generated ID
@@ -1345,6 +1371,7 @@ function submitSerial() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ serial_key: serial, hwid: effectiveHwid, plugin_name: "Easy Mix" })
             }).then(res => res.json()).then(response => {
+                if (btn) btn.classList.remove('btn-loading');
                 if (response && response.success) {
                     // Store serial in localStorage so it persists between sessions
                     try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
@@ -1383,6 +1410,7 @@ function submitSerial() {
                     alert("Error del servidor: " + (response.error || "Licencia inv&#225;lida"));
                 }
             }).catch(e => {
+                if (btn) btn.classList.remove('btn-loading');
                 // Offline — grant access optimistically if serial was entered
                 try { localStorage.setItem('offszn_serial', serial); } catch(e2) {}
                 callNative("saveLicense", serial);
@@ -1394,10 +1422,13 @@ function submitSerial() {
         });
     } else {
         // Browser preview mode
-        console.log("[Preview] Mock verify serial:", serial);
-        closeActivationModal();
-        const welcome = document.getElementById('welcome-modal');
-        if (welcome) welcome.style.display = 'flex';
+        setTimeout(() => {
+            if (btn) btn.classList.remove('btn-loading');
+            console.log("[Preview] Mock verify serial:", serial);
+            closeActivationModal();
+            const welcome = document.getElementById('welcome-modal');
+            if (welcome) welcome.style.display = 'flex';
+        }, 1000);
     }
 }
 
@@ -1551,12 +1582,17 @@ function submitExpiredSerial() {
     const input = document.getElementById('exp-serial-input');
     if (!input || !input.value.trim()) return;
     const serial = input.value.trim();
+    
+    const btn = document.getElementById('exp-submit-btn');
+    if (btn) btn.classList.add('btn-loading');
+    
     const hwid = getOrCreateDeviceId();
     fetch(`${apiBase}/api/plugin/activate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
     }).then(res => res.json()).then(response => {
+        if (btn) btn.classList.remove('btn-loading');
         if (response && response.success) {
             try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
             callNative("saveLicense", serial);
@@ -1574,6 +1610,7 @@ function submitExpiredSerial() {
             setTimeout(() => { input.style.borderColor = ''; }, 2000);
         }
     }).catch(() => {
+        if (btn) btn.classList.remove('btn-loading');
         // Offline — grant access optimistically
         try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
         callNative("saveLicense", serial);
