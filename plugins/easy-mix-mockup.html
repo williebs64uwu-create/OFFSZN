@@ -830,7 +830,7 @@
             <input class="exp-input" id="exp-serial-input" type="text" placeholder="EM-XXXX-XXXX-XXXX"
                 spellcheck="false" autocomplete="off">
             <button class="exp-btn" id="exp-submit-btn" onclick="submitExpiredSerial()">Activar Nueva Licencia</button>
-            <a class="exp-buy" id="exp-link-btn" href="#" onclick="callNative('openURLNative', 'https://offszn.lat/plugins/easy-mix'); return false;"
+            <a class="exp-buy" id="exp-link-btn" href="#" onclick="openExternalURL('https://offszn.lat/plugins/easy-mix'); return false;"
                 style="text-decoration: underline; display: block; text-align: center;">Consigue tu licencia &rarr;</a>
         </div>
 
@@ -897,7 +897,7 @@
                 <input type="text" class="act-input" placeholder="EM-XXXX-XXXX-XXXX" id="serial-input">
                 <button class="act-btn act-btn-primary" id="act-submit-btn" onclick="submitSerial()">Validar
                     Llave</button>
-                <a class="exp-buy" href="#" onclick="callNative('openURLNative', 'https://offszn.lat/plugins/easy-mix#serial-section'); return false;"
+                <a class="exp-buy" href="#" onclick="openExternalURL('https://offszn.lat/plugins/easy-mix#serial-section'); return false;"
                     style="display:block; text-align:center; font-size:10px; margin-top:5px; text-decoration: underline;">Consigue
                     tu licencia &rarr;</a>
             </div>
@@ -2206,8 +2206,14 @@
                     console.error("Error calling window[" + funcName + "]:", e);
                 }
             }
-            console.warn("callNative: native function not found or not callable: " + funcName);
-            return Promise.resolve(null);
+        }
+
+        function openExternalURL(url) {
+            if (hasJuceBridge()) {
+                callNative('openURLNative', url);
+            } else {
+                window.open(url, '_blank');
+            }
         }
 
         // Generate a persistent device ID as HWID fallback when native bridge can't return it
