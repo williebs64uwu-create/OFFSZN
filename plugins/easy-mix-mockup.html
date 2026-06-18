@@ -2636,16 +2636,26 @@
             if (!listDiv) return;
             listDiv.innerHTML = '';
 
-            let userPresets = {};
-            try {
-                userPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}');
-            } catch (e) { }
-            const keys = Object.keys(userPresets);
-            if (keys.length === 0) {
-                listDiv.innerHTML = '<span style="font-size:10px; color:var(--dim); font-style:italic; padding-left:5px;">Aún no tienes presets guardados.</span>';
-                return;
+            if (hasJuceBridge()) {
+                callNative("listPresetsNative").then(keys => {
+                    if (!keys || keys.length === 0) {
+                        listDiv.innerHTML = '<span style="font-size:10px; color:var(--dim); font-style:italic; padding-left:5px;">Aún no tienes presets guardados.</span>';
+                        return;
+                    }
+                    buildPresetRows(keys, listDiv, true);
+                });
+            } else {
+                let userPresets = {};
+                try {
+                    userPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}');
+                } catch (e) { }
+                const keys = Object.keys(userPresets);
+                if (keys.length === 0) {
+                    listDiv.innerHTML = '<span style="font-size:10px; color:var(--dim); font-style:italic; padding-left:5px;">Aún no tienes presets guardados.</span>';
+                    return;
+                }
+                buildPresetRows(keys, listDiv, false);
             }
-            buildPresetRows(keys, listDiv, false);
         }
 
         function buildPresetRows(keys, listDiv, isNative) {
