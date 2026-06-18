@@ -1103,16 +1103,10 @@
                         <div class="mod-title">Poner Voz al Frente
                             <div class="led" id="led-comp" onclick="toggleModule('comp-on','comp')"></div>
                         </div>
-                        <div class="btn-row">
-                            <button class="btn" id="btn-comp-type-1"
-                                onclick="modeBtn(this,'comp-type',1)">Suave</button>
-                            <button class="btn active" id="btn-comp-type-0"
-                                onclick="modeBtn(this,'comp-type',0)">Agresivo</button>
-                        </div>
-                        <div class="center" style="margin-top:2px;">
+                        <div class="center" style="margin-top:8px; margin-bottom:8px;">
                             <div class="knob-wrap">
                                 <div class="knob xl" data-id="comp-amount" data-val="0" data-accent="ff453a"></div>
-                                <span class="knob-label">Cantidad</span>
+                                <span id="db-comp-amount" style="font-size: 9px; font-weight: normal; color: var(--dim); margin-top: 3px;">0 %</span>
                             </div>
                         </div>
                     </div>
@@ -1865,7 +1859,7 @@
                 let dbStr = db === 0 ? '0.0 dB' : '+' + db.toFixed(1) + ' dB';
                 let span = document.getElementById('db-' + knob.dataset.id);
                 if (span) span.textContent = dbStr;
-            } else if (knob.dataset.id === 'sat-tape' || knob.dataset.id === 'desser' || knob.dataset.id === 'dly-feedback' || knob.dataset.id === 'fx-pitch-mix' || knob.dataset.id === 'stereo-width') {
+            } else if (knob.dataset.id === 'sat-tape' || knob.dataset.id === 'desser' || knob.dataset.id === 'dly-feedback' || knob.dataset.id === 'fx-pitch-mix' || knob.dataset.id === 'stereo-width' || knob.dataset.id === 'comp-amount') {
                 let span = document.getElementById('db-' + knob.dataset.id);
                 if (span) span.textContent = Math.round(val) + ' %';
             } else if (knob.dataset.id === 'fx-pitch-val' || knob.dataset.id === 'fx-formant-val') {
@@ -2021,7 +2015,7 @@
                                 let dbStr = db === 0 ? '0.0 dB' : '+' + db.toFixed(1) + ' dB';
                                 let span = document.getElementById('db-' + id);
                                 if (span) span.textContent = dbStr;
-                            } else if (id === 'sat-tape' || id === 'desser' || id === 'dly-feedback' || id === 'fx-pitch-mix' || id === 'stereo-width') {
+                            } else if (id === 'sat-tape' || id === 'desser' || id === 'dly-feedback' || id === 'fx-pitch-mix' || id === 'stereo-width' || id === 'comp-amount') {
                                 let span = document.getElementById('db-' + id);
                                 if (span) span.textContent = Math.round(value) + ' %';
                             }
@@ -2498,29 +2492,28 @@
             }, 30 * 60 * 1000); // every 30 minutes
         }
 
-        // Hardcoded presets (paste generated json here later)
         const factoryPresets = {
             "init": {
                 "global-in": 50, "global-out": 50,
                 "noise-thresh": 15, "noise-amount": 0, "noise-on": 1,
                 "rider-target": 50, "rider-on": 1, "cut-lows": 0, "cut-lows-on": 1,
                 "cut-boxy": 0, "cut-boxy-on": 1, "desser": 0, "desser-on": 1,
-                "comp-amount": 0, "comp-on": 1, "pres-mid": 0, "pres-high": 0, "pres-on": 1,
+                "comp-amount": 0, "comp-on": 1, "comp-type": 0, "comp-mode": 1, "pres-mid": 0, "pres-high": 0, "pres-on": 1,
                 "sat-tape": 0, "sat-on": 1, "air-band": 0, "air-on": 1,
                 "stereo-width": 0, "stereo-vol": 0, "stereo-on": 1,
                 "rev-length": 0, "rev-vol": 0, "rev-lc": 0, "rev-hc": 100, "rev-on": 1,
                 "dly-fdbk": 0, "dly-vol": 0, "dly-on": 1,
                 "fx-bitcrusher-mix": 0, "fx-phone-mix": 0, "fx-endless-vol": 0, "fx-flutter-mix": 0
             },
-            "agresivo": { "global-in": 50, "global-out": 55.25, "noise-thresh": 37, "noise-amount": 100, "rider-target": 100, "cut-lows": 88, "cut-boxy": 13.5, "desser": 73, "comp-amount": 9, "pres-mid": 3.75, "pres-high": 100, "sat-tape": 9, "air-band": 100, "stereo-width": 100, "stereo-vol": 31.75, "rev-length": 60.75, "rev-vol": 15.25, "rev-lc": 8.25, "rev-hc": 100, "dly-fdbk": 26.25, "dly-vol": 9.25, "fx-bitcrusher-bits": 16, "fx-bitcrusher-down": 1, "fx-bitcrusher-mix": 100, "fx-phone-freq": 28.5, "fx-phone-q": 100, "fx-phone-mix": 100, "fx-endless-intensity": 11.5, "fx-endless-filter": 68.5, "fx-endless-vol": 25.5, "fx-flutter-rate": 0, "fx-flutter-fdbk": 0, "fx-flutter-mix": 0, "noise-on": 1, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 1, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1 },
+            "agresivo": { "global-in": 50, "global-out": 55.25, "noise-thresh": 37, "noise-amount": 100, "rider-target": 100, "cut-lows": 88, "cut-boxy": 13.5, "desser": 73, "comp-amount": 9, "comp-type": 0, "comp-mode": 1, "pres-mid": 3.75, "pres-high": 100, "sat-tape": 9, "air-band": 100, "stereo-width": 100, "stereo-vol": 31.75, "rev-length": 60.75, "rev-vol": 15.25, "rev-lc": 8.25, "rev-hc": 100, "dly-fdbk": 26.25, "dly-vol": 9.25, "fx-bitcrusher-bits": 16, "fx-bitcrusher-down": 1, "fx-bitcrusher-mix": 100, "fx-phone-freq": 28.5, "fx-phone-q": 100, "fx-phone-mix": 100, "fx-endless-intensity": 11.5, "fx-endless-filter": 68.5, "fx-endless-vol": 25.5, "fx-flutter-rate": 0, "fx-flutter-fdbk": 0, "fx-flutter-mix": 0, "noise-on": 1, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 1, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1 },
             "normal": {
-                "global-in": 50, "global-out": 50, "noise-thresh": 20, "noise-amount": 50, "rider-target": 50, "cut-lows": 50, "cut-boxy": 20, "desser": 35, "comp-amount": 25, "pres-mid": 15, "pres-high": 25, "sat-tape": 15, "air-band": 30, "stereo-width": 25, "stereo-vol": 15, "rev-length": 30, "rev-vol": 20, "rev-lc": 20, "rev-hc": 80, "dly-fdbk": 15, "dly-vol": 10, "noise-on": 0, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 0, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
+                "global-in": 50, "global-out": 50, "noise-thresh": 20, "noise-amount": 50, "rider-target": 50, "cut-lows": 50, "cut-boxy": 20, "desser": 35, "comp-amount": 25, "comp-type": 0, "comp-mode": 1, "pres-mid": 15, "pres-high": 25, "sat-tape": 15, "air-band": 30, "stereo-width": 25, "stereo-vol": 15, "rev-length": 30, "rev-vol": 20, "rev-lc": 20, "rev-hc": 80, "dly-fdbk": 15, "dly-vol": 10, "noise-on": 0, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 0, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
             },
             "modo pro": {
-                "global-in": 50, "global-out": 52, "noise-thresh": 40, "noise-amount": 80, "rider-target": 80, "cut-lows": 75, "cut-boxy": 40, "desser": 60, "comp-amount": 40, "pres-mid": 25, "pres-high": 50, "sat-tape": 30, "air-band": 60, "stereo-width": 50, "stereo-vol": 25, "rev-length": 45, "rev-vol": 25, "rev-lc": 30, "rev-hc": 90, "dly-fdbk": 25, "dly-vol": 15, "noise-on": 0, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 0, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
+                "global-in": 50, "global-out": 52, "noise-thresh": 40, "noise-amount": 80, "rider-target": 80, "cut-lows": 75, "cut-boxy": 40, "desser": 60, "comp-amount": 40, "comp-type": 0, "comp-mode": 1, "pres-mid": 25, "pres-high": 50, "sat-tape": 30, "air-band": 60, "stereo-width": 50, "stereo-vol": 25, "rev-length": 45, "rev-vol": 25, "rev-lc": 30, "rev-hc": 90, "dly-fdbk": 25, "dly-vol": 15, "noise-on": 0, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 0, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
             },
             "offszn trial": {
-                "global-in": 50, "global-out": 50, "noise-thresh": 0, "noise-amount": 0, "rider-target": 40, "cut-lows": 30, "cut-boxy": 10, "desser": 20, "comp-amount": 0, "pres-mid": 10, "pres-high": 15, "sat-tape": 10, "air-band": 20, "stereo-width": 10, "stereo-vol": 10, "rev-length": 20, "rev-vol": 15, "rev-lc": 10, "rev-hc": 90, "dly-fdbk": 10, "dly-vol": 5, "noise-on": 0, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 0, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
+                "global-in": 50, "global-out": 50, "noise-thresh": 0, "noise-amount": 0, "rider-target": 40, "cut-lows": 30, "cut-boxy": 10, "desser": 20, "comp-amount": 0, "comp-type": 0, "comp-mode": 1, "pres-mid": 10, "pres-high": 15, "sat-tape": 10, "air-band": 20, "stereo-width": 10, "stereo-vol": 10, "rev-length": 20, "rev-vol": 15, "rev-lc": 10, "rev-hc": 90, "dly-fdbk": 10, "dly-vol": 5, "noise-on": 0, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 0, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
             }
         };
 
@@ -2581,6 +2574,10 @@
                         if (match) {
                             state[id] = parseFloat(match[1]);
                         }
+                    } else {
+                        // Fallback default values for removed button groups
+                        if (id === 'comp-type') state[id] = 0; // Agresivo (Poner Voz al Frente)
+                        if (id === 'comp-mode') state[id] = 1; // Aggressive mode
                     }
                 });
 
