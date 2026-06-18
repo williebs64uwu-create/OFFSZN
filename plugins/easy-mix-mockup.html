@@ -186,6 +186,9 @@
             padding: 3px 5px;
             border-top: 2px solid var(--accent);
             transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
         }
 
         .module.bypassed {
@@ -1021,8 +1024,8 @@
                         </div>
                         <div class="knob-row">
                             <div class="knob-wrap">
-                                <div class="knob md" data-id="noise-thresh" data-val="0" data-accent="0a84ff"></div>
-                                <span class="knob-label">Umbral</span>
+                                <div class="knob md" data-id="noise-thresh" data-val="15" data-accent="0a84ff"></div>
+                                <span class="knob-label">Intensidad</span>
                             </div>
                             <div class="knob-wrap">
                                 <div class="knob md" data-id="noise-amount" data-val="0" data-accent="0a84ff"></div>
@@ -1065,7 +1068,7 @@
                         </div>
                         <div class="module">
                             <div class="mod-title" style="font-size:8px;margin-bottom:4px;">
-                                Quitar Cartón
+                                Quitar Sonido de Cartón
                                 <div class="led sm" id="led-boxy" onclick="toggleModule('cut-boxy-on','boxy')"></div>
                             </div>
                             <div class="center">
@@ -1083,8 +1086,9 @@
                         </div>
                         <div class="center">
                             <div class="knob-wrap">
-                                <div class="knob md" data-id="desser" data-val="0" data-accent="0a84ff"></div>
                                 <span class="knob-label">Reducción</span>
+                                <div class="knob md" data-id="desser" data-val="0" data-accent="0a84ff"></div>
+                                <span id="db-desser" style="font-size: 8px; font-weight: normal; color: var(--dim); margin-top: 1px;">0 %</span>
                             </div>
                         </div>
                     </div>
@@ -1133,17 +1137,17 @@
                             <div class="mod-title" style="font-size:8px;justify-content:center;margin-bottom:4px;">
                                 Saturación</div>
                             <div class="center">
-                                <div class="knob-wrap">
+                                <div class="knob-wrap" style="align-items: center; gap: 2px;">
                                     <div class="knob md" data-id="sat-tape" data-val="0" data-accent="ff453a"></div>
-                                    <span class="knob-label">Cinta</span>
+                                    <span id="db-sat-tape" style="font-size: 8px; font-weight: normal; color: var(--dim); margin-top: 1px;">0 %</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Brillo Fino -->
+                    <!-- Aire y Brillo -->
                     <div class="module">
-                        <div class="mod-title">Brillo Fino
+                        <div class="mod-title">Aire y Brillo
                             <div class="led" id="led-air" onclick="toggleModule('air-on','air')"></div>
                         </div>
                         <div class="btn-row">
@@ -1172,9 +1176,8 @@
                         </div>
                         <div class="btn-row" style="margin-bottom: 5px;">
                             <button class="btn active" id="btn-stereo-mode-0"
-                                onclick="modeBtn(this,'stereo-mode',0)">Suave (CLA)</button>
-                            <button class="btn" id="btn-stereo-mode-1" onclick="modeBtn(this,'stereo-mode',1)">Hard
-                                (Doubler)</button>
+                                onclick="modeBtn(this,'stereo-mode',0)">Suave</button>
+                            <button class="btn" id="btn-stereo-mode-1" onclick="modeBtn(this,'stereo-mode',1)">Agresivo</button>
                         </div>
                         <div class="stereo-visualizer">
                             <div class="stereo-arc"></div>
@@ -1186,8 +1189,9 @@
                         </div>
                         <div class="knob-row">
                             <div class="knob-wrap">
-                                <div class="knob md" data-id="stereo-width" data-val="0" data-accent="bf5af2"></div>
                                 <span class="knob-label">Ancho</span>
+                                <div class="knob md" data-id="stereo-width" data-val="0" data-accent="bf5af2"></div>
+                                <span id="db-stereo-width" style="font-size: 8px; font-weight: normal; color: var(--dim); margin-top: 1px;">0 %</span>
                             </div>
                             <div class="knob-wrap" style="align-items: center; gap: 2px;">
                                 <span class="knob-label">Volumen</span>
@@ -1230,9 +1234,9 @@
                         </div>
                     </div>
 
-                    <!-- Eco (Delay) -->
+                    <!-- Delay -->
                     <div class="module">
-                        <div class="mod-title">Eco (Delay)
+                        <div class="mod-title">Delay
                             <div class="led" id="led-dly" onclick="toggleModule('dly-on','dly')"></div>
                         </div>
                         <div class="btn-row">
@@ -1247,8 +1251,9 @@
                         </div>
                         <div class="knob-row">
                             <div class="knob-wrap">
-                                <div class="knob md" data-id="dly-fdbk" data-val="0" data-accent="bf5af2"></div>
                                 <span class="knob-label">Repeticiones</span>
+                                <div class="knob md" data-id="dly-feedback" data-val="0" data-accent="bf5af2"></div>
+                                <span id="db-dly-feedback" style="font-size: 8px; font-weight: normal; color: var(--dim); margin-top: 1px;">0 %</span>
                             </div>
                             <div class="knob-wrap" style="align-items: center; gap: 2px;">
                                 <span class="knob-label">Volumen</span>
@@ -1271,7 +1276,7 @@
                 <div class="col col-cyan">
                     <div class="col-title">Coldfire Distorsión</div>
                     <div class="module"
-                        style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+                        style="flex:1; display:flex; flex-direction:column; justify-content:flex-start; gap:12px;">
                         <div style="display:flex; flex-direction:column; gap:5px;">
                             <div class="mod-title">Arturia Style
                                 <div class="led" id="led-fx-coldfire"
@@ -1287,7 +1292,7 @@
                             <div class="knob-wrap">
                                 <div class="knob xl" data-id="fx-coldfire-amount" data-val="0" data-accent="64d2ff">
                                 </div>
-                                <span class="knob-label">Amount</span>
+                                <span class="knob-label">Mix</span>
                             </div>
                         </div>
                     </div>
@@ -1297,7 +1302,7 @@
                 <div class="col col-yellow">
                     <div class="col-title">Modo Teléfono</div>
                     <div class="module"
-                        style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+                        style="flex:1; display:flex; flex-direction:column; justify-content:flex-start; gap:12px;">
                         <div style="display:flex; flex-direction:column; gap:5px;">
                             <div class="mod-title">Filtro de Voz
                                 <div class="led" id="led-fx-phone" onclick="toggleModule('fx-phone-on','fx-phone')">
@@ -1322,7 +1327,7 @@
                             <div class="knob-wrap">
                                 <div class="knob xl" data-id="fx-phone-amount" data-val="0" data-accent="ffd60a">
                                 </div>
-                                <span class="knob-label">Amount</span>
+                                <span class="knob-label">Mix</span>
                             </div>
                         </div>
                     </div>
@@ -1332,7 +1337,7 @@
                 <div class="col col-pink">
                     <div class="col-title">Endless Smile</div>
                     <div class="module"
-                        style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+                        style="flex:1; display:flex; flex-direction:column; justify-content:flex-start; gap:12px;">
                         <div style="display:flex; flex-direction:column; gap:5px;">
                             <div class="mod-title">Infinito / Sweeper
                                 <div class="led" id="led-fx-endless"
@@ -1355,7 +1360,7 @@
                             <div class="knob-wrap">
                                 <div class="knob xl" data-id="fx-endless-amount" data-val="0" data-accent="ff375f">
                                 </div>
-                                <span class="knob-label">Intensity</span>
+                                <span class="knob-label">Intensidad</span>
                             </div>
                         </div>
                     </div>
@@ -1365,7 +1370,7 @@
                 <div class="col col-green">
                     <div class="col-title">Pitch Pro</div>
                     <div class="module"
-                        style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+                        style="flex:1; display:flex; flex-direction:column; justify-content:flex-start; gap:12px;">
                         <div style="display:flex; flex-direction:column; gap:5px;">
                             <div class="mod-title">Vocal Bender / AlterBoy
                                 <div class="led" id="led-fx-pitch" onclick="toggleModule('fx-pitch-on','fx-pitch')">
@@ -1396,9 +1401,10 @@
                             <!-- Mix knob row -->
                             <div class="center" style="margin-top: 3px;">
                                 <div class="knob-wrap">
-                                    <div class="knob sm" data-id="fx-pitch-mix" data-val="100" data-accent="30d158">
+                                    <span class="knob-label">Mix</span>
+                                    <div class="knob md" data-id="fx-pitch-mix" data-val="100" data-accent="30d158">
                                     </div>
-                                    <span class="knob-label" style="font-size: 7px;">Mix</span>
+                                    <span id="db-fx-pitch-mix" style="font-size: 8px; font-weight: normal; color: var(--dim); margin-top: 1px;">100 %</span>
                                 </div>
                             </div>
                         </div>
@@ -1430,8 +1436,32 @@
             } catch (e) { /* running in browser preview — no bridge */ }
         }
 
-        // (openActivationModal, closeActivationModal, submitSerial, closeWelcomeModal defined below)
+        function updateAllVisualizers() {
+            let sw = document.querySelector('[data-id="stereo-width"]');
+            if(sw) updateStereoVisualizer(parseFloat(sw.dataset.val || 0));
+            updateBitcrusherCanvas();
+            updatePhoneCanvas();
+            updatePitchProCanvas();
+            let es = document.querySelector('[data-id="fx-endless-amount"]');
+            if(es) updateEndlessSmile(parseFloat(es.dataset.val || 0));
+        }
 
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                if (el.value) {
+                    el.value = tabId;
+                }
+            });
+
+            // Force redraw of canvases and knobs when tab becomes visible, wait for layout
+            requestAnimationFrame(() => {
+                document.querySelectorAll('.knob').forEach(k => drawKnob(k));
+                updateAllVisualizers();
+            });
+        }
 
         // Notify C++ that the UI is fully loaded and ready to receive state
         window.addEventListener('DOMContentLoaded', () => {
@@ -1682,16 +1712,25 @@
 
             const amountVal = parseFloat(amtKnob.dataset.val || 0);
 
-            // Map center X based on frequency (centered bandpass filter curve)
-            // As amount goes up, EQ band narrows and boost goes higher
             const cx = w / 2;
-            const bandWidth = Math.max(12, (w / 2.5) * (1.0 - amountVal / 130));
+            const maxBandWidth = w * 0.9;
+            const minBandWidth = w * 0.15;
+            const currentBandWidth = maxBandWidth - (amountVal / 100) * (maxBandWidth - minBandWidth);
+            
+            const leftEdge = cx - currentBandWidth / 2;
+            const rightEdge = cx + currentBandWidth / 2;
 
             ctx.beginPath();
-            for (let x = 0; x < w; x++) {
-                const dist = (x - cx) / bandWidth;
-                const peak = (h - 25) * (amountVal / 100);
-                const y = (h - 10) - peak * Math.exp(-dist * dist * 1.5);
+            for (let x = 0; x <= w; x += 2) {
+                let gain = 1.0;
+                
+                if (x < leftEdge) {
+                    gain = Math.exp(-(leftEdge - x) * 0.15);
+                } else if (x > rightEdge) {
+                    gain = Math.exp(-(x - rightEdge) * 0.15);
+                }
+                
+                const y = (h - 10) - (gain * (h - 25));
                 if (x === 0) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
             }
@@ -1725,7 +1764,12 @@
         function drawKnob(knob) {
             const val = parseFloat(knob.dataset.val || 0);
             const accentHex = '#' + (knob.dataset.accent || 'ffffff');
-            const size = knob.offsetWidth || 38;
+            
+            let size = 38;
+            if (knob.classList.contains('xl')) size = 44;
+            else if (knob.classList.contains('md')) size = 34;
+            else if (knob.classList.contains('sm')) size = 24;
+
             const dpr = window.devicePixelRatio || 1;
             const isBipolar = knob.dataset.bipolar === 'true';
 
@@ -1782,12 +1826,13 @@
                     ctx.shadowBlur = 0;
                 }
             }
-
+            
             // Indicator dot
             const indicatorAngle = MIN_ANG + (val / 100) * (MAX_ANG - MIN_ANG) - Math.PI / 2;
             const ir = r - 5;
             const ix = cx + ir * Math.cos(indicatorAngle);
             const iy = cy + ir * Math.sin(indicatorAngle);
+
             ctx.beginPath();
             ctx.arc(ix, iy, 1.8, 0, Math.PI * 2);
 
@@ -1816,10 +1861,12 @@
                 let span = document.getElementById('db-' + knob.dataset.id);
                 if (span) span.textContent = dbStr;
             } else if (knob.dataset.id === 'stereo-vol' || knob.dataset.id === 'rev-vol' || knob.dataset.id === 'dly-vol') {
-                let db = ((val - 50) / 50) * 24.0;
-                let dbStr = (db >= 0 ? '+' : '') + db.toFixed(1) + ' dB';
+                let db = (val / 100) * 24.0 - 24.0; // 0 to 100 -> -24 to 0
                 let span = document.getElementById('db-' + knob.dataset.id);
-                if (span) span.textContent = dbStr;
+                if (span) span.textContent = db.toFixed(1) + ' dB';
+            } else if (knob.dataset.id === 'sat-tape' || knob.dataset.id === 'desser' || knob.dataset.id === 'dly-feedback' || knob.dataset.id === 'fx-pitch-mix' || knob.dataset.id === 'stereo-width') {
+                let span = document.getElementById('db-' + knob.dataset.id);
+                if (span) span.textContent = Math.round(val) + ' %';
             } else if (knob.dataset.id === 'fx-pitch-val' || knob.dataset.id === 'fx-formant-val') {
                 let pval = ((val - 50) / 50) * 12.0; // -12 to +12
                 let pvalStr = (pval > 0 ? '+' : '') + pval.toFixed(1);
@@ -1887,6 +1934,10 @@
 
         // Redraw on resize
         window.addEventListener('resize', () => {
+            // Escalar visualmente toda la interfaz de acuerdo al tamaño de ventana base (1000x530)
+            const scale = Math.min(window.innerWidth / 1000, window.innerHeight / 530);
+            document.body.style.zoom = scale;
+            
             document.querySelectorAll('.knob').forEach(drawKnob);
             updateBitcrusherCanvas();
             updatePhoneCanvas();
@@ -1964,6 +2015,9 @@
                                 let dbStr = (db >= 0 ? '+' : '') + db.toFixed(1) + ' dB';
                                 let span = document.getElementById('db-' + id);
                                 if (span) span.textContent = dbStr;
+                            } else if (id === 'sat-tape' || id === 'desser' || id === 'dly-feedback' || id === 'fx-pitch-mix' || id === 'stereo-width') {
+                                let span = document.getElementById('db-' + id);
+                                if (span) span.textContent = Math.round(value) + ' %';
                             }
                             continue;
                         }
@@ -2454,7 +2508,7 @@
         const factoryPresets = {
             "init": {
                 "global-in": 50, "global-out": 50,
-                "noise-thresh": 0, "noise-amount": 0, "noise-on": 1,
+                "noise-thresh": 15, "noise-amount": 0, "noise-on": 1,
                 "rider-target": 50, "rider-on": 1, "cut-lows": 0, "cut-lows-on": 1,
                 "cut-boxy": 0, "cut-boxy-on": 1, "desser": 0, "desser-on": 1,
                 "comp-amount": 0, "comp-on": 1, "pres-mid": 0, "pres-high": 0, "pres-on": 1,
