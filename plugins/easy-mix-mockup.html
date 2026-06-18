@@ -1445,23 +1445,7 @@
             let es = document.querySelector('[data-id="fx-endless-amount"]');
             if(es) updateEndlessSmile(parseFloat(es.dataset.val || 0));
         }
-
-        function switchTab(tabIndex) {
-            document.querySelectorAll('.tab-content').forEach((el, i) => {
-                el.classList.toggle('active', (i === tabIndex));
-            });
-            sendParam('active-tab', tabIndex);
-
-            // Re-trigger visualizers when returning to FX view
-            if (tabIndex === 1) {
-                setTimeout(() => {
-                    document.querySelectorAll('.knob').forEach(knob => {
-                        updateVisualizerFromParam(knob.dataset.id, parseFloat(knob.dataset.val || 0));
-                    });
-                }, 50);
-            }
-        }
-
+        // Remove old switchTab function
         // Notify C++ that the UI is fully loaded and ready to receive state
         window.addEventListener('DOMContentLoaded', () => {
             try {
@@ -1476,17 +1460,27 @@
         //  TAB SWITCHING SYSTEM
         // ──────────────────────────────────────────────────────────
         function switchTab(mode) {
-            if (mode === 'mix') {
+            let tabIndex = 0;
+            if (mode === 'mix' || mode === 0 || mode === '0') {
+                tabIndex = 0;
                 document.getElementById('tab-mix').classList.add('active');
                 document.getElementById('tab-effects').classList.remove('active');
                 sendParam('active-tab', 0);
             } else {
+                tabIndex = 1;
                 document.getElementById('tab-effects').classList.add('active');
                 document.getElementById('tab-mix').classList.remove('active');
                 sendParam('active-tab', 1);
-                // Re-trigger visualizers
-                setTimeout(() => updateAllVisualizers(), 50);
             }
+            
+            // Sync the select dropdown visual
+            const selectEl = document.querySelector('.tab-btn');
+            if (selectEl) {
+                selectEl.value = (tabIndex === 0) ? 'mix' : 'effects';
+            }
+            
+            // Re-trigger visualizers
+            setTimeout(() => updateAllVisualizers(), 50);
         }
 
         // ──────────────────────────────────────────────────────────
@@ -1971,7 +1965,7 @@
 
         // Module ON/OFF initial states
         ['noise', 'lows', 'boxy', 'desser', 'comp', 'pres', 'sat', 'air', 'stereo', 'rev', 'dly',
-            'fx-bitcrusher', 'fx-phone', 'fx-endless', 'fx-flutter', 'fx-pitch'].forEach(k => {
+            'fx-coldfire', 'fx-phone', 'fx-endless', 'fx-flutter', 'fx-pitch'].forEach(k => {
                 moduleState[k] = true;
             });
         moduleState['rider'] = true; // default rider on
@@ -2005,7 +1999,7 @@
                                 let dbStr = (db >= 0 ? '+' : '') + db.toFixed(1) + ' dB';
                                 let span = document.getElementById('db-' + id);
                                 if (span) span.textContent = dbStr;
-                            } else if (id === 'sat-tape' || id === 'desser' || id === 'dly-feedback' || id === 'fx-pitch-mix' || id === 'stereo-width') {
+                            } else if (id === 'stereo-vol' || id === 'rev-vol' || id === 'dly-vol' || id === 'sat-tape' || id === 'desser' || id === 'dly-feedback' || id === 'fx-pitch-mix' || id === 'stereo-width') {
                                 let span = document.getElementById('db-' + id);
                                 if (span) span.textContent = Math.round(value) + ' %';
                             }
@@ -2026,7 +2020,7 @@
                             'stereo-on': 'stereo',
                             'rev-on': 'rev',
                             'dly-on': 'dly',
-                            'fx-bitcrusher-on': 'fx-bitcrusher',
+                            'fx-coldfire-on': 'fx-coldfire',
                             'fx-phone-on': 'fx-phone',
                             'fx-endless-on': 'fx-endless',
                             'fx-flutter-on': 'fx-flutter',
