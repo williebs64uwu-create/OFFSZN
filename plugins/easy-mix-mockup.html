@@ -1098,9 +1098,9 @@
                 <div class="col col-red">
                     <div class="col-title">2. Color y Cuerpo</div>
 
-                    <!-- Compresor Principal -->
+                    <!-- Poner Voz al Frente -->
                     <div class="module">
-                        <div class="mod-title">Compresor Principal
+                        <div class="mod-title">Poner Voz al Frente
                             <div class="led" id="led-comp" onclick="toggleModule('comp-on','comp')"></div>
                         </div>
                         <div class="btn-row">
@@ -2314,6 +2314,13 @@
         }
 
 
+        function getHwidAsync() {
+            if (hasJuceBridge()) {
+                return callNative("getHardwareId").then(hwid => hwid || getOrCreateDeviceId());
+            }
+            return Promise.resolve(getOrCreateDeviceId());
+        }
+
         function startupVerifySerial(serial) {
             if (!serial || serial.length === 0) {
                 hideLoadingOverlay();
@@ -2321,37 +2328,38 @@
                 openActivationModal(false);
                 return;
             }
-            const hwid = getOrCreateDeviceId();
-            fetch(`${apiBase}/api/plugin/activate`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
-            }).then(res => res.json()).then(response => {
-                hideLoadingOverlay();
-                applyLicenseResponse(response, serial);
-                if (response && response.success) {
-                    startPeriodicCheck(serial); // begin periodic re-validation
-                }
-            }).catch(() => {
-                hideLoadingOverlay();
-                // Offline check local expiration date
-                let isExpiredLocally = false;
-                try {
-                    const localExpires = localStorage.getItem('offszn_expires');
-                    if (localExpires && localExpires !== 'never') {
-                        if (new Date(localExpires) < new Date()) isExpiredLocally = true;
+            getHwidAsync().then(hwid => {
+                fetch(`${apiBase}/api/plugin/activate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
+                }).then(res => res.json()).then(response => {
+                    hideLoadingOverlay();
+                    applyLicenseResponse(response, serial);
+                    if (response && response.success) {
+                        startPeriodicCheck(serial); // begin periodic re-validation
                     }
-                } catch (e) { }
+                }).catch(() => {
+                    hideLoadingOverlay();
+                    // Offline check local expiration date
+                    let isExpiredLocally = false;
+                    try {
+                        const localExpires = localStorage.getItem('offszn_expires');
+                        if (localExpires && localExpires !== 'never') {
+                            if (new Date(localExpires) < new Date()) isExpiredLocally = true;
+                        }
+                    } catch (e) { }
 
-                if (isExpiredLocally) {
-                    triggerLicenseExpired('Activar Licencia', 'Tu licencia o prueba ha expirado (verificado localmente).');
-                } else {
-                    // Offline — keep unlocked, show offline badge
-                    callNative("setLicenseStatus", true);
-                    const badge = document.getElementById('trial-badge');
-                    if (badge) { badge.innerHTML = "Sin conexi&#243;n &#8212; Acceso local"; badge.style.display = 'flex'; }
-                    startPeriodicCheck(serial); // still start checking for when connection returns
-                }
+                    if (isExpiredLocally) {
+                        triggerLicenseExpired('Activar Licencia', 'Tu licencia o prueba ha expirado (verificado localmente).');
+                    } else {
+                        // Offline — keep unlocked, show offline badge
+                        callNative("setLicenseStatus", true);
+                        const badge = document.getElementById('trial-badge');
+                        if (badge) { badge.innerHTML = "Sin conexi&#243;n &#8212; Acceso local"; badge.style.display = 'flex'; }
+                        startPeriodicCheck(serial); // still start checking for when connection returns
+                    }
+                });
             });
         }
 
@@ -2421,39 +2429,40 @@
             const btn = document.getElementById('exp-submit-btn');
             if (btn) btn.classList.add('btn-loading');
 
-            const hwid = getOrCreateDeviceId();
-            fetch(`${apiBase}/api/plugin/activate`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
-            }).then(res => res.json()).then(response => {
-                if (btn) btn.classList.remove('btn-loading');
-                if (response && response.success) {
+            getHwidAsync().then(hwid => {
+                fetch(`${apiBase}/api/plugin/activate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
+                }).then(res => res.json()).then(response => {
+                    if (btn) btn.classList.remove('btn-loading');
+                    if (response && response.success) {
+                        try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
+                        callNative("saveLicense", serial);
+                        callNative("setLicenseStatus", true);
+                        // Dismiss overlay
+                        const overlay = document.getElementById('license-expired-overlay');
+                        if (overlay) overlay.classList.remove('active');
+                        input.value = '';
+                        // Update badge
+                        applyLicenseResponse(response);
+                        // Restart periodic checks with the new serial
+                        startPeriodicCheck(serial);
+                    } else {
+                        input.style.borderColor = '#ff453a';
+                        setTimeout(() => { input.style.borderColor = ''; }, 2000);
+                        const friendlyMsg = getFriendlyLicenseErrorMessage(serial, response.error || "Licencia inválida");
+                        showCustomAlert("Error de Activación", friendlyMsg, '❌');
+                    }
+                }).catch(() => {
+                    if (btn) btn.classList.remove('btn-loading');
+                    // Offline — grant access optimistically
                     try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
                     callNative("saveLicense", serial);
                     callNative("setLicenseStatus", true);
-                    // Dismiss overlay
                     const overlay = document.getElementById('license-expired-overlay');
                     if (overlay) overlay.classList.remove('active');
-                    input.value = '';
-                    // Update badge
-                    applyLicenseResponse(response);
-                    // Restart periodic checks with the new serial
-                    startPeriodicCheck(serial);
-                } else {
-                    input.style.borderColor = '#ff453a';
-                    setTimeout(() => { input.style.borderColor = ''; }, 2000);
-                    const friendlyMsg = getFriendlyLicenseErrorMessage(serial, response.error || "Licencia inválida");
-                    showCustomAlert("Error de Activación", friendlyMsg, '❌');
-                }
-            }).catch(() => {
-                if (btn) btn.classList.remove('btn-loading');
-                // Offline — grant access optimistically
-                try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
-                callNative("saveLicense", serial);
-                callNative("setLicenseStatus", true);
-                const overlay = document.getElementById('license-expired-overlay');
-                if (overlay) overlay.classList.remove('active');
+                });
             });
         }
 
@@ -2469,21 +2478,22 @@
                 let activeSerial = serial;
                 try { activeSerial = localStorage.getItem('offszn_serial') || serial; } catch (e) { }
                 if (!activeSerial) return;
-                const hwid = getOrCreateDeviceId();
-                fetch(`${apiBase}/api/plugin/activate`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ serial_key: activeSerial, hwid: hwid, plugin_name: "Easy Mix" })
-                }).then(res => res.json()).then(response => {
-                    if (!response || !response.success) {
-                        const reason = response?.error || 'Licencia inv&#225;lida';
-                        triggerLicenseExpired('Licencia Bloqueada', reason);
-                    } else {
-                        // Still valid — just update badge silently
-                        applyLicenseResponse(response);
-                    }
-                }).catch(() => {
-                    // Offline — do nothing, keep current state
+                getHwidAsync().then(hwid => {
+                    fetch(`${apiBase}/api/plugin/activate`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ serial_key: activeSerial, hwid: hwid, plugin_name: "Easy Mix" })
+                    }).then(res => res.json()).then(response => {
+                        if (!response || !response.success) {
+                            const reason = response?.error || 'Licencia inv&#225;lida';
+                            triggerLicenseExpired('Licencia Bloqueada', reason);
+                        } else {
+                            // Still valid — just update badge silently
+                            applyLicenseResponse(response);
+                        }
+                    }).catch(() => {
+                        // Offline — do nothing, keep current state
+                    });
                 });
             }, 30 * 60 * 1000); // every 30 minutes
         }
