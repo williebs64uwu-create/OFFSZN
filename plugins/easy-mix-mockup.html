@@ -1098,19 +1098,6 @@
                 <div class="col col-red">
                     <div class="col-title">2. Color y Cuerpo</div>
 
-                    <!-- Poner Voz al Frente -->
-                    <div class="module">
-                        <div class="mod-title">Poner Voz al Frente
-                            <div class="led" id="led-comp" onclick="toggleModule('comp-on','comp')"></div>
-                        </div>
-                        <div class="center" style="margin-top:8px; margin-bottom:8px;">
-                            <div class="knob-wrap">
-                                <div class="knob xl" data-id="comp-amount" data-val="0" data-accent="ff453a"></div>
-                                <span id="db-comp-amount" style="font-size: 9px; font-weight: normal; color: var(--dim); margin-top: 3px;">0 %</span>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Presencia + Saturación -->
                     <div class="g2">
                         <div class="module">
@@ -1154,6 +1141,19 @@
                             <div class="knob-wrap">
                                 <div class="knob md" data-id="air-band" data-val="0" data-accent="ff453a"></div>
                                 <span class="knob-label">Aire</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Poner Voz al Frente -->
+                    <div class="module">
+                        <div class="mod-title">Poner Voz al Frente
+                            <div class="led" id="led-comp" onclick="toggleModule('comp-on','comp')"></div>
+                        </div>
+                        <div class="center" style="margin-top:8px; margin-bottom:8px;">
+                            <div class="knob-wrap">
+                                <div class="knob xl" data-id="comp-amount" data-val="0" data-accent="ff453a"></div>
+                                <span id="db-comp-amount" style="font-size: 9px; font-weight: normal; color: var(--dim); margin-top: 3px;">0 %</span>
                             </div>
                         </div>
                     </div>
@@ -1440,36 +1440,6 @@
             if(es) updateEndlessSmile(parseFloat(es.dataset.val || 0));
         }
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
-            
-            document.querySelectorAll('.tab-btn').forEach(el => {
-                if (el.value) {
-                    el.value = tabId;
-                }
-            });
-
-            // Force redraw of canvases and knobs when tab becomes visible, wait for layout
-            requestAnimationFrame(() => {
-                document.querySelectorAll('.knob').forEach(k => drawKnob(k));
-                updateAllVisualizers();
-            });
-        }
-
-        // Notify C++ that the UI is fully loaded and ready to receive state
-        window.addEventListener('DOMContentLoaded', () => {
-            try {
-                if (window.__JUCE__ && window.__JUCE__.backend) {
-                    // Send special parameter to request state initialization from editor
-                    sendParam('ui-ready', 1);
-                }
-            } catch (e) { }
-        });
-
-        // ──────────────────────────────────────────────────────────
-        //  TAB SWITCHING SYSTEM
-        // ──────────────────────────────────────────────────────────
         function switchTab(mode) {
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
@@ -1481,13 +1451,28 @@
                 sendParam('active-tab', 1);
             }
 
-            // Redraw visualizer canvases
+            // Sync the select dropdown element value
+            const dropdown = document.querySelector('select.tab-btn');
+            if (dropdown && dropdown.value !== mode) {
+                dropdown.value = mode;
+            }
+
+            // Redraw all knobs and visualizers when tab becomes visible, wait for layout
             setTimeout(() => {
-                updateBitcrusherCanvas();
-                updatePhoneCanvas();
-                updateEndlessSmile(parseFloat(document.querySelector('[data-id="fx-endless-amount"]').dataset.val || 0));
+                document.querySelectorAll('.knob').forEach(k => drawKnob(k));
+                updateAllVisualizers();
             }, 50);
         }
+
+        // Notify C++ that the UI is fully loaded and ready to receive state
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                if (window.__JUCE__ && window.__JUCE__.backend) {
+                    // Send special parameter to request state initialization from editor
+                    sendParam('ui-ready', 1);
+                }
+            } catch (e) { }
+        });
 
         // ──────────────────────────────────────────────────────────
         //  WAVEFORM GENERATOR (Realtime RMS)
