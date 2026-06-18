@@ -2361,6 +2361,42 @@
             return Promise.resolve(getOrCreateDeviceId());
         }
 
+        function fetchWithTimeout(resource, options = {}) {
+            const { timeout = 3000 } = options;
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            return fetch(resource, {
+                ...options,
+                signal: controller.signal
+            }).then(response => {
+                clearTimeout(id);
+                return response;
+            }).catch(error => {
+                clearTimeout(id);
+                throw error;
+            });
+        }
+
+        function handleOfflineFallback(serial) {
+            hideLoadingOverlay();
+            let isExpiredLocally = false;
+            try {
+                const localExpires = localStorage.getItem('offszn_expires');
+                if (localExpires && localExpires !== 'never') {
+                    if (new Date(localExpires) < new Date()) isExpiredLocally = true;
+                }
+            } catch (e) { }
+
+            if (isExpiredLocally) {
+                triggerLicenseExpired('Activar Licencia', 'Tu licencia o prueba ha expirado (verificado localmente).');
+            } else {
+                callNative("setLicenseStatus", true);
+                const badge = document.getElementById('trial-badge');
+                if (badge) { badge.innerHTML = "Sin conexi&#243;n &#8212; Acceso local"; badge.style.display = 'flex'; }
+                startPeriodicCheck(serial);
+            }
+        }
+
         function startupVerifySerial(serial) {
             if (!serial || serial.length === 0) {
                 hideLoadingOverlay();
@@ -2369,37 +2405,24 @@
                 return;
             }
             getHwidAsync().then(hwid => {
-                fetch(`${apiBase}/api/plugin/activate`, {
+                fetchWithTimeout(`${apiBase}/api/plugin/activate`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
+                    body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" }),
+                    timeout: 4000
                 }).then(res => res.json()).then(response => {
                     hideLoadingOverlay();
                     applyLicenseResponse(response, serial);
                     if (response && response.success) {
-                        startPeriodicCheck(serial); // begin periodic re-validation
+                        startPeriodicCheck(serial);
                     }
-                }).catch(() => {
-                    hideLoadingOverlay();
-                    // Offline check local expiration date
-                    let isExpiredLocally = false;
-                    try {
-                        const localExpires = localStorage.getItem('offszn_expires');
-                        if (localExpires && localExpires !== 'never') {
-                            if (new Date(localExpires) < new Date()) isExpiredLocally = true;
-                        }
-                    } catch (e) { }
-
-                    if (isExpiredLocally) {
-                        triggerLicenseExpired('Activar Licencia', 'Tu licencia o prueba ha expirado (verificado localmente).');
-                    } else {
-                        // Offline — keep unlocked, show offline badge
-                        callNative("setLicenseStatus", true);
-                        const badge = document.getElementById('trial-badge');
-                        if (badge) { badge.innerHTML = "Sin conexi&#243;n &#8212; Acceso local"; badge.style.display = 'flex'; }
-                        startPeriodicCheck(serial); // still start checking for when connection returns
-                    }
+                }).catch(err => {
+                    console.warn("Fetch failed, falling back to offline check:", err);
+                    handleOfflineFallback(serial);
                 });
+            }).catch(err => {
+                console.error("Error getting HWID, falling back to offline check:", err);
+                handleOfflineFallback(serial);
             });
         }
 
