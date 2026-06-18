@@ -1150,7 +1150,13 @@
                         <div class="mod-title">Poner Voz al Frente
                             <div class="led" id="led-comp" onclick="toggleModule('comp-on','comp')"></div>
                         </div>
-                        <div class="center" style="margin-top:8px; margin-bottom:8px;">
+                        <div class="btn-row">
+                            <button class="btn" id="btn-comp-type-1"
+                                onclick="modeBtn(this,'comp-type',1)">Suave</button>
+                            <button class="btn active" id="btn-comp-type-0"
+                                onclick="modeBtn(this,'comp-type',0)">Agresivo</button>
+                        </div>
+                        <div class="center" style="margin-top:2px;">
                             <div class="knob-wrap">
                                 <div class="knob xl" data-id="comp-amount" data-val="0" data-accent="ff453a"></div>
                                 <span id="db-comp-amount" style="font-size: 9px; font-weight: normal; color: var(--dim); margin-top: 3px;">0 %</span>
@@ -2145,13 +2151,62 @@
         }
 
         function hasJuceBridge() {
-            return !!(window.__JUCE__ && window.__JUCE__.backend);
+            if (window.__JUCE__ && window.__JUCE__.backend) return true;
+            if (window.__JUCE__ && typeof window.__JUCE__.getNativeFunction === 'function') return true;
+            if (typeof window.getNativeFunction === 'function') return true;
+            if (window.__JUCE__ && typeof window.__JUCE__.getHardwareId === 'function') return true;
+            if (typeof window.getHardwareId === 'function') return true;
+            return false;
         }
 
         function callNative(funcName, ...args) {
+            // 1. Scan window.__JUCE__.backend
             if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend[funcName] === 'function') {
-                return window.__JUCE__.backend[funcName](...args);
+                try {
+                    return window.__JUCE__.backend[funcName](...args);
+                } catch (e) {
+                    console.error("Error calling window.__JUCE__.backend[" + funcName + "]:", e);
+                }
             }
+            // 2. Scan window.__JUCE__.getNativeFunction
+            if (window.__JUCE__ && typeof window.__JUCE__.getNativeFunction === 'function') {
+                try {
+                    const fn = window.__JUCE__.getNativeFunction(funcName);
+                    if (typeof fn === 'function') {
+                        return fn(...args);
+                    }
+                } catch (e) {
+                    console.error("Error calling window.__JUCE__.getNativeFunction(" + funcName + "):", e);
+                }
+            }
+            // 3. Scan window.getNativeFunction
+            if (typeof window.getNativeFunction === 'function') {
+                try {
+                    const fn = window.getNativeFunction(funcName);
+                    if (typeof fn === 'function') {
+                        return fn(...args);
+                    }
+                } catch (e) {
+                    console.error("Error calling window.getNativeFunction(" + funcName + "):", e);
+                }
+            }
+            // 4. Scan window.__JUCE__ directly
+            if (window.__JUCE__ && typeof window.__JUCE__[funcName] === 'function') {
+                try {
+                    return window.__JUCE__[funcName](...args);
+                } catch (e) {
+                    console.error("Error calling window.__JUCE__[" + funcName + "]:", e);
+                }
+            }
+            // 5. Scan window directly
+            if (typeof window[funcName] === 'function') {
+                try {
+                    return window[funcName](...args);
+                } catch (e) {
+                    console.error("Error calling window[" + funcName + "]:", e);
+                }
+            }
+            console.warn("callNative: native function not found or not callable: " + funcName);
             return Promise.resolve(null);
         }
 
