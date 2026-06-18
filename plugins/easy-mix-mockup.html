@@ -1445,7 +1445,24 @@
             let es = document.querySelector('[data-id="fx-endless-amount"]');
             if(es) updateEndlessSmile(parseFloat(es.dataset.val || 0));
         }
-        // Remove old switchTab function
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                if (el.value) {
+                    el.value = tabId;
+                }
+            });
+
+            // Force redraw of canvases and knobs when tab becomes visible, wait for layout
+            requestAnimationFrame(() => {
+                document.querySelectorAll('.knob').forEach(k => drawKnob(k));
+                updateAllVisualizers();
+            });
+        }
+
         // Notify C++ that the UI is fully loaded and ready to receive state
         window.addEventListener('DOMContentLoaded', () => {
             try {
@@ -1460,27 +1477,22 @@
         //  TAB SWITCHING SYSTEM
         // ──────────────────────────────────────────────────────────
         function switchTab(mode) {
-            let tabIndex = 0;
-            if (mode === 'mix' || mode === 0 || mode === '0') {
-                tabIndex = 0;
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (mode === 'mix') {
                 document.getElementById('tab-mix').classList.add('active');
-                document.getElementById('tab-effects').classList.remove('active');
                 sendParam('active-tab', 0);
             } else {
-                tabIndex = 1;
                 document.getElementById('tab-effects').classList.add('active');
-                document.getElementById('tab-mix').classList.remove('active');
                 sendParam('active-tab', 1);
             }
-            
-            // Sync the select dropdown visual
-            const selectEl = document.querySelector('.tab-btn');
-            if (selectEl) {
-                selectEl.value = (tabIndex === 0) ? 'mix' : 'effects';
-            }
-            
-            // Re-trigger visualizers
-            setTimeout(() => updateAllVisualizers(), 50);
+
+            // Redraw visualizer canvases
+            setTimeout(() => {
+                updateBitcrusherCanvas();
+                updatePhoneCanvas();
+                updateEndlessSmile(parseFloat(document.querySelector('[data-id="fx-endless-amount"]').dataset.val || 0));
+            }, 50);
         }
 
         // ──────────────────────────────────────────────────────────
@@ -1848,7 +1860,12 @@
                 let dbStr = (db >= 0 ? '+' : '') + db.toFixed(1) + ' dB';
                 let span = document.getElementById('db-' + knob.dataset.id);
                 if (span) span.textContent = dbStr;
-            } else if (knob.dataset.id === 'stereo-vol' || knob.dataset.id === 'rev-vol' || knob.dataset.id === 'dly-vol' || knob.dataset.id === 'sat-tape' || knob.dataset.id === 'desser' || knob.dataset.id === 'dly-feedback' || knob.dataset.id === 'fx-pitch-mix' || knob.dataset.id === 'stereo-width') {
+            } else if (knob.dataset.id === 'stereo-vol' || knob.dataset.id === 'rev-vol' || knob.dataset.id === 'dly-vol') {
+                let db = (val / 100) * 24.0;
+                let dbStr = db === 0 ? '0.0 dB' : '+' + db.toFixed(1) + ' dB';
+                let span = document.getElementById('db-' + knob.dataset.id);
+                if (span) span.textContent = dbStr;
+            } else if (knob.dataset.id === 'sat-tape' || knob.dataset.id === 'desser' || knob.dataset.id === 'dly-feedback' || knob.dataset.id === 'fx-pitch-mix' || knob.dataset.id === 'stereo-width') {
                 let span = document.getElementById('db-' + knob.dataset.id);
                 if (span) span.textContent = Math.round(val) + ' %';
             } else if (knob.dataset.id === 'fx-pitch-val' || knob.dataset.id === 'fx-formant-val') {
@@ -1983,7 +2000,7 @@
                     for (const [id, value] of Object.entries(params)) {
                         // 1. Check if it's the tab selector
                         if (id === 'active-tab') {
-                            switchTab(value > 0.5 ? 1 : 0);
+                            switchTab(value > 0.5 ? 'effects' : 'mix');
                             continue;
                         }
 
@@ -1999,7 +2016,12 @@
                                 let dbStr = (db >= 0 ? '+' : '') + db.toFixed(1) + ' dB';
                                 let span = document.getElementById('db-' + id);
                                 if (span) span.textContent = dbStr;
-                            } else if (id === 'stereo-vol' || id === 'rev-vol' || id === 'dly-vol' || id === 'sat-tape' || id === 'desser' || id === 'dly-feedback' || id === 'fx-pitch-mix' || id === 'stereo-width') {
+                            } else if (id === 'stereo-vol' || id === 'rev-vol' || id === 'dly-vol') {
+                                let db = (value / 100) * 24.0;
+                                let dbStr = db === 0 ? '0.0 dB' : '+' + db.toFixed(1) + ' dB';
+                                let span = document.getElementById('db-' + id);
+                                if (span) span.textContent = dbStr;
+                            } else if (id === 'sat-tape' || id === 'desser' || id === 'dly-feedback' || id === 'fx-pitch-mix' || id === 'stereo-width') {
                                 let span = document.getElementById('db-' + id);
                                 if (span) span.textContent = Math.round(value) + ' %';
                             }
@@ -2092,13 +2114,17 @@
             }
         } catch (e) { }
 
-        // Initial draw of visualizers in preview mode
+        // Initial draw of visualizers
         setTimeout(() => {
-            updateStereoVisualizer(0);
-            updateEndlessSmile(0);
-            updateBitcrusherCanvas();
-            updatePhoneCanvas();
-            updatePitchProCanvas();
+            if (!hasJuceBridge()) {
+                updateStereoVisualizer(0);
+                updateEndlessSmile(0);
+                updateBitcrusherCanvas();
+                updatePhoneCanvas();
+                updatePitchProCanvas();
+            } else {
+                updateAllVisualizers();
+            }
         }, 200);
 
         // ──────────────────────────────────────────────────────────
@@ -2144,36 +2170,10 @@
         }
 
         function callNative(funcName, ...args) {
-            return new Promise((resolve) => {
-                if (!window.__JUCE__ || !window.__JUCE__.backend) {
-                    resolve(null);
-                    return;
-                }
-
-                const resultId = Math.floor(Math.random() * 100000000);
-                const resultEventName = "__juce__result_" + resultId;
-
-                const onResult = (result) => {
-                    try { window.__JUCE__.backend.removeEventListener(resultEventName, onResult); } catch (e) { }
-                    resolve(result);
-                };
-
-                try {
-                    window.__JUCE__.backend.addEventListener(resultEventName, onResult);
-                } catch (e) { }
-
-                window.__JUCE__.backend.emitEvent("__juce__invoke", {
-                    name: funcName,
-                    params: args,
-                    resultId: resultId
-                });
-
-                // Safety timeout if response never comes
-                setTimeout(() => {
-                    try { window.__JUCE__.backend.removeEventListener(resultEventName, onResult); } catch (e) { }
-                    resolve(null);
-                }, 3000);
-            });
+            if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend[funcName] === 'function') {
+                return window.__JUCE__.backend[funcName](...args);
+            }
+            return Promise.resolve(null);
         }
 
         // Generate a persistent device ID as HWID fallback when native bridge can't return it
@@ -2488,7 +2488,7 @@
             }, 30 * 60 * 1000); // every 30 minutes
         }
 
-        // Hardcoded presets
+        // Hardcoded presets (paste generated json here later)
         const factoryPresets = {
             "init": {
                 "global-in": 50, "global-out": 50,
@@ -2500,27 +2500,11 @@
                 "stereo-width": 0, "stereo-vol": 0, "stereo-on": 1,
                 "rev-length": 0, "rev-vol": 0, "rev-lc": 0, "rev-hc": 100, "rev-on": 1,
                 "dly-fdbk": 0, "dly-vol": 0, "dly-on": 1,
-                "fx-coldfire-amount": 0, "fx-phone-amount": 0, "fx-endless-amount": 0, 
-                "fx-pitch-val": 50, "fx-formant-val": 50, "fx-pitch-mix": 0,
-                "noise-on": 1, "rider-on": 1, "cut-lows-on": 1, "cut-boxy-on": 1, "desser-on": 1, "comp-on": 1, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
+                "fx-bitcrusher-mix": 0, "fx-phone-mix": 0, "fx-endless-vol": 0, "fx-flutter-mix": 0
             },
-            "agresivo": { 
-                "global-in": 50, "global-out": 55, "noise-thresh": 35, "noise-amount": 100, "rider-target": 80, 
-                "cut-lows": 80, "cut-boxy": 30, "desser": 70, "comp-amount": 75, "pres-mid": 25, "pres-high": 60, 
-                "sat-tape": 45, "air-band": 80, "stereo-width": 100, "stereo-vol": 60, "rev-length": 60, "rev-vol": 45, 
-                "rev-lc": 20, "rev-hc": 100, "dly-fdbk": 25, "dly-vol": 30, 
-                "fx-coldfire-amount": 0, "fx-phone-amount": 0, "fx-endless-amount": 0, 
-                "fx-pitch-val": 50, "fx-formant-val": 50, "fx-pitch-mix": 0,
-                "noise-on": 1, "rider-on": 1, "cut-lows-on": 1, "cut-boxy-on": 1, "desser-on": 1, "comp-on": 1, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1 
-            },
-            "suave": {
-                "global-in": 50, "global-out": 50, "noise-thresh": 20, "noise-amount": 50, "rider-target": 50, 
-                "cut-lows": 40, "cut-boxy": 15, "desser": 35, "comp-amount": 25, "pres-mid": 10, "pres-high": 15, 
-                "sat-tape": 10, "air-band": 20, "stereo-width": 30, "stereo-vol": 30, "rev-length": 30, "rev-vol": 35, 
-                "rev-lc": 15, "rev-hc": 85, "dly-fdbk": 15, "dly-vol": 20, 
-                "fx-coldfire-amount": 0, "fx-phone-amount": 0, "fx-endless-amount": 0, 
-                "fx-pitch-val": 50, "fx-formant-val": 50, "fx-pitch-mix": 0,
-                "noise-on": 1, "rider-on": 1, "cut-lows-on": 1, "cut-boxy-on": 1, "desser-on": 1, "comp-on": 1, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
+            "agresivo": { "global-in": 50, "global-out": 55.25, "noise-thresh": 37, "noise-amount": 100, "rider-target": 100, "cut-lows": 88, "cut-boxy": 13.5, "desser": 73, "comp-amount": 9, "pres-mid": 3.75, "pres-high": 100, "sat-tape": 9, "air-band": 100, "stereo-width": 100, "stereo-vol": 31.75, "rev-length": 60.75, "rev-vol": 15.25, "rev-lc": 8.25, "rev-hc": 100, "dly-fdbk": 26.25, "dly-vol": 9.25, "fx-bitcrusher-bits": 16, "fx-bitcrusher-down": 1, "fx-bitcrusher-mix": 100, "fx-phone-freq": 28.5, "fx-phone-q": 100, "fx-phone-mix": 100, "fx-endless-intensity": 11.5, "fx-endless-filter": 68.5, "fx-endless-vol": 25.5, "fx-flutter-rate": 0, "fx-flutter-fdbk": 0, "fx-flutter-mix": 0, "noise-on": 1, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 1, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1 },
+            "normal": {
+                "global-in": 50, "global-out": 50, "noise-thresh": 20, "noise-amount": 50, "rider-target": 50, "cut-lows": 50, "cut-boxy": 20, "desser": 35, "comp-amount": 25, "pres-mid": 15, "pres-high": 25, "sat-tape": 15, "air-band": 30, "stereo-width": 25, "stereo-vol": 15, "rev-length": 30, "rev-vol": 20, "rev-lc": 20, "rev-hc": 80, "dly-fdbk": 15, "dly-vol": 10, "noise-on": 0, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 0, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
             },
             "modo pro": {
                 "global-in": 50, "global-out": 52, "noise-thresh": 40, "noise-amount": 80, "rider-target": 80, "cut-lows": 75, "cut-boxy": 40, "desser": 60, "comp-amount": 40, "pres-mid": 25, "pres-high": 50, "sat-tape": 30, "air-band": 60, "stereo-width": 50, "stereo-vol": 25, "rev-length": 45, "rev-vol": 25, "rev-lc": 30, "rev-hc": 90, "dly-fdbk": 25, "dly-vol": 15, "noise-on": 0, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 0, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
