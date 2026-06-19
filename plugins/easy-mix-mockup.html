@@ -2164,6 +2164,47 @@
             }
         } catch (e) { }
 
+        function hasJuceBridge() {
+            if (window.__JUCE__ && window.__JUCE__.backend) return true;
+            if (window.chrome && window.chrome.webview) return true;
+            return false;
+        }
+
+        const jucePromises = new Map();
+        if (window.__JUCE__ && window.__JUCE__.backend) {
+            window.__JUCE__.backend.addEventListener("__juce__complete", (ev) => {
+                const pid = ev.promiseId;
+                if (jucePromises.has(pid)) {
+                    jucePromises.get(pid).resolve(ev.result);
+                    jucePromises.delete(pid);
+                }
+            });
+        }
+
+        function callNative(funcName, ...args) {
+            try {
+                if (window.__JUCE__ && window.__JUCE__.backend) {
+                    const promiseId = Math.floor(Math.random() * 1000000000);
+                    const p = new Promise(resolve => {
+                        jucePromises.set(promiseId, { resolve });
+                    });
+                    window.__JUCE__.backend.emitEvent("__juce__invoke", {
+                        name: funcName,
+                        params: args,
+                        resultId: promiseId
+                    });
+                    return p;
+                }
+
+                if (window.chrome && window.chrome.webview) {
+                    window.chrome.webview.postMessage(JSON.stringify({ func: funcName, args: args }));
+                    return Promise.resolve();
+                }
+            } catch(err){}
+
+            return Promise.resolve();
+        }
+
         // Initial draw of visualizers
         setTimeout(() => {
             if (!hasJuceBridge()) {
@@ -2215,94 +2256,7 @@
             if (modal) modal.style.display = 'none';
         }
 
-        function hasJuceBridge() {
-            if (window.__JUCE__ && window.__JUCE__.backend) return true;
-            if (window.__JUCE__ && typeof window.__JUCE__.getNativeFunction === 'function') return true;
-            if (typeof window.getNativeFunction === 'function') return true;
-            if (window.__JUCE__ && typeof window.__JUCE__.getHardwareId === 'function') return true;
-            if (typeof window.getHardwareId === 'function') return true;
-            return false;
-        }
 
-        function callNative(funcName, ...args) {
-            try {
-                if (typeof window.getNativeFunction === 'function') {
-                    const fn = window.getNativeFunction('writeLog');
-                    if (typeof fn === 'function') {
-                        fn("callNative JS: calling " + funcName);
-                    }
-                }
-            } catch(err){}
-
-            let result;
-            // 1. Scan window.__JUCE__.backend
-            if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend[funcName] === 'function') {
-                try {
-                    result = window.__JUCE__.backend[funcName](...args);
-                } catch (e) {
-                    console.error("Error calling window.__JUCE__.backend[" + funcName + "]:", e);
-                }
-            }
-            // 2. Scan window.chrome.webview.postMessage for direct WebView2 dispatch
-            else if (window.chrome && window.chrome.webview && typeof window.chrome.webview.postMessage === 'function') {
-                try {
-                    window.chrome.webview.postMessage(JSON.stringify({
-                        name: funcName,
-                        params: args,
-                        resultId: Math.floor(Math.random() * 1000000)
-                    }));
-                } catch (e) {
-                    console.error("Error posting message via WebView2:", e);
-                }
-            }
-            // 3. Scan window.__JUCE__.getNativeFunction
-            else if (window.__JUCE__ && typeof window.__JUCE__.getNativeFunction === 'function') {
-                try {
-                    const fn = window.__JUCE__.getNativeFunction(funcName);
-                    if (typeof fn === 'function') {
-                        result = fn(...args);
-                    }
-                } catch (e) {
-                    console.error("Error calling window.__JUCE__.getNativeFunction(" + funcName + "):", e);
-                }
-            }
-            // 4. Scan window.getNativeFunction
-            else if (typeof window.getNativeFunction === 'function') {
-                try {
-                    const fn = window.getNativeFunction(funcName);
-                    if (typeof fn === 'function') {
-                        result = fn(...args);
-                    }
-                } catch (e) {
-                    console.error("Error calling window.getNativeFunction(" + funcName + "):", e);
-                }
-            }
-            // 5. Scan window.__JUCE__ directly
-            else if (window.__JUCE__ && typeof window.__JUCE__[funcName] === 'function') {
-                try {
-                    result = window.__JUCE__[funcName](...args);
-                } catch (e) {
-                    console.error("Error calling window.__JUCE__[" + funcName + "]:", e);
-                }
-            }
-            // 6. Scan window directly
-            else if (typeof window[funcName] === 'function') {
-                try {
-                    result = window[funcName](...args);
-                } catch (e) {
-                    console.error("Error calling window[" + funcName + "]:", e);
-                }
-            } else {
-                console.warn("callNative: native function not found or not callable: " + funcName);
-                return Promise.resolve(null);
-            }
-
-            // Garantee that a Promise is returned
-            if (result && typeof result.then === 'function') {
-                return result;
-            }
-            return Promise.resolve(result);
-        }
 
         function openExternalURL(url) {
             if (hasJuceBridge()) {
@@ -3090,3 +3044,4 @@
     </script>
 </body>
 </html>
+
