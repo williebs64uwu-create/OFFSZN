@@ -2191,6 +2191,12 @@
         }
 
         function callNative(funcName, ...args) {
+            try {
+                if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.writeLog === 'function') {
+                    window.__JUCE__.backend.writeLog("callNative JS: calling " + funcName + " with " + JSON.stringify(args));
+                }
+            } catch(err){}
+
             let result;
             // 1. Scan window.__JUCE__.backend
             if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend[funcName] === 'function') {
@@ -2200,7 +2206,19 @@
                     console.error("Error calling window.__JUCE__.backend[" + funcName + "]:", e);
                 }
             }
-            // 2. Scan window.__JUCE__.getNativeFunction
+            // 2. Scan window.chrome.webview.postMessage for direct WebView2 dispatch
+            else if (window.chrome && window.chrome.webview && typeof window.chrome.webview.postMessage === 'function') {
+                try {
+                    window.chrome.webview.postMessage(JSON.stringify({
+                        name: funcName,
+                        params: args,
+                        resultId: Math.floor(Math.random() * 1000000)
+                    }));
+                } catch (e) {
+                    console.error("Error posting message via WebView2:", e);
+                }
+            }
+            // 3. Scan window.__JUCE__.getNativeFunction
             else if (window.__JUCE__ && typeof window.__JUCE__.getNativeFunction === 'function') {
                 try {
                     const fn = window.__JUCE__.getNativeFunction(funcName);
@@ -2211,7 +2229,7 @@
                     console.error("Error calling window.__JUCE__.getNativeFunction(" + funcName + "):", e);
                 }
             }
-            // 3. Scan window.getNativeFunction
+            // 4. Scan window.getNativeFunction
             else if (typeof window.getNativeFunction === 'function') {
                 try {
                     const fn = window.getNativeFunction(funcName);
@@ -2222,7 +2240,7 @@
                     console.error("Error calling window.getNativeFunction(" + funcName + "):", e);
                 }
             }
-            // 4. Scan window.__JUCE__ directly
+            // 5. Scan window.__JUCE__ directly
             else if (window.__JUCE__ && typeof window.__JUCE__[funcName] === 'function') {
                 try {
                     result = window.__JUCE__[funcName](...args);
@@ -2230,7 +2248,7 @@
                     console.error("Error calling window.__JUCE__[" + funcName + "]:", e);
                 }
             }
-            // 5. Scan window directly
+            // 6. Scan window directly
             else if (typeof window[funcName] === 'function') {
                 try {
                     result = window[funcName](...args);
