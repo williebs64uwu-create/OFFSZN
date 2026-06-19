@@ -1283,8 +1283,8 @@
                         <div class="knob-row">
                             <div class="knob-wrap">
                                 <span class="knob-label">Repeticiones</span>
-                                <div class="knob md" data-id="dly-feedback" data-val="0" data-accent="bf5af2"></div>
-                                <span id="db-dly-feedback" style="font-size: 8px; font-weight: normal; color: var(--dim); margin-top: 1px;">0 %</span>
+                                <div class="knob md" data-id="dly-fdbk" data-val="0" data-accent="bf5af2"></div>
+                                <span id="db-dly-fdbk" style="font-size: 8px; font-weight: normal; color: var(--dim); margin-top: 1px;">0 %</span>
                             </div>
                             <div class="knob-wrap" style="align-items: center; gap: 2px;">
                                 <span class="knob-label">Volumen</span>
@@ -1881,7 +1881,7 @@
                 let dbStr = db === 0 ? '0.0 dB' : '+' + db.toFixed(1) + ' dB';
                 let span = document.getElementById('db-' + knob.dataset.id);
                 if (span) span.textContent = dbStr;
-            } else if (knob.dataset.id === 'sat-tape' || knob.dataset.id === 'desser' || knob.dataset.id === 'dly-feedback' || knob.dataset.id === 'fx-pitch-mix' || knob.dataset.id === 'stereo-width' || knob.dataset.id === 'comp-amount') {
+            } else if (knob.dataset.id === 'sat-tape' || knob.dataset.id === 'desser' || knob.dataset.id === 'dly-fdbk' || knob.dataset.id === 'fx-pitch-mix' || knob.dataset.id === 'stereo-width' || knob.dataset.id === 'comp-amount') {
                 let span = document.getElementById('db-' + knob.dataset.id);
                 if (span) span.textContent = Math.round(val) + ' %';
             } else if (knob.dataset.id === 'fx-pitch-val' || knob.dataset.id === 'fx-formant-val') {
@@ -2037,7 +2037,7 @@
                                 let dbStr = db === 0 ? '0.0 dB' : '+' + db.toFixed(1) + ' dB';
                                 let span = document.getElementById('db-' + id);
                                 if (span) span.textContent = dbStr;
-                            } else if (id === 'sat-tape' || id === 'desser' || id === 'dly-feedback' || id === 'fx-pitch-mix' || id === 'stereo-width' || id === 'comp-amount') {
+                            } else if (id === 'sat-tape' || id === 'desser' || id === 'dly-fdbk' || id === 'fx-pitch-mix' || id === 'stereo-width' || id === 'comp-amount') {
                                 let span = document.getElementById('db-' + id);
                                 if (span) span.textContent = Math.round(value) + ' %';
                             }
@@ -2191,54 +2191,62 @@
         }
 
         function callNative(funcName, ...args) {
+            let result;
             // 1. Scan window.__JUCE__.backend
             if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend[funcName] === 'function') {
                 try {
-                    return window.__JUCE__.backend[funcName](...args);
+                    result = window.__JUCE__.backend[funcName](...args);
                 } catch (e) {
                     console.error("Error calling window.__JUCE__.backend[" + funcName + "]:", e);
                 }
             }
             // 2. Scan window.__JUCE__.getNativeFunction
-            if (window.__JUCE__ && typeof window.__JUCE__.getNativeFunction === 'function') {
+            else if (window.__JUCE__ && typeof window.__JUCE__.getNativeFunction === 'function') {
                 try {
                     const fn = window.__JUCE__.getNativeFunction(funcName);
                     if (typeof fn === 'function') {
-                        return fn(...args);
+                        result = fn(...args);
                     }
                 } catch (e) {
                     console.error("Error calling window.__JUCE__.getNativeFunction(" + funcName + "):", e);
                 }
             }
             // 3. Scan window.getNativeFunction
-            if (typeof window.getNativeFunction === 'function') {
+            else if (typeof window.getNativeFunction === 'function') {
                 try {
                     const fn = window.getNativeFunction(funcName);
                     if (typeof fn === 'function') {
-                        return fn(...args);
+                        result = fn(...args);
                     }
                 } catch (e) {
                     console.error("Error calling window.getNativeFunction(" + funcName + "):", e);
                 }
             }
             // 4. Scan window.__JUCE__ directly
-            if (window.__JUCE__ && typeof window.__JUCE__[funcName] === 'function') {
+            else if (window.__JUCE__ && typeof window.__JUCE__[funcName] === 'function') {
                 try {
-                    return window.__JUCE__[funcName](...args);
+                    result = window.__JUCE__[funcName](...args);
                 } catch (e) {
                     console.error("Error calling window.__JUCE__[" + funcName + "]:", e);
                 }
             }
             // 5. Scan window directly
-            if (typeof window[funcName] === 'function') {
+            else if (typeof window[funcName] === 'function') {
                 try {
-                    return window[funcName](...args);
+                    result = window[funcName](...args);
                 } catch (e) {
                     console.error("Error calling window[" + funcName + "]:", e);
                 }
+            } else {
+                console.warn("callNative: native function not found or not callable: " + funcName);
+                return Promise.resolve(null);
             }
-            console.warn("callNative: native function not found or not callable: " + funcName);
-            return Promise.resolve(null);
+
+            // Garantee that a Promise is returned
+            if (result && typeof result.then === 'function') {
+                return result;
+            }
+            return Promise.resolve(result);
         }
 
         function openExternalURL(url) {
@@ -2737,7 +2745,13 @@
             listDiv.innerHTML = '';
 
             if (hasJuceBridge()) {
-                callNative("listPresetsNative").then(keys => {
+                callNative("listPresetsNative").then(rawKeys => {
+                    let keys = [];
+                    if (rawKeys) {
+                        try {
+                            keys = typeof rawKeys === 'string' ? JSON.parse(rawKeys) : rawKeys;
+                        } catch (e) { console.error("Error parsing keys:", e); }
+                    }
                     if (!keys || keys.length === 0) {
                         listDiv.innerHTML = '<span style="font-size:10px; color:var(--dim); font-style:italic; padding-left:5px;">Aún no tienes presets guardados.</span>';
                         return;
