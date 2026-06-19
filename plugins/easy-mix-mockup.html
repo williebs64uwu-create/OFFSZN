@@ -3056,6 +3056,37 @@
             // Prevent right click globally
             event.preventDefault();
         });
+
+        // DEBUG OVERLAY
+        const debugOverlay = document.createElement('div');
+        debugOverlay.style.position = 'absolute';
+        debugOverlay.style.top = '0';
+        debugOverlay.style.left = '0';
+        debugOverlay.style.width = '100%';
+        debugOverlay.style.height = '300px';
+        debugOverlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+        debugOverlay.style.color = 'lime';
+        debugOverlay.style.zIndex = '999999';
+        debugOverlay.style.overflow = 'auto';
+        debugOverlay.style.fontSize = '14px';
+        debugOverlay.style.pointerEvents = 'none';
+        document.body.appendChild(debugOverlay);
+
+        function logDebug(msg) {
+            debugOverlay.innerHTML += msg + '<br>';
+        }
+
+        setTimeout(() => {
+            logDebug('JUCE check at 500ms:');
+            logDebug('window.__JUCE__: ' + typeof window.__JUCE__);
+            if (window.__JUCE__) {
+                logDebug('Keys in __JUCE__: ' + Object.keys(window.__JUCE__).join(', '));
+            }
+            logDebug('window.getNativeFunction: ' + typeof window.getNativeFunction);
+            if (typeof window.getNativeFunction === 'function') {
+                logDebug('callNative setParam = ' + typeof window.getNativeFunction('setParam'));
+            }
+        }, 500);
     </script>
 </body>
 </html>
