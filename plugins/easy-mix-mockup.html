@@ -778,6 +778,40 @@
             text-decoration: underline;
         }
 
+        .exp-btn-secondary {
+            width: 260px;
+            padding: 11px;
+            background: transparent;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid #ffffff;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        .exp-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .act-btn-secondary {
+            background: transparent !important;
+            border: 1px solid #ffffff !important;
+            color: #ffffff !important;
+            margin-top: 5px;
+            transition: all 0.2s ease;
+        }
+
+        .act-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+
         /* Spinner style for loading buttons */
         .btn-loading {
             position: relative;
@@ -830,8 +864,7 @@
             <input class="exp-input" id="exp-serial-input" type="text" placeholder="EM-XXXX-XXXX-XXXX"
                 spellcheck="false" autocomplete="off">
             <button class="exp-btn" id="exp-submit-btn" onclick="submitExpiredSerial()">Activar Nueva Licencia</button>
-            <a class="exp-buy" id="exp-link-btn" href="#" onclick="openExternalURL('https://offszn.lat/plugins/easy-mix'); return false;"
-                style="text-decoration: underline; display: block; text-align: center;">Consigue tu licencia &rarr;</a>
+            <button class="exp-btn-secondary" id="exp-link-btn" onclick="openExternalURL('https://offszn.lat/plugins/easy-mix'); return false;">Consigue tu licencia &rarr;</button>
         </div>
 
         <!-- PRESET MODAL -->
@@ -897,9 +930,7 @@
                 <input type="text" class="act-input" placeholder="EM-XXXX-XXXX-XXXX" id="serial-input">
                 <button class="act-btn act-btn-primary" id="act-submit-btn" onclick="submitSerial()">Validar
                     Llave</button>
-                <a class="exp-buy" href="#" onclick="openExternalURL('https://offszn.lat/plugins/easy-mix#serial-section'); return false;"
-                    style="display:block; text-align:center; font-size:10px; margin-top:5px; text-decoration: underline;">Consigue
-                    tu licencia &rarr;</a>
+                <button class="act-btn act-btn-secondary" id="act-link-btn" onclick="openExternalURL('https://offszn.lat/plugins/easy-mix#serial-section'); return false;">Consigue tu licencia &rarr;</button>
             </div>
         </div>
 
@@ -2430,6 +2461,9 @@
 
         setTimeout(() => {
             if (hasJuceBridge()) {
+                // Silenciar inmediatamente el audio mientras verificamos la licencia
+                callNative("setLicenseStatus", false);
+
                 // 1) Try localStorage first (fastest, most reliable)
                 let localSerial = null;
                 try { localSerial = localStorage.getItem('offszn_serial'); } catch (e) { }
@@ -2477,6 +2511,10 @@
             callNative("setLicenseStatus", false);
             // 2) Clear localStorage so next open also asks for serial
             try { localStorage.removeItem('offszn_serial'); } catch (e) { }
+            // Limpiar también el archivo de licencia física guardada en C++
+            if (hasJuceBridge()) {
+                callNative("saveLicense", "");
+            }
             // 3) Show hard-lock overlay
             const overlay = document.getElementById('license-expired-overlay');
             if (overlay) {
