@@ -234,3 +234,73 @@ export const activateSerial = async (req, res) => {
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 };
+
+// ─── POST /api/plugin/admin/reset-license ─────────────────────────────────────
+// Admin-only: Deletes an existing license + all its activations,
+// then generates a fresh FULL lifetime key.
+// Body: { admin_key: "...", serial_key: "EASY-FULL-...", plugin_name: "Easy Mix" }
+export const adminResetLicense = async (req, res) => {
+    try {
+        const { admin_key, serial_key, plugin_name } = req.body;
+
+        // Simple shared-secret auth — set PLUGIN_ADMIN_KEY in Render env vars
+        const expectedKey = process.env.PLUGIN_ADMIN_KEY || 'offszn-admin-2026';
+        if (admin_key !== expectedKey) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        if (!serial_key) {
+            return res.status(400).json({ error: 'Falta serial_key' });
+        }
+
+        // 1. Find the old license
+        const { data: oldLicense } = await supabase
+            .from('plugin_licenses').select('id, serial_key').eq('serial_key', serial_key).single();
+
+        if (oldLicense) {
+            // 2. Delete all device activations for this license
+            const { error: delActErr } = await supabase
+                .from('plugin_activations').delete().eq('license_id', oldLicense.id);
+            if (delActErr) console.warn('[Admin] Error deleting activations:', delActErr.message);
+
+            // 3. Delete the license itself
+            const { error: delLicErr } = await supabase
+                .from('plugin_licenses').delete().eq('id', oldLicense.id);
+            if (delLicErr) console.warn('[Admin] Error deleting license:', delLicErr.message);
+
+            console.log(`🗑️ [Admin] Deleted license ${serial_key} and all its activations`);
+        } else {
+            console.log(`ℹ️ [Admin] License ${serial_key} not found — will just generate a new one`);
+        }
+
+        // 4. Generate a new FULL lifetime key
+        const newSerial = `EASY-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+        const { data: newLic, error: insertErr } = await supabase
+            .from('plugin_licenses')
+            .insert({
+                serial_key: newSerial,
+                license_type: 'lifetime',
+                status: 'active',
+                expires_at: null,
+                max_devices: 3,
+                plugin_name: plugin_name || 'Easy Mix'
+            })
+            .select('*').single();
+
+        if (insertErr) throw insertErr;
+
+        console.log(`✅ [Admin] New FULL license created: ${newSerial}`);
+
+        return res.json({
+            success: true,
+            old_serial_deleted: serial_key,
+            new_serial_key: newSerial,
+            license_type: 'lifetime',
+            expires_at: 'never',
+            max_devices: 3
+        });
+    } catch (error) {
+        console.error('💥 [Admin] Reset License Error:', error);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+};
