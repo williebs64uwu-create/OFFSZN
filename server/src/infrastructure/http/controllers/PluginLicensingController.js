@@ -112,31 +112,51 @@ export const requestTrial = async (req, res) => {
         const { hwid, device_name } = req.body;
         if (!hwid) return res.status(400).json({ error: 'Falta HWID' });
 
+        // ── 1. Check if this HWID ALREADY has a trial (past or present) ──────
+        // Strict: ONE trial per machine, ever. No re-trials.
         const { data: existingAct } = await supabase
             .from('plugin_activations')
-            .select('license_id, plugin_licenses!inner(*)')
-            .eq('hwid', hwid).eq('plugin_licenses.license_type', 'trial').single();
-
-        let serialKey, expiresAt;
+            .select('license_id, plugin_licenses!inner(serial_key, expires_at, license_type)')
+            .eq('hwid', hwid)
+            .eq('plugin_licenses.license_type', 'trial')
+            .limit(1)
+            .maybeSingle();
 
         if (existingAct) {
-            serialKey = existingAct.plugin_licenses.serial_key;
-            expiresAt = existingAct.plugin_licenses.expires_at;
-        } else {
-            serialKey = `TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
-            const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + 7);
-            expiresAt = expiryDate.toISOString();
+            // Return their existing trial (even if expired — they used their one trial)
+            const lic = existingAct.plugin_licenses;
+            const now = new Date();
+            const expiry = lic.expires_at ? new Date(lic.expires_at) : null;
 
-            const { data: newLic, error: licErr } = await supabase
-                .from('plugin_licenses')
-                .insert({ serial_key: serialKey, license_type: 'trial', status: 'active', expires_at: expiresAt, max_devices: 1 })
-                .select('id').single();
-            if (licErr) throw licErr;
+            if (expiry && expiry < now) {
+                // Trial expired → tell them to buy
+                return res.status(403).json({
+                    error: 'Tu periodo de prueba gratuito ha expirado. Adquiere una licencia en offszn.lat/plugins para seguir usando Easy Mix.',
+                    trial_expired: true
+                });
+            }
 
-            await supabase.from('plugin_activations').insert({ license_id: newLic.id, hwid, device_name: device_name || 'Desconocido' });
+            // Trial still valid → return same key
+            const payload = `${lic.serial_key}|${lic.expires_at}`;
+            const signature = signPayload(payload);
+            return res.json({ success: true, serial_key: lic.serial_key, expires_at: lic.expires_at, license_type: 'trial', signature });
         }
 
+        // ── 2. No previous trial → create one ────────────────────────────────
+        const serialKey = `TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 7);
+        const expiresAt = expiryDate.toISOString();
+
+        const { data: newLic, error: licErr } = await supabase
+            .from('plugin_licenses')
+            .insert({ serial_key: serialKey, license_type: 'trial', status: 'active', expires_at: expiresAt, max_devices: 1, plugin_name: 'Easy Mix' })
+            .select('id').single();
+        if (licErr) throw licErr;
+
+        await supabase.from('plugin_activations').insert({ license_id: newLic.id, hwid, device_name: device_name || 'Desconocido' });
+
+        console.log(`[Trial] New trial created for hwid: ${hwid}, key: ${serialKey}`);
         const payload = `${serialKey}|${expiresAt}`;
         const signature = signPayload(payload);
         return res.json({ success: true, serial_key: serialKey, expires_at: expiresAt, license_type: 'trial', signature });
@@ -145,6 +165,47 @@ export const requestTrial = async (req, res) => {
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 };
+
+// ─── Helper: Generate plugin license after purchase ────────────────────────────
+// Called internally from PayPalController after a successful plugin purchase.
+export async function generatePluginLicense({ licenseType, userEmail, userId, pluginName = 'Easy Mix' }) {
+    const prefix = licenseType === 'subscription' ? 'EASY-SUB' : 'EASY-FULL';
+    const serialKey = `${prefix}-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+
+    let expiresAt = null;
+    if (licenseType === 'subscription') {
+        // Monthly: expires in 35 days (gives 5-day grace period)
+        const d = new Date();
+        d.setDate(d.getDate() + 35);
+        expiresAt = d.toISOString();
+    }
+
+    const { data: newLic, error } = await supabase
+        .from('plugin_licenses')
+        .insert({
+            serial_key: serialKey,
+            license_type: licenseType === 'subscription' ? 'subscription' : 'lifetime',
+            status: 'active',
+            expires_at: expiresAt,
+            max_devices: licenseType === 'subscription' ? 1 : 2,
+            plugin_name: pluginName,
+            user_id: userId || null
+        })
+        .select('id').single();
+
+    if (error) throw error;
+
+    // Send email with serial key
+    await sendActivationEmail({
+        to: userEmail,
+        serialKey,
+        licenseType: licenseType === 'subscription' ? 'subscription' : 'lifetime',
+        expiresAt: expiresAt || 'never'
+    });
+
+    console.log(`[Plugin License] Generated ${serialKey} for ${userEmail} (${licenseType})`);
+    return { serialKey, expiresAt, licenseId: newLic.id };
+}
 
 // ─── POST /api/plugin/activate ────────────────────────────────────────────────
 export const activateSerial = async (req, res) => {

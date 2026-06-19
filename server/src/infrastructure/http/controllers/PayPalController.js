@@ -5,6 +5,7 @@ import { PLATFORM_PAYPAL_EMAIL, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_E
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { v4 as uuidv4 } from 'uuid';
 import { getPresignedDownloadUrl } from '../../services/r2-storage.service.js';
+import { generatePluginLicense } from './PluginLicensingController.js';
 
 // --- PayPal OAuth Config ---
 const PAYPAL_OAUTH_URL = PAYPAL_ENVIRONMENT === 'live'
@@ -885,6 +886,30 @@ export const capturePayPalOrder = async (req, res) => {
                 console.error("[PayPalCapture] Error recording order items:", itemsError);
             } else if (orderItems.length > 0) {
                 console.log(`[PayPalCapture] Recorded ${orderItems.length} order_item(s) for order ${order.id}`);
+            }
+
+            // --- GENERAR LICENCIA DEL PLUGIN SI SE COMPRÓ EASY MIX ---
+            for (const item of cartItems) {
+                const prodName = item.product?.name || '';
+                const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix');
+                if (isEasyMix) {
+                    try {
+                        const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
+                                               (item.product?.product_type && item.product.product_type === 'subscription') || 
+                                               (item.variant_price !== undefined && parseFloat(item.variant_price) <= 6.00);
+                        const licenseType = isSubscription ? 'subscription' : 'lifetime';
+                        
+                        console.log(`[PayPalCapture] Easy Mix detected! Generating ${licenseType} license for user ${userId || 'guest'} (${payerEmail})`);
+                        await generatePluginLicense({
+                            licenseType,
+                            userEmail: payerEmail,
+                            userId: userId,
+                            pluginName: 'Easy Mix'
+                        });
+                    } catch (licError) {
+                        console.error('[PayPalCapture] Error generating plugin license for Easy Mix:', licError);
+                    }
+                }
             }
 
             // 4. Update Sales Count
