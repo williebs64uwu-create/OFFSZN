@@ -1495,12 +1495,8 @@
         // ──────────────────────────────────────────────────────────
         function sendParam(id, value) {
             try {
-                if (window.__JUCE__ && window.__JUCE__.backend) {
-                    window.__JUCE__.backend.emitEvent("__juce__invoke", {
-                        name: "setParam",
-                        params: [String(id), Number(value)],
-                        resultId: Math.floor(Math.random() * 1000000)
-                    });
+                if (hasJuceBridge()) {
+                    callNative("setParam", String(id), Number(value));
                 }
             } catch (e) { /* running in browser preview — no bridge */ }
         }
@@ -2230,8 +2226,11 @@
 
         function callNative(funcName, ...args) {
             try {
-                if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.writeLog === 'function') {
-                    window.__JUCE__.backend.writeLog("callNative JS: calling " + funcName + " with " + JSON.stringify(args));
+                if (typeof window.getNativeFunction === 'function') {
+                    const fn = window.getNativeFunction('writeLog');
+                    if (typeof fn === 'function') {
+                        fn("callNative JS: calling " + funcName);
+                    }
                 }
             } catch(err){}
 
