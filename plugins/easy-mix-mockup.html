@@ -35,6 +35,11 @@
             user-select: none;
         }
 
+        /* Prevent context menu globally */
+        body {
+            -webkit-touch-callout: none;
+        }
+        
         .plugin {
             width: 100%;
             height: 100%;
@@ -583,6 +588,18 @@
             color: #fff;
         }
 
+        .act-btn-secondary {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transition: all 0.2s ease;
+        }
+
+        .act-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+        }
+
         .act-btn-close {
             position: absolute;
             top: 10px;
@@ -771,6 +788,27 @@
             cursor: pointer;
         }
 
+        .exp-btn-secondary {
+            width: 260px;
+            padding: 11px;
+            background: transparent;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 7px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .exp-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #fff;
+        }
+
         .exp-buy {
             font-size: 10px;
             color: #ff9f0a;
@@ -864,7 +902,7 @@
             <input class="exp-input" id="exp-serial-input" type="text" placeholder="EM-XXXX-XXXX-XXXX"
                 spellcheck="false" autocomplete="off">
             <button class="exp-btn" id="exp-submit-btn" onclick="submitExpiredSerial()">Activar Nueva Licencia</button>
-            <button class="exp-btn-secondary" id="exp-link-btn" onclick="openExternalURL('https://offszn.lat/plugins/easy-mix'); return false;">Consigue tu licencia &rarr;</button>
+            <button class="exp-btn-secondary" id="exp-link-btn" onclick="window.location.href='https://offszn.lat/plugins/easy-mix';">Consigue tu licencia &rarr;</button>
         </div>
 
         <!-- PRESET MODAL -->
@@ -930,7 +968,7 @@
                 <input type="text" class="act-input" placeholder="EM-XXXX-XXXX-XXXX" id="serial-input">
                 <button class="act-btn act-btn-primary" id="act-submit-btn" onclick="submitSerial()">Validar
                     Llave</button>
-                <button class="act-btn act-btn-secondary" id="act-link-btn" onclick="openExternalURL('https://offszn.lat/plugins/easy-mix#serial-section'); return false;">Consigue tu licencia &rarr;</button>
+                <button class="act-btn act-btn-secondary" id="act-link-btn" onclick="window.location.href='https://offszn.lat/plugins/easy-mix#serial-section';">Consigue tu licencia &rarr;</button>
             </div>
         </div>
 
@@ -2308,8 +2346,8 @@
                         if (response && response.success) {
                             // Store serial in localStorage so it persists between sessions
                             try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
-                            callNative("saveLicense", serial);
-                            callNative("setLicenseStatus", true);
+                            // Pass serial as 2nd arg so C++ saves it to disk atomically before verifying
+                            callNative("setLicenseStatus", true, serial);
 
                             // Update UI badge
                             const badge = document.getElementById('trial-badge');
@@ -2345,13 +2383,7 @@
                         }
                     }).catch(e => {
                         if (btn) btn.classList.remove('btn-loading');
-                        // Offline — grant access optimistically if serial was entered
-                        try { localStorage.setItem('offszn_serial', serial); } catch (e2) { }
-                        callNative("saveLicense", serial);
-                        callNative("setLicenseStatus", true);
-                        const badge = document.getElementById('trial-badge');
-                        if (badge) { badge.innerHTML = "Sin conexi&#243;n &#8212; Acceso offline"; badge.style.display = 'flex'; }
-                        closeActivationModal();
+                        showCustomAlert("Error de Conexión", "No se pudo conectar al servidor. Activa tu conexión a Internet para validar la licencia.", '❌');
                     });
                 });
             } else {
@@ -2380,7 +2412,7 @@
                 triggerLicenseExpired('Licencia Inválida', reason);
                 return;
             }
-            callNative("setLicenseStatus", true);
+            callNative("setLicenseStatus", true, serial);
             if (badge) {
                 try { localStorage.setItem('offszn_expires', response.expires_at || 'never'); } catch (e) { }
                 if (response.license_type === 'lifetime' || response.license_type === 'subscription' || response.expires_at === 'never') {
@@ -2414,6 +2446,9 @@
 
 
         function getHwidAsync() {
+            if (window.OFFSZN_HWID) {
+                return Promise.resolve(window.OFFSZN_HWID);
+            }
             if (hasJuceBridge()) {
                 return callNative("getHardwareId").then(hwid => hwid || getOrCreateDeviceId());
             }
@@ -2438,22 +2473,9 @@
 
         function handleOfflineFallback(serial) {
             hideLoadingOverlay();
-            let isExpiredLocally = false;
-            try {
-                const localExpires = localStorage.getItem('offszn_expires');
-                if (localExpires && localExpires !== 'never') {
-                    if (new Date(localExpires) < new Date()) isExpiredLocally = true;
-                }
-            } catch (e) { }
-
-            if (isExpiredLocally) {
-                triggerLicenseExpired('Activar Licencia', 'Tu licencia o prueba ha expirado (verificado localmente).');
-            } else {
-                callNative("setLicenseStatus", true);
-                const badge = document.getElementById('trial-badge');
-                if (badge) { badge.innerHTML = "Sin conexi&#243;n &#8212; Acceso local"; badge.style.display = 'flex'; }
-                startPeriodicCheck(serial);
-            }
+            // OFFLINE = NO SOUND, NO FUNCIONA HASTA QUE ESTES ONLINE BRO
+            callNative("setLicenseStatus", false);
+            triggerLicenseOffline('Sin Conexión', 'Se requiere una conexión activa a Internet para validar la licencia y poder usar el plugin.');
         }
 
         function startupVerifySerial(serial) {
@@ -2487,6 +2509,9 @@
 
         setTimeout(() => {
             if (hasJuceBridge()) {
+                // Set the API base URL in C++ so the background thread matches
+                callNative("setApiBase", apiBase);
+
                 // Silenciar inmediatamente el audio mientras verificamos la licencia
                 callNative("setLicenseStatus", false);
 
@@ -2518,12 +2543,19 @@
         }, 800);
 
 
-        // Escuchar evento de bloqueo si la licencia es inválida (desde C++)
+        // Escuchar evento de bloqueo si la licencia es inválida o no hay conexión (desde C++)
         try {
             if (window.__JUCE__ && window.__JUCE__.backend) {
                 window.__JUCE__.backend.addEventListener('license-status', (statusStr) => {
-                    if (statusStr === 'INVALID' || statusStr === 'EXPIRED') {
-                        triggerLicenseExpired('Licencia Bloqueada', 'Tu licencia fue revocada. Contacta soporte o ingresa una nueva key.');
+                    const status = (typeof statusStr === 'object' && statusStr !== null) ? (statusStr.value || statusStr.message || '') : statusStr;
+                    if (status === 'INVALID' || status === 'EXPIRED') {
+                        triggerLicenseExpired('Licencia Bloqueada', 'Tu licencia fue revocada o es inválida. Ingresa una nueva key.');
+                    } else if (status === 'OFFLINE') {
+                        triggerLicenseOffline('Sin Conexión', 'Se requiere una conexión activa a Internet para validar la licencia y usar el plugin.');
+                    } else if (status === 'VALID') {
+                        // Dismiss expired or offline overlays if they are visible
+                        const expOverlay = document.getElementById('license-expired-overlay');
+                        if (expOverlay) expOverlay.classList.remove('active');
                     }
                 });
             }
@@ -2546,6 +2578,53 @@
             if (overlay) {
                 document.getElementById('exp-title').textContent = title || 'Activar Licencia';
                 document.getElementById('exp-subtitle').textContent = subtitle || 'Ingresa tu serial gratis o el full para activarlo.';
+                
+                // Ensure input and buttons are visible
+                const input = document.getElementById('exp-serial-input');
+                const btn = document.getElementById('exp-submit-btn');
+                const btnSec = document.getElementById('exp-link-btn');
+                const retryBtn = document.getElementById('exp-retry-btn');
+                
+                if (input) input.style.display = 'block';
+                if (btn) btn.style.display = 'block';
+                if (btnSec) btnSec.style.display = 'block';
+                if (retryBtn) retryBtn.style.display = 'none';
+                
+                overlay.classList.add('active');
+            }
+        }
+
+        function triggerLicenseOffline(title, subtitle) {
+            // 1) Cut audio via C++
+            callNative("setLicenseStatus", false);
+            
+            // 2) Show hard-lock overlay with offline messaging
+            const overlay = document.getElementById('license-expired-overlay');
+            if (overlay) {
+                document.getElementById('exp-title').textContent = title || 'Sin Conexión';
+                document.getElementById('exp-subtitle').textContent = subtitle || 'El plugin requiere conexión a Internet.';
+                
+                // Hide input and normal buttons
+                const input = document.getElementById('exp-serial-input');
+                const btn = document.getElementById('exp-submit-btn');
+                const btnSec = document.getElementById('exp-link-btn');
+                if (input) input.style.display = 'none';
+                if (btn) btn.style.display = 'none';
+                if (btnSec) btnSec.style.display = 'none';
+                
+                // Show a retry/reload button
+                let retryBtn = document.getElementById('exp-retry-btn');
+                if (!retryBtn) {
+                    retryBtn = document.createElement('button');
+                    retryBtn.id = 'exp-retry-btn';
+                    retryBtn.className = 'exp-btn';
+                    retryBtn.textContent = 'Reintentar Conexión';
+                    retryBtn.onclick = () => {
+                        window.location.reload();
+                    };
+                    overlay.appendChild(retryBtn);
+                }
+                retryBtn.style.display = 'block';
                 overlay.classList.add('active');
             }
         }
@@ -2566,9 +2645,7 @@
                 }).then(res => res.json()).then(response => {
                     if (btn) btn.classList.remove('btn-loading');
                     if (response && response.success) {
-                        try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
-                        callNative("saveLicense", serial);
-                        callNative("setLicenseStatus", true);
+                        callNative("setLicenseStatus", true, serial);
                         // Dismiss overlay
                         const overlay = document.getElementById('license-expired-overlay');
                         if (overlay) overlay.classList.remove('active');
@@ -2585,12 +2662,7 @@
                     }
                 }).catch(() => {
                     if (btn) btn.classList.remove('btn-loading');
-                    // Offline — grant access optimistically
-                    try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
-                    callNative("saveLicense", serial);
-                    callNative("setLicenseStatus", true);
-                    const overlay = document.getElementById('license-expired-overlay');
-                    if (overlay) overlay.classList.remove('active');
+                    showCustomAlert("Error de Conexión", "No se pudo conectar al servidor. Activa tu conexión a Internet para validar la licencia.", '❌');
                 });
             });
         }
@@ -2711,12 +2783,12 @@
                         }
                     } else {
                         // Fallback default values for removed button groups
-                        if (id === 'comp-type') state[id] = 0; // Agresivo (Poner Voz al Frente)
-                        if (id === 'comp-mode') state[id] = 1; // Aggressive mode
+                        if (id === 'comp-type') state[id] = 0;
+                        if (id === 'comp-mode') state[id] = 1;
                     }
                 });
 
-                // Save delay division division
+                // Save delay division
                 let activeDly = document.querySelector(`.btn.active[onclick*="delayDiv"]`);
                 if (activeDly) {
                     let match = activeDly.getAttribute('onclick').match(/,\s*(\d+)\s*\)/);
@@ -2727,33 +2799,28 @@
                 state['rev-sidechain'] = document.getElementById('btn-rev-sidechain')?.classList.contains('active') ? 1 : 0;
                 state['dly-sidechain'] = document.getElementById('btn-dly-sidechain')?.classList.contains('active') ? 1 : 0;
 
-                if (hasJuceBridge()) {
-                    callNative("savePresetNative", name, JSON.stringify(state)).then(() => {
-                        renderPresetLists();
-                    });
-                } else {
-                    // Save to localStorage
+                const stateJson = JSON.stringify(state);
+
+                // ── PASO 1: Guardar en localStorage SIEMPRE (sincrónico y confiable) ──
+                try {
                     let userPresets = {};
-                    try {
-                        userPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}');
-                    } catch (e) { }
+                    try { userPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}'); } catch (e) {}
                     userPresets[name] = state;
                     localStorage.setItem('easymix_user_presets', JSON.stringify(userPresets));
-
-                    try {
-                        const blob = new Blob([JSON.stringify(state, null, 4)], { type: 'application/json' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = name.replace(/[^a-z0-9]/gi, '_') + '.preset';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                    } catch (e) { }
-
-                    renderPresetLists();
+                } catch (e) {
+                    console.warn('localStorage save failed:', e);
                 }
+
+                // ── PASO 2: También intentar guardar via native (respaldo en disco) ──
+                if (hasJuceBridge()) {
+                    try {
+                        callNative("savePresetNative", name, stateJson).catch(() => {});
+                    } catch (e) {}
+                }
+
+                // ── PASO 3: Actualizar la lista inmediatamente (usa localStorage) ──
+                renderPresetLists();
+                showCustomAlert('Preset Guardado', `"${name}" guardado exitosamente. ✅`, '🎛️');
             });
         }
 
@@ -2762,31 +2829,15 @@
             if (!listDiv) return;
             listDiv.innerHTML = '';
 
-            if (hasJuceBridge()) {
-                callNative("listPresetsNative").then(rawKeys => {
-                    let keys = [];
-                    if (rawKeys) {
-                        try {
-                            keys = typeof rawKeys === 'string' ? JSON.parse(rawKeys) : rawKeys;
-                        } catch (e) { console.error("Error parsing keys:", e); }
-                    }
-                    if (!keys || keys.length === 0) {
-                        listDiv.innerHTML = '<span style="font-size:10px; color:var(--dim); font-style:italic; padding-left:5px;">Aún no tienes presets guardados.</span>';
-                        return;
-                    }
-                    buildPresetRows(keys, listDiv, true);
-                });
+            // ── SIEMPRE leer de localStorage primero (sincrónico, confiable) ──
+            let localPresets = {};
+            try { localPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}'); } catch (e) {}
+            const localKeys = Object.keys(localPresets);
+
+            if (localKeys.length > 0) {
+                buildPresetRows(localKeys, listDiv, false);
             } else {
-                let userPresets = {};
-                try {
-                    userPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}');
-                } catch (e) { }
-                const keys = Object.keys(userPresets);
-                if (keys.length === 0) {
-                    listDiv.innerHTML = '<span style="font-size:10px; color:var(--dim); font-style:italic; padding-left:5px;">Aún no tienes presets guardados.</span>';
-                    return;
-                }
-                buildPresetRows(keys, listDiv, false);
+                listDiv.innerHTML = '<span style="font-size:10px; color:var(--dim); font-style:italic; padding-left:5px;">Aún no tienes presets guardados.</span>';
             }
         }
 
@@ -2857,7 +2908,14 @@
                             let dbStr = (db >= 0 ? '+' : '') + db.toFixed(1) + ' dB';
                             let span = document.getElementById('db-' + key);
                             if (span) span.textContent = dbStr;
+                        } else if (key === 'sat-tape' || key === 'desser' || key === 'dly-fdbk' || key === 'fx-pitch-mix' || key === 'stereo-width' || key === 'comp-amount') {
+                            let span = document.getElementById('db-' + key);
+                            if (span) span.textContent = Math.round(val) + ' %';
                         }
+                    }
+                    // Also handle buttons/modes if saved in state
+                    if (key === 'dly-div') {
+                        setDelayDiv(val);
                     }
                     if (key.endsWith('-on')) {
                         let moduleKey = key.replace('-on', '');
@@ -2995,7 +3053,10 @@
             });
         }
 
+        document.addEventListener('contextmenu', event => {
+            // Prevent right click globally
+            event.preventDefault();
+        });
     </script>
 </body>
-
 </html>
