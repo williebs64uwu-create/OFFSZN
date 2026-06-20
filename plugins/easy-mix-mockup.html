@@ -2465,35 +2465,31 @@
                 // Set the API base URL in C++ so the background thread matches
                 callNative("setApiBase", apiBase);
 
-                // Silenciar inmediatamente el audio mientras verificamos la licencia
-                callNative("setLicenseStatus", false);
+                // Check the license state from C++ (which has optimistic restore)
+                callNative("getLicenseState").then((state) => {
+                    const isValid = state && state.isValid;
+                    const serial = state && state.serial;
 
-                // 1) Try localStorage first (fastest, most reliable)
-                let localSerial = null;
-                try { localSerial = localStorage.getItem('offszn_serial'); } catch (e) { }
-
-                if (localSerial && localSerial.length > 0) {
-                    startupVerifySerial(localSerial);
-                } else {
-                    // 2) Fall back to C++ getSavedLicense
-                    callNative("getSavedLicense").then((serial) => {
-                        if (serial && serial.length > 0) {
-                            try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
-                            startupVerifySerial(serial);
-                        } else {
-                            // 3) No license anywhere — show modal
-                            hideLoadingOverlay();
-                            callNative("setLicenseStatus", false);
-                            openActivationModal(false);
-                        }
-                    });
-                }
+                    if (isValid && serial) {
+                        try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
+                        hideLoadingOverlay();
+                        // Start background silent verification check
+                        startPeriodicCheck(serial);
+                    } else if (serial) {
+                        try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
+                        startupVerifySerial(serial);
+                    } else {
+                        hideLoadingOverlay();
+                        callNative("setLicenseStatus", false);
+                        openActivationModal(false);
+                    }
+                });
             } else {
                 // Browser preview mode — show modal for testing
                 hideLoadingOverlay();
                 openActivationModal(true);
             }
-        }, 800);
+        }, 100);
 
 
         // Escuchar evento de bloqueo si la licencia es inválida o no hay conexión (desde C++)
