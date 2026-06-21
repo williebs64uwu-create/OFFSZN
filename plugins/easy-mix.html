@@ -652,6 +652,88 @@
                 line-height: 1.5;
             }
         }
+        
+        /* ==================== STICKY BANNER ==================== */
+        .sticky-offer-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 159, 10, 0.3);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 12px 20px;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+            animation: slideUpBanner 0.5s ease-out forwards;
+            animation-delay: 1s;
+            transform: translateY(100%);
+        }
+
+        @keyframes slideUpBanner {
+            to { transform: translateY(0); }
+        }
+
+        .sticky-offer-text {
+            color: #ff9f0a;
+            font-weight: 800;
+            font-size: 1.05rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .sticky-offer-timer {
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sticky-offer-btn {
+            background: #ff9f0a;
+            color: #000;
+            padding: 8px 24px;
+            border-radius: 8px;
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .sticky-offer-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            background: #ffa826;
+            box-shadow: 0 5px 15px rgba(255, 159, 10, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .sticky-offer-banner {
+                flex-direction: column;
+                gap: 10px;
+                padding: 16px 20px;
+            }
+            .sticky-offer-btn {
+                width: 100%;
+                text-align: center;
+                padding: 12px;
+                font-size: 1rem;
+            }
+            .sticky-offer-text {
+                font-size: 0.85rem;
+                text-align: center;
+            }
+            .sticky-offer-timer {
+                font-size: 0.85rem;
+                padding: 4px 10px;
+            }
+        }
     </style>
 </head>
 
@@ -807,41 +889,11 @@
                     <!-- Lifetime -->
                     <div style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 16px; display: flex; flex-direction: column;">
                         <h3 style="font-size: 1.5rem; margin-bottom: 10px;">De Por Vida</h3>
-                        <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px;">
+                        <div style="display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-bottom: 20px;">
                             <span style="font-size: 1.4rem; text-decoration: line-through; color: rgba(255,255,255,0.4); font-weight: 500;">$45</span>
                             <span style="font-size: 2.5rem; font-weight: 800; color: #fff;">$10</span>
                             <span style="font-size: 1rem; color: #888;"> único</span>
                         </div>
-                        <div style="align-self: flex-start; background: rgba(255, 59, 48, 0.1); color: #ff3b30; font-size: 0.75rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; margin-bottom: 5px; border: 1px solid rgba(255, 59, 48, 0.2);">
-                            🔥 OFERTA RELÁMPAGO: SOLO QUEDAN 13 UNIDADES
-                        </div>
-                        <div id="countdown-timer" style="color: #ff3b30; font-size: 0.85rem; font-weight: 700; margin-bottom: 15px;">
-                            ⏳ Termina en: 23h 59m 59s
-                        </div>
-                        <script>
-                            // Local countdown timer
-                            (function() {
-                                var timerElement = document.getElementById('countdown-timer');
-                                var endTime = localStorage.getItem('easyMixOfferEnd');
-                                if (!endTime || (endTime - new Date().getTime()) < 0) {
-                                    endTime = new Date().getTime() + (23 * 60 * 60 * 1000) + (14 * 60 * 1000); // ~23h 14m
-                                    localStorage.setItem('easyMixOfferEnd', endTime);
-                                }
-                                
-                                setInterval(function() {
-                                    var now = new Date().getTime();
-                                    var distance = endTime - now;
-                                    
-                                    if (distance < 0) return;
-                                    
-                                    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                                    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                                    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                                    
-                                    timerElement.innerHTML = "⏳ Termina en: " + hours + "h " + minutes + "m " + seconds + "s";
-                                }, 1000);
-                            })();
-                        </script>
                         <ul style="list-style: none; padding: 0; margin: 10px 0 20px 0; text-align: left; color: #aaa; flex-grow: 1;">
                             <li style="margin-bottom: 10px;"><i class="bi bi-check-circle-fill" style="color: #fff; margin-right: 8px;"></i> Pago Único</li>
                             <li style="margin-bottom: 10px;"><i class="bi bi-check-circle-fill" style="color: #fff; margin-right: 8px;"></i> 1 Computadora (Transferible)</li>
@@ -1041,6 +1093,40 @@
                 }
             });
         });
+    </script>
+    <!-- ==================== STICKY OFFER BANNER ==================== -->
+    <div class="sticky-offer-banner">
+        <div class="sticky-offer-text">🚀 OFERTA DE LANZAMIENTO: SOLO 13 LICENCIAS A $10</div>
+        <div class="sticky-offer-timer" id="sticky-countdown-timer">⏳ Calculando...</div>
+        <a href="#serial-section" class="sticky-offer-btn">Obtener Oferta</a>
+    </div>
+
+    <script>
+        // Local countdown timer for sticky banner
+        (function() {
+            var timerElement = document.getElementById('sticky-countdown-timer');
+            var endTime = localStorage.getItem('easyMixOfferEnd');
+            if (!endTime || (endTime - new Date().getTime()) < 0) {
+                endTime = new Date().getTime() + (23 * 60 * 60 * 1000) + (14 * 60 * 1000); // ~23h 14m
+                localStorage.setItem('easyMixOfferEnd', endTime);
+            }
+            
+            setInterval(function() {
+                var now = new Date().getTime();
+                var distance = endTime - now;
+                
+                if (distance < 0) {
+                    timerElement.innerHTML = "Oferta Expirada";
+                    return;
+                }
+                
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                timerElement.innerHTML = "⏳ Expira en: " + hours + "h " + minutes + "m " + seconds + "s";
+            }, 1000);
+        })();
     </script>
 </body>
 
