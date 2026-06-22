@@ -10,7 +10,6 @@
             --primary: #ff7300;
             --accent: #ff7300;
             --accent-rgb: 255, 115, 0;
-            --primary: #FFD600;
             --bg-dark: #0a0a0a;
             --bg-panel: #111111;
             --text-main: #f0f0f0;
@@ -218,19 +217,20 @@
         .modes-dropdown {
             position: relative;
             display: inline-block;
-            margin-left: 10px;
+            margin-left: 12px;
         }
         .dropdown-trigger {
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             color: var(--text-main);
             padding: 6px 14px;
             border-radius: 8px;
             font-weight: bold;
-            font-family: 'Outfit';
-            font-size: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 11px;
             cursor: pointer;
             transition: all 0.3s ease;
+            letter-spacing: 0.05em;
         }
         .dropdown-trigger:hover {
             border-color: var(--primary);
@@ -245,7 +245,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             min-width: 140px;
-            z-index: 1000;
+            z-index: 10000;
             box-shadow: 0 10px 25px rgba(0,0,0,0.6);
             backdrop-filter: blur(10px);
         }
@@ -266,14 +266,25 @@
             color: var(--primary);
         }
 
-        .version-tag {
+        /* FOOTER STYLE */
+        .footer {
             position: absolute;
-            bottom: 10px;
+            bottom: 12px;
+            left: 20px;
             right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.2);
             font-size: 10px;
-            color: rgba(255,255,255,0.2);
-            font-family: monospace;
+            font-weight: 600;
+            letter-spacing: 0.08em;
             pointer-events: none;
+            font-family: 'Outfit', sans-serif;
+            z-index: 5;
+        }
+        .footer-left {
+            text-transform: uppercase;
         }
 
         /* ACTIVATION OVERLAY */
@@ -316,7 +327,6 @@
         }
         .activation-content.visible { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* OLD_OVERLAY_HACK */
         
         .activation-box {
             background: #151515;
@@ -326,6 +336,9 @@
             text-align: center;
             width: 400px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .activation-box h2 {
             margin: 0 0 10px 0;
@@ -369,6 +382,29 @@
             transform: scale(1.05);
             box-shadow: 0 0 15px rgba(255,214,0,0.4);
         }
+        
+        .offszn-logo-activation {
+            width: 140px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        .buy-link {
+            display: block;
+            color: #666;
+            font-size: 12px;
+            text-decoration: none;
+            margin-top: 15px;
+            transition: color 0.2s;
+        }
+        .buy-link:hover {
+            color: var(--primary);
+        }
+        .error-msg {
+            color: #ff3333;
+            font-size: 12px;
+            margin-top: 10px;
+            height: 15px;
+        }
     </style>
 </head>
 <body>
@@ -376,7 +412,7 @@
     <div class="plugin-container">
         <!-- HEADER -->
         <div class="header">
-            <div class="header-left">
+            <div class="header-left" style="display: flex; align-items: center;">
                 <button class="preset-btn">Default</button>
                 <div class="modes-dropdown" id="modes-dropdown">
                     <button class="dropdown-trigger" id="active-mode-btn" onclick="toggleDropdown(event)">MODO PREMIUM</button>
@@ -387,10 +423,7 @@
                     </div>
                 </div>
             </div>
-            <div class="logo-area">
-                <h1>EASY MASTER</h1>
-                <span>by OFFSZN</span>
-            </div>
+            
             <div class="header-right">
                 <button class="reset-btn" onclick="resetAll()">RESETEAR</button>
             </div>
@@ -424,26 +457,30 @@
                     </svg>
                     
                     <div class="mode-labels">
-                        <div class="mode-label" id="lbl-clean" style="transform: translate(-50%, -50%) rotate(-135deg) translateY(-160px) rotate(135deg);">CLEAN</div>
-                        <div class="mode-label" id="lbl-warm" style="transform: translate(-50%, -50%) rotate(-67.5deg) translateY(-160px) rotate(67.5deg);">WARM</div>
-                        <div class="mode-label" id="lbl-punch" style="transform: translate(-50%, -50%) rotate(0deg) translateY(-160px) rotate(0deg);">PUNCH</div>
-                        <div class="mode-label" id="lbl-glue" style="transform: translate(-50%, -50%) rotate(67.5deg) translateY(-160px) rotate(-67.5deg);">GLUE</div>
+                        <div class="mode-label" id="lbl-clean" style="transform: translate(-50%, -50%) rotate(-135deg) translateY(-160px) rotate(135deg);">LIMPIO</div>
+                        <div class="mode-label" id="lbl-warm" style="transform: translate(-50%, -50%) rotate(-67.5deg) translateY(-160px) rotate(67.5deg);">CÁLIDO</div>
+                        <div class="mode-label" id="lbl-punch" style="transform: translate(-50%, -50%) rotate(0deg) translateY(-160px) rotate(0deg);">EQUILIBRADO</div>
+                        <div class="mode-label" id="lbl-glue" style="transform: translate(-50%, -50%) rotate(67.5deg) translateY(-160px) rotate(-67.5deg);">POTENTE</div>
                         <div class="mode-label" id="lbl-sauce" style="transform: translate(-50%, -50%) rotate(135deg) translateY(-160px) rotate(-135deg);">SAUCE</div>
                     </div>
 
                     <div class="knob-dial" onmousedown="startDrag(event, 'amount')">
-                        <div class="knob-indicator" id="ind-amount"></div>
-                        <span class="knob-value" id="val-amount">0%</span>
+                        <canvas id="particles-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; border-radius:50%; z-index:1;"></canvas>
+                        <svg id="salsa-drip" viewBox="0 0 100 100" style="position: absolute; top: 25%; left: 25%; width: 50%; height: 50%; opacity: 0.12; pointer-events: none; fill: var(--primary); transition: fill 0.3s; z-index:0;">
+                            <path d="M50,10 C50,10 42,25 42,35 C42,42 47,48 50,48 C53,48 58,42 58,35 C58,25 50,10 50,10 Z M46,55 C46,55 35,62 35,72 C35,82 43,88 50,88 C57,88 65,82 65,72 C65,62 54,55 54,55 C54,55 53,60 50,60 C47,60 46,55 46,55 Z"/>
+                        </svg>
+                        <div class="knob-indicator" id="ind-amount" style="z-index:2;"></div>
+                        <span class="knob-value" id="val-amount" style="z-index:2;">0%</span>
                     </div>
                 </div>
-                <div class="label" style="margin-top: -5px;">AMOUNT</div>
+                <div class="label" style="margin-top: -5px;">CANTIDAD</div>
             </div>
 
             <!-- SALSA EXTRA GAIN -->
             <div class="knob-container small-knob">
                 <div class="knob-track">
                     <svg class="svg-ring" viewBox="0 0 110 110">
-                        <circle class="ring-bg" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="56.5" transform="rotate(135 55 55)"></circle>
+                        <circle class="ring-bg" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="70.7" transform="rotate(135 55 55)"></circle>
                         <circle class="ring-fg" id="ring-global-out" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="282.7" transform="rotate(135 55 55)"></circle>
                     </svg>
                     <div class="knob-dial" onmousedown="startDrag(event, 'global-out')">
@@ -451,24 +488,32 @@
                         <span class="knob-value" id="val-global-out">0.0</span>
                     </div>
                 </div>
-                <div class="label">OUTPUT</div>
+                <div class="label">SALSA EXTRA</div>
             </div>
         </div>
 
         <!-- ACTIVATION OVERLAY -->
         <div class="activation-overlay active" id="activation-overlay">
-        <img src="https://offszn.lat/assets/img/OFZ_Logo.png" alt="OFFSZN" class="offszn-logo-activation">
-        <div class="loading-spinner" id="loading-spinner"></div>
-        <p id="loading-text" style="margin-top:15px; font-size:14px; color:rgba(255,255,255,0.6);">Verificando licencia...</p>
-        <div class="activation-content" id="activation-content">
-            <h2>EASY MASTER</h2>
-            <p>Por favor, activa tu copia para continuar.</p>
-            <input type="text" id="serial-input" class="serial-input" placeholder="Ingresa tu Serial Key..." autocomplete="off" spellcheck="false">
-            <button class="activate-btn" id="activate-btn" onclick="verifyLicense()">Activar Licencia</button>
-            <p class="error-msg" id="activation-error"></p>
-            <a href="https://offszn.lat" target="_blank" class="buy-link">¿No tienes una licencia? Consíguela aquí</a>
+            <div class="activation-box">
+                <img src="https://offszn.lat/assets/img/OFZ_Logo.png" alt="OFFSZN" class="offszn-logo-activation">
+                <div class="loading-spinner" id="loading-spinner"></div>
+                <p id="loading-text" style="margin-top:15px; font-size:14px; color:rgba(255,255,255,0.6);">Verificando licencia...</p>
+                <div class="activation-content" id="activation-content">
+                    <h2>EASY MASTER</h2>
+                    <p>Por favor, activa tu copia para continuar.</p>
+                    <input type="text" id="serial-input" class="serial-input" placeholder="Ingresa tu Serial Key..." autocomplete="off" spellcheck="false">
+                    <button class="activate-btn" id="activate-btn" onclick="verifyLicense()">Activar Licencia</button>
+                    <p class="error-msg" id="activation-error"></p>
+                    <a href="https://offszn.lat" target="_blank" class="buy-link">¿No tienes una licencia? Consíguela aquí</a>
+                </div>
+            </div>
         </div>
-    </div>
+
+        <!-- FOOTER INSIDE CONTAINER TO SCALE CORRECTLY -->
+        <div class="footer">
+            <div class="footer-left">EASY MASTER by OFFSZN</div>
+            <div class="footer-right">Versión 1.0.0</div>
+        </div>
     </div>
 
     <script>
@@ -483,14 +528,15 @@
 
         let params = {
             'global-in': 25, // default to -12dB (25%)
-            'global-out': 50, // default to 0dB (50%)
-            'amount': 0
+            'global-out': 100, // default to 100% Salsa Extra (Limiter full)
+            'amount': 100, // default Cantidad to 100%
+            'mode': 1 // default Premium Mode
         };
 
         const circumSmall = 282.7; // r=45
         const circumLarge = 848.2; // r=135
-        const dashOffsetSmall = circumSmall * 0.2; // 20% gap at bottom
-        const dashOffsetLarge = circumLarge * 0.2;
+        const dashOffsetSmall = circumSmall * 0.25; // 25% gap at bottom
+        const dashOffsetLarge = circumLarge * 0.25;
 
         function updateKnobVisuals(id, val) {
             let pct = val / 100; // 0.0 to 1.0
@@ -512,9 +558,11 @@
             // Update Text
             const textEl = document.getElementById('val-' + id);
             if (textEl) {
-                if (id === 'global-in' || id === 'global-out') {
+                if (id === 'global-in') {
                     let db = -24 + (pct * 48);
                     textEl.innerText = (db > 0 ? '+' : '') + db.toFixed(1);
+                } else if (id === 'global-out') {
+                    textEl.innerText = Math.round(val) + '%'; // Salsa Extra displays in percentage
                 } else {
                     textEl.innerText = Math.round(val) + '%';
                     updateModeLabels(val);
@@ -571,15 +619,18 @@
         }
 
         function resetAll() {
-            params['global-in'] = 25; // default input is -12dB
-            params['global-out'] = 50;
-            params['amount'] = 0;
+            params['global-in'] = 25; 
+            params['global-out'] = 100;
+            params['amount'] = 100;
+            params['mode'] = 1;
             updateKnobVisuals('global-in', 25);
-            updateKnobVisuals('global-out', 50);
-            updateKnobVisuals('amount', 0);
+            updateKnobVisuals('global-out', 100);
+            updateKnobVisuals('amount', 100);
+            selectMode(1); // Reset colors to Premium
             sendParam('global-in', 25);
-            sendParam('global-out', 50);
-            sendParam('amount', 0);
+            sendParam('global-out', 100);
+            sendParam('amount', 100);
+            sendParam('mode', 1);
         }
 
         // --- JUCE NATIVE BRIDGE ---
@@ -654,7 +705,7 @@
             let serial = document.getElementById('serial-input').value.trim();
             if (!serial) return;
 
-            const btn = document.querySelector('.activation-box button');
+            const btn = document.getElementById('activate-btn');
             if (btn) btn.innerText = "Verificando...";
 
             getHwidAsync().then((hwid) => {
@@ -670,6 +721,7 @@
                         try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
                         callNative("setLicenseStatus", true, serial);
                         document.getElementById('activation-overlay').classList.remove('active');
+                        document.getElementById('activation-overlay').style.display = 'none';
                     } else {
                         callNative("setLicenseStatus", false);
                         alert(response.error || "Licencia inválida");
@@ -687,7 +739,6 @@
             });
         }
 
-        // Incoming bridge from JUCE
         window.updateParameter = function(id, val) {
             if (params[id] !== undefined) {
                 params[id] = val;
@@ -700,16 +751,18 @@
             const spinner = document.getElementById('loading-spinner');
             const loadText = document.getElementById('loading-text');
             const content = document.getElementById('activation-content');
-            if (isValid) overlay.classList.remove('active');
-            else {
+            if (isValid) {
+                overlay.classList.remove('active');
+                overlay.style.display = 'none'; // Unblock all mouse pointer clicks!
+            } else {
                 overlay.classList.add('active');
+                overlay.style.display = 'flex';
                 if (spinner) spinner.style.display = 'none';
                 if (loadText) loadText.style.display = 'none';
                 if (content) content.classList.add('visible');
             }
         };
 
-        // Escuchar evento de bloqueo si la licencia es inválida o no hay conexión (desde C++)
         try {
             if (window.__JUCE__ && window.__JUCE__.backend) {
                 window.__JUCE__.backend.addEventListener('license-status', (statusStr) => {
@@ -725,15 +778,12 @@
 
         // Init visuals
         updateKnobVisuals('global-in', 25);
-        updateKnobVisuals('global-out', 50);
-        updateKnobVisuals('amount', 0);
+        updateKnobVisuals('global-out', 100);
+        updateKnobVisuals('amount', 100);
 
-        // Startup check
         setTimeout(() => {
             if (hasJuceBridge()) {
                 callNative("setApiBase", apiBase);
-                
-                // Set the initial HWID from C++
                 callNative("getHardwareId").then(hwid => {
                     window.OFFSZN_HWID = hwid;
                 });
@@ -745,7 +795,6 @@
                         try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
                         window.setLicenseStatus(true);
                     } else if (serial) {
-                        // try to verify online in background
                         getHwidAsync().then(hwid => {
                             fetch(`${apiBase}/api/plugin/activate`, {
                                 method: "POST",
@@ -763,7 +812,6 @@
                                 }
                             })
                             .catch(err => {
-                                // Offline fallback
                                 window.setLicenseStatus(false);
                                 callNative("setLicenseStatus", false);
                             });
@@ -787,13 +835,15 @@
             if (e) e.stopPropagation();
             params['mode'] = idx;
             const mode = modesColors[idx];
-            document.getElementById('active-mode-btn').innerText = mode.name;
+            const btn = document.getElementById('active-mode-btn');
+            if (btn) btn.innerText = mode.name;
             document.documentElement.style.setProperty('--primary', mode.primary);
             document.documentElement.style.setProperty('--accent', mode.primary);
             document.documentElement.style.setProperty('--accent-rgb', mode.accentRgb);
             
             // Close dropdown
-            document.getElementById('dropdown-content').classList.remove('show');
+            const dropdown = document.getElementById('dropdown-content');
+            if (dropdown) dropdown.classList.remove('show');
             
             // Send to C++
             sendParam('mode', idx);
@@ -801,7 +851,8 @@
 
         function toggleDropdown(e) {
             if (e) e.stopPropagation();
-            document.getElementById('dropdown-content').classList.toggle('show');
+            const dropdown = document.getElementById('dropdown-content');
+            if (dropdown) dropdown.classList.toggle('show');
         }
 
         window.addEventListener('click', () => {
@@ -823,7 +874,7 @@
             }
         }
         window.addEventListener('resize', resizeCanvas);
-        setTimeout(resizeCanvas, 300);
+        setTimeout(resizeCanvas, 400);
 
         class GemParticle {
             constructor() {
