@@ -371,13 +371,18 @@
     </div>
 
     <script>
+        // --- API CONFIG ---
+        const apiBase = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:3000'
+            : 'https://offszn.lat';
+
         // --- KNOB LOGIC ---
         // For IN / OUT: 0 to 100 maps to -24dB to +24dB
         // For AMOUNT: 0 to 100 maps to 0% to 100%
 
         let params = {
-            'global-in': 50,
-            'global-out': 50,
+            'global-in': 25, // default to -12dB (25%)
+            'global-out': 50, // default to 0dB (50%)
             'amount': 0
         };
 
@@ -391,7 +396,8 @@
             
             // Calculate rotation (-135 to 135 degrees)
             let deg = -135 + (pct * 270);
-            document.getElementById('ind-' + id).style.transform = `rotate(${deg}deg)`;
+            const ind = document.getElementById('ind-' + id);
+            if (ind) ind.style.transform = `rotate(${deg}deg)`;
 
             // Update SVG Ring
             let isLarge = (id === 'amount');
@@ -399,15 +405,19 @@
             let gap = isLarge ? dashOffsetLarge : dashOffsetSmall;
             let fillable = C - gap;
             let offset = C - (fillable * pct);
-            document.getElementById('ring-' + id).style.strokeDashoffset = offset;
+            const ring = document.getElementById('ring-' + id);
+            if (ring) ring.style.strokeDashoffset = offset;
 
             // Update Text
-            if (id === 'global-in' || id === 'global-out') {
-                let db = -24 + (pct * 48);
-                document.getElementById('val-' + id).innerText = (db > 0 ? '+' : '') + db.toFixed(1);
-            } else {
-                document.getElementById('val-' + id).innerText = Math.round(val) + '%';
-                updateModeLabels(val);
+            const textEl = document.getElementById('val-' + id);
+            if (textEl) {
+                if (id === 'global-in' || id === 'global-out') {
+                    let db = -24 + (pct * 48);
+                    textEl.innerText = (db > 0 ? '+' : '') + db.toFixed(1);
+                } else {
+                    textEl.innerText = Math.round(val) + '%';
+                    updateModeLabels(val);
+                }
             }
         }
 
@@ -417,10 +427,12 @@
             
             modes.forEach((m, idx) => {
                 let el = document.getElementById('lbl-' + m);
-                if (idx === activeIdx) {
-                    el.classList.add('active');
-                } else {
-                    el.classList.remove('active');
+                if (el) {
+                    if (idx === activeIdx) {
+                        el.classList.add('active');
+                    } else {
+                        el.classList.remove('active');
+                    }
                 }
             });
         }
@@ -447,14 +459,7 @@
             params[currentKnob] = newVal;
             
             updateKnobVisuals(currentKnob, newVal);
-            
-            if (window.__juce) {
-                window.__juce.postMessage(JSON.stringify({
-                    type: 'paramChanged',
-                    paramId: currentKnob,
-                    value: newVal
-                }));
-            }
+            sendParam(currentKnob, newVal);
         }
 
         function stopDrag() {
@@ -465,33 +470,115 @@
         }
 
         function resetAll() {
-            params['global-in'] = 50;
+            params['global-in'] = 25; // default input is -12dB
             params['global-out'] = 50;
             params['amount'] = 0;
-            updateKnobVisuals('global-in', 50);
+            updateKnobVisuals('global-in', 25);
             updateKnobVisuals('global-out', 50);
             updateKnobVisuals('amount', 0);
-            if (window.__juce) {
-                window.__juce.postMessage(JSON.stringify({ type: 'paramChanged', paramId: 'global-in', value: 50 }));
-                window.__juce.postMessage(JSON.stringify({ type: 'paramChanged', paramId: 'global-out', value: 50 }));
-                window.__juce.postMessage(JSON.stringify({ type: 'paramChanged', paramId: 'amount', value: 0 }));
-            }
+            sendParam('global-in', 25);
+            sendParam('global-out', 50);
+            sendParam('amount', 0);
+        }
+
+        // --- JUCE NATIVE BRIDGE ---
+        function hasJuceBridge() {
+            if (window.__JUCE__ && window.__JUCE__.backend) return true;
+            if (window.chrome && window.chrome.webview) return true;
+            return false;
+        }
+
+        const jucePromises = new Map();
+        if (window.__JUCE__ && window.__JUCE__.backend) {
+            window.__JUCE__.backend.addEventListener("__juce__complete", (ev) => {
+                const pid = ev.promiseId;
+                if (jucePromises.has(pid)) {
+                    jucePromises.get(pid).resolve(ev.result);
+                    jucePromises.delete(pid);
+                }
+            });
+        }
+
+        function callNative(funcName, ...args) {
+            try {
+                if (window.__JUCE__ && window.__JUCE__.backend) {
+                    const promiseId = Math.floor(Math.random() * 1000000000);
+                    const p = new Promise(resolve => {
+                        jucePromises.set(promiseId, { resolve });
+                    });
+                    window.__JUCE__.backend.emitEvent("__juce__invoke", {
+                        name: funcName,
+                        params: args,
+                        resultId: promiseId
+                    });
+                    return p;
+                }
+                if (window.chrome && window.chrome.webview) {
+                    window.chrome.webview.postMessage(JSON.stringify({ func: funcName, args: args }));
+                    return Promise.resolve();
+                }
+            } catch(err){}
+            return Promise.resolve();
+        }
+
+        function sendParam(id, value) {
+            try {
+                if (hasJuceBridge()) {
+                    callNative("setParam", String(id), Number(value));
+                }
+            } catch (e) {}
         }
 
         // --- LICENSE LOGIC ---
-        function verifyLicense() {
-            let code = document.getElementById('serial-input').value;
-            if (code.length > 5) {
-                // Simulate sending to JUCE
-                if (window.__juce) {
-                    window.__juce.postMessage(JSON.stringify({
-                        type: 'verifyLicense',
-                        serial: code
-                    }));
-                }
-                // Optimistically hide for now (JUCE will re-trigger if invalid)
-                document.getElementById('activation-overlay').classList.remove('active');
+        function getOrCreateDeviceId() {
+            let id = localStorage.getItem('offszn_device_id');
+            if (!id) {
+                id = 'web-' + Math.random().toString(36).substring(2) + '-' + Date.now().toString(36);
+                try { localStorage.setItem('offszn_device_id', id); } catch (e) { }
             }
+            return id;
+        }
+
+        function getHwidAsync() {
+            if (window.OFFSZN_HWID) {
+                return Promise.resolve(window.OFFSZN_HWID);
+            }
+            if (hasJuceBridge()) {
+                return callNative("getHardwareId").then(hwid => hwid || getOrCreateDeviceId());
+            }
+            return Promise.resolve(getOrCreateDeviceId());
+        }
+
+        function verifyLicense() {
+            let serial = document.getElementById('serial-input').value.trim();
+            if (!serial) return;
+
+            const btn = document.querySelector('.activation-box button');
+            if (btn) btn.innerText = "Verificando...";
+
+            getHwidAsync().then((hwid) => {
+                fetch(`${apiBase}/api/plugin/activate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Master" })
+                })
+                .then(res => res.json())
+                .then(response => {
+                    if (btn) btn.innerText = "Activar Licencia";
+                    if (response && response.success) {
+                        try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
+                        callNative("setLicenseStatus", true, serial);
+                        document.getElementById('activation-overlay').classList.remove('active');
+                    } else {
+                        callNative("setLicenseStatus", false);
+                        alert(response.error || "Licencia inválida");
+                    }
+                })
+                .catch(err => {
+                    if (btn) btn.innerText = "Activar Licencia";
+                    alert("Error de conexión. Inténtalo de nuevo.");
+                });
+            });
         }
 
         // Incoming bridge from JUCE
@@ -511,10 +598,81 @@
             }
         };
 
+        // Escuchar evento de bloqueo si la licencia es inválida o no hay conexión (desde C++)
+        try {
+            if (window.__JUCE__ && window.__JUCE__.backend) {
+                window.__JUCE__.backend.addEventListener('license-status', (statusStr) => {
+                    const status = (typeof statusStr === 'object' && statusStr !== null) ? (statusStr.value || statusStr.message || '') : statusStr;
+                    if (status === 'INVALID' || status === 'EXPIRED' || status === 'OFFLINE') {
+                        window.setLicenseStatus(false);
+                    } else if (status === 'VALID') {
+                        window.setLicenseStatus(true);
+                    }
+                });
+            }
+        } catch(e){}
+
         // Init visuals
-        updateKnobVisuals('global-in', 50);
+        updateKnobVisuals('global-in', 25);
         updateKnobVisuals('global-out', 50);
         updateKnobVisuals('amount', 0);
+
+        // Startup check
+        setTimeout(() => {
+            if (hasJuceBridge()) {
+                callNative("setApiBase", apiBase);
+                
+                // Set the initial HWID from C++
+                callNative("getHardwareId").then(hwid => {
+                    window.OFFSZN_HWID = hwid;
+                });
+
+                callNative("getLicenseState").then((state) => {
+                    const isValid = state && state.isValid;
+                    const serial = state && state.serial;
+                    if (isValid && serial) {
+                        try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
+                        window.setLicenseStatus(true);
+                    } else if (serial) {
+                        // try to verify online in background
+                        getHwidAsync().then(hwid => {
+                            fetch(`${apiBase}/api/plugin/activate`, {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Master" })
+                            })
+                            .then(res => res.json())
+                            .then(response => {
+                                if (response && response.success) {
+                                    window.setLicenseStatus(true);
+                                    callNative("setLicenseStatus", true, serial);
+                                } else {
+                                    window.setLicenseStatus(false);
+                                    callNative("setLicenseStatus", false);
+                                }
+                            })
+                            .catch(err => {
+                                // Offline fallback
+                                window.setLicenseStatus(false);
+                                callNative("setLicenseStatus", false);
+                            });
+                        });
+                    } else {
+                        window.setLicenseStatus(false);
+                        callNative("setLicenseStatus", false);
+                    }
+                });
+            }
+        }, 100);
+
+        // Redraw on resize to scale visually
+        window.addEventListener('resize', () => {
+            const scale = Math.min(window.innerWidth / 800, window.innerHeight / 500);
+            document.body.style.zoom = scale;
+        });
+        // Run once on load
+        const scale = Math.min(window.innerWidth / 800, window.innerHeight / 500);
+        document.body.style.zoom = scale;
     </script>
 </body>
 </html>
