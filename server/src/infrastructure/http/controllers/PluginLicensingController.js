@@ -94,7 +94,8 @@ export const generateWebLicense = async (req, res) => {
             return res.json({ success: true, serial_key: existingLic.serial_key, expires_at: existingLic.expires_at, license_type: 'trial' });
         }
 
-        const serialKey = `TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+        const basePrefix = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master') ? 'MASTER' : 'EASY';
+        const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiryDate = new Date();
         expiryDate.setDate(expiryDate.getDate() + 7);
         const expiresAt = expiryDate.toISOString();
@@ -180,7 +181,8 @@ export const requestTrial = async (req, res) => {
 // ─── Helper: Generate plugin license after purchase ────────────────────────────
 // Called internally from PayPalController after a successful plugin purchase.
 export async function generatePluginLicense({ licenseType, userEmail, userId, pluginName = 'Easy Mix' }) {
-    const prefix = licenseType === 'subscription' ? 'EASY-SUB' : 'EASY-FULL';
+    let basePrefix = (pluginName === 'EASY MASTER' || pluginName === 'Easy Master') ? 'MASTER' : 'EASY';
+    const prefix = licenseType === 'subscription' ? `${basePrefix}-SUB` : `${basePrefix}-FULL`;
     const serialKey = `${prefix}-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
     let expiresAt = null;
@@ -346,7 +348,8 @@ export const adminResetLicense = async (req, res) => {
         }
 
         // 4. Generate a new FULL lifetime key
-        const newSerial = `EASY-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+        let basePrefix = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master') ? 'MASTER' : 'EASY';
+        const newSerial = `${basePrefix}-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const { data: newLic, error: insertErr } = await supabase
             .from('plugin_licenses')
             .insert({
