@@ -21,18 +21,18 @@
 **Files:**
 - Modify: [plugins/easy-master-mockup.html](file:///C:/Users/Willie/Desktop/OFFSZN/plugins/easy-master-mockup.html)
 
-- [ ] **Step 1: Restaurar HTML a estado inicial limpio para evitar parches corruptos**
-- [ ] **Step 2: Re-escribir script de parcheo usando strings de coincidencia exacta**
+- [x] **Step 1: Restaurar HTML a estado inicial limpio para evitar parches corruptos**
+- [x] **Step 2: Re-escribir script de parcheo usando strings de coincidencia exacta**
   - Mapear `<div class="label" style="margin-top: -5px;">AMOUNT</div>` -> `<div class="label" style="margin-top: -5px;">CANTIDAD</div>`
   - Mapear `<div class="label">OUTPUT</div>` -> `<div class="label">SALSA EXTRA</div>`
   - Mapear etiquetas de marcas: `LIMPIO`, `CÁLIDO`, `EQUILIBRADO`, `POTENTE`, `SAUCE`.
   - Mapear botón `Reset` -> `RESETEAR`.
-- [ ] **Step 3: Mover Logo a Footer e Insertar Versión**
+- [x] **Step 3: Mover Logo a Footer e Insertar Versión**
   - Quitar el div `.logo-area` del header.
   - Agregar `<div class="footer"><div class="footer-left">EASY MASTER by OFFSZN</div><div class="footer-right">Versión 1.0.0</div></div>` justo antes de `</body>`.
-- [ ] **Step 4: Solucionar Bloqueo de Perillas**
+- [x] **Step 4: Solucionar Bloqueo de Perillas**
   - Cambiar la lógica en `setLicenseStatus` para usar `overlay.style.display = 'none'` cuando la licencia sea válida, garantizando que el WebView2 no intercepte los clicks en las perillas.
-- [ ] **Step 5: Integrar Canvas Gemas RMS, Salsa Drip y Aros SVG 25%**
+- [x] **Step 5: Integrar Canvas Gemas RMS, Salsa Drip y Aros SVG 25%**
   - Re-inyectar el canvas de gemas con comportamiento de aceleración RMS al recibir el evento `audio-rms`.
   - Colocar el SVG de goteo de salsa con baja opacidad en el centro del dial.
   - Ajustar el offset a 25% del arco (`70.7` y `212.0`).
@@ -44,9 +44,9 @@
 **Files:**
 - Build local
 
-- [ ] **Step 1: Compilar la versión Release**
+- [x] **Step 1: Compilar la versión Release**
   `cmake --build build --config Release`
-- [ ] **Step 2: Probar en FL Studio**
+- [x] **Step 2: Probar en FL Studio**
   - Comprobar que las perillas giren correctamente y no estén bloqueadas.
   - Comprobar que el diseño tenga el footer y la versión correctos.
   - Confirmar las traducciones al español.
