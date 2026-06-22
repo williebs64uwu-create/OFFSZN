@@ -26,6 +26,7 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
+            width: 100vw;
             overflow: hidden;
             user-select: none;
         }
@@ -454,7 +455,7 @@
 
         function onDrag(e) {
             if (!isDragging) return;
-            let deltaY = startY - e.clientY;
+            let deltaY = (startY - e.clientY) / currentScale;
             let newVal = Math.max(0, Math.min(100, startVal + (deltaY * 0.5))); // 0.5 sensitivity
             params[currentKnob] = newVal;
             
@@ -666,13 +667,17 @@
         }, 100);
 
         // Redraw on resize to scale visually
-        window.addEventListener('resize', () => {
-            const scale = Math.min(window.innerWidth / 800, window.innerHeight / 500);
-            document.body.style.zoom = scale;
-        });
-        // Run once on load
-        const scale = Math.min(window.innerWidth / 800, window.innerHeight / 500);
-        document.body.style.zoom = scale;
+        let currentScale = 1;
+        function updateScale() {
+            currentScale = Math.min(window.innerWidth / 800, window.innerHeight / 500);
+            const container = document.querySelector('.plugin-container');
+            if (container) {
+                container.style.transform = `scale(${currentScale})`;
+                container.style.transformOrigin = 'center center';
+            }
+        }
+        window.addEventListener('resize', updateScale);
+        updateScale(); // Run once on load
     </script>
 </body>
 </html>
