@@ -126,6 +126,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            transition: transform 0.05s ease-out; /* Smooth scaling transition */
         }
 
         .knob-indicator {
@@ -203,7 +204,7 @@
             letter-spacing: 1px;
             color: #444;
             transition: 0.3s;
-            width: 80px;
+            width: 90px;
             text-align: center;
             top: 50%;
             left: 50%;
@@ -413,7 +414,7 @@
         <!-- HEADER -->
         <div class="header">
             <div class="header-left" style="display: flex; align-items: center;">
-                <button class="preset-btn">Default</button>
+                <button class="preset-btn" onclick="loadDefaultPreset()">Default</button>
                 <div class="modes-dropdown" id="modes-dropdown">
                     <button class="dropdown-trigger" id="active-mode-btn" onclick="toggleDropdown(event)">MODO PREMIUM</button>
                     <div class="dropdown-content" id="dropdown-content">
@@ -457,11 +458,11 @@
                     </svg>
                     
                     <div class="mode-labels">
-                        <div class="mode-label" id="lbl-clean" style="transform: translate(-50%, -50%) rotate(-135deg) translateY(-160px) rotate(135deg);">LIMPIO</div>
-                        <div class="mode-label" id="lbl-warm" style="transform: translate(-50%, -50%) rotate(-67.5deg) translateY(-160px) rotate(67.5deg);">CÁLIDO</div>
-                        <div class="mode-label" id="lbl-punch" style="transform: translate(-50%, -50%) rotate(0deg) translateY(-160px) rotate(0deg);">EQUILIBRADO</div>
-                        <div class="mode-label" id="lbl-glue" style="transform: translate(-50%, -50%) rotate(67.5deg) translateY(-160px) rotate(-67.5deg);">POTENTE</div>
-                        <div class="mode-label" id="lbl-sauce" style="transform: translate(-50%, -50%) rotate(135deg) translateY(-160px) rotate(-135deg);">SAUCE</div>
+                        <div class="mode-label" id="lbl-clean" style="transform: translate(-50%, -50%) rotate(-135deg) translateY(-185px) rotate(135deg);">LIMPIO</div>
+                        <div class="mode-label" id="lbl-warm" style="transform: translate(-50%, -50%) rotate(-67.5deg) translateY(-185px) rotate(67.5deg);">CÁLIDO</div>
+                        <div class="mode-label" id="lbl-punch" style="transform: translate(-50%, -50%) rotate(0deg) translateY(-185px) rotate(0deg);">EQUILIBRADO</div>
+                        <div class="mode-label" id="lbl-glue" style="transform: translate(-50%, -50%) rotate(67.5deg) translateY(-185px) rotate(-67.5deg);">POTENTE</div>
+                        <div class="mode-label" id="lbl-sauce" style="transform: translate(-50%, -50%) rotate(135deg) translateY(-185px) rotate(-135deg);">SAUCE</div>
                     </div>
 
                     <div class="knob-dial" onmousedown="startDrag(event, 'amount')">
@@ -485,7 +486,7 @@
                     </svg>
                     <div class="knob-dial" onmousedown="startDrag(event, 'global-out')">
                         <div class="knob-indicator" id="ind-global-out"></div>
-                        <span class="knob-value" id="val-global-out">0.0</span>
+                        <span class="knob-value" id="val-global-out">0%</span>
                     </div>
                 </div>
                 <div class="label">SALSA EXTRA</div>
@@ -523,12 +524,12 @@
             : 'https://offszn.lat';
 
         // --- KNOB LOGIC ---
-        // For IN / OUT: 0 to 100 maps to -24dB to +24dB
-        // For AMOUNT: 0 to 100 maps to 0% to 100%
+        // For IN: 0 to 100 maps to -24dB to +24dB
+        // For AMOUNT & OUT: 0 to 100 maps to 0% to 100%
 
         let params = {
             'global-in': 25, // default to -12dB (25%)
-            'global-out': 100, // default to 100% Salsa Extra (Limiter full)
+            'global-out': 0, // default to 0% Salsa Extra (Limiter threshold drive at 0dB)
             'amount': 100, // default Cantidad to 100%
             'mode': 1 // default Premium Mode
         };
@@ -619,16 +620,33 @@
         }
 
         function resetAll() {
-            params['global-in'] = 25; 
-            params['global-out'] = 100;
-            params['amount'] = 100;
+            // Poner todos los porcentajes a 0%
+            params['global-in'] = 0; 
+            params['global-out'] = 0;
+            params['amount'] = 0;
+            params['mode'] = 1;
+            updateKnobVisuals('global-in', 0);
+            updateKnobVisuals('global-out', 0);
+            updateKnobVisuals('amount', 0);
+            selectMode(1); // Reset colors to Premium
+            sendParam('global-in', 0);
+            sendParam('global-out', 0);
+            sendParam('amount', 0);
+            sendParam('mode', 1);
+        }
+
+        function loadDefaultPreset() {
+            // Carga valores predeterminados de la industria
+            params['global-in'] = 25; // default input is -12dB (25%)
+            params['global-out'] = 0; // default output/limiter drive is 0%
+            params['amount'] = 100; // default Cantidad is 100%
             params['mode'] = 1;
             updateKnobVisuals('global-in', 25);
-            updateKnobVisuals('global-out', 100);
+            updateKnobVisuals('global-out', 0);
             updateKnobVisuals('amount', 100);
-            selectMode(1); // Reset colors to Premium
+            selectMode(1); // Premium
             sendParam('global-in', 25);
-            sendParam('global-out', 100);
+            sendParam('global-out', 0);
             sendParam('amount', 100);
             sendParam('mode', 1);
         }
@@ -778,7 +796,7 @@
 
         // Init visuals
         updateKnobVisuals('global-in', 25);
-        updateKnobVisuals('global-out', 100);
+        updateKnobVisuals('global-out', 0);
         updateKnobVisuals('amount', 100);
 
         setTimeout(() => {
@@ -879,7 +897,7 @@
         class GemParticle {
             constructor() {
                 this.reset();
-                this.y = Math.random() * 200; // start randomly
+                this.y = Math.random() * canvas.height; // start randomly distributed across the whole height
             }
             reset() {
                 if (!canvas) return;
@@ -906,7 +924,8 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.rot);
-                ctx.globalAlpha = this.alpha * (0.5 + audioRms * 0.8);
+                // Keep particles visible even when silent (0.7 minimum factor), pulsing sutilly with audio
+                ctx.globalAlpha = this.alpha * (0.7 + Math.min(1.0, audioRms) * 0.3);
                 ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
                 
                 // Draw diamond shape
@@ -940,12 +959,12 @@
                     p.draw();
                 });
                 
-                // Pulse central dial with audio RMS
+                // Pulse central dial with audio RMS (capped to prevent dial from growing too large)
                 const dial = document.querySelector('.large-knob .knob-dial');
                 if (dial) {
-                    const pulse = 1.0 + audioRms * 0.12; // sutil scale pulse
+                    const pulse = 1.0 + Math.min(1.0, Math.max(0, audioRms)) * 0.05; // Capped to max 5% growth
                     dial.style.transform = `scale(${pulse})`;
-                    dial.style.boxShadow = `0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(var(--accent-rgb), ${0.1 + audioRms * 0.4})`;
+                    dial.style.boxShadow = `0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(var(--accent-rgb), ${0.1 + Math.min(1.0, audioRms) * 0.4})`;
                 }
             }
             requestAnimationFrame(animateParticles);
