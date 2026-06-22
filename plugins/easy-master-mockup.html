@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EASY MASTER by OFFSZN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FFD600;
+            --bg-dark: #0a0a0a;
+            --bg-panel: #111111;
+            --text-main: #f0f0f0;
+            --text-dim: #666666;
+            --knob-bg: #1c1c1c;
+            --knob-border: #333;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .plugin-container {
+            width: 800px;
+            height: 500px;
+            background: radial-gradient(circle at 50% 50%, var(--bg-panel) 0%, var(--bg-dark) 100%);
+            border-radius: 12px;
+            border: 1px solid #222;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 30px;
+            align-items: center;
+        }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .preset-btn { 
+            background: rgba(255,255,255,0.05); 
+            border: 1px solid #333; 
+            color: #ccc; 
+            padding: 6px 16px; 
+            border-radius: 6px; 
+            font-family: 'Outfit';
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .preset-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+        .logo-area { text-align: center; flex: 1; }
+        .logo-area h1 { 
+            margin: 0; 
+            color: var(--text-main); 
+            font-size: 20px; 
+            font-weight: 700;
+            letter-spacing: 4px;
+        }
+        .logo-area span { color: var(--text-dim); font-size: 12px; font-weight: 300; letter-spacing: 2px;}
+
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .reset-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #aaa;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: 'Outfit';
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        /* MAIN UI */
+        .main-ui {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex: 1;
+            padding: 0 60px 40px 60px;
+        }
+
+        /* KNOBS */
+        .knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .knob-track {
+            position: relative;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .knob-dial {
+            background: linear-gradient(135deg, #2a2a2a 0%, #111 100%);
+            border-radius: 50%;
+            border: 1px solid #000;
+            box-shadow: 
+                inset 0 2px 3px rgba(255,255,255,0.1),
+                0 10px 20px rgba(0,0,0,0.5);
+            position: relative;
+            cursor: ns-resize;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .knob-indicator {
+            width: 4px;
+            height: 14px;
+            background: var(--primary);
+            position: absolute;
+            top: 10px;
+            border-radius: 2px;
+            box-shadow: 0 0 8px var(--primary);
+            transform-origin: center 40px; /* will be overridden dynamically */
+        }
+
+        .knob-value {
+            position: absolute;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(255, 214, 0, 0.4);
+            pointer-events: none;
+        }
+
+        .label {
+            margin-top: 25px;
+            font-size: 12px;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            font-weight: 500;
+        }
+
+        /* SMALL KNOBS (IN / OUT) */
+        .small-knob .knob-track { width: 110px; height: 110px; }
+        .small-knob .knob-dial { width: 80px; height: 80px; }
+        .small-knob .knob-indicator { transform-origin: center 40px; }
+        
+        .svg-ring {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        .svg-ring circle {
+            fill: none;
+            stroke-width: 4;
+            stroke-linecap: round;
+        }
+        .ring-bg { stroke: #222; }
+        .ring-fg { 
+            stroke: var(--primary); 
+            transition: stroke-dashoffset 0.1s;
+        }
+
+        /* LARGE KNOB (AMOUNT) */
+        .large-knob {
+            position: relative;
+            margin-top: -30px;
+        }
+        .large-knob .knob-track { width: 320px; height: 320px; }
+        .large-knob .knob-dial { width: 220px; height: 220px; }
+        .large-knob .knob-indicator { transform-origin: center 110px; top: 15px; width: 6px; height: 20px;}
+        .large-knob .knob-value { font-size: 32px; }
+
+        /* MODE LABELS (CLEAN, WARM, PUNCH, GLUE, SAUCE) */
+        .mode-labels {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            pointer-events: none;
+        }
+        .mode-label {
+            position: absolute;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #444;
+            transition: 0.3s;
+            width: 80px;
+            text-align: center;
+            top: 50%;
+            left: 50%;
+        }
+        .mode-label.active {
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(255,214,0,0.5);
+        }
+
+        /* ACTIVATION OVERLAY */
+        #activation-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 10, 10, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 12px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        #activation-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .activation-box {
+            background: #151515;
+            border: 1px solid #333;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+        .activation-box h2 {
+            margin: 0 0 10px 0;
+            color: var(--primary);
+            font-size: 22px;
+        }
+        .activation-box p {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .activation-box input {
+            width: 80%;
+            padding: 12px;
+            background: #0a0a0a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-family: monospace;
+            font-size: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+            outline: none;
+        }
+        .activation-box input:focus {
+            border-color: var(--primary);
+        }
+        .activation-box button {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-family: 'Outfit';
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .activation-box button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(255,214,0,0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="plugin-container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <button class="preset-btn">Default</button>
+            </div>
+            <div class="logo-area">
+                <h1>EASY MASTER</h1>
+                <span>by OFFSZN</span>
+            </div>
+            <div class="header-right">
+                <button class="reset-btn" onclick="resetAll()">Reset</button>
+            </div>
+        </div>
+
+        <!-- MAIN KNOBS -->
+        <div class="main-ui">
+            <!-- INPUT GAIN -->
+            <div class="knob-container small-knob">
+                <div class="knob-track">
+                    <svg class="svg-ring" viewBox="0 0 110 110">
+                        <!-- r=45, circumference = 282.7 -->
+                        <circle class="ring-bg" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="56.5" transform="rotate(135 55 55)"></circle>
+                        <circle class="ring-fg" id="ring-global-in" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="282.7" transform="rotate(135 55 55)"></circle>
+                    </svg>
+                    <div class="knob-dial" onmousedown="startDrag(event, 'global-in')">
+                        <div class="knob-indicator" id="ind-global-in"></div>
+                        <span class="knob-value" id="val-global-in">0.0</span>
+                    </div>
+                </div>
+                <div class="label">INPUT</div>
+            </div>
+
+            <!-- AMOUNT / SAUCE (LARGE) -->
+            <div class="knob-container large-knob">
+                <div class="knob-track">
+                    <svg class="svg-ring" viewBox="0 0 320 320">
+                        <!-- r=135, circumference = 848.2 -->
+                        <circle class="ring-bg" cx="160" cy="160" r="135" stroke-dasharray="848.2" stroke-dashoffset="169.6" transform="rotate(135 160 160)" stroke-width="6"></circle>
+                        <circle class="ring-fg" id="ring-amount" cx="160" cy="160" r="135" stroke-dasharray="848.2" stroke-dashoffset="848.2" transform="rotate(135 160 160)" stroke-width="6"></circle>
+                    </svg>
+                    
+                    <div class="mode-labels">
+                        <div class="mode-label" id="lbl-clean" style="transform: translate(-50%, -50%) rotate(-135deg) translateY(-160px) rotate(135deg);">CLEAN</div>
+                        <div class="mode-label" id="lbl-warm" style="transform: translate(-50%, -50%) rotate(-67.5deg) translateY(-160px) rotate(67.5deg);">WARM</div>
+                        <div class="mode-label" id="lbl-punch" style="transform: translate(-50%, -50%) rotate(0deg) translateY(-160px) rotate(0deg);">PUNCH</div>
+                        <div class="mode-label" id="lbl-glue" style="transform: translate(-50%, -50%) rotate(67.5deg) translateY(-160px) rotate(-67.5deg);">GLUE</div>
+                        <div class="mode-label" id="lbl-sauce" style="transform: translate(-50%, -50%) rotate(135deg) translateY(-160px) rotate(-135deg);">SAUCE</div>
+                    </div>
+
+                    <div class="knob-dial" onmousedown="startDrag(event, 'amount')">
+                        <div class="knob-indicator" id="ind-amount"></div>
+                        <span class="knob-value" id="val-amount">0%</span>
+                    </div>
+                </div>
+                <div class="label" style="margin-top: -5px;">AMOUNT</div>
+            </div>
+
+            <!-- OUTPUT GAIN -->
+            <div class="knob-container small-knob">
+                <div class="knob-track">
+                    <svg class="svg-ring" viewBox="0 0 110 110">
+                        <circle class="ring-bg" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="56.5" transform="rotate(135 55 55)"></circle>
+                        <circle class="ring-fg" id="ring-global-out" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="282.7" transform="rotate(135 55 55)"></circle>
+                    </svg>
+                    <div class="knob-dial" onmousedown="startDrag(event, 'global-out')">
+                        <div class="knob-indicator" id="ind-global-out"></div>
+                        <span class="knob-value" id="val-global-out">0.0</span>
+                    </div>
+                </div>
+                <div class="label">OUTPUT</div>
+            </div>
+        </div>
+
+        <!-- ACTIVATION OVERLAY -->
+        <div id="activation-overlay" class="active">
+            <div class="activation-box">
+                <h2>Activar EASY MASTER</h2>
+                <p>Ingresa tu Serial Key para comenzar</p>
+                <input type="text" id="serial-input" placeholder="XXXX-XXXX-XXXX-XXXX">
+                <br>
+                <button onclick="verifyLicense()">Activar Licencia</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- KNOB LOGIC ---
+        // For IN / OUT: 0 to 100 maps to -24dB to +24dB
+        // For AMOUNT: 0 to 100 maps to 0% to 100%
+
+        let params = {
+            'global-in': 50,
+            'global-out': 50,
+            'amount': 0
+        };
+
+        const circumSmall = 282.7; // r=45
+        const circumLarge = 848.2; // r=135
+        const dashOffsetSmall = circumSmall * 0.2; // 20% gap at bottom
+        const dashOffsetLarge = circumLarge * 0.2;
+
+        function updateKnobVisuals(id, val) {
+            let pct = val / 100; // 0.0 to 1.0
+            
+            // Calculate rotation (-135 to 135 degrees)
+            let deg = -135 + (pct * 270);
+            document.getElementById('ind-' + id).style.transform = `rotate(${deg}deg)`;
+
+            // Update SVG Ring
+            let isLarge = (id === 'amount');
+            let C = isLarge ? circumLarge : circumSmall;
+            let gap = isLarge ? dashOffsetLarge : dashOffsetSmall;
+            let fillable = C - gap;
+            let offset = C - (fillable * pct);
+            document.getElementById('ring-' + id).style.strokeDashoffset = offset;
+
+            // Update Text
+            if (id === 'global-in' || id === 'global-out') {
+                let db = -24 + (pct * 48);
+                document.getElementById('val-' + id).innerText = (db > 0 ? '+' : '') + db.toFixed(1);
+            } else {
+                document.getElementById('val-' + id).innerText = Math.round(val) + '%';
+                updateModeLabels(val);
+            }
+        }
+
+        function updateModeLabels(val) {
+            let modes = ['clean', 'warm', 'punch', 'glue', 'sauce'];
+            let activeIdx = Math.min(4, Math.floor(val / 20));
+            
+            modes.forEach((m, idx) => {
+                let el = document.getElementById('lbl-' + m);
+                if (idx === activeIdx) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        }
+
+        let isDragging = false;
+        let currentKnob = null;
+        let startY = 0;
+        let startVal = 0;
+
+        function startDrag(e, knobId) {
+            isDragging = true;
+            currentKnob = knobId;
+            startY = e.clientY;
+            startVal = params[knobId];
+            window.addEventListener('mousemove', onDrag);
+            window.addEventListener('mouseup', stopDrag);
+            document.body.style.cursor = 'ns-resize';
+        }
+
+        function onDrag(e) {
+            if (!isDragging) return;
+            let deltaY = startY - e.clientY;
+            let newVal = Math.max(0, Math.min(100, startVal + (deltaY * 0.5))); // 0.5 sensitivity
+            params[currentKnob] = newVal;
+            
+            updateKnobVisuals(currentKnob, newVal);
+            
+            if (window.__juce) {
+                window.__juce.postMessage(JSON.stringify({
+                    type: 'paramChanged',
+                    paramId: currentKnob,
+                    value: newVal
+                }));
+            }
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            window.removeEventListener('mousemove', onDrag);
+            window.removeEventListener('mouseup', stopDrag);
+            document.body.style.cursor = 'default';
+        }
+
+        function resetAll() {
+            params['global-in'] = 50;
+            params['global-out'] = 50;
+            params['amount'] = 0;
+            updateKnobVisuals('global-in', 50);
+            updateKnobVisuals('global-out', 50);
+            updateKnobVisuals('amount', 0);
+            if (window.__juce) {
+                window.__juce.postMessage(JSON.stringify({ type: 'paramChanged', paramId: 'global-in', value: 50 }));
+                window.__juce.postMessage(JSON.stringify({ type: 'paramChanged', paramId: 'global-out', value: 50 }));
+                window.__juce.postMessage(JSON.stringify({ type: 'paramChanged', paramId: 'amount', value: 0 }));
+            }
+        }
+
+        // --- LICENSE LOGIC ---
+        function verifyLicense() {
+            let code = document.getElementById('serial-input').value;
+            if (code.length > 5) {
+                // Simulate sending to JUCE
+                if (window.__juce) {
+                    window.__juce.postMessage(JSON.stringify({
+                        type: 'verifyLicense',
+                        serial: code
+                    }));
+                }
+                // Optimistically hide for now (JUCE will re-trigger if invalid)
+                document.getElementById('activation-overlay').classList.remove('active');
+            }
+        }
+
+        // Incoming bridge from JUCE
+        window.updateParameter = function(id, val) {
+            if (params[id] !== undefined) {
+                params[id] = val;
+                updateKnobVisuals(id, val);
+            }
+        };
+
+        window.setLicenseStatus = function(isValid) {
+            const overlay = document.getElementById('activation-overlay');
+            if (isValid) {
+                overlay.classList.remove('active');
+            } else {
+                overlay.classList.add('active');
+            }
+        };
+
+        // Init visuals
+        updateKnobVisuals('global-in', 50);
+        updateKnobVisuals('global-out', 50);
+        updateKnobVisuals('amount', 0);
+    </script>
+</body>
+</html>
