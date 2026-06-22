@@ -7,6 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
+            --primary: #ff7300;
+            --accent: #ff7300;
+            --accent-rgb: 255, 115, 0;
             --primary: #FFD600;
             --bg-dark: #0a0a0a;
             --bg-panel: #111111;
@@ -142,7 +145,7 @@
             font-weight: 700;
             font-size: 14px;
             color: var(--primary);
-            text-shadow: 0 0 10px rgba(255, 214, 0, 0.4);
+            text-shadow: 0 0 10px rgba(var(--accent-rgb), 0.4);
             pointer-events: none;
         }
 
@@ -176,7 +179,7 @@
             transition: stroke-dashoffset 0.1s;
         }
 
-        /* LARGE KNOB (AMOUNT) */
+        /* LARGE KNOB (CANTIDAD) */
         .large-knob {
             position: relative;
             margin-top: -30px;
@@ -186,7 +189,7 @@
         .large-knob .knob-indicator { transform-origin: center 110px; top: 15px; width: 6px; height: 20px;}
         .large-knob .knob-value { font-size: 32px; }
 
-        /* MODE LABELS (CLEAN, WARM, PUNCH, GLUE, SAUCE) */
+        /* MODE LABELS (LIMPIO, CÁLIDO, EQUILIBRADO, POTENTE, SAUCE) */
         .mode-labels {
             position: absolute;
             width: 100%;
@@ -209,6 +212,68 @@
         .mode-label.active {
             color: var(--primary);
             text-shadow: 0 0 10px rgba(255,214,0,0.5);
+        }
+
+        /* MODES DROPDOWN */
+        .modes-dropdown {
+            position: relative;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .dropdown-trigger {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-family: 'Outfit';
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .dropdown-trigger:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.2);
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            left: 0;
+            margin-top: 5px;
+            background: rgba(15, 15, 15, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            min-width: 140px;
+            z-index: 1000;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+        }
+        .dropdown-content.show {
+            display: block;
+        }
+        .dropdown-content div {
+            color: #aaa;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .dropdown-content div:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--primary);
+        }
+
+        .version-tag {
+            position: absolute;
+            bottom: 10px;
+            right: 20px;
+            font-size: 10px;
+            color: rgba(255,255,255,0.2);
+            font-family: monospace;
+            pointer-events: none;
         }
 
         /* ACTIVATION OVERLAY */
@@ -313,13 +378,21 @@
         <div class="header">
             <div class="header-left">
                 <button class="preset-btn">Default</button>
+                <div class="modes-dropdown" id="modes-dropdown">
+                    <button class="dropdown-trigger" id="active-mode-btn" onclick="toggleDropdown(event)">MODO PREMIUM</button>
+                    <div class="dropdown-content" id="dropdown-content">
+                        <div onclick="selectMode(0, event)">MODO STARTER</div>
+                        <div onclick="selectMode(1, event)">MODO PREMIUM</div>
+                        <div onclick="selectMode(2, event)">MODO SAUCE</div>
+                    </div>
+                </div>
             </div>
             <div class="logo-area">
                 <h1>EASY MASTER</h1>
                 <span>by OFFSZN</span>
             </div>
             <div class="header-right">
-                <button class="reset-btn" onclick="resetAll()">Reset</button>
+                <button class="reset-btn" onclick="resetAll()">RESETEAR</button>
             </div>
         </div>
 
@@ -330,7 +403,7 @@
                 <div class="knob-track">
                     <svg class="svg-ring" viewBox="0 0 110 110">
                         <!-- r=45, circumference = 282.7 -->
-                        <circle class="ring-bg" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="56.5" transform="rotate(135 55 55)"></circle>
+                        <circle class="ring-bg" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="70.7" transform="rotate(135 55 55)"></circle>
                         <circle class="ring-fg" id="ring-global-in" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="282.7" transform="rotate(135 55 55)"></circle>
                     </svg>
                     <div class="knob-dial" onmousedown="startDrag(event, 'global-in')">
@@ -346,7 +419,7 @@
                 <div class="knob-track">
                     <svg class="svg-ring" viewBox="0 0 320 320">
                         <!-- r=135, circumference = 848.2 -->
-                        <circle class="ring-bg" cx="160" cy="160" r="135" stroke-dasharray="848.2" stroke-dashoffset="169.6" transform="rotate(135 160 160)" stroke-width="6"></circle>
+                        <circle class="ring-bg" cx="160" cy="160" r="135" stroke-dasharray="848.2" stroke-dashoffset="212.0" transform="rotate(135 160 160)" stroke-width="6"></circle>
                         <circle class="ring-fg" id="ring-amount" cx="160" cy="160" r="135" stroke-dasharray="848.2" stroke-dashoffset="848.2" transform="rotate(135 160 160)" stroke-width="6"></circle>
                     </svg>
                     
@@ -366,7 +439,7 @@
                 <div class="label" style="margin-top: -5px;">AMOUNT</div>
             </div>
 
-            <!-- OUTPUT GAIN -->
+            <!-- SALSA EXTRA GAIN -->
             <div class="knob-container small-knob">
                 <div class="knob-track">
                     <svg class="svg-ring" viewBox="0 0 110 110">
@@ -702,6 +775,167 @@
                 });
             }
         }, 100);
+
+        // --- Premium Modes Dropdown Logic ---
+        const modesColors = [
+            { name: 'MODO STARTER', primary: '#ffd600', accentRgb: '255, 214, 0' },
+            { name: 'MODO PREMIUM', primary: '#ff7300', accentRgb: '255, 115, 0' },
+            { name: 'MODO SAUCE', primary: '#a300ff', accentRgb: '163, 0, 255' }
+        ];
+
+        function selectMode(idx, e) {
+            if (e) e.stopPropagation();
+            params['mode'] = idx;
+            const mode = modesColors[idx];
+            document.getElementById('active-mode-btn').innerText = mode.name;
+            document.documentElement.style.setProperty('--primary', mode.primary);
+            document.documentElement.style.setProperty('--accent', mode.primary);
+            document.documentElement.style.setProperty('--accent-rgb', mode.accentRgb);
+            
+            // Close dropdown
+            document.getElementById('dropdown-content').classList.remove('show');
+            
+            // Send to C++
+            sendParam('mode', idx);
+        }
+
+        function toggleDropdown(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('dropdown-content').classList.toggle('show');
+        }
+
+        window.addEventListener('click', () => {
+            const dropdown = document.getElementById('dropdown-content');
+            if (dropdown) dropdown.classList.remove('show');
+        });
+
+        // --- Gem Particles Animation ---
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let audioRms = 0;
+
+        function resizeCanvas() {
+            if (canvas) {
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 300);
+
+        class GemParticle {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * 200; // start randomly
+            }
+            reset() {
+                if (!canvas) return;
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + 10;
+                this.size = Math.random() * 4 + 2;
+                this.speedY = Math.random() * 0.8 + 0.3;
+                this.speedX = (Math.random() - 0.5) * 0.4;
+                this.alpha = Math.random() * 0.5 + 0.3;
+                this.rot = Math.random() * Math.PI * 2;
+                this.rotSpeed = (Math.random() - 0.5) * 0.05;
+            }
+            update() {
+                const mult = 1.0 + audioRms * 12.0; // speed up with music volume
+                this.y -= this.speedY * mult;
+                this.x += this.speedX;
+                this.rot += this.rotSpeed * mult;
+                if (this.y < -10 || (canvas && (this.x < -10 || this.x > canvas.width + 10))) {
+                    this.reset();
+                }
+            }
+            draw() {
+                if (!canvas) return;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rot);
+                ctx.globalAlpha = this.alpha * (0.5 + audioRms * 0.8);
+                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+                
+                // Draw diamond shape
+                ctx.beginPath();
+                ctx.moveTo(0, -this.size);
+                ctx.lineTo(this.size * 0.7, 0);
+                ctx.lineTo(0, this.size);
+                ctx.lineTo(-this.size * 0.7, 0);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Glow
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = ctx.fillStyle;
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+
+        // Create particles
+        for (let i = 0; i < 20; i++) {
+            particles.push(new GemParticle());
+        }
+
+        function animateParticles() {
+            if (canvas) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                
+                // Pulse central dial with audio RMS
+                const dial = document.querySelector('.large-knob .knob-dial');
+                if (dial) {
+                    const pulse = 1.0 + audioRms * 0.12; // sutil scale pulse
+                    dial.style.transform = `scale(${pulse})`;
+                    dial.style.boxShadow = `0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(var(--accent-rgb), ${0.1 + audioRms * 0.4})`;
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        requestAnimationFrame(animateParticles);
+
+        // Listen to native audio RMS
+        try {
+            if (window.__JUCE__ && window.__JUCE__.backend) {
+                window.__JUCE__.backend.addEventListener('audio-rms', (val) => {
+                    const r = (typeof val === 'object' && val !== null) ? (val.value || 0) : Number(val);
+                    audioRms = r;
+                });
+            }
+        } catch(e){}
+
+        // Handle init-params from C++
+        try {
+            if (window.__JUCE__ && window.__JUCE__.backend) {
+                window.__JUCE__.backend.addEventListener('init-params', (ev) => {
+                    const data = (typeof ev === 'object' && ev !== null) ? (ev.value || ev) : ev;
+                    if (data) {
+                        if (data['global-in'] !== undefined) {
+                            params['global-in'] = data['global-in'];
+                            updateKnobVisuals('global-in', data['global-in']);
+                        }
+                        if (data['global-out'] !== undefined) {
+                            params['global-out'] = data['global-out'];
+                            updateKnobVisuals('global-out', data['global-out']);
+                        }
+                        if (data['amount'] !== undefined) {
+                            params['amount'] = data['amount'];
+                            updateKnobVisuals('amount', data['amount']);
+                        }
+                        if (data['mode'] !== undefined) {
+                            selectMode(Math.round(data['mode']));
+                        }
+                    }
+                });
+            }
+        } catch(e){}
 
         // Redraw on resize to scale visually
         let currentScale = 1;
