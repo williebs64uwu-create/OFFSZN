@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EASY YOUTUBE VST | Mezcla Voces Profesionales en FL Studio - OFFSZN</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="description" content="Plugin VST de OFFSZN. Logra la mezcla vocal perfecta sin dolores de cabeza con EASY YOUTUBE. Limpieza, color y efectos en un solo lugar.">
+    <meta name="theme-color" content="#0a0a0a">
+    <!-- Open Graph -->
+    <meta property="og:title" content="EASY YOUTUBE VST | Mezcla Voces Profesionales en FL Studio">
+    <meta property="og:description" content="Plugin VST para voces. Limpieza, compresión, efectos y más, en una interfaz intuitiva.">
+    <meta property="og:image" content="https://offszn.lat/images/plugins/easy%20mixx.png">
+    <meta property="og:url" content="https://offszn.lat/plugins/easy-mix.html">
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="OFFSZN">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://offszn.lat/images/plugins/easy%20mixx.png">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Supabase & Config -->
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>window.supabaseClient = null;</script>
+    <script src="/script/config.js"></script>
+    <script src="/script/auth-utils.js?v=12"></script>
+
+    <style>
+        :root {
+            --accent: #bf5af2;
+        }
+
+        .plugin-landing {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Geist', sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ==================== HERO ==================== */
+        .hero-section {
+            padding: 60px 0 40px;
+            text-align: center;
+            animation: heroFadeIn 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes heroFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-top-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            width: 100%;
+        }
+
+        .area-1 {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .area-2 {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .hero-title {
+            font-size: clamp(2.2rem, 6vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: #888;
+            max-width: 550px;
+            margin: 0 auto 40px;
+            line-height: 1.5;
+        }
+
+        .hero-image-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+            animation: heroFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes heroFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .hero-mockup {
+            width: 100%;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+
+        /* CTA Buttons (Matching X Flow Analyzer) */
+        .btn-free-download {
+            background: #fff;
+            color: #000;
+            padding: 12px 28px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #fff;
+            gap: 8px;
+        }
+
+        .btn-free-download:hover {
+            transform: translateY(-2px) scale(1.02);
+            background: #eee;
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-free-download.primary-large {
+            padding: 16px 48px;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+        }
+
+        .btn-serial {
+            background: transparent;
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            gap: 8px;
+            opacity: 0.7;
+            cursor: pointer;
+        }
+
+        .btn-serial:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.4);
+            opacity: 1;
+        }
+
+        /* ==================== CONTENT SECTIONS ==================== */
+        .feature-section {
+            border-top: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .alt-bg {
+            background: #080808;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            padding: 80px 0;
+        }
+
+        .content-grid.reverse {
+            direction: rtl;
+        }
+
+        .content-grid.reverse .text-content {
+            direction: ltr;
+        }
+
+        .feature-tag {
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .text-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 24px;
+            font-weight: 700;
+        }
+
+        .text-content p {
+            color: #aaa;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        .placeholder-img {
+            aspect-ratio: 1/1;
+            background: #161619;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.08);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            direction: ltr;
+        }
+
+        /* Plugin Mockup inside feature section */
+        .mockup-plugin {
+            background: #0a0a0a;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            width: 280px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .mockup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .mockup-logo {
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mockup-badge {
+            background: #111;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .mockup-drop {
+            background: #050505;
+            border: 1px dashed rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mockup-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .mockup-icon.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        .mockup-main-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .mockup-sub-text {
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .mockup-btn {
+            background: #fff;
+            color: #000;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .mockup-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* ==================== SERIAL KEY SECTION ==================== */
+        .serial-section {
+            padding: 80px 0;
+            text-align: center;
+            background: #000;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            color: #888;
+            font-size: 1.05rem;
+            max-width: 500px;
+            margin: 0 auto 40px;
+        }
+
+        .serial-card {
+            background: #0a0a0a;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .auth-wall {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .auth-wall i {
+            font-size: 3rem;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .serial-display {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .serial-box {
+            background: #000;
+            border: 1px dashed rgba(255,255,255,0.3);
+            padding: 16px 24px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            border-radius: 8px;
+            width: 100%;
+            user-select: all;
+            cursor: pointer;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .serial-box:hover {
+            border-color: rgba(255,255,255,0.6);
+        }
+
+        .btn-auth {
+            background: #fff;
+            color: #000;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            background: #e5e5e5;
+        }
+
+        .btn-download {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-download:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* ==================== FEATURE GRID (AHORRA TIEMPO) ==================== */
+        .features-grid-section {
+            padding: 100px 0;
+            background: #000;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .features-grid-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .features-grid-header h2 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #fff;
+        }
+
+        .features-grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-left: 1px solid rgba(255,255,255,0.05);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .f-grid-item {
+            padding: 40px;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: #050505;
+        }
+
+        .f-grid-icon {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .f-grid-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .f-grid-desc {
+            font-size: 0.95rem;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 900px) {
+            .features-grid-container { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .features-grid-container { grid-template-columns: 1fr; }
+        }
+
+        /* ==================== FAQ SECTION ==================== */
+        .faq-section {
+            padding: 100px 0;
+            background: #000;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .faq-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .faq-header .subtitle {
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .faq-header h2 {
+            font-size: clamp(3rem, 6vw, 4.5rem);
+            font-weight: 800;
+            letter-spacing: -2px;
+            color: #fff;
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .faq-item {
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .faq-question {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: left;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .faq-question i {
+            transition: transform 0.3s;
+            color: #666;
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            color: #888;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding-bottom: 24px;
+        }
+
+        /* ==================== TAGLINE (FINAL CTA) ==================== */
+        .tagline-section {
+            padding: 100px 20px;
+            text-align: center;
+            background: #000;
+        }
+
+        .tagline-section h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #666);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .content-grid.reverse {
+                direction: ltr;
+            }
+
+            .hero-top-actions {
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .area-1, .area-2 {
+                align-items: center;
+            }
+
+            .tagline-section h2 {
+                font-size: 2rem;
+            }
+
+            .placeholder-img {
+                max-width: 300px;
+                margin: 0 auto;
+            }
+
+            .faq-section {
+                padding: 60px 0;
+            }
+
+            .faq-header {
+                margin-bottom: 30px;
+            }
+
+            .faq-header h2 {
+                font-size: 2.2rem;
+            }
+
+            .faq-question {
+                font-size: 1.05rem;
+                padding: 18px 0;
+            }
+
+            .faq-answer {
+                font-size: 0.95rem;
+                line-height: 1.5;
+            }
+        }
+        
+        /* ==================== STICKY BANNER ==================== */
+        .sticky-offer-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255, 159, 10, 0.3);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 12px 20px;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+            animation: slideUpBanner 0.5s ease-out forwards;
+            animation-delay: 1s;
+            transform: translateY(100%);
+        }
+
+        @keyframes slideUpBanner {
+            to { transform: translateY(0); }
+        }
+
+        .sticky-offer-text {
+            color: #bf5af2;
+            font-weight: 800;
+            font-size: 1.05rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .sticky-offer-timer {
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sticky-offer-btn {
+            background: #bf5af2;
+            color: #000;
+            padding: 8px 24px;
+            border-radius: 8px;
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .sticky-offer-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            background: #ffa826;
+            box-shadow: 0 5px 15px rgba(255, 159, 10, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .sticky-offer-banner {
+                flex-direction: column;
+                gap: 10px;
+                padding: 16px 20px;
+            }
+            .sticky-offer-btn {
+                width: 100%;
+                text-align: center;
+                padding: 12px;
+                font-size: 1rem;
+            }
+            .sticky-offer-text {
+                font-size: 0.85rem;
+                text-align: center;
+            }
+            .sticky-offer-timer {
+                font-size: 0.85rem;
+                padding: 4px 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ==================== DYNAMIC NAVBAR ==================== -->
+    <div id="navbar-placeholder">
+        <div style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;"></div>
+    </div>
+    <script src="/script/load-navbar.js?v=25"></script>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="plugin-landing">
+
+        <!-- HERO SECTION -->
+        <section class="hero-section">
+            <div class="container">
+                <!-- HERO TOP ACTIONS -->
+                <div class="hero-top-actions" style="justify-content: center; margin-bottom: 24px;">
+                    <div class="area-2">
+                        <a href="#serial-section" class="btn-free-download"><i class="bi bi-key"></i> INICIAR PRUEBA GRATIS</a>
+                    </div>
+                </div>
+
+                <h1 class="hero-title" style="background: linear-gradient(135deg, #bf5af2 0%, #fff 100%); -webkit-background-clip: text; background-clip: text;">EASY YOUTUBE</h1>
+                <p class="hero-subtitle">Descarga videos de YouTube en MP3 (320kbps) o WAV (Lossless) de máxima calidad y arrástralos directamente a tu DAW sin salir del proyecto.</p>
+                
+                <div class="hero-image-container" style="max-width: 800px; margin: 30px auto 0;">
+                    <img src="/images/plugins/EASY YOUTUBEx.png" alt="EASY YOUTUBE VST" style="width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 30px 60px rgba(0,0,0,0.6);">
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURE GRID: AHORRA TIEMPO -->
+        <section class="features-grid-section">
+            <div class="container">
+                <div class="features-grid-header">
+                    <h2>Ahorra tiempo y<br>enfócate en Crear</h2>
+                </div>
+                
+                <div class="features-grid-container">
+                    
+                    <div class="f-grid-item">
+                        <div class="f-grid-icon"><i class="bi bi-currency-dollar"></i></div>
+                        <div class="f-grid-title">0% Complicaciones</div>
+                        <div class="f-grid-desc">Olvídate de enrutamientos complejos y cadenas interminables. Un solo plugin para procesar tus voces al máximo nivel.</div>
+                    </div>
+
+                    <div class="f-grid-item">
+                        <div class="f-grid-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+                        <div class="f-grid-title">Tiempo Real Sin Latencia</div>
+                        <div class="f-grid-desc">Graba directamente con el plugin encendido sin experimentar retrasos. Monitorea tu mezcla vocal en vivo.</div>
+                    </div>
+
+                    <div class="f-grid-item">
+                        <div class="f-grid-icon"><i class="bi bi-robot"></i></div>
+                        <div class="f-grid-title">Algoritmos Inteligentes</div>
+                        <div class="f-grid-desc">El De-Esser y los compresores se ajustan dinámicamente según la fuerza de tu voz para un control transparente.</div>
+                    </div>
+
+                    <div class="f-grid-item">
+                        <div class="f-grid-icon"><i class="bi bi-palette-fill"></i></div>
+                        <div class="f-grid-title">Estudio en tu PC</div>
+                        <div class="f-grid-desc">Sonido pulido y brillante instantáneo, rivalizando con plugins de mezcla que cuestan cientos de dólares.</div>
+                    </div>
+
+                    <div class="f-grid-item">
+                        <div class="f-grid-icon"><i class="bi bi-cpu-fill"></i></div>
+                        <div class="f-grid-title">Optimizado para CPU</div>
+                        <div class="f-grid-desc">Úsalo en decenas de canales (voces principales, coros, adlibs) sin congelar FL Studio ni Ableton.</div>
+                    </div>
+
+                    <div class="f-grid-item">
+                        <div class="f-grid-icon"><i class="bi bi-shield-lock-fill"></i></div>
+                        <div class="f-grid-title">Presets de Industria</div>
+                        <div class="f-grid-desc">Viene equipado con plantillas diseñadas por ingenieros de mezcla top para Trap, Reggaeton, Drill y más.</div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SYSTEM REQUIREMENTS ==================== -->
+        <section style="padding: 60px 0; background: #000; border-top: 1px solid rgba(255,255,255,0.05);">
+            <div class="container" style="max-width: 700px; text-align: center;">
+                <h2 class="section-title" style="font-size: 2rem; margin-bottom: 30px;">Requisitos del Sistema</h2>
+                <div style="display: flex; gap: 30px; flex-wrap: wrap; justify-content: center;">
+                    <!-- Windows -->
+                    <div style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); padding: 30px; border-radius: 16px; text-align: left;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#0078D4" viewBox="0 0 16 16"><path d="M6.555 1.375 0 2.237v5.45h6.555zM0 13.795l6.555.933V8.313H0zm7.278-5.4 .026 6.378L16 15.64V8.395zM16 .396 7.304 1.407v6.281H16z"/></svg>
+                            <span style="font-size: 1.1rem; font-weight: 700; color: #fff;">Windows</span>
+                        </div>
+                        <ul style="list-style: none; padding: 0; margin: 0; color: #aaa; font-size: 0.9rem; line-height: 2;">
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> Windows 10 o superior (64-bit)</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> Procesador Intel i5 / AMD Ryzen 5 o superior</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> 4 GB RAM mínimo</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> FL Studio 20.8+ / Ableton 11+ / cualquier DAW con VST3</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> Conexión a internet (solo para activación)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SERIAL KEY SECTION ==================== -->
+        <section class="serial-section" id="serial-section">
+            <div class="container">
+                <h2 class="section-title">Descarga tu Plugin</h2>
+                <p class="section-subtitle">Inicia sesión para obtener tu clave gratis automáticamente.</p>
+
+                <div class="serial-card" style="max-width: 800px; margin-bottom: 60px;">
+                    
+                    <!-- ESTADO 1: NO LOGUEADO (AUTH WALL) -->
+                    <div class="auth-wall" id="ui-auth-wall">
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 10px;">Crea tu cuenta gratuita o inicia sesión para obtener tu clave de acceso al instante.</p>
+                        <a href="/pages/login.html?redirect=/plugins/easy-mix" class="btn-auth" style="background: transparent; border: 1px solid #fff; color: #fff;">Obtener mi clave gratis</a>
+                    </div>
+
+                    <!-- ESTADO 2: LOGUEADO Y LISTO -->
+                    <div class="serial-display" id="ui-serial-ready">
+                        <h3 style="margin:0; font-size: 1.2rem;">Tu Licencia Actual</h3>
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 0;">Pega esta clave dentro de EASY YOUTUBE en tu DAW para validarlo.</p>
+
+                        <div class="serial-box" id="serial-key-text" title="Clic para copiar" onclick="copySerial()" style="border-color: #bf5af2; color: #bf5af2;">Cargando...</div>
+
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px;">
+                            <a href="https://offszn.lat/api/download/easymix-installer" class="btn-download" download><i class="fa-brands fa-windows" style="margin-right: 8px; color: #0078d4;"></i> Descargar para Windows (.exe)</a>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- PRICING CARDS -->
+                <h3 style="font-size: 2rem; font-weight: 800; margin-bottom: 10px; color: #fff;">O obtén tu licencia completa</h3>
+                <p style="color: #888; margin-bottom: 40px;">Si ya lo probaste y te encantó, elige el plan que mejor se adapte a ti.</p>
+
+                <div id="pricing-wall" style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 800px; margin: 0 auto;">
+                    
+                    <!-- Suscripción -->
+                    <div style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 16px; display: flex; flex-direction: column;">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 10px;">Suscripción</h3>
+                        <div style="font-size: 2.5rem; font-weight: 800; color: #bf5af2; margin-bottom: 5px;">$5<span style="font-size: 1rem; color: #888;">/mes</span></div>
+                        <ul style="list-style: none; padding: 0; margin: 20px 0; text-align: left; color: #aaa; flex-grow: 1;">
+                            <li style="margin-bottom: 10px;"><i class="bi bi-check-circle-fill" style="color: #bf5af2; margin-right: 8px;"></i> Hasta 2 Computadoras</li>
+                            <li style="margin-bottom: 10px;"><i class="bi bi-check-circle-fill" style="color: #bf5af2; margin-right: 8px;"></i> Actualizaciones incluidas</li>
+                            <li style="margin-bottom: 10px;"><i class="bi bi-check-circle-fill" style="color: #bf5af2; margin-right: 8px;"></i> Cancela cuando quieras</li>
+                        </ul>
+                        <!-- PayPal Sub Link -->
+                        <a href="https://www.paypal.com/webapps/billing/subscriptions?plan_id=P-267828821J7939438NIYMYZI" target="_blank" class="btn-auth" style="width: 100%; background: #bf5af2; color: #000; font-weight: 800; text-align: center; display: block; box-sizing: border-box;">Suscribirse</a>
+                    </div>
+
+                    <!-- Lifetime -->
+                    <div style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); padding: 30px; border-radius: 16px; display: flex; flex-direction: column;">
+                        <h3 style="font-size: 1.5rem; margin-bottom: 10px;">De Por Vida</h3>
+                        <div style="display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-bottom: 20px;">
+                            <span style="font-size: 1.4rem; text-decoration: line-through; color: rgba(255,255,255,0.4); font-weight: 500;">$45</span>
+                            <span style="font-size: 2.5rem; font-weight: 800; color: #fff;">$15</span>
+                            <span style="font-size: 1rem; color: #888;"> único</span>
+                        </div>
+                        <ul style="list-style: none; padding: 0; margin: 10px 0 20px 0; text-align: left; color: #aaa; flex-grow: 1;">
+                            <li style="margin-bottom: 10px;"><i class="bi bi-check-circle-fill" style="color: #fff; margin-right: 8px;"></i> Pago Único</li>
+                            <li style="margin-bottom: 10px;"><i class="bi bi-check-circle-fill" style="color: #fff; margin-right: 8px;"></i> 1 Computadora (Transferible)</li>
+                            <li style="margin-bottom: 10px;"><i class="bi bi-check-circle-fill" style="color: #fff; margin-right: 8px;"></i> Actualizaciones de por vida</li>
+                            <li style="margin-bottom: 10px;"><i class="bi bi-check-circle-fill" style="color: #fff; margin-right: 8px;"></i> +50 presets de voces incluidos</li>
+                        </ul>
+                        <!-- PayPal Checkout Direct -->
+                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=willie2008garay@gmail.com&item_name=EASY+MIX+Lifetime+License+Promo&amount=15.00&currency_code=USD" target="_blank" class="btn-auth" style="width: 100%; text-align: center; display: block; box-sizing: border-box;">Comprar Ahora a $15</a>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== FAQ SECTION ==================== -->
+        <section class="faq-section">
+            <div class="container">
+                <div class="faq-header">
+                    <div class="subtitle">SOPORTE</div>
+                    <h2>Preguntas</h2>
+                </div>
+                <div class="faq-container">
+                    
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Es compatible con mi DAW?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Sí. EASY YOUTUBE se exporta en los formatos estándar de la industria (VST3 y AU). Esto lo hace compatible con casi todos los programas de producción modernos: FL Studio, Ableton Live, Logic Pro X, Studio One, Reaper, entre otros.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Cómo obtengo mi licencia?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Al suscribirte o comprar la versión de por vida, la licencia se vincula automáticamente a tu cuenta de OFFSZN. Podrás ver tu "Serial Key" aquí mismo y simplemente pegarla en el plugin la primera vez que lo abras.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Funciona en Mac y Windows?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Totalmente. Al descargar el instalador, tendrás acceso tanto a la versión ejecutable para Windows (.exe / VST3) como a la versión para macOS (.pkg / VST3 & AU). Ambas optimizadas para procesadores Intel y Apple Silicon (M1/M2/M3).
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Puedo usarlo en más de un dispositivo?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Sí. Tu Serial Key personal te permite activar el plugin en hasta 2 computadoras simultáneamente (por ejemplo, tu PC de estudio y tu laptop para viajar).
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Qué métodos de pago soportan?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Aceptamos pagos seguros mediante PayPal, y también puedes pagar directamente con cualquier tarjeta de Crédito o Débito.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- TAGLINE -->
+        <section class="tagline-section">
+            <div class="container" style="padding: 0 24px;">
+                <h2>Mezclas vocales. Rápidas.<br>Impecables.</h2>
+                <div style="margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                    <a href="#serial-section" class="btn-free-download primary-large"><i class="bi bi-download"></i> Descargar Ahora</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== FOOTER ==================== -->
+    <div id="footer-placeholder"></div>
+
+    <!-- SCRIPTS -->
+    <script src="/script/id-obfuscator.js?v=1"></script>
+    <script src="/script/cart.js?v=21"></script>
+    <script src="/script/notifications.js?v=21"></script>
+    <script src="/script/footer.js?v=21"></script>
+    <script src="/script/navbar.js?v=21" type="module"></script>
+
+    <!-- SERIAL KEY LOGIC -->
+    <script>
+        const UI_WALL = document.getElementById('ui-auth-wall');
+        const UI_READY = document.getElementById('ui-serial-ready');
+        const TEXT_SERIAL = document.getElementById('serial-key-text');
+        const BTN_GENERATE = document.getElementById('btn-generate-serial');
+
+        function copySerial() {
+            const text = TEXT_SERIAL.innerText;
+            if (text && text !== 'Cargando...' && text !== 'NO TIENES LICENCIA ACTIVA' && text !== 'GENERANDO...') {
+                navigator.clipboard.writeText(text);
+                const original = TEXT_SERIAL.innerText;
+                TEXT_SERIAL.innerText = '¡COPIADO!';
+                setTimeout(() => TEXT_SERIAL.innerText = original, 2000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for supabase to be ready
+            let retries = 0;
+            while (!window.supabaseClient && retries < 20) {
+                await new Promise(r => setTimeout(r, 200));
+                retries++;
+            }
+
+            if (!window.supabaseClient) {
+                console.warn('Supabase not loaded');
+                return;
+            }
+
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+
+            if (!session) {
+                UI_WALL.style.display = 'flex';
+                UI_READY.style.display = 'none';
+            } else {
+                UI_WALL.style.display = 'none';
+                UI_READY.style.display = 'flex';
+
+                const userId = session.user.id;
+
+                // Check if user already has ANY license for EASY YOUTUBE
+                const { data, error } = await window.supabaseClient
+                    .from('plugin_licenses')
+                    .select('serial_key, status, license_type, expires_at')
+                    .eq('user_id', userId)
+                    .eq('plugin_name', 'EASY YOUTUBE')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (data && data.serial_key) {
+                    // User already has a key (trial or paid) — show it
+                    TEXT_SERIAL.innerText = data.serial_key;
+                } else {
+                    // No license yet — AUTO-GENERATE a trial immediately
+                    TEXT_SERIAL.innerText = 'GENERANDO TU CLAVE...';
+                    try {
+                        const res = await fetch('/api/plugin/generate-web', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${session.access_token}`
+                            },
+                            body: JSON.stringify({ plugin_name: 'EASY YOUTUBE' })
+                        });
+
+                        const result = await res.json();
+                        
+                        if (result.success) {
+                            TEXT_SERIAL.innerText = result.serial_key;
+                        } else {
+                            TEXT_SERIAL.innerText = 'ERROR AL GENERAR';
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        TEXT_SERIAL.innerText = 'ERROR DE CONEXIÓN';
+                    }
+                }
+            }
+        });
+    </script>
+    <!-- FAQ LOGIC -->
+    <script>
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const faqItem = button.parentElement;
+                const wasActive = faqItem.classList.contains('active');
+                
+                // Close all others
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Toggle current
+                if (!wasActive) {
+                    faqItem.classList.add('active');
+                }
+            });
+        });
+    </script>
+    <!-- ==================== STICKY OFFER BANNER ==================== -->
+    <div class="sticky-offer-banner">
+        <div class="sticky-offer-text">🚀 OFERTA DE LANZAMIENTO: SOLO 13 LICENCIAS A $15</div>
+        <div class="sticky-offer-timer" id="sticky-countdown-timer">⏳ Calculando...</div>
+        <a href="#serial-section" class="sticky-offer-btn">Obtener Oferta</a>
+    </div>
+
+    <script>
+        // Local countdown timer for sticky banner
+        (function() {
+            var timerElement = document.getElementById('sticky-countdown-timer');
+            var endTime = localStorage.getItem('easyMixOfferEnd');
+            if (!endTime || (endTime - new Date().getTime()) < 0) {
+                endTime = new Date().getTime() + (23 * 60 * 60 * 1000) + (14 * 60 * 1000); // ~23h 14m
+                localStorage.setItem('easyMixOfferEnd', endTime);
+            }
+            
+            setInterval(function() {
+                var now = new Date().getTime();
+                var distance = endTime - now;
+                
+                if (distance < 0) {
+                    timerElement.innerHTML = "Oferta Expirada";
+                    return;
+                }
+                
+                var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                timerElement.innerHTML = "⏳ Expira en: " + hours + "h " + minutes + "m " + seconds + "s";
+            }, 1000);
+        })();
+    </script>
+</body>
+
+</html>
