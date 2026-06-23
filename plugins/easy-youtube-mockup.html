@@ -185,9 +185,17 @@
             overflow: hidden;
         }
 
+        /* ─── MAIN AREA ─── */
+        .main-area {
+            flex: 1; display: flex;
+            align-items: center; justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
         /* ─── DOWNLOADER CARD ─── */
         .downloader-card {
-            width: 100%; max-width: 420px;
+            width: 100%; max-width: 800px;
             background: var(--panel);
             border: 1px solid var(--border);
             border-radius: 16px;
@@ -205,16 +213,91 @@
 
         .card-body { padding: 28px 24px; display: flex; flex-direction: column; gap: 18px; }
 
+        /* ─── PLATFORM MODES ─── */
+        .mode-selector {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .mode-tab {
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 8px 18px;
+            color: var(--dim);
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .mode-tab:hover {
+            border-color: var(--border-light);
+            color: var(--text);
+            transform: translateY(-1px);
+        }
+        .mode-tab.active {
+            background: rgba(191, 90, 242, 0.12);
+            border-color: var(--accent);
+            color: var(--text);
+            box-shadow: 0 0 12px rgba(191, 90, 242, 0.2);
+        }
+        .mode-tab.active[data-mode="youtube"] {
+            background: rgba(255, 69, 58, 0.12);
+            border-color: var(--red);
+            color: #ff5e55;
+            box-shadow: 0 0 12px rgba(255, 69, 58, 0.2);
+        }
+        .mode-tab.active[data-mode="instagram"] {
+            background: rgba(225, 48, 108, 0.12);
+            border-color: #ff3b30;
+            color: #ff5252;
+            box-shadow: 0 0 12px rgba(225, 48, 108, 0.2);
+        }
+        .mode-tab.active[data-mode="tiktok"] {
+            background: rgba(0, 242, 254, 0.12);
+            border-color: #00f2fe;
+            color: #4efcff;
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.2);
+        }
+
+        /* ─── CARD VIEWS ─── */
+        .card-view {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
         /* ─── FIELD GROUPS ─── */
-        .field-label {
-            font-size: 10px; font-weight: 700; color: var(--dim);
-            text-transform: uppercase; letter-spacing: 1.5px;
+        .field-label-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
             margin-bottom: 7px;
         }
-        .url-wrap { position: relative; }
+        .input-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            width: 100%;
+        }
+        .url-wrap {
+            flex: 1;
+            position: relative;
+        }
         .url-icon {
             position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-            color: var(--dim); font-size: 13px; pointer-events: none;
+            color: var(--dim); font-size: 14px; pointer-events: none;
+            transition: color 0.2s;
         }
         .url-input {
             width: 100%; padding: 13px 14px 13px 38px;
@@ -230,26 +313,41 @@
         }
         .url-input::placeholder { color: var(--dim); }
 
-        /* ─── FORMAT ROW ─── */
-        .format-row { display: flex; gap: 10px; }
-        .format-btn {
-            flex: 1; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            gap: 4px; padding: 14px 10px;
-            background: var(--panel2); border: 2px solid var(--border);
-            border-radius: 10px; cursor: pointer;
-            transition: all 0.2s;
+        /* ─── DROPDOWN SELECT ─── */
+        .dropdown-wrap {
+            position: relative;
+            width: 160px;
+            flex-shrink: 0;
         }
-        .format-btn.active {
+        .format-select {
+            width: 100%;
+            padding: 13px 34px 13px 14px;
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .format-select:focus {
             border-color: var(--accent);
-            background: rgba(191,90,242,0.08);
-            box-shadow: 0 0 0 1px rgba(191,90,242,0.15) inset;
+            box-shadow: 0 0 0 3px rgba(191,90,242,0.12);
         }
-        .format-btn i { font-size: 18px; color: var(--dim); transition: color 0.2s; }
-        .format-btn.active i { color: var(--accent); }
-        .format-btn-name { font-size: 13px; font-weight: 800; letter-spacing: 0.5px; }
-        .format-btn-sub { font-size: 9px; color: var(--dim); }
-        .format-btn.active .format-btn-sub { color: rgba(191,90,242,0.8); }
+        .dropdown-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--dim);
+            pointer-events: none;
+            font-size: 10px;
+        }
 
         /* ─── DOWNLOAD BUTTON ─── */
         #btn-download {
@@ -284,27 +382,57 @@
 
         /* ─── DRAG ZONE ─── */
         #drag-zone {
-            display: none;
+            display: flex;
             flex-direction: column; align-items: center; justify-content: center;
-            gap: 10px; padding: 28px 20px;
+            gap: 10px; padding: 24px 20px;
             border: 2px dashed rgba(191,90,242,0.5);
             border-radius: 10px;
-            background: rgba(191,90,242,0.05);
+            background: rgba(191,90,242,0.04);
             cursor: grab; text-align: center;
             animation: dragPulse 2.5s ease-in-out infinite;
             transition: border-color 0.2s, background 0.2s;
+            margin-bottom: 16px;
         }
         #drag-zone:hover {
             border-color: var(--accent);
-            background: rgba(191,90,242,0.10);
+            background: rgba(191,90,242,0.08);
         }
-        #drag-zone.show { display: flex; }
-        #drag-zone i { font-size: 28px; color: var(--accent); }
-        #drag-zone .dz-title { font-size: 12px; font-weight: 700; color: var(--text); }
-        #drag-zone .dz-sub { font-size: 10px; color: var(--dim); }
+        #drag-zone i { font-size: 32px; color: var(--accent); }
+        .dz-title { font-size: 12px; font-weight: 700; color: var(--text); }
+        .dz-sub { font-size: 10px; color: var(--dim); }
+        .dz-file-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--green);
+            background: rgba(50, 215, 75, 0.08);
+            border: 1px solid rgba(50, 215, 75, 0.15);
+            padding: 4px 10px;
+            border-radius: 6px;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         @keyframes dragPulse {
             0%,100% { box-shadow: 0 0 0 0 rgba(191,90,242,0); }
             50%      { box-shadow: 0 0 20px 4px rgba(191,90,242,0.15); }
+        }
+
+        .btn-secondary-purple {
+            width: 100%; padding: 13px;
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid rgba(191, 90, 242, 0.3);
+            border-radius: 10px;
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: all 0.2s;
+        }
+        .btn-secondary-purple:hover {
+            background: rgba(191, 90, 242, 0.08);
+            border-color: var(--accent);
+            transform: translateY(-1px);
         }
 
         /* ─── FOOTER ─── */
@@ -370,53 +498,67 @@
         <div class="downloader-card">
             <div class="card-glow-line"></div>
             <div class="card-body">
+                <div id="view-input" class="card-view">
+                    <!-- Selector de Plataforma -->
+                    <div class="mode-selector">
+                        <button class="mode-tab active" data-mode="youtube" onclick="selectMode('youtube')">
+                            <i class="fa-brands fa-youtube"></i> YouTube
+                        </button>
+                        <button class="mode-tab" data-mode="instagram" onclick="selectMode('instagram')">
+                            <i class="fa-brands fa-instagram"></i> Instagram
+                        </button>
+                        <button class="mode-tab" data-mode="tiktok" onclick="selectMode('tiktok')">
+                            <i class="fa-brands fa-tiktok"></i> TikTok
+                        </button>
+                    </div>
 
-                <!-- URL INPUT -->
-                <div>
-                    <div class="field-label">YouTube URL</div>
-                    <div class="url-wrap">
-                        <i class="fa-brands fa-youtube url-icon"></i>
-                        <input type="text" id="url-input" class="url-input"
-                               placeholder="https://www.youtube.com/watch?v=..."
-                               autocomplete="off" spellcheck="false">
+                    <!-- Fila de URL e Input -->
+                    <div class="field-label-row">
+                        <span id="url-label-text">YouTube URL</span>
+                        <span>Formato · Máxima Calidad</span>
+                    </div>
+                    <div class="input-row">
+                        <div class="url-wrap">
+                            <i class="fa-brands fa-youtube url-icon" id="input-platform-icon"></i>
+                            <input type="text" id="url-input" class="url-input"
+                                   placeholder="https://www.youtube.com/watch?v=..."
+                                   autocomplete="off" spellcheck="false">
+                        </div>
+                        <div class="dropdown-wrap">
+                            <select id="format-select" class="format-select" onchange="selectFormat(this.value)">
+                                <option value="mp3">MP3 (320 kbps)</option>
+                                <option value="wav">WAV (Lossless)</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down dropdown-icon"></i>
+                        </div>
+                    </div>
+
+                    <!-- DOWNLOAD BUTTON -->
+                    <button id="btn-download" onclick="startDownload()" style="margin-top: 18px;">
+                        <i class="fa-solid fa-download"></i> Descargar Audio
+                    </button>
+
+                    <!-- STATUS BAR -->
+                    <div class="status-bar" id="status-bar" style="margin-top: 14px;">
+                        <i class="fa-solid fa-circle-info status-icon"></i>
+                        <span class="status-msg">Listo para descargar.</span>
                     </div>
                 </div>
 
-                <!-- FORMAT SELECTOR -->
-                <div>
-                    <div class="field-label">Formato · Máxima Calidad</div>
-                    <div class="format-row">
-                        <div class="format-btn active" id="fmt-mp3" onclick="selectFormat('mp3')">
-                            <i class="fa-solid fa-music"></i>
-                            <div class="format-btn-name">MP3</div>
-                            <div class="format-btn-sub">320 kbps · CBR</div>
-                        </div>
-                        <div class="format-btn" id="fmt-wav" onclick="selectFormat('wav')">
-                            <i class="fa-solid fa-wave-square"></i>
-                            <div class="format-btn-name">WAV</div>
-                            <div class="format-btn-sub">Lossless · PCM</div>
-                        </div>
+                <div id="view-success" class="card-view" style="display: none;">
+                    <!-- DRAG ZONE -->
+                    <div id="drag-zone" onmousedown="startDrag(event)">
+                        <i class="fa-solid fa-file-audio"></i>
+                        <div class="dz-title">¡Descarga completada!</div>
+                        <div class="dz-file-name" id="success-file-name">audio_file.mp3</div>
+                        <div class="dz-sub">Arrastra este bloque directo a tu DAW</div>
                     </div>
+
+                    <!-- BOTON DESCARGAR OTRO -->
+                    <button id="btn-download-another" class="btn-secondary-purple" onclick="resetToInputView()">
+                        <i class="fa-solid fa-rotate-left"></i> Descargar Otro
+                    </button>
                 </div>
-
-                <!-- DOWNLOAD BUTTON -->
-                <button id="btn-download" onclick="startDownload()">
-                    <i class="fa-solid fa-download"></i> Descargar Audio
-                </button>
-
-                <!-- STATUS BAR -->
-                <div class="status-bar" id="status-bar">
-                    <i class="fa-solid fa-circle-info status-icon"></i>
-                    <span class="status-msg">Listo para descargar.</span>
-                </div>
-
-                <!-- DRAG ZONE -->
-                <div id="drag-zone" onmousedown="startDrag(event)">
-                    <i class="fa-solid fa-file-audio"></i>
-                    <div class="dz-title">¡Descarga completada!</div>
-                    <div class="dz-sub">Arrastra este bloque directo a tu DAW</div>
-                </div>
-
             </div>
         </div>
     </div>
@@ -582,12 +724,98 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    //  FORMAT SELECT
+    //  PLATFORM & FORMAT SELECT
     // ═══════════════════════════════════════════════════════════
+    let selectedMode = 'youtube';
+    const platformIcons = {
+        youtube: 'fa-brands fa-youtube',
+        instagram: 'fa-brands fa-instagram',
+        tiktok: 'fa-brands fa-tiktok'
+    };
+    const platformPlaceholders = {
+        youtube: 'https://www.youtube.com/watch?v=...',
+        instagram: 'https://www.instagram.com/reel/... o https://www.instagram.com/p/...',
+        tiktok: 'https://www.tiktok.com/@usuario/video/...'
+    };
+    const platformLabels = {
+        youtube: 'YouTube URL',
+        instagram: 'Instagram URL',
+        tiktok: 'TikTok URL'
+    };
+
+    function selectMode(mode) {
+        selectedMode = mode;
+        
+        // Update active class on tabs
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.getAttribute('data-mode') === mode);
+        });
+        
+        // Update label text
+        const label = document.getElementById('url-label-text');
+        if (label) label.textContent = platformLabels[mode];
+        
+        // Update input icon
+        const icon = document.getElementById('input-platform-icon');
+        if (icon) {
+            icon.className = `${platformIcons[mode]} url-icon`;
+            if (mode === 'youtube') icon.style.color = '#ff453a';
+            else if (mode === 'instagram') icon.style.color = '#ff5252';
+            else if (mode === 'tiktok') icon.style.color = '#00f2fe';
+            else icon.style.color = 'var(--dim)';
+        }
+        
+        // Update placeholder
+        const input = document.getElementById('url-input');
+        if (input) {
+            input.placeholder = platformPlaceholders[mode];
+            input.value = '';
+        }
+        
+        // Reset view states
+        document.getElementById('view-success').style.display = 'none';
+        document.getElementById('view-input').style.display = 'flex';
+        
+        const btn = document.getElementById('btn-download');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-download"></i>&nbsp; Descargar Audio';
+        }
+        setStatus('info', 'Listo para descargar.');
+    }
+
     function selectFormat(fmt) {
         selectedFormat = fmt;
-        document.getElementById('fmt-mp3').classList.toggle('active', fmt === 'mp3');
-        document.getElementById('fmt-wav').classList.toggle('active', fmt === 'wav');
+        const selectEl = document.getElementById('format-select');
+        if (selectEl && selectEl.value !== fmt) {
+            selectEl.value = fmt;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  URL VALIDATION
+    // ═══════════════════════════════════════════════════════════
+    function validateURL(url, mode) {
+        if (!url) return { valid: false, error: 'Por favor ingresa un link.' };
+        
+        const lowerUrl = url.toLowerCase();
+        if (mode === 'youtube') {
+            if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                return { valid: true };
+            }
+            return { valid: false, error: 'Ingresa un link válido de YouTube.' };
+        } else if (mode === 'instagram') {
+            if (lowerUrl.includes('instagram.com') || lowerUrl.includes('instagr.am')) {
+                return { valid: true };
+            }
+            return { valid: false, error: 'Ingresa un link válido de Instagram.' };
+        } else if (mode === 'tiktok') {
+            if (lowerUrl.includes('tiktok.com')) {
+                return { valid: true };
+            }
+            return { valid: false, error: 'Ingresa un link válido de TikTok.' };
+        }
+        return { valid: false, error: 'Modo no soportado.' };
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -600,13 +828,12 @@
         }
 
         const urlVal = document.getElementById('url-input').value.trim();
-        if (!urlVal) {
-            setStatus('error', 'Por favor ingresa un link de YouTube válido.');
+        const validation = validateURL(urlVal, selectedMode);
+        if (!validation.valid) {
+            setStatus('error', validation.error);
             return;
         }
 
-        // Reset drag zone
-        document.getElementById('drag-zone').classList.remove('show');
         downloadedFile = '';
 
         // Disable button while downloading
@@ -621,20 +848,40 @@
 
     function onDownloadSuccess(filePath) {
         downloadedFile = filePath;
-        const btn = document.getElementById('btn-download');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-download"></i>&nbsp; Descargar otro';
-
+        
         const name = filePath.split(/[\\/]/).pop();
+        document.getElementById('success-file-name').textContent = name;
+        
+        // Switch to success view
+        document.getElementById('view-input').style.display = 'none';
+        document.getElementById('view-success').style.display = 'flex';
+        
         setStatus('ok', `Guardado: ${name}`);
-        document.getElementById('drag-zone').classList.add('show');
     }
 
     function onDownloadError(errMsg) {
         const btn = document.getElementById('btn-download');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-download"></i>&nbsp; Reintentar';
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-download"></i>&nbsp; Reintentar';
+        }
         setStatus('error', errMsg || 'Error al descargar.');
+    }
+
+    function resetToInputView() {
+        downloadedFile = '';
+        document.getElementById('url-input').value = '';
+        document.getElementById('view-success').style.display = 'none';
+        document.getElementById('view-input').style.display = 'flex';
+        
+        const btn = document.getElementById('btn-download');
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-download"></i>&nbsp; Descargar Audio';
+        }
+        setStatus('info', 'Listo para descargar.');
+        
+        document.getElementById('url-input').focus();
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -651,11 +898,12 @@
     const statusIcons = { ok: 'fa-circle-check', error: 'fa-triangle-exclamation', busy: 'fa-circle-notch fa-spin', info: 'fa-circle-info' };
     function setStatus(type, msg) {
         const bar = document.getElementById('status-bar');
+        if (!bar) return;
         const icon = bar.querySelector('.status-icon');
         const txt  = bar.querySelector('.status-msg');
         bar.className = `status-bar status-${type}`;
-        icon.className = `fa-solid ${statusIcons[type] || statusIcons.info} status-icon`;
-        txt.textContent = msg;
+        if (icon) icon.className = `fa-solid ${statusIcons[type] || statusIcons.info} status-icon`;
+        if (txt) txt.textContent = msg;
     }
 
     // Reset on new URL input
@@ -664,12 +912,18 @@
         if (urlInput) {
             urlInput.addEventListener('input', () => {
                 downloadedFile = '';
-                document.getElementById('drag-zone').classList.remove('show');
-                document.getElementById('btn-download').disabled = false;
-                document.getElementById('btn-download').innerHTML = '<i class="fa-solid fa-download"></i>&nbsp; Descargar Audio';
+                const btn = document.getElementById('btn-download');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-download"></i>&nbsp; Descargar Audio';
+                }
                 setStatus('info', 'Listo para descargar.');
             });
         }
+        
+        // Initial setup for youtube styling
+        const icon = document.getElementById('input-platform-icon');
+        if (icon) icon.style.color = '#ff453a';
     });
 </script>
 </body>
