@@ -558,15 +558,15 @@
         btn.disabled = true;
 
         try {
-            const hwid = window.OFFSZN_HWID || 'dev-hwid';
-            const resp = await fetch(`${window.OFFSZN_API_BASE}/api/validate-license`, {
+            const hwid = window.OFFSZN_HWID || 'device-no-hwid';
+            const resp = await fetch(`${window.OFFSZN_API_BASE}/api/plugin/activate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ serial, hwid, plugin: 'easy-youtube' })
+                body: JSON.stringify({ serial_key: serial, hwid: hwid, device_name: 'EASY YOUTUBE Plugin', plugin: 'easy-youtube' })
             });
             const data = await resp.json();
 
-            if (data.valid) {
+            if (data.success) {
                 callNative('setLicenseStatus', true, serial);
                 callNative('saveLicense', serial);
                 handleLicenseStatus('VALID');
