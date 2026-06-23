@@ -4,347 +4,673 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>EASY YOUTUBE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
+
         :root {
-            --bg: #0f0f11;
-            --panel: #161619;
-            --border: #242428;
-            --text: #ffffff;
-            --dim: #8e8e93;
-            --accent: #bf5af2;
-            --accent-glow: rgba(191, 90, 242, 0.4);
+            --bg:           #0c0c0f;
+            --panel:        #141417;
+            --panel2:       #1a1a1e;
+            --border:       #2a2a30;
+            --border-light: #363640;
+            --text:         #f0f0f5;
+            --dim:          #7a7a86;
+            --accent:       #bf5af2;
+            --accent2:      #9b42d4;
+            --accent-glow:  rgba(191, 90, 242, 0.35);
+            --green:        #32d74b;
+            --red:          #ff453a;
         }
-        body {
-            width: 100%; height: 100vh; overflow: hidden;
-            background: var(--bg); color: var(--text);
-            font-family: 'Inter', sans-serif; user-select: none;
+
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* ─── LOADING OVERLAY ─── */
+        #loading-overlay {
+            position: fixed; inset: 0;
+            background: var(--bg);
+            z-index: 9999;
             display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 16px;
+            transition: opacity 0.5s ease;
+        }
+        #loading-overlay.fade-out { opacity: 0; pointer-events: none; }
+        .loading-logo {
+            font-size: 22px; font-weight: 800; letter-spacing: 3px;
+            background: linear-gradient(135deg, var(--accent), #e0a0ff);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .loading-dot-row { display: flex; gap: 6px; }
+        .loading-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--accent); opacity: 0.3;
+            animation: dotPulse 1.2s infinite;
+        }
+        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dotPulse { 0%,100%{opacity:0.2;transform:scale(0.8)} 50%{opacity:1;transform:scale(1)} }
+
+        /* ─── LICENSE MODAL ─── */
+        #license-modal {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.88);
+            z-index: 5000;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(6px);
+        }
+        #license-modal.show { display: flex; }
+
+        .license-card {
+            width: 320px;
+            background: linear-gradient(160deg, #1e1e25, #141418);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            padding: 28px 24px;
+            box-shadow: 0 30px 70px rgba(0,0,0,0.9), 0 0 0 1px rgba(191,90,242,0.15);
+            position: relative; overflow: hidden;
+        }
+        .license-card::before {
+            content:''; position:absolute; top:0; left:0; right:0; height:3px;
+            background: linear-gradient(90deg, var(--accent2), var(--accent), #e0a0ff);
+        }
+        .license-icon {
+            width: 54px; height: 54px; border-radius: 14px;
+            background: rgba(191,90,242,0.15); border: 1px solid rgba(191,90,242,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: var(--accent); margin: 0 auto 16px;
+        }
+        .license-title {
+            text-align: center; font-size: 15px; font-weight: 800;
+            letter-spacing: 0.5px; margin-bottom: 6px;
+        }
+        .license-sub {
+            text-align: center; font-size: 11px; color: var(--dim);
+            margin-bottom: 20px; line-height: 1.5;
+        }
+        .license-input {
+            width: 100%; background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+            border-radius: 8px; padding: 11px 14px;
+            color: #fff; font-family: 'Courier New', monospace;
+            font-size: 12px; text-align: center; letter-spacing: 2px;
+            outline: none; margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+        .license-input:focus { border-color: var(--accent); }
+        .license-input::placeholder { color: var(--dim); letter-spacing: 1px; }
+        .license-btn {
+            width: 100%; padding: 11px;
+            border: none; border-radius: 8px;
+            font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            cursor: pointer; margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+        .license-btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(191,90,242,0.35);
+        }
+        .license-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(191,90,242,0.5); }
+        .license-btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-light);
+            color: var(--dim);
+        }
+        .license-btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .license-error {
+            display: none; text-align: center;
+            font-size: 10px; color: var(--red);
+            font-weight: 600; margin-top: 8px;
         }
 
-        /* ── HEADER ── */
+        /* ─── MAIN LAYOUT ─── */
+        .app-wrapper {
+            display: flex; flex-direction: column;
+            width: 100%; height: 100%;
+        }
+
+        /* ─── HEADER ─── */
         .header {
-            background: linear-gradient(180deg, #242428, #161619);
-            padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;
+            display: flex; align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            height: 46px;
+            background: linear-gradient(180deg, #1e1e24, #141418);
             border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
         }
-        .logo { font-size: 20px; font-weight: 800; letter-spacing: 2px; }
-        .logo span { color: var(--accent); }
-        .tagline { font-size: 11px; color: var(--dim); letter-spacing: 1px; }
+        .header-logo {
+            font-size: 17px; font-weight: 800; letter-spacing: 2px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .header-logo span { color: var(--accent); }
+        .header-logo sub {
+            font-size: 9px; letter-spacing: 1px; color: var(--dim);
+            margin-left: 6px; font-weight: 600; text-transform: uppercase; vertical-align: middle;
+        }
+        .header-center { font-size: 10px; color: var(--dim); letter-spacing: 1.5px; text-transform: uppercase; }
+        .header-right { display: flex; align-items: center; gap: 10px; }
+        .license-badge {
+            display: none; align-items: center; gap: 5px;
+            font-size: 9px; font-weight: 700;
+            color: var(--accent); background: rgba(191,90,242,0.12);
+            border: 1px solid rgba(191,90,242,0.25);
+            padding: 4px 10px; border-radius: 100px;
+            cursor: pointer; letter-spacing: 0.5px;
+            transition: all 0.2s;
+        }
+        .license-badge:hover { background: rgba(191,90,242,0.2); }
+        .license-badge.show { display: flex; }
+        .license-badge i { font-size: 8px; }
 
-        /* ── MAIN CONTENT ── */
-        .main-content {
-            flex: 1; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; padding: 30px;
+        /* ─── MAIN AREA ─── */
+        .main-area {
+            flex: 1; display: flex;
+            align-items: center; justify-content: center;
+            padding: 20px;
+            overflow: hidden;
         }
-        
-        .downloader-box {
-            background: var(--panel); border: 1px solid var(--border);
-            border-radius: 12px; padding: 30px; width: 100%; max-width: 450px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            display: flex; flex-direction: column; gap: 20px;
+
+        /* ─── DOWNLOADER CARD ─── */
+        .downloader-card {
+            width: 100%; max-width: 420px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
             position: relative;
         }
-        
-        .downloader-box::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-            background: var(--accent); border-radius: 12px 12px 0 0;
-            box-shadow: 0 0 15px var(--accent-glow);
+        .card-glow-line {
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent2), var(--accent), #e0a0ff, var(--accent));
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+        }
+        @keyframes shimmer { 0%{background-position:0%} 100%{background-position:200%} }
+
+        .card-body { padding: 28px 24px; display: flex; flex-direction: column; gap: 18px; }
+
+        /* ─── FIELD GROUPS ─── */
+        .field-label {
+            font-size: 10px; font-weight: 700; color: var(--dim);
+            text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 7px;
+        }
+        .url-wrap { position: relative; }
+        .url-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: var(--dim); font-size: 13px; pointer-events: none;
+        }
+        .url-input {
+            width: 100%; padding: 13px 14px 13px 38px;
+            background: var(--panel2); border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text);
+            font-family: 'Inter', sans-serif; font-size: 12px;
+            outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+            user-select: text; -webkit-user-select: text;
+        }
+        .url-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(191,90,242,0.12);
+        }
+        .url-input::placeholder { color: var(--dim); }
+
+        /* ─── FORMAT ROW ─── */
+        .format-row { display: flex; gap: 10px; }
+        .format-btn {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 4px; padding: 14px 10px;
+            background: var(--panel2); border: 2px solid var(--border);
+            border-radius: 10px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .format-btn.active {
+            border-color: var(--accent);
+            background: rgba(191,90,242,0.08);
+            box-shadow: 0 0 0 1px rgba(191,90,242,0.15) inset;
+        }
+        .format-btn i { font-size: 18px; color: var(--dim); transition: color 0.2s; }
+        .format-btn.active i { color: var(--accent); }
+        .format-btn-name { font-size: 13px; font-weight: 800; letter-spacing: 0.5px; }
+        .format-btn-sub { font-size: 9px; color: var(--dim); }
+        .format-btn.active .format-btn-sub { color: rgba(191,90,242,0.8); }
+
+        /* ─── DOWNLOAD BUTTON ─── */
+        #btn-download {
+            width: 100%; padding: 15px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff; border: none; border-radius: 10px;
+            font-size: 12px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 9px;
+            transition: all 0.2s;
+            box-shadow: 0 6px 20px rgba(191,90,242,0.4);
+        }
+        #btn-download:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(191,90,242,0.55); }
+        #btn-download:disabled {
+            background: var(--border); color: var(--dim);
+            box-shadow: none; transform: none; cursor: not-allowed;
         }
 
-        .input-group { display: flex; flex-direction: column; gap: 8px; }
-        .input-group label { font-size: 11px; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
-        
-        .yt-input {
-            width: 100%; background: #080808; border: 1px solid var(--border);
-            color: #fff; padding: 14px; border-radius: 8px; font-size: 13px;
-            outline: none; transition: border-color 0.2s;
+        /* ─── STATUS BAR ─── */
+        .status-bar {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 11px; color: var(--dim);
+            padding: 10px 14px;
+            background: var(--panel2); border-radius: 8px;
+            min-height: 38px;
         }
-        .yt-input:focus { border-color: var(--accent); }
+        .status-bar .status-icon { font-size: 12px; flex-shrink: 0; }
+        .status-bar.status-ok    .status-icon { color: var(--green); }
+        .status-bar.status-error .status-icon { color: var(--red); }
+        .status-bar.status-busy  .status-icon { color: var(--accent); }
+        .status-bar .status-msg { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* Custom Dropdown */
-        .format-select {
-            width: 100%; background: #080808; border: 1px solid var(--border);
-            color: #fff; padding: 14px; border-radius: 8px; font-size: 13px;
-            outline: none; cursor: pointer; appearance: none;
+        /* ─── DRAG ZONE ─── */
+        #drag-zone {
+            display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            gap: 10px; padding: 28px 20px;
+            border: 2px dashed rgba(191,90,242,0.5);
+            border-radius: 10px;
+            background: rgba(191,90,242,0.05);
+            cursor: grab; text-align: center;
+            animation: dragPulse 2.5s ease-in-out infinite;
+            transition: border-color 0.2s, background 0.2s;
         }
-        .format-select:focus { border-color: var(--accent); }
-        .select-wrapper { position: relative; }
-        .select-wrapper::after {
-            content: '\f107'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
-            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
-            color: var(--dim); pointer-events: none;
+        #drag-zone:hover {
+            border-color: var(--accent);
+            background: rgba(191,90,242,0.10);
+        }
+        #drag-zone.show { display: flex; }
+        #drag-zone i { font-size: 28px; color: var(--accent); }
+        #drag-zone .dz-title { font-size: 12px; font-weight: 700; color: var(--text); }
+        #drag-zone .dz-sub { font-size: 10px; color: var(--dim); }
+        @keyframes dragPulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(191,90,242,0); }
+            50%      { box-shadow: 0 0 20px 4px rgba(191,90,242,0.15); }
         }
 
-        .btn-download {
-            background: linear-gradient(180deg, var(--accent), #8a3dc2);
-            color: #fff; border: none; padding: 16px; border-radius: 8px;
-            font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
-            cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px var(--accent-glow);
-            display: flex; justify-content: center; align-items: center; gap: 10px;
+        /* ─── FOOTER ─── */
+        .footer {
+            height: 30px; display: flex; align-items: center;
+            justify-content: center; gap: 6px;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
         }
-        .btn-download:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--accent-glow); }
-        .btn-download:disabled { background: var(--border); color: var(--dim); cursor: not-allowed; box-shadow: none; transform: none; }
+        .footer span { font-size: 9px; color: #3a3a44; letter-spacing: 1px; text-transform: uppercase; }
+        .footer-dot { width: 3px; height: 3px; border-radius: 50%; background: #3a3a44; }
 
-        .status-text { font-size: 11px; color: var(--dim); text-align: center; height: 14px; }
-
-        /* Drag & Drop Zone */
-        .drag-zone {
-            display: none; width: 100%; padding: 30px 20px; border: 2px dashed var(--accent);
-            background: rgba(191, 90, 242, 0.05); border-radius: 8px;
-            text-align: center; cursor: grab; flex-direction: column; gap: 10px; align-items: center;
-            animation: pulseDrag 2s infinite;
-        }
-        .drag-zone.active { display: flex; }
-        .drag-zone i { font-size: 24px; color: var(--accent); }
-        .drag-zone span { font-size: 12px; font-weight: 700; color: #fff; }
-        @keyframes pulseDrag { 0% { box-shadow: 0 0 0 0 rgba(191, 90, 242, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(191, 90, 242, 0); } 100% { box-shadow: 0 0 0 0 rgba(191, 90, 242, 0); } }
-
-        /* ── ACTIVATION MODAL ── */
-        .activation-modal {
-            display: none; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85);
-            z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(5px);
-        }
-        .act-container {
-            width: 300px; background: rgba(22, 22, 25, 0.9); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); position: relative;
-        }
-        .act-input {
-            width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border);
-            border-radius: 6px; padding: 10px; color: #fff; font-family: monospace; font-size: 11px;
-            text-align: center; letter-spacing: 1px; outline: none; margin-bottom: 10px;
-        }
-        .act-input:focus { border-color: var(--accent); }
-        .act-btn {
-            width: 100%; padding: 10px; border-radius: 6px; font-size: 10px; font-weight: 800;
-            text-transform: uppercase; cursor: pointer; border: none; margin-bottom: 8px;
-        }
-        .act-btn-primary { background: linear-gradient(180deg, var(--accent), #8a3dc2); color: #fff; }
-        .act-btn-secondary { background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, 0.6); transition: all 0.2s ease; }
-        .act-btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: #fff; }
-
-        .trial-badge {
-            font-size: 9px; font-weight: 800; color: var(--accent);
-            background: rgba(191, 90, 242, 0.15); border: 1px solid rgba(191, 90, 242, 0.3);
-            padding: 4px 8px; border-radius: 4px; cursor: pointer; text-transform: uppercase;
-            letter-spacing: 1px; display: none; align-items: center; transition: background 0.2s;
-        }
-        .trial-badge:hover { background: rgba(191, 90, 242, 0.25); }
-
-        #license-loading-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0f0f11;
-            z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 18px; transition: opacity 0.4s ease;
-        }
-        #license-loading-overlay.fade-out { opacity: 0; pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <div id="license-loading-overlay">
-        <div class="logo">EASY<span>YOUTUBE</span></div>
-        <div style="color: #888; font-size: 11px;">Verificando licencia...</div>
+<!-- ─── LOADING OVERLAY ─── -->
+<div id="loading-overlay">
+    <div class="loading-logo">EASY YOUTUBE</div>
+    <div class="loading-dot-row">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
     </div>
+</div>
 
-    <!-- Activation Modal -->
-    <div id="activation-modal" class="activation-modal">
-        <div class="act-container">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <i class="fa-solid fa-lock" style="font-size: 32px; color: var(--accent); margin-bottom: 10px;"></i>
-                <div style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Añadir Licencia</div>
-                <div style="font-size: 10px; color: var(--dim);">Ingresa tu código de licencia de OFFSZN.</div>
-            </div>
-            <input type="text" id="serial-input" class="act-input" placeholder="OFFSZN-XXXX-XXXX" autocomplete="off" spellcheck="false">
-            <button class="act-btn act-btn-primary" onclick="verifyLicense()">Activar Plugin</button>
-            <button class="act-btn act-btn-secondary" onclick="window.chrome.webview.postMessage({ type: 'openUrl', url: 'https://offszn.lat/plugins/easy-youtube.html#serial-section' })">Obtener Licencia</button>
-            <div id="act-error" style="color: #ff453a; font-size: 10px; text-align: center; margin-top: 10px; display: none; font-weight: 600;">Licencia inválida.</div>
+<!-- ─── LICENSE MODAL ─── -->
+<div id="license-modal">
+    <div class="license-card">
+        <div class="license-icon"><i class="fa-solid fa-key"></i></div>
+        <div class="license-title">Añadir Licencia</div>
+        <div class="license-sub">Ingresa tu código de activación de OFFSZN para desbloquear todas las funciones.</div>
+        <input type="text" id="serial-input" class="license-input"
+               placeholder="OFFSZN-XXXX-XXXX-XXXX"
+               autocomplete="off" spellcheck="false"
+               oninput="this.value=this.value.toUpperCase()">
+        <button class="license-btn license-btn-primary" id="btn-activate" onclick="verifyLicense()">
+            <i class="fa-solid fa-unlock"></i>&nbsp; Activar Plugin
+        </button>
+        <button class="license-btn license-btn-secondary" onclick="callNative('openURLNative','https://offszn.lat/plugins/easy-youtube.html')">
+            Obtener Licencia &rarr;
+        </button>
+        <div class="license-error" id="license-error">
+            <i class="fa-solid fa-triangle-exclamation"></i> Código inválido. Verifica e intenta de nuevo.
         </div>
     </div>
+</div>
+
+<!-- ─── APP ─── -->
+<div class="app-wrapper">
 
     <div class="header">
-        <div class="logo">EASY<span>YOUTUBE</span></div>
-        <div class="tagline">MAX QUALITY DOWNLOADS</div>
-        <div id="trial-badge" class="trial-badge" onclick="document.getElementById('activation-modal').style.display='flex'">LICENCIA PRO</div>
-    </div>
-
-    <div class="main-content">
-        <div class="downloader-box">
-            <div class="input-group">
-                <label>YouTube URL</label>
-                <input type="text" id="url-input" class="yt-input" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
-            </div>
-
-            <div class="input-group">
-                <label>Formato (Máxima Calidad)</label>
-                <div class="select-wrapper">
-                    <select id="format-select" class="format-select">
-                        <option value="mp3">MP3 (320kbps Lossy)</option>
-                        <option value="wav">WAV (Uncompressed Lossless)</option>
-                    </select>
-                </div>
-            </div>
-
-            <button id="btn-download" class="btn-download" onclick="startDownload()">
-                <i class="fa-solid fa-download"></i> Descargar Audio
-            </button>
-
-            <div id="status-text" class="status-text">Listo.</div>
-
-            <!-- Drag Zone (Hidden until downloaded) -->
-            <div id="drag-zone" class="drag-zone" onmousedown="startDrag(event)">
-                <i class="fa-solid fa-file-audio"></i>
-                <span>¡Descarga lista! Arrastra esto a tu DAW</span>
+        <div class="header-logo">EASY<span>YOUTUBE</span><sub>by OFFSZN</sub></div>
+        <div class="header-center">MAX QUALITY AUDIO DOWNLOADER</div>
+        <div class="header-right">
+            <div class="license-badge" id="license-badge" onclick="document.getElementById('license-modal').classList.add('show')">
+                <i class="fa-solid fa-circle-check"></i> PRO
             </div>
         </div>
     </div>
 
-    <script>
-        let isActivated = false;
-        let downloadedFile = "";
+    <div class="main-area">
+        <div class="downloader-card">
+            <div class="card-glow-line"></div>
+            <div class="card-body">
 
-        // API URL (can be changed via C++)
-        window.OFFSZN_API_BASE = 'https://offszn.lat';
+                <!-- URL INPUT -->
+                <div>
+                    <div class="field-label">YouTube URL</div>
+                    <div class="url-wrap">
+                        <i class="fa-brands fa-youtube url-icon"></i>
+                        <input type="text" id="url-input" class="url-input"
+                               placeholder="https://www.youtube.com/watch?v=..."
+                               autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
 
-        window.onload = function() {
-            // Native integration listeners
+                <!-- FORMAT SELECTOR -->
+                <div>
+                    <div class="field-label">Formato · Máxima Calidad</div>
+                    <div class="format-row">
+                        <div class="format-btn active" id="fmt-mp3" onclick="selectFormat('mp3')">
+                            <i class="fa-solid fa-music"></i>
+                            <div class="format-btn-name">MP3</div>
+                            <div class="format-btn-sub">320 kbps · CBR</div>
+                        </div>
+                        <div class="format-btn" id="fmt-wav" onclick="selectFormat('wav')">
+                            <i class="fa-solid fa-wave-square"></i>
+                            <div class="format-btn-name">WAV</div>
+                            <div class="format-btn-sub">Lossless · PCM</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DOWNLOAD BUTTON -->
+                <button id="btn-download" onclick="startDownload()">
+                    <i class="fa-solid fa-download"></i> Descargar Audio
+                </button>
+
+                <!-- STATUS BAR -->
+                <div class="status-bar" id="status-bar">
+                    <i class="fa-solid fa-circle-info status-icon"></i>
+                    <span class="status-msg">Listo para descargar.</span>
+                </div>
+
+                <!-- DRAG ZONE -->
+                <div id="drag-zone" onmousedown="startDrag(event)">
+                    <i class="fa-solid fa-file-audio"></i>
+                    <div class="dz-title">¡Descarga completada!</div>
+                    <div class="dz-sub">Arrastra este bloque directo a tu DAW</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span>EASY YOUTUBE</span>
+        <div class="footer-dot"></div>
+        <span>OFFSZN</span>
+        <div class="footer-dot"></div>
+        <span>v1.0</span>
+    </div>
+
+</div>
+
+<script>
+    // ═══════════════════════════════════════════════════════════
+    //  JUCE BRIDGE  (same pattern as EASY MIX)
+    // ═══════════════════════════════════════════════════════════
+    function hasJuceBridge() {
+        if (window.__JUCE__ && window.__JUCE__.backend) return true;
+        if (window.chrome && window.chrome.webview) return true;
+        return false;
+    }
+
+    const jucePromises = new Map();
+    if (window.__JUCE__ && window.__JUCE__.backend) {
+        window.__JUCE__.backend.addEventListener("__juce__complete", (ev) => {
+            const pid = ev.promiseId;
+            if (jucePromises.has(pid)) {
+                jucePromises.get(pid).resolve(ev.result);
+                jucePromises.delete(pid);
+            }
+        });
+    }
+
+    function callNative(funcName, ...args) {
+        try {
+            if (window.__JUCE__ && window.__JUCE__.backend) {
+                const promiseId = Math.floor(Math.random() * 1000000000);
+                const p = new Promise(resolve => { jucePromises.set(promiseId, { resolve }); });
+                window.__JUCE__.backend.emitEvent("__juce__invoke", {
+                    name: funcName, params: args, resultId: promiseId
+                });
+                return p;
+            }
             if (window.chrome && window.chrome.webview) {
-                window.chrome.webview.addEventListener('message', function(e) {
-                    let msg = e.data;
-                    if (msg.event === 'license-status') {
-                        handleLicenseStatus(msg.value);
-                    } else if (msg.event === 'download-progress') {
-                        document.getElementById('status-text').innerText = msg.value;
-                    } else if (msg.event === 'download-success') {
-                        document.getElementById('btn-download').disabled = false;
-                        document.getElementById('btn-download').style.display = 'none';
-                        document.getElementById('drag-zone').style.display = 'flex';
-                        document.getElementById('status-text').innerText = "Guardado en: " + msg.value;
-                        downloadedFile = msg.value;
-                    } else if (msg.event === 'download-error') {
-                        document.getElementById('btn-download').disabled = false;
-                        document.getElementById('btn-download').innerHTML = '<i class="fa-solid fa-download"></i> Reintentar Descarga';
-                        document.getElementById('status-text').innerText = "Error: " + msg.value;
-                        document.getElementById('status-text').style.color = "#ff453a";
-                    }
-                });
-            } else {
-                // Testing outside of plugin
-                setTimeout(() => handleLicenseStatus('VALID'), 1000);
+                window.chrome.webview.postMessage(JSON.stringify({ func: funcName, args: args }));
+                return Promise.resolve();
             }
-        };
+        } catch(err) {}
+        return Promise.resolve();
+    }
 
-        function handleLicenseStatus(status) {
-            document.getElementById('license-loading-overlay').classList.add('fade-out');
-            if (status === 'VALID') {
-                isActivated = true;
-                document.getElementById('activation-modal').style.display = 'none';
-                document.getElementById('trial-badge').style.display = 'flex';
-            } else {
-                isActivated = false;
-                document.getElementById('activation-modal').style.display = 'flex';
-                document.getElementById('trial-badge').style.display = 'none';
-            }
-        }
+    // ═══════════════════════════════════════════════════════════
+    //  APP STATE
+    // ═══════════════════════════════════════════════════════════
+    let isActivated = false;
+    let selectedFormat = 'mp3';
+    let downloadedFile = '';
 
-        async function verifyLicense() {
-            const serial = document.getElementById('serial-input').value.trim();
-            if(!serial) return;
-            
-            document.getElementById('act-error').style.display = 'none';
-            const btn = document.querySelector('.act-btn-primary');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            btn.disabled = true;
+    window.OFFSZN_API_BASE = 'https://offszn.lat';
+    window.OFFSZN_HWID = '';
 
-            try {
-                // Connect to your actual Supabase backend / Verify route.
-                // Replace this with the actual validation used in EASY MIX.
-                let hwid = window.OFFSZN_HWID || "dev-hwid";
-                const response = await fetch(`${window.OFFSZN_API_BASE}/api/validate-license`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ serial: serial, hwid: hwid, plugin: 'easy-youtube' })
-                });
-                
-                const data = await response.json();
-                
-                if(data.valid) {
-                    if(window.chrome && window.chrome.webview) {
-                        window.chrome.webview.postMessage({ type: 'setLicenseStatus', isValid: true, serial: serial });
-                    }
-                    handleLicenseStatus('VALID');
-                } else {
-                    throw new Error("Invalid");
+    // ═══════════════════════════════════════════════════════════
+    //  INIT
+    // ═══════════════════════════════════════════════════════════
+    window.addEventListener('DOMContentLoaded', () => {
+        // Listen for events coming FROM C++
+        const backend = window.__JUCE__ && window.__JUCE__.backend;
+        if (backend) {
+            backend.addEventListener('license-status', (statusStr) => {
+                handleLicenseStatus(typeof statusStr === 'string' ? statusStr : String(statusStr));
+            });
+            backend.addEventListener('download-progress', (msg) => {
+                setStatus('busy', typeof msg === 'string' ? msg : 'Descargando...');
+            });
+            backend.addEventListener('download-success', (filePath) => {
+                onDownloadSuccess(typeof filePath === 'string' ? filePath : '');
+            });
+            backend.addEventListener('download-error', (errMsg) => {
+                onDownloadError(typeof errMsg === 'string' ? errMsg : 'Error desconocido');
+            });
+            // Trigger init to receive saved license state & HWID
+            callNative('setParam', 'ui-ready', 1);
+        } else if (window.chrome && window.chrome.webview) {
+            // Legacy fallback for older WebView2 bridge
+            window.chrome.webview.addEventListener('message', function(e) {
+                let msg = e.data;
+                if (typeof msg === 'string') { try { msg = JSON.parse(msg); } catch(x){} }
+                if (msg.event === 'license-status') handleLicenseStatus(msg.value);
+                if (msg.event === 'download-progress') setStatus('busy', msg.value);
+                if (msg.event === 'download-success') onDownloadSuccess(msg.value);
+                if (msg.event === 'download-error') onDownloadError(msg.value);
+                if (msg.event === 'init-params' && msg.value && msg.value.hwid) {
+                    window.OFFSZN_HWID = msg.value.hwid;
                 }
-            } catch(e) {
-                document.getElementById('act-error').style.display = 'block';
-                if(window.chrome && window.chrome.webview) {
-                    window.chrome.webview.postMessage({ type: 'setLicenseStatus', isValid: false });
-                }
-            } finally {
-                btn.innerHTML = 'Activar Plugin';
-                btn.disabled = false;
-            }
+            });
+            callNative('setParam', 'ui-ready', 1);
+        } else {
+            // Browser preview — simulate activated
+            setTimeout(() => handleLicenseStatus('VALID'), 800);
         }
 
-        function startDownload() {
-            if(!isActivated) {
-                document.getElementById('activation-modal').style.display = 'flex';
-                return;
-            }
-            const url = document.getElementById('url-input').value.trim();
-            const format = document.getElementById('format-select').value;
-            
-            if(!url) {
-                document.getElementById('status-text').innerText = "Por favor, ingresa un link válido.";
-                document.getElementById('status-text').style.color = "#ff453a";
-                return;
-            }
-            
-            document.getElementById('status-text').style.color = "var(--dim)";
-            document.getElementById('status-text').innerText = "Iniciando descarga...";
-            document.getElementById('btn-download').disabled = true;
-            document.getElementById('btn-download').innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Descargando...';
-
-            if(window.chrome && window.chrome.webview) {
-                window.chrome.webview.postMessage({
-                    type: 'downloadAudio',
-                    url: url,
-                    format: format
-                });
-            } else {
-                // Mock test outside JUCE
-                setTimeout(() => {
-                    document.getElementById('status-text').innerText = "Guardado mock en C:/Downloads";
-                    document.getElementById('btn-download').style.display = 'none';
-                    document.getElementById('drag-zone').style.display = 'flex';
-                }, 2000);
-            }
-        }
-
-        function startDrag(e) {
-            if(!downloadedFile) return;
-            if(window.chrome && window.chrome.webview) {
-                window.chrome.webview.postMessage({
-                    type: 'dragAudio',
-                    filePath: downloadedFile
-                });
-            }
-        }
-        
-        // Listen to changes to reset the download button if they change the URL
-        document.getElementById('url-input').addEventListener('input', () => {
-            document.getElementById('btn-download').style.display = 'flex';
-            document.getElementById('btn-download').disabled = false;
-            document.getElementById('btn-download').innerHTML = '<i class="fa-solid fa-download"></i> Descargar Audio';
-            document.getElementById('drag-zone').style.display = 'none';
-            document.getElementById('status-text').innerText = "Listo.";
-            document.getElementById('status-text').style.color = "var(--dim)";
-            downloadedFile = "";
+        // Fetch HWID
+        callNative('getHardwareId').then(hwid => {
+            if (hwid) window.OFFSZN_HWID = hwid;
         });
 
-    </script>
+        // Check saved license
+        callNative('getLicenseState').then(state => {
+            if (state && state.isValid) handleLicenseStatus('VALID');
+        });
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    //  LICENSE
+    // ═══════════════════════════════════════════════════════════
+    function handleLicenseStatus(status) {
+        document.getElementById('loading-overlay').classList.add('fade-out');
+
+        if (status === 'VALID') {
+            isActivated = true;
+            document.getElementById('license-modal').classList.remove('show');
+            document.getElementById('license-badge').classList.add('show');
+        } else {
+            isActivated = false;
+            document.getElementById('license-badge').classList.remove('show');
+            document.getElementById('license-modal').classList.add('show');
+        }
+    }
+
+    async function verifyLicense() {
+        const serial = document.getElementById('serial-input').value.trim();
+        if (!serial) return;
+
+        document.getElementById('license-error').style.display = 'none';
+        const btn = document.getElementById('btn-activate');
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+        btn.disabled = true;
+
+        try {
+            const hwid = window.OFFSZN_HWID || 'dev-hwid';
+            const resp = await fetch(`${window.OFFSZN_API_BASE}/api/validate-license`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serial, hwid, plugin: 'easy-youtube' })
+            });
+            const data = await resp.json();
+
+            if (data.valid) {
+                callNative('setLicenseStatus', true, serial);
+                callNative('saveLicense', serial);
+                handleLicenseStatus('VALID');
+            } else {
+                throw new Error('invalid');
+            }
+        } catch(e) {
+            document.getElementById('license-error').style.display = 'block';
+        } finally {
+            btn.innerHTML = '<i class="fa-solid fa-unlock"></i>&nbsp; Activar Plugin';
+            btn.disabled = false;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  FORMAT SELECT
+    // ═══════════════════════════════════════════════════════════
+    function selectFormat(fmt) {
+        selectedFormat = fmt;
+        document.getElementById('fmt-mp3').classList.toggle('active', fmt === 'mp3');
+        document.getElementById('fmt-wav').classList.toggle('active', fmt === 'wav');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  DOWNLOAD
+    // ═══════════════════════════════════════════════════════════
+    function startDownload() {
+        if (!isActivated) {
+            document.getElementById('license-modal').classList.add('show');
+            return;
+        }
+
+        const urlVal = document.getElementById('url-input').value.trim();
+        if (!urlVal) {
+            setStatus('error', 'Por favor ingresa un link de YouTube válido.');
+            return;
+        }
+
+        // Reset drag zone
+        document.getElementById('drag-zone').classList.remove('show');
+        downloadedFile = '';
+
+        // Disable button while downloading
+        const btn = document.getElementById('btn-download');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>&nbsp; Descargando...';
+
+        setStatus('busy', 'Iniciando descarga...');
+
+        callNative('downloadAudio', urlVal, selectedFormat);
+    }
+
+    function onDownloadSuccess(filePath) {
+        downloadedFile = filePath;
+        const btn = document.getElementById('btn-download');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-download"></i>&nbsp; Descargar otro';
+
+        const name = filePath.split(/[\\/]/).pop();
+        setStatus('ok', `Guardado: ${name}`);
+        document.getElementById('drag-zone').classList.add('show');
+    }
+
+    function onDownloadError(errMsg) {
+        const btn = document.getElementById('btn-download');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-download"></i>&nbsp; Reintentar';
+        setStatus('error', errMsg || 'Error al descargar.');
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  DRAG TO DAW
+    // ═══════════════════════════════════════════════════════════
+    function startDrag(e) {
+        if (!downloadedFile) return;
+        callNative('dragAudio', downloadedFile);
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    //  STATUS HELPER
+    // ═══════════════════════════════════════════════════════════
+    const statusIcons = { ok: 'fa-circle-check', error: 'fa-triangle-exclamation', busy: 'fa-circle-notch fa-spin', info: 'fa-circle-info' };
+    function setStatus(type, msg) {
+        const bar = document.getElementById('status-bar');
+        const icon = bar.querySelector('.status-icon');
+        const txt  = bar.querySelector('.status-msg');
+        bar.className = `status-bar status-${type}`;
+        icon.className = `fa-solid ${statusIcons[type] || statusIcons.info} status-icon`;
+        txt.textContent = msg;
+    }
+
+    // Reset on new URL input
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlInput = document.getElementById('url-input');
+        if (urlInput) {
+            urlInput.addEventListener('input', () => {
+                downloadedFile = '';
+                document.getElementById('drag-zone').classList.remove('show');
+                document.getElementById('btn-download').disabled = false;
+                document.getElementById('btn-download').innerHTML = '<i class="fa-solid fa-download"></i>&nbsp; Descargar Audio';
+                setStatus('info', 'Listo para descargar.');
+            });
+        }
+    });
+</script>
 </body>
 </html>
