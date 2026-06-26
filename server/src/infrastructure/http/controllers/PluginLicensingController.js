@@ -88,30 +88,28 @@ export const generateWebLicense = async (req, res) => {
 
         const { data: existingLic } = await supabase
             .from('plugin_licenses').select('*')
-            .eq('user_id', user_id).eq('plugin_name', plugin_name).eq('license_type', 'trial').single();
+            .eq('user_id', user_id).eq('plugin_name', plugin_name).eq('license_type', 'lifetime').maybeSingle();
 
         if (existingLic) {
-            return res.json({ success: true, serial_key: existingLic.serial_key, expires_at: existingLic.expires_at, license_type: 'trial' });
+            return res.json({ success: true, serial_key: existingLic.serial_key, expires_at: existingLic.expires_at, license_type: 'lifetime' });
         }
 
         const basePrefix = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master') ? 'MASTER' : 'EASY';
-        const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 7);
-        const expiresAt = expiryDate.toISOString();
+        const serialKey = `${basePrefix}-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+        const expiresAt = null;
 
         const { data: newLic, error: licErr } = await supabase
             .from('plugin_licenses')
-            .insert({ user_id, plugin_name, serial_key: serialKey, license_type: 'trial', status: 'active', expires_at: expiresAt, max_devices: 1 })
+            .insert({ user_id, plugin_name, serial_key: serialKey, license_type: 'lifetime', status: 'active', expires_at: expiresAt, max_devices: 3 })
             .select('serial_key, expires_at').single();
 
         if (licErr) throw licErr;
 
         // Send welcome email if user has an email
         const { data: userData } = await supabase.from('users').select('email').eq('id', user_id).single();
-        await sendActivationEmail({ to: userData?.email, serialKey, licenseType: 'trial', expiresAt });
+        await sendActivationEmail({ to: userData?.email, serialKey, licenseType: 'lifetime', expiresAt });
 
-        return res.json({ success: true, serial_key: newLic.serial_key, expires_at: newLic.expires_at, license_type: 'trial' });
+        return res.json({ success: true, serial_key: newLic.serial_key, expires_at: newLic.expires_at, license_type: 'lifetime' });
     } catch (error) {
         console.error('Error en generateWebLicense:', error);
         res.status(500).json({ error: 'Error interno del servidor.' });

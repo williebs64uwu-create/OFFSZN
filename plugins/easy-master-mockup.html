@@ -500,12 +500,12 @@
                 <div class="loading-spinner" id="loading-spinner"></div>
                 <p id="loading-text" style="margin-top:15px; font-size:14px; color:rgba(255,255,255,0.6);">Verificando licencia...</p>
                 <div class="activation-content" id="activation-content">
-                    <h2>EASY MASTER</h2>
-                    <p>Por favor, activa tu copia para continuar.</p>
-                    <input type="text" id="serial-input" class="serial-input" placeholder="Ingresa tu Serial Key..." autocomplete="off" spellcheck="false">
-                    <button class="activate-btn" id="activate-btn" onclick="verifyLicense()">Activar Licencia</button>
+                    <h2>Ingresa tu Serial Key FULL</h2>
+                    <p>Activa tu plugin para siempre. Consigue tu licencia en OFFSZN.</p>
+                    <input type="text" id="serial-input" class="serial-input" placeholder="Ingresa tu Serial Key..." autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()">
+                    <button class="activate-btn" id="activate-btn" onclick="verifyLicense()">Activar Plugin</button>
                     <p class="error-msg" id="activation-error"></p>
-                    <a href="https://offszn.lat" target="_blank" class="buy-link">¿No tienes una licencia? Consíguela aquí</a>
+                    <a href="#" onclick="callNative('openURLNative','https://offszn.lat/plugins/easy-master.html'); return false;" class="buy-link">Consigue tu licencia &rarr; $5/mes o $10</a>
                 </div>
             </div>
         </div>
@@ -734,25 +734,19 @@
                 })
                 .then(res => res.json())
                 .then(response => {
-                    if (btn) btn.innerText = "Activar Licencia";
+                    if (btn) btn.innerText = "Activar Plugin";
                     if (response && response.success) {
                         try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
                         callNative("setLicenseStatus", true, serial);
-                        document.getElementById('activation-overlay').classList.remove('active');
-                        document.getElementById('activation-overlay').style.display = 'none';
+                        window.setLicenseStatus(true);
                     } else {
                         callNative("setLicenseStatus", false);
                         alert(response.error || "Licencia inválida");
                     }
                 })
                 .catch(err => {
-                    if (btn) btn.innerText = "Activar Licencia";
-                    setTimeout(() => {
-                        callNative("getLicenseState").then((s) => {
-                            if (s && s.isValid) window.setLicenseStatus(true);
-                            else window.setLicenseStatus(false);
-                        });
-                    }, 500);
+                    if (btn) btn.innerText = "Activar Plugin";
+                    alert("Error de conexión. Activa tu conexión a Internet para validar la licencia.");
                 });
             });
         }
@@ -781,18 +775,7 @@
             }
         };
 
-        try {
-            if (window.__JUCE__ && window.__JUCE__.backend) {
-                window.__JUCE__.backend.addEventListener('license-status', (statusStr) => {
-                    const status = (typeof statusStr === 'object' && statusStr !== null) ? (statusStr.value || statusStr.message || '') : statusStr;
-                    if (status === 'INVALID' || status === 'EXPIRED' || status === 'OFFLINE') {
-                        window.setLicenseStatus(false);
-                    } else if (status === 'VALID') {
-                        window.setLicenseStatus(true);
-                    }
-                });
-            }
-        } catch(e){}
+
 
         // Init visuals
         updateKnobVisuals('global-in', 25);
@@ -801,42 +784,52 @@
 
         setTimeout(() => {
             if (hasJuceBridge()) {
-                callNative("setApiBase", apiBase);
-                callNative("getHardwareId").then(hwid => {
-                    window.OFFSZN_HWID = hwid;
-                });
-
                 callNative("getLicenseState").then((state) => {
                     const isValid = state && state.isValid;
-                    const serial = state && state.serial;
-                    if (isValid && serial) {
-                        try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
-                        window.setLicenseStatus(true);
-                    } else if (serial) {
-                        getHwidAsync().then(hwid => {
-                            fetch(`${apiBase}/api/plugin/activate`, {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Master" })
-                            })
-                            .then(res => res.json())
-                            .then(response => {
-                                if (response && response.success) {
-                                    window.setLicenseStatus(true);
-                                    callNative("setLicenseStatus", true, serial);
-                                } else {
-                                    window.setLicenseStatus(false);
+                    const serial = (state && state.serial || "").trim();
+
+                    if (serial) {
+                        const isTrial = serial.toUpperCase().startsWith("TRIAL-");
+                        if (isTrial) {
+                            // Silently verify trial key online
+                            callNative("getHardwareId").then(hwid => {
+                                const effectiveHwid = hwid || 'device-no-hwid';
+                                fetch(`${apiBase}/api/plugin/activate`, {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ serial_key: serial, hwid: effectiveHwid, plugin_name: "Easy Master" })
+                                }).then(res => res.json()).then(response => {
+                                    if (response && response.success) {
+                                        // Still valid trial! Activate for this session
+                                        callNative("setLicenseStatus", true, serial);
+                                        window.setLicenseStatus(true);
+                                        try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
+                                    } else {
+                                        // Expired trial -> force modal
+                                        callNative("setLicenseStatus", false);
+                                        callNative("saveLicense", "");
+                                        window.setLicenseStatus(false);
+                                    }
+                                }).catch(() => {
+                                    // Offline
                                     callNative("setLicenseStatus", false);
-                                }
-                            })
-                            .catch(err => {
-                                window.setLicenseStatus(false);
-                                callNative("setLicenseStatus", false);
+                                    window.setLicenseStatus(false);
+                                    alert("El plugin requiere conexión a Internet para validar tu periodo de prueba.");
+                                });
                             });
-                        });
+                        } else {
+                            // FULL license: trust local validation completely
+                            if (isValid) {
+                                try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
+                                window.setLicenseStatus(true);
+                            } else {
+                                callNative("setLicenseStatus", false);
+                                window.setLicenseStatus(false);
+                            }
+                        }
                     } else {
-                        window.setLicenseStatus(false);
                         callNative("setLicenseStatus", false);
+                        window.setLicenseStatus(false);
                     }
                 });
             }

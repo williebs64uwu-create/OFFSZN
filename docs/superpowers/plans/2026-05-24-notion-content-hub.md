@@ -73,6 +73,9 @@ Propiedad `Prioridad` con opciones:
 - `Hashtags TikTok` (text)
 - `IG Views` (number), `IG Likes` (number), `IG Comments` (number), `IG Saves` (number), `IG Shares` (number), `IG Followers` (number)
 - `TT Views` (number), `TT Likes` (number), `TT Comments` (number), `TT Saves` (number), `TT Shares` (number), `TT Followers` (number)
+- `Audios Recibidos` (number): Cantidad de leads que enviaron su toma para prueba
+- `Demos Enviados` (number): Previews personalizados entregados por DM
+- `Ventas Directas` (number): Cash collected rastreable mediante el post
 
 **Fórmulas (Notion)**
 - `IG Save Rate` (formula):
@@ -83,6 +86,10 @@ Propiedad `Prioridad` con opciones:
   - `if(prop("TT Views") > 0, prop("TT Saves") / prop("TT Views"), 0)`
 - `TT Comment Rate` (formula):
   - `if(prop("TT Views") > 0, prop("TT Comments") / prop("TT Views"), 0)`
+- `Conversión Demo Rate` (formula):
+  - `if(prop("IG Views") > 0, prop("Audios Recibidos") / prop("IG Views"), 0)`
+- `Cierre Ventas Rate` (formula):
+  - `if(prop("Audios Recibidos") > 0, prop("Ventas Directas") / prop("Audios Recibidos"), 0)`
 
 **Views recomendadas**
 - `READY TO POST`: Status = `Listo para publicar` ordenado por `Planned Publish` asc.

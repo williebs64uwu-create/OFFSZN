@@ -437,8 +437,8 @@
 <div id="license-modal">
     <div class="license-card">
         <div class="license-icon"><i class="fa-solid fa-key"></i></div>
-        <div class="license-title">Añadir Licencia</div>
-        <div class="license-sub">Ingresa tu código de activación de OFFSZN para desbloquear todas las funciones.</div>
+        <div class="license-title">Ingresa tu Serial Key FULL</div>
+        <div class="license-sub">Activa tu plugin para siempre. Consigue tu licencia en OFFSZN.</div>
         <input type="text" id="serial-input" class="license-input"
                placeholder="OFFSZN-XXXX-XXXX-XXXX"
                autocomplete="off" spellcheck="false"
@@ -447,10 +447,10 @@
             <i class="fa-solid fa-unlock"></i>&nbsp; Activar Plugin
         </button>
         <button class="license-btn license-btn-secondary" onclick="callNative('openURLNative','https://offszn.lat/plugins/easy-youtube.html')">
-            Obtener Licencia &rarr;
+            Consigue tu licencia &rarr; $5/mes o $10
         </button>
         <div class="license-error" id="license-error">
-            <i class="fa-solid fa-triangle-exclamation"></i> Código inválido. Verifica e intenta de nuevo.
+            <i class="fa-solid fa-triangle-exclamation"></i> Serial Key inválida. Verifica e intenta de nuevo.
         </div>
     </div>
 </div>
@@ -604,9 +604,6 @@
         // Listen for events coming FROM C++
         const backend = window.__JUCE__ && window.__JUCE__.backend;
         if (backend) {
-            backend.addEventListener('license-status', (statusStr) => {
-                handleLicenseStatus(typeof statusStr === 'string' ? statusStr : String(statusStr));
-            });
             backend.addEventListener('download-progress', (msg) => {
                 setStatus('busy', typeof msg === 'string' ? msg : 'Descargando...');
             });
@@ -623,7 +620,6 @@
             window.chrome.webview.addEventListener('message', function(e) {
                 let msg = e.data;
                 if (typeof msg === 'string') { try { msg = JSON.parse(msg); } catch(x){} }
-                if (msg.event === 'license-status') handleLicenseStatus(msg.value);
                 if (msg.event === 'download-progress') setStatus('busy', msg.value);
                 if (msg.event === 'download-success') onDownloadSuccess(msg.value);
                 if (msg.event === 'download-error') onDownloadError(msg.value);
@@ -644,7 +640,47 @@
 
         // Check saved license
         callNative('getLicenseState').then(state => {
-            if (state && state.isValid) handleLicenseStatus('VALID');
+            const isValid = state && state.isValid;
+            const serial = (state && state.serial || "").trim();
+
+            if (serial) {
+                const isTrial = serial.toUpperCase().startsWith("TRIAL-");
+                if (isTrial) {
+                    // Silently verify trial key online
+                    const hwid = window.OFFSZN_HWID || 'device-no-hwid';
+                    fetch(`${window.OFFSZN_API_BASE}/api/plugin/activate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ serial_key: serial, hwid: hwid, device_name: 'EASY YOUTUBE Plugin', plugin: 'easy-youtube' })
+                    }).then(res => res.json()).then(data => {
+                        if (data && data.success) {
+                            callNative('setLicenseStatus', true, serial);
+                            handleLicenseStatus('VALID');
+                        } else {
+                            // Expired trial -> force modal
+                            callNative('setLicenseStatus', false);
+                            callNative('saveLicense', '');
+                            handleLicenseStatus('INVALID');
+                        }
+                    }).catch(() => {
+                        // Offline: since it's a trial, require internet
+                        callNative('setLicenseStatus', false);
+                        handleLicenseStatus('INVALID');
+                        alert("El plugin requiere conexión a Internet para validar tu periodo de prueba.");
+                    });
+                } else {
+                    // FULL license: trust local validation completely
+                    if (isValid) {
+                        handleLicenseStatus('VALID');
+                    } else {
+                        callNative('setLicenseStatus', false);
+                        handleLicenseStatus('INVALID');
+                    }
+                }
+            } else {
+                callNative('setLicenseStatus', false);
+                handleLicenseStatus('INVALID');
+            }
         });
     });
 
