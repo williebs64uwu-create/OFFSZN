@@ -1,8 +1,6 @@
-
-
 1 - EQ en modo SLOPE 12 DB, HIGH SHELF HACIENDO SOLO SIDE, para subirle 1.5 DBS EN LOS 10K HASTA 20K
 
-2 - oxford inflator: EFFECT es el que deberia de subir desde 10% para arriba, curve dejarlo en +10 
+2 - oxford inflator: EFFECT es el que deberia de subir desde 10% para arriba, curve dejarlo en +10
 
 3 - OZONE 12 IMAGER DE BANDAS DE 120 HZ HASTA 1K , BANDA DE 1K HASTA 8K Y BANDA DE 8K PARA ARRIBA, TODO EN MODO STEREOIZE 1, DONDE SE USA 6MS. SE SUBE HASTA UN MÁXIMO DE 30% CADA BANCA EN SINCRONO. MENOS EL LOW END DE 0 A 120 HZ. 
 

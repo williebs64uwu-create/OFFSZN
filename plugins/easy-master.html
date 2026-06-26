@@ -754,7 +754,7 @@
                 <!-- HERO TOP ACTIONS -->
                 <div class="hero-top-actions" style="justify-content: center; margin-bottom: 24px;">
                     <div class="area-2">
-                        <a href="#serial-section" class="btn-free-download"><i class="bi bi-key"></i> INICIAR PRUEBA GRATIS</a>
+                        <a href="#serial-section" class="btn-free-download"><i class="bi bi-download"></i> DESCARGAR PLUGIN</a>
                     </div>
                 </div>
 
@@ -843,25 +843,28 @@
         <section class="serial-section" id="serial-section">
             <div class="container">
                 <h2 class="section-title">Descarga tu Plugin</h2>
-                <p class="section-subtitle">Inicia sesión para obtener tu clave gratis automáticamente.</p>
+                <p class="section-subtitle">Inicia sesión para descargar el plugin y ver tus licencias.</p>
 
                 <div class="serial-card" style="max-width: 800px; margin-bottom: 60px;">
                     
                     <!-- ESTADO 1: NO LOGUEADO (AUTH WALL) -->
                     <div class="auth-wall" id="ui-auth-wall">
-                        <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 10px;">Crea tu cuenta gratuita o inicia sesión para obtener tu licencia.</p>
-                        <a href="/pages/login.html?redirect=/plugins/easy-master" class="btn-auth" style="background: transparent; border: 1px solid #fff; color: #fff;">Obtener mi licencia</a>
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 10px;">Crea tu cuenta o inicia sesión para descargar.</p>
+                        <a href="/pages/login.html?redirect=/plugins/easy-master" class="btn-auth" style="background: transparent; border: 1px solid #fff; color: #fff;">Iniciar Sesión</a>
                     </div>
 
                     <!-- ESTADO 2: LOGUEADO Y LISTO -->
-                    <div class="serial-display" id="ui-serial-ready">
-                        <h3 style="margin:0; font-size: 1.2rem;">Tu Licencia Actual</h3>
-                        <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 0;">Pega esta clave dentro de Easy Master en tu DAW para validarlo.</p>
+                    <div class="serial-display" id="ui-serial-ready" style="display: none; flex-direction: column; align-items: center; gap: 20px; padding: 30px 20px;">
+                        <!-- BOTÓN DE DESCARGA (Siempre visible cuando está logueado) -->
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 100%;">
+                            <a href="https://offszn.lat/api/download/easymaster-installer" class="btn-download" download style="display: inline-flex; align-items: center; gap: 8px;"><i class="fa-brands fa-windows" style="color: #0078d4; font-size: 1.2rem;"></i> Descargar para Windows</a>
+                        </div>
 
-                        <div class="serial-box" id="serial-key-text" title="Clic para copiar" onclick="copySerial()" style="border-color: #ff9f0a; color: #ff9f0a;">Cargando...</div>
-
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px;">
-                            <a href="https://offszn.lat/api/download/easymaster-installer" class="btn-download" download><i class="fa-brands fa-windows" style="margin-right: 8px; color: #0078d4;"></i> Descargar para Windows (.exe)</a>
+                        <!-- PANEL DE LICENCIA (Oculto por defecto, se muestra solo si tiene licencia en DB) -->
+                        <div id="license-key-panel" style="display: none; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; margin-top: 10px;">
+                            <h3 style="margin:0 0 5px 0; font-size: 1.2rem;">Tu Licencia Actual</h3>
+                            <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 15px;">Pega esta clave dentro de Easy Master en tu DAW para validarlo.</p>
+                            <div class="serial-box" id="serial-key-text" title="Clic para copiar" onclick="copySerial()" style="border-color: #ff9f0a; color: #ff9f0a; max-width: 400px; margin: 0 auto;">Cargando...</div>
                         </div>
                     </div>
 
@@ -1046,31 +1049,11 @@
 
                 if (data && data.serial_key) {
                     // User already has a key (trial or paid) — show it
+                    document.getElementById('license-key-panel').style.display = 'block';
                     TEXT_SERIAL.innerText = data.serial_key;
                 } else {
-                    // No license yet — AUTO-GENERATE a license immediately
-                    TEXT_SERIAL.innerText = 'GENERANDO TU CLAVE...';
-                    try {
-                        const res = await fetch('/api/plugin/generate-web', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${session.access_token}`
-                            },
-                            body: JSON.stringify({ plugin_name: 'Easy Master' })
-                        });
-
-                        const result = await res.json();
-                        
-                        if (result.success) {
-                            TEXT_SERIAL.innerText = result.serial_key;
-                        } else {
-                            TEXT_SERIAL.innerText = 'ERROR AL GENERAR';
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        TEXT_SERIAL.innerText = 'ERROR DE CONEXIÓN';
-                    }
+                    // Hide the license panel completely if no license exists
+                    document.getElementById('license-key-panel').style.display = 'none';
                 }
             }
         });
@@ -1096,7 +1079,7 @@
     </script>
     <!-- ==================== STICKY OFFER BANNER ==================== -->
     <div class="sticky-offer-banner">
-        <div class="sticky-offer-text">🚀 OFERTA DE LANZAMIENTO: SOLO 13 LICENCIAS A $10</div>
+        <div class="sticky-offer-text">🚀 OFERTA DE LANZAMIENTO: Solo quedan 7 licencias a 10$</div>
         <div class="sticky-offer-timer" id="sticky-countdown-timer">⏳ Calculando...</div>
         <a href="#serial-section" class="sticky-offer-btn">Obtener Oferta</a>
     </div>
