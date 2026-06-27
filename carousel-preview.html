@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFFSZN Premium Carousel - Plantilla</title>
+    <!-- Google Fonts: Instrument Serif & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --bg: #F9F8F6;
+            --text: #1A1A1A;
+            --accent: #FF0000;
+            --tag-bg: #FFFFFF;
+            --tag-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+            --tag-border: 1px solid rgba(0, 0, 0, 0.08);
+            --serif: 'Instrument Serif', serif;
+            --sans: 'Outfit', sans-serif;
+            --new-badge: #6D9788;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background: #E5E5E5;
+            display: flex;
+            flex-direction: column;
+            gap: 60px;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+            font-family: var(--sans);
+            padding: 80px 40px;
+        }
+
+        /* Container with 4:5 Aspect Ratio (1080x1350) scaled for preview */
+        .slide {
+            width: 540px; 
+            height: 675px; 
+            background: var(--bg);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        /* --- SLIDE 1 STYLES --- */
+        .slide-1 {
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide-content {
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            max-width: 85%;
+            margin-top: -20px;
+        }
+
+        h1 {
+            font-family: var(--serif);
+            font-size: 60px;
+            font-weight: 400;
+            line-height: 1.1;
+            color: var(--text);
+            margin-bottom: 25px;
+            letter-spacing: 0px;
+        }
+
+        h1 b { font-weight: 700; letter-spacing: -1px; }
+
+        .arrow-container {
+            position: absolute; bottom: 22%;
+            display: flex; justify-content: center; width: 100%;
+        }
+        .hand-arrow { width: 75px; height: auto; opacity: 0.9; }
+
+        /* --- SLIDE PROBLEM STYLES --- */
+        .slide-problem {
+            padding: 80px 50px;
+            justify-content: center;
+        }
+
+        .problem-title {
+            font-family: var(--serif);
+            font-size: 52px;
+            line-height: 1.1;
+            margin-bottom: 30px;
+            color: var(--text);
+        }
+
+        .problem-subtitle {
+            font-size: 22px;
+            font-weight: 300;
+            line-height: 1.5;
+            color: var(--text);
+            opacity: 0.8;
+            max-width: 90%;
+        }
+
+        /* --- SLIDE BENEFIT STYLES --- */
+        .slide-benefit {
+            padding: 60px 50px;
+            justify-content: flex-start;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            opacity: 0.8;
+        }
+
+        .benefit-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-top: 10px;
+        }
+
+        .benefit-card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        }
+
+        .benefit-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .benefit-card p {
+            font-size: 16px;
+            opacity: 0.7;
+            line-height: 1.4;
+        }
+
+        /* --- SLIDE RESULT STYLES --- */
+        .slide-result {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: #1A1A1A; /* Contrast slide */
+            color: white;
+        }
+
+        .result-text {
+            font-family: var(--serif);
+            font-size: 52px;
+            line-height: 1.1;
+            max-width: 85%;
+        }
+
+        .result-text b {
+            color: #6D9788;
+            font-style: italic;
+        }
+
+        /* --- SLIDE CTA STYLES --- */
+        .slide-3 {
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+        }
+
+        .cta-text {
+            font-family: var(--serif);
+            font-size: 50px;
+            line-height: 1.1;
+            text-align: center;
+            color: var(--text);
+            max-width: 90%;
+        }
+
+        .cta-text b {
+            font-weight: 700;
+            font-style: italic;
+        }
+
+        .cta-subtext {
+            font-size: 18px;
+            font-weight: 300;
+            margin-top: 20px;
+            color: var(--text);
+            opacity: 0.7;
+            text-align: center;
+        }
+
+        /* Indicators */
+        .indicators {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 4px;
+            height: 4px;
+            background: var(--text);
+            border-radius: 50%;
+            opacity: 0.1;
+        }
+        .slide-result .dot { background: white; }
+        .dot.active { opacity: 0.8; }
+
+        .export-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: var(--sans);
+            font-weight: 600;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+            transition: opacity 0.3s;
+        }
+        .export-btn:hover {
+            opacity: 0.8;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <button class="export-btn" onclick="exportSlides()">Descargar Carrusel</button>
+
+    <!-- SLIDE 1: HOOK -->
+    <div class="slide slide-1">
+        <div class="slide-content">
+            <h1>Sigues peleando con tus voces sin sonar bien...<br><br><b>o las mezclas en 2 clics.</b></h1>
+        </div>
+
+        <div class="arrow-container">
+            <svg class="hand-arrow" viewBox="0 0 100 40" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 20H85M85 20L72 10M85 20L72 30" />
+            </svg>
+        </div>
+
+        <div class="indicators">
+            <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+    </div>
+
+    <!-- SLIDE 2: PROBLEM -->
+    <div class="slide slide-problem">
+        <div class="problem-title">
+            El problema no es tu micrófono.
+        </div>
+        <div class="problem-subtitle">
+            Lograr el sonido que quieres es más fácil de lo que piensas...
+        </div>
+
+        <div class="indicators">
+            <div class="dot"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+    </div>
+
+    <!-- SLIDE 3: SECRET -->
+    <div class="slide slide-result">
+        <div class="result-text">
+            El secreto de los que suenan <b>Pro</b>.
+            <br><br>
+            <span style="font-family: var(--sans); font-size: 22px; font-weight: 300; color: rgba(255,255,255,0.8); display: block; margin-top: 20px;">Usan plantillas de voces donde no necesitan estar ajustando desde 0.</span>
+        </div>
+
+        <div class="indicators">
+            <div class="dot"></div><div class="dot"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+    </div>
+
+    <!-- SLIDE 4: OPTIONS -->
+    <div class="slide slide-benefit">
+        <div class="header-row">
+            <div class="brand-name">Tienes dos opciones:</div>
+        </div>
+
+        <div class="benefit-grid">
+            <div class="benefit-card">
+                <h3>Opción A</h3>
+                <p>O sigues perdiendo el tiempo mezclando a ciegas en cada canción.</p>
+            </div>
+            <div class="benefit-card">
+                <h3>Opción B</h3>
+                <p>O usas este sistema y lo resuelves en <b>2 clics</b>.</p>
+            </div>
+        </div>
+
+        <div class="indicators">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot active"></div><div class="dot"></div>
+        </div>
+    </div>
+
+    <!-- SLIDE 5: CTA -->
+    <div class="slide slide-3">
+        <div class="cta-text">
+            Comenta <b>"plantilla"</b>
+        </div>
+        <div class="cta-subtext">
+            Y te envío el sistema que están usando +1000 artistas.
+        </div>
+
+        <div class="indicators">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot active"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.dot');
+
+        function showSlide(index) {
+            slides[currentSlide].classList.remove('active');
+            dots[currentSlide].classList.remove('active');
+            
+            currentSlide = index;
+            if (currentSlide >= slides.length) currentSlide = 0;
+            if (currentSlide < 0) currentSlide = slides.length - 1;
+            
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+        }
+
+        function moveSlide(direction) {
+            showSlide(currentSlide + direction);
+        }
+
+        function setSlide(index) {
+            showSlide(index);
+        }
+
+        async function exportSlides() {
+            const btn = document.querySelector('.export-btn');
+            const originalText = btn.innerText;
+            btn.innerText = 'Exportando...';
+            btn.disabled = true;
+
+            const originalSlide = currentSlide;
+
+            for(let i = 0; i < slides.length; i++) {
+                showSlide(i);
+                // Esperamos medio segundo para que la animación termine y se renderice bien
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                const canvas = await html2canvas(slides[i], {
+                    scale: 2, // Calidad alta (retina/HD) para que se vea nítido en redes
+                    useCORS: true,
+                    backgroundColor: slides[i].classList.contains('slide-result') ? '#1A1A1A' : '#F9F8F6'
+                });
+                
+                const link = document.createElement('a');
+                link.download = `slide-${i + 1}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
+
+            // Volvemos al estado inicial
+            showSlide(originalSlide);
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>

@@ -3093,19 +3093,9 @@ window.submitNegotiationInline = async function () {
         }
         */
 
-        const { error } = await window.supabaseClient.from('propuestas_offszn').insert({
-            product_id: product.id,
-            producer_id: product.producer_id,
-            email_offszn: email,
-            amount_offszn: amountNum,
-            status_offszn: 'pending',
-            selected_license: selectedLicense
-        });
-
-        if (error) throw error;
-
-        // --- 📧 Email Notification via Server ---
-        fetch('/api/negotiate', {
+        // --- 📨 Submitting to Backend ---
+        // Backend handles both DB insertion (bypassing RLS) and emails
+        const response = await fetch('/api/negotiate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -3113,9 +3103,15 @@ window.submitNegotiationInline = async function () {
                 producerId: product.producer_id,
                 amount: amountNum,
                 email: email,
-                userId: userId
+                userId: userId,
+                selectedLicense: selectedLicense
             })
-        }).catch(err => console.warn('[Negotiation] Email notification failed (background):', err));
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Error al enviar propuesta');
+        }
 
         alert("¡Propuesta enviada con éxito! Se envió un correo a ti mismo y al productor.");
 
@@ -3519,17 +3515,24 @@ window.submitNegotiation = async function () {
         const activeLicTab = document.querySelector('.lic-tab.active');
         const selectedLicense = activeLicTab ? activeLicTab.textContent.trim() : 'Standard';
 
-        // Step 2: Save the proposal
-        const { error } = await window.supabaseClient.from('propuestas_offszn').insert({
-            product_id: product.id,
-            producer_id: product.producer_id,
-            email: email,
-            amount: amountNum,
-            status: 'pending',
-            selected_license: selectedLicense
+        // Step 2: Save the proposal via Backend (Bypasses RLS)
+        const response = await fetch('/api/negotiate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                productId: product.id,
+                producerId: product.producer_id,
+                amount: amountNum,
+                email: email,
+                userId: userId,
+                selectedLicense: selectedLicense
+            })
         });
 
-        if (error) throw error;
+        if (!response.ok) {
+            const data = await response.json();
+            throw new Error(data.error || 'Error al enviar la propuesta.');
+        }
 
         alert("¡Propuesta enviada con éxito! Revisa tu correo pronto para activar tu cuenta y ver la respuesta.");
         window.closeNegotiationModal();

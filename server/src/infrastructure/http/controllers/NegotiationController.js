@@ -11,13 +11,28 @@ function truncateName(name, max = 30) {
  * Handles the negotiation proposal and sends email notifications.
  */
 export const submitNegotiation = async (req, res) => {
-    const { productId, producerId, amount, email, userId } = req.body;
+    const { productId, producerId, amount, email, userId, selectedLicense } = req.body;
 
     if (!productId || !producerId || !amount || !email) {
         return res.status(400).json({ error: 'Faltan datos requeridos (productId, producerId, amount, email)' });
     }
 
     try {
+        // 0. Save the proposal to the database (bypasses RLS since backend uses SERVICE_ROLE_KEY)
+        const { error: insertError } = await supabase.from('propuestas_offszn').insert({
+            product_id: productId,
+            producer_id: producerId,
+            email_offszn: email,
+            amount_offszn: amount,
+            status_offszn: 'pending',
+            selected_license: selectedLicense || 'Standard'
+        });
+
+        if (insertError) {
+            console.error('[Negotiation] DB Insert failed:', insertError);
+            return res.status(500).json({ error: 'Error al registrar la propuesta en la base de datos' });
+        }
+
         // 1. Fetch Producer Email
         const { data: producer, error: prodError } = await supabase
             .from('users')

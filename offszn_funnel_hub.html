@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFFSZN Funnel Hub - Willie Inspired</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #08080c;
+            --card-bg: #12121a;
+            --border-color: #222230;
+            --accent-gold: #e5a93b;
+            --accent-orange: #ff5e00;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b8;
+            --success-color: #00e676;
+            --shadow-glow: 0 0 15px rgba(229, 169, 59, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.6;
+            padding: 40px 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-gold) 70%, var(--accent-orange) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Progress Bar Hub */
+        .progress-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 40px;
+            box-shadow: var(--shadow-glow);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .progress-info {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .progress-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .progress-info p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .progress-bar-outer {
+            width: 100%;
+            height: 12px;
+            background: #1a1a26;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-bar-inner {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-gold), var(--accent-orange));
+            border-radius: 6px;
+            transition: width 0.4s ease;
+        }
+
+        .progress-percentage {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+            text-align: right;
+            min-width: 100px;
+        }
+
+        /* Tab System */
+        .tabs-header {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .tabs-header::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: #151522;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-gold);
+            border-bottom: 3px solid var(--accent-gold);
+            background: #12121a;
+            border-color: var(--border-color) var(--border-color) transparent var(--border-color);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Content Blocks */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 900px) {
+            .grid-layout {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .card-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #202030;
+            color: var(--accent-gold);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(229, 169, 59, 0.3);
+        }
+
+        /* Checkbox Styles */
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            user-select: none;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .checklist-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .custom-checkbox {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 2px;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            background: #08080c;
+        }
+
+        .checklist-item.checked .custom-checkbox {
+            border-color: var(--success-color);
+            background: var(--success-color);
+            box-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
+        }
+
+        .custom-checkbox svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: #000;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s ease;
+        }
+
+        .checklist-item.checked .custom-checkbox svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .checklist-text {
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .checklist-item.checked .checklist-text {
+            color: var(--text-secondary);
+            text-decoration: line-through;
+        }
+
+        .checklist-subtext {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* Copy Block Styles */
+        .copy-block {
+            background: #08080c;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .copy-text {
+            font-family: monospace;
+            color: #d1d1e0;
+            white-space: pre-wrap;
+            font-size: 0.95rem;
+            overflow-x: auto;
+            max-height: 250px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #1b1b29;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-gold);
+            color: #000;
+            border-color: var(--accent-gold);
+        }
+
+        /* Script Table */
+        .script-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .script-table th, .script-table td {
+            border: 1px solid var(--border-color);
+            padding: 12px 15px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .script-table th {
+            background: #181824;
+            color: var(--accent-gold);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+        }
+
+        .script-table td:first-child {
+            font-weight: bold;
+            color: var(--accent-gold);
+            width: 12%;
+        }
+
+        .script-table td:nth-child(2) {
+            width: 44%;
+        }
+
+        .script-table td:nth-child(3) {
+            color: #d1d1e0;
+            width: 44%;
+        }
+
+        /* ManyChat Diagram */
+        .flowchart-container {
+            background: #08080c;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .flow-node {
+            background: #12121a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 15px;
+            text-align: center;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .flow-node.active {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px rgba(229, 169, 59, 0.2);
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: var(--accent-gold);
+            font-size: 1.2rem;
+        }
+
+        /* Large lists */
+        .batch-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .batch-card {
+            background: #181824;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .batch-card h4 {
+            margin-bottom: 12px;
+            color: var(--accent-gold);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .email-list-text {
+            color: #a0a0b8;
+            font-size: 0.85rem;
+            word-break: break-all;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>OFFSZN Funnel Hub</h1>
+        <p>Tu centro visual para organizar y copiar las plantillas, guiones y lotes de emails del Embudo de los 4 Sistemas</p>
+    </header>
+
+    <!-- Progress Tracker -->
+    <div class="progress-container">
+        <div class="progress-info">
+            <h3>Progreso de la Implementación</h3>
+            <p>Completa las tareas para avanzar. El progreso se guarda automáticamente.</p>
+            <div class="progress-bar-outer">
+                <div class="progress-bar-inner" id="progress-bar"></div>
+            </div>
+        </div>
+        <div class="progress-percentage" id="progress-percent">0%</div>
+    </div>
+
+    <!-- Tab Buttons -->
+    <div class="tabs-header">
+        <button class="tab-btn active" onclick="openTab(event, 'identidad')">1. Identidad & Bio</button>
+        <button class="tab-btn" onclick="openTab(event, 'guiones')">2. Guiones de Pinned Reels</button>
+        <button class="tab-btn" onclick="openTab(event, 'manychat')">3. ManyChat & DMs</button>
+        <button class="tab-btn" onclick="openTab(event, 'emails')">4. Lotes de Emails (98 Leads)</button>
+        <button class="tab-btn" onclick="openTab(event, 'anuncios')">5. Anuncios & Retargeting</button>
+    </div>
+
+    <!-- Tab 1: Identidad & Bio -->
+    <div id="identidad" class="tab-content active">
+        <div class="grid-layout">
+            <div>
+                <div class="card">
+                    <div class="card-title">Bios Optimizadas para Instagram & TikTok <span class="tag">System 1</span></div>
+                    
+                    <p style="margin-bottom: 15px; color: var(--text-secondary);">El objetivo es enganchar al usuario con tu métrica de (+1,500 artistas) y dirigirlo a interactuar en DMs en vez de mandarlo a un enlace de Beacons.</p>
+                    
+                    <h3>Instagram - Opción A (Enfocada en el Micrófono - Recomendada)</h3>
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('bio-ig-a', this)">Copiar</button>
+                        <div class="copy-text" id="bio-ig-a">🎙️ Te hago sonar pro en tu Home Studio en 2 clics (sin Neumann)
+📀 +1,500 artistas sonando pro con mi cadena de FL Studio
+🎁 Comenta "REGALO" y te mando mi preset de maquetas gratis por DM 👇</div>
+                    </div>
+
+                    <h3>Instagram - Opción B (Enfocada en Cheat Code)</h3>
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('bio-ig-b', this)">Copiar</button>
+                        <div class="copy-text" id="bio-ig-b">⚡ El cheat code para mezclar tus voces en FL Studio
+📀 +1,500 productores y cantantes usando mi método
+📥 Comenta "PRESET" y te regalo mi vocal chain nativa 👇</div>
+                    </div>
+
+                    <h3>TikTok Bio</h3>
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('bio-tt', this)">Copiar</button>
+                        <div class="copy-text" id="bio-tt">🎙️ Presets y Plantillas de voces en FL Studio
+📀 +1,500 artistas sonando pro con mi método
+🏺 Toca el botón de IG y coméntame "PRESET" para tu regalo gratis 👇</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Sidebar -->
+            <div>
+                <div class="card">
+                    <div class="card-title">Tareas de Identidad</div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-bio')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Actualizar Bio de Instagram<span class="checklist-subtext">Usar la opción A o B enfocada en el trigger de ManyChat</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-bio-tt')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Actualizar Bio de TikTok<span class="checklist-subtext">Alinearla con la llamada de acción hacia Instagram DMs</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-photo')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Foto de perfil humana<span class="checklist-subtext">Cambiar logo por foto propia bien iluminada en el estudio (genera 3-5x más confianza)</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-highlights')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Historias Destacadas (Highlights)<span class="checklist-subtext">Limpiar ruido. Dejar solo testimonios de clientes, explicación de tus presets, y FAQ</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Guiones -->
+    <div id="guiones" class="tab-content">
+        <div class="grid-layout">
+            <div>
+                <!-- Reel 1 -->
+                <div class="card">
+                    <div class="card-title">Reel Fijado 1: Aclaración de Mecanismo <span class="tag">VSL Reel</span></div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Explica la lógica bajo el capó (low-cut, boxy cut, relative de-esser) y tira piedras a mezclar desde cero con 15 plugins.</p>
+                    
+                    <button class="copy-btn" style="position:relative; float:right; margin-bottom: 10px;" onclick="copyText('table-reel-1', this)">Copiar Texto Completo</button>
+                    
+                    <table class="script-table" id="table-reel-1">
+                        <thead>
+                            <tr>
+                                <th>Tiempo</th>
+                                <th>Visual (FL Studio)</th>
+                                <th>Lo que dices</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>0:00-0:05</td>
+                                <td>Willie a cámara serio. Texto: "Por qué tus voces nunca se sientan en el beat"</td>
+                                <td>"Si eres de los que pasa 3 horas metiendo 15 plugins en la mixer y tu voz sigue sonando opaca y separada de la instrumental... este video no es para ti."</td>
+                            </tr>
+                            <tr>
+                                <td>0:05-0:15</td>
+                                <td>B-roll del mixer lleno de plugins abriéndose caóticamente.</td>
+                                <td>"El error no es tu micrófono de $50, el error es que estás mezclando sin estructura. La mayoría copia cadenas de YouTube al azar esperando que el audio suene pro."</td>
+                            </tr>
+                            <tr>
+                                <td>0:15-0:30</td>
+                                <td>Willie muestra el mixer con el preset de OFFSZN activo y la voz limpiándose en vivo.</td>
+                                <td>"Lo que necesitas es un procesamiento dinámico optimizado. Mi método limpia la frecuencia nasal en 300Hz, controla la sibilancia de forma automática según el volumen de la voz, y ensancha el estéreo con efecto Haas en 2 clics."</td>
+                            </tr>
+                            <tr>
+                                <td>0:30-0:45</td>
+                                <td>Muestra capturas rápidas de testimonios de clientes satisfechos por DM.</td>
+                                <td>"Esto es lo que usan miles de artistas que graban desde su habitación para sonar listos para Spotify sin pagar un ingeniero de mezcla de $100 por canción."</td>
+                            </tr>
+                            <tr>
+                                <td>0:45-0:60</td>
+                                <td>Willie señalando abajo. Texto: "Comenta PRUEBA".</td>
+                                <td>"No me creas a mí. Comenta la palabra 'PRUEBA' aquí abajo, mándame tu voz seca por DM y yo mismo te devuelvo un preview procesado gratis con mi plantilla."</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Reel 2 -->
+                <div class="card">
+                    <div class="card-title">Reel Fijado 2: Dream Outcome (Contraste vs $100 Presets) <span class="tag">Contraste de Valor</span></div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Muestra los precios inflados de competidores ($100) vs tu plantilla de $15 que suena profesional de inmediato.</p>
+                    
+                    <button class="copy-btn" style="position:relative; float:right; margin-bottom: 10px;" onclick="copyText('table-reel-2', this)">Copiar Texto Completo</button>
+                    
+                    <table class="script-table" id="table-reel-2">
+                        <thead>
+                            <tr>
+                                <th>Tiempo</th>
+                                <th>Visual (Home Studio)</th>
+                                <th>Lo que dices</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>0:00-0:06</td>
+                                <td>Willie sorprendido mirando web de Pineapple Music a $100.</td>
+                                <td>"Hay personas cobrando hasta $100 dólares por un solo preset de voz en internet. Sí, una completa locura para un artista independiente."</td>
+                            </tr>
+                            <tr>
+                                <td>0:06-0:18</td>
+                                <td>Muestra FL Studio, Willie graba una toma de voz y activa su preset de $5.</td>
+                                <td>"La verdad es que no necesitas gastar un dineral para sonar pro. Mira cómo esta cadena vocal de $5 dólares hace que una toma de voz grabada con un micrófono simple suene en la cara del beat."</td>
+                            </tr>
+                            <tr>
+                                <td>0:18-0:35</td>
+                                <td>Willie muestra los compresores y saturadores en FL mixer.</td>
+                                <td>"Mi objetivo con OFFSZN es democratizar la mezcla. Te doy plantillas completas por $15 y presets de artistas específicos por $5 que están afinados con mi propio método para ser arrastrados y usados al instante."</td>
+                            </tr>
+                            <tr>
+                                <td>0:35-0:50</td>
+                                <td>Audio alternando entre voz seca y procesada (brillo y volumen estéreo).</td>
+                                <td>"Escucha la diferencia. Brillo fino Maag en los agudos y cuerpo analógico en los medios. Calidad de estudio comercial por una fracción de lo que te cobra una gran marca."</td>
+                            </tr>
+                            <tr>
+                                <td>0:50-0:60</td>
+                                <td>Willie señala abajo. Texto: "Comenta CHEATCODE".</td>
+                                <td>"Comenta 'CHEATCODE' y te mando un paquete con mis mejores presets de artista y la plantilla de maquetas a un precio absurdo."</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Reel 3 -->
+                <div class="card">
+                    <div class="card-title">Reel Fijado 3: Tu Historia de Origen <span class="tag">Epiphany Bridge</span></div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Guion emocional con la estructura Epiphany Bridge usando tu historia de cómo iniciaste con el preset malo de tu amigo y puliste tu método.</p>
+                    
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('story-script', this)">Copiar Guion</button>
+                        <div class="copy-text" id="story-script">Hace 4 años empecé a mezclar mis primeras maquetas en mi habitación. No tenía idea de compresión ni de ecualización. Un día, un amigo me mandó un preset vocal; no era nada del otro mundo, pero cuando lo puse en mi canal de voz y le di play, algo cambió en mi cabeza. Por primera vez mi voz no sonaba a cartón seco.
+
+Quise mejorar, así que pasé meses copiando tutoriales de YouTube paso a paso. Copiaba las configuraciones de compresores y ecualizadores de otros productores, pero cuando las aplicaba a mi voz, sonaba fatal. Mi micrófono era diferente, mi cuarto tenía eco y nada encajaba.
+
+Hasta que un día, modificando una de esas cadenas, di con una combinación de filtros dinámicos y compresión paralela que sí funcionaba con mi micro barato. Empecé a modificar ese preset día tras día, año tras año. Hoy en día ha mutado tanto que no queda ni el 1% de la cadena original.
+
+Me di cuenta de que si yo ahorraba tanto tiempo usando mis propias plantillas en vez de empezar a mezclar de cero, otros artistas también lo necesitaban. Decidí venderlas, pero empecé con un branding horrible. El primer mes vendí apenas 3 presets. Quise rendirme y pensé que no servía para esto.
+
+Pero decidí mejorar las plantillas, pulir el método de mezcla para que funcionara con cualquier micrófono USB o de interfaz barata, y rediseñé OFFSZN. Cuando subí los nuevos videos mostrando el antes y después real, las ventas empezaron a caer solas. Hoy uso este método para absolutamente todo lo que grabo.
+
+Si quieres ahorrarte 4 años de dolores de cabeza mezclando de cero, sígueme. Estoy subiendo guías diarias para que configures tu Home Studio sin gastar una fortuna.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Sidebar -->
+            <div>
+                <div class="card">
+                    <div class="card-title">Tareas de Reels</div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-reel-1')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Grabar Reel 1 (Mecanismo)<span class="checklist-subtext">VSL de 1 min mostrando la lógica del preset</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-reel-2')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Grabar Reel 2 (Dream Outcome)<span class="checklist-subtext">Contraste de presets a $5 vs $100</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-reel-3')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Grabar Reel 3 (Tu Historia)<span class="checklist-subtext">Video íntimo contando tu origen en la mezcla</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-pin')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Fijar los 3 videos en el perfil<span class="checklist-subtext">Anclarlos al inicio del grid de tu feed de Instagram</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: ManyChat & DMs -->
+    <div id="manychat" class="tab-content">
+        <div class="grid-layout">
+            <div>
+                <div class="card">
+                    <div class="card-title">Lógica de ManyChat (Cualificación de Leads) <span class="tag">System 4</span></div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Este es el flujo automatizado para descartar curiosos y ofrecer la "Prueba Personalizada" solo a usuarios con FL Studio.</p>
+
+                    <div class="flowchart-container">
+                        <div class="flow-node active">Comentario detectado ("REGALO" / "PRESET")</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">ManyChat envía link de Preset de Regalo + Pregunta: "¿Qué programa (DAW) usas?"</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node">Botón: [ FL Studio 🍊 ] / [ Otro ]</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="flow-node active">Si elige FL Studio: Ofrecer Prueba Personalizada (Voz Seca + Beat por chat)</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Scripts Manuales de Cierre por DM (Venta Silenciosa)</div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Usa estos copys cuando el lead te envíe su archivo de voz seca + beat por los DMs de Instagram.</p>
+
+                    <h3>1. Respuesta al recibir el audio</h3>
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('dm-recibir', this)">Copiar</button>
+                        <div class="copy-text" id="dm-recibir">¡Recibido bro! Dame unos minutos, lo meto al mixer de FL Studio con mi plantilla premium y te paso el preview para que escuches la magia.</div>
+                    </div>
+
+                    <h3>2. Copiar y pegar tras enviar el preview de audio (El Cierre)</h3>
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('dm-cierre', this)">Copiar</button>
+                        <div class="copy-text" id="dm-cierre">Ahí te lo mandé hermano. Escúchalo con audífonos. Básicamente le puse la cadena de mezcla que viene en mi plantilla premium: limpié los graves sucios de la habitación, acomodé las frecuencias medias y le di el brillo fino estéreo de 20k.
+
+Cuéntame, ¿qué tal te pareció el cambio?
+
+--- (Responde maravillado) ---
+
+¡Qué nivel bro! Me alegra que te gustara. La verdad es que con la plantilla de mezcla completa de OFFSZN te ahorras tener que perillear 15 plugins de cero. Solo arrastras tus tomas y grabas directamente.
+
+Te dejo aquí el enlace para que te lleves la plantilla completa por solo $15 dólares: beacons.ai/willieinspired
+
+Cualquier duda que tengas al instalarla me avisas por aquí y te ayudo.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Sidebar -->
+            <div>
+                <div class="card">
+                    <div class="card-title">Tareas de ManyChat & DMs</div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-mc-keyword')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Trigger de ManyChat<span class="checklist-subtext">Configurar palabras clave: REGALO, PRESET, MAQUETA</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-mc-questions')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Preguntas de Filtro<span class="checklist-subtext">Crear los botones de selección rápida (FL Studio, micro)</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-mc-test')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Prueba de flujo en DMs<span class="checklist-subtext">Comentar tu propia cuenta y verificar que ManyChat cualifique y ofrezca el demo</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 4: Lotes de Emails -->
+    <div id="emails" class="tab-content">
+        <div class="grid-layout">
+            <div>
+                <div class="card">
+                    <div class="card-title">Campaña de Emails Convencionales (Gratis en CCO) <span class="tag">Outbound</span></div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Usa esta plantilla en Gmail. Pon tu correo en "Para" y 20 destinatarios del lote en "CCO" (BCC) para enviarles el regalo de feedback.</p>
+                    
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('email-outbound-copy', this)">Copiar Asunto y Cuerpo</button>
+                        <div class="copy-text" id="email-outbound-copy">ASUNTO: Te quería regalar esto para tu Home Studio (FL Studio) 🎙️
+
+Hola hermano, cómo va todo.
+
+Me crucé con tu perfil de Instagram hace poco mientras buscaba artistas y productores que trabajen con FL Studio.
+
+Te escribo rápido porque acabo de armar una plantilla base de grabación en FL Studio para ahorrarme tiempo y no mezclar mis voces desde cero en cada sesión de grabación. 
+
+No estoy vendiendo nada, de verdad. Solo la estoy compartiendo gratis con algunos productores del nicho para que la prueben en sus maquetas y me den su feedback sincero para mejorarla.
+
+¿Te sirve que te la mande para que la pruebes? 
+
+Responde a este correo con un "SÍ" y te paso el enlace de descarga directa.
+
+Un abrazo,
+Willie Inspired (@willieinspired)</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Copiar Lotes de Email directos (98 Leads de Pineapple Music)</div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Haz clic en el botón de copiar del lote que te toque enviar hoy y pégalo directo en la casilla de CCO en Gmail.</p>
+
+                    <div class="batch-grid">
+                        <div class="batch-card">
+                            <h4>📦 Lote 1 (Enviar Hoy)</h4>
+                            <button class="copy-btn" onclick="copyText('batch1', this)">Copiar Lote 1</button>
+                            <div class="email-list-text" id="batch1">angelfilgueiraquintela1997@gmail.com, benaje98@gmail.com, chavezsteven882@gmail.com, trapcodeiine@gmail.com, rodriguezcandidoalain@gmail.com, jorgetapiasonido@gmail.com, caramelovie@hotmail.com, agendachristianlora@hotmail.com, fridaybeats77@gmail.com, expansionrapera@gmail.com, picmusicoficial@hotmail.com, cj9853964@gmail.com, andregajardo98@gmail.com, itadoriyuji7700@gmail.com, alexcortez355@gmail.com, alkemi.elalquimista@gmail.com, humberto.a.hernandez.r@gmail.com, robelindiaz@icloud.com, leocortescaicedo@gmail.com, bruzmexha@gmail.com</div>
+                        </div>
+
+                        <div class="batch-card">
+                            <h4>📦 Lote 2 (Enviar Mañana)</h4>
+                            <button class="copy-btn" onclick="copyText('batch2', this)">Copiar Lote 2</button>
+                            <div class="email-list-text" id="batch2">patoyw@gamail.com, ungaiterenguayana@gmail.com, germansalvadorreyes@hotmail.com, gtouchkeys@gmail.com, dannykker@gmail.com, dizi_70k@hotmail.com, bosster.djmusic@gmail.com, waydj0420@gmail.com, dj.calix321@gmail.com, djatley@hotmail.com, djglass88@gmail.com, djrafelmusic@gmail.com, bboyrhoger@gmail.com, tito-el-elekante@hotmail.com, hbeatscontac@gmail.com, danellmusiclm@gmail.com, ulloaulloacristhiandavid@gmail.com, yosoysegha@gmail.com, elcash2012@hotmail.com, erickdaeloficial@outlook.com</div>
+                        </div>
+
+                        <div class="batch-card">
+                            <h4>📦 Lote 3 (En 2 Días)</h4>
+                            <button class="copy-btn" onclick="copyText('batch3', this)">Copiar Lote 3</button>
+                            <div class="email-list-text" id="batch3">castroestiduar@gmail.com, estebanburgmusica@gmail.com, ezequiel_trackrecords@hotmail.com, contactokailer@gmail.com, kanelomusiica@gmail.com, kencelnetworkbusiness@gmail.com, pupialesk784@icloud.com, hermandadperureggae@gmail.com, blayenciclopedia@gmail.com, dimelojhay@outlook.es, asdfgksluejjdjd@gmail.com, jeremyelmagojp@gmail.com, jheyzelll@gmail.com, juanggy07@gmail08.com, juicybeats.dj@gmail.com, carolinaperlaza94@gmail.com, kingbufon54@gmail.com, unideritmos@gmail.com, leoneldrums27@gmail.com, hola@makemusic.pe</div>
+                        </div>
+
+                        <div class="batch-card">
+                            <h4>📦 Lote 4 (En 3 Días)</h4>
+                            <button class="copy-btn" onclick="copyText('batch4', this)">Copiar Lote 4</button>
+                            <div class="email-list-text" id="batch4">maradjibeatm@gmail.com, martellezolivera@yahoo.es, megadesigns@live.com, jungle8michigan@gmail.com, mgangginir@gmail.com, mistakingbooking@gmail.com, hernanelibecerraruiz@gmail.com, nest1342637@gmail.com, sccp.evives@gmail.com, nickmati4s@gmail.com, npkillah26@hotmail.com, bymets2021@gmail.com, malagmusika14@gmail.com, info@sebastianpradodj.com, sebas823@outlook.com, selecta.one.rvcr@gmail.com, sergio.navarrete.admi@gmail.com, profe.deng@gmail.com, vaikonsaikia07@gmail.com, oficialpowerstreet@gmail.com</div>
+                        </div>
+
+                        <div class="batch-card">
+                            <h4>📦 Lote 5 (En 4 Días)</h4>
+                            <button class="copy-btn" onclick="copyText('batch5', this)">Copiar Lote 5</button>
+                            <div class="email-list-text" id="batch5">westestudo@gmail.com, global541380@gmail.com, perezsurf_sibana@hotmail.com, antuant.01@gmail.com, randyvitecalderon@gmail.com, holer.realzaga@gmail.com, baptistewadson25@gmail.com, williebeatsyt@gmail.com, tianomores@gmail.com, trafficbeatsmx@gmail.com, twentyyproduction@gmail.com, diginessrec@hotmail.com, yontrap23@gmail.com, yalan2468@gmail.com, yamirmusic@gmail.com, infoyeremybrown@gmail.com, martinnavarretecarrillo@gmail.com, letrapuma@gmail.com</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Sidebar -->
+            <div>
+                <div class="card">
+                    <div class="card-title">Tareas de Envío Manual</div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-send-1')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Enviar Lote 1 (20 correos)<span class="checklist-subtext">Usar CCO en tu Gmail personal/trabajo</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-send-2')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Enviar Lote 2 (20 correos)<span class="checklist-subtext">Programado para mañana</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-send-3')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Enviar Lote 3 (20 correos)<span class="checklist-subtext">Programado para en 2 días</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-send-4')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Enviar Lote 4 (20 correos)<span class="checklist-subtext">Programado para en 3 días</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-send-5')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Enviar Lote 5 (18 correos)<span class="checklist-subtext">Programado para en 4 días</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 5: Anuncios & Retargeting -->
+    <div id="anuncios" class="tab-content">
+        <div class="grid-layout">
+            <div>
+                <div class="card">
+                    <div class="card-title">Retargeting Largo (Masterclass de 12 Minutos) <span class="tag">System 3</span></div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Vídeo horizontal de 12 minutos para pautar únicamente a tu público tibio (visitantes de Beacons o de la tienda, y personas que hayan interactuado por DM).</p>
+
+                    <h4 style="color: var(--accent-gold); margin-bottom: 10px;">Estructura del Contenido del Vídeo:</h4>
+                    <ul style="margin-left: 20px; color: #d1d1e0; display: flex; flex-direction: column; gap: 8px;">
+                        <li><strong>Min 0:00 - 1:30: El Contraste del Hardware</strong> - Demostrar con antes/después rápido que no se necesita un micrófono caro de $3000 para sonar pro.</li>
+                        <li><strong>Min 1:30 - 4:00: Módulo Limpieza Dinámica</strong> - Explicar la acumulación de frecuencias nasales en 300Hz-500Hz y el De-esser Relativo.</li>
+                        <li><strong>Min 4:00 - 7:00: Módulo Color & Cinta</strong> - Explicar la compresión dinámica suave (LA-2A) vs agresiva (FET), la inyección armónica de Spectre y la banda de aire Maag a 20kHz.</li>
+                        <li><strong>Min 7:00 - 10:00: Módulo Espacio (Estéreo Pro)</strong> - Explicar por qué dos reverbs mono chocan y se cancelan, y cómo el Haas Effect y la reverb True Stereo con ducking separan la voz del beat.</li>
+                        <li><strong>Min 10:00 - 12:00: Pitch de Venta</strong> - "Tienes dos opciones: gastar cientos de dólares en plugins y recrear esto, o llevarte mi plantilla premium por $15".</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Booking Page Visitors (Recuperación de Reservas)</div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Retargeting a personas que visitaron tu agenda en los últimos 14 días pero no agendaron. Esto recupera ventas sin tirar dinero.</p>
+                    
+                    <h4 style="color: var(--accent-gold); margin-bottom: 5px;">Configuración:</h4>
+                    <p style="color: #d1d1e0; margin-bottom: 15px;">Incrusta tu Calendly en tu propia landing page (ej: <code>offszn.lat/agenda</code>), instala el Píxel de Meta, crea un público que haya visitado esta página y excluye a los que ya agendaron.</p>
+                    
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('ad-booking-copy', this)">Copiar Copy de Anuncio</button>
+                        <div class="copy-text" id="ad-booking-copy">¿Se te pasó agendar tu prueba de voz gratis? 🎙️
+
+Veo que entraste a la agenda pero no terminaste de reservar tu lugar. Esta semana me quedan pocos espacios libres para procesar demos de voz gratis. 
+
+Si quieres escuchar cómo suena tu música con nuestra cadena premium, toca abajo, reserva tu llamada o mándame un mensaje directo hoy.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Sidebar -->
+            <div>
+                <div class="card">
+                    <div class="card-title">Tareas de Anuncios</div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-ads-scraped')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Someter Emails a Meta Custom Audience<span class="checklist-subtext">Subir el Excel de los 98 correos a tu Administrador comercial</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-ads-master')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Grabar Video Masterclass (12 min)<span class="checklist-subtext">Explicar la mezcla pro y presentar la plantilla de $15</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-ads-booking')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Montar Landing Page con Píxel<span class="checklist-subtext">Habilitar offszn.lat/agenda con Calendly incrustado y Píxel de Meta</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab Navigation
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].classList.remove("active");
+        }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+        }
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    // Copy to Clipboard
+    function copyText(elementId, btn) {
+        var textToCopy = document.getElementById(elementId).innerText;
+        
+        // Handle table copying nicely
+        if (document.getElementById(elementId).tagName === 'TABLE') {
+            textToCopy = "";
+            var rows = document.getElementById(elementId).rows;
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].cells;
+                var rowText = [];
+                for (var j = 0; j < cells.length; j++) {
+                    rowText.push(cells[j].innerText);
+                }
+                textToCopy += rowText.join(" | ") + "\n";
+            }
+        }
+
+        navigator.clipboard.writeText(textToCopy).then(function() {
+            var originalText = btn.innerText;
+            btn.innerText = "¡Copiado! ✓";
+            btn.style.background = "#00e676";
+            btn.style.color = "#000";
+            btn.style.borderColor = "#00e676";
+            setTimeout(function() {
+                btn.innerText = originalText;
+                btn.style.background = "#1b1b29";
+                btn.style.color = "#ffffff";
+                btn.style.borderColor = "var(--border-color)";
+            }, 1500);
+        }, function(err) {
+            console.error('Could not copy text: ', err);
+        });
+    }
+
+    // Interactive Checklist & LocalStorage state
+    var totalTasks = 0;
+    var checkedTasks = 0;
+
+    function updateProgressBar() {
+        var checklistItems = document.querySelectorAll(".checklist-item");
+        totalTasks = checklistItems.length;
+        checkedTasks = document.querySelectorAll(".checklist-item.checked").length;
+        
+        var percent = totalTasks > 0 ? Math.round((checkedTasks / totalTasks) * 100) : 0;
+        
+        document.getElementById("progress-bar").style.width = percent + "%";
+        document.getElementById("progress-percent").innerText = percent + "%";
+    }
+
+    function toggleTask(element, taskId) {
+        element.classList.toggle("checked");
+        var isChecked = element.classList.contains("checked");
+        localStorage.setItem(taskId, isChecked ? "true" : "false");
+        updateProgressBar();
+    }
+
+    // Load saved tasks on load
+    window.onload = function() {
+        var checklistItems = document.querySelectorAll(".checklist-item");
+        checklistItems.forEach(function(item) {
+            // Extract a unique identifier from the toggleTask call
+            var onClickAttr = item.getAttribute("onclick");
+            var matches = onClickAttr.match(/'([^']+)'/);
+            if (matches && matches[1]) {
+                var taskId = matches[1];
+                var savedState = localStorage.getItem(taskId);
+                if (savedState === "true") {
+                    item.classList.add("checked");
+                }
+            }
+        });
+        updateProgressBar();
+    }
+</script>
+
+</body>
+</html>
