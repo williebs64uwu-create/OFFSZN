@@ -3,21 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OFFSZN Funnel Hub - Willie Inspired</title>
+    <title>Willie Inspired — Funnel Hub & Command Center</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #08080c;
-            --card-bg: #12121a;
-            --border-color: #222230;
-            --accent-gold: #e5a93b;
+            --bg-color: #050508;
+            --card-bg: #0d0d14;
+            --border-color: #1e1e2d;
+            --accent-gold: #d4af37;
             --accent-orange: #ff5e00;
+            --accent-gold-rgb: 212, 175, 55;
             --text-primary: #ffffff;
-            --text-secondary: #a0a0b8;
+            --text-secondary: #8e8ea8;
             --success-color: #00e676;
-            --shadow-glow: 0 0 15px rgba(229, 169, 59, 0.15);
+            --danger-color: #ff1744;
+            --shadow-glow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
         * {
@@ -33,6 +35,9 @@
             line-height: 1.6;
             padding: 40px 20px;
             overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 94, 0, 0.05) 0%, transparent 40%);
         }
 
         .container {
@@ -43,34 +48,82 @@
         /* Header */
         header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             position: relative;
         }
 
         h1 {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: 800;
-            letter-spacing: -1px;
-            background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent-gold) 70%, var(--accent-orange) 100%);
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, var(--text-primary) 20%, var(--accent-gold) 60%, var(--accent-orange) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 40px rgba(212, 175, 55, 0.1);
         }
 
         header p {
             color: var(--text-secondary);
-            font-size: 1.1rem;
-            max-width: 600px;
+            font-size: 1.15rem;
+            max-width: 750px;
             margin: 0 auto;
+        }
+
+        /* Stats Bar - Willie Inspired */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(13, 13, 20, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-gold);
+        }
+
+        .stat-val {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 5px;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+        }
+
+        .stat-lbl {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         /* Progress Bar Hub */
         .progress-container {
-            background: var(--card-bg);
+            background: rgba(13, 13, 20, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
+            border-radius: 24px;
+            padding: 25px 30px;
             margin-bottom: 40px;
             box-shadow: var(--shadow-glow);
             display: flex;
@@ -78,93 +131,122 @@
             justify-content: space-between;
             gap: 20px;
             flex-wrap: wrap;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), var(--accent-orange), transparent);
         }
 
         .progress-info {
             flex: 1;
-            min-width: 250px;
+            min-width: 280px;
         }
 
         .progress-info h3 {
-            font-size: 1.3rem;
-            margin-bottom: 8px;
+            font-size: 1.4rem;
+            margin-bottom: 6px;
             font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(90deg, #fff, var(--accent-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .progress-info p {
             color: var(--text-secondary);
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
 
         .progress-bar-outer {
             width: 100%;
-            height: 12px;
-            background: #1a1a26;
-            border-radius: 6px;
+            height: 10px;
+            background: #06060a;
+            border-radius: 10px;
             overflow: hidden;
-            margin-top: 15px;
+            margin-top: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .progress-bar-inner {
             width: 0%;
             height: 100%;
             background: linear-gradient(90deg, var(--accent-gold), var(--accent-orange));
-            border-radius: 6px;
-            transition: width 0.4s ease;
+            border-radius: 10px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .progress-percentage {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 2.5rem;
+            font-size: 3rem;
             font-weight: 700;
             color: var(--accent-gold);
             text-align: right;
             min-width: 100px;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.25);
         }
 
-        /* Tab System */
+        /* Tab System - Visible Pill Grid */
         .tabs-header {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
             gap: 10px;
-            margin-bottom: 25px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
-
-        .tabs-header::-webkit-scrollbar {
-            display: none;
+            margin-bottom: 35px;
         }
 
         .tab-btn {
-            background: transparent;
-            border: 1px solid transparent;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             color: var(--text-secondary);
-            padding: 12px 24px;
-            font-size: 1rem;
+            padding: 12px 14px;
+            font-size: 0.82rem;
             font-weight: 600;
-            border-radius: 8px 8px 0 0;
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: left;
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.3;
+        }
+
+        .tab-btn svg {
+            flex-shrink: 0;
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
         }
 
         .tab-btn:hover {
             color: var(--text-primary);
-            background: #151522;
+            border-color: rgba(212, 175, 55, 0.4);
+            background: rgba(212, 175, 55, 0.04);
+            transform: translateY(-2px);
         }
 
         .tab-btn.active {
-            color: var(--accent-gold);
-            border-bottom: 3px solid var(--accent-gold);
-            background: #12121a;
-            border-color: var(--border-color) var(--border-color) transparent var(--border-color);
+            color: #000;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange));
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .tab-btn.active svg {
+            fill: #000;
         }
 
         .tab-content {
             display: none;
-            animation: fadeIn 0.4s ease;
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .tab-content.active {
@@ -172,7 +254,7 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -183,28 +265,34 @@
             gap: 30px;
         }
 
-        @media (min-width: 900px) {
+        @media (min-width: 950px) {
             .grid-layout {
-                grid-template-columns: 2fr 1fr;
+                grid-template-columns: 2.1fr 0.9fr;
             }
         }
 
         .card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 30px;
+            border-radius: 24px;
+            padding: 35px;
             margin-bottom: 30px;
             position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: border-color 0.3s;
+        }
+
+        .card:hover {
+            border-color: rgba(212, 175, 55, 0.2);
         }
 
         .card-title {
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.5rem;
+            font-size: 1.65rem;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             border-bottom: 1px solid var(--border-color);
-            padding-bottom: 12px;
+            padding-bottom: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -213,11 +301,13 @@
         .tag {
             font-size: 0.75rem;
             font-weight: 600;
-            background: #202030;
+            background: rgba(212, 175, 55, 0.1);
             color: var(--accent-gold);
-            padding: 4px 10px;
+            padding: 6px 12px;
             border-radius: 20px;
-            border: 1px solid rgba(229, 169, 59, 0.3);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         /* Checkbox Styles */
@@ -225,16 +315,18 @@
             display: flex;
             align-items: flex-start;
             gap: 15px;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
             cursor: pointer;
             user-select: none;
-            padding: 10px;
-            border-radius: 8px;
-            transition: background 0.2s ease;
+            padding: 12px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
         }
 
         .checklist-item:hover {
             background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.05);
         }
 
         .custom-checkbox {
@@ -248,13 +340,13 @@
             margin-top: 2px;
             transition: all 0.3s ease;
             flex-shrink: 0;
-            background: #08080c;
+            background: #060609;
         }
 
         .checklist-item.checked .custom-checkbox {
             border-color: var(--success-color);
             background: var(--success-color);
-            box-shadow: 0 0 10px rgba(0, 230, 118, 0.4);
+            box-shadow: 0 0 12px rgba(0, 230, 118, 0.4);
         }
 
         .custom-checkbox svg {
@@ -278,6 +370,7 @@
         .checklist-text {
             font-size: 1rem;
             color: var(--text-primary);
+            font-weight: 600;
         }
 
         .checklist-item.checked .checklist-text {
@@ -289,16 +382,17 @@
             font-size: 0.85rem;
             color: var(--text-secondary);
             display: block;
-            margin-top: 4px;
+            margin-top: 5px;
+            font-weight: 400;
         }
 
         /* Copy Block Styles */
         .copy-block {
-            background: #08080c;
+            background: #06060a;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 25px;
             position: relative;
         }
 
@@ -308,20 +402,21 @@
             white-space: pre-wrap;
             font-size: 0.95rem;
             overflow-x: auto;
-            max-height: 250px;
+            max-height: 280px;
+            line-height: 1.5;
         }
 
         .copy-btn {
             position: absolute;
             top: 15px;
             right: 15px;
-            background: #1b1b29;
+            background: #171724;
             border: 1px solid var(--border-color);
             color: var(--text-primary);
             padding: 8px 14px;
             font-size: 0.8rem;
             font-weight: 600;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -341,13 +436,13 @@
 
         .script-table th, .script-table td {
             border: 1px solid var(--border-color);
-            padding: 12px 15px;
+            padding: 15px;
             text-align: left;
             vertical-align: top;
         }
 
         .script-table th {
-            background: #181824;
+            background: #14141e;
             color: var(--accent-gold);
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 600;
@@ -368,12 +463,33 @@
             width: 44%;
         }
 
-        /* ManyChat Diagram */
-        .flowchart-container {
-            background: #08080c;
+        /* Interactive Notepad styling */
+        .notepad {
+            width: 100%;
+            min-height: 250px;
+            background: #06060a;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 25px;
+            border-radius: 16px;
+            color: #fff;
+            padding: 20px;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            resize: vertical;
+            line-height: 1.5;
+            transition: border-color 0.3s;
+        }
+
+        .notepad:focus {
+            border-color: var(--accent-gold);
+        }
+
+        /* Flowchart */
+        .flowchart-container {
+            background: #06060a;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px;
             margin-top: 20px;
             display: flex;
             flex-direction: column;
@@ -381,24 +497,25 @@
         }
 
         .flow-node {
-            background: #12121a;
+            background: #0f0f16;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px 15px;
+            border-radius: 12px;
+            padding: 15px 20px;
             text-align: center;
             font-weight: bold;
-            position: relative;
+            transition: all 0.3s;
         }
 
         .flow-node.active {
             border-color: var(--accent-gold);
-            box-shadow: 0 0 10px rgba(229, 169, 59, 0.2);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+            background: rgba(212, 175, 55, 0.02);
         }
 
         .flow-arrow {
             text-align: center;
             color: var(--accent-gold);
-            font-size: 1.2rem;
+            font-size: 1.4rem;
         }
 
         /* Large lists */
@@ -409,10 +526,10 @@
         }
 
         .batch-card {
-            background: #181824;
+            background: #11111a;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 16px;
+            padding: 22px;
             position: relative;
         }
 
@@ -420,13 +537,195 @@
             margin-bottom: 12px;
             color: var(--accent-gold);
             font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.1rem;
         }
 
         .email-list-text {
             color: #a0a0b8;
             font-size: 0.85rem;
             word-break: break-all;
-            line-height: 1.4;
+            line-height: 1.5;
+        }
+
+        /* Calendar Grid */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .day-card {
+            background: #11111a;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px 15px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .day-card:hover {
+            border-color: var(--accent-gold);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(212,175,55,0.08);
+        }
+
+        .day-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            color: var(--accent-gold);
+            font-size: 1.15rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .day-content {
+            font-size: 0.88rem;
+            color: #ffffff;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .day-sub {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Interactive Calculator & Visual Funnel */
+        .calc-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        @media (min-width: 850px) {
+            .calc-grid {
+                grid-template-columns: 1.2fr 0.8fr;
+            }
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: #06060a;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: #fff;
+            padding: 12px 16px;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--accent-gold);
+        }
+
+        .result-box {
+            background: #141420;
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 4px 24px rgba(212, 175, 55, 0.05);
+        }
+
+        .result-val {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: var(--success-color);
+            margin-top: 10px;
+            text-shadow: 0 0 20px rgba(0, 230, 118, 0.25);
+        }
+
+        .metric-sub {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 25px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .sub-val {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .sub-lbl {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* HTML Funnel visualization */
+        .visual-funnel {
+            margin-top: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .funnel-stage {
+            background: linear-gradient(90deg, #181826, #12121d);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+            transition: width 0.3s ease;
+        }
+
+        #funnel-sent { width: 100%; border-color: rgba(255, 255, 255, 0.2); }
+        #funnel-replied { width: 85%; border-color: rgba(212, 175, 55, 0.4); }
+        #funnel-demos { width: 70%; border-color: rgba(255, 94, 0, 0.4); }
+        #funnel-sales { width: 55%; border-color: rgba(0, 230, 118, 0.4); background: linear-gradient(90deg, rgba(0, 230, 118, 0.1), #12121d); }
+
+        /* Storytelling Principles list */
+        .principle-item {
+            border-left: 4px solid var(--accent-gold);
+            padding-left: 20px;
+            margin-bottom: 25px;
+        }
+
+        .principle-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--accent-gold);
+        }
+
+        .principle-desc {
+            font-size: 0.98rem;
+            color: #d1d1e0;
         }
     </style>
 </head>
@@ -434,9 +733,29 @@
 
 <div class="container">
     <header>
-        <h1>OFFSZN Funnel Hub</h1>
-        <p>Tu centro visual para organizar y copiar las plantillas, guiones y lotes de emails del Embudo de los 4 Sistemas</p>
+        <h1>Willie Inspired</h1>
+        <p>Estructura visual de tus 4 Sistemas de Venta Orgánica e Outbound y planificación de la Comunidad VIP & Cursos</p>
     </header>
+
+    <!-- Willie Inspired Stats Bar -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-val">3,762</div>
+            <div class="stat-lbl">Seguidores Instagram</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val">4,332</div>
+            <div class="stat-lbl">Seguidores TikTok</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val">$640.00 USD</div>
+            <div class="stat-lbl">Récord de Facturación Mensual</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-val">+1,500</div>
+            <div class="stat-lbl">Clientes Acumulados</div>
+        </div>
+    </div>
 
     <!-- Progress Tracker -->
     <div class="progress-container">
@@ -452,20 +771,248 @@
 
     <!-- Tab Buttons -->
     <div class="tabs-header">
-        <button class="tab-btn active" onclick="openTab(event, 'identidad')">1. Identidad & Bio</button>
-        <button class="tab-btn" onclick="openTab(event, 'guiones')">2. Guiones de Pinned Reels</button>
-        <button class="tab-btn" onclick="openTab(event, 'manychat')">3. ManyChat & DMs</button>
-        <button class="tab-btn" onclick="openTab(event, 'emails')">4. Lotes de Emails (98 Leads)</button>
-        <button class="tab-btn" onclick="openTab(event, 'anuncios')">5. Anuncios & Retargeting</button>
+        <button class="tab-btn active" onclick="openTab(event, 'curso-upsell')">
+            <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5.89 12.5L12 15.84l6.11-3.34L12 9.16l-6.11 3.34z"/></svg>
+            🔥 Nuevo Curso & Upsell
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'comunidad-vip')">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            👥 Comunidad VIP & Gamificación
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'identidad')">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+            1. Perfil & Bio
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'guiones')">
+            <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+            2. Guiones Pinned
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'manychat')">
+            <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+            3. ManyChat & DMs
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'emails')">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            4. Lotes Outbound
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'nurturing')">
+            <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5.89 12.5L12 15.84l6.11-3.34L12 9.16l-6.11 3.34z"/></svg>
+            5. Email Nurturing
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'ganadores')">
+            <svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+            6. Reels Pro
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'calendario')">
+            <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
+            7. Calendario
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'calculadora')">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z"/></svg>
+            8. Simulador ROI
+        </button>
+        <button class="tab-btn" onclick="openTab(event, 'kallaway')">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            9. Storytelling
+        </button>
+    </div>
+
+    <!-- Tab 0: Nuevo Curso & Upsell (ACTIVE BY DEFAULT) -->
+    <div id="curso-upsell" class="tab-content active">
+        <div class="grid-layout">
+            <div>
+                <!-- ESTRUCTURA DEL CURSO -->
+                <div class="card">
+                    <div class="card-title">Estructura del Curso Diferenciado: Crea tu propio Preset <span class="tag">Nuevo Producto</span></div>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Un curso donde no enseñas mezcla genérica, sino que enseñas <strong>la teoría y lógica detrás de crear tus propios presets y plantillas de voz para vender</strong> o sonar pro desde casa.</p>
+                    
+                    <div class="principle-item">
+                        <div class="principle-title">Módulo 1: La Señal y Psicoacústica de Limpieza</div>
+                        <div class="principle-desc">Cómo configurar el De-esser Relativo y el Boxy Cut en la zona de 250Hz - 500Hz para micrófonos económicos.</div>
+                    </div>
+                    <div class="principle-item">
+                        <div class="principle-title">Módulo 2: Inyección Armónica y Color (FET vs Opto)</div>
+                        <div class="principle-desc">Cuándo usar compresión FET (CLA-76) agresiva para rap o compresión óptica (LA-2A) para voces melódicas, sumado a la saturación paralela (Crush Bus).</div>
+                    </div>
+                    <div class="principle-item">
+                        <div class="principle-title">Módulo 3: Profundidad Asíncrona (Reverb de 3 capas)</div>
+                        <div class="principle-desc">Configuración paso a paso de capas de Room corto, Plate de brillo medio, y Hall largo con Sidechain/Ducking para no tapar la inteligibilidad.</div>
+                    </div>
+                    <div class="principle-item">
+                        <div class="principle-title">Módulo 4: El Negocio de Crear y Vender Presets</div>
+                        <div class="principle-desc">El paso a paso de cómo Willie Inspired genera +$500/mes empaquetando cadenas nativas y de Waves, subiéndolas a Payhip y promocionándolas con miniaturas de gancho.</div>
+                    </div>
+                </div>
+
+                <!-- VIDEO CORTO EMBUDO -->
+                <div class="card">
+                    <div class="card-title">Guion de Reel/TikTok: Lanzamiento del Curso <span class="tag">Embudo de Venta</span></div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Video corto para vender el curso de forma indirecta mostrando lo que van a recibir ("Crea tu propio preset") y guiándolos al link de Payhip.</p>
+                    
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('reel-curso-lanzamiento', this)">Copiar</button>
+                        <div class="copy-text" id="reel-curso-lanzamiento">¿Sigues gastando en presets que no están hechos para tu voz? 🎙️❌
+
+El error del 95% de artistas es comprar un preset genérico y esperar que suene pro en su micrófono barato de habitación. 
+
+En mi nuevo curso no te voy a dar presets. Te voy a enseñar el método exacto que uso en OFFSZN para construirlos desde cero. 
+
+Vas a aprender a domar la frecuencia nasal en 300Hz de tu cuarto con filtros dinámicos, configurar un de-esser dinámico que escuche tu sibilancia de forma relativa, y crear esa reverberación pop de 3 capas que flota detrás de tu voz sin ensuciarla.
+
+Al final del día, vas a saber mezclar tus temas y crear tus propios presets listos para vender o usar en 2 clics. 🏺🔥
+
+Comenta la palabra "METODO" aquí abajo y te mando el temario del curso y el acceso prioritario al precio de preventa por privado.</div>
+                    </div>
+                </div>
+
+                <!-- PIZARRA DE IDEAS INTERACTIVA -->
+                <div class="card">
+                    <div class="card-title">Pizarra de Ideas y Notas para el Curso <span class="tag">Autosave</span></div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Escribe aquí tus ideas de contenido, módulos del curso, estrategias de upsell o notas. Todo se guarda automáticamente en tu computadora.</p>
+                    <textarea class="notepad" id="ideas-notepad" placeholder="Escribe aquí tus ideas..." oninput="saveNotepad()"></textarea>
+                    
+                    <!-- Interactive Custom Modules List -->
+                    <div style="margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                        <h4 style="color: var(--accent-gold); margin-bottom: 10px;">📋 Ideas de Módulos & Contenido (Lista Interactiva)</h4>
+                        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                            <input type="text" id="new-idea-input" placeholder="Ej: Módulo 5: Compresión paralela avanzada..." style="flex: 1; background: #06060a; border: 1px solid var(--border-color); border-radius: 8px; color: #fff; padding: 10px; font-family: inherit; outline: none;">
+                            <button onclick="addCustomIdea()" style="background: var(--accent-gold); color: #000; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.2s;">Añadir</button>
+                        </div>
+                        <div id="custom-ideas-list" style="display: flex; flex-direction: column; gap: 10px;">
+                            <!-- Dynamic items will load here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Sidebar & Escalera de Valor -->
+            <div>
+                <div class="card">
+                    <div class="card-title">Escalera de Valor Completa</div>
+                    
+                    <div style="background: rgba(255, 94, 0, 0.1); border: 1px solid var(--accent-orange); border-radius: 12px; padding: 15px; margin-bottom: 15px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--accent-orange); font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">Nivel 5: High Ticket</div>
+                        <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 3px;">Mentorías & Clases 1 a 1</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">$100 - $150 USD | Consultas y ajustes en vivo</div>
+                    </div>
+
+                    <div style="background: rgba(212, 175, 55, 0.1); border: 1px solid var(--accent-gold); border-radius: 12px; padding: 15px; margin-bottom: 15px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--accent-gold); font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">Nivel 4: Core Offer</div>
+                        <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 3px;">Curso de Mezcla & Presets</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">$49 USD | Enseña a crear plantillas y venderlas</div>
+                    </div>
+
+                    <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-bottom: 15px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">Nivel 3: Tripwire</div>
+                        <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 3px;">Plantillas Premium ($15 - $30)</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">Ventas estables que validaron el mercado</div>
+                    </div>
+
+                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; text-align: center;">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;">Nivel 1 & 2: Ganchos</div>
+                        <div style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-top: 3px;">Presets de Artistas ($1 - $5)</div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">Entrada masiva por DMs de Instagram</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">Tareas del Nuevo Curso</div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-curso-outline')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Estructurar temario final<span class="checklist-subtext">Definir los videos exactos de mezcla y creación de presets</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-curso-video')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Grabar video de Lanzamiento<span class="checklist-subtext">Utilizar el guion con trigger "METODO"</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-curso-payhip')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Configurar Preventa en Payhip<span class="checklist-subtext">Crear el producto de preventa con descuento temporal</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 0.5: Comunidad VIP & Gamificación (NEW) -->
+    <div id="comunidad-vip" class="tab-content">
+        <div class="grid-layout">
+            <div>
+                <!-- ESTRUCTURA DE LA COMUNIDAD -->
+                <div class="card">
+                    <div class="card-title">Comunidad VIP Willie Inspired: Más que un curso <span class="tag">Gamificación</span></div>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Cómo estructurar y organizar la comunidad de productores sin usar Skool, creando un ecosistema dinámico y de alta retención.</p>
+                    
+                    <div class="principle-item">
+                        <div class="principle-title">🏆 Mezclas de la Semana (Weekly Mix Wars)</div>
+                        <div class="principle-desc">Cada semana subes un archivo de voz seca + un beat instrumental en tu espacio VIP. Los miembros tienen 4 días para mezclarlo. El ganador (votado por todos) se lleva exposición en tus historias y presets premium de regalo. Esto genera interacción constante.</div>
+                    </div>
+
+                    <div class="principle-item">
+                        <div class="principle-title">🔥 El "Value Loop" Orgánico en Instagram</div>
+                        <div class="principle-desc">Tus miembros suben Reels mostrando su progreso con tus plantillas o mezclando en el reto semanal, etiquetándote como <code>@willieinspired</code> para recibir tu feedback público. Esto funciona como marketing viral gratuito y constante para ti.</div>
+                    </div>
+
+                    <div class="principle-item">
+                        <div class="principle-title">🏺 Sesiones de Deconstrucción en Vivo (Feedback)</div>
+                        <div class="principle-desc">Llamadas mensuales por Discord / Zoom donde tus miembros envían sus archivos de proyecto (.flp) y tú abres FL Studio en vivo para corregir sus errores de mezcla ante todos. La educación práctica grupal supera a cualquier curso pregrabado.</div>
+                    </div>
+
+                    <div class="principle-item">
+                        <div class="principle-title">📦 Repositorio de Recursos Compartidos</div>
+                        <div class="principle-desc">Una carpeta VIP donde los miembros suben sus propios loops, melodías y presets. Esto hace que el valor de la comunidad crezca solo con el tiempo gracias a los propios usuarios.</div>
+                    </div>
+                </div>
+
+                <!-- ESTRUCTURA DETALLADA DE OFERTAS -->
+                <div class="card">
+                    <div class="card-title">Estructura Detallada de Ofertas del Ecosistema</div>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Cómo se dividen tus productos, el curso, las mentorías y clases 1 a 1 en tu negocio:</p>
+
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <div style="background: #11111a; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+                            <h4 style="color: var(--accent-gold); margin-bottom: 5px;">🎓 1. Cursos Auto-dirigidos ($49)</h4>
+                            <p style="color: #d1d1e0; font-size: 0.9rem;">Curso completo "Crea tu propio preset" + Acceso a los foros de la Comunidad VIP de Discord. Pensado para volumen de ventas automático.</p>
+                        </div>
+                        <div style="background: #11111a; border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;">
+                            <h4 style="color: var(--accent-orange); margin-bottom: 5px;">👥 2. Mentorías Grupales ($97)</h4>
+                            <p style="color: #d1d1e0; font-size: 0.9rem;">Todo lo anterior + Acceso a los Retos Semanales (Mix Wars) + Sesión en vivo de feedback grupal mensual contigo en FL Studio.</p>
+                        </div>
+                        <div style="background: #11111a; border: 1px solid var(--accent-gold); border-radius: 12px; padding: 20px;">
+                            <h4 style="color: #00e676; margin-bottom: 5px;">🎙️ 3. Clases 1 a 1 / Partner Premium ($150 - $250)</h4>
+                            <p style="color: #d1d1e0; font-size: 0.9rem;">Tu servicio estrella de alto ticket. Sesión privada de 1 hora al mes contigo por Zoom, mezcla personalizada de su tema principal y soporte prioritario por WhatsApp DMs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Sidebar Comunidad -->
+            <div>
+                <div class="card">
+                    <div class="card-title">Tareas de la Comunidad</div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-comunidad-discord')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Estructurar Servidor de Discord<span class="checklist-subtext">Crear canales: retos-semanales, feedback, recursos-vip</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-comunidad-reglas')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Definir Reglas de Retos<span class="checklist-subtext">Establecer fechas y sistemas de votación para las Mix Wars</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-comunidad-payhip')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Integrar Roles en Discord<span class="checklist-subtext">Vincular Payhip para dar roles automáticos al comprar</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Tab 1: Identidad & Bio -->
-    <div id="identidad" class="tab-content active">
+    <div id="identidad" class="tab-content">
         <div class="grid-layout">
             <div>
                 <div class="card">
                     <div class="card-title">Bios Optimizadas para Instagram & TikTok <span class="tag">System 1</span></div>
-                    
                     <p style="margin-bottom: 15px; color: var(--text-secondary);">El objetivo es enganchar al usuario con tu métrica de (+1,500 artistas) y dirigirlo a interactuar en DMs en vez de mandarlo a un enlace de Beacons.</p>
                     
                     <h3>Instagram - Opción A (Enfocada en el Micrófono - Recomendada)</h3>
@@ -526,7 +1073,7 @@
                 <!-- Reel 1 -->
                 <div class="card">
                     <div class="card-title">Reel Fijado 1: Aclaración de Mecanismo <span class="tag">VSL Reel</span></div>
-                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Explica la lógica bajo el capó (low-cut, boxy cut, relative de-esser) y tira piedras a mezclar desde cero con 15 plugins.</p>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Explica la lógica bajo el capó (low-cut, boxy cut, de-esser dinámico) y tira piedras a mezclar desde cero con 15 plugins.</p>
                     
                     <button class="copy-btn" style="position:relative; float:right; margin-bottom: 10px;" onclick="copyText('table-reel-1', this)">Copiar Texto Completo</button>
                     
@@ -571,7 +1118,7 @@
                 <!-- Reel 2 -->
                 <div class="card">
                     <div class="card-title">Reel Fijado 2: Dream Outcome (Contraste vs $100 Presets) <span class="tag">Contraste de Valor</span></div>
-                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Muestra los precios inflados de competidores ($100) vs tu plantilla de $15 que suena profesional de inmediato.</p>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Muestra los precios inflados de competidores ($100 de Pineapple) vs tu plantilla de $15 que suena profesional de inmediato.</p>
                     
                     <button class="copy-btn" style="position:relative; float:right; margin-bottom: 10px;" onclick="copyText('table-reel-2', this)">Copiar Texto Completo</button>
                     
@@ -680,6 +1227,24 @@ Si quieres ahorrarte 4 años de dolores de cabeza mezclando de cero, sígueme. E
                 </div>
 
                 <div class="card">
+                    <div class="card-title">Secuencias de ManyChat por Historias (Sticker Trigger)</div>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">Los stickers de encuesta o preguntas en Historias de Instagram tienen hasta <strong>3 veces más conversión</strong> que los comentarios comunes. Configura esto en ManyChat:</p>
+
+                    <h4 style="color: var(--accent-gold); margin-bottom: 10px;">Flujo de Story Sticker:</h4>
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('story-sticker-flow', this)">Copiar Flujo</button>
+                        <div class="copy-text" id="story-sticker-flow">Trigger: El usuario responde a tu sticker en Stories ("Yo quiero sonar pro" / "Uso FL Studio")
+
+Mensaje automático de ManyChat por DM:
+"¡Qué onda hermano! Vi que respondiste a mi historia sobre el preset nativo para FL Studio.
+
+Te lo mando directo por aquí: [Link de Descarga]
+
+Por cierto, si quieres que te haga una prueba personalizada en tu propia voz para escuchar la diferencia de inmediato, respóndeme este chat con la palabra 'PRUEBA' y te paso las instrucciones."</div>
+                    </div>
+                </div>
+
+                <div class="card">
                     <div class="card-title">Scripts Manuales de Cierre por DM (Venta Silenciosa)</div>
                     <p style="color: var(--text-secondary); margin-bottom: 15px;">Usa estos copys cuando el lead te envíe su archivo de voz seca + beat por los DMs de Instagram.</p>
 
@@ -719,9 +1284,9 @@ Cualquier duda que tengas al instalarla me avisas por aquí y te ayudo.</div>
                         <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
                         <div class="checklist-text">Preguntas de Filtro<span class="checklist-subtext">Crear los botones de selección rápida (FL Studio, micro)</span></div>
                     </div>
-                    <div class="checklist-item" onclick="toggleTask(this, 'task-mc-test')">
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-mc-sticker')">
                         <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-                        <div class="checklist-text">Prueba de flujo en DMs<span class="checklist-subtext">Comentar tu propia cuenta y verificar que ManyChat cualifique y ofrezca el demo</span></div>
+                        <div class="checklist-text">Configurar Story Trigger<span class="checklist-subtext">Habilitar respuesta automática cuando respondan a tus encuestas</span></div>
                     </div>
                 </div>
             </div>
@@ -824,7 +1389,148 @@ Willie Inspired (@willieinspired)</div>
         </div>
     </div>
 
-    <!-- Tab 5: Anuncios & Retargeting -->
+    <!-- Tab 5: Email Nurturing -->
+    <div id="nurturing" class="tab-content">
+        <div class="grid-layout">
+            <div>
+                <div class="card">
+                    <div class="card-title">Secuencia Automatizada de Email Nurturing (3 Días) <span class="tag">Conversión Back-end</span></div>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Cuando un usuario se descarga el preset de regalo (o te responde al correo), si no va a Instagram, recibe esta secuencia automática en tu autorrespondedor para comprar el paquete de $15 dólares.</p>
+
+                    <h3>Día 1: Entrega del Preset + Guía de Instalación Rápida</h3>
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('nurture-email-1', this)">Copiar</button>
+                        <div class="copy-text" id="nurture-email-1">ASUNTO: Aquí tienes tu plantilla de FL Studio, {{first_name}}! 🎁
+
+Hola hermano,
+
+Aquí tienes el enlace de descarga directa del preset nativo de maquetas:
+👉 [Link de Descarga del Preset de Regalo]
+
+Este preset está configurado 100% con plugins nativos de FL Studio para que no tengas problemas de licencias ni errores al abrirlo. 
+
+💡 Tip rápido de instalación:
+1. Abre tu mezclador (mixer) en FL Studio.
+2. Haz clic derecho sobre la ranura del canal vocal.
+3. Selecciona "File" -> "Open state file" y elige este archivo.
+
+Si tienes problemas para que tu voz se siente en el beat, escríbeme por Instagram DM a @willieinspired con la palabra "PRUEBA" y te hago un preview mezclado de 15 segundos gratis.
+
+Un abrazo,
+Willie Inspired</div>
+                    </div>
+
+                    <h3>Día 2: Destrucción de Creencias Limitantes (No necesitas un Neumann de $3000)</h3>
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('nurture-email-2', this)">Copiar</button>
+                        <div class="copy-text" id="nurture-email-2">ASUNTO: El mito del micrófono de 3000 dólares... 🎙️
+
+Hola {{first_name}},
+
+Hoy en día ves a todo el mundo diciendo que necesitas una interfaz de audio cara o un micrófono de estudio premium para poder sonar en la radio. 
+
+Eso es mentira. El 90% de un sonido vocal profesional no está en el micrófono, está en el procesamiento dinámico y de frecuencias.
+
+Si tu voz suena opaca o a cartón, no es porque tu micro sea barato. Es porque tienes acumulación en 300Hz (frecuencia nasal) y no estás comprimiendo en paralelo para nivelar los picos de volumen.
+
+Con mi plantilla premium de mezcla OFFSZN solucionamos eso de inmediato. Ella nivela las tomas suaves y limpia los ruidos de fondo automáticamente.
+
+Si quieres ahorrarte horas perilleando plugins, llévate la plantilla premium completa por solo $15 dólares aquí:
+👉 beacons.ai/willieinspired
+
+¡Nos vemos en el estudio!
+Willie Inspired</div>
+                    </div>
+
+                    <h3>Día 3: Prueba Social + Urgencia (El descuento de 24 horas)</h3>
+                    <div class="copy-block">
+                        <button class="copy-btn" onclick="copyText('nurture-email-3', this)">Copiar</button>
+                        <div class="copy-text" id="nurture-email-3">ASUNTO: Lo que pasa cuando arrastras mi cadena premium... 📀
+
+Hola {{first_name}},
+
+Mira lo que me mandó un artista que graba en su habitación con un Shure SM58 y una Focusrite Scarlett:
+
+"Bro, literalmente arrastré la plantilla premium en FL Studio, grabé mi tema y parece mezclado en un estudio comercial. Mis temas en Spotify nunca se habían escuchado así."
+
+Ese es el poder de automatizar tus procesos. No tienes que estudiar 3 años de ingeniería de sonido para sacar maquetas profesionales.
+
+Solo por hoy, te dejo la plantilla premium completa de OFFSZN + un paquete de presets de artista de regalo por solo $15 dólares.
+
+Consíguela hoy antes de que quitemos los regalos extra:
+👉 beacons.ai/willieinspired
+
+Un abrazo,
+Willie Inspired</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Sidebar -->
+            <div>
+                <div class="card">
+                    <div class="card-title">Tareas de Email Nurture</div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-nurture-config')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Configurar Autoresponder<span class="checklist-subtext">Cargar los 3 correos en tu plataforma (Mailerfind o similar)</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-nurture-links')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Revisar Enlaces de Venta<span class="checklist-subtext">Asegurar que el botón de beacons funcione en todos los correos</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 6: Reels Pro -->
+    <div id="ganadores" class="tab-content">
+        <div class="grid-layout">
+            <div>
+                <div class="card">
+                    <div class="card-title">Anatomía Visual de un Reel Viral de Presets <span class="tag">Retención Pro</span></div>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">Los mejores creadores del nicho de audio (Pineapple Music, Wavy Wayne, etc.) usan esta estructura de producción milimétrica para enganchar en Instagram Reels:</p>
+
+                    <div class="principle-item">
+                        <div class="principle-title">1. El "Hook" Visual Sin Sonido (Segundos 0-2)</div>
+                        <div class="principle-desc">Un texto en contraste negro y amarillo neon que ocupe el centro de la pantalla. Ej: <em>"NO grabes voces en FL Studio sin hacer esto"</em> o <em>"La perilla secreta de FL Studio que limpia tus voces"</em>. Muestra tu mano moviendo un potenciómetro en FL.</div>
+                    </div>
+
+                    <div class="principle-item">
+                        <div class="principle-title">2. El Contraste Auditivo Inmediato (Segundos 2-5)</div>
+                        <div class="principle-desc">Reproduce 2 segundos de voz seca (sin efectos) que suene opaca, y luego da un chasquido con los dedos o golpea la pantalla y reproduce el mismo audio con el preset de OFFSZN cargado. La diferencia debe ser extrema (brillo, estéreo).</div>
+                    </div>
+
+                    <div class="principle-item">
+                        <div class="principle-title">3. Explicación de 1 Perilla (Segundos 5-25)</div>
+                        <div class="principle-desc">No expliques todo el preset. Concéntrate en un solo plugin y explica qué hace. Ej: <em>"Esta compresión paralela hace que tu voz flote encima de los bombos del beat sin perder cuerpo"</em>. Esto genera autoridad y curiosidad.</div>
+                    </div>
+
+                    <div class="principle-item">
+                        <div class="principle-title">4. Call to Action (CTA) Automatizado (Segundos 25-30)</div>
+                        <div class="principle-desc">Termina diciendo: <em>"Si quieres sonar así de pro hoy mismo, comenta la palabra 'PRESET' abajo y mi robot te manda mi vocal chain nativa directo al DM gratis"</em>.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Sidebar -->
+            <div>
+                <div class="card">
+                    <div class="card-title">Tareas de Producción</div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-prod-props')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Grabar tomas de celular claras<span class="checklist-subtext">Grabar la pantalla de la PC de noche en el estudio (el color oscuro e iluminación LED vende mucho más)</span></div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleTask(this, 'task-prod-sub')">
+                        <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                        <div class="checklist-text">Subtítulos con contraste<span class="checklist-subtext">Usar tipografías gordas (como Montserrat o The Bold Font) con palabras clave en amarillo</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 7: Anuncios & Retargeting -->
     <div id="anuncios" class="tab-content">
         <div class="grid-layout">
             <div>
@@ -880,6 +1586,201 @@ Si quieres escuchar cómo suena tu música con nuestra cadena premium, toca abaj
             </div>
         </div>
     </div>
+
+    <!-- Tab 8: Calendario de Contenido -->
+    <div id="calendario" class="tab-content">
+        <div class="card">
+            <div class="card-title">Calendario de Publicaciones: Reels y Stories <span class="tag">Planificación Semanal</span></div>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">Sigue este esquema para alternar dinámicamente entre educar, divertir y vender en piloto automático sin aburrir a tu audiencia.</p>
+
+            <div class="calendar-grid">
+                <div class="day-card">
+                    <div class="day-name">Lunes</div>
+                    <div class="day-content">🎬 Contenido Documentado</div>
+                    <div class="day-sub">Willie mezclando en vivo o dando tips informales.</div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">Martes</div>
+                    <div class="day-content">🎙️ Antes / Después</div>
+                    <div class="day-sub">Voz seca de cuarto vs la cadena en 2 clics.</div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">Miércoles</div>
+                    <div class="day-content">🔥 Reel Anti-Retardados</div>
+                    <div class="day-sub">Hook excluyente (ej: de-esser dinámico).</div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">Jueves</div>
+                    <div class="day-content">🏺 Caso de Éxito</div>
+                    <div class="day-sub">DM de un artista feliz usando el preset.</div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">Viernes</div>
+                    <div class="day-content">🎹 Proceso & Setup</div>
+                    <div class="day-sub">Willie mostrando cómo grabar sin Neumann.</div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">Sábado</div>
+                    <div class="day-content">📦 Reel del Mecanismo</div>
+                    <div class="day-sub">Tirar flores a tu preset y piedras al mixer.</div>
+                </div>
+                <div class="day-card">
+                    <div class="day-name">Domingo</div>
+                    <div class="day-content">📈 Repost de Ganador</div>
+                    <div class="day-sub">Volver a subir tu Reel con mejor alcance.</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <h4 style="color: var(--accent-gold); margin-bottom: 10px;">Fórmula de Stories Diarias (80% Crear Valor / 20% Extraer)</h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div style="background: #06060a; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <h5 style="color: var(--accent-orange); margin-bottom: 8px;">💎 Historias de Valor (Lunes a Viernes)</h5>
+                        <ul style="margin-left: 20px; font-size: 0.9rem; color: #d1d1e0; display: flex; flex-direction: column; gap: 6px;">
+                            <li><strong>Prueba social</strong>: Captura de DM de un cliente.</li>
+                            <li><strong>Mecanismo</strong>: Explicar por qué es mejor limpiar el "cartón en 300Hz".</li>
+                            <li><strong>Humor/Carácter</strong>: Reírte de los productores que perillean mil plugins.</li>
+                            <li><strong>Relación</strong>: Tu día a día en el estudio.</li>
+                        </ul>
+                    </div>
+                    <div style="background: #06060a; padding: 20px; border-radius: 12px; border: 1px solid var(--border-color);">
+                        <h5 style="color: var(--success-color); margin-bottom: 8px;">💸 Historias de Extracción (Fines de Semana)</h5>
+                        <ul style="margin-left: 20px; font-size: 0.9rem; color: #d1d1e0; display: flex; flex-direction: column; gap: 6px;">
+                            <li><strong>Lead Magnet</strong>: "Mañana regalo un preset básico. Comenta REGALO".</li>
+                            <li><strong>Venta Directa</strong>: "La plantilla premium de FL por $15 en el link".</li>
+                            <li><strong>Cierre de Demos</strong>: "Tengo 5 cupos de mezcla de voces gratis. DM 'PRUEBA'".</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 9: Simulador ROI -->
+    <div id="calculadora" class="tab-content">
+        <div class="card">
+            <div class="card-title">Simulador de Conversión de Ventas <span class="tag">Calculadora ROI</span></div>
+            <p style="color: var(--text-secondary); margin-bottom: 25px;">Modifica los parámetros para proyectar tus ventas estimadas en base a los emails de Mailerfind y tu conversión por DMs.</p>
+
+            <div class="calc-grid">
+                <!-- Inputs -->
+                <div>
+                    <div class="input-group">
+                        <label for="emails-sent">Correos Enviados (Mailerfind)</label>
+                        <input type="number" id="emails-sent" value="98" oninput="calculateROI()">
+                    </div>
+                    <div class="input-group">
+                        <label for="reply-rate">% de Tasa de Respuesta (Bandeja de entrada)</label>
+                        <input type="number" id="reply-rate" value="15" oninput="calculateROI()">
+                    </div>
+                    <div class="input-group">
+                        <label for="demo-rate">% de Aceptación de Prueba (Score >= 5/10)</label>
+                        <input type="number" id="demo-rate" value="70" oninput="calculateROI()">
+                    </div>
+                    <div class="input-group">
+                        <label for="close-rate">% de Cierre de Venta (Prueba Realizada)</label>
+                        <input type="number" id="close-rate" value="25" oninput="calculateROI()">
+                    </div>
+                    <div class="input-group">
+                        <label for="product-price">Precio de Plantilla Vocal (USD)</label>
+                        <input type="number" id="product-price" value="15" oninput="calculateROI()">
+                    </div>
+                </div>
+
+                <!-- Results -->
+                <div>
+                    <div class="result-box">
+                        <h3>Ingreso Estimado Orgánico</h3>
+                        <div class="result-val" id="total-revenue">$0.00</div>
+                        <p style="color: var(--text-secondary); margin-top: 10px;">Calculado a partir de tus leads calificados</p>
+                        
+                        <div class="metric-sub">
+                            <div>
+                                <div class="sub-val" id="leads-replied">0</div>
+                                <div class="sub-lbl">Respuestas</div>
+                            </div>
+                            <div>
+                                <div class="sub-val" id="demos-sent">0</div>
+                                <div class="sub-lbl">Demos Mezclados</div>
+                            </div>
+                            <div>
+                                <div class="sub-val" id="total-sales">0</div>
+                                <div class="sub-lbl">Ventas</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Funnel Chart -->
+                    <div class="visual-funnel">
+                        <div class="funnel-stage" id="funnel-sent">
+                            <span>1. Enviados</span>
+                            <span id="txt-funnel-sent">98</span>
+                        </div>
+                        <div class="funnel-stage" id="funnel-replied">
+                            <span>2. Respondieron</span>
+                            <span id="txt-funnel-replied">15</span>
+                        </div>
+                        <div class="funnel-stage" id="funnel-demos">
+                            <span>3. Aceptaron Demo</span>
+                            <span id="txt-funnel-demos">11</span>
+                        </div>
+                        <div class="funnel-stage" id="funnel-sales">
+                            <span>4. Compras ($)</span>
+                            <span id="txt-funnel-sales">3</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 10: Kallaway Storytelling -->
+    <div id="kallaway" class="tab-content">
+        <div class="card">
+            <div class="card-title">Los 8 Principios del Shortform Storytelling <span class="tag">Kallaway 2026</span></div>
+            <p style="color: var(--text-secondary); margin-bottom: 25px;">Utiliza estas reglas psicológicas de retención para tus Reels y TikToks de OFFSZN para aumentar el "Save Rate" (motor de la viralidad).</p>
+
+            <div class="principle-item">
+                <div class="principle-title">1. Curiosidad & Contraste (Curiosity & Contrast)</div>
+                <div class="principle-desc">El hook debe plantear un contraste visual o auditivo chocante (ej: el sonido seco y feo vs la voz ya procesada con efectos profesionales en 2 clics).</div>
+            </div>
+
+            <div class="principle-item">
+                <div class="principle-title">2. Velocidad de Valor (Speed to Value)</div>
+                <div class="principle-desc">No des rodeos. En los primeros 5 segundos el espectador debe escuchar el cambio de voz o la interfaz de FL Studio en acción. Evita introducciones lentas.</div>
+            </div>
+
+            <div class="principle-item">
+                <div class="principle-title">3. Ritmo Visual y Loops (Visual Pacing)</div>
+                <div class="principle-desc">Realiza un corte visual o zoom cada 2.5 o 3 segundos en el mixer para mantener el cerebro del espectador enganchado en el video.</div>
+            </div>
+
+            <div class="principle-item">
+                <div class="principle-title">4. Desmitificación de Creencias (Belief Shifting)</div>
+                <div class="principle-desc">Ataca lo que ellos creen que es verdad: "No necesitas un micrófono Neumann de $3,000 para sonar profesional en casa". La verdad es el procesamiento dinámico.</div>
+            </div>
+
+            <div class="principle-item">
+                <div class="principle-title">5. Loops de Retención</div>
+                <div class="principle-desc">Muestra el mixer de FL Studio corriendo de fondo mientras explicas la teoría para que el espectador tenga que ver el video 2 veces para captar todo.</div>
+            </div>
+
+            <div class="principle-item">
+                <div class="principle-title">6. El Guardado como Objetivo (Save Rate Hack)</div>
+                <div class="principle-desc">Haz que tus videos sean tan útiles o que tengan esquemas/cadenas vocales tan rápidas que el algoritmo los promocione porque los usuarios le den clic a "Guardar".</div>
+            </div>
+
+            <div class="principle-item">
+                <div class="principle-title">7. Los 3 Pilares de Ryan Pineda / Hormozi</div>
+                <div class="principle-desc"><strong>Enseñar</strong> (tutorials que solucionan un problem a específico) + <strong>Mostrar</strong> (behind-the-scenes, resultados de clientes) + <strong>Conectar</strong> (tu historia personal, tus fracasos y victorias). Rota estos 3 pilares semanalmente para no quemar a tu audiencia.</div>
+            </div>
+
+            <div class="principle-item">
+                <div class="principle-title">8. El "Audio Sandwich" para Música</div>
+                <div class="principle-desc">Estructura de audio de alto rendimiento: (1) Audio trending de fondo a bajo volumen, (2) Tu voz explicando el tip de mezcla, (3) SFX suave de transición (ej: click de mouse o tecla de teclado). Esta combinación genera hasta 2x más retención que el audio plano.</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -902,7 +1803,6 @@ Si quieres escuchar cómo suena tu música con nuestra cadena premium, toca abaj
     function copyText(elementId, btn) {
         var textToCopy = document.getElementById(elementId).innerText;
         
-        // Handle table copying nicely
         if (document.getElementById(elementId).tagName === 'TABLE') {
             textToCopy = "";
             var rows = document.getElementById(elementId).rows;
@@ -924,7 +1824,7 @@ Si quieres escuchar cómo suena tu música con nuestra cadena premium, toca abaj
             btn.style.borderColor = "#00e676";
             setTimeout(function() {
                 btn.innerText = originalText;
-                btn.style.background = "#1b1b29";
+                btn.style.background = "#171724";
                 btn.style.color = "#ffffff";
                 btn.style.borderColor = "var(--border-color)";
             }, 1500);
@@ -955,11 +1855,112 @@ Si quieres escuchar cómo suena tu música con nuestra cadena premium, toca abaj
         updateProgressBar();
     }
 
+    // Interactive Notepad Autosave
+    function saveNotepad() {
+        var content = document.getElementById("ideas-notepad").value;
+        localStorage.setItem("willie_ideas_notepad", content);
+    }
+
+    function loadNotepad() {
+        var content = localStorage.getItem("willie_ideas_notepad");
+        if (content) {
+            document.getElementById("ideas-notepad").value = content;
+        }
+    }
+
+    // Interactive Custom Ideas list manager
+    function addCustomIdea(text) {
+        var input = document.getElementById("new-idea-input");
+        var ideaText = text || input.value.trim();
+        if (!ideaText) return;
+
+        var list = document.getElementById("custom-ideas-list");
+        var itemId = "custom-idea-" + Date.now() + Math.random().toString(36).substr(2, 5);
+
+        var item = document.createElement("div");
+        item.id = itemId;
+        item.style.display = "flex";
+        item.style.justifyContent = "space-between";
+        item.style.alignItems = "center";
+        item.style.background = "#11111a";
+        item.style.padding = "12px 15px";
+        item.style.borderRadius = "10px";
+        item.style.border = "1px solid var(--border-color)";
+
+        item.innerHTML = `
+            <span style="color: #fff; font-size: 0.95rem;">${ideaText}</span>
+            <button onclick="deleteCustomIdea('${itemId}')" style="background: transparent; border: none; color: var(--danger-color); cursor: pointer; font-size: 0.9rem; font-weight: bold; margin-left: 10px;">✕</button>
+        `;
+
+        list.appendChild(item);
+        if (!text) {
+            input.value = "";
+            saveCustomIdeas();
+        }
+    }
+
+    function deleteCustomIdea(itemId) {
+        var item = document.getElementById(itemId);
+        if (item) {
+            item.remove();
+            saveCustomIdeas();
+        }
+    }
+
+    function saveCustomIdeas() {
+        var list = document.getElementById("custom-ideas-list");
+        var items = list.querySelectorAll("span");
+        var ideas = [];
+        items.forEach(function(span) {
+            ideas.push(span.innerText);
+        });
+        localStorage.setItem("willie_custom_ideas", JSON.stringify(ideas));
+    }
+
+    function loadCustomIdeas() {
+        var saved = localStorage.getItem("willie_custom_ideas");
+        if (saved) {
+            var ideas = JSON.parse(saved);
+            ideas.forEach(function(ideaText) {
+                addCustomIdea(ideaText);
+            });
+        }
+    }
+
+    // Calculate ROI
+    function calculateROI() {
+        var sent = parseFloat(document.getElementById("emails-sent").value) || 0;
+        var replyRate = (parseFloat(document.getElementById("reply-rate").value) || 0) / 100;
+        var demoRate = (parseFloat(document.getElementById("demo-rate").value) || 0) / 100;
+        var closeRate = (parseFloat(document.getElementById("close-rate").value) || 0) / 100;
+        var price = parseFloat(document.getElementById("product-price").value) || 0;
+
+        var replied = Math.round(sent * replyRate);
+        var demos = Math.round(replied * demoRate);
+        var sales = Math.round(demos * closeRate);
+        var revenue = sales * price;
+
+        document.getElementById("leads-replied").innerText = replied;
+        document.getElementById("demos-sent").innerText = demos;
+        document.getElementById("total-sales").innerText = sales;
+        document.getElementById("total-revenue").innerText = "$" + revenue.toFixed(2);
+
+        // Update Funnel graphic
+        document.getElementById("txt-funnel-sent").innerText = sent;
+        document.getElementById("txt-funnel-replied").innerText = replied;
+        document.getElementById("txt-funnel-demos").innerText = demos;
+        document.getElementById("txt-funnel-sales").innerText = sales;
+
+        // Dynamic widths
+        document.getElementById("funnel-replied").style.width = (sent > 0 ? Math.max(25, Math.min(100, (replied / sent) * 100)) : 0) + "%";
+        document.getElementById("funnel-demos").style.width = (sent > 0 ? Math.max(25, Math.min(100, (demos / sent) * 100)) : 0) + "%";
+        document.getElementById("funnel-sales").style.width = (sent > 0 ? Math.max(25, Math.min(100, (sales / sent) * 100)) : 0) + "%";
+    }
+
     // Load saved tasks on load
     window.onload = function() {
         var checklistItems = document.querySelectorAll(".checklist-item");
         checklistItems.forEach(function(item) {
-            // Extract a unique identifier from the toggleTask call
             var onClickAttr = item.getAttribute("onclick");
             var matches = onClickAttr.match(/'([^']+)'/);
             if (matches && matches[1]) {
@@ -971,6 +1972,9 @@ Si quieres escuchar cómo suena tu música con nuestra cadena premium, toca abaj
             }
         });
         updateProgressBar();
+        calculateROI();
+        loadNotepad();
+        loadCustomIdeas();
     }
 </script>
 
