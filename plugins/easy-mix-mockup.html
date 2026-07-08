@@ -1402,65 +1402,63 @@
     </div><!-- /plugin -->
 
     <script>
-        const apiBase = window.location.origin.includes('localhost')
-            ? 'http://localhost:3000'
-            : 'https://offszn.lat';
+var apiBase = window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://offszn.lat';
 
-        // ──────────────────────────────────────────────────────────
-        //  JUCE BRIDGE
-        // ──────────────────────────────────────────────────────────
-        function sendParam(id, value) {
-            try {
-                if (hasJuceBridge()) {
-                    callNative("setParam", String(id), Number(value));
-                }
-            } catch (e) { /* running in browser preview — no bridge */ }
-        }
+// ──────────────────────────────────────────────────────────
+//  JUCE BRIDGE
+// ──────────────────────────────────────────────────────────
+function sendParam(id, value) {
+  try {
+    if (hasJuceBridge()) {
+      callNative("setParam", String(id), Number(value));
+    }
+  } catch (e) {/* running in browser preview — no bridge */}
+}
+function updateAllVisualizers() {
+  var sw = document.querySelector('[data-id="stereo-width"]');
+  if (sw) updateStereoVisualizer(parseFloat(sw.dataset.val || 0));
+  updateBitcrusherCanvas();
+  updatePhoneCanvas();
+  updatePitchProCanvas();
+  var es = document.querySelector('[data-id="fx-endless-amount"]');
+  if (es) updateEndlessSmile(parseFloat(es.dataset.val || 0));
+}
+function switchTab(mode) {
+  document.querySelectorAll('.tab-content').forEach(function (content) {
+    return content.classList.remove('active');
+  });
+  if (mode === 'mix') {
+    document.getElementById('tab-mix').classList.add('active');
+    sendParam('active-tab', 0);
+  } else {
+    document.getElementById('tab-effects').classList.add('active');
+    sendParam('active-tab', 1);
+  }
 
-        function updateAllVisualizers() {
-            let sw = document.querySelector('[data-id="stereo-width"]');
-            if(sw) updateStereoVisualizer(parseFloat(sw.dataset.val || 0));
-            updateBitcrusherCanvas();
-            updatePhoneCanvas();
-            updatePitchProCanvas();
-            let es = document.querySelector('[data-id="fx-endless-amount"]');
-            if(es) updateEndlessSmile(parseFloat(es.dataset.val || 0));
-        }
+  // Sync the select dropdown element value
+  var dropdown = document.querySelector('select.tab-btn');
+  if (dropdown && dropdown.value !== mode) {
+    dropdown.value = mode;
+  }
 
-        function switchTab(mode) {
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+  // Redraw all knobs and visualizers when tab becomes visible, wait for layout
+  setTimeout(function () {
+    document.querySelectorAll('.knob').forEach(function (k) {
+      return drawKnob(k);
+    });
+    updateAllVisualizers();
+  }, 50);
+}
 
-            if (mode === 'mix') {
-                document.getElementById('tab-mix').classList.add('active');
-                sendParam('active-tab', 0);
-            } else {
-                document.getElementById('tab-effects').classList.add('active');
-                sendParam('active-tab', 1);
-            }
+// Notify C++ that the UI is fully loaded and ready to receive state
 
-            // Sync the select dropdown element value
-            const dropdown = document.querySelector('select.tab-btn');
-            if (dropdown && dropdown.value !== mode) {
-                dropdown.value = mode;
-            }
-
-            // Redraw all knobs and visualizers when tab becomes visible, wait for layout
-            setTimeout(() => {
-                document.querySelectorAll('.knob').forEach(k => drawKnob(k));
-                updateAllVisualizers();
-            }, 50);
-        }
-
-        // Notify C++ that the UI is fully loaded and ready to receive state
-        
-        // --- AUTO-POPULATE DEFAULT SAUCE PRESETS BANK (EMBEDDED) ---
-        try {
-            let mis_presets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}');
-            let hasLoadedSauce = localStorage.getItem('easymix_sauce_presets_loaded');
-            
-            if (!hasLoadedSauce) {
-                const saucePresets = {
-    "SAUCE 1176 Punch": {
+// --- AUTO-POPULATE DEFAULT SAUCE PRESETS BANK (EMBEDDED) ---
+try {
+  var mis_presets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}');
+  var hasLoadedSauce = localStorage.getItem('easymix_sauce_presets_loaded');
+  if (!hasLoadedSauce) {
+    var saucePresets = {
+      "SAUCE 1176 Punch": {
         "global-in": 54.9,
         "global-out": 48.02,
         "noise-thresh": 12.57,
@@ -1513,8 +1511,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE 80s Synthpop": {
+      },
+      "SAUCE 80s Synthpop": {
         "global-in": 54.77,
         "global-out": 51.43,
         "noise-thresh": 15.11,
@@ -1567,8 +1565,8 @@
         "dly-div": 16,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE 90s Boom Bap": {
+      },
+      "SAUCE 90s Boom Bap": {
         "global-in": 45.48,
         "global-out": 49.57,
         "noise-thresh": 11.1,
@@ -1621,8 +1619,8 @@
         "dly-div": 8,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE Adlibs Wash": {
+      },
+      "SAUCE Adlibs Wash": {
         "global-in": 48.88,
         "global-out": 51.99,
         "noise-thresh": 15.53,
@@ -1675,8 +1673,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE Aggressive Rap": {
+      },
+      "SAUCE Aggressive Rap": {
         "global-in": 52.77,
         "global-out": 54.2,
         "noise-thresh": 14.44,
@@ -1729,8 +1727,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Alien Formant": {
+      },
+      "SAUCE Alien Formant": {
         "global-in": 49.09,
         "global-out": 54.92,
         "noise-thresh": 10.37,
@@ -1783,8 +1781,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE Big Hall": {
+      },
+      "SAUCE Big Hall": {
         "global-in": 54.63,
         "global-out": 48.94,
         "noise-thresh": 20.04,
@@ -1837,8 +1835,8 @@
         "dly-div": 4,
         "rev-sidechain": 0,
         "dly-sidechain": 1
-    },
-    "SAUCE Boxy Cut": {
+      },
+      "SAUCE Boxy Cut": {
         "global-in": 50.1,
         "global-out": 51.94,
         "noise-thresh": 18.57,
@@ -1891,8 +1889,8 @@
         "dly-div": 8,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Bright Pop": {
+      },
+      "SAUCE Bright Pop": {
         "global-in": 53.47,
         "global-out": 49.86,
         "noise-thresh": 26.3,
@@ -1945,8 +1943,8 @@
         "dly-div": 8,
         "rev-sidechain": 0,
         "dly-sidechain": 1
-    },
-    "SAUCE Clean R&B": {
+      },
+      "SAUCE Clean R&B": {
         "global-in": 47.73,
         "global-out": 52.74,
         "noise-thresh": 15.58,
@@ -1999,8 +1997,8 @@
         "dly-div": 16,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE Coldfire Heat": {
+      },
+      "SAUCE Coldfire Heat": {
         "global-in": 46.25,
         "global-out": 47.61,
         "noise-thresh": 25.85,
@@ -2053,8 +2051,8 @@
         "dly-div": 8,
         "rev-sidechain": 0,
         "dly-sidechain": 1
-    },
-    "SAUCE Crispy Rap": {
+      },
+      "SAUCE Crispy Rap": {
         "global-in": 45.34,
         "global-out": 47.58,
         "noise-thresh": 15.24,
@@ -2107,8 +2105,8 @@
         "dly-div": 8,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Dark Trap": {
+      },
+      "SAUCE Dark Trap": {
         "global-in": 48.38,
         "global-out": 47.89,
         "noise-thresh": 11.87,
@@ -2161,8 +2159,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE De-Essed Clean": {
+      },
+      "SAUCE De-Essed Clean": {
         "global-in": 50.53,
         "global-out": 47.23,
         "noise-thresh": 13.33,
@@ -2215,8 +2213,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE Deep Voice": {
+      },
+      "SAUCE Deep Voice": {
         "global-in": 46.23,
         "global-out": 50.92,
         "noise-thresh": 10.38,
@@ -2269,8 +2267,8 @@
         "dly-div": 4,
         "rev-sidechain": 0,
         "dly-sidechain": 1
-    },
-    "SAUCE Delay Throws": {
+      },
+      "SAUCE Delay Throws": {
         "global-in": 53,
         "global-out": 50.46,
         "noise-thresh": 29.7,
@@ -2323,8 +2321,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Detroit Style": {
+      },
+      "SAUCE Detroit Style": {
         "global-in": 53.26,
         "global-out": 50.73,
         "noise-thresh": 19.97,
@@ -2377,8 +2375,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Drill Lead": {
+      },
+      "SAUCE Drill Lead": {
         "global-in": 46.02,
         "global-out": 51.25,
         "noise-thresh": 15.34,
@@ -2431,8 +2429,8 @@
         "dly-div": 16,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Emo Trap": {
+      },
+      "SAUCE Emo Trap": {
         "global-in": 50.57,
         "global-out": 46.32,
         "noise-thresh": 21.46,
@@ -2485,8 +2483,8 @@
         "dly-div": 8,
         "rev-sidechain": 0,
         "dly-sidechain": 0
-    },
-    "SAUCE Endless Smile": {
+      },
+      "SAUCE Endless Smile": {
         "global-in": 53.89,
         "global-out": 54.55,
         "noise-thresh": 23.26,
@@ -2539,8 +2537,8 @@
         "dly-div": 16,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Exciter": {
+      },
+      "SAUCE Exciter": {
         "global-in": 54.51,
         "global-out": 49.84,
         "noise-thresh": 10.54,
@@ -2593,8 +2591,8 @@
         "dly-div": 16,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE Future Bass": {
+      },
+      "SAUCE Future Bass": {
         "global-in": 45.52,
         "global-out": 45.78,
         "noise-thresh": 13.33,
@@ -2647,8 +2645,8 @@
         "dly-div": 4,
         "rev-sidechain": 0,
         "dly-sidechain": 0
-    },
-    "SAUCE Helium Voice": {
+      },
+      "SAUCE Helium Voice": {
         "global-in": 45.33,
         "global-out": 53.58,
         "noise-thresh": 23.19,
@@ -2701,8 +2699,8 @@
         "dly-div": 16,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE High Presence": {
+      },
+      "SAUCE High Presence": {
         "global-in": 49.37,
         "global-out": 50.53,
         "noise-thresh": 17.96,
@@ -2755,8 +2753,8 @@
         "dly-div": 16,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE Hyperpop": {
+      },
+      "SAUCE Hyperpop": {
         "global-in": 53.53,
         "global-out": 46.88,
         "noise-thresh": 20.47,
@@ -2809,8 +2807,8 @@
         "dly-div": 16,
         "rev-sidechain": 0,
         "dly-sidechain": 0
-    },
-    "SAUCE LA-2A Magic": {
+      },
+      "SAUCE LA-2A Magic": {
         "global-in": 45.65,
         "global-out": 51.82,
         "noise-thresh": 28.12,
@@ -2863,8 +2861,8 @@
         "dly-div": 8,
         "rev-sidechain": 0,
         "dly-sidechain": 0
-    },
-    "SAUCE Lead Vocal": {
+      },
+      "SAUCE Lead Vocal": {
         "global-in": 52.72,
         "global-out": 49.16,
         "noise-thresh": 14.21,
@@ -2917,8 +2915,8 @@
         "dly-div": 8,
         "rev-sidechain": 0,
         "dly-sidechain": 1
-    },
-    "SAUCE Lo-Fi Vocals": {
+      },
+      "SAUCE Lo-Fi Vocals": {
         "global-in": 54.33,
         "global-out": 50.38,
         "noise-thresh": 27.92,
@@ -2971,8 +2969,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Mid Scoop": {
+      },
+      "SAUCE Mid Scoop": {
         "global-in": 46.8,
         "global-out": 53.94,
         "noise-thresh": 14.39,
@@ -3025,8 +3023,8 @@
         "dly-div": 16,
         "rev-sidechain": 0,
         "dly-sidechain": 1
-    },
-    "SAUCE Monster Voice": {
+      },
+      "SAUCE Monster Voice": {
         "global-in": 50.36,
         "global-out": 50.67,
         "noise-thresh": 16.42,
@@ -3079,8 +3077,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Mumble Rap": {
+      },
+      "SAUCE Mumble Rap": {
         "global-in": 46.75,
         "global-out": 47.12,
         "noise-thresh": 21.14,
@@ -3133,8 +3131,8 @@
         "dly-div": 4,
         "rev-sidechain": 0,
         "dly-sidechain": 1
-    },
-    "SAUCE NY Drill": {
+      },
+      "SAUCE NY Drill": {
         "global-in": 49.61,
         "global-out": 54.8,
         "noise-thresh": 29.43,
@@ -3187,8 +3185,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Ping Pong": {
+      },
+      "SAUCE Ping Pong": {
         "global-in": 54.42,
         "global-out": 48,
         "noise-thresh": 23.21,
@@ -3241,8 +3239,8 @@
         "dly-div": 16,
         "rev-sidechain": 0,
         "dly-sidechain": 1
-    },
-    "SAUCE Pitch Down": {
+      },
+      "SAUCE Pitch Down": {
         "global-in": 46.91,
         "global-out": 54.27,
         "noise-thresh": 21.08,
@@ -3295,8 +3293,8 @@
         "dly-div": 8,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE Pitch Up": {
+      },
+      "SAUCE Pitch Up": {
         "global-in": 52.75,
         "global-out": 50.5,
         "noise-thresh": 16.03,
@@ -3349,8 +3347,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE Plate Wash": {
+      },
+      "SAUCE Plate Wash": {
         "global-in": 49.75,
         "global-out": 48.62,
         "noise-thresh": 19.55,
@@ -3403,8 +3401,8 @@
         "dly-div": 8,
         "rev-sidechain": 0,
         "dly-sidechain": 1
-    },
-    "SAUCE Podcast Voice": {
+      },
+      "SAUCE Podcast Voice": {
         "global-in": 49.32,
         "global-out": 48.3,
         "noise-thresh": 20.83,
@@ -3457,8 +3455,8 @@
         "dly-div": 16,
         "rev-sidechain": 0,
         "dly-sidechain": 0
-    },
-    "SAUCE Radio Ready": {
+      },
+      "SAUCE Radio Ready": {
         "global-in": 50.31,
         "global-out": 50.28,
         "noise-thresh": 13.82,
@@ -3511,8 +3509,8 @@
         "dly-div": 16,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Sad Boy": {
+      },
+      "SAUCE Sad Boy": {
         "global-in": 48.21,
         "global-out": 51.57,
         "noise-thresh": 15.24,
@@ -3565,8 +3563,8 @@
         "dly-div": 8,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Saturation Drive": {
+      },
+      "SAUCE Saturation Drive": {
         "global-in": 51.02,
         "global-out": 53.84,
         "noise-thresh": 16.02,
@@ -3619,8 +3617,8 @@
         "dly-div": 8,
         "rev-sidechain": 0,
         "dly-sidechain": 0
-    },
-    "SAUCE Slapback": {
+      },
+      "SAUCE Slapback": {
         "global-in": 48.35,
         "global-out": 46.81,
         "noise-thresh": 11.79,
@@ -3673,8 +3671,8 @@
         "dly-div": 4,
         "rev-sidechain": 0,
         "dly-sidechain": 0
-    },
-    "SAUCE Smooth Chorus": {
+      },
+      "SAUCE Smooth Chorus": {
         "global-in": 49.39,
         "global-out": 52.2,
         "noise-thresh": 29.47,
@@ -3727,8 +3725,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Space Reverb": {
+      },
+      "SAUCE Space Reverb": {
         "global-in": 53.98,
         "global-out": 48.12,
         "noise-thresh": 18.53,
@@ -3781,8 +3779,8 @@
         "dly-div": 16,
         "rev-sidechain": 0,
         "dly-sidechain": 0
-    },
-    "SAUCE Telephone Effect": {
+      },
+      "SAUCE Telephone Effect": {
         "global-in": 54.54,
         "global-out": 52.62,
         "noise-thresh": 22.98,
@@ -3835,8 +3833,8 @@
         "dly-div": 8,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE The Sauce": {
+      },
+      "SAUCE The Sauce": {
         "global-in": 50.06,
         "global-out": 47.96,
         "noise-thresh": 24.21,
@@ -3889,8 +3887,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE Tight Room": {
+      },
+      "SAUCE Tight Room": {
         "global-in": 47.77,
         "global-out": 50.22,
         "noise-thresh": 26.18,
@@ -3943,8 +3941,8 @@
         "dly-div": 8,
         "rev-sidechain": 0,
         "dly-sidechain": 0
-    },
-    "SAUCE Vintage Tape": {
+      },
+      "SAUCE Vintage Tape": {
         "global-in": 51.43,
         "global-out": 54.12,
         "noise-thresh": 27.14,
@@ -3997,8 +3995,8 @@
         "dly-div": 8,
         "rev-sidechain": 1,
         "dly-sidechain": 1
-    },
-    "SAUCE Voiceover": {
+      },
+      "SAUCE Voiceover": {
         "global-in": 53.87,
         "global-out": 53.26,
         "noise-thresh": 28.13,
@@ -4051,8 +4049,8 @@
         "dly-div": 4,
         "rev-sidechain": 1,
         "dly-sidechain": 0
-    },
-    "SAUCE Warm Lows": {
+      },
+      "SAUCE Warm Lows": {
         "global-in": 51.52,
         "global-out": 53.63,
         "noise-thresh": 15.64,
@@ -4105,8 +4103,8 @@
         "dly-div": 16,
         "rev-sidechain": 0,
         "dly-sidechain": 1
-    },
-    "SAUCE Wide Doubler": {
+      },
+      "SAUCE Wide Doubler": {
         "global-in": 51.2,
         "global-out": 45.74,
         "noise-thresh": 15.47,
@@ -4159,1360 +4157,1475 @@
         "dly-div": 16,
         "rev-sidechain": 0,
         "dly-sidechain": 0
+      }
+    };
+    var updated = false;
+    for (var name in saucePresets) {
+      if (!mis_presets[name]) {
+        mis_presets[name] = saucePresets[name];
+        updated = true;
+      }
     }
-};
-                let updated = false;
-                for (let name in saucePresets) {
-                    if (!mis_presets[name]) {
-                        mis_presets[name] = saucePresets[name];
-                        updated = true;
-                    }
-                }
-                
-                if (updated) {
-                    localStorage.setItem('easymix_user_presets', JSON.stringify(mis_presets));
-                }
-                localStorage.setItem('easymix_sauce_presets_loaded', 'true');
-            }
-        } catch (e) {
-            console.error("Failed to load default sauce bank:", e);
-        }
-        // --- END AUTO-POPULATE ---
-    
-        window.addEventListener('DOMContentLoaded', () => {
-            try {
-                if (window.__JUCE__ && window.__JUCE__.backend) {
-                    // Send special parameter to request state initialization from editor
-                    sendParam('ui-ready', 1);
-                }
-            } catch (e) { }
-        });
+    if (updated) {
+      localStorage.setItem('easymix_user_presets', JSON.stringify(mis_presets));
+    }
+    localStorage.setItem('easymix_sauce_presets_loaded', 'true');
+  }
+} catch (e) {
+  console.error("Failed to load default sauce bank:", e);
+}
+// --- END AUTO-POPULATE ---
 
-        // ──────────────────────────────────────────────────────────
-        //  WAVEFORM GENERATOR (Realtime RMS)
-        // ──────────────────────────────────────────────────────────
-        const bars = document.getElementById('wf-bars');
-        const NUM_BARS = 30;
-        const wfHistory = new Array(NUM_BARS).fill(0);
+window.addEventListener('DOMContentLoaded', function () {
+  try {
+    if (window.__JUCE__ && window.__JUCE__.backend) {
+      // Send special parameter to request state initialization from editor
+      sendParam('ui-ready', 1);
+    }
+  } catch (e) {}
+});
 
-        // Initialize empty bars
-        for (let i = 0; i < NUM_BARS; i++) {
-            const s = document.createElement('span');
-            s.style.height = '0%';
-            bars.appendChild(s);
-        }
+// ──────────────────────────────────────────────────────────
+//  WAVEFORM GENERATOR (Realtime RMS)
+// ──────────────────────────────────────────────────────────
+var bars = document.getElementById('wf-bars');
+var NUM_BARS = 30;
+var wfHistory = new Array(NUM_BARS).fill(0);
 
-        function updateWaveform(rms) {
-            let val = rms * 400; // scale
-            if (val > 100) val = 100;
+// Initialize empty bars
+for (var i = 0; i < NUM_BARS; i++) {
+  var s = document.createElement('span');
+  s.style.height = '0%';
+  bars.appendChild(s);
+}
+function updateWaveform(rms) {
+  var val = rms * 400; // scale
+  if (val > 100) val = 100;
+  wfHistory.push(val);
+  wfHistory.shift();
+  var spans = bars.children;
+  for (var _i = 0; _i < NUM_BARS; _i++) {
+    spans[_i].style.height = wfHistory[_i] + '%';
+  }
+}
 
-            wfHistory.push(val);
-            wfHistory.shift();
+// Subscribe to JUCE RMS events
+try {
+  if (window.__JUCE__ && window.__JUCE__.backend) {
+    window.__JUCE__.backend.addEventListener('audio-rms', function (rms) {
+      var val = typeof rms === 'object' && rms !== null ? rms.value || rms.message || 0 : rms;
+      if (typeof val === 'number') {
+        updateWaveform(val);
+      }
+    });
+  } else {
+    // Fallback animation for browser preview
+    setInterval(function () {
+      return updateWaveform(Math.random() * 0.2);
+    }, 100);
+  }
+} catch (e) {}
 
-            const spans = bars.children;
-            for (let i = 0; i < NUM_BARS; i++) {
-                spans[i].style.height = wfHistory[i] + '%';
-            }
-        }
+// ──────────────────────────────────────────────────────────
+//  DYNAMIC GRAPHIC VISUALIZERS
+// ──────────────────────────────────────────────────────────
 
-        // Subscribe to JUCE RMS events
-        try {
-            if (window.__JUCE__ && window.__JUCE__.backend) {
-                window.__JUCE__.backend.addEventListener('audio-rms', (rms) => {
-                    let val = (typeof rms === 'object' && rms !== null) ? (rms.value || rms.message || 0) : rms;
-                    if (typeof val === 'number') {
-                        updateWaveform(val);
-                    }
-                });
-            } else {
-                // Fallback animation for browser preview
-                setInterval(() => updateWaveform(Math.random() * 0.2), 100);
-            }
-        } catch (e) { }
+// 1. Stereo Field Visualizer (spreads dots L and R based on Width)
+function updateStereoVisualizer(widthVal) {
+  var leftDot = document.getElementById('stereo-l');
+  var rightDot = document.getElementById('stereo-r');
+  if (leftDot && rightDot) {
+    // Map 0-100 to 0px - 35px spread
+    var px = widthVal / 100 * 35;
+    leftDot.style.transform = `translate(${-px}px, ${-5 + px * 0.08}px)`;
+    rightDot.style.transform = `translate(${px}px, ${-5 + px * 0.08}px)`;
+  }
+}
 
-        // ──────────────────────────────────────────────────────────
-        //  DYNAMIC GRAPHIC VISUALIZERS
-        // ──────────────────────────────────────────────────────────
+// 2. Endless Smile Face animation (smile curves up with Intensity)
+function updateEndlessSmile(intensityVal) {
+  var path = document.getElementById('smile-path');
+  var svg = document.getElementById('smile-svg');
+  if (path) {
+    // Map 0-100: 0 -> sad, 50 -> neutral, 100 -> happy
+    var factor = (intensityVal - 50) / 50;
+    var startY = 60 - factor * 10;
+    var endY = 60 - factor * 10;
+    var ctrlY = 60 + factor * 20;
+    path.setAttribute('d', `M 32 ${startY} Q 50 ${ctrlY} 68 ${endY}`);
 
-        // 1. Stereo Field Visualizer (spreads dots L and R based on Width)
-        function updateStereoVisualizer(widthVal) {
-            const leftDot = document.getElementById('stereo-l');
-            const rightDot = document.getElementById('stereo-r');
-            if (leftDot && rightDot) {
-                // Map 0-100 to 0px - 35px spread
-                const px = (widthVal / 100) * 35;
-                leftDot.style.transform = `translate(${-px}px, ${-5 + (px * 0.08)}px)`;
-                rightDot.style.transform = `translate(${px}px, ${-5 + (px * 0.08)}px)`;
-            }
-        }
+    // Dynamically scale/color-glow the face as it gets intense
+    if (svg) {
+      var scale = 1.0 + intensityVal / 100 * 0.1;
+      svg.style.transform = `scale(${scale})`;
+      svg.style.filter = `drop-shadow(0 0 ${3 + intensityVal * 0.05}px rgba(255,55,95,${0.4 + intensityVal * 0.003}))`;
+      path.setAttribute('stroke', `hsl(${345 + intensityVal * 0.1}, 100%, ${60 + intensityVal * 0.1}%)`);
+    }
+  }
+}
 
-        // 2. Endless Smile Face animation (smile curves up with Intensity)
-        function updateEndlessSmile(intensityVal) {
-            const path = document.getElementById('smile-path');
-            const svg = document.getElementById('smile-svg');
-            if (path) {
-                // Map 0-100: 0 -> sad, 50 -> neutral, 100 -> happy
-                const factor = (intensityVal - 50) / 50; 
-                
-                const startY = 60 - factor * 10;
-                const endY = 60 - factor * 10;
-                const ctrlY = 60 + factor * 20;
+// 3. Pitch Pro dynamic visualizer
+function updatePitchProCanvas() {
+  var canvas = document.getElementById('pitch-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width = canvas.offsetWidth;
+  var h = canvas.height = canvas.offsetHeight;
+  if (w === 0 || h === 0) return;
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = '#30d158';
+  ctx.lineWidth = 1.5;
+  var pitchKnob = document.querySelector('[data-id="fx-pitch-val"]');
+  var formantKnob = document.querySelector('[data-id="fx-formant-val"]');
+  var mixKnob = document.querySelector('[data-id="fx-pitch-mix"]');
+  if (!pitchKnob || !formantKnob || !mixKnob) return;
+  var pitch = (parseFloat(pitchKnob.dataset.val || 50) - 50) * 0.24; // semitones (-12 to +12)
+  var formant = (parseFloat(formantKnob.dataset.val || 50) - 50) * 0.24;
+  var mix = parseFloat(mixKnob.dataset.val || 100) / 100;
 
-                path.setAttribute('d', `M 32 ${startY} Q 50 ${ctrlY} 68 ${endY}`);
+  // Draw dual shifting rings (Vocal Bender/AlterBoy style)
+  var cx = w / 2;
+  var cy = h / 2;
+  var baseRadius = Math.min(w, h) * 0.28;
 
-                // Dynamically scale/color-glow the face as it gets intense
-                if (svg) {
-                    const scale = 1.0 + (intensityVal / 100) * 0.1;
-                    svg.style.transform = `scale(${scale})`;
-                    svg.style.filter = `drop-shadow(0 0 ${3 + intensityVal * 0.05}px rgba(255,55,95,${0.4 + intensityVal * 0.003}))`;
-                    path.setAttribute('stroke', `hsl(${345 + intensityVal * 0.1}, 100%, ${60 + intensityVal * 0.1}%)`);
-                }
-            }
-        }
+  // Outer circle reacts to Pitch
+  ctx.beginPath();
+  ctx.arc(cx, cy, baseRadius + pitch * 2, 0, 2 * Math.PI);
+  ctx.strokeStyle = `rgba(48, 209, 88, ${0.1 + mix * 0.35})`;
+  ctx.lineWidth = 4;
+  ctx.stroke();
 
-        // 3. Pitch Pro dynamic visualizer
-        function updatePitchProCanvas() {
-            const canvas = document.getElementById('pitch-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const w = canvas.width = canvas.offsetWidth;
-            const h = canvas.height = canvas.offsetHeight;
-            if (w === 0 || h === 0) return;
+  // Inner circle reacts to Formant
+  ctx.beginPath();
+  ctx.arc(cx, cy, baseRadius * 0.6 + formant * 1.5, 0, 2 * Math.PI);
+  ctx.strokeStyle = `rgba(48, 209, 88, ${0.2 + mix * 0.65})`;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
 
-            ctx.clearRect(0, 0, w, h);
-            ctx.strokeStyle = '#30d158';
-            ctx.lineWidth = 1.5;
+  // Draw crosshair lines showing pitch/formant deviation
+  ctx.beginPath();
+  ctx.moveTo(cx - 20, cy);
+  ctx.lineTo(cx + 20, cy);
+  ctx.moveTo(cx, cy - 20);
+  ctx.lineTo(cx, cy + 20);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
 
-            const pitchKnob = document.querySelector('[data-id="fx-pitch-val"]');
-            const formantKnob = document.querySelector('[data-id="fx-formant-val"]');
-            const mixKnob = document.querySelector('[data-id="fx-pitch-mix"]');
-            if (!pitchKnob || !formantKnob || !mixKnob) return;
+  // Dev dot
+  ctx.beginPath();
+  ctx.arc(cx + formant * 2.2, cy - pitch * 2.2, 4, 0, 2 * Math.PI);
+  ctx.fillStyle = '#30d158';
+  ctx.shadowColor = '#30d158';
+  ctx.shadowBlur = 6;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
 
-            const pitch = (parseFloat(pitchKnob.dataset.val || 50) - 50) * 0.24; // semitones (-12 to +12)
-            const formant = (parseFloat(formantKnob.dataset.val || 50) - 50) * 0.24;
-            const mix = parseFloat(mixKnob.dataset.val || 100) / 100;
+// 4. Bitcrusher dynamic canvas drawing (Arturia style active Sci-fi waves)
+var coldfireAnimPhase = 0;
+function updateBitcrusherCanvas() {
+  var canvas = document.getElementById('bit-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width = canvas.offsetWidth;
+  var h = canvas.height = canvas.offsetHeight;
+  if (w === 0 || h === 0) return;
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = '#64d2ff';
+  ctx.lineWidth = 2.0;
+  var amtKnob = document.querySelector('[data-id="fx-coldfire-amount"]');
+  if (!amtKnob) return;
+  var amount = parseFloat(amtKnob.dataset.val || 0) / 100;
 
-            // Draw dual shifting rings (Vocal Bender/AlterBoy style)
-            const cx = w / 2;
-            const cy = h / 2;
-            const baseRadius = Math.min(w, h) * 0.28;
+  // Active foldback waves distortion drawing
+  var segments = 120;
+  ctx.beginPath();
+  for (var _i2 = 0; _i2 <= segments; _i2++) {
+    var x = _i2 / segments * w;
+    var normX = _i2 / segments * 2 - 1; // -1 to 1
 
-            // Outer circle reacts to Pitch
-            ctx.beginPath();
-            ctx.arc(cx, cy, baseRadius + pitch * 2, 0, 2 * Math.PI);
-            ctx.strokeStyle = `rgba(48, 209, 88, ${0.1 + mix * 0.35})`;
-            ctx.lineWidth = 4;
-            ctx.stroke();
+    // Sine with frequency foldback
+    var sineY = Math.sin(normX * (Math.PI * 2.5 + amount * 12.0) + coldfireAnimPhase);
 
-            // Inner circle reacts to Formant
-            ctx.beginPath();
-            ctx.arc(cx, cy, baseRadius * 0.6 + formant * 1.5, 0, 2 * Math.PI);
-            ctx.strokeStyle = `rgba(48, 209, 88, ${0.2 + mix * 0.65})`;
-            ctx.lineWidth = 2.5;
-            ctx.stroke();
+    // Coldfire style clipping & foldback distortion
+    if (amount > 0.1) {
+      var fold = Math.sin(sineY * (1.0 + amount * 4.0));
+      sineY = fold * (1.0 - amount * 0.3);
+    }
+    var y = h / 2 + sineY * (h * 0.38);
+    if (_i2 === 0) ctx.moveTo(x, y);else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
 
-            // Draw crosshair lines showing pitch/formant deviation
-            ctx.beginPath();
-            ctx.moveTo(cx - 20, cy);
-            ctx.lineTo(cx + 20, cy);
-            ctx.moveTo(cx, cy - 20);
-            ctx.lineTo(cx, cy + 20);
-            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
+// Animate Coldfire wave
+function animateColdfire() {
+  var amtKnob = document.querySelector('[data-id="fx-coldfire-amount"]');
+  if (amtKnob) {
+    var amount = parseFloat(amtKnob.dataset.val || 0) / 100;
+    if (amount > 0.02) {
+      coldfireAnimPhase += 0.03 + amount * 0.12;
+      updateBitcrusherCanvas();
+    }
+  }
+  requestAnimationFrame(animateColdfire);
+}
+requestAnimationFrame(animateColdfire);
 
-            // Dev dot
-            ctx.beginPath();
-            ctx.arc(cx + formant * 2.2, cy - pitch * 2.2, 4, 0, 2 * Math.PI);
-            ctx.fillStyle = '#30d158';
-            ctx.shadowColor = '#30d158';
-            ctx.shadowBlur = 6;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-        }
+// 5. Phone filter response curve canvas drawing
+function updatePhoneCanvas() {
+  var canvas = document.getElementById('phone-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var w = canvas.width = canvas.offsetWidth;
+  var h = canvas.height = canvas.offsetHeight;
+  if (w === 0 || h === 0) return;
+  ctx.clearRect(0, 0, w, h);
+  ctx.strokeStyle = '#ffd60a';
+  ctx.lineWidth = 2.0;
+  var amtKnob = document.querySelector('[data-id="fx-phone-amount"]');
+  if (!amtKnob) return;
+  var amountVal = parseFloat(amtKnob.dataset.val || 0);
+  var cx = w / 2;
+  var maxBandWidth = w * 0.9;
+  var minBandWidth = w * 0.15;
+  var currentBandWidth = maxBandWidth - amountVal / 100 * (maxBandWidth - minBandWidth);
+  var leftEdge = cx - currentBandWidth / 2;
+  var rightEdge = cx + currentBandWidth / 2;
+  ctx.beginPath();
+  for (var x = 0; x <= w; x += 2) {
+    var gain = 1.0;
+    if (x < leftEdge) {
+      gain = Math.exp(-(leftEdge - x) * 0.15);
+    } else if (x > rightEdge) {
+      gain = Math.exp(-(x - rightEdge) * 0.15);
+    }
+    var y = h - 10 - gain * (h - 25);
+    if (x === 0) ctx.moveTo(x, y);else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
 
-        // 4. Bitcrusher dynamic canvas drawing (Arturia style active Sci-fi waves)
-        let coldfireAnimPhase = 0;
-        function updateBitcrusherCanvas() {
-            const canvas = document.getElementById('bit-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const w = canvas.width = canvas.offsetWidth;
-            const h = canvas.height = canvas.offsetHeight;
-            if (w === 0 || h === 0) return;
+// Trigger visualizer updates based on parameter changes
+function updateVisualizerFromParam(id, val) {
+  if (id === 'stereo-width') {
+    updateStereoVisualizer(val);
+  } else if (id === 'fx-endless-amount') {
+    updateEndlessSmile(val);
+  } else if (id === 'fx-coldfire-amount') {
+    updateBitcrusherCanvas();
+  } else if (id === 'fx-phone-amount') {
+    updatePhoneCanvas();
+  } else if (id === 'fx-pitch-val' || id === 'fx-formant-val' || id === 'fx-pitch-mix') {
+    updatePitchProCanvas();
+  } else if (id === 'noise-thresh') {
+    var line = document.getElementById('thresh-line');
+    if (line) line.style.top = 100 - val + '%';
+  }
+}
 
-            ctx.clearRect(0, 0, w, h);
-            ctx.strokeStyle = '#64d2ff';
-            ctx.lineWidth = 2.0;
+// ──────────────────────────────────────────────────────────
+//  KNOB RENDERING (Canvas arc)
+// ──────────────────────────────────────────────────────────
+var MIN_ANG = -135 * Math.PI / 180;
+var MAX_ANG = 135 * Math.PI / 180;
+function drawKnob(knob) {
+  var val = parseFloat(knob.dataset.val || 0);
+  var accentHex = '#' + (knob.dataset.accent || 'ffffff');
+  var size = 38;
+  if (knob.classList.contains('xl')) size = 44;else if (knob.classList.contains('md')) size = 34;else if (knob.classList.contains('sm')) size = 24;
+  var dpr = window.devicePixelRatio || 1;
+  var isBipolar = knob.dataset.bipolar === 'true';
+  var canvas = knob.querySelector('canvas');
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    knob.appendChild(canvas);
+  }
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  var ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, size, size);
+  var cx = size / 2,
+    cy = size / 2;
+  var r = size / 2 - 3;
 
-            const amtKnob = document.querySelector('[data-id="fx-coldfire-amount"]');
-            if (!amtKnob) return;
+  // Track (empty arc)
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, MIN_ANG - Math.PI / 2, MAX_ANG - Math.PI / 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.stroke();
 
-            const amount = parseFloat(amtKnob.dataset.val || 0) / 100;
+  // Fill arc (colored by value)
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = accentHex;
+  if (isBipolar) {
+    // center is 50
+    var centerAng = (MIN_ANG + MAX_ANG) / 2;
+    var currentAng = MIN_ANG + val / 100 * (MAX_ANG - MIN_ANG);
+    ctx.beginPath();
+    var counterclockwise = currentAng < centerAng;
+    ctx.arc(cx, cy, r, centerAng - Math.PI / 2, currentAng - Math.PI / 2, counterclockwise);
+    ctx.shadowColor = accentHex;
+    ctx.shadowBlur = Math.abs(val - 50) > 2 ? 4 : 0;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  } else {
+    if (val > 0) {
+      var fillEnd = MIN_ANG + val / 100 * (MAX_ANG - MIN_ANG);
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, MIN_ANG - Math.PI / 2, fillEnd - Math.PI / 2);
+      ctx.shadowColor = accentHex;
+      ctx.shadowBlur = 4;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
 
-            // Active foldback waves distortion drawing
-            const segments = 120;
-            ctx.beginPath();
-            for (let i = 0; i <= segments; i++) {
-                const x = (i / segments) * w;
-                const normX = (i / segments) * 2 - 1; // -1 to 1
+  // Indicator dot
+  var indicatorAngle = MIN_ANG + val / 100 * (MAX_ANG - MIN_ANG) - Math.PI / 2;
+  var ir = r - 5;
+  var ix = cx + ir * Math.cos(indicatorAngle);
+  var iy = cy + ir * Math.sin(indicatorAngle);
+  ctx.beginPath();
+  ctx.arc(ix, iy, 1.8, 0, Math.PI * 2);
+  var hasActiveVal = isBipolar ? Math.abs(val - 50) > 1 : val > 0;
+  ctx.fillStyle = hasActiveVal ? accentHex : 'rgba(255,255,255,0.3)';
+  ctx.shadowColor = accentHex;
+  ctx.shadowBlur = hasActiveVal ? 5 : 0;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+}
+function setKnobVal(knob, val) {
+  val = Math.max(0, Math.min(100, val));
+  knob.dataset.val = val;
+  drawKnob(knob);
 
-                // Sine with frequency foldback
-                let sineY = Math.sin(normX * (Math.PI * 2.5 + amount * 12.0) + coldfireAnimPhase);
+  // Sync noise gate thresh-line
+  if (knob.dataset.id === 'noise-thresh') {
+    document.getElementById('thresh-line').style.top = 100 - val + '%';
+  }
 
-                // Coldfire style clipping & foldback distortion
-                if (amount > 0.1) {
-                    const fold = Math.sin(sineY * (1.0 + amount * 4.0));
-                    sineY = fold * (1.0 - amount * 0.3);
-                }
+  // Update dB label for global-in / global-out
+  if (knob.dataset.id === 'global-in' || knob.dataset.id === 'global-out') {
+    var db = (val - 50) / 50 * 24.0;
+    var dbStr = (db >= 0 ? '+' : '') + db.toFixed(1) + ' dB';
+    var span = document.getElementById('db-' + knob.dataset.id);
+    if (span) span.textContent = dbStr;
+  } else if (knob.dataset.id === 'stereo-vol' || knob.dataset.id === 'rev-vol' || knob.dataset.id === 'dly-vol') {
+    var _db = val / 100 * 24.0;
+    var _dbStr = _db === 0 ? '0.0 dB' : '+' + _db.toFixed(1) + ' dB';
+    var _span = document.getElementById('db-' + knob.dataset.id);
+    if (_span) _span.textContent = _dbStr;
+  } else if (knob.dataset.id === 'sat-tape' || knob.dataset.id === 'desser' || knob.dataset.id === 'dly-fdbk' || knob.dataset.id === 'fx-pitch-mix' || knob.dataset.id === 'stereo-width' || knob.dataset.id === 'comp-amount') {
+    var _span2 = document.getElementById('db-' + knob.dataset.id);
+    if (_span2) _span2.textContent = Math.round(val) + ' %';
+  } else if (knob.dataset.id === 'fx-pitch-val' || knob.dataset.id === 'fx-formant-val') {
+    var pval = (val - 50) / 50 * 12.0; // -12 to +12
+    var pvalStr = (pval > 0 ? '+' : '') + pval.toFixed(1);
+    var _span3 = document.getElementById('db-' + knob.dataset.id);
+    if (_span3) _span3.textContent = pvalStr;
+  }
+  updateVisualizerFromParam(knob.dataset.id, val);
+  sendParam(knob.dataset.id, val);
+}
 
-                const y = h / 2 + sineY * (h * 0.38);
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            ctx.stroke();
-        }
+// ──────────────────────────────────────────────────────────
+//  INIT ALL KNOBS
+// ──────────────────────────────────────────────────────────
+document.querySelectorAll('.knob').forEach(function (knob) {
+  setTimeout(function () {
+    return drawKnob(knob);
+  }, 0);
+  var startY, startVal;
+  knob.addEventListener('mousedown', function (e) {
+    e.preventDefault();
+    startY = e.clientY;
+    startVal = parseFloat(knob.dataset.val || 0);
+    document.body.style.cursor = 'ns-resize';
+    function onMove(e) {
+      var dy = startY - e.clientY; // up = positive
+      setKnobVal(knob, startVal + dy * 0.75);
+    }
+    function onUp() {
+      document.body.style.cursor = '';
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
 
-        // Animate Coldfire wave
-        function animateColdfire() {
-            const amtKnob = document.querySelector('[data-id="fx-coldfire-amount"]');
-            if (amtKnob) {
-                const amount = parseFloat(amtKnob.dataset.val || 0) / 100;
-                if (amount > 0.02) {
-                    coldfireAnimPhase += 0.03 + amount * 0.12;
-                    updateBitcrusherCanvas();
-                }
-            }
-            requestAnimationFrame(animateColdfire);
-        }
-        requestAnimationFrame(animateColdfire);
+  // Double-click → reset to 0 (or 50 if it's center-detent or bipolar)
+  knob.addEventListener('dblclick', function () {
+    var isCenter = knob.dataset.bipolar === 'true' || knob.dataset.id === 'rider-target' || knob.dataset.id === 'fx-phone-freq' || knob.dataset.id === 'fx-endless-filter' || knob.dataset.id === 'global-in' || knob.dataset.id === 'global-out';
+    var resetVal = isCenter ? 50 : 0;
+    setKnobVal(knob, resetVal);
+  });
 
-        // 5. Phone filter response curve canvas drawing
-        function updatePhoneCanvas() {
-            const canvas = document.getElementById('phone-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const w = canvas.width = canvas.offsetWidth;
-            const h = canvas.height = canvas.offsetHeight;
-            if (w === 0 || h === 0) return;
+  // Right-click → reset to 0/50
+  knob.addEventListener('contextmenu', function (e) {
+    e.preventDefault();
+    var isCenter = knob.dataset.bipolar === 'true' || knob.dataset.id === 'rider-target' || knob.dataset.id === 'fx-phone-freq' || knob.dataset.id === 'fx-endless-filter' || knob.dataset.id === 'global-in' || knob.dataset.id === 'global-out';
+    var resetVal = isCenter ? 50 : 0;
+    setKnobVal(knob, resetVal);
+  });
+});
 
-            ctx.clearRect(0, 0, w, h);
-            ctx.strokeStyle = '#ffd60a';
-            ctx.lineWidth = 2.0;
+// Redraw on resize
+window.addEventListener('resize', function () {
+  // Escalar visualmente toda la interfaz de acuerdo al tamaño de ventana base (1000x530)
+  var scale = Math.min(window.innerWidth / 1000, window.innerHeight / 530);
+  document.body.style.zoom = scale;
+  document.querySelectorAll('.knob').forEach(drawKnob);
+  updateBitcrusherCanvas();
+  updatePhoneCanvas();
+  updatePitchProCanvas();
+});
 
-            const amtKnob = document.querySelector('[data-id="fx-phone-amount"]');
-            if (!amtKnob) return;
+// ──────────────────────────────────────────────────────────
+//  BUTTONS & TOGGLES
+// ──────────────────────────────────────────────────────────
+function modeBtn(btn, paramId, value) {
+  var siblings = btn.parentElement.querySelectorAll('.btn');
+  siblings.forEach(function (b) {
+    return b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  sendParam(paramId, value);
+}
+function delayDiv(btn, div) {
+  var siblings = btn.parentElement.querySelectorAll('.btn');
+  siblings.forEach(function (b) {
+    return b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  sendParam('dly-div', div);
+}
+var moduleState = {};
+function toggleModule(paramId, moduleKey) {
+  moduleState[moduleKey] = !moduleState[moduleKey];
 
-            const amountVal = parseFloat(amtKnob.dataset.val || 0);
+  // Update local status visual triggers
+  if (moduleKey === 'fx-flutter') {
+    flutterOn = moduleState[moduleKey];
+  }
+  var led = document.getElementById('led-' + moduleKey);
+  if (led) {
+    led.classList.toggle('off', !moduleState[moduleKey]);
+    var mod = led.closest('.module');
+    if (mod) mod.classList.toggle('bypassed', !moduleState[moduleKey]);
+  }
+  sendParam(paramId, moduleState[moduleKey] ? 1 : 0);
+}
 
-            const cx = w / 2;
-            const maxBandWidth = w * 0.9;
-            const minBandWidth = w * 0.15;
-            const currentBandWidth = maxBandWidth - (amountVal / 100) * (maxBandWidth - minBandWidth);
-            
-            const leftEdge = cx - currentBandWidth / 2;
-            const rightEdge = cx + currentBandWidth / 2;
+// Module ON/OFF initial states
+['noise', 'lows', 'boxy', 'desser', 'comp', 'pres', 'sat', 'air', 'stereo', 'rev', 'dly', 'fx-coldfire', 'fx-phone', 'fx-endless', 'fx-flutter', 'fx-pitch'].forEach(function (k) {
+  moduleState[k] = true;
+});
+moduleState['rider'] = true; // default rider on
+flutterOn = true;
 
-            ctx.beginPath();
-            for (let x = 0; x <= w; x += 2) {
-                let gain = 1.0;
-                
-                if (x < leftEdge) {
-                    gain = Math.exp(-(leftEdge - x) * 0.15);
-                } else if (x > rightEdge) {
-                    gain = Math.exp(-(x - rightEdge) * 0.15);
-                }
-                
-                const y = (h - 10) - (gain * (h - 25));
-                if (x === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            }
-            ctx.stroke();
-        }
+// ──────────────────────────────────────────────────────────
+//  STATE SYNCHRONIZATION BRIDGE (init-params)
+// ──────────────────────────────────────────────────────────
+try {
+  if (window.__JUCE__ && window.__JUCE__.backend) {
+    window.__JUCE__.backend.addEventListener('init-params', function (params) {
+      if (!params) return;
 
-        // Trigger visualizer updates based on parameter changes
-        function updateVisualizerFromParam(id, val) {
-            if (id === 'stereo-width') {
-                updateStereoVisualizer(val);
-            } else if (id === 'fx-endless-amount') {
-                updateEndlessSmile(val);
-            } else if (id === 'fx-coldfire-amount') {
-                updateBitcrusherCanvas();
-            } else if (id === 'fx-phone-amount') {
-                updatePhoneCanvas();
-            } else if (id === 'fx-pitch-val' || id === 'fx-formant-val' || id === 'fx-pitch-mix') {
-                updatePitchProCanvas();
-            } else if (id === 'noise-thresh') {
-                const line = document.getElementById('thresh-line');
-                if (line) line.style.top = (100 - val) + '%';
-            }
-        }
-
-        // ──────────────────────────────────────────────────────────
-        //  KNOB RENDERING (Canvas arc)
-        // ──────────────────────────────────────────────────────────
-        const MIN_ANG = -135 * Math.PI / 180;
-        const MAX_ANG = 135 * Math.PI / 180;
-
-        function drawKnob(knob) {
-            const val = parseFloat(knob.dataset.val || 0);
-            const accentHex = '#' + (knob.dataset.accent || 'ffffff');
-            
-            let size = 38;
-            if (knob.classList.contains('xl')) size = 44;
-            else if (knob.classList.contains('md')) size = 34;
-            else if (knob.classList.contains('sm')) size = 24;
-
-            const dpr = window.devicePixelRatio || 1;
-            const isBipolar = knob.dataset.bipolar === 'true';
-
-            let canvas = knob.querySelector('canvas');
-            if (!canvas) {
-                canvas = document.createElement('canvas');
-                knob.appendChild(canvas);
-            }
-            canvas.width = size * dpr;
-            canvas.height = size * dpr;
-            canvas.style.width = size + 'px';
-            canvas.style.height = size + 'px';
-
-            const ctx = canvas.getContext('2d');
-            ctx.scale(dpr, dpr);
-            ctx.clearRect(0, 0, size, size);
-
-            const cx = size / 2, cy = size / 2;
-            const r = size / 2 - 3;
-
-            // Track (empty arc)
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, MIN_ANG - Math.PI / 2, MAX_ANG - Math.PI / 2);
-            ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-            ctx.lineWidth = 2.5;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-
-            // Fill arc (colored by value)
-            ctx.lineWidth = 2.5;
-            ctx.lineCap = 'round';
-            ctx.strokeStyle = accentHex;
-
-            if (isBipolar) {
-                // center is 50
-                const centerAng = (MIN_ANG + MAX_ANG) / 2;
-                const currentAng = MIN_ANG + (val / 100) * (MAX_ANG - MIN_ANG);
-
-                ctx.beginPath();
-                const counterclockwise = currentAng < centerAng;
-                ctx.arc(cx, cy, r, centerAng - Math.PI / 2, currentAng - Math.PI / 2, counterclockwise);
-                ctx.shadowColor = accentHex;
-                ctx.shadowBlur = Math.abs(val - 50) > 2 ? 4 : 0;
-                ctx.stroke();
-                ctx.shadowBlur = 0;
-            } else {
-                if (val > 0) {
-                    const fillEnd = MIN_ANG + (val / 100) * (MAX_ANG - MIN_ANG);
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, r, MIN_ANG - Math.PI / 2, fillEnd - Math.PI / 2);
-                    ctx.shadowColor = accentHex;
-                    ctx.shadowBlur = 4;
-                    ctx.stroke();
-                    ctx.shadowBlur = 0;
-                }
-            }
-            
-            // Indicator dot
-            const indicatorAngle = MIN_ANG + (val / 100) * (MAX_ANG - MIN_ANG) - Math.PI / 2;
-            const ir = r - 5;
-            const ix = cx + ir * Math.cos(indicatorAngle);
-            const iy = cy + ir * Math.sin(indicatorAngle);
-
-            ctx.beginPath();
-            ctx.arc(ix, iy, 1.8, 0, Math.PI * 2);
-
-            const hasActiveVal = isBipolar ? Math.abs(val - 50) > 1 : val > 0;
-            ctx.fillStyle = hasActiveVal ? accentHex : 'rgba(255,255,255,0.3)';
-            ctx.shadowColor = accentHex;
-            ctx.shadowBlur = hasActiveVal ? 5 : 0;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-        }
-
-        function setKnobVal(knob, val) {
-            val = Math.max(0, Math.min(100, val));
-            knob.dataset.val = val;
-            drawKnob(knob);
-
-            // Sync noise gate thresh-line
-            if (knob.dataset.id === 'noise-thresh') {
-                document.getElementById('thresh-line').style.top = (100 - val) + '%';
-            }
-
-            // Update dB label for global-in / global-out
-            if (knob.dataset.id === 'global-in' || knob.dataset.id === 'global-out') {
-                let db = ((val - 50) / 50) * 24.0;
-                let dbStr = (db >= 0 ? '+' : '') + db.toFixed(1) + ' dB';
-                let span = document.getElementById('db-' + knob.dataset.id);
-                if (span) span.textContent = dbStr;
-            } else if (knob.dataset.id === 'stereo-vol' || knob.dataset.id === 'rev-vol' || knob.dataset.id === 'dly-vol') {
-                let db = (val / 100) * 24.0;
-                let dbStr = db === 0 ? '0.0 dB' : '+' + db.toFixed(1) + ' dB';
-                let span = document.getElementById('db-' + knob.dataset.id);
-                if (span) span.textContent = dbStr;
-            } else if (knob.dataset.id === 'sat-tape' || knob.dataset.id === 'desser' || knob.dataset.id === 'dly-fdbk' || knob.dataset.id === 'fx-pitch-mix' || knob.dataset.id === 'stereo-width' || knob.dataset.id === 'comp-amount') {
-                let span = document.getElementById('db-' + knob.dataset.id);
-                if (span) span.textContent = Math.round(val) + ' %';
-            } else if (knob.dataset.id === 'fx-pitch-val' || knob.dataset.id === 'fx-formant-val') {
-                let pval = ((val - 50) / 50) * 12.0; // -12 to +12
-                let pvalStr = (pval > 0 ? '+' : '') + pval.toFixed(1);
-                let span = document.getElementById('db-' + knob.dataset.id);
-                if (span) span.textContent = pvalStr;
-            }
-
-            updateVisualizerFromParam(knob.dataset.id, val);
-            sendParam(knob.dataset.id, val);
-        }
-
-        // ──────────────────────────────────────────────────────────
-        //  INIT ALL KNOBS
-        // ──────────────────────────────────────────────────────────
-        document.querySelectorAll('.knob').forEach(knob => {
-            setTimeout(() => drawKnob(knob), 0);
-
-            let startY, startVal;
-
-            knob.addEventListener('mousedown', e => {
-                e.preventDefault();
-                startY = e.clientY;
-                startVal = parseFloat(knob.dataset.val || 0);
-
-                document.body.style.cursor = 'ns-resize';
-
-                function onMove(e) {
-                    const dy = startY - e.clientY;  // up = positive
-                    setKnobVal(knob, startVal + dy * 0.75);
-                }
-                function onUp() {
-                    document.body.style.cursor = '';
-                    document.removeEventListener('mousemove', onMove);
-                    document.removeEventListener('mouseup', onUp);
-                }
-                document.addEventListener('mousemove', onMove);
-                document.addEventListener('mouseup', onUp);
-            });
-
-            // Double-click → reset to 0 (or 50 if it's center-detent or bipolar)
-            knob.addEventListener('dblclick', () => {
-                const isCenter = knob.dataset.bipolar === 'true' ||
-                    knob.dataset.id === 'rider-target' ||
-                    knob.dataset.id === 'fx-phone-freq' ||
-                    knob.dataset.id === 'fx-endless-filter' ||
-                    knob.dataset.id === 'global-in' ||
-                    knob.dataset.id === 'global-out';
-                const resetVal = isCenter ? 50 : 0;
-                setKnobVal(knob, resetVal);
-            });
-
-            // Right-click → reset to 0/50
-            knob.addEventListener('contextmenu', e => {
-                e.preventDefault();
-                const isCenter = knob.dataset.bipolar === 'true' ||
-                    knob.dataset.id === 'rider-target' ||
-                    knob.dataset.id === 'fx-phone-freq' ||
-                    knob.dataset.id === 'fx-endless-filter' ||
-                    knob.dataset.id === 'global-in' ||
-                    knob.dataset.id === 'global-out';
-                const resetVal = isCenter ? 50 : 0;
-                setKnobVal(knob, resetVal);
-            });
-        });
-
-        // Redraw on resize
-        window.addEventListener('resize', () => {
-            // Escalar visualmente toda la interfaz de acuerdo al tamaño de ventana base (1000x530)
-            const scale = Math.min(window.innerWidth / 1000, window.innerHeight / 530);
-            document.body.style.zoom = scale;
-            
-            document.querySelectorAll('.knob').forEach(drawKnob);
-            updateBitcrusherCanvas();
-            updatePhoneCanvas();
-            updatePitchProCanvas();
-        });
-
-        // ──────────────────────────────────────────────────────────
-        //  BUTTONS & TOGGLES
-        // ──────────────────────────────────────────────────────────
-        function modeBtn(btn, paramId, value) {
-            const siblings = btn.parentElement.querySelectorAll('.btn');
-            siblings.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            sendParam(paramId, value);
+      // Loop through all properties in the object
+      for (var [id, value] of Object.entries(params)) {
+        // 1. Check if it's the tab selector
+        if (id === 'active-tab') {
+          switchTab(value > 0.5 ? 'effects' : 'mix');
+          continue;
         }
 
-        function delayDiv(btn, div) {
-            const siblings = btn.parentElement.querySelectorAll('.btn');
-            siblings.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            sendParam('dly-div', div);
+        // 2. Check if it's a knob
+        var knob = document.querySelector(`.knob[data-id="${id}"]`);
+        if (knob) {
+          knob.dataset.val = value;
+          drawKnob(knob);
+          updateVisualizerFromParam(id, value);
+          if (id === 'global-in' || id === 'global-out') {
+            var db = (value - 50) / 50 * 24.0;
+            var dbStr = (db >= 0 ? '+' : '') + db.toFixed(1) + ' dB';
+            var span = document.getElementById('db-' + id);
+            if (span) span.textContent = dbStr;
+          } else if (id === 'stereo-vol' || id === 'rev-vol' || id === 'dly-vol') {
+            var _db2 = value / 100 * 24.0;
+            var _dbStr2 = _db2 === 0 ? '0.0 dB' : '+' + _db2.toFixed(1) + ' dB';
+            var _span4 = document.getElementById('db-' + id);
+            if (_span4) _span4.textContent = _dbStr2;
+          } else if (id === 'sat-tape' || id === 'desser' || id === 'dly-fdbk' || id === 'fx-pitch-mix' || id === 'stereo-width' || id === 'comp-amount') {
+            var _span5 = document.getElementById('db-' + id);
+            if (_span5) _span5.textContent = Math.round(value) + ' %';
+          }
+          continue;
         }
 
-        const moduleState = {};
-        function toggleModule(paramId, moduleKey) {
-            moduleState[moduleKey] = !moduleState[moduleKey];
-
-            // Update local status visual triggers
-            if (moduleKey === 'fx-flutter') {
-                flutterOn = moduleState[moduleKey];
-            }
-
-            const led = document.getElementById('led-' + moduleKey);
-            if (led) {
-                led.classList.toggle('off', !moduleState[moduleKey]);
-                const mod = led.closest('.module');
-                if (mod) mod.classList.toggle('bypassed', !moduleState[moduleKey]);
-            }
-            sendParam(paramId, moduleState[moduleKey] ? 1 : 0);
-        }
-
-        // Module ON/OFF initial states
-        ['noise', 'lows', 'boxy', 'desser', 'comp', 'pres', 'sat', 'air', 'stereo', 'rev', 'dly',
-            'fx-coldfire', 'fx-phone', 'fx-endless', 'fx-flutter', 'fx-pitch'].forEach(k => {
-                moduleState[k] = true;
-            });
-        moduleState['rider'] = true; // default rider on
-        flutterOn = true;
-
-        // ──────────────────────────────────────────────────────────
-        //  STATE SYNCHRONIZATION BRIDGE (init-params)
-        // ──────────────────────────────────────────────────────────
-        try {
-            if (window.__JUCE__ && window.__JUCE__.backend) {
-                window.__JUCE__.backend.addEventListener('init-params', (params) => {
-                    if (!params) return;
-
-                    // Loop through all properties in the object
-                    for (const [id, value] of Object.entries(params)) {
-                        // 1. Check if it's the tab selector
-                        if (id === 'active-tab') {
-                            switchTab(value > 0.5 ? 'effects' : 'mix');
-                            continue;
-                        }
-
-                        // 2. Check if it's a knob
-                        const knob = document.querySelector(`.knob[data-id="${id}"]`);
-                        if (knob) {
-                            knob.dataset.val = value;
-                            drawKnob(knob);
-                            updateVisualizerFromParam(id, value);
-
-                            if (id === 'global-in' || id === 'global-out') {
-                                let db = ((value - 50) / 50) * 24.0;
-                                let dbStr = (db >= 0 ? '+' : '') + db.toFixed(1) + ' dB';
-                                let span = document.getElementById('db-' + id);
-                                if (span) span.textContent = dbStr;
-                            } else if (id === 'stereo-vol' || id === 'rev-vol' || id === 'dly-vol') {
-                                let db = (value / 100) * 24.0;
-                                let dbStr = db === 0 ? '0.0 dB' : '+' + db.toFixed(1) + ' dB';
-                                let span = document.getElementById('db-' + id);
-                                if (span) span.textContent = dbStr;
-                            } else if (id === 'sat-tape' || id === 'desser' || id === 'dly-fdbk' || id === 'fx-pitch-mix' || id === 'stereo-width' || id === 'comp-amount') {
-                                let span = document.getElementById('db-' + id);
-                                if (span) span.textContent = Math.round(value) + ' %';
-                            }
-                            continue;
-                        }
-
-                        // 3. Check if it's a bypass LED status
-                        const ledMap = {
-                            'noise-on': 'noise',
-                            'rider-on': 'rider',
-                            'cut-lows-on': 'lows',
-                            'cut-boxy-on': 'boxy',
-                            'desser-on': 'desser',
-                            'comp-on': 'comp',
-                            'pres-on': 'pres',
-                            'sat-on': 'sat',
-                            'air-on': 'air',
-                            'stereo-on': 'stereo',
-                            'rev-on': 'rev',
-                            'dly-on': 'dly',
-                            'fx-coldfire-on': 'fx-coldfire',
-                            'fx-phone-on': 'fx-phone',
-                            'fx-endless-on': 'fx-endless',
-                            'fx-flutter-on': 'fx-flutter',
-                            'fx-pitch-on': 'fx-pitch'
-                        };
-
-                        if (ledMap[id]) {
-                            const moduleKey = ledMap[id];
-                            moduleState[moduleKey] = (value > 0.5);
-                            if (moduleKey === 'fx-flutter') {
-                                flutterOn = moduleState[moduleKey];
-                            }
-                            const led = document.getElementById('led-' + moduleKey);
-                            if (led) {
-                                led.classList.toggle('off', !moduleState[moduleKey]);
-                                const mod = led.closest('.module');
-                                if (mod) mod.classList.toggle('bypassed', !moduleState[moduleKey]);
-                            }
-                            continue;
-                        }
-
-                        // 4. Check if it's a button mode
-                        const buttonMap = {
-                            'rider-mode': 'btn-rider-mode-',
-                            'comp-type': 'btn-comp-type-',
-                            'comp-mode': 'btn-comp-mode-',
-                            'air-mode': 'btn-air-mode-',
-                            'stereo-mode': 'btn-stereo-mode-',
-                            'voice-type': 'btn-voice-'
-                        };
-
-                        if (buttonMap[id]) {
-                            const btnPrefix = buttonMap[id];
-                            const activeVal = Math.round(value);
-                            const btn = document.getElementById(btnPrefix + activeVal);
-                            if (btn) {
-                                const siblings = btn.parentElement.querySelectorAll('.btn');
-                                siblings.forEach(b => b.classList.remove('active'));
-                                btn.classList.add('active');
-                            }
-                            continue;
-                        }
-
-                        // 5. Check if it's the delay division
-                        if (id === 'dly-div') {
-                            const activeVal = Math.round(value);
-                            const btn = document.getElementById('btn-dly-div-' + activeVal);
-                            if (btn) {
-                                const siblings = btn.parentElement.querySelectorAll('.btn');
-                                siblings.forEach(b => b.classList.remove('active'));
-                                btn.classList.add('active');
-                            }
-                            continue;
-                        }
-
-                        // 6. Sidechain buttons
-                        if (id === 'rev-sidechain') {
-                            const btn = document.getElementById('btn-rev-sidechain');
-                            if (btn) btn.classList.toggle('active', value > 0.5);
-                            continue;
-                        }
-                        if (id === 'dly-sidechain') {
-                            const btn = document.getElementById('btn-dly-sidechain');
-                            if (btn) btn.classList.toggle('active', value > 0.5);
-                            continue;
-                        }
-                    }
-                });
-            }
-        } catch (e) { }
-
-        function hasJuceBridge() {
-            if (window.__JUCE__ && window.__JUCE__.backend) return true;
-            if (window.chrome && window.chrome.webview) return true;
-            return false;
-        }
-
-        const jucePromises = new Map();
-        if (window.__JUCE__ && window.__JUCE__.backend) {
-            window.__JUCE__.backend.addEventListener("__juce__complete", (ev) => {
-                const pid = ev.promiseId;
-                if (jucePromises.has(pid)) {
-                    jucePromises.get(pid).resolve(ev.result);
-                    jucePromises.delete(pid);
-                }
-            });
-        }
-
-        function callNative(funcName, ...args) {
-            try {
-                if (window.__JUCE__ && window.__JUCE__.backend) {
-                    const promiseId = Math.floor(Math.random() * 1000000000);
-                    const p = new Promise(resolve => {
-                        jucePromises.set(promiseId, { resolve });
-                    });
-                    window.__JUCE__.backend.emitEvent("__juce__invoke", {
-                        name: funcName,
-                        params: args,
-                        resultId: promiseId
-                    });
-                    return p;
-                }
-
-                if (window.chrome && window.chrome.webview) {
-                    window.chrome.webview.postMessage(JSON.stringify({ func: funcName, args: args }));
-                    return Promise.resolve();
-                }
-            } catch(err){}
-
-            return Promise.resolve();
-        }
-
-        // Initial draw of visualizers
-        setTimeout(() => {
-            if (!hasJuceBridge()) {
-                updateStereoVisualizer(0);
-                updateEndlessSmile(0);
-                updateBitcrusherCanvas();
-                updatePhoneCanvas();
-                updatePitchProCanvas();
-            } else {
-                updateAllVisualizers();
-            }
-        }, 200);
-
-        // ──────────────────────────────────────────────────────────
-        //  PRESET MODAL LOGIC
-        // ──────────────────────────────────────────────────────────
-        function openPresetModal() {
-            const modal = document.getElementById('preset-modal');
-            if (modal) {
-                modal.style.display = 'flex';
-                renderPresetLists();
-            }
-        }
-
-        function closePresetModal() {
-            const modal = document.getElementById('preset-modal');
-            if (modal) modal.style.display = 'none';
-        }
-
-        // ──────────────────────────────────────────────────────────
-        //  LICENSE / ACTIVATION MODAL FUNCTIONS
-        // ──────────────────────────────────────────────────────────
-        function openActivationModal(cancellable = false) {
-            const modal = document.getElementById('activation-modal');
-            if (modal) {
-                modal.style.display = 'flex';
-                const closeBtn = document.getElementById('btn-close-activation');
-                if (closeBtn) closeBtn.style.display = cancellable ? 'block' : 'none';
-            }
-        }
-
-        function closeActivationModal() {
-            const modal = document.getElementById('activation-modal');
-            if (modal) modal.style.display = 'none';
-        }
-
-        function closeWelcomeModal() {
-            const modal = document.getElementById('welcome-modal');
-            if (modal) modal.style.display = 'none';
-        }
-
-
-
-        function openExternalURL(url) {
-            if (hasJuceBridge()) {
-                callNative('openURLNative', url);
-            } else {
-                window.open(url, '_blank');
-            }
-        }
-
-        // Generate a persistent device ID as HWID fallback when native bridge can't return it
-        function getOrCreateDeviceId() {
-            let id = localStorage.getItem('offszn_device_id');
-            if (!id) {
-                id = 'web-' + Math.random().toString(36).substring(2) + '-' + Date.now().toString(36);
-                try { localStorage.setItem('offszn_device_id', id); } catch (e) { }
-            }
-            return id;
-        }
-
-        function submitSerial() {
-            const serial = document.getElementById('serial-input').value.trim();
-            if (!serial) {
-                showCustomAlert("Activar Licencia", "Por favor, ingresa tu Serial Key de OFFSZN.", '🔑');
-                return;
-            }
-
-            const btn = document.getElementById('act-submit-btn');
-            if (btn) btn.classList.add('btn-loading');
-
-            if (hasJuceBridge()) {
-                callNative("getHardwareId").then((hwid) => {
-                    const effectiveHwid = hwid || getOrCreateDeviceId();
-                    fetch(`${apiBase}/api/plugin/activate`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ serial_key: serial, hwid: effectiveHwid, plugin_name: "Easy Mix" })
-                    }).then(res => res.json()).then(response => {
-                        if (btn) btn.classList.remove('btn-loading');
-                        if (response && response.success) {
-                            try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
-                            callNative("setLicenseStatus", true, serial);
-                            closeActivationModal();
-                            const welcome = document.getElementById('welcome-modal');
-                            if (welcome) welcome.style.display = 'flex';
-                        } else {
-                            callNative("setLicenseStatus", false);
-                            const friendlyMsg = getFriendlyLicenseErrorMessage(serial, response.error || "Licencia inválida");
-                            showCustomAlert("Error de Activación", friendlyMsg, '❌');
-                        }
-                    }).catch(e => {
-                        if (btn) btn.classList.remove('btn-loading');
-                        showCustomAlert("Error de Conexión", "No se pudo conectar al servidor. Activa tu conexión a Internet para validar la licencia.", '❌');
-                    });
-                });
-            } else {
-                // Browser preview mode
-                setTimeout(() => {
-                    if (btn) btn.classList.remove('btn-loading');
-                    console.log("[Preview] Mock verify serial:", serial);
-                    closeActivationModal();
-                    const welcome = document.getElementById('welcome-modal');
-                    if (welcome) welcome.style.display = 'flex';
-                }, 1000);
-            }
-        }
-
-        function getHwidAsync() {
-            if (window.OFFSZN_HWID) {
-                return Promise.resolve(window.OFFSZN_HWID);
-            }
-            if (hasJuceBridge()) {
-                return callNative("getHardwareId").then(hwid => hwid || getOrCreateDeviceId());
-            }
-            return Promise.resolve(getOrCreateDeviceId());
-        }
-
-        setTimeout(() => {
-            if (hasJuceBridge()) {
-                callNative("getLicenseState").then((state) => {
-                    const isValid = state && state.isValid;
-                    const serial = (state && state.serial || "").trim();
-
-                    if (serial) {
-                        const isTrial = serial.toUpperCase().startsWith("TRIAL-");
-                        if (isTrial) {
-                            // Silently verify the trial key online
-                            getHwidAsync().then(hwid => {
-                                fetch(`${apiBase}/api/plugin/activate`, {
-                                    method: "POST",
-                                    headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
-                                }).then(res => res.json()).then(response => {
-                                    if (response && response.success) {
-                                        // Still valid trial! Activate for this session
-                                        callNative("setLicenseStatus", true, serial);
-                                        try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
-                                    } else {
-                                        // Expired trial
-                                        triggerLicenseExpired(
-                                            "Prueba Expirada",
-                                            "Tu periodo de prueba de 24 horas ha expirado. Adquiere una licencia FULL en offszn.lat para seguir usando Easy Mix."
-                                        );
-                                    }
-                                }).catch(() => {
-                                    // Offline / Server error
-                                    triggerLicenseOffline(
-                                        "Sin Conexión",
-                                        "El plugin requiere conexión a Internet para validar tu periodo de prueba. Conéctate para continuar."
-                                    );
-                                });
-                            });
-                        } else {
-                            // FULL Key: trust local validation completely, no internet check
-                            if (isValid) {
-                                try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
-                            } else {
-                                callNative("setLicenseStatus", false);
-                                openActivationModal(false);
-                            }
-                        }
-                    } else {
-                        // No serial at all -> ask for activation
-                        callNative("setLicenseStatus", false);
-                        openActivationModal(false);
-                    }
-                });
-            } else {
-                openActivationModal(true);
-            }
-        }, 100);
-
-        // ─────────────────────────────────────────────────────────────
-        //  HARD LOCK: show the expired overlay (cannot be dismissed)
-        // ─────────────────────────────────────────────────────────────
-        function triggerLicenseExpired(title, subtitle) {
-            // 1) Cut audio via C++
-            callNative("setLicenseStatus", false);
-            // 2) Clear localStorage so next open also asks for serial
-            try { localStorage.removeItem('offszn_serial'); } catch (e) { }
-            // Limpiar también el archivo de licencia física guardada en C++
-            if (hasJuceBridge()) {
-                callNative("saveLicense", "");
-            }
-            // 3) Show hard-lock overlay
-            const overlay = document.getElementById('license-expired-overlay');
-            if (overlay) {
-                document.getElementById('exp-title').textContent = title || 'Activar Licencia';
-                document.getElementById('exp-subtitle').textContent = subtitle || 'Ingresa tu serial gratis o el full para activarlo.';
-                
-                // Ensure input and buttons are visible
-                const input = document.getElementById('exp-serial-input');
-                const btn = document.getElementById('exp-submit-btn');
-                const btnSec = document.getElementById('exp-link-btn');
-                const retryBtn = document.getElementById('exp-retry-btn');
-                
-                if (input) input.style.display = 'block';
-                if (btn) btn.style.display = 'block';
-                if (btnSec) btnSec.style.display = 'block';
-                if (retryBtn) retryBtn.style.display = 'none';
-                
-                overlay.classList.add('active');
-            }
-        }
-
-        function triggerLicenseOffline(title, subtitle) {
-            // 1) Cut audio via C++
-            callNative("setLicenseStatus", false);
-            
-            // 2) Show hard-lock overlay with offline messaging
-            const overlay = document.getElementById('license-expired-overlay');
-            if (overlay) {
-                document.getElementById('exp-title').textContent = title || 'Sin Conexión';
-                document.getElementById('exp-subtitle').textContent = subtitle || 'El plugin requiere conexión a Internet.';
-                
-                // Hide input and normal buttons
-                const input = document.getElementById('exp-serial-input');
-                const btn = document.getElementById('exp-submit-btn');
-                const btnSec = document.getElementById('exp-link-btn');
-                if (input) input.style.display = 'none';
-                if (btn) btn.style.display = 'none';
-                if (btnSec) btnSec.style.display = 'none';
-                
-                // Show a retry/reload button
-                let retryBtn = document.getElementById('exp-retry-btn');
-                if (!retryBtn) {
-                    retryBtn = document.createElement('button');
-                    retryBtn.id = 'exp-retry-btn';
-                    retryBtn.className = 'exp-btn';
-                    retryBtn.textContent = 'Reintentar Conexión';
-                    retryBtn.onclick = () => {
-                        window.location.reload();
-                    };
-                    overlay.appendChild(retryBtn);
-                }
-                retryBtn.style.display = 'block';
-                overlay.classList.add('active');
-            }
-        }
-
-        function submitExpiredSerial() {
-            const input = document.getElementById('exp-serial-input');
-            if (!input || !input.value.trim()) return;
-            const serial = input.value.trim();
-
-            const btn = document.getElementById('exp-submit-btn');
-            if (btn) btn.classList.add('btn-loading');
-
-            getHwidAsync().then(hwid => {
-                fetch(`${apiBase}/api/plugin/activate`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Mix" })
-                }).then(res => res.json()).then(response => {
-                    if (btn) btn.classList.remove('btn-loading');
-                    if (response && response.success) {
-                        callNative("setLicenseStatus", true, serial);
-                        // Dismiss overlay
-                        const overlay = document.getElementById('license-expired-overlay');
-                        if (overlay) overlay.classList.remove('active');
-                        input.value = '';
-                        // Update badge
-                        // Saved and activated successfully
-                        callNative("saveLicense", serial);
-                    } else {
-                        input.style.borderColor = '#ff453a';
-                        setTimeout(() => { input.style.borderColor = ''; }, 2000);
-                        const friendlyMsg = getFriendlyLicenseErrorMessage(serial, response.error || "Licencia inválida");
-                        showCustomAlert("Error de Activación", friendlyMsg, '❌');
-                    }
-                }).catch(() => {
-                    if (btn) btn.classList.remove('btn-loading');
-                    showCustomAlert("Error de Conexión", "No se pudo conectar al servidor. Activa tu conexión a Internet para validar la licencia.", '❌');
-                });
-            });
-        }
-
-
-
-        const factoryPresets = {
-            "init": {
-                "global-in": 50, "global-out": 50,
-                "noise-thresh": 15, "noise-amount": 0, "noise-on": 1,
-                "rider-target": 50, "rider-on": 1, "cut-lows": 0, "cut-lows-on": 1,
-                "cut-boxy": 0, "cut-boxy-on": 1, "desser": 0, "desser-on": 1,
-                "comp-amount": 0, "comp-on": 1, "comp-type": 0, "comp-mode": 1, "pres-mid": 0, "pres-high": 0, "pres-on": 1,
-                "sat-tape": 0, "sat-on": 1, "air-band": 0, "air-on": 1,
-                "stereo-width": 0, "stereo-vol": 0, "stereo-on": 1,
-                "rev-length": 0, "rev-vol": 0, "rev-lc": 0, "rev-hc": 100, "rev-on": 1,
-                "dly-fdbk": 0, "dly-vol": 0, "dly-on": 1,
-                "fx-bitcrusher-mix": 0, "fx-phone-mix": 0, "fx-endless-vol": 0, "fx-flutter-mix": 0
-            },
-            "agresivo": { "global-in": 50, "global-out": 55.25, "noise-thresh": 37, "noise-amount": 100, "rider-target": 100, "cut-lows": 88, "cut-boxy": 13.5, "desser": 73, "comp-amount": 9, "comp-type": 0, "comp-mode": 1, "pres-mid": 3.75, "pres-high": 100, "sat-tape": 9, "air-band": 100, "stereo-width": 100, "stereo-vol": 31.75, "rev-length": 60.75, "rev-vol": 15.25, "rev-lc": 8.25, "rev-hc": 100, "dly-fdbk": 26.25, "dly-vol": 9.25, "fx-bitcrusher-bits": 16, "fx-bitcrusher-down": 1, "fx-bitcrusher-mix": 100, "fx-phone-freq": 28.5, "fx-phone-q": 100, "fx-phone-mix": 100, "fx-endless-intensity": 11.5, "fx-endless-filter": 68.5, "fx-endless-vol": 25.5, "fx-flutter-rate": 0, "fx-flutter-fdbk": 0, "fx-flutter-mix": 0, "noise-on": 1, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 1, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1 },
-            "normal": {
-                "global-in": 50, "global-out": 50, "noise-thresh": 20, "noise-amount": 50, "rider-target": 50, "cut-lows": 50, "cut-boxy": 20, "desser": 35, "comp-amount": 25, "comp-type": 0, "comp-mode": 1, "pres-mid": 15, "pres-high": 25, "sat-tape": 15, "air-band": 30, "stereo-width": 25, "stereo-vol": 15, "rev-length": 30, "rev-vol": 20, "rev-lc": 20, "rev-hc": 80, "dly-fdbk": 15, "dly-vol": 10, "noise-on": 0, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 0, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
-            },
-            "modo pro": {
-                "global-in": 50, "global-out": 52, "noise-thresh": 40, "noise-amount": 80, "rider-target": 80, "cut-lows": 75, "cut-boxy": 40, "desser": 60, "comp-amount": 40, "comp-type": 0, "comp-mode": 1, "pres-mid": 25, "pres-high": 50, "sat-tape": 30, "air-band": 60, "stereo-width": 50, "stereo-vol": 25, "rev-length": 45, "rev-vol": 25, "rev-lc": 30, "rev-hc": 90, "dly-fdbk": 25, "dly-vol": 15, "noise-on": 0, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 0, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
-            },
-            "offszn trial": {
-                "global-in": 50, "global-out": 50, "noise-thresh": 0, "noise-amount": 0, "rider-target": 40, "cut-lows": 30, "cut-boxy": 10, "desser": 20, "comp-amount": 0, "comp-type": 0, "comp-mode": 1, "pres-mid": 10, "pres-high": 15, "sat-tape": 10, "air-band": 20, "stereo-width": 10, "stereo-vol": 10, "rev-length": 20, "rev-vol": 15, "rev-lc": 10, "rev-hc": 90, "dly-fdbk": 10, "dly-vol": 5, "noise-on": 0, "rider-on": 1, "lows-on": 1, "boxy-on": 1, "desser-on": 1, "comp-on": 0, "pres-on": 1, "sat-on": 1, "air-on": 1, "stereo-on": 1, "rev-on": 1, "dly-on": 1
-            }
+        // 3. Check if it's a bypass LED status
+        var ledMap = {
+          'noise-on': 'noise',
+          'rider-on': 'rider',
+          'cut-lows-on': 'lows',
+          'cut-boxy-on': 'boxy',
+          'desser-on': 'desser',
+          'comp-on': 'comp',
+          'pres-on': 'pres',
+          'sat-on': 'sat',
+          'air-on': 'air',
+          'stereo-on': 'stereo',
+          'rev-on': 'rev',
+          'dly-on': 'dly',
+          'fx-coldfire-on': 'fx-coldfire',
+          'fx-phone-on': 'fx-phone',
+          'fx-endless-on': 'fx-endless',
+          'fx-flutter-on': 'fx-flutter',
+          'fx-pitch-on': 'fx-pitch'
         };
-
-        function loadPreset(presetName) {
-            console.log("Loading preset:", presetName);
-            const p = factoryPresets[presetName];
-            if (p) {
-                for (let key in p) {
-                    let val = p[key];
-
-                    // 1. Send to backend
-                    sendParam(key, val);
-
-                    // 2. Update Knobs visually
-                    let knob = document.querySelector(`.knob[data-id="${key}"]`);
-                    if (knob) {
-                        knob.dataset.val = val;
-                        drawKnob(knob);
-                    }
-
-                    // 3. Update LEDs
-                    if (key.endsWith('-on')) {
-                        let moduleKey = key.replace('-on', '');
-                        let led = document.getElementById('led-' + moduleKey);
-                        if (led) {
-                            led.classList.toggle('off', val < 0.5);
-                            moduleState[moduleKey] = (val > 0.5);
-                        }
-                    }
-                }
-            }
-            closePresetModal();
+        if (ledMap[id]) {
+          var moduleKey = ledMap[id];
+          moduleState[moduleKey] = value > 0.5;
+          if (moduleKey === 'fx-flutter') {
+            flutterOn = moduleState[moduleKey];
+          }
+          var led = document.getElementById('led-' + moduleKey);
+          if (led) {
+            led.classList.toggle('off', !moduleState[moduleKey]);
+            var mod = led.closest('.module');
+            if (mod) mod.classList.toggle('bypassed', !moduleState[moduleKey]);
+          }
+          continue;
         }
 
-        function saveCurrentState() {
-            showCustomPrompt("Guardar Preset", "Escribe el nombre de tu preset:").then(name => {
-                if (!name || !name.trim()) return;
-                name = name.trim();
-
-                let state = {};
-                document.querySelectorAll('.knob').forEach(k => {
-                    if (k.dataset.id) {
-                        state[k.dataset.id] = parseFloat(k.dataset.val) || 0;
-                    }
-                });
-
-                ['noise', 'rider', 'lows', 'boxy', 'desser', 'comp', 'pres', 'sat', 'air', 'stereo', 'rev', 'dly',
-                    'fx-coldfire', 'fx-phone', 'fx-endless', 'fx-pitch'].forEach(k => {
-                        state[k + '-on'] = moduleState[k] ? 1 : 0;
-                    });
-
-                // Save active button group states (button modes)
-                const buttonModes = ['rider-mode', 'comp-type', 'comp-mode', 'air-mode', 'stereo-mode', 'voice-type'];
-                buttonModes.forEach(id => {
-                    let activeBtn = document.querySelector(`.btn.active[onclick*="${id}"]`);
-                    if (activeBtn) {
-                        let match = activeBtn.getAttribute('onclick').match(/,\s*([\d\.]+)\s*\)/);
-                        if (match) {
-                            state[id] = parseFloat(match[1]);
-                        }
-                    } else {
-                        // Fallback default values for removed button groups
-                        if (id === 'comp-type') state[id] = 0;
-                        if (id === 'comp-mode') state[id] = 1;
-                    }
-                });
-
-                // Save delay division
-                let activeDly = document.querySelector(`.btn.active[onclick*="delayDiv"]`);
-                if (activeDly) {
-                    let match = activeDly.getAttribute('onclick').match(/,\s*(\d+)\s*\)/);
-                    if (match) state['dly-div'] = parseInt(match[1]);
-                }
-
-                // Save sidechain statuses
-                state['rev-sidechain'] = document.getElementById('btn-rev-sidechain')?.classList.contains('active') ? 1 : 0;
-                state['dly-sidechain'] = document.getElementById('btn-dly-sidechain')?.classList.contains('active') ? 1 : 0;
-
-                const stateJson = JSON.stringify(state);
-
-                // ── PASO 1: Guardar en localStorage SIEMPRE (sincrónico y confiable) ──
-                try {
-                    let userPresets = {};
-                    try { userPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}'); } catch (e) {}
-                    userPresets[name] = state;
-                    localStorage.setItem('easymix_user_presets', JSON.stringify(userPresets));
-                } catch (e) {
-                    console.warn('localStorage save failed:', e);
-                }
-
-                // ── PASO 2: También intentar guardar via native (respaldo en disco) ──
-                if (hasJuceBridge()) {
-                    try {
-                        callNative("savePresetNative", name, stateJson).catch(() => {});
-                    } catch (e) {}
-                }
-
-                // ── PASO 3: Actualizar la lista inmediatamente (usa localStorage) ──
-                renderPresetLists();
-                showCustomAlert('Preset Guardado', `"${name}" guardado exitosamente. ✅`, '🎛️');
+        // 4. Check if it's a button mode
+        var buttonMap = {
+          'rider-mode': 'btn-rider-mode-',
+          'comp-type': 'btn-comp-type-',
+          'comp-mode': 'btn-comp-mode-',
+          'air-mode': 'btn-air-mode-',
+          'stereo-mode': 'btn-stereo-mode-',
+          'voice-type': 'btn-voice-'
+        };
+        if (buttonMap[id]) {
+          var btnPrefix = buttonMap[id];
+          var activeVal = Math.round(value);
+          var btn = document.getElementById(btnPrefix + activeVal);
+          if (btn) {
+            var siblings = btn.parentElement.querySelectorAll('.btn');
+            siblings.forEach(function (b) {
+              return b.classList.remove('active');
             });
+            btn.classList.add('active');
+          }
+          continue;
         }
 
-        function renderPresetLists() {
-            const listDiv = document.getElementById('user-presets-list');
-            if (!listDiv) return;
-            listDiv.innerHTML = '';
-
-            // ── SIEMPRE leer de localStorage primero (sincrónico, confiable) ──
-            let localPresets = {};
-            try { localPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}'); } catch (e) {}
-            const localKeys = Object.keys(localPresets);
-
-            if (localKeys.length > 0) {
-                buildPresetRows(localKeys, listDiv, false);
-            } else {
-                listDiv.innerHTML = '<span style="font-size:10px; color:var(--dim); font-style:italic; padding-left:5px;">Aún no tienes presets guardados.</span>';
-            }
-        }
-
-        function buildPresetRows(keys, listDiv, isNative) {
-            keys.forEach(name => {
-                const row = document.createElement('div');
-                row.style.display = 'flex';
-                row.style.gap = '6px';
-                row.style.marginBottom = '4px';
-
-                const loadBtn = document.createElement('button');
-                loadBtn.className = 'btn';
-                loadBtn.style.flex = '1';
-                loadBtn.style.padding = '8px';
-                loadBtn.style.textAlign = 'left';
-                loadBtn.innerText = name;
-                loadBtn.onclick = () => {
-                    if (isNative) {
-                        callNative("loadPresetNative", name).then(dataStr => {
-                            if (dataStr) {
-                                try {
-                                    applyPresetState(JSON.parse(dataStr));
-                                } catch (e) { }
-                            }
-                        });
-                    } else {
-                        loadUserPreset(name);
-                    }
-                };
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'btn';
-                deleteBtn.style.padding = '8px 10px';
-                deleteBtn.style.borderColor = 'rgba(255,69,58,0.4)';
-                deleteBtn.style.color = '#ff453a';
-                deleteBtn.innerText = '✕';
-                deleteBtn.onclick = () => {
-                    showCustomAlert("Eliminar Preset", `¿Seguro que deseas eliminar el preset "${name}"?`, '❓', true).then(confirmed => {
-                        if (confirmed) {
-                            if (isNative) {
-                                callNative("deletePresetNative", name).then(() => {
-                                    renderPresetLists();
-                                });
-                            } else {
-                                deleteUserPreset(name);
-                            }
-                        }
-                    });
-                };
-
-                row.appendChild(loadBtn);
-                row.appendChild(deleteBtn);
-                listDiv.appendChild(row);
+        // 5. Check if it's the delay division
+        if (id === 'dly-div') {
+          var _activeVal = Math.round(value);
+          var _btn = document.getElementById('btn-dly-div-' + _activeVal);
+          if (_btn) {
+            var _siblings = _btn.parentElement.querySelectorAll('.btn');
+            _siblings.forEach(function (b) {
+              return b.classList.remove('active');
             });
+            _btn.classList.add('active');
+          }
+          continue;
         }
 
-        function applyPresetState(p) {
-            if (p) {
-                for (let key in p) {
-                    let val = p[key];
-                    sendParam(key, val);
-                    let knob = document.querySelector(`.knob[data-id="${key}"]`);
-                    if (knob) {
-                        knob.dataset.val = val;
-                        drawKnob(knob);
-                        if (key === 'global-in' || key === 'global-out') {
-                            let db = ((val - 50) / 50) * 24.0;
-                            let dbStr = (db >= 0 ? '+' : '') + db.toFixed(1) + ' dB';
-                            let span = document.getElementById('db-' + key);
-                            if (span) span.textContent = dbStr;
-                        } else if (key === 'sat-tape' || key === 'desser' || key === 'dly-fdbk' || key === 'fx-pitch-mix' || key === 'stereo-width' || key === 'comp-amount') {
-                            let span = document.getElementById('db-' + key);
-                            if (span) span.textContent = Math.round(val) + ' %';
-                        }
-                    }
-                    // Also handle buttons/modes if saved in state
-                    if (key === 'dly-div') {
-                        setDelayDiv(val);
-                    }
-                    if (key.endsWith('-on')) {
-                        let moduleKey = key.replace('-on', '');
-                        let led = document.getElementById('led-' + moduleKey);
-                        if (led) {
-                            led.classList.toggle('off', val < 0.5);
-                            moduleState[moduleKey] = (val > 0.5);
-                            const mod = led.closest('.module');
-                            if (mod) mod.classList.toggle('bypassed', val < 0.5);
-                        }
-                    }
-                }
-            }
-            closePresetModal();
+        // 6. Sidechain buttons
+        if (id === 'rev-sidechain') {
+          var _btn2 = document.getElementById('btn-rev-sidechain');
+          if (_btn2) _btn2.classList.toggle('active', value > 0.5);
+          continue;
         }
-
-        function loadUserPreset(name) {
-            let userPresets = {};
-            try {
-                userPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}');
-            } catch (e) { }
-            const p = userPresets[name];
-            applyPresetState(p);
+        if (id === 'dly-sidechain') {
+          var _btn3 = document.getElementById('btn-dly-sidechain');
+          if (_btn3) _btn3.classList.toggle('active', value > 0.5);
+          continue;
         }
-
-        function deleteUserPreset(name) {
-            let userPresets = {};
-            try {
-                userPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}');
-            } catch (e) { }
-            delete userPresets[name];
-            localStorage.setItem('easymix_user_presets', JSON.stringify(userPresets));
-            renderPresetLists();
-        }
-
-        function getFriendlyLicenseErrorMessage(serial, serverError) {
-            const err = (serverError || "").toLowerCase();
-            const key = (serial || "").toUpperCase();
-
-            const isDeviceLimit = err.includes("device") || err.includes("dispositivo") || err.includes("limit") || err.includes("límite") || err.includes("alcanzado");
-
-            if (isDeviceLimit) {
-                return "Límite de dispositivos alcanzado (Máx: 3). Revoca un dispositivo activo en tu cuenta de OFFSZN para poder activar este.";
-            }
-            return serverError || "Licencia inválida. Por favor verifica tu Serial Key.";
-        }
-
-        function showCustomAlert(title, message, icon = '⚠️', showCancel = false) {
-            return new Promise((resolve) => {
-                const modal = document.getElementById('custom-alert-modal');
-                const titleEl = document.getElementById('custom-alert-title');
-                const msgEl = document.getElementById('custom-alert-message');
-                const iconEl = document.getElementById('custom-alert-icon');
-                const btnOk = document.getElementById('custom-alert-btn-ok');
-                const btnCancel = document.getElementById('custom-alert-btn-cancel');
-
-                if (!modal) {
-                    alert(message);
-                    resolve(true);
-                    return;
-                }
-
-                titleEl.textContent = title;
-                msgEl.textContent = message;
-                iconEl.textContent = icon;
-                btnCancel.style.display = showCancel ? 'block' : 'none';
-
-                modal.style.display = 'flex';
-
-                btnOk.onclick = () => {
-                    modal.style.display = 'none';
-                    resolve(true);
-                };
-
-                btnCancel.onclick = () => {
-                    modal.style.display = 'none';
-                    resolve(false);
-                };
-            });
-        }
-
-        function showCustomPrompt(title, text, defaultValue = '') {
-            return new Promise((resolve) => {
-                const modal = document.getElementById('custom-prompt-modal');
-                const titleEl = document.getElementById('custom-prompt-title');
-                const textEl = document.getElementById('custom-prompt-text');
-                const inputEl = document.getElementById('custom-prompt-input');
-                const btnOk = document.getElementById('custom-prompt-btn-ok');
-                const btnCancel = document.getElementById('custom-prompt-btn-cancel');
-
-                if (!modal) {
-                    const res = prompt(text, defaultValue);
-                    resolve(res);
-                    return;
-                }
-
-                titleEl.textContent = title;
-                textEl.textContent = text;
-                inputEl.value = defaultValue;
-                modal.style.display = 'flex';
-                inputEl.focus();
-
-                btnOk.onclick = () => {
-                    modal.style.display = 'none';
-                    resolve(inputEl.value);
-                };
-
-                btnCancel.onclick = () => {
-                    modal.style.display = 'none';
-                    resolve(null);
-                };
-
-                inputEl.onkeydown = (e) => {
-                    if (e.key === 'Enter') {
-                        btnOk.click();
-                    }
-                };
-            });
-        }
-
-        document.addEventListener('contextmenu', event => {
-            // Prevent right click globally
-            event.preventDefault();
+      }
+    });
+  }
+} catch (e) {}
+function hasJuceBridge() {
+  if (window.__JUCE__ && window.__JUCE__.backend) return true;
+  if (window.chrome && window.chrome.webview) return true;
+  return false;
+}
+var jucePromises = new Map();
+if (window.__JUCE__ && window.__JUCE__.backend) {
+  window.__JUCE__.backend.addEventListener("__juce__complete", function (ev) {
+    var pid = ev.promiseId;
+    if (jucePromises.has(pid)) {
+      jucePromises.get(pid).resolve(ev.result);
+      jucePromises.delete(pid);
+    }
+  });
+}
+function callNative(funcName, ...args) {
+  try {
+    if (window.__JUCE__ && window.__JUCE__.backend) {
+      var promiseId = Math.floor(Math.random() * 1000000000);
+      var p = new Promise(function (resolve) {
+        jucePromises.set(promiseId, {
+          resolve
         });
+      });
+      window.__JUCE__.backend.emitEvent("__juce__invoke", {
+        name: funcName,
+        params: args,
+        resultId: promiseId
+      });
+      return p;
+    }
+    if (window.chrome && window.chrome.webview) {
+      window.chrome.webview.postMessage(JSON.stringify({
+        func: funcName,
+        args: args
+      }));
+      return Promise.resolve();
+    }
+  } catch (err) {}
+  return Promise.resolve();
+}
 
-        // DEBUG OVERLAY DISABLED FOR PRODUCTION
-        /*
-        const debugOverlay = document.createElement('div');
-        debugOverlay.style.position = 'absolute';
-        debugOverlay.style.top = '0';
-        debugOverlay.style.left = '0';
-        debugOverlay.style.width = '100%';
-        debugOverlay.style.height = '300px';
-        debugOverlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
-        debugOverlay.style.color = 'lime';
-        debugOverlay.style.zIndex = '999999';
-        debugOverlay.style.overflow = 'auto';
-        debugOverlay.style.fontSize = '14px';
-        debugOverlay.style.pointerEvents = 'none';
-        document.body.appendChild(debugOverlay);
+// Initial draw of visualizers
+setTimeout(function () {
+  if (!hasJuceBridge()) {
+    updateStereoVisualizer(0);
+    updateEndlessSmile(0);
+    updateBitcrusherCanvas();
+    updatePhoneCanvas();
+    updatePitchProCanvas();
+  } else {
+    updateAllVisualizers();
+  }
+}, 200);
 
-        function logDebug(msg) {
-            debugOverlay.innerHTML += msg + '<br>';
+// ──────────────────────────────────────────────────────────
+//  PRESET MODAL LOGIC
+// ──────────────────────────────────────────────────────────
+function openPresetModal() {
+  var modal = document.getElementById('preset-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    renderPresetLists();
+  }
+}
+function closePresetModal() {
+  var modal = document.getElementById('preset-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+// ──────────────────────────────────────────────────────────
+//  LICENSE / ACTIVATION MODAL FUNCTIONS
+// ──────────────────────────────────────────────────────────
+function openActivationModal(cancellable = false) {
+  var modal = document.getElementById('activation-modal');
+  if (modal) {
+    modal.style.display = 'flex';
+    var closeBtn = document.getElementById('btn-close-activation');
+    if (closeBtn) closeBtn.style.display = cancellable ? 'block' : 'none';
+  }
+}
+function closeActivationModal() {
+  var modal = document.getElementById('activation-modal');
+  if (modal) modal.style.display = 'none';
+}
+function closeWelcomeModal() {
+  var modal = document.getElementById('welcome-modal');
+  if (modal) modal.style.display = 'none';
+}
+function openExternalURL(url) {
+  if (hasJuceBridge()) {
+    callNative('openURLNative', url);
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
+// Generate a persistent device ID as HWID fallback when native bridge can't return it
+function getOrCreateDeviceId() {
+  var id = localStorage.getItem('offszn_device_id');
+  if (!id) {
+    id = 'web-' + Math.random().toString(36).substring(2) + '-' + Date.now().toString(36);
+    try {
+      localStorage.setItem('offszn_device_id', id);
+    } catch (e) {}
+  }
+  return id;
+}
+function submitSerial() {
+  var serial = document.getElementById('serial-input').value.trim();
+  if (!serial) {
+    showCustomAlert("Activar Licencia", "Por favor, ingresa tu Serial Key de OFFSZN.", '🔑');
+    return;
+  }
+  var btn = document.getElementById('act-submit-btn');
+  if (btn) btn.classList.add('btn-loading');
+  if (hasJuceBridge()) {
+    callNative("getHardwareId").then(function (hwid) {
+      var effectiveHwid = hwid || getOrCreateDeviceId();
+      fetch(`${apiBase}/api/plugin/activate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          serial_key: serial,
+          hwid: effectiveHwid,
+          plugin_name: "Easy Mix"
+        })
+      }).then(function (res) {
+        return res.json();
+      }).then(function (response) {
+        if (btn) btn.classList.remove('btn-loading');
+        if (response && response.success) {
+          try {
+            localStorage.setItem('offszn_serial', serial);
+          } catch (e) {}
+          callNative("setLicenseStatus", true, serial);
+          closeActivationModal();
+          var welcome = document.getElementById('welcome-modal');
+          if (welcome) welcome.style.display = 'flex';
+        } else {
+          callNative("setLicenseStatus", false);
+          var friendlyMsg = getFriendlyLicenseErrorMessage(serial, response.error || "Licencia inválida");
+          showCustomAlert("Error de Activación", friendlyMsg, '❌');
         }
+      }).catch(function (e) {
+        if (btn) btn.classList.remove('btn-loading');
+        showCustomAlert("Error de Conexión", "No se pudo conectar al servidor. Activa tu conexión a Internet para validar la licencia.", '❌');
+      });
+    });
+  } else {
+    // Browser preview mode
+    setTimeout(function () {
+      if (btn) btn.classList.remove('btn-loading');
+      console.log("[Preview] Mock verify serial:", serial);
+      closeActivationModal();
+      var welcome = document.getElementById('welcome-modal');
+      if (welcome) welcome.style.display = 'flex';
+    }, 1000);
+  }
+}
+function getHwidAsync() {
+  if (window.OFFSZN_HWID) {
+    return Promise.resolve(window.OFFSZN_HWID);
+  }
+  if (hasJuceBridge()) {
+    return callNative("getHardwareId").then(function (hwid) {
+      return hwid || getOrCreateDeviceId();
+    });
+  }
+  return Promise.resolve(getOrCreateDeviceId());
+}
+setTimeout(function () {
+  if (hasJuceBridge()) {
+    callNative("getLicenseState").then(function (state) {
+      var isValid = state && state.isValid;
+      var serial = (state && state.serial || "").trim();
+      if (serial) {
+        var isTrial = serial.toUpperCase().startsWith("TRIAL-");
+        if (isTrial) {
+          // Silently verify the trial key online
+          getHwidAsync().then(function (hwid) {
+            fetch(`${apiBase}/api/plugin/activate`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                serial_key: serial,
+                hwid: hwid,
+                plugin_name: "Easy Mix"
+              })
+            }).then(function (res) {
+              return res.json();
+            }).then(function (response) {
+              if (response && response.success) {
+                // Still valid trial! Activate for this session
+                callNative("setLicenseStatus", true, serial);
+                try {
+                  localStorage.setItem('offszn_serial', serial);
+                } catch (e) {}
+              } else {
+                // Expired trial
+                triggerLicenseExpired("Prueba Expirada", "Tu periodo de prueba de 24 horas ha expirado. Adquiere una licencia FULL en offszn.lat para seguir usando Easy Mix.");
+              }
+            }).catch(function () {
+              // Offline / Server error
+              triggerLicenseOffline("Sin Conexión", "El plugin requiere conexión a Internet para validar tu periodo de prueba. Conéctate para continuar.");
+            });
+          });
+        } else {
+          // FULL Key: trust local validation completely, no internet check
+          if (isValid) {
+            try {
+              localStorage.setItem('offszn_serial', serial);
+            } catch (e) {}
+          } else {
+            callNative("setLicenseStatus", false);
+            openActivationModal(false);
+          }
+        }
+      } else {
+        // No serial at all -> ask for activation
+        callNative("setLicenseStatus", false);
+        openActivationModal(false);
+      }
+    });
+  } else {
+    openActivationModal(true);
+  }
+}, 100);
 
-        setTimeout(() => {
-            logDebug('JUCE check at 500ms:');
-            logDebug('window.__JUCE__: ' + typeof window.__JUCE__);
-            if (window.__JUCE__) {
-                logDebug('Keys in __JUCE__: ' + Object.keys(window.__JUCE__).join(', '));
-            }
-            logDebug('window.getNativeFunction: ' + typeof window.getNativeFunction);
-            if (typeof window.getNativeFunction === 'function') {
-                logDebug('callNative setParam = ' + typeof window.getNativeFunction('setParam'));
-            }
-        }, 500);
-        */
-    </script>
+// ─────────────────────────────────────────────────────────────
+//  HARD LOCK: show the expired overlay (cannot be dismissed)
+// ─────────────────────────────────────────────────────────────
+function triggerLicenseExpired(title, subtitle) {
+  // 1) Cut audio via C++
+  callNative("setLicenseStatus", false);
+  // 2) Clear localStorage so next open also asks for serial
+  try {
+    localStorage.removeItem('offszn_serial');
+  } catch (e) {}
+  // Limpiar también el archivo de licencia física guardada en C++
+  if (hasJuceBridge()) {
+    callNative("saveLicense", "");
+  }
+  // 3) Show hard-lock overlay
+  var overlay = document.getElementById('license-expired-overlay');
+  if (overlay) {
+    document.getElementById('exp-title').textContent = title || 'Activar Licencia';
+    document.getElementById('exp-subtitle').textContent = subtitle || 'Ingresa tu serial gratis o el full para activarlo.';
+
+    // Ensure input and buttons are visible
+    var input = document.getElementById('exp-serial-input');
+    var btn = document.getElementById('exp-submit-btn');
+    var btnSec = document.getElementById('exp-link-btn');
+    var retryBtn = document.getElementById('exp-retry-btn');
+    if (input) input.style.display = 'block';
+    if (btn) btn.style.display = 'block';
+    if (btnSec) btnSec.style.display = 'block';
+    if (retryBtn) retryBtn.style.display = 'none';
+    overlay.classList.add('active');
+  }
+}
+function triggerLicenseOffline(title, subtitle) {
+  // 1) Cut audio via C++
+  callNative("setLicenseStatus", false);
+
+  // 2) Show hard-lock overlay with offline messaging
+  var overlay = document.getElementById('license-expired-overlay');
+  if (overlay) {
+    document.getElementById('exp-title').textContent = title || 'Sin Conexión';
+    document.getElementById('exp-subtitle').textContent = subtitle || 'El plugin requiere conexión a Internet.';
+
+    // Hide input and normal buttons
+    var input = document.getElementById('exp-serial-input');
+    var btn = document.getElementById('exp-submit-btn');
+    var btnSec = document.getElementById('exp-link-btn');
+    if (input) input.style.display = 'none';
+    if (btn) btn.style.display = 'none';
+    if (btnSec) btnSec.style.display = 'none';
+
+    // Show a retry/reload button
+    var retryBtn = document.getElementById('exp-retry-btn');
+    if (!retryBtn) {
+      retryBtn = document.createElement('button');
+      retryBtn.id = 'exp-retry-btn';
+      retryBtn.className = 'exp-btn';
+      retryBtn.textContent = 'Reintentar Conexión';
+      retryBtn.onclick = function () {
+        window.location.reload();
+      };
+      overlay.appendChild(retryBtn);
+    }
+    retryBtn.style.display = 'block';
+    overlay.classList.add('active');
+  }
+}
+function submitExpiredSerial() {
+  var input = document.getElementById('exp-serial-input');
+  if (!input || !input.value.trim()) return;
+  var serial = input.value.trim();
+  var btn = document.getElementById('exp-submit-btn');
+  if (btn) btn.classList.add('btn-loading');
+  getHwidAsync().then(function (hwid) {
+    fetch(`${apiBase}/api/plugin/activate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        serial_key: serial,
+        hwid: hwid,
+        plugin_name: "Easy Mix"
+      })
+    }).then(function (res) {
+      return res.json();
+    }).then(function (response) {
+      if (btn) btn.classList.remove('btn-loading');
+      if (response && response.success) {
+        callNative("setLicenseStatus", true, serial);
+        // Dismiss overlay
+        var overlay = document.getElementById('license-expired-overlay');
+        if (overlay) overlay.classList.remove('active');
+        input.value = '';
+        // Update badge
+        // Saved and activated successfully
+        callNative("saveLicense", serial);
+      } else {
+        input.style.borderColor = '#ff453a';
+        setTimeout(function () {
+          input.style.borderColor = '';
+        }, 2000);
+        var friendlyMsg = getFriendlyLicenseErrorMessage(serial, response.error || "Licencia inválida");
+        showCustomAlert("Error de Activación", friendlyMsg, '❌');
+      }
+    }).catch(function () {
+      if (btn) btn.classList.remove('btn-loading');
+      showCustomAlert("Error de Conexión", "No se pudo conectar al servidor. Activa tu conexión a Internet para validar la licencia.", '❌');
+    });
+  });
+}
+var factoryPresets = {
+  "init": {
+    "global-in": 50,
+    "global-out": 50,
+    "noise-thresh": 15,
+    "noise-amount": 0,
+    "noise-on": 1,
+    "rider-target": 50,
+    "rider-on": 1,
+    "cut-lows": 0,
+    "cut-lows-on": 1,
+    "cut-boxy": 0,
+    "cut-boxy-on": 1,
+    "desser": 0,
+    "desser-on": 1,
+    "comp-amount": 0,
+    "comp-on": 1,
+    "comp-type": 0,
+    "comp-mode": 1,
+    "pres-mid": 0,
+    "pres-high": 0,
+    "pres-on": 1,
+    "sat-tape": 0,
+    "sat-on": 1,
+    "air-band": 0,
+    "air-on": 1,
+    "stereo-width": 0,
+    "stereo-vol": 0,
+    "stereo-on": 1,
+    "rev-length": 0,
+    "rev-vol": 0,
+    "rev-lc": 0,
+    "rev-hc": 100,
+    "rev-on": 1,
+    "dly-fdbk": 0,
+    "dly-vol": 0,
+    "dly-on": 1,
+    "fx-bitcrusher-mix": 0,
+    "fx-phone-mix": 0,
+    "fx-endless-vol": 0,
+    "fx-flutter-mix": 0
+  },
+  "agresivo": {
+    "global-in": 50,
+    "global-out": 55.25,
+    "noise-thresh": 37,
+    "noise-amount": 100,
+    "rider-target": 100,
+    "cut-lows": 88,
+    "cut-boxy": 13.5,
+    "desser": 73,
+    "comp-amount": 9,
+    "comp-type": 0,
+    "comp-mode": 1,
+    "pres-mid": 3.75,
+    "pres-high": 100,
+    "sat-tape": 9,
+    "air-band": 100,
+    "stereo-width": 100,
+    "stereo-vol": 31.75,
+    "rev-length": 60.75,
+    "rev-vol": 15.25,
+    "rev-lc": 8.25,
+    "rev-hc": 100,
+    "dly-fdbk": 26.25,
+    "dly-vol": 9.25,
+    "fx-bitcrusher-bits": 16,
+    "fx-bitcrusher-down": 1,
+    "fx-bitcrusher-mix": 100,
+    "fx-phone-freq": 28.5,
+    "fx-phone-q": 100,
+    "fx-phone-mix": 100,
+    "fx-endless-intensity": 11.5,
+    "fx-endless-filter": 68.5,
+    "fx-endless-vol": 25.5,
+    "fx-flutter-rate": 0,
+    "fx-flutter-fdbk": 0,
+    "fx-flutter-mix": 0,
+    "noise-on": 1,
+    "rider-on": 1,
+    "lows-on": 1,
+    "boxy-on": 1,
+    "desser-on": 1,
+    "comp-on": 1,
+    "pres-on": 1,
+    "sat-on": 1,
+    "air-on": 1,
+    "stereo-on": 1,
+    "rev-on": 1,
+    "dly-on": 1
+  },
+  "normal": {
+    "global-in": 50,
+    "global-out": 50,
+    "noise-thresh": 20,
+    "noise-amount": 50,
+    "rider-target": 50,
+    "cut-lows": 50,
+    "cut-boxy": 20,
+    "desser": 35,
+    "comp-amount": 25,
+    "comp-type": 0,
+    "comp-mode": 1,
+    "pres-mid": 15,
+    "pres-high": 25,
+    "sat-tape": 15,
+    "air-band": 30,
+    "stereo-width": 25,
+    "stereo-vol": 15,
+    "rev-length": 30,
+    "rev-vol": 20,
+    "rev-lc": 20,
+    "rev-hc": 80,
+    "dly-fdbk": 15,
+    "dly-vol": 10,
+    "noise-on": 0,
+    "rider-on": 1,
+    "lows-on": 1,
+    "boxy-on": 1,
+    "desser-on": 1,
+    "comp-on": 0,
+    "pres-on": 1,
+    "sat-on": 1,
+    "air-on": 1,
+    "stereo-on": 1,
+    "rev-on": 1,
+    "dly-on": 1
+  },
+  "modo pro": {
+    "global-in": 50,
+    "global-out": 52,
+    "noise-thresh": 40,
+    "noise-amount": 80,
+    "rider-target": 80,
+    "cut-lows": 75,
+    "cut-boxy": 40,
+    "desser": 60,
+    "comp-amount": 40,
+    "comp-type": 0,
+    "comp-mode": 1,
+    "pres-mid": 25,
+    "pres-high": 50,
+    "sat-tape": 30,
+    "air-band": 60,
+    "stereo-width": 50,
+    "stereo-vol": 25,
+    "rev-length": 45,
+    "rev-vol": 25,
+    "rev-lc": 30,
+    "rev-hc": 90,
+    "dly-fdbk": 25,
+    "dly-vol": 15,
+    "noise-on": 0,
+    "rider-on": 1,
+    "lows-on": 1,
+    "boxy-on": 1,
+    "desser-on": 1,
+    "comp-on": 0,
+    "pres-on": 1,
+    "sat-on": 1,
+    "air-on": 1,
+    "stereo-on": 1,
+    "rev-on": 1,
+    "dly-on": 1
+  },
+  "offszn trial": {
+    "global-in": 50,
+    "global-out": 50,
+    "noise-thresh": 0,
+    "noise-amount": 0,
+    "rider-target": 40,
+    "cut-lows": 30,
+    "cut-boxy": 10,
+    "desser": 20,
+    "comp-amount": 0,
+    "comp-type": 0,
+    "comp-mode": 1,
+    "pres-mid": 10,
+    "pres-high": 15,
+    "sat-tape": 10,
+    "air-band": 20,
+    "stereo-width": 10,
+    "stereo-vol": 10,
+    "rev-length": 20,
+    "rev-vol": 15,
+    "rev-lc": 10,
+    "rev-hc": 90,
+    "dly-fdbk": 10,
+    "dly-vol": 5,
+    "noise-on": 0,
+    "rider-on": 1,
+    "lows-on": 1,
+    "boxy-on": 1,
+    "desser-on": 1,
+    "comp-on": 0,
+    "pres-on": 1,
+    "sat-on": 1,
+    "air-on": 1,
+    "stereo-on": 1,
+    "rev-on": 1,
+    "dly-on": 1
+  }
+};
+function loadPreset(presetName) {
+  console.log("Loading preset:", presetName);
+  var p = factoryPresets[presetName];
+  if (p) {
+    for (var key in p) {
+      var val = p[key];
+
+      // 1. Send to backend
+      sendParam(key, val);
+
+      // 2. Update Knobs visually
+      var knob = document.querySelector(`.knob[data-id="${key}"]`);
+      if (knob) {
+        knob.dataset.val = val;
+        drawKnob(knob);
+      }
+
+      // 3. Update LEDs
+      if (key.endsWith('-on')) {
+        var moduleKey = key.replace('-on', '');
+        var led = document.getElementById('led-' + moduleKey);
+        if (led) {
+          led.classList.toggle('off', val < 0.5);
+          moduleState[moduleKey] = val > 0.5;
+        }
+      }
+    }
+  }
+  closePresetModal();
+}
+function saveCurrentState() {
+  showCustomPrompt("Guardar Preset", "Escribe el nombre de tu preset:").then(function (name) {
+    if (!name || !name.trim()) return;
+    name = name.trim();
+    var state = {};
+    document.querySelectorAll('.knob').forEach(function (k) {
+      if (k.dataset.id) {
+        state[k.dataset.id] = parseFloat(k.dataset.val) || 0;
+      }
+    });
+    ['noise', 'rider', 'lows', 'boxy', 'desser', 'comp', 'pres', 'sat', 'air', 'stereo', 'rev', 'dly', 'fx-coldfire', 'fx-phone', 'fx-endless', 'fx-pitch'].forEach(function (k) {
+      state[k + '-on'] = moduleState[k] ? 1 : 0;
+    });
+
+    // Save active button group states (button modes)
+    var buttonModes = ['rider-mode', 'comp-type', 'comp-mode', 'air-mode', 'stereo-mode', 'voice-type'];
+    buttonModes.forEach(function (id) {
+      var activeBtn = document.querySelector(`.btn.active[onclick*="${id}"]`);
+      if (activeBtn) {
+        var match = activeBtn.getAttribute('onclick').match(/,\s*([\d\.]+)\s*\)/);
+        if (match) {
+          state[id] = parseFloat(match[1]);
+        }
+      } else {
+        // Fallback default values for removed button groups
+        if (id === 'comp-type') state[id] = 0;
+        if (id === 'comp-mode') state[id] = 1;
+      }
+    });
+
+    // Save delay division
+    var activeDly = document.querySelector(`.btn.active[onclick*="delayDiv"]`);
+    if (activeDly) {
+      var match = activeDly.getAttribute('onclick').match(/,\s*(\d+)\s*\)/);
+      if (match) state['dly-div'] = parseInt(match[1]);
+    }
+
+    // Save sidechain statuses
+    state['rev-sidechain'] = document.getElementById('btn-rev-sidechain')?.classList.contains('active') ? 1 : 0;
+    state['dly-sidechain'] = document.getElementById('btn-dly-sidechain')?.classList.contains('active') ? 1 : 0;
+    var stateJson = JSON.stringify(state);
+
+    // ── PASO 1: Guardar en localStorage SIEMPRE (sincrónico y confiable) ──
+    try {
+      var userPresets = {};
+      try {
+        userPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}');
+      } catch (e) {}
+      userPresets[name] = state;
+      localStorage.setItem('easymix_user_presets', JSON.stringify(userPresets));
+    } catch (e) {
+      console.warn('localStorage save failed:', e);
+    }
+
+    // ── PASO 2: También intentar guardar via native (respaldo en disco) ──
+    if (hasJuceBridge()) {
+      try {
+        callNative("savePresetNative", name, stateJson).catch(function () {});
+      } catch (e) {}
+    }
+
+    // ── PASO 3: Actualizar la lista inmediatamente (usa localStorage) ──
+    renderPresetLists();
+    showCustomAlert('Preset Guardado', `"${name}" guardado exitosamente. ✅`, '🎛️');
+  });
+}
+function renderPresetLists() {
+  var listDiv = document.getElementById('user-presets-list');
+  if (!listDiv) return;
+  listDiv.innerHTML = '';
+
+  // ── SIEMPRE leer de localStorage primero (sincrónico, confiable) ──
+  var localPresets = {};
+  try {
+    localPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}');
+  } catch (e) {}
+  var localKeys = Object.keys(localPresets);
+  if (localKeys.length > 0) {
+    buildPresetRows(localKeys, listDiv, false);
+  } else {
+    listDiv.innerHTML = '<span style="font-size:10px; color:var(--dim); font-style:italic; padding-left:5px;">Aún no tienes presets guardados.</span>';
+  }
+}
+function buildPresetRows(keys, listDiv, isNative) {
+  keys.forEach(function (name) {
+    var row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.gap = '6px';
+    row.style.marginBottom = '4px';
+    var loadBtn = document.createElement('button');
+    loadBtn.className = 'btn';
+    loadBtn.style.flex = '1';
+    loadBtn.style.padding = '8px';
+    loadBtn.style.textAlign = 'left';
+    loadBtn.innerText = name;
+    loadBtn.onclick = function () {
+      if (isNative) {
+        callNative("loadPresetNative", name).then(function (dataStr) {
+          if (dataStr) {
+            try {
+              applyPresetState(JSON.parse(dataStr));
+            } catch (e) {}
+          }
+        });
+      } else {
+        loadUserPreset(name);
+      }
+    };
+    var deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn';
+    deleteBtn.style.padding = '8px 10px';
+    deleteBtn.style.borderColor = 'rgba(255,69,58,0.4)';
+    deleteBtn.style.color = '#ff453a';
+    deleteBtn.innerText = '✕';
+    deleteBtn.onclick = function () {
+      showCustomAlert("Eliminar Preset", `¿Seguro que deseas eliminar el preset "${name}"?`, '❓', true).then(function (confirmed) {
+        if (confirmed) {
+          if (isNative) {
+            callNative("deletePresetNative", name).then(function () {
+              renderPresetLists();
+            });
+          } else {
+            deleteUserPreset(name);
+          }
+        }
+      });
+    };
+    row.appendChild(loadBtn);
+    row.appendChild(deleteBtn);
+    listDiv.appendChild(row);
+  });
+}
+function applyPresetState(p) {
+  if (p) {
+    for (var key in p) {
+      var val = p[key];
+      sendParam(key, val);
+      var knob = document.querySelector(`.knob[data-id="${key}"]`);
+      if (knob) {
+        knob.dataset.val = val;
+        drawKnob(knob);
+        if (key === 'global-in' || key === 'global-out') {
+          var db = (val - 50) / 50 * 24.0;
+          var dbStr = (db >= 0 ? '+' : '') + db.toFixed(1) + ' dB';
+          var span = document.getElementById('db-' + key);
+          if (span) span.textContent = dbStr;
+        } else if (key === 'sat-tape' || key === 'desser' || key === 'dly-fdbk' || key === 'fx-pitch-mix' || key === 'stereo-width' || key === 'comp-amount') {
+          var _span6 = document.getElementById('db-' + key);
+          if (_span6) _span6.textContent = Math.round(val) + ' %';
+        }
+      }
+      // Also handle buttons/modes if saved in state
+      if (key === 'dly-div') {
+        setDelayDiv(val);
+      }
+      if (key.endsWith('-on')) {
+        var moduleKey = key.replace('-on', '');
+        var led = document.getElementById('led-' + moduleKey);
+        if (led) {
+          led.classList.toggle('off', val < 0.5);
+          moduleState[moduleKey] = val > 0.5;
+          var mod = led.closest('.module');
+          if (mod) mod.classList.toggle('bypassed', val < 0.5);
+        }
+      }
+    }
+  }
+  closePresetModal();
+}
+function loadUserPreset(name) {
+  var userPresets = {};
+  try {
+    userPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}');
+  } catch (e) {}
+  var p = userPresets[name];
+  applyPresetState(p);
+}
+function deleteUserPreset(name) {
+  var userPresets = {};
+  try {
+    userPresets = JSON.parse(localStorage.getItem('easymix_user_presets') || '{}');
+  } catch (e) {}
+  delete userPresets[name];
+  localStorage.setItem('easymix_user_presets', JSON.stringify(userPresets));
+  renderPresetLists();
+}
+function getFriendlyLicenseErrorMessage(serial, serverError) {
+  var err = (serverError || "").toLowerCase();
+  var key = (serial || "").toUpperCase();
+  var isDeviceLimit = err.includes("device") || err.includes("dispositivo") || err.includes("limit") || err.includes("límite") || err.includes("alcanzado");
+  if (isDeviceLimit) {
+    return "Límite de dispositivos alcanzado (Máx: 3). Revoca un dispositivo activo en tu cuenta de OFFSZN para poder activar este.";
+  }
+  return serverError || "Licencia inválida. Por favor verifica tu Serial Key.";
+}
+function showCustomAlert(title, message, icon = '⚠️', showCancel = false) {
+  return new Promise(function (resolve) {
+    var modal = document.getElementById('custom-alert-modal');
+    var titleEl = document.getElementById('custom-alert-title');
+    var msgEl = document.getElementById('custom-alert-message');
+    var iconEl = document.getElementById('custom-alert-icon');
+    var btnOk = document.getElementById('custom-alert-btn-ok');
+    var btnCancel = document.getElementById('custom-alert-btn-cancel');
+    if (!modal) {
+      alert(message);
+      resolve(true);
+      return;
+    }
+    titleEl.textContent = title;
+    msgEl.textContent = message;
+    iconEl.textContent = icon;
+    btnCancel.style.display = showCancel ? 'block' : 'none';
+    modal.style.display = 'flex';
+    btnOk.onclick = function () {
+      modal.style.display = 'none';
+      resolve(true);
+    };
+    btnCancel.onclick = function () {
+      modal.style.display = 'none';
+      resolve(false);
+    };
+  });
+}
+function showCustomPrompt(title, text, defaultValue = '') {
+  return new Promise(function (resolve) {
+    var modal = document.getElementById('custom-prompt-modal');
+    var titleEl = document.getElementById('custom-prompt-title');
+    var textEl = document.getElementById('custom-prompt-text');
+    var inputEl = document.getElementById('custom-prompt-input');
+    var btnOk = document.getElementById('custom-prompt-btn-ok');
+    var btnCancel = document.getElementById('custom-prompt-btn-cancel');
+    if (!modal) {
+      var res = prompt(text, defaultValue);
+      resolve(res);
+      return;
+    }
+    titleEl.textContent = title;
+    textEl.textContent = text;
+    inputEl.value = defaultValue;
+    modal.style.display = 'flex';
+    inputEl.focus();
+    btnOk.onclick = function () {
+      modal.style.display = 'none';
+      resolve(inputEl.value);
+    };
+    btnCancel.onclick = function () {
+      modal.style.display = 'none';
+      resolve(null);
+    };
+    inputEl.onkeydown = function (e) {
+      if (e.key === 'Enter') {
+        btnOk.click();
+      }
+    };
+  });
+}
+document.addEventListener('contextmenu', function (event) {
+  // Prevent right click globally
+  event.preventDefault();
+});
+
+// DEBUG OVERLAY DISABLED FOR PRODUCTION
+/*
+const debugOverlay = document.createElement('div');
+debugOverlay.style.position = 'absolute';
+debugOverlay.style.top = '0';
+debugOverlay.style.left = '0';
+debugOverlay.style.width = '100%';
+debugOverlay.style.height = '300px';
+debugOverlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+debugOverlay.style.color = 'lime';
+debugOverlay.style.zIndex = '999999';
+debugOverlay.style.overflow = 'auto';
+debugOverlay.style.fontSize = '14px';
+debugOverlay.style.pointerEvents = 'none';
+document.body.appendChild(debugOverlay);
+  function logDebug(msg) {
+    debugOverlay.innerHTML += msg + '<br>';
+}
+  setTimeout(function() {
+    logDebug('JUCE check at 500ms:');
+    logDebug('window.__JUCE__: ' + typeof window.__JUCE__);
+    if (window.__JUCE__) {
+        logDebug('Keys in __JUCE__: ' + Object.keys(window.__JUCE__).join(', '));
+    }
+    logDebug('window.getNativeFunction: ' + typeof window.getNativeFunction);
+    if (typeof window.getNativeFunction === 'function') {
+        logDebug('callNative setParam = ' + typeof window.getNativeFunction('setParam'));
+    }
+}, 500);
+*/
+</script>
 </body>
 </html>
 
