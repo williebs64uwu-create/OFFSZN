@@ -30,7 +30,7 @@ async function sendActivationEmail({ to, serialKey, licenseType, expiresAt }) {
     if (!to) return; // No email, skip silently
     try {
         const licenseLabels = {
-            trial:        '🎁 Prueba Gratuita (7 días)',
+            trial:        '🎁 Prueba Gratuita (24 horas)',
             subscription: '📅 Suscripción Mensual OFFSZN',
             lifetime:     '⭐ Licencia Lifetime — Acceso de por vida'
         };
@@ -116,6 +116,57 @@ export const generateWebLicense = async (req, res) => {
     }
 };
 
+// ─── POST /api/plugin/generate-trial-web ──────────────────────────────────────
+export const generateTrialWebLicense = async (req, res) => {
+    try {
+        const { plugin_name } = req.body;
+        const user_id = req.user?.id;
+        if (!user_id) return res.status(401).json({ error: 'No autorizado' });
+        if (!plugin_name) return res.status(400).json({ error: 'Falta plugin_name' });
+
+        // Check if user already has a trial for this plugin
+        const { data: existingLic } = await supabase
+            .from('plugin_licenses')
+            .select('*')
+            .eq('user_id', user_id)
+            .eq('plugin_name', plugin_name)
+            .eq('license_type', 'trial')
+            .maybeSingle();
+
+        if (existingLic) {
+            return res.json({ success: true, serial_key: existingLic.serial_key, expires_at: existingLic.expires_at, license_type: 'trial' });
+        }
+
+        // Create new 1-day trial key
+        const basePrefix = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master') ? 'MASTER' : 'EASY';
+        const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 1); // 1 day trial (24h)
+        const expiresAt = expiryDate.toISOString();
+
+        const { data: newLic, error: licErr } = await supabase
+            .from('plugin_licenses')
+            .insert({
+                user_id,
+                plugin_name,
+                serial_key: serialKey,
+                license_type: 'trial',
+                status: 'active',
+                expires_at: expiresAt,
+                max_devices: 1
+            })
+            .select('serial_key, expires_at').single();
+
+        if (licErr) throw licErr;
+
+        return res.json({ success: true, serial_key: newLic.serial_key, expires_at: newLic.expires_at, license_type: 'trial' });
+    } catch (error) {
+        console.error('Error en generateTrialWebLicense:', error);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+};
+
+
 // ─── POST /api/plugin/request-trial ───────────────────────────────────────────
 export const requestTrial = async (req, res) => {
     try {
@@ -155,7 +206,7 @@ export const requestTrial = async (req, res) => {
         // ── 2. No previous trial → create one ────────────────────────────────
         const serialKey = `TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 7);
+        expiryDate.setDate(expiryDate.getDate() + 1); // 1 day trial
         const expiresAt = expiryDate.toISOString();
 
         const { data: newLic, error: licErr } = await supabase

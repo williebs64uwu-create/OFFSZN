@@ -17,10 +17,10 @@ async function main() {
     console.log("2. Reponiendo TODAS las licencias a status='active' (activas/válidas para uso)...");
     await supabase.from('plugin_licenses').update({ status: 'active' }).neq('status', 'active');
     
-    console.log("3. Generando una nueva trial fresca de 7 días...");
+    console.log("3. Generando una nueva trial fresca de 1 día...");
     const serialKey = `TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
     const expiryDate = new Date();
-    expiryDate.setDate(expiryDate.getDate() + 7);
+    expiryDate.setDate(expiryDate.getDate() + 1); // 1 day trial
     const expiresAt = expiryDate.toISOString();
 
     const { data: newLic, error: licErr } = await supabase

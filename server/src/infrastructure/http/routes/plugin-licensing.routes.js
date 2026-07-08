@@ -1,5 +1,5 @@
 import express from 'express';
-import { requestTrial, activateSerial, generateWebLicense, adminResetLicense } from '../controllers/PluginLicensingController.js';
+import { requestTrial, activateSerial, generateWebLicense, generateTrialWebLicense, adminResetLicense } from '../controllers/PluginLicensingController.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 
 const router = express.Router();
@@ -8,8 +8,9 @@ const router = express.Router();
 router.post('/request-trial', requestTrial);
 router.post('/activate', activateSerial);
 
-// Ruta usada por la Web para generar licencias gratis ligadas a la cuenta
+// Rutas usadas por la Web para generar licencias gratis ligadas a la cuenta
 router.post('/generate-web', authenticateTokenMiddleware, generateWebLicense);
+router.post('/generate-trial-web', authenticateTokenMiddleware, generateTrialWebLicense);
 
 // Admin: Borrar licencia vieja + generar nueva FULL (protegida por admin_key)
 router.post('/admin/reset-license', adminResetLicense);
