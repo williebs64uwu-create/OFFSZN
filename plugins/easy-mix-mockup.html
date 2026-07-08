@@ -5379,8 +5379,10 @@ function saveCurrentState() {
     }
 
     // Save sidechain statuses
-    state['rev-sidechain'] = document.getElementById('btn-rev-sidechain')?.classList.contains('active') ? 1 : 0;
-    state['dly-sidechain'] = document.getElementById('btn-dly-sidechain')?.classList.contains('active') ? 1 : 0;
+    var revSidechainBtn = document.getElementById('btn-rev-sidechain');
+    state['rev-sidechain'] = (revSidechainBtn && revSidechainBtn.classList.contains('active')) ? 1 : 0;
+    var dlySidechainBtn = document.getElementById('btn-dly-sidechain');
+    state['dly-sidechain'] = (dlySidechainBtn && dlySidechainBtn.classList.contains('active')) ? 1 : 0;
     var stateJson = JSON.stringify(state);
 
     // ── PASO 1: Guardar en localStorage SIEMPRE (sincrónico y confiable) ──
