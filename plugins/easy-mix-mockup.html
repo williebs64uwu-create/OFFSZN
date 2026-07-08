@@ -1402,6 +1402,7 @@
     </div><!-- /plugin -->
 
     <script>
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 var apiBase = window.location.origin.includes('localhost') ? 'http://localhost:3000' : 'https://offszn.lat';
 
 // ──────────────────────────────────────────────────────────
@@ -4213,7 +4214,7 @@ function updateWaveform(rms) {
 try {
   if (window.__JUCE__ && window.__JUCE__.backend) {
     window.__JUCE__.backend.addEventListener('audio-rms', function (rms) {
-      var val = typeof rms === 'object' && rms !== null ? rms.value || rms.message || 0 : rms;
+      var val = _typeof(rms) === 'object' && rms !== null ? rms.value || rms.message || 0 : rms;
       if (typeof val === 'number') {
         updateWaveform(val);
       }
@@ -4639,7 +4640,6 @@ try {
   if (window.__JUCE__ && window.__JUCE__.backend) {
     window.__JUCE__.backend.addEventListener('init-params', function (params) {
       if (!params) return;
-
       var keys = Object.keys(params);
       for (var i = 0; i < keys.length; i++) {
         var id = keys[i];
@@ -4838,7 +4838,9 @@ function closePresetModal() {
 //  LICENSE / ACTIVATION MODAL FUNCTIONS
 // ──────────────────────────────────────────────────────────
 function openActivationModal(cancellable) {
-  if (cancellable === undefined) { cancellable = false; }
+  if (cancellable === undefined) {
+    cancellable = false;
+  }
   var modal = document.getElementById('activation-modal');
   if (modal) {
     modal.style.display = 'flex';
@@ -5380,9 +5382,9 @@ function saveCurrentState() {
 
     // Save sidechain statuses
     var revSidechainBtn = document.getElementById('btn-rev-sidechain');
-    state['rev-sidechain'] = (revSidechainBtn && revSidechainBtn.classList.contains('active')) ? 1 : 0;
+    state['rev-sidechain'] = revSidechainBtn && revSidechainBtn.classList.contains('active') ? 1 : 0;
     var dlySidechainBtn = document.getElementById('btn-dly-sidechain');
-    state['dly-sidechain'] = (dlySidechainBtn && dlySidechainBtn.classList.contains('active')) ? 1 : 0;
+    state['dly-sidechain'] = dlySidechainBtn && dlySidechainBtn.classList.contains('active') ? 1 : 0;
     var stateJson = JSON.stringify(state);
 
     // ── PASO 1: Guardar en localStorage SIEMPRE (sincrónico y confiable) ──
@@ -5539,8 +5541,12 @@ function getFriendlyLicenseErrorMessage(serial, serverError) {
   return serverError || "Licencia inválida. Por favor verifica tu Serial Key.";
 }
 function showCustomAlert(title, message, icon, showCancel) {
-  if (icon === undefined) { icon = '⚠️'; }
-  if (showCancel === undefined) { showCancel = false; }
+  if (icon === undefined) {
+    icon = '⚠️';
+  }
+  if (showCancel === undefined) {
+    showCancel = false;
+  }
   return new Promise(function (resolve) {
     var modal = document.getElementById('custom-alert-modal');
     var titleEl = document.getElementById('custom-alert-title');
@@ -5569,7 +5575,9 @@ function showCustomAlert(title, message, icon, showCancel) {
   });
 }
 function showCustomPrompt(title, text, defaultValue) {
-  if (defaultValue === undefined) { defaultValue = ''; }
+  if (defaultValue === undefined) {
+    defaultValue = '';
+  }
   return new Promise(function (resolve) {
     var modal = document.getElementById('custom-prompt-modal');
     var titleEl = document.getElementById('custom-prompt-title');
