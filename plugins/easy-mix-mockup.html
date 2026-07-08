@@ -4640,8 +4640,10 @@ try {
     window.__JUCE__.backend.addEventListener('init-params', function (params) {
       if (!params) return;
 
-      // Loop through all properties in the object
-      for (var [id, value] of Object.entries(params)) {
+      var keys = Object.keys(params);
+      for (var i = 0; i < keys.length; i++) {
+        var id = keys[i];
+        var value = params[id];
         // 1. Check if it's the tab selector
         if (id === 'active-tab') {
           switchTab(value > 0.5 ? 'effects' : 'mix');
