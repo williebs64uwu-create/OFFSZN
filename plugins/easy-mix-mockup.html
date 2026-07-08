@@ -4775,13 +4775,17 @@ if (window.__JUCE__ && window.__JUCE__.backend) {
     }
   });
 }
-function callNative(funcName, ...args) {
+function callNative(funcName) {
+  var args = [];
+  for (var i = 1; i < arguments.length; i++) {
+    args.push(arguments[i]);
+  }
   try {
     if (window.__JUCE__ && window.__JUCE__.backend) {
       var promiseId = Math.floor(Math.random() * 1000000000);
       var p = new Promise(function (resolve) {
         jucePromises.set(promiseId, {
-          resolve
+          resolve: resolve
         });
       });
       window.__JUCE__.backend.emitEvent("__juce__invoke", {
@@ -4833,7 +4837,8 @@ function closePresetModal() {
 // ──────────────────────────────────────────────────────────
 //  LICENSE / ACTIVATION MODAL FUNCTIONS
 // ──────────────────────────────────────────────────────────
-function openActivationModal(cancellable = false) {
+function openActivationModal(cancellable) {
+  if (cancellable === undefined) { cancellable = false; }
   var modal = document.getElementById('activation-modal');
   if (modal) {
     modal.style.display = 'flex';
@@ -5531,7 +5536,9 @@ function getFriendlyLicenseErrorMessage(serial, serverError) {
   }
   return serverError || "Licencia inválida. Por favor verifica tu Serial Key.";
 }
-function showCustomAlert(title, message, icon = '⚠️', showCancel = false) {
+function showCustomAlert(title, message, icon, showCancel) {
+  if (icon === undefined) { icon = '⚠️'; }
+  if (showCancel === undefined) { showCancel = false; }
   return new Promise(function (resolve) {
     var modal = document.getElementById('custom-alert-modal');
     var titleEl = document.getElementById('custom-alert-title');
@@ -5559,7 +5566,8 @@ function showCustomAlert(title, message, icon = '⚠️', showCancel = false) {
     };
   });
 }
-function showCustomPrompt(title, text, defaultValue = '') {
+function showCustomPrompt(title, text, defaultValue) {
+  if (defaultValue === undefined) { defaultValue = ''; }
   return new Promise(function (resolve) {
     var modal = document.getElementById('custom-prompt-modal');
     var titleEl = document.getElementById('custom-prompt-title');
