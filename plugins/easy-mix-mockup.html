@@ -4237,8 +4237,8 @@ function updateStereoVisualizer(widthVal) {
   if (leftDot && rightDot) {
     // Map 0-100 to 0px - 35px spread
     var px = widthVal / 100 * 35;
-    leftDot.style.transform = `translate(${-px}px, ${-5 + px * 0.08}px)`;
-    rightDot.style.transform = `translate(${px}px, ${-5 + px * 0.08}px)`;
+    leftDot.style.transform = "translate(".concat(-px, "px, ").concat(-5 + px * 0.08, "px)");
+    rightDot.style.transform = "translate(".concat(px, "px, ").concat(-5 + px * 0.08, "px)");
   }
 }
 
@@ -4252,14 +4252,14 @@ function updateEndlessSmile(intensityVal) {
     var startY = 60 - factor * 10;
     var endY = 60 - factor * 10;
     var ctrlY = 60 + factor * 20;
-    path.setAttribute('d', `M 32 ${startY} Q 50 ${ctrlY} 68 ${endY}`);
+    path.setAttribute('d', "M 32 ".concat(startY, " Q 50 ").concat(ctrlY, " 68 ").concat(endY));
 
     // Dynamically scale/color-glow the face as it gets intense
     if (svg) {
       var scale = 1.0 + intensityVal / 100 * 0.1;
-      svg.style.transform = `scale(${scale})`;
-      svg.style.filter = `drop-shadow(0 0 ${3 + intensityVal * 0.05}px rgba(255,55,95,${0.4 + intensityVal * 0.003}))`;
-      path.setAttribute('stroke', `hsl(${345 + intensityVal * 0.1}, 100%, ${60 + intensityVal * 0.1}%)`);
+      svg.style.transform = "scale(".concat(scale, ")");
+      svg.style.filter = "drop-shadow(0 0 ".concat(3 + intensityVal * 0.05, "px rgba(255,55,95,").concat(0.4 + intensityVal * 0.003, "))");
+      path.setAttribute('stroke', "hsl(".concat(345 + intensityVal * 0.1, ", 100%, ").concat(60 + intensityVal * 0.1, "%)"));
     }
   }
 }
@@ -4291,14 +4291,14 @@ function updatePitchProCanvas() {
   // Outer circle reacts to Pitch
   ctx.beginPath();
   ctx.arc(cx, cy, baseRadius + pitch * 2, 0, 2 * Math.PI);
-  ctx.strokeStyle = `rgba(48, 209, 88, ${0.1 + mix * 0.35})`;
+  ctx.strokeStyle = "rgba(48, 209, 88, ".concat(0.1 + mix * 0.35, ")");
   ctx.lineWidth = 4;
   ctx.stroke();
 
   // Inner circle reacts to Formant
   ctx.beginPath();
   ctx.arc(cx, cy, baseRadius * 0.6 + formant * 1.5, 0, 2 * Math.PI);
-  ctx.strokeStyle = `rgba(48, 209, 88, ${0.2 + mix * 0.65})`;
+  ctx.strokeStyle = "rgba(48, 209, 88, ".concat(0.2 + mix * 0.65, ")");
   ctx.lineWidth = 2.5;
   ctx.stroke();
 
@@ -4649,7 +4649,7 @@ try {
         }
 
         // 2. Check if it's a knob
-        var knob = document.querySelector(`.knob[data-id="${id}"]`);
+        var knob = document.querySelector(".knob[data-id=\"".concat(id, "\"]"));
         if (knob) {
           knob.dataset.val = value;
           drawKnob(knob);
@@ -4877,7 +4877,7 @@ function submitSerial() {
   if (hasJuceBridge()) {
     callNative("getHardwareId").then(function (hwid) {
       var effectiveHwid = hwid || getOrCreateDeviceId();
-      fetch(`${apiBase}/api/plugin/activate`, {
+      fetch("".concat(apiBase, "/api/plugin/activate"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -4941,7 +4941,7 @@ setTimeout(function () {
         if (isTrial) {
           // Silently verify the trial key online
           getHwidAsync().then(function (hwid) {
-            fetch(`${apiBase}/api/plugin/activate`, {
+            fetch("".concat(apiBase, "/api/plugin/activate"), {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
@@ -5064,7 +5064,7 @@ function submitExpiredSerial() {
   var btn = document.getElementById('exp-submit-btn');
   if (btn) btn.classList.add('btn-loading');
   getHwidAsync().then(function (hwid) {
-    fetch(`${apiBase}/api/plugin/activate`, {
+    fetch("".concat(apiBase, "/api/plugin/activate"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -5315,7 +5315,7 @@ function loadPreset(presetName) {
       sendParam(key, val);
 
       // 2. Update Knobs visually
-      var knob = document.querySelector(`.knob[data-id="${key}"]`);
+      var knob = document.querySelector(".knob[data-id=\"".concat(key, "\"]"));
       if (knob) {
         knob.dataset.val = val;
         drawKnob(knob);
@@ -5351,7 +5351,7 @@ function saveCurrentState() {
     // Save active button group states (button modes)
     var buttonModes = ['rider-mode', 'comp-type', 'comp-mode', 'air-mode', 'stereo-mode', 'voice-type'];
     buttonModes.forEach(function (id) {
-      var activeBtn = document.querySelector(`.btn.active[onclick*="${id}"]`);
+      var activeBtn = document.querySelector(".btn.active[onclick*=\"".concat(id, "\"]"));
       if (activeBtn) {
         var match = activeBtn.getAttribute('onclick').match(/,\s*([\d\.]+)\s*\)/);
         if (match) {
@@ -5365,7 +5365,7 @@ function saveCurrentState() {
     });
 
     // Save delay division
-    var activeDly = document.querySelector(`.btn.active[onclick*="delayDiv"]`);
+    var activeDly = document.querySelector(".btn.active[onclick*=\"delayDiv\"]");
     if (activeDly) {
       var match = activeDly.getAttribute('onclick').match(/,\s*(\d+)\s*\)/);
       if (match) state['dly-div'] = parseInt(match[1]);
@@ -5397,7 +5397,7 @@ function saveCurrentState() {
 
     // ── PASO 3: Actualizar la lista inmediatamente (usa localStorage) ──
     renderPresetLists();
-    showCustomAlert('Preset Guardado', `"${name}" guardado exitosamente. ✅`, '🎛️');
+    showCustomAlert('Preset Guardado', "\"".concat(name, "\" guardado exitosamente. ✅"), '🎛️');
   });
 }
 function renderPresetLists() {
@@ -5449,7 +5449,7 @@ function buildPresetRows(keys, listDiv, isNative) {
     deleteBtn.style.color = '#ff453a';
     deleteBtn.innerText = '✕';
     deleteBtn.onclick = function () {
-      showCustomAlert("Eliminar Preset", `¿Seguro que deseas eliminar el preset "${name}"?`, '❓', true).then(function (confirmed) {
+      showCustomAlert("Eliminar Preset", "¿Seguro que deseas eliminar el preset \"".concat(name, "\"?"), '❓', true).then(function (confirmed) {
         if (confirmed) {
           if (isNative) {
             callNative("deletePresetNative", name).then(function () {
@@ -5471,7 +5471,7 @@ function applyPresetState(p) {
     for (var key in p) {
       var val = p[key];
       sendParam(key, val);
-      var knob = document.querySelector(`.knob[data-id="${key}"]`);
+      var knob = document.querySelector(".knob[data-id=\"".concat(key, "\"]"));
       if (knob) {
         knob.dataset.val = val;
         drawKnob(knob);
