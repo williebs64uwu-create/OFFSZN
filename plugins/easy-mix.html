@@ -794,10 +794,9 @@
                 </div>
 
                 <h1 class="hero-title"
-                    style="background: linear-gradient(135deg, #ff9f0a 0%, #fff 100%); -webkit-background-clip: text; background-clip: text;">
-                    EASY MIX</h1>
-                <p class="hero-subtitle">La solución definitiva (All In One) para que tus voces suenen como la industria
-                    en tiempo récord. Limpieza, compresión, color y efectos en un solo plugin.</p>
+                    style="background: linear-gradient(135deg, #ff9f0a 0%, #fff 100%); -webkit-background-clip: text; background-clip: text; font-size: clamp(2.5rem, 7vw, 4.5rem); line-height: 1.1; margin-bottom: 20px;">
+                    Mezclas vocales.<br>Rápidas. Impecables.</h1>
+                <p class="hero-subtitle" style="font-size: 1.3rem; color: #aaa; max-width: 600px; margin: 0 auto 40px;">mezcla voces de la forma más fácil con Easy Mix</p>
 
                 <div class="hero-image-container" style="max-width: 800px; margin: 30px auto 0;">
                     <img src="/images/plugins/easy mixx.png" alt="Easy Mix VST"
@@ -807,160 +806,179 @@
         </section>
 
         <!-- ==================== VIDEO DEMO SECTION ==================== -->
-        <!-- ⬇ Reemplaza VIDEO_SRC_HERE con la ruta o URL de tu video -->
-        <section id="video-demo" style="padding: 60px 0 30px; background: #050505; border-top: 1px solid rgba(255,255,255,0.04);">
-            <div class="container" style="max-width: 900px; text-align: center;">
-                <div style="font-size: 0.75rem; letter-spacing: 3px; color: #ff9f0a; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Demo en acción</div>
-                <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 8px; color: #fff;">Mira cómo suena Easy Mix</h2>
-                <p style="color: #666; font-size: 0.9rem; margin-bottom: 32px; max-width: 500px; margin-left: auto; margin-right: auto;">Del canal sin procesar al sonido profesional en segundos.</p>
-
-                <div style="position: relative; border-radius: 16px; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.08); background: #111;">
-                    <video
-                        id="demo-video"
-                        src="/videos/video-offsz.mp4"
-                        autoplay
-                        muted
-                        loop
-                        playsinline
-                        controls
-                        style="width: 100%; display: block; max-height: 520px; object-fit: cover; border-radius: 16px;"
-                        preload="metadata">
-                        Tu navegador no soporta la reproducción de video.
-                    </video>
-                </div>
-                <p style="margin-top: 16px; font-size: 0.78rem; color: rgba(255,255,255,0.2);">Video grabado en tiempo real — sin edición posterior.</p>
-            </div>
-        </section>
-
-        <!-- FEATURE GRID: AHORRA TIEMPO -->
-        <section class="features-grid-section">
-            <div class="container">
-                <div class="features-grid-header">
-                    <h2>Ahorra tiempo y<br>enfócate en Crear</h2>
-                </div>
-
-                <div class="features-grid-container">
-
-                    <div class="f-grid-item">
-                        <div class="f-grid-icon"><i class="bi bi-currency-dollar"></i></div>
-                        <div class="f-grid-title">0% Complicaciones</div>
-                        <div class="f-grid-desc">Olvídate de enrutamientos complejos y cadenas interminables. Un solo
-                            plugin para procesar tus voces al máximo nivel.</div>
+        <section id="video-demo" style="padding: 80px 0; background: #050505; border-top: 1px solid rgba(255,255,255,0.04);">
+            <div class="container" style="max-width: 950px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 40px; flex-wrap: wrap; text-align: left;">
+                    <!-- Left Column: Titles & Text -->
+                    <div style="flex: 1; min-width: 300px;">
+                        <div style="font-size: 0.75rem; letter-spacing: 3px; color: #ff9f0a; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Demo en acción</div>
+                        <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 16px; color: #fff; line-height: 1.2;">Mira cómo suena Easy Mix</h2>
+                        <p style="color: #aaa; font-size: 1rem; margin-bottom: 0; line-height: 1.6;">Del canal sin procesar al sonido profesional en segundos.</p>
                     </div>
+                    
+                    <!-- Right Column: Vertical 9:16 Video -->
+                    <div style="flex: 0 0 290px; max-width: 290px; width: 100%; margin: 0 auto;">
+                        <div style="position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.8); border: 2.5px solid rgba(255,255,255,0.1); background: #111; aspect-ratio: 9 / 16;">
+                            
+                            <!-- Click Interceptor (Prevents pausing, toggles mute) -->
+                            <div onclick="toggleVideoMute(event)" style="position: absolute; top: 0; left: 0; right: 0; bottom: 50px; z-index: 4; cursor: pointer;"></div>
 
-                    <div class="f-grid-item">
-                        <div class="f-grid-icon"><i class="bi bi-lightning-charge-fill"></i></div>
-                        <div class="f-grid-title">Tiempo Real Sin Latencia</div>
-                        <div class="f-grid-desc">Graba directamente con el plugin encendido sin experimentar retrasos.
-                            Monitorea tu mezcla vocal en vivo.</div>
-                    </div>
+                            <!-- Unmute Overlay Badge -->
+                            <div id="video-sound-overlay" style="position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid #ff9f0a; padding: 8px 14px; border-radius: 30px; display: flex; align-items: center; gap: 8px; color: #ff9f0a; font-weight: 700; font-size: 0.8rem; box-shadow: 0 8px 20px rgba(0,0,0,0.6); z-index: 5; transition: opacity 0.3s; pointer-events: none;">
+                                <i class="bi bi-volume-mute-fill" id="sound-overlay-icon" style="font-size: 1.05rem;"></i>
+                                <span id="sound-overlay-text">CLIC PARA SONIDO</span>
+                            </div>
 
-                    <div class="f-grid-item">
-                        <div class="f-grid-icon"><i class="bi bi-robot"></i></div>
-                        <div class="f-grid-title">Algoritmos Inteligentes</div>
-                        <div class="f-grid-desc">El De-Esser y los compresores se ajustan dinámicamente según la fuerza
-                            de tu voz para un control transparente.</div>
-                    </div>
-
-                    <div class="f-grid-item">
-                        <div class="f-grid-icon"><i class="bi bi-palette-fill"></i></div>
-                        <div class="f-grid-title">Estudio en tu PC</div>
-                        <div class="f-grid-desc">Sonido pulido y brillante instantáneo, rivalizando con plugins de
-                            mezcla que cuestan cientos de dólares.</div>
-                    </div>
-
-                    <div class="f-grid-item">
-                        <div class="f-grid-icon"><i class="bi bi-cpu-fill"></i></div>
-                        <div class="f-grid-title">Optimizado para CPU</div>
-                        <div class="f-grid-desc">Úsalo en decenas de canales (voces principales, coros, adlibs) sin
-                            congelar FL Studio ni Ableton.</div>
-                    </div>
-
-                    <div class="f-grid-item">
-                        <div class="f-grid-icon"><i class="bi bi-shield-lock-fill"></i></div>
-                        <div class="f-grid-title">Presets de Industria</div>
-                        <div class="f-grid-desc">Viene equipado con plantillas diseñadas por ingenieros de mezcla top
-                            para Trap, Reggaeton, Drill y más.</div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- ==================== SYSTEM REQUIREMENTS ==================== -->
-        <section style="padding: 60px 0; background: #000; border-top: 1px solid rgba(255,255,255,0.05);">
-            <div class="container" style="max-width: 700px; text-align: center;">
-                <h2 class="section-title" style="font-size: 2rem; margin-bottom: 30px;">Requisitos del Sistema</h2>
-                <div style="display: flex; gap: 30px; flex-wrap: wrap; justify-content: center;">
-                    <!-- Windows -->
-                    <div
-                        style="flex: 1; min-width: 250px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); padding: 30px; border-radius: 16px; text-align: left;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#0078D4"
-                                viewBox="0 0 16 16">
-                                <path
-                                    d="M6.555 1.375 0 2.237v5.45h6.555zM0 13.795l6.555.933V8.313H0zm7.278-5.4 .026 6.378L16 15.64V8.395zM16 .396 7.304 1.407v6.281H16z" />
-                            </svg>
-                            <span style="font-size: 1.1rem; font-weight: 700; color: #fff;">Windows</span>
+                            <video
+                                id="demo-video"
+                                src="/videos/video-offsz.mp4"
+                                autoplay
+                                muted
+                                loop
+                                playsinline
+                                controls
+                                style="width: 100%; height: 100%; display: block; object-fit: contain; image-rendering: -webkit-optimize-contrast; -webkit-backface-visibility: hidden; backface-visibility: hidden;"
+                                preload="auto">
+                                Tu navegador no soporta la reproducción de video.
+                            </video>
                         </div>
-                        <ul
-                            style="list-style: none; padding: 0; margin: 0; color: #aaa; font-size: 0.9rem; line-height: 2;">
-                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i>
-                                Windows 10 o superior (64-bit)</li>
-                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i>
-                                Procesador Intel i5 / AMD Ryzen 5 o superior</li>
-                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> 4 GB
-                                RAM mínimo</li>
-                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> FL
-                                Studio 20.8+ / Ableton 11+ / cualquier DAW con VST3</li>
-                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i>
-                                Conexión a internet (solo para activación)</li>
-                        </ul>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ==================== HOW IT WORKS (SERIAL FLOW) ==================== -->
-        <section style="padding: 70px 0; background: #000; border-top: 1px solid rgba(255,255,255,0.04);">
-            <div class="container" style="max-width: 900px; text-align: center;">
-                <div style="font-size: 0.75rem; letter-spacing: 3px; color: #ff9f0a; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Así funciona</div>
-                <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 50px; color: #fff;">Del clic a la mezcla en 3 pasos</h2>
-                <div style="display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; position: relative;">
+        <script>
+            function toggleVideoMute(event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                const video = document.getElementById('demo-video');
+                const overlayText = document.getElementById('sound-overlay-text');
+                const overlayIcon = document.getElementById('sound-overlay-icon');
+                const overlay = document.getElementById('video-sound-overlay');
+                
+                if (video) {
+                    if (video.muted) {
+                        video.muted = false;
+                        video.play().catch(e => console.log(e));
+                        overlayText.innerText = 'SONIDO ACTIVO';
+                        overlayIcon.className = 'bi bi-volume-up-fill';
+                        // Auto fade out overlay
+                        setTimeout(() => {
+                            overlay.style.opacity = '0';
+                        }, 1200);
+                    } else {
+                        video.muted = true;
+                        video.play().catch(e => console.log(e));
+                        overlay.style.opacity = '1';
+                        overlayText.innerText = 'CLIC PARA SONIDO';
+                        overlayIcon.className = 'bi bi-volume-mute-fill';
+                    }
+                }
+            }
+        </script>
 
-                    <!-- Paso 1 -->
-                    <div style="flex: 1; min-width: 220px; max-width: 260px; text-align: center;">
-                        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,159,10,0.12); border: 1.5px solid rgba(255,159,10,0.4); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.5rem;">⬇️</div>
-                        <div style="font-size: 0.75rem; letter-spacing: 2px; color: #ff9f0a; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Paso 1</div>
-                        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; color: #fff;">Descarga el instalador</h3>
-                        <p style="color: #666; font-size: 0.85rem; line-height: 1.6;">Crea tu cuenta gratuita en OFFSZN. Desde esta misma página descarga el instalador de Windows (.exe) o macOS (.pkg).</p>
+
+
+        <!-- ==================== COMPATIBILITY SECTION ==================== -->
+        <section style="padding: 60px 0; background: #000; border-top: 1px solid rgba(255,255,255,0.05);">
+            <div class="container" style="max-width: 800px; text-align: center;">
+                <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 24px; color: #fff; text-transform: uppercase; letter-spacing: 1px;">Disponible en:</h2>
+                
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: center;">
+                    <!-- FL Studio -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 12px; transition: transform 0.2s;">
+                        <img src="/images/logo fl.png" alt="FL Studio" style="height: 30px; width: auto; object-fit: contain;">
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">FL Studio</span>
+                    </div>
+                    
+                    <!-- Ableton Live -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.3rem;">🎹</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Ableton Live</span>
+                    </div>
+                    
+                    <!-- Studio One -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.3rem;">🎚️</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Studio One</span>
                     </div>
 
-                    <!-- Divisor -->
-                    <div style="display: flex; align-items: center; color: rgba(255,255,255,0.12); font-size: 1.5rem; padding-top: 30px;">→</div>
-
-                    <!-- Paso 2 -->
-                    <div style="flex: 1; min-width: 220px; max-width: 260px; text-align: center;">
-                        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,159,10,0.12); border: 1.5px solid rgba(255,159,10,0.4); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.5rem;">🔑</div>
-                        <div style="font-size: 0.75rem; letter-spacing: 2px; color: #ff9f0a; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Paso 2</div>
-                        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; color: #fff;">Activa tu Serial Key</h3>
-                        <p style="color: #666; font-size: 0.85rem; line-height: 1.6;">Al abrir el plugin por primera vez, pega tu Serial Key (la encuentras abajo en esta página una vez logueado). ¡Un clic y listo!</p>
+                    <!-- Reaper -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.3rem;">💻</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Reaper</span>
                     </div>
 
-                    <!-- Divisor -->
-                    <div style="display: flex; align-items: center; color: rgba(255,255,255,0.12); font-size: 1.5rem; padding-top: 30px;">→</div>
-
-                    <!-- Paso 3 -->
-                    <div style="flex: 1; min-width: 220px; max-width: 260px; text-align: center;">
-                        <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,159,10,0.12); border: 1.5px solid rgba(255,159,10,0.4); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 1.5rem;">🎤</div>
-                        <div style="font-size: 0.75rem; letter-spacing: 2px; color: #ff9f0a; font-weight: 700; text-transform: uppercase; margin-bottom: 8px;">Paso 3</div>
-                        <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; color: #fff;">Mezcla y Crea</h3>
-                        <p style="color: #666; font-size: 0.85rem; line-height: 1.6;">Pon Easy Mix en cualquier canal de voces en tu DAW y empieza a crear. Los presets hacen el 80% del trabajo por ti.</p>
+                    <!-- Cubase -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.3rem;">🎸</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Cubase</span>
                     </div>
+                </div>
+                <p style="color: #666; font-size: 0.85rem; margin-top: 24px; margin-bottom: 0;">* Disponible únicamente para Windows (VST3 de 64 bits).</p>
+            </div>
+        </section>
 
+        <!-- ==================== TESTIMONIALS SECTION ==================== -->
+        <section id="testimonios" style="padding: 80px 0; background: #050505; border-top: 1px solid rgba(255,255,255,0.04);">
+            <div class="container" style="max-width: 1100px; text-align: center;">
+                <div style="font-size: 0.75rem; letter-spacing: 3px; color: #ff9f0a; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">Testimonios</div>
+                <h2 style="font-size: clamp(2rem, 5vw, 2.8rem); font-weight: 800; margin-bottom: 48px; color: #fff; line-height: 1.15;">Lo que dicen los artistas y productores.</h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px;">
+                    <!-- Testimonio 1 -->
+                    <div onclick="openLightbox('/images/plugins/testi-1.jpg')" style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-1.jpg" alt="Testimonio Easy Mix 1" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <!-- Testimonio 2 -->
+                    <div onclick="openLightbox('/images/plugins/testi-2.jpg')" style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-2.jpg" alt="Testimonio Easy Mix 2" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <!-- Testimonio 3 -->
+                    <div onclick="openLightbox('/images/plugins/testi-3.jpg')" style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-3.jpg" alt="Testimonio Easy Mix 3" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <!-- Testimonio 4 -->
+                    <div onclick="openLightbox('/images/plugins/plugin-testi.png')" style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;" onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/plugin-testi.png" alt="Testimonio Easy Mix 4" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
                 </div>
             </div>
         </section>
+
+        <!-- Lightbox Overlay Component -->
+        <div id="lightbox-overlay" onclick="closeLightbox()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 99999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; cursor: zoom-out;">
+            <img id="lightbox-img" src="" alt="Testimonio Zoom" style="max-width: 90%; max-height: 85%; object-fit: contain; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 30px 70px rgba(0,0,0,0.9); transform: scale(0.92); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+            <button onclick="closeLightbox()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 44px; height: 44px; color: #fff; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <script>
+            function openLightbox(src) {
+                const overlay = document.getElementById('lightbox-overlay');
+                const img = document.getElementById('lightbox-img');
+                if (overlay && img) {
+                    img.src = src;
+                    overlay.style.display = 'flex';
+                    // Trigger animation reflow
+                    overlay.offsetHeight;
+                    overlay.style.opacity = '1';
+                    img.style.transform = 'scale(1)';
+                }
+            }
+            function closeLightbox() {
+                const overlay = document.getElementById('lightbox-overlay');
+                const img = document.getElementById('lightbox-img');
+                if (overlay && img) {
+                    overlay.style.opacity = '0';
+                    img.style.transform = 'scale(0.92)';
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                    }, 300);
+                }
+            }
+        </script>
 
         <!-- ==================== SERIAL KEY SECTION ==================== -->
         <section class="serial-section" id="serial-section">
@@ -1014,8 +1032,7 @@
                 </div>
 
                 <!-- PRICING CARDS -->
-                <h3 style="font-size: 2rem; font-weight: 800; margin-bottom: 10px; color: #fff;">O obtén tu licencia
-                    completa</h3>
+                <h3 style="font-size: 2rem; font-weight: 800; margin-bottom: 10px; color: #fff;">Licencia de por vida + actualizaciones</h3>
                 <p style="color: #888; margin-bottom: 40px;">Si ya lo probaste y te encantó, adquiere la licencia de por vida.</p>
 
                 <!-- PRICING: SOLO LIFETIME -->
@@ -1295,7 +1312,7 @@
     </script>
     <!-- ==================== STICKY OFFER BANNER ==================== -->
     <div class="sticky-offer-banner">
-        <div class="sticky-offer-text">🚀 OFERTA DE LANZAMIENTO: Solo quedan 7 licencias a 10$</div>
+        <div class="sticky-offer-text">🚀 Solo quedan 6 licencias de por vida</div>
         <div class="sticky-offer-timer" id="sticky-countdown-timer">⏳ Calculando...</div>
         <a href="#serial-section" class="sticky-offer-btn">Obtener Oferta</a>
     </div>

@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEAT POST - OFFSZN Plugin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:           #000000;      /* Pure Black */
+            --panel:        #0c0c0e;      /* Ultra Dark Slate */
+            --panel-light:  #141418;      /* Dark Grey Panel */
+            --border:       #1f1f24;      /* Sleek borders */
+            --border-light: #2d2d35;      /* Focus/Light borders */
+            --text:         #ffffff;      /* Pure White Text */
+            --dim:          #8e8e93;      /* Muted Slate Text */
+            --accent:       #ffffff;      /* Monochrome White Accent */
+            --accent-hover: #e5e5ea;
+            --accent-glow:  rgba(255, 255, 255, 0.1);
+            --green:        #30d158;      /* Safe checkmarks */
+            --red:          #ff453a;
+            --yt-red:       #ff3b30;
+        }
+
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Geist', sans-serif;
+            font-size: 13px;
+            user-select: none;
+            -webkit-user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* ─── PLUGIN CONTAINER (VST WINDOW) ─── */
+        .vst-container {
+            width: 580px;
+            height: 680px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.03);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* VST Title bar */
+        .vst-titlebar {
+            height: 38px;
+            background: #121215;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--dim);
+            letter-spacing: 0.5px;
+        }
+
+        .vst-controls {
+            display: flex;
+            gap: 6px;
+        }
+        .vst-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--border-light);
+        }
+        .vst-dot.active { background: var(--accent); }
+
+        /* ─── HEADER ─── */
+        .plugin-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(25,25,32,0.5) 0%, rgba(12,12,14,0) 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-mark {
+            color: var(--accent);
+            font-size: 20px;
+        }
+
+        .logo-text {
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #fff;
+        }
+
+        .logo-sub {
+            font-weight: 400;
+            color: var(--dim);
+            font-size: 10px;
+        }
+
+        /* ─── STEP BAR (wizard indicator) ─── */
+        .step-indicator {
+            display: flex;
+            background: #060608;
+            border-bottom: 1px solid var(--border);
+            height: 36px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+
+        .step-item.active {
+            color: var(--accent);
+        }
+
+        .step-item.completed {
+            color: var(--dim);
+            opacity: 0.6;
+        }
+
+        .step-arrow {
+            font-size: 9px;
+            opacity: 0.2;
+        }
+
+        /* ─── VIEWS CONTAINER ─── */
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        /* ─── STEP 1: AUTH SCREEN ─── */
+        #view-auth {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-top: auto;
+            margin-bottom: auto;
+            gap: 24px;
+        }
+
+        .auth-logo-icon {
+            font-size: 58px;
+            color: var(--accent);
+        }
+
+        .auth-title {
+            font-size: 19px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .auth-desc {
+            font-size: 12.5px;
+            color: var(--dim);
+            max-width: 340px;
+            line-height: 1.6;
+        }
+
+        .btn-google {
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 28px;
+            font-weight: 700;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-google:hover {
+            transform: translateY(-1px);
+            background: #e5e5ea;
+        }
+
+        /* ─── GENERAL STEPS CONTAINER ─── */
+        .step-pane {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+        }
+
+        .step-pane.active {
+            display: flex;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--dim);
+            margin-bottom: 8px;
+        }
+
+        /* Form Inputs */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .text-input {
+            background: #000000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 13.5px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .text-input:focus {
+            border-color: var(--accent);
+        }
+
+        /* Cover Recommendation Engine */
+        .cover-recommender {
+            background: #060608;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .recommender-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .recommender-header span {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--dim);
+            text-transform: uppercase;
+        }
+
+        .variations-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .variation-badge {
+            background: var(--panel-light);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 10px;
+            color: var(--dim);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .variation-badge:hover, .variation-badge.active {
+            border-color: var(--accent);
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .covers-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .cover-option-card {
+            aspect-ratio: 1/1;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 10px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+
+        .cover-option-card:hover {
+            transform: scale(1.02);
+        }
+
+        .cover-option-card.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+        }
+
+        .cover-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.9) 100%);
+            z-index: 1;
+        }
+
+        .cover-title {
+            font-size: 9px;
+            font-weight: 800;
+            color: #fff;
+            z-index: 2;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.3;
+            word-break: break-all;
+        }
+
+        .cover-icon {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 26px;
+            color: rgba(255,255,255,0.15);
+            z-index: 1;
+            transition: transform 0.3s;
+        }
+        .cover-option-card:hover .cover-icon {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .custom-upload-card {
+            background: var(--panel-light);
+            border: 1px dashed var(--border-light);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            aspect-ratio: 1/1;
+            gap: 6px;
+            color: var(--dim);
+            transition: all 0.2s;
+        }
+
+        .custom-upload-card:hover {
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        /* ─── TARGETS & AUDIO STATUS ─── */
+        .dest-option {
+            background: var(--panel-light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .dest-option:hover {
+            border-color: var(--border-light);
+        }
+
+        .dest-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dest-icon {
+            font-size: 18px;
+            color: var(--dim);
+            width: 24px;
+            text-align: center;
+        }
+
+        .dest-left.youtube-active .dest-icon {
+            color: var(--yt-red);
+        }
+
+        .dest-left.store-active .dest-icon {
+            color: #fff;
+        }
+
+        .dest-details h4 {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .dest-details p {
+            font-size: 10px;
+            color: var(--dim);
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 22px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--border-light); transition: .3s; border-radius: 36px;
+        }
+
+        .slider:before {
+            position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
+            background-color: #fff; transition: .3s; border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: #fff; }
+        input:checked + .slider:before { transform: translateX(14px); background-color: #000; }
+
+        /* Master Render Card */
+        .master-capture-card {
+            background: #000000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .capture-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--dim);
+            text-transform: uppercase;
+        }
+
+        .capture-files {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--panel-light);
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .file-name {
+            font-family: 'Geist Mono', monospace;
+            font-size: 11.5px;
+            color: #eee;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-status {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            margin-top: auto;
+            display: flex;
+            gap: 14px;
+        }
+
+        .btn-prev {
+            flex: 1;
+            background: transparent;
+            color: var(--dim);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-prev:hover {
+            color: #fff;
+            border-color: var(--border-light);
+        }
+
+        .btn-next {
+            flex: 2;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-next:hover {
+            background: #e5e5ea;
+        }
+
+        /* ─── STEP 4: RUNNING PROCESS ─── */
+        #view-progress {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 28px;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        .progress-spinner-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .outer-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid var(--border-light);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+        }
+
+        .progress-percentage {
+            font-family: 'Geist Mono', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .status-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: left;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .status-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12.5px;
+            color: var(--dim);
+        }
+
+        .status-step.active { color: #fff; }
+        .status-step.completed { color: #fff; }
+        .status-step i { width: 16px; text-align: center; }
+
+        /* ─── STEP 5: SUCCESS SCREEN ─── */
+        #view-success {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 28px;
+            margin-top: auto;
+            margin-bottom: auto;
+        }
+
+        .success-badge {
+            width: 64px;
+            height: 64px;
+            background: rgba(255,255,255,0.08);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #fff;
+            animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .success-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .success-desc {
+            font-size: 13px;
+            color: var(--dim);
+            max-width: 340px;
+            line-height: 1.6;
+        }
+
+        .btn-restart {
+            background: transparent;
+            color: var(--dim);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-restart:hover {
+            color: #fff;
+            border-color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- VST PLUGIN MOCKUP WINDOW -->
+    <div class="vst-container">
+        
+        <!-- Window Title Bar -->
+        <div class="vst-titlebar">
+            <span>BEAT POST</span>
+            <div class="vst-controls">
+                <div class="vst-dot"></div>
+                <div class="vst-dot"></div>
+                <div class="vst-dot active"></div>
+            </div>
+        </div>
+
+        <!-- Plugin Header -->
+        <div class="plugin-header">
+            <div class="brand">
+                <i class="fa-solid fa-cloud-arrow-up logo-mark"></i>
+                <div>
+                    <div class="logo-text">BEAT POST</div>
+                    <div class="logo-sub">OFFSZN Exporter</div>
+                </div>
+            </div>
+            <div style="font-size: 9px; font-weight: 700; color: #fff; opacity: 0.8; letter-spacing: 0.5px;">
+                VST INTEGRATION
+            </div>
+        </div>
+
+        <!-- Step Indicator Bar -->
+        <div class="step-indicator" id="vst-steps-bar" style="display: none;">
+            <div class="step-item active" id="step-lbl-1">
+                <span>1. Archivos DAW</span>
+            </div>
+            <i class="fa-solid fa-chevron-right step-arrow"></i>
+            <div class="step-item" id="step-lbl-2">
+                <span>2. Detalles Beat</span>
+            </div>
+            <i class="fa-solid fa-chevron-right step-arrow"></i>
+            <div class="step-item" id="step-lbl-3">
+                <span>3. Publicación</span>
+            </div>
+        </div>
+
+        <!-- Interactive Content Viewport -->
+        <div class="content-area">
+
+            <!-- STAGE 1: GOOGLE LOGIN -->
+            <div id="view-auth">
+                <i class="fa-solid fa-fingerprint auth-logo-icon"></i>
+                <div>
+                    <h2 class="auth-title">Vincula tu cuenta OFFSZN</h2>
+                    <p class="auth-desc">Inicia sesión con Google para subir beats directamente desde el Master de tu DAW sin abrir el navegador.</p>
+                </div>
+                <button class="btn-google" onclick="loginWithGoogle()">
+                    <i class="fa-brands fa-google" style="color: #000;"></i> Continuar con Google
+                </button>
+            </div>
+
+            <!-- STEP 1: AUDIO RENDER STATUS (MP3/WAV) -->
+            <div class="step-pane" id="view-audio">
+                <div>
+                    <h3 class="section-title">Archivos del Render (Master Track)</h3>
+                    <p style="color: var(--dim); font-size: 11.5px; margin-bottom: 12px; line-height: 1.5;">El plugin detecta automáticamente las exportaciones activas en el canal de salida principal de tu FL Studio.</p>
+                    <div class="master-capture-card">
+                        <div class="capture-header">
+                            <span>Estado de Captura</span>
+                            <span style="color: #fff;">Archivos Listos</span>
+                        </div>
+                        <div class="capture-files">
+                            <div class="file-row">
+                                <span class="file-name"><i class="fa-regular fa-file-audio"></i> master_timeline.wav</span>
+                                <span class="file-status">Audio WAV (24-bit)</span>
+                            </div>
+                            <div class="file-row">
+                                <span class="file-name"><i class="fa-regular fa-file-audio"></i> master_timeline.mp3</span>
+                                <span class="file-status">Audio MP3 (320k)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn-next" onclick="goToStep(2)">
+                        Continuar <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: BEAT DETAILS & COVER RECOMMENDER -->
+            <div class="step-pane" id="view-details">
+                <div class="form-group">
+                    <h3 class="section-title">Título del Beat</h3>
+                    <input type="text" id="beat-title-input" class="text-input" value="R&B Type Beat" placeholder="Ej. Lofi Chill Type Beat" oninput="onTitleChange()">
+                </div>
+
+                <!-- Cover Recommender Engine Block -->
+                <div class="cover-recommender">
+                    <div class="recommender-header">
+                        <span>Recomendación de Portada</span>
+                        <span id="search-tag-indicator" style="color: #fff; font-family: 'Geist Mono', monospace; font-size: 9px;">Búsqueda: R&B</span>
+                    </div>
+
+                    <!-- Keywords Suggestions Variations -->
+                    <div class="variations-row" id="variations-container">
+                        <!-- Filled by JS -->
+                    </div>
+
+                    <!-- Recommended Covers Grid -->
+                    <div class="covers-grid" id="covers-container">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn-prev" onclick="goToStep(1)"><i class="fa-solid fa-chevron-left"></i> Atrás</button>
+                    <button class="btn-next" onclick="goToStep(3)">
+                        Continuar <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: DESTINATIONS & UPLOAD ACTION -->
+            <div class="step-pane" id="view-targets">
+                
+                <div>
+                    <h3 class="section-title">Destinos de Publicación</h3>
+                    
+                    <!-- Store target (Required) -->
+                    <div class="dest-option">
+                        <div class="dest-left store-active">
+                            <i class="fa-solid fa-store dest-icon"></i>
+                            <div class="dest-details">
+                                <h4>Tienda Virtual OFFSZN</h4>
+                                <p>Publicar beat en tu catálogo automáticamente</p>
+                            </div>
+                        </div>
+                        <span style="font-size: 10px; font-weight: 700; color: #fff; padding-right: 6px;">OBLIGATORIO</span>
+                    </div>
+
+                    <!-- YouTube target -->
+                    <div class="dest-option" onclick="toggleYoutube()">
+                        <div class="dest-left" id="yt-left-area">
+                            <i class="fa-brands fa-youtube dest-icon"></i>
+                            <div class="dest-details">
+                                <h4>Canal de YouTube</h4>
+                                <p>Publicar video de fondo sin marca de agua</p>
+                            </div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="yt-toggle" onchange="updateYtState()">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="nav-buttons">
+                    <button class="btn-prev" onclick="goToStep(2)"><i class="fa-solid fa-chevron-left"></i> Atrás</button>
+                    <button class="btn-next" onclick="startProcess()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> SUBIR A OFFSZN
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- STEP 4: UPLOAD & PROCESS PROGRESS -->
+            <div id="view-progress">
+                <div class="progress-spinner-container">
+                    <div class="outer-ring"></div>
+                    <div class="progress-percentage" id="progress-val">0%</div>
+                </div>
+                
+                <div>
+                    <h3 style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;">Publicando instrumental</h3>
+                    <p style="color: var(--dim); font-size: 11px;">El DAW está procesando y subiendo tus archivos...</p>
+                </div>
+
+                <div class="status-list">
+                    <div class="status-step" id="step-render">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> <span>Preparando archivos MP3 y WAV del Master</span>
+                    </div>
+                    <div class="status-step" id="step-upload-store">
+                        <i class="fa-regular fa-circle"></i> <span>Subiendo archivos y portada a OFFSZN</span>
+                    </div>
+                    <div class="status-step" id="step-youtube">
+                        <i class="fa-regular fa-circle"></i> <span>Publicando a YouTube (sin marca de agua)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 5: SUCCESS -->
+            <div id="view-success">
+                <div class="success-badge">
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <div>
+                    <h2 class="success-title">¡Beat Publicado!</h2>
+                    <p class="success-desc" id="success-message">Tu instrumental ha sido renderizada, subida a tu tienda OFFSZN y ya está lista para la venta.</p>
+                </div>
+                <button class="btn-restart" onclick="resetMockup()">Publicar otro Beat</button>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="plugin-footer">
+            <span id="footer-status-text">Desconectado</span>
+            <div class="user-indicator" id="footer-user" style="display: none;">
+                <div class="user-avatar">W</div>
+                <span>Willie OFFSZN</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MOCKUP INTERACTIVE LOGIC -->
+    <script>
+        let selectedYoutube = false;
+        let selectedCoverIndex = 0;
+        let currentKeywords = ['rnb'];
+
+        // Predefined cover styles with cool B&W-themed gradients and layouts
+        const coverTemplates = {
+            'rnb': [
+                { grad: 'linear-gradient(135deg, #111, #444, #222)', label: 'Sunset Vibe', icon: 'fa-regular fa-moon' },
+                { grad: 'linear-gradient(135deg, #050505, #666, #1a1a1a)', label: 'Neo-Soul Groove', icon: 'fa-solid fa-droplet' },
+                { grad: 'linear-gradient(135deg, #0d0d0d, #222, #000)', label: 'Late Night R&B', icon: 'fa-solid fa-wand-magic-sparkles' }
+            ],
+            'trap': [
+                { grad: 'linear-gradient(135deg, #000, #333, #000)', label: 'Metro Trap', icon: 'fa-solid fa-skull' },
+                { grad: 'linear-gradient(135deg, #121212, #555, #1c1c1c)', label: 'Dark Haze', icon: 'fa-solid fa-gun' },
+                { grad: 'linear-gradient(135deg, #08080a, #777, #000)', label: 'Cachin', icon: 'fa-solid fa-money-bill-wave' }
+            ],
+            'lofi': [
+                { grad: 'linear-gradient(135deg, #222, #555)', label: 'Study Session', icon: 'fa-solid fa-mug-saucer' },
+                { grad: 'linear-gradient(135deg, #0f0f12, #666)', label: 'Rainy Day', icon: 'fa-solid fa-cloud-showers-heavy' },
+                { grad: 'linear-gradient(135deg, #030303, #444, #1f1f1f)', label: 'Chill Vintage', icon: 'fa-solid fa-compact-disc' }
+            ],
+            'random': [
+                { grad: 'linear-gradient(135deg, #121215, #3a3a42)', label: 'Abstract Wave', icon: 'fa-solid fa-compass-drafting' },
+                { grad: 'linear-gradient(135deg, #050505, #505055)', label: 'Cloud Beats', icon: 'fa-solid fa-cloud' },
+                { grad: 'linear-gradient(135deg, #000000, #2b2b2b)', label: 'Deep Space', icon: 'fa-solid fa-satellite' }
+            ]
+        };
+
+        function loginWithGoogle() {
+            const authView = document.getElementById('view-auth');
+            authView.style.opacity = '0.5';
+            
+            setTimeout(() => {
+                authView.style.display = 'none';
+                document.getElementById('vst-steps-bar').style.display = 'flex';
+                
+                // Update footer user
+                document.getElementById('footer-status-text').textContent = 'Conectado a OFFSZN';
+                document.getElementById('footer-user').style.display = 'flex';
+                
+                goToStep(1);
+            }, 700);
+        }
+
+        function goToStep(stepNum) {
+            // Hide all steps
+            document.getElementById('view-audio').classList.remove('active');
+            document.getElementById('view-details').classList.remove('active');
+            document.getElementById('view-targets').classList.remove('active');
+
+            // Reset labels active
+            document.getElementById('step-lbl-1').className = 'step-item';
+            document.getElementById('step-lbl-2').className = 'step-item';
+            document.getElementById('step-lbl-3').className = 'step-item';
+
+            if (stepNum === 1) {
+                document.getElementById('view-audio').classList.add('active');
+                document.getElementById('step-lbl-1').className = 'step-item active';
+            } else if (stepNum === 2) {
+                document.getElementById('view-details').classList.add('active');
+                document.getElementById('step-lbl-1').className = 'step-item completed';
+                document.getElementById('step-lbl-2').className = 'step-item active';
+                onTitleChange(); // initialize cover recommendations
+            } else if (stepNum === 3) {
+                document.getElementById('view-targets').classList.add('active');
+                document.getElementById('step-lbl-1').className = 'step-item completed';
+                document.getElementById('step-lbl-2').className = 'step-item completed';
+                document.getElementById('step-lbl-3').className = 'step-item active';
+            }
+        }
+
+        // Cover Recommendation Logic based on title
+        function onTitleChange() {
+            const titleVal = document.getElementById('beat-title-input').value.toLowerCase();
+            
+            // Detect genre keywords from title
+            let genre = 'random';
+            let keywords = [];
+
+            if (titleVal.includes('rnb') || titleVal.includes('r&b') || titleVal.includes('soul')) {
+                genre = 'rnb';
+                keywords = ['rnb type beat', 'rnb beat type', 'soul type beat'];
+            } else if (titleVal.includes('trap') || titleVal.includes('hard') || titleVal.includes('drill')) {
+                genre = 'trap';
+                keywords = ['trap type beat', 'drill beat type', 'hard trap beat'];
+            } else if (titleVal.includes('lofi') || titleVal.includes('chill') || titleVal.includes('lo-fi')) {
+                genre = 'lofi';
+                keywords = ['lofi type beat', 'chill lofi beat', 'lo-fi type'];
+            } else {
+                // Random / Unknown fallback - Juan Perez style
+                genre = 'random';
+                keywords = ['trap type beat', 'rnb type beat', 'lofi type beat'];
+            }
+
+            currentKeywords = keywords;
+            renderVariations(genre);
+            renderCovers(genre);
+        }
+
+        function setKeywordSearch(keyword, genre) {
+            document.getElementById('search-tag-indicator').textContent = `Búsqueda: ${keyword}`;
+            
+            // Update active variation badge
+            const badges = document.querySelectorAll('.variation-badge');
+            badges.forEach(b => {
+                if (b.textContent.toLowerCase() === keyword.toLowerCase()) {
+                    b.classList.add('active');
+                } else {
+                    b.classList.remove('active');
+                }
+            });
+
+            // Re-render covers
+            renderCovers(genre);
+        }
+
+        function renderVariations(genre) {
+            const container = document.getElementById('variations-container');
+            container.innerHTML = '';
+
+            currentKeywords.forEach((kw, idx) => {
+                const badge = document.createElement('div');
+                badge.className = `variation-badge ${idx === 0 ? 'active' : ''}`;
+                badge.textContent = kw;
+                badge.onclick = () => setKeywordSearch(kw, genre);
+                container.appendChild(badge);
+            });
+
+            document.getElementById('search-tag-indicator').textContent = `Búsqueda: ${currentKeywords[0]}`;
+        }
+
+        function renderCovers(genre) {
+            const container = document.getElementById('covers-container');
+            container.innerHTML = '';
+
+            const titleInput = document.getElementById('beat-title-input').value;
+            const templates = coverTemplates[genre] || coverTemplates['random'];
+
+            templates.forEach((tpl, idx) => {
+                const card = document.createElement('div');
+                card.className = `cover-option-card ${idx === selectedCoverIndex ? 'selected' : ''}`;
+                card.style.background = tpl.grad;
+                card.onclick = () => selectCover(idx);
+
+                const icon = document.createElement('i');
+                icon.className = `${tpl.icon} cover-icon`;
+                card.appendChild(icon);
+
+                const overlay = document.createElement('div');
+                overlay.className = 'cover-overlay';
+                card.appendChild(overlay);
+
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'cover-title';
+                titleSpan.textContent = titleInput || 'Mi Beat';
+                card.appendChild(titleSpan);
+
+                container.appendChild(card);
+            });
+
+            // Add Custom Upload option card
+            const customCard = document.createElement('div');
+            customCard.className = 'custom-upload-card';
+            customCard.innerHTML = `<i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px;"></i><span style="font-size:9px; font-weight:700;">Subir Imagen</span>`;
+            customCard.onclick = () => alert('Simulación: Seleccionar archivo del sistema...');
+            container.appendChild(customCard);
+        }
+
+        function selectCover(idx) {
+            selectedCoverIndex = idx;
+            const cards = document.querySelectorAll('.cover-option-card');
+            cards.forEach((c, i) => {
+                if (i === idx) {
+                    c.classList.add('selected');
+                } else {
+                    c.classList.remove('selected');
+                }
+            });
+        }
+
+        function toggleYoutube() {
+            const toggle = document.getElementById('yt-toggle');
+            toggle.checked = !toggle.checked;
+            updateYtState();
+        }
+
+        function updateYtState() {
+            const toggle = document.getElementById('yt-toggle');
+            const leftArea = document.getElementById('yt-left-area');
+            selectedYoutube = toggle.checked;
+
+            if (selectedYoutube) {
+                leftArea.classList.add('youtube-active');
+            } else {
+                leftArea.classList.remove('youtube-active');
+            }
+        }
+
+        function startProcess() {
+            document.getElementById('view-targets').classList.remove('active');
+            document.getElementById('vst-steps-bar').style.display = 'none';
+            document.getElementById('view-progress').style.display = 'flex';
+
+            const progressVal = document.getElementById('progress-val');
+            const stepRender = document.getElementById('step-render');
+            const stepUploadStore = document.getElementById('step-upload-store');
+            const stepYoutube = document.getElementById('step-youtube');
+
+            if (!selectedYoutube) {
+                stepYoutube.style.display = 'none';
+            } else {
+                stepYoutube.style.display = 'flex';
+            }
+
+            // Step status resetting
+            stepRender.className = 'status-step active';
+            stepRender.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
+            
+            stepUploadStore.className = 'status-step';
+            stepUploadStore.querySelector('i').className = 'fa-regular fa-circle';
+
+            stepYoutube.className = 'status-step';
+            stepYoutube.querySelector('i').className = 'fa-regular fa-circle';
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 2;
+                progressVal.textContent = `${progress}%`;
+
+                if (progress === 30) {
+                    stepRender.className = 'status-step completed';
+                    stepRender.querySelector('i').className = 'fa-solid fa-circle-check';
+                    
+                    stepUploadStore.className = 'status-step active';
+                    stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
+                }
+
+                if (progress === 70) {
+                    stepUploadStore.className = 'status-step completed';
+                    stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-check';
+
+                    if (selectedYoutube) {
+                        stepYoutube.className = 'status-step active';
+                        stepYoutube.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
+                    }
+                }
+
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    
+                    if (selectedYoutube) {
+                        stepYoutube.className = 'status-step completed';
+                        stepYoutube.querySelector('i').className = 'fa-solid fa-circle-check';
+                    }
+
+                    setTimeout(() => {
+                        document.getElementById('view-progress').style.display = 'none';
+                        const successView = document.getElementById('view-success');
+                        
+                        const titleText = document.getElementById('beat-title-input').value || 'Beat';
+                        const msg = selectedYoutube 
+                            ? `"${titleText}" ha sido renderizado en MP3/WAV, subido a tu tienda OFFSZN y publicado en YouTube.`
+                            : `"${titleText}" ha sido renderizado en MP3/WAV y subido directamente a tu tienda virtual de OFFSZN.`;
+                        
+                        document.getElementById('success-message').textContent = msg;
+                        successView.style.display = 'flex';
+                    }, 500);
+                }
+            }, 60);
+        }
+
+        function resetMockup() {
+            document.getElementById('view-success').style.display = 'none';
+            document.getElementById('vst-steps-bar').style.display = 'flex';
+            goToStep(1);
+        }
+    </script>
+</body>
+</html>
