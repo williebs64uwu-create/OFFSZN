@@ -180,4 +180,12 @@
             document.cookie = `sb-access-token=${token}; path=/; max-age=${maxAge}; SameSite=Strict; Secure`;
         }
     });
+
+    // Automatically hide YouTube (Beta) menu item from sidebars to avoid unverified OAuth warnings
+    document.addEventListener('DOMContentLoaded', () => {
+        const ytSidebarItems = document.querySelectorAll('a[href*="youtube.html"], a[data-title*="YouTube"], a[title*="YouTube"]');
+        ytSidebarItems.forEach(el => {
+            el.style.setProperty('display', 'none', 'important');
+        });
+    });
 })();

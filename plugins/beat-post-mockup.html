@@ -7,6 +7,13 @@
     <title>BEAT POST - OFFSZN Plugin</title>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase Client for Real Integration -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/env.js" onerror="console.log('Running standalone/mockup mode')"></script>
+    <script src="/script/config.js" onerror="console.log('Config omitted')"></script>
+    <script src="beat-post-service.js"></script>
+
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -42,8 +49,8 @@
 
         /* ─── PLUGIN CONTAINER (VST WINDOW) ─── */
         .vst-container {
-            width: 580px;
-            height: 680px;
+            width: 620px;
+            height: 740px;
             background: var(--panel);
             border: 1px solid var(--border);
             border-radius: 16px;
@@ -81,7 +88,7 @@
 
         /* ─── HEADER ─── */
         .plugin-header {
-            padding: 18px 24px;
+            padding: 20px 24px;
             border-bottom: 1px solid var(--border);
             background: linear-gradient(180deg, rgba(25,25,32,0.5) 0%, rgba(12,12,14,0) 100%);
             display: flex;
@@ -97,11 +104,11 @@
 
         .logo-mark {
             color: var(--accent);
-            font-size: 20px;
+            font-size: 22px;
         }
 
         .logo-text {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 800;
             letter-spacing: 2px;
             color: #fff;
@@ -118,7 +125,7 @@
             display: flex;
             background: #060608;
             border-bottom: 1px solid var(--border);
-            height: 36px;
+            height: 38px;
             align-items: center;
             justify-content: space-between;
             padding: 0 24px;
@@ -153,7 +160,7 @@
         /* ─── VIEWS CONTAINER ─── */
         .content-area {
             flex: 1;
-            padding: 24px;
+            padding: 28px;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
@@ -172,21 +179,21 @@
         }
 
         .auth-logo-icon {
-            font-size: 58px;
+            font-size: 64px;
             color: var(--accent);
         }
 
         .auth-title {
-            font-size: 19px;
+            font-size: 20px;
             font-weight: 800;
             color: #fff;
             margin-bottom: 6px;
         }
 
         .auth-desc {
-            font-size: 12.5px;
+            font-size: 13px;
             color: var(--dim);
-            max-width: 340px;
+            max-width: 360px;
             line-height: 1.6;
         }
 
@@ -215,7 +222,7 @@
         .step-pane {
             display: none;
             flex-direction: column;
-            gap: 20px;
+            gap: 24px;
             height: 100%;
         }
 
@@ -246,7 +253,7 @@
             padding: 14px 16px;
             color: #fff;
             font-family: inherit;
-            font-size: 13.5px;
+            font-size: 14px;
             outline: none;
             transition: border-color 0.2s;
         }
@@ -260,10 +267,10 @@
             background: #060608;
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 16px;
+            padding: 18px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
         }
 
         .recommender-header {
@@ -289,8 +296,8 @@
             background: var(--panel-light);
             border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 5px 12px;
-            font-size: 10px;
+            padding: 6px 14px;
+            font-size: 10.5px;
             color: var(--dim);
             cursor: pointer;
             transition: all 0.2s ease;
@@ -305,7 +312,7 @@
         .covers-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            gap: 14px;
         }
 
         .cover-option-card {
@@ -318,7 +325,7 @@
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            padding: 10px;
+            padding: 12px;
             transition: all 0.2s ease;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
@@ -340,7 +347,7 @@
         }
 
         .cover-title {
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 800;
             color: #fff;
             z-index: 2;
@@ -354,7 +361,7 @@
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 26px;
+            font-size: 30px;
             color: rgba(255,255,255,0.15);
             z-index: 1;
             transition: transform 0.3s;
@@ -374,7 +381,7 @@
             text-align: center;
             cursor: pointer;
             aspect-ratio: 1/1;
-            gap: 6px;
+            gap: 8px;
             color: var(--dim);
             transition: all 0.2s;
         }
@@ -389,7 +396,7 @@
             background: var(--panel-light);
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 16px;
+            padding: 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -405,11 +412,11 @@
         .dest-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
 
         .dest-icon {
-            font-size: 18px;
+            font-size: 20px;
             color: var(--dim);
             width: 24px;
             text-align: center;
@@ -424,13 +431,13 @@
         }
 
         .dest-details h4 {
-            font-size: 12.5px;
+            font-size: 13px;
             font-weight: 700;
             color: #fff;
         }
 
         .dest-details p {
-            font-size: 10px;
+            font-size: 10.5px;
             color: var(--dim);
         }
 
@@ -462,10 +469,10 @@
             background: #000000;
             border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 16px;
+            padding: 18px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
         }
 
         .capture-header {
@@ -481,7 +488,7 @@
         .capture-files {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
 
         .file-row {
@@ -489,14 +496,14 @@
             align-items: center;
             justify-content: space-between;
             background: var(--panel-light);
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 6px;
             border: 1px solid var(--border);
         }
 
         .file-name {
             font-family: 'Geist Mono', monospace;
-            font-size: 11.5px;
+            font-size: 12.5px;
             color: #eee;
             display: flex;
             align-items: center;
@@ -504,9 +511,34 @@
         }
 
         .file-status {
-            font-size: 10.5px;
+            font-size: 11px;
             font-weight: 700;
             color: #fff;
+        }
+
+        /* Debug / Host Info Console */
+        .debug-console {
+            background: #060608;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-family: 'Geist Mono', monospace;
+            font-size: 10px;
+            color: var(--dim);
+            max-height: 80px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .debug-line {
+            display: flex;
+            gap: 8px;
+        }
+        .debug-tag {
+            color: #fff;
+            font-weight: 700;
         }
 
         /* Navigation Buttons */
@@ -668,6 +700,40 @@
             color: #fff;
             border-color: #fff;
         }
+
+        /* ─── FOOTER BRANDING ─── */
+        .plugin-footer {
+            height: 38px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            background: #0a0a0d;
+            font-size: 10px;
+            color: var(--dim);
+            flex-shrink: 0;
+        }
+
+        .user-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .user-avatar {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -691,11 +757,10 @@
                 <i class="fa-solid fa-cloud-arrow-up logo-mark"></i>
                 <div>
                     <div class="logo-text">BEAT POST</div>
-                    <div class="logo-sub">OFFSZN Exporter</div>
                 </div>
             </div>
             <div style="font-size: 9px; font-weight: 700; color: #fff; opacity: 0.8; letter-spacing: 0.5px;">
-                VST INTEGRATION
+                Versión 1.0.0
             </div>
         </div>
 
@@ -737,18 +802,25 @@
                     <div class="master-capture-card">
                         <div class="capture-header">
                             <span>Estado de Captura</span>
-                            <span style="color: #fff;">Archivos Listos</span>
+                            <span style="color: #fff;" id="render-status-lbl">Archivos Listos</span>
                         </div>
                         <div class="capture-files">
                             <div class="file-row">
                                 <span class="file-name"><i class="fa-regular fa-file-audio"></i> master_timeline.wav</span>
-                                <span class="file-status">Audio WAV (24-bit)</span>
+                                <span class="file-status" id="wav-status-lbl">Audio WAV (24-bit)</span>
                             </div>
                             <div class="file-row">
                                 <span class="file-name"><i class="fa-regular fa-file-audio"></i> master_timeline.mp3</span>
-                                <span class="file-status">Audio MP3 (320k)</span>
+                                <span class="file-status" id="mp3-status-lbl">Audio MP3 (320k)</span>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 14px;">
+                    <h3 class="section-title">Debug & Host Bridge</h3>
+                    <div class="debug-console" id="dbg-console">
+                        <div class="debug-line"><span class="debug-tag">[SYS]</span> VST enlazado al Master Bus.</div>
                     </div>
                 </div>
 
@@ -891,7 +963,7 @@
         let selectedCoverIndex = 0;
         let currentKeywords = ['rnb'];
 
-        // Predefined cover styles with cool B&W-themed gradients and layouts
+        // Premium B&W gradients
         const coverTemplates = {
             'rnb': [
                 { grad: 'linear-gradient(135deg, #111, #444, #222)', label: 'Sunset Vibe', icon: 'fa-regular fa-moon' },
@@ -915,7 +987,60 @@
             ]
         };
 
-        function loginWithGoogle() {
+        // ═══════════════════════════════════════════════════════════
+        //  DAW NATIVE C++ BRIDGE
+        // ═══════════════════════════════════════════════════════════
+        function callNativeHost(action, payload = {}) {
+            logDebug(`Calling host: ${action}`);
+            
+            // Check for WebView2 host bridge
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({
+                    action: action,
+                    payload: payload
+                });
+                return true;
+            }
+            return false;
+        }
+
+        function logDebug(msg) {
+            const consoleEl = document.getElementById('dbg-console');
+            if (consoleEl) {
+                const line = document.createElement('div');
+                line.className = 'debug-line';
+                line.innerHTML = `<span class="debug-tag">[SYS]</span> ${msg}`;
+                consoleEl.appendChild(line);
+                consoleEl.scrollTop = consoleEl.scrollHeight;
+            }
+        }
+
+        // Listener for Host answers
+        if (window.chrome && window.chrome.webview) {
+            window.chrome.webview.addEventListener('message', function(e) {
+                const data = e.data;
+                logDebug(`Host answered: ${data.event}`);
+                if (data.event === 'audioRendered') {
+                    document.getElementById('render-status-lbl').textContent = 'Listo';
+                    document.getElementById('wav-status-lbl').textContent = 'Audio WAV cargado';
+                }
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        //  LOGIN LOGIC (Google & Supabase check)
+        // ═══════════════════════════════════════════════════════════
+        async function loginWithGoogle() {
+            logDebug('Requesting Google authentication...');
+            
+            // Check if we can trigger native authentication
+            const nativeTriggered = callNativeHost('signInGoogle');
+            
+            if (window.supabaseClient) {
+                logDebug('Supabase SDK detected. Persisting session...');
+                // Standalone / WebView auth fallback
+            }
+
             const authView = document.getElementById('view-auth');
             authView.style.opacity = '0.5';
             
@@ -928,16 +1053,14 @@
                 document.getElementById('footer-user').style.display = 'flex';
                 
                 goToStep(1);
-            }, 700);
+            }, 500);
         }
 
         function goToStep(stepNum) {
-            // Hide all steps
             document.getElementById('view-audio').classList.remove('active');
             document.getElementById('view-details').classList.remove('active');
             document.getElementById('view-targets').classList.remove('active');
 
-            // Reset labels active
             document.getElementById('step-lbl-1').className = 'step-item';
             document.getElementById('step-lbl-2').className = 'step-item';
             document.getElementById('step-lbl-3').className = 'step-item';
@@ -945,11 +1068,12 @@
             if (stepNum === 1) {
                 document.getElementById('view-audio').classList.add('active');
                 document.getElementById('step-lbl-1').className = 'step-item active';
+                callNativeHost('checkTimelineRender');
             } else if (stepNum === 2) {
                 document.getElementById('view-details').classList.add('active');
                 document.getElementById('step-lbl-1').className = 'step-item completed';
                 document.getElementById('step-lbl-2').className = 'step-item active';
-                onTitleChange(); // initialize cover recommendations
+                onTitleChange();
             } else if (stepNum === 3) {
                 document.getElementById('view-targets').classList.add('active');
                 document.getElementById('step-lbl-1').className = 'step-item completed';
@@ -958,11 +1082,9 @@
             }
         }
 
-        // Cover Recommendation Logic based on title
+        // Cover recommendations logic
         function onTitleChange() {
             const titleVal = document.getElementById('beat-title-input').value.toLowerCase();
-            
-            // Detect genre keywords from title
             let genre = 'random';
             let keywords = [];
 
@@ -976,7 +1098,6 @@
                 genre = 'lofi';
                 keywords = ['lofi type beat', 'chill lofi beat', 'lo-fi type'];
             } else {
-                // Random / Unknown fallback - Juan Perez style
                 genre = 'random';
                 keywords = ['trap type beat', 'rnb type beat', 'lofi type beat'];
             }
@@ -988,8 +1109,6 @@
 
         function setKeywordSearch(keyword, genre) {
             document.getElementById('search-tag-indicator').textContent = `Búsqueda: ${keyword}`;
-            
-            // Update active variation badge
             const badges = document.querySelectorAll('.variation-badge');
             badges.forEach(b => {
                 if (b.textContent.toLowerCase() === keyword.toLowerCase()) {
@@ -998,8 +1117,6 @@
                     b.classList.remove('active');
                 }
             });
-
-            // Re-render covers
             renderCovers(genre);
         }
 
@@ -1047,11 +1164,13 @@
                 container.appendChild(card);
             });
 
-            // Add Custom Upload option card
             const customCard = document.createElement('div');
             customCard.className = 'custom-upload-card';
             customCard.innerHTML = `<i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px;"></i><span style="font-size:9px; font-weight:700;">Subir Imagen</span>`;
-            customCard.onclick = () => alert('Simulación: Seleccionar archivo del sistema...');
+            customCard.onclick = () => {
+                callNativeHost('openFileExplorer', { type: 'image' });
+                alert('Simulación: Seleccionar archivo del sistema...');
+            };
             container.appendChild(customCard);
         }
 
@@ -1101,30 +1220,34 @@
                 stepYoutube.style.display = 'flex';
             }
 
-            // Step status resetting
             stepRender.className = 'status-step active';
             stepRender.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
-            
             stepUploadStore.className = 'status-step';
             stepUploadStore.querySelector('i').className = 'fa-regular fa-circle';
-
             stepYoutube.className = 'status-step';
             stepYoutube.querySelector('i').className = 'fa-regular fa-circle';
 
+            // Trigger C++ audio render & cloud publication
+            const titleText = document.getElementById('beat-title-input').value || 'Beat';
+            callNativeHost('publishBeat', {
+                title: titleText,
+                syncYoutube: selectedYoutube
+            });
+
+            // Fast simulation speed (20ms interval ticks)
             let progress = 0;
             const interval = setInterval(() => {
-                progress += 2;
+                progress += 4; // faster steps
                 progressVal.textContent = `${progress}%`;
 
-                if (progress === 30) {
+                if (progress === 28) {
                     stepRender.className = 'status-step completed';
                     stepRender.querySelector('i').className = 'fa-solid fa-circle-check';
-                    
                     stepUploadStore.className = 'status-step active';
                     stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
                 }
 
-                if (progress === 70) {
+                if (progress === 72) {
                     stepUploadStore.className = 'status-step completed';
                     stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-check';
 
@@ -1146,16 +1269,15 @@
                         document.getElementById('view-progress').style.display = 'none';
                         const successView = document.getElementById('view-success');
                         
-                        const titleText = document.getElementById('beat-title-input').value || 'Beat';
                         const msg = selectedYoutube 
                             ? `"${titleText}" ha sido renderizado en MP3/WAV, subido a tu tienda OFFSZN y publicado en YouTube.`
                             : `"${titleText}" ha sido renderizado en MP3/WAV y subido directamente a tu tienda virtual de OFFSZN.`;
                         
                         document.getElementById('success-message').textContent = msg;
                         successView.style.display = 'flex';
-                    }, 500);
+                    }, 300);
                 }
-            }, 60);
+            }, 20); // 20ms animation tick rate for rapid testing
         }
 
         function resetMockup() {

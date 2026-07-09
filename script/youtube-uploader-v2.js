@@ -8,7 +8,7 @@ const YouTubeUploader = (function () {
     // Configuration
     const CONFIG = {
         CLIENT_ID: '804444303530-bl8gtp4sdjkcnrkjl1295vns59tqp4tc.apps.googleusercontent.com',
-        SCOPES: 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly',
+        SCOPES: 'https://www.googleapis.com/auth/youtube.upload',
         DISCOVERY_DOCS: ['https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest']
     };
 

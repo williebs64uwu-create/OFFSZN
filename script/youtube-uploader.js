@@ -18,7 +18,7 @@ const YouTubeUploader = (function () {
         // This is the SAME client ID used in youtube-importer.js. 
         // We will need 'https://www.googleapis.com/auth/youtube.upload' scope.
         CLIENT_ID: '804444303530-bl8gtp4sdjkcnrkjl1295vns59tqp4tc.apps.googleusercontent.com', // Replace if different
-        SCOPES: 'https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly',
+        SCOPES: 'https://www.googleapis.com/auth/youtube.upload',
         DISCOVERY_DOCS: ['https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest']
     };
 
