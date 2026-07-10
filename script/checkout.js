@@ -1745,7 +1745,7 @@ const CheckoutManager = {
       // Success: Clear cart and redirect to WhatsApp
       const orderId = orderData.id;
       const orderNumber = orderId.substring(0, 8).toUpperCase();
-      const whatsappPhone = "51965715974"; // The owner's number
+      const whatsappPhone = "51993525005"; // The owner's number
 
       const message = encodeURIComponent(
         `¡Hola OFFSZN! 👋 He realizado mi pago por Yape.\n\n` +
