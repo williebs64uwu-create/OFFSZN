@@ -254,8 +254,8 @@ const YouTubeUploader = (function () {
             console.log('📹 [YT-V2] Requesting auth via proxy...');
 
             const authTimeout = setTimeout(() => {
-                reject(new Error('La autenticación de Google tardó demasiado o la ventana fue cerrada. Reintenta.'));
-            }, 60000); // 1 minute safety timeout
+                reject(new Error('La autenticación de Google tardó demasiado. Reintenta.'));
+            }, 300000); // 5 minutes safety timeout (300,000 ms)
 
             window._googleRequestAuth((resp) => {
                 clearTimeout(authTimeout);
