@@ -988,10 +988,10 @@
                     <p style="color: var(--dim); font-size: 11.5px; margin-bottom: 14px; line-height: 1.5;">Arrastra tus archivos WAV/MP3 exportados o haz clic para cargarlos desde el explorador.</p>
                     
                     <!-- DRAG & DROP ZONE -->
-                    <div id="drop-zone" class="custom-upload-card" style="width: 100%; height: 140px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: #060608; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px; transition: border-color 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border-light)'" ondrop="handleFileDrop(event)" onclick="document.getElementById('file-input-mp3').click()">
+                    <div id="drop-zone" class="custom-upload-card" style="width: 100%; height: 140px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: #060608; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px; transition: border-color 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border-light)'" ondrop="handleFileDrop(event)" onclick="if (!uploadedFiles.mp3) { document.getElementById('file-input-mp3').click(); } else { document.getElementById('file-input-wav').click(); }">
                         <i class="fa-solid fa-cloud-arrow-up" style="font-size: 26px; color: var(--dim);"></i>
                         <span style="font-size: 12px; font-weight: 700; color: #fff;">Arrastra aquí tus archivos MP3 y WAV</span>
-                        <span style="font-size: 10px; color: var(--dim);">O haz clic para seleccionar tu MP3 principal (máx. 60MB)</span>
+                        <span id="drop-zone-help" style="font-size: 10px; color: var(--dim);">O haz clic para seleccionar tu MP3 principal (máx. 60MB)</span>
                         <input type="file" id="file-input-wav" accept=".wav" style="display: none;" onchange="handleFileSelect('wav', this.files[0])">
                         <input type="file" id="file-input-mp3" accept=".mp3" style="display: none;" onchange="handleFileSelect('mp3', this.files[0])">
                     </div>
@@ -1212,7 +1212,7 @@
             { url: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'bridge', 'chill', 'mist'] },
             // GENERAL & OTHERS
             { url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500&auto=format&fit=crop&q=80', tags: ['singer', 'shadow', 'music', 'soul'] },
-            { url: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=500&auto=format&fit=crop&q=80', tags: ['concert', 'hands', 'crowd', 'festival'] },
+            { url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80', tags: ['concert', 'hands', 'crowd', 'festival'] },
             { url: 'https://images.unsplash.com/photo-1518972559570-7cc1309f3229?w=500&auto=format&fit=crop&q=80', tags: ['synth', 'keys', 'music', 'piano'] },
             { url: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=500&auto=format&fit=crop&q=80', tags: ['neon', 'headphones', 'music', 'gaming'] },
             { url: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=500&auto=format&fit=crop&q=80', tags: ['sunset', 'city', 'chill', 'skyline'] },
@@ -1446,6 +1446,12 @@
             } else if (type === 'mp3') {
                 document.getElementById('mp3-status-lbl').textContent = `${file.name.substring(0,18)}... (${(file.size/1024/1024).toFixed(1)}MB)`;
                 document.getElementById('mp3-status-lbl').style.color = 'var(--green)';
+                
+                // Update helper text if MP3 is uploaded
+                const helpEl = document.getElementById('drop-zone-help');
+                if (helpEl) {
+                    helpEl.textContent = 'O haz clic para seleccionar tu WAV adicional (máx. 60MB)';
+                }
             }
             validateStep1Continue();
         }
@@ -1628,10 +1634,19 @@
                 const card = document.createElement('div');
                 const isSelected = (selectedCoverUrl === tpl.url) && !uploadedFiles.cover;
                 card.className = `cover-option-card ${isSelected ? 'selected' : ''}`;
-                card.style.backgroundImage = `url(${tpl.url})`;
-                card.style.backgroundSize = 'cover';
-                card.style.backgroundPosition = 'center';
                 card.onclick = () => selectCoverUrl(tpl.url);
+
+                const img = document.createElement('img');
+                img.src = tpl.url;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                img.style.position = 'absolute';
+                img.style.inset = '0';
+                img.onerror = () => {
+                    img.src = 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=500&auto=format&fit=crop&q=80';
+                };
+                card.appendChild(img);
 
                 const overlay = document.createElement('div');
                 overlay.className = 'cover-overlay';
@@ -1772,6 +1787,9 @@
         }
 
         // Modal cover recommender functions
+        let currentSearchQuery = '';
+        let openversePage = 1;
+        let isLocalSearch = true;
         let modalSearchOffset = 0;
         let currentModalResults = [];
 
@@ -1781,7 +1799,6 @@
                 modal.style.display = 'flex';
                 const titleVal = document.getElementById('beat-title-input').value || '';
                 document.getElementById('modal-cover-search').value = titleVal;
-                modalSearchOffset = 0;
                 runModalSearch(titleVal, false);
             }
         }
@@ -1794,45 +1811,126 @@
         }
 
         function runModalSearch(query, append = false) {
-            const searchTerms = query.toLowerCase().split(/\s+/).filter(Boolean);
-            let matches = [];
+            query = query.trim();
+            currentSearchQuery = query;
 
-            if (searchTerms.length === 0) {
-                matches = [...curatedCovers];
-            } else {
-                curatedCovers.forEach(cov => {
-                    let score = 0;
-                    searchTerms.forEach(term => {
-                        cov.tags.forEach(tag => {
-                            if (tag.includes(term) || term.includes(tag)) {
-                                score += 2;
-                            }
+            if (!append) {
+                openversePage = 1;
+                modalSearchOffset = 0;
+                document.getElementById('modal-covers-grid').innerHTML = '';
+                document.getElementById('btn-load-more-modal').style.display = 'none';
+            }
+
+            // If query is empty, use local curated covers list
+            if (query === '') {
+                isLocalSearch = true;
+                const limit = 15;
+                const offset = append ? document.querySelectorAll('#modal-covers-grid .modal-cover-card').length : 0;
+                const pageResults = curatedCovers.slice(offset, offset + limit);
+                
+                renderResultsInModal(pageResults);
+                
+                const loadMoreBtn = document.getElementById('btn-load-more-modal');
+                if (offset + limit < curatedCovers.length) {
+                    loadMoreBtn.style.display = 'block';
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+                return;
+            }
+
+            // Real live search on Openverse API
+            isLocalSearch = false;
+            const grid = document.getElementById('modal-covers-grid');
+            
+            // Show loading spinner
+            let loader = document.getElementById('modal-search-loader');
+            if (!loader) {
+                loader = document.createElement('div');
+                loader.id = 'modal-search-loader';
+                loader.style.gridColumn = '1 / -1';
+                loader.style.textAlign = 'center';
+                loader.style.padding = '20px';
+                loader.style.color = 'var(--dim)';
+                loader.style.fontSize = '12px';
+                loader.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando en internet...';
+            }
+            grid.appendChild(loader);
+
+            // Fetch page results from Openverse
+            const url = `https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page=${openversePage}&page_size=15`;
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error('Search failed');
+                    return res.json();
+                })
+                .then(data => {
+                    if (loader) loader.remove();
+
+                    if (!data.results || data.results.length === 0) {
+                        if (!append) {
+                            grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--dim);">No se encontraron resultados en internet.</div>';
+                        }
+                        return;
+                    }
+
+                    const formattedResults = data.results.map(r => ({
+                        url: r.url || r.thumbnail,
+                        tags: r.tags ? r.tags.map(t => t.name) : []
+                    }));
+
+                    renderResultsInModal(formattedResults);
+
+                    openversePage++;
+
+                    const loadMoreBtn = document.getElementById('btn-load-more-modal');
+                    if (data.page < data.page_count) {
+                        loadMoreBtn.style.display = 'block';
+                    } else {
+                        loadMoreBtn.style.display = 'none';
+                    }
+                })
+                .catch(err => {
+                    console.error("Openverse search error:", err);
+                    if (loader) loader.remove();
+                    
+                    // Local fallback search matching tags
+                    isLocalSearch = true;
+                    const searchTerms = query.toLowerCase().split(/\s+/).filter(Boolean);
+                    let matches = [];
+                    curatedCovers.forEach(cov => {
+                        let score = 0;
+                        searchTerms.forEach(term => {
+                            cov.tags.forEach(tag => {
+                                if (tag.includes(term) || term.includes(tag)) score += 2;
+                            });
                         });
+                        if (score > 0) matches.push({ ...cov, score });
                     });
-                    if (score > 0) {
-                        matches.push({ ...cov, score });
+
+                    matches.sort((a, b) => b.score - a.score);
+                    if (matches.length === 0) {
+                        matches = [...curatedCovers].sort(() => 0.5 - Math.random());
+                    }
+
+                    const limit = 15;
+                    const offset = append ? document.querySelectorAll('#modal-covers-grid .modal-cover-card').length : 0;
+                    const pageResults = matches.slice(offset, offset + limit);
+                    
+                    renderResultsInModal(pageResults);
+                    
+                    const loadMoreBtn = document.getElementById('btn-load-more-modal');
+                    if (offset + limit < matches.length) {
+                        loadMoreBtn.style.display = 'block';
+                    } else {
+                        loadMoreBtn.style.display = 'none';
                     }
                 });
+        }
 
-                matches.sort((a, b) => b.score - a.score);
-
-                if (matches.length === 0) {
-                    matches = [...curatedCovers].sort(() => 0.5 - Math.random());
-                }
-            }
-
-            const limit = 15;
-            if (!append) {
-                modalSearchOffset = 0;
-                currentModalResults = matches;
-                document.getElementById('modal-covers-grid').innerHTML = '';
-            }
-
-            const pageResults = currentModalResults.slice(modalSearchOffset, modalSearchOffset + limit);
-            modalSearchOffset += limit;
-
+        function renderResultsInModal(results) {
             const grid = document.getElementById('modal-covers-grid');
-            pageResults.forEach(cov => {
+            results.forEach(cov => {
                 const card = document.createElement('div');
                 const isSelected = (selectedCoverUrl === cov.url) && !uploadedFiles.cover;
                 card.className = `modal-cover-card ${isSelected ? 'selected' : ''}`;
@@ -1840,6 +1938,9 @@
                 const img = document.createElement('img');
                 img.src = cov.url;
                 img.alt = 'Cover option';
+                img.onerror = () => {
+                    img.src = 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=500&auto=format&fit=crop&q=80';
+                };
                 card.appendChild(img);
 
                 const dlBtn = document.createElement('button');
@@ -1855,13 +1956,6 @@
 
                 grid.appendChild(card);
             });
-
-            const loadMoreBtn = document.getElementById('btn-load-more-modal');
-            if (modalSearchOffset < currentModalResults.length) {
-                loadMoreBtn.style.display = 'block';
-            } else {
-                loadMoreBtn.style.display = 'none';
-            }
         }
 
         // ═══════════════════════════════════════════════════════════
