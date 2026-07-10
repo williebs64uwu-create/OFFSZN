@@ -325,7 +325,7 @@
         }
 
         .cover-option-card:hover {
-            transform: scale(1.02);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .cover-option-card.selected {
@@ -849,8 +849,8 @@
             transition: transform 0.3s;
         }
 
-        .modal-cover-card:hover img {
-            transform: scale(1.05);
+        .modal-cover-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .modal-cover-card.selected {
@@ -873,13 +873,11 @@
             font-size: 11px;
             cursor: pointer;
             z-index: 5;
-            transition: all 0.2s;
+            transition: opacity 0.2s;
         }
 
         .btn-download-cover:hover {
-            background: var(--accent);
-            border-color: var(--accent);
-            transform: scale(1.1);
+            opacity: 0.8;
         }
 
         .btn-load-more {
@@ -992,9 +990,9 @@
                         <i class="fa-solid fa-cloud-arrow-up" style="font-size: 26px; color: var(--dim);"></i>
                         <span style="font-size: 12px; font-weight: 700; color: #fff;">Arrastra aquí tus archivos MP3 y WAV</span>
                         <span id="drop-zone-help" style="font-size: 10px; color: var(--dim);">O haz clic para seleccionar tu MP3 principal (máx. 60MB)</span>
-                        <input type="file" id="file-input-wav" accept=".wav" style="display: none;" onchange="handleFileSelect('wav', this.files[0])">
-                        <input type="file" id="file-input-mp3" accept=".mp3" style="display: none;" onchange="handleFileSelect('mp3', this.files[0])">
                     </div>
+                    <input type="file" id="file-input-wav" accept=".wav" style="display: none;" onchange="handleFileSelect('wav', this.files[0])">
+                    <input type="file" id="file-input-mp3" accept=".mp3" style="display: none;" onchange="handleFileSelect('mp3', this.files[0])">
 
                     <!-- SELECTED FILES LIST -->
                     <div class="capture-files" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
@@ -1815,7 +1813,6 @@
             currentSearchQuery = query;
 
             if (!append) {
-                openversePage = 1;
                 modalSearchOffset = 0;
                 document.getElementById('modal-covers-grid').innerHTML = '';
                 document.getElementById('btn-load-more-modal').style.display = 'none';
@@ -1825,13 +1822,13 @@
             if (query === '') {
                 isLocalSearch = true;
                 const limit = 15;
-                const offset = append ? document.querySelectorAll('#modal-covers-grid .modal-cover-card').length : 0;
-                const pageResults = curatedCovers.slice(offset, offset + limit);
+                const pageResults = curatedCovers.slice(modalSearchOffset, modalSearchOffset + limit);
+                modalSearchOffset += pageResults.length;
                 
                 renderResultsInModal(pageResults);
                 
                 const loadMoreBtn = document.getElementById('btn-load-more-modal');
-                if (offset + limit < curatedCovers.length) {
+                if (modalSearchOffset < curatedCovers.length) {
                     loadMoreBtn.style.display = 'block';
                 } else {
                     loadMoreBtn.style.display = 'none';
@@ -1839,7 +1836,7 @@
                 return;
             }
 
-            // Real live search on Openverse API
+            // Real live search on Deezer API
             isLocalSearch = false;
             const grid = document.getElementById('modal-covers-grid');
             
@@ -1853,12 +1850,11 @@
                 loader.style.padding = '20px';
                 loader.style.color = 'var(--dim)';
                 loader.style.fontSize = '12px';
-                loader.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando en internet...';
+                loader.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando portadas reales en Spotify/Deezer...';
             }
             grid.appendChild(loader);
 
-            // Fetch page results from Openverse
-            const url = `https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page=${openversePage}&page_size=15`;
+            const url = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&index=${modalSearchOffset}&limit=15`;
             fetch(url)
                 .then(res => {
                     if (!res.ok) throw new Error('Search failed');
@@ -1867,31 +1863,40 @@
                 .then(data => {
                     if (loader) loader.remove();
 
-                    if (!data.results || data.results.length === 0) {
+                    if (!data.data || data.data.length === 0) {
                         if (!append) {
-                            grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--dim);">No se encontraron resultados en internet.</div>';
+                            grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--dim);">No se encontraron portadas de este género.</div>';
                         }
                         return;
                     }
 
-                    const formattedResults = data.results.map(r => ({
-                        url: r.url || r.thumbnail,
-                        tags: r.tags ? r.tags.map(t => t.name) : []
-                    }));
+                    // Deduplicate album covers
+                    const formattedResults = [];
+                    const seenUrls = new Set();
+                    data.data.forEach(item => {
+                        const coverUrl = item.album && item.album.cover_big;
+                        if (coverUrl && !seenUrls.has(coverUrl)) {
+                            seenUrls.add(coverUrl);
+                            formattedResults.push({
+                                url: coverUrl,
+                                tags: [item.artist ? item.artist.name : '', item.title]
+                            });
+                        }
+                    });
 
                     renderResultsInModal(formattedResults);
 
-                    openversePage++;
+                    modalSearchOffset += data.data.length;
 
                     const loadMoreBtn = document.getElementById('btn-load-more-modal');
-                    if (data.page < data.page_count) {
+                    if (data.next) {
                         loadMoreBtn.style.display = 'block';
                     } else {
                         loadMoreBtn.style.display = 'none';
                     }
                 })
                 .catch(err => {
-                    console.error("Openverse search error:", err);
+                    console.error("Deezer search error:", err);
                     if (loader) loader.remove();
                     
                     // Local fallback search matching tags
@@ -1914,13 +1919,13 @@
                     }
 
                     const limit = 15;
-                    const offset = append ? document.querySelectorAll('#modal-covers-grid .modal-cover-card').length : 0;
-                    const pageResults = matches.slice(offset, offset + limit);
+                    const pageResults = matches.slice(modalSearchOffset, modalSearchOffset + limit);
+                    modalSearchOffset += pageResults.length;
                     
                     renderResultsInModal(pageResults);
                     
                     const loadMoreBtn = document.getElementById('btn-load-more-modal');
-                    if (offset + limit < matches.length) {
+                    if (modalSearchOffset < matches.length) {
                         loadMoreBtn.style.display = 'block';
                     } else {
                         loadMoreBtn.style.display = 'none';
