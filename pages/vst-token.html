@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <script src="/env.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+  <script src="/script/auth-utils.js?v=11"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token del VST - OFFSZN</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Geist', sans-serif; }
+  </style>
+</head>
+<body class="bg-black text-white min-h-screen flex flex-col items-center justify-center p-4">
+
+  <div class="w-full max-w-md bg-[#0a0a0d] border border-[#1f1f24] rounded-2xl p-8 shadow-2xl flex flex-col gap-6 text-center">
+    
+    <div class="flex flex-col items-center gap-2">
+      <div class="w-16 h-16 bg-white/5 border border-white/10 rounded-full flex items-center justify-center text-3xl mb-2">
+        🔌
+      </div>
+      <h1 class="text-2xl font-extrabold tracking-tight">Token de Acceso VST</h1>
+      <p class="text-xs text-[#8e8e93] px-4 leading-relaxed">
+        Usa este token para iniciar sesión de forma segura en tu plugin de exportación VST desde tu DAW.
+      </p>
+    </div>
+
+    <!-- User details -->
+    <div id="user-info" class="bg-[#141418] border border-[#1f1f24] rounded-lg p-3 text-sm flex items-center justify-between text-left hidden">
+      <div>
+        <div class="font-semibold text-white" id="user-email">Cargando...</div>
+        <div class="text-[10px] text-[#8e8e93]">Usuario autenticado en OFFSZN</div>
+      </div>
+      <span class="w-2.5 h-2.5 bg-green-500 rounded-full"></span>
+    </div>
+
+    <!-- Token display box -->
+    <div class="flex flex-col gap-2">
+      <span class="text-[10px] font-bold text-[#8e8e93] uppercase tracking-wider text-left">Tu Token</span>
+      <div class="flex gap-2">
+        <input type="password" id="token-input" readonly value="" class="flex-1 bg-black border border-[#1f1f24] rounded-lg px-3 py-2 text-xs font-mono text-[#8e8e93] focus:outline-none focus:border-white">
+        <button onclick="toggleTokenVisibility()" class="bg-[#141418] border border-[#1f1f24] hover:bg-[#1f1f24] text-white text-xs px-3 rounded-lg transition-colors">
+          👁️
+        </button>
+      </div>
+    </div>
+
+    <!-- Copy action button -->
+    <button onclick="copyTokenToClipboard()" class="w-full bg-white hover:bg-zinc-200 text-black font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm">
+      <span>Copiar Token al Portapapeles</span>
+    </button>
+    
+    <div id="copy-status" class="text-xs text-green-400 font-medium opacity-0 transition-opacity duration-300">
+      ¡Copiado con éxito! Pégalo en tu plugin de FL Studio.
+    </div>
+
+  </div>
+
+  <script>
+    let currentToken = "";
+
+    (async () => {
+      // Wait for supabaseClient to initialize if needed
+      if (!window.supabaseClient) {
+        await new Promise(r => setTimeout(r, 200));
+      }
+      const client = window.supabaseClient;
+      if (!client) {
+        alert("Error de conexión con la base de datos.");
+        return;
+      }
+
+      const { data: { session } } = await client.auth.getSession();
+      
+      if (!session) {
+        // Redirect to login if not logged in
+        window.location.replace('/pages/login.html?redirect=' + encodeURIComponent(window.location.pathname));
+        return;
+      }
+
+      // Display token
+      currentToken = session.access_token;
+      document.getElementById('token-input').value = currentToken;
+      
+      // Update user info card
+      const userInfo = document.getElementById('user-info');
+      document.getElementById('user-email').textContent = session.user.email;
+      userInfo.classList.remove('hidden');
+    })();
+
+    function toggleTokenVisibility() {
+      const input = document.getElementById('token-input');
+      if (input.type === "password") {
+        input.type = "text";
+        input.className = input.className.replace("text-[#8e8e93]", "text-white");
+      } else {
+        input.type = "password";
+        input.className = input.className.replace("text-white", "text-[#8e8e93]");
+      }
+    }
+
+    function copyTokenToClipboard() {
+      navigator.clipboard.writeText(currentToken).then(() => {
+        const status = document.getElementById('copy-status');
+        status.classList.remove('opacity-0');
+        setTimeout(() => {
+          status.classList.add('opacity-0');
+        }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

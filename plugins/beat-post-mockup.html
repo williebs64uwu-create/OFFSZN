@@ -42,19 +42,13 @@
             font-size: 13px;
             user-select: none;
             -webkit-user-select: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         /* ─── PLUGIN CONTAINER (VST WINDOW) ─── */
         .vst-container {
-            width: 620px;
-            height: 740px;
+            width: 100%;
+            height: 100%;
             background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.03);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -776,35 +770,60 @@
             <i class="fa-solid fa-chevron-right step-arrow"></i>
             <div class="step-item" id="step-lbl-3">
                 <span>3. Publicación</span>
-            </div>
-        </div>
-
-        <!-- Interactive Content Viewport -->
-        <div class="content-area">
-
-            <!-- STAGE 1: GOOGLE LOGIN -->
-            <div id="view-auth">
-                <i class="fa-solid fa-fingerprint auth-logo-icon"></i>
+             <!-- STAGE 1: AUTHENTICATION (Direct Login + Web Token Link) -->
+            <div id="view-auth" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: auto; margin-bottom: auto; gap: 20px;">
+                <i class="fa-solid fa-fingerprint auth-logo-icon" style="font-size: 52px; color: var(--accent);"></i>
                 <div>
-                    <h2 class="auth-title">Vincula tu cuenta OFFSZN</h2>
-                    <p class="auth-desc">Inicia sesión con Google para subir beats directamente desde el Master de tu DAW sin abrir el navegador.</p>
+                    <h2 class="auth-title">Vincular cuenta OFFSZN</h2>
+                    <p class="auth-desc">Inicia sesión con tus credenciales de OFFSZN o ingresa tu token del plugin.</p>
                 </div>
-                <button class="btn-google" onclick="loginWithGoogle()">
-                    <i class="fa-brands fa-google" style="color: #000;"></i> Continuar con Google
-                </button>
+                
+                <!-- Email & Password Form -->
+                <div style="width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 10px; text-align: left;">
+                    <div class="form-group">
+                        <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--dim); letter-spacing: 0.5px;">Email</span>
+                        <input type="email" id="auth-email" class="text-input" placeholder="correo@ejemplo.com" style="padding: 10px; font-size: 13px; background: #000;">
+                    </div>
+                    <div class="form-group">
+                        <span style="font-size: 9px; font-weight: 700; text-transform: uppercase; color: var(--dim); letter-spacing: 0.5px;">Contraseña</span>
+                        <input type="password" id="auth-password" class="text-input" placeholder="••••••••" style="padding: 10px; font-size: 13px; background: #000;">
+                    </div>
+                    <button class="btn-next" onclick="loginWithEmail()" style="margin: 0; padding: 12px; font-size: 12px; background: #fff; color: #000; font-weight: 800;">
+                        Iniciar Sesión
+                    </button>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px; width: 100%; max-width: 320px; opacity: 0.2; margin: 4px 0;">
+                    <div style="flex: 1; height: 1px; background: #fff;"></div>
+                    <span style="font-size: 9px; font-weight: 700;">O</span>
+                    <div style="flex: 1; height: 1px; background: #fff;"></div>
+                </div>
+
+                <!-- Web Token Link -->
+                <div style="width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn-prev" onclick="openWebTokenPage()" style="padding: 10px; font-size: 11px; font-weight: 700;">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Obtener Token desde la Web
+                    </button>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="auth-token-input" class="text-input" placeholder="Pega tu token de acceso aquí" style="flex: 1; padding: 8px 12px; font-size: 11px; background: #000;">
+                        <button class="btn-next" onclick="loginWithToken()" style="padding: 8px 16px; font-size: 11px; font-weight: 700; flex: initial; margin: 0;">
+                            Vincular
+                        </button>
+                    </div>
+                </div>
             </div>
 
-            <!-- STEP 1: AUDIO CONFIGURATION (FILE UPLOAD OR RECORDING) -->
+            <!-- STEP 1: AUDIO CONFIGURATION (FILE DRAG & DROP / SELECTOR) -->
             <div class="step-pane" id="view-audio">
                 <div>
-                    <h3 class="section-title">Cargar o Grabar Instrumental</h3>
-                    <p style="color: var(--dim); font-size: 11.5px; margin-bottom: 14px; line-height: 1.5;">Arrastra tus archivos exportados (WAV y MP3) o graba el master directamente en tiempo real.</p>
+                    <h3 class="section-title">Cargar Instrumental</h3>
+                    <p style="color: var(--dim); font-size: 11.5px; margin-bottom: 14px; line-height: 1.5;">Arrastra tus archivos WAV/MP3 exportados o haz clic para cargarlos desde el explorador.</p>
                     
-                    <!-- OPTION A: DRAG & DROP ZONE (RECOMMENDED) -->
-                    <div id="drop-zone" class="custom-upload-card" style="width: 100%; height: 130px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: #060608; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px; transition: border-color 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border-light)'" ondrop="handleFileDrop(event)" onclick="document.getElementById('file-input-wav').click()">
-                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 24px; color: var(--dim);"></i>
-                        <span style="font-size: 11.5px; font-weight: 700; color: #fff;">Arrastra aquí tus archivos WAV y MP3</span>
-                        <span style="font-size: 9.5px; color: var(--dim);">O haz clic para seleccionar tu WAV principal</span>
+                    <!-- DRAG & DROP ZONE -->
+                    <div id="drop-zone" class="custom-upload-card" style="width: 100%; height: 140px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: #060608; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px; transition: border-color 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border-light)'" ondrop="handleFileDrop(event)" onclick="document.getElementById('file-input-wav').click()">
+                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 26px; color: var(--dim);"></i>
+                        <span style="font-size: 12px; font-weight: 700; color: #fff;">Arrastra aquí tus archivos WAV y MP3</span>
+                        <span style="font-size: 10px; color: var(--dim);">O haz clic para seleccionar tu WAV principal</span>
                         <input type="file" id="file-input-wav" accept=".wav" style="display: none;" onchange="handleFileSelect('wav', this.files[0])">
                         <input type="file" id="file-input-mp3" accept=".mp3" style="display: none;" onchange="handleFileSelect('mp3', this.files[0])">
                     </div>
@@ -813,31 +832,11 @@
                     <div class="capture-files" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
                         <div class="file-row" onclick="document.getElementById('file-input-wav').click()" style="cursor: pointer;">
                             <span class="file-name"><i class="fa-regular fa-file-audio"></i> WAV Master (Obligatorio)</span>
-                            <span class="file-status" id="wav-status-lbl" style="color: var(--dim);">Cargar archivo</span>
+                            <span class="file-status" id="wav-status-lbl" style="color: var(--dim);">Cargar WAV</span>
                         </div>
                         <div class="file-row" onclick="document.getElementById('file-input-mp3').click()" style="cursor: pointer;">
                             <span class="file-name"><i class="fa-regular fa-file-audio"></i> MP3 Demo (Opcional)</span>
-                            <span class="file-status" id="mp3-status-lbl" style="color: var(--dim);">Cargar archivo</span>
-                        </div>
-                    </div>
-
-                    <!-- OPTION B: REAL-TIME RECORDER COLLAPSIBLE -->
-                    <div style="border: 1px solid var(--border); border-radius: 8px; background: #060608; padding: 12px 14px; margin-bottom: 14px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleRecorderSection()">
-                            <span style="font-size: 10px; font-weight: 700; color: var(--dim); text-transform: uppercase;"><i class="fa-solid fa-microphone"></i> Grabadora en Tiempo Real</span>
-                            <i class="fa-solid fa-chevron-down" id="recorder-arrow" style="font-size: 9px; color: var(--dim);"></i>
-                        </div>
-                        <div id="recorder-section" style="display: none; flex-direction: column; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);">
-                            <p style="color: var(--dim); font-size: 11px; line-height: 1.4;">Captura el master en tiempo real (deberás reproducir el beat completo en el DAW).</p>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <span style="font-size: 11px; font-weight: 600; color: var(--dim);" id="render-status-lbl">Listo</span>
-                                <button id="btn-rec-start" class="btn-next" style="background: #ff453a; color: #fff; margin: 0; padding: 8px 16px; font-size: 11px; font-weight: 700; border-radius: 6px; flex: initial;" onclick="startVSTRecording()">
-                                    <i class="fa-solid fa-circle"></i> Grabar Master
-                                </button>
-                                <button id="btn-rec-stop" class="btn-next" style="background: #3a3a3c; color: #fff; margin: 0; padding: 8px 16px; font-size: 11px; font-weight: 700; border-radius: 6px; display: none; flex: initial;" onclick="stopVSTRecording()">
-                                    <i class="fa-solid fa-square"></i> Detener
-                                </button>
-                            </div>
+                            <span class="file-status" id="mp3-status-lbl" style="color: var(--dim);">Cargar MP3</span>
                         </div>
                     </div>
                 </div>
@@ -983,6 +982,7 @@
     </div>
 
     <!-- MOCKUP INTERACTIVE LOGIC -->
+    <!-- MOCKUP INTERACTIVE LOGIC -->
     <script>
         let selectedYoutube = false;
         let selectedCoverIndex = 0;
@@ -1013,9 +1013,8 @@
         };
 
         // ═══════════════════════════════════════════════════════════
-        //  DAW NATIVE C++ BRIDGE & SUPABASE
+        //  SUPABASE & FILE CONFIGURATION
         // ═══════════════════════════════════════════════════════════
-        let recordedWavPath = null;
         let uploadedFiles = {
             wav: null,
             mp3: null,
@@ -1036,20 +1035,6 @@
             return false;
         }
 
-        async function callNativeFunction(funcName, ...args) {
-            if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.getNativeFunction === 'function') {
-                try {
-                    return await window.__JUCE__.backend.getNativeFunction(funcName)(...args);
-                } catch (e) {
-                    logDebug(`Error native function call ${funcName}: ${e.message}`);
-                }
-            }
-            if (window.chrome && window.chrome.webview) {
-                window.chrome.webview.postMessage({ action: funcName, payload: args });
-            }
-            return null;
-        }
-
         function logDebug(msg) {
             const consoleEl = document.getElementById('dbg-console');
             if (consoleEl) {
@@ -1061,7 +1046,7 @@
             }
         }
 
-        // Initialize Supabase and check session
+        // Initialize Supabase Client
         document.addEventListener('DOMContentLoaded', async () => {
             if (window.supabase) {
                 if (!window.supabaseClient && window.OFFSZN_CONFIG) {
@@ -1087,55 +1072,68 @@
             }
         });
 
-        // Initialize BeatPostService WebView2 host listener
-        if (window.BeatPostService) {
-            window.BeatPostService.initNativeBridgeListener((action, payload) => {
-                logDebug(`Host command received: ${action}`);
-                if (action === 'audioRendered' || action === 'setExportedAudio') {
-                    if (payload.wavPath) {
-                        uploadedFiles.wav = new File([""], "recorded_beat.wav", { type: "audio/wav" });
-                        uploadedFiles.wav.localPath = payload.wavPath;
-                        document.getElementById('wav-status-lbl').textContent = 'WAV de DAW cargado';
-                        document.getElementById('wav-status-lbl').style.color = 'var(--green)';
-                        validateStep1Continue();
-                    }
-                    logDebug('Audio files updated from native host.');
-                } else if (action === 'setSessionToken') {
-                    if (payload.access_token && supabaseClient) {
-                        supabaseClient.auth.setSession({
-                            access_token: payload.access_token,
-                            refresh_token: payload.refresh_token || ''
-                        }).then(({ data }) => {
-                            if (data.session) handleSession(data.session);
-                        });
-                    }
-                }
-            });
-        }
-
         // ═══════════════════════════════════════════════════════════
-        //  LOGIN LOGIC (Google & Supabase check)
+        //  LOGIN LOGIC (Email/Password & VST Token copy-paste)
         // ═══════════════════════════════════════════════════════════
-        async function loginWithGoogle() {
-            logDebug('Requesting Google authentication...');
-            const nativeTriggered = callNativeHost('signInGoogle');
-            
+        async function loginWithEmail() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            if (!email || !password) {
+                alert('Ingresa tu email y contraseña.');
+                return;
+            }
+            logDebug('Iniciando sesión con credenciales...');
             if (supabaseClient) {
-                const apiBase = window.location.origin;
-                const { error } = await supabaseClient.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: `${apiBase}/pages/auth-callback.html`
-                    }
-                });
-                if (error) logDebug('Auth error: ' + error.message);
-            } else if (!nativeTriggered) {
-                logDebug('Simulating Google login...');
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) {
+                    logDebug('Error de autenticación: ' + error.message);
+                    alert('Error: ' + error.message);
+                } else if (data.session) {
+                    handleSession(data.session);
+                }
+            } else {
+                logDebug('Simulación de login exitosa.');
                 handleSession({
-                    user: { email: 'williebeatsyt@gmail.com' },
+                    user: { email: email },
                     access_token: 'mock_token'
                 });
             }
+        }
+
+        async function loginWithToken() {
+            const token = document.getElementById('auth-token-input').value.trim();
+            if (!token) {
+                alert('Pega el token de acceso.');
+                return;
+            }
+            logDebug('Vinculando token...');
+            if (supabaseClient) {
+                const { data, error } = await supabaseClient.auth.setSession({
+                    access_token: token,
+                    refresh_token: ''
+                });
+                if (error) {
+                    logDebug('Token inválido: ' + error.message);
+                    alert('Token inválido o expirado.');
+                } else if (data.session) {
+                    handleSession(data.session);
+                }
+            } else {
+                logDebug('Simulación de token exitosa.');
+                handleSession({
+                    user: { email: 'vst-user@offszn.lat' },
+                    access_token: token
+                });
+            }
+        }
+
+        function openWebTokenPage() {
+            logDebug('Abriendo navegador para token...');
+            const tokenUrl = 'https://offszn.lat/pages/vst-token.html';
+            if (window.chrome && window.chrome.webview) {
+                callNativeHost('openExternalBrowser', { url: tokenUrl });
+            }
+            window.open(tokenUrl, '_blank');
         }
 
         function handleSession(sess) {
@@ -1143,7 +1141,6 @@
             document.getElementById('view-auth').style.display = 'none';
             document.getElementById('vst-steps-bar').style.display = 'flex';
             
-            // Update footer
             document.getElementById('footer-status-text').textContent = 'Conectado a OFFSZN';
             document.getElementById('footer-user').style.display = 'flex';
             document.getElementById('footer-user').querySelector('span').textContent = sess.user.email.split('@')[0];
@@ -1187,31 +1184,19 @@
         // ═══════════════════════════════════════════════════════════
         //  FILE DROPS & NATIVE SELECTORS
         // ═══════════════════════════════════════════════════════════
-        function toggleRecorderSection() {
-            const section = document.getElementById('recorder-section');
-            const arrow = document.getElementById('recorder-arrow');
-            if (section.style.display === 'none') {
-                section.style.display = 'flex';
-                arrow.className = 'fa-solid fa-chevron-up';
-            } else {
-                section.style.display = 'none';
-                arrow.className = 'fa-solid fa-chevron-down';
-            }
-        }
-
         function handleFileSelect(type, file) {
             if (!file) return;
             const maxMB = type === 'wav' ? 60 : (type === 'mp3' ? 50 : 20);
             if (file.size > maxMB * 1024 * 1024) {
-                alert(`El archivo excede el límite de ${maxMB}MB.`);
+                alert(`El archivo excede el límite de ${maxMB}MB. (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
                 return;
             }
             uploadedFiles[type] = file;
             if (type === 'wav') {
-                document.getElementById('wav-status-lbl').textContent = `${file.name.substring(0,22)}...`;
+                document.getElementById('wav-status-lbl').textContent = `${file.name.substring(0,18)}... (${(file.size/1024/1024).toFixed(1)}MB)`;
                 document.getElementById('wav-status-lbl').style.color = 'var(--green)';
             } else if (type === 'mp3') {
-                document.getElementById('mp3-status-lbl').textContent = `${file.name.substring(0,22)}...`;
+                document.getElementById('mp3-status-lbl').textContent = `${file.name.substring(0,18)}... (${(file.size/1024/1024).toFixed(1)}MB)`;
                 document.getElementById('mp3-status-lbl').style.color = 'var(--green)';
             }
             validateStep1Continue();
@@ -1433,10 +1418,10 @@
             stepYoutube.querySelector('i').className = 'fa-regular fa-circle';
 
             try {
-                progressVal.textContent = '10%';
+                progressVal.textContent = '15%';
                 const coverBlob = await getSelectedCoverBlob();
 
-                progressVal.textContent = '25%';
+                progressVal.textContent = '30%';
                 const files = {
                     cover: coverBlob,
                     wav: uploadedFiles.wav,
@@ -1465,9 +1450,9 @@
                         (stage, msg) => {
                             logDebug(msg);
                             if (stage === 'upload_store') {
-                                progressVal.textContent = '70%';
+                                progressVal.textContent = '75%';
                             } else if (stage === 'render_video') {
-                                progressVal.textContent = '85%';
+                                progressVal.textContent = '90%';
                                 stepUploadStore.className = 'status-step completed';
                                 stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-check';
                                 stepYoutube.className = 'status-step active';
@@ -1496,11 +1481,11 @@
 
                 } else {
                     logDebug('OFFSZN Service bypassed. Simulating mock upload...');
-                    let progress = 25;
+                    let progress = 30;
                     const interval = setInterval(() => {
-                        progress += 5;
+                        progress += 10;
                         progressVal.textContent = `${progress}%`;
-                        if (progress === 45) {
+                        if (progress === 50) {
                             stepRender.className = 'status-step completed';
                             stepRender.querySelector('i').className = 'fa-solid fa-circle-check';
                             stepUploadStore.className = 'status-step active';
@@ -1526,7 +1511,7 @@
                                 successView.style.display = 'flex';
                             }, 500);
                         }
-                    }, 100);
+                    }, 150);
                 }
             } catch (err) {
                 logDebug('Upload failed: ' + err.message);
@@ -1545,9 +1530,9 @@
             document.getElementById('view-success').style.display = 'none';
             document.getElementById('vst-steps-bar').style.display = 'flex';
             
-            document.getElementById('wav-status-lbl').textContent = 'Cargar archivo';
+            document.getElementById('wav-status-lbl').textContent = 'Cargar WAV';
             document.getElementById('wav-status-lbl').style.color = 'var(--dim)';
-            document.getElementById('mp3-status-lbl').textContent = 'Cargar archivo';
+            document.getElementById('mp3-status-lbl').textContent = 'Cargar MP3';
             document.getElementById('mp3-status-lbl').style.color = 'var(--dim)';
             
             document.getElementById('btn-audio-continue').disabled = true;
@@ -1555,48 +1540,7 @@
             document.getElementById('btn-audio-continue').style.cursor = 'not-allowed';
             
             uploadedFiles = { wav: null, mp3: null, cover: null };
-            recordedWavPath = null;
             goToStep(1);
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        //  VST MASTER RECORDING INTEGRATION
-        // ═══════════════════════════════════════════════════════════
-        async function startVSTRecording() {
-            logDebug('Starting real-time DAW Master recording...');
-            document.getElementById('render-status-lbl').textContent = 'Grabando...';
-            document.getElementById('render-status-lbl').style.color = 'var(--red)';
-            document.getElementById('btn-rec-start').style.display = 'none';
-            document.getElementById('btn-rec-stop').style.display = 'block';
-
-            const ok = await callNativeFunction('startRecordingNative');
-            logDebug(ok ? 'C++ Audio Recorder started. Play DAW project!' : 'Failed to start C++ Audio Recorder.');
-        }
-
-        async function stopVSTRecording() {
-            logDebug('Stopping DAW Master recording...');
-            document.getElementById('render-status-lbl').textContent = 'Procesando WAV...';
-            document.getElementById('render-status-lbl').style.color = '#ffcc00';
-
-            const path = await callNativeFunction('stopRecordingNative');
-            if (path && path.length > 0) {
-                recordedWavPath = path;
-                document.getElementById('render-status-lbl').textContent = 'Grabación Completa';
-                document.getElementById('render-status-lbl').style.color = 'var(--green)';
-                document.getElementById('wav-status-lbl').textContent = 'recorded_beat.wav (Listo)';
-                document.getElementById('wav-status-lbl').style.color = 'var(--green)';
-                logDebug('Saved WAV to: ' + path);
-
-                uploadedFiles.wav = new File([""], "recorded_beat.wav", { type: "audio/wav" });
-                uploadedFiles.wav.localPath = path;
-
-                validateStep1Continue();
-            } else {
-                document.getElementById('render-status-lbl').textContent = 'Error al grabar';
-                document.getElementById('render-status-lbl').style.color = 'var(--red)';
-                document.getElementById('btn-rec-start').style.display = 'block';
-                document.getElementById('btn-rec-stop').style.display = 'none';
-            }
         }
     </script>
 </body>
