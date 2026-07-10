@@ -735,16 +735,6 @@
     <!-- VST PLUGIN MOCKUP WINDOW -->
     <div class="vst-container">
         
-        <!-- Window Title Bar -->
-        <div class="vst-titlebar">
-            <span>BEAT POST</span>
-            <div class="vst-controls">
-                <div class="vst-dot"></div>
-                <div class="vst-dot"></div>
-                <div class="vst-dot active"></div>
-            </div>
-        </div>
-
         <!-- Plugin Header -->
         <div class="plugin-header">
             <div class="brand">
@@ -770,8 +760,14 @@
             <i class="fa-solid fa-chevron-right step-arrow"></i>
             <div class="step-item" id="step-lbl-3">
                 <span>3. Publicación</span>
+            </div>
+        </div>
+
+        <!-- Interactive Content Viewport -->
+        <div class="content-area">
+
              <!-- STAGE 1: AUTHENTICATION (Direct Login + Web Token Link) -->
-            <div id="view-auth" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: auto; margin-bottom: auto; gap: 20px;">
+             <div id="view-auth" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: auto; margin-bottom: auto; gap: 20px;">
                 <i class="fa-solid fa-fingerprint auth-logo-icon" style="font-size: 52px; color: var(--accent);"></i>
                 <div>
                     <h2 class="auth-title">Vincular cuenta OFFSZN</h2>
@@ -982,8 +978,20 @@
     </div>
 
     <!-- MOCKUP INTERACTIVE LOGIC -->
-    <!-- MOCKUP INTERACTIVE LOGIC -->
     <script>
+        // Prevent Right-Click context menu
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // Prevent Zoom (Ctrl + Wheel)
+        document.addEventListener('wheel', e => {
+            if (e.ctrlKey) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Prevent pinch-to-zoom on touch screens
+        document.addEventListener('gesturestart', e => e.preventDefault());
+
         let selectedYoutube = false;
         let selectedCoverIndex = 0;
         let currentKeywords = ['rnb'];
