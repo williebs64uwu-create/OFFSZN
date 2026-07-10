@@ -794,42 +794,62 @@
                 </button>
             </div>
 
-            <!-- STEP 1: AUDIO RENDER STATUS (MP3/WAV) -->
+            <!-- STEP 1: AUDIO CONFIGURATION (FILE UPLOAD OR RECORDING) -->
             <div class="step-pane" id="view-audio">
                 <div>
-                    <h3 class="section-title">Grabar Instrumental (Master Bus)</h3>
-                    <p style="color: var(--dim); font-size: 11.5px; margin-bottom: 12px; line-height: 1.5;">El plugin captura el audio directamente desde tu canal Master. Dale Play en tu DAW para iniciar.</p>
+                    <h3 class="section-title">Cargar o Grabar Instrumental</h3>
+                    <p style="color: var(--dim); font-size: 11.5px; margin-bottom: 14px; line-height: 1.5;">Arrastra tus archivos exportados (WAV y MP3) o graba el master directamente en tiempo real.</p>
                     
-                    <div class="master-capture-card" style="margin-bottom: 16px;">
-                        <div class="capture-header">
-                            <span>Control de Grabación</span>
-                            <span style="color: var(--dim);" id="render-status-lbl">Listo para grabar</span>
+                    <!-- OPTION A: DRAG & DROP ZONE (RECOMMENDED) -->
+                    <div id="drop-zone" class="custom-upload-card" style="width: 100%; height: 130px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: #060608; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px; transition: border-color 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border-light)'" ondrop="handleFileDrop(event)" onclick="document.getElementById('file-input-wav').click()">
+                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 24px; color: var(--dim);"></i>
+                        <span style="font-size: 11.5px; font-weight: 700; color: #fff;">Arrastra aquí tus archivos WAV y MP3</span>
+                        <span style="font-size: 9.5px; color: var(--dim);">O haz clic para seleccionar tu WAV principal</span>
+                        <input type="file" id="file-input-wav" accept=".wav" style="display: none;" onchange="handleFileSelect('wav', this.files[0])">
+                        <input type="file" id="file-input-mp3" accept=".mp3" style="display: none;" onchange="handleFileSelect('mp3', this.files[0])">
+                    </div>
+
+                    <!-- SELECTED FILES LIST -->
+                    <div class="capture-files" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
+                        <div class="file-row" onclick="document.getElementById('file-input-wav').click()" style="cursor: pointer;">
+                            <span class="file-name"><i class="fa-regular fa-file-audio"></i> WAV Master (Obligatorio)</span>
+                            <span class="file-status" id="wav-status-lbl" style="color: var(--dim);">Cargar archivo</span>
                         </div>
-                        <div style="display: flex; gap: 10px; margin-top: 8px;">
-                            <button id="btn-rec-start" class="btn-next" style="background: #ff453a; color: #fff; margin: 0; padding: 10px; font-size: 12px; font-weight: 700; border-radius: 6px;" onclick="startVSTRecording()">
-                                <i class="fa-solid fa-circle"></i> Iniciar Grabación
-                            </button>
-                            <button id="btn-rec-stop" class="btn-next" style="background: #3a3a3c; color: #fff; margin: 0; padding: 10px; font-size: 12px; font-weight: 700; border-radius: 6px; display: none;" onclick="stopVSTRecording()">
-                                <i class="fa-solid fa-square"></i> Detener y Guardar
-                            </button>
+                        <div class="file-row" onclick="document.getElementById('file-input-mp3').click()" style="cursor: pointer;">
+                            <span class="file-name"><i class="fa-regular fa-file-audio"></i> MP3 Demo (Opcional)</span>
+                            <span class="file-status" id="mp3-status-lbl" style="color: var(--dim);">Cargar archivo</span>
                         </div>
-                        <div class="capture-files" style="margin-top: 12px;">
-                            <div class="file-row">
-                                <span class="file-name"><i class="fa-regular fa-file-audio"></i> recorded_beat.wav</span>
-                                <span class="file-status" id="wav-status-lbl">Sin grabar</span>
+                    </div>
+
+                    <!-- OPTION B: REAL-TIME RECORDER COLLAPSIBLE -->
+                    <div style="border: 1px solid var(--border); border-radius: 8px; background: #060608; padding: 12px 14px; margin-bottom: 14px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleRecorderSection()">
+                            <span style="font-size: 10px; font-weight: 700; color: var(--dim); text-transform: uppercase;"><i class="fa-solid fa-microphone"></i> Grabadora en Tiempo Real</span>
+                            <i class="fa-solid fa-chevron-down" id="recorder-arrow" style="font-size: 9px; color: var(--dim);"></i>
+                        </div>
+                        <div id="recorder-section" style="display: none; flex-direction: column; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);">
+                            <p style="color: var(--dim); font-size: 11px; line-height: 1.4;">Captura el master en tiempo real (deberás reproducir el beat completo en el DAW).</p>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <span style="font-size: 11px; font-weight: 600; color: var(--dim);" id="render-status-lbl">Listo</span>
+                                <button id="btn-rec-start" class="btn-next" style="background: #ff453a; color: #fff; margin: 0; padding: 8px 16px; font-size: 11px; font-weight: 700; border-radius: 6px; flex: initial;" onclick="startVSTRecording()">
+                                    <i class="fa-solid fa-circle"></i> Grabar Master
+                                </button>
+                                <button id="btn-rec-stop" class="btn-next" style="background: #3a3a3c; color: #fff; margin: 0; padding: 8px 16px; font-size: 11px; font-weight: 700; border-radius: 6px; display: none; flex: initial;" onclick="stopVSTRecording()">
+                                    <i class="fa-solid fa-square"></i> Detener
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-top: 14px;">
+                <div class="form-group">
                     <h3 class="section-title">Debug & Host Bridge</h3>
                     <div class="debug-console" id="dbg-console">
                         <div class="debug-line"><span class="debug-tag">[SYS]</span> VST enlazado al Master Bus.</div>
                     </div>
                 </div>
 
-                <div class="nav-buttons">
+                <div class="nav-buttons" style="margin-top: 14px;">
                     <button class="btn-next" id="btn-audio-continue" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="goToStep(2)">
                         Continuar <i class="fa-solid fa-chevron-right"></i>
                     </button>
@@ -993,12 +1013,19 @@
         };
 
         // ═══════════════════════════════════════════════════════════
-        //  DAW NATIVE C++ BRIDGE
+        //  DAW NATIVE C++ BRIDGE & SUPABASE
         // ═══════════════════════════════════════════════════════════
+        let recordedWavPath = null;
+        let uploadedFiles = {
+            wav: null,
+            mp3: null,
+            cover: null
+        };
+        let supabaseClient = null;
+        let session = null;
+
         function callNativeHost(action, payload = {}) {
             logDebug(`Calling host: ${action}`);
-            
-            // Check for WebView2 host bridge
             if (window.chrome && window.chrome.webview) {
                 window.chrome.webview.postMessage({
                     action: action,
@@ -1007,6 +1034,20 @@
                 return true;
             }
             return false;
+        }
+
+        async function callNativeFunction(funcName, ...args) {
+            if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.getNativeFunction === 'function') {
+                try {
+                    return await window.__JUCE__.backend.getNativeFunction(funcName)(...args);
+                } catch (e) {
+                    logDebug(`Error native function call ${funcName}: ${e.message}`);
+                }
+            }
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: funcName, payload: args });
+            }
+            return null;
         }
 
         function logDebug(msg) {
@@ -1020,30 +1061,56 @@
             }
         }
 
+        // Initialize Supabase and check session
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.supabase) {
+                if (!window.supabaseClient && window.OFFSZN_CONFIG) {
+                    window.supabaseClient = window.supabase.createClient(
+                        window.OFFSZN_CONFIG.SUPABASE_URL,
+                        window.OFFSZN_CONFIG.SUPABASE_ANON_KEY
+                    );
+                }
+                if (window.supabaseClient) {
+                    supabaseClient = window.supabaseClient;
+                    const { data } = await supabaseClient.auth.getSession();
+                    if (data.session) {
+                        handleSession(data.session);
+                    }
+                    supabaseClient.auth.onAuthStateChange((_event, newSession) => {
+                        if (newSession) {
+                            handleSession(newSession);
+                        } else {
+                            showAuthView();
+                        }
+                    });
+                }
+            }
+        });
+
         // Initialize BeatPostService WebView2 host listener
         if (window.BeatPostService) {
             window.BeatPostService.initNativeBridgeListener((action, payload) => {
                 logDebug(`Host command received: ${action}`);
                 if (action === 'audioRendered' || action === 'setExportedAudio') {
-                    document.getElementById('render-status-lbl').textContent = 'Listo';
-                    document.getElementById('wav-status-lbl').textContent = 'Audio WAV cargado';
+                    if (payload.wavPath) {
+                        uploadedFiles.wav = new File([""], "recorded_beat.wav", { type: "audio/wav" });
+                        uploadedFiles.wav.localPath = payload.wavPath;
+                        document.getElementById('wav-status-lbl').textContent = 'WAV de DAW cargado';
+                        document.getElementById('wav-status-lbl').style.color = 'var(--green)';
+                        validateStep1Continue();
+                    }
                     logDebug('Audio files updated from native host.');
                 } else if (action === 'setSessionToken') {
-                    logDebug('Session token injected from C++ host.');
+                    if (payload.access_token && supabaseClient) {
+                        supabaseClient.auth.setSession({
+                            access_token: payload.access_token,
+                            refresh_token: payload.refresh_token || ''
+                        }).then(({ data }) => {
+                            if (data.session) handleSession(data.session);
+                        });
+                    }
                 }
             });
-        } else {
-            // Standalone mock fallback
-            if (window.chrome && window.chrome.webview) {
-                window.chrome.webview.addEventListener('message', function(e) {
-                    const data = e.data;
-                    logDebug(`Host answered: ${data.event}`);
-                    if (data.event === 'audioRendered') {
-                        document.getElementById('render-status-lbl').textContent = 'Listo';
-                        document.getElementById('wav-status-lbl').textContent = 'Audio WAV cargado';
-                    }
-                });
-            }
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -1051,28 +1118,45 @@
         // ═══════════════════════════════════════════════════════════
         async function loginWithGoogle() {
             logDebug('Requesting Google authentication...');
-            
-            // Check if we can trigger native authentication
             const nativeTriggered = callNativeHost('signInGoogle');
             
-            if (window.supabaseClient) {
-                logDebug('Supabase SDK detected. Persisting session...');
-                // Standalone / WebView auth fallback
+            if (supabaseClient) {
+                const apiBase = window.location.origin;
+                const { error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${apiBase}/pages/auth-callback.html`
+                    }
+                });
+                if (error) logDebug('Auth error: ' + error.message);
+            } else if (!nativeTriggered) {
+                logDebug('Simulating Google login...');
+                handleSession({
+                    user: { email: 'williebeatsyt@gmail.com' },
+                    access_token: 'mock_token'
+                });
             }
+        }
 
-            const authView = document.getElementById('view-auth');
-            authView.style.opacity = '0.5';
+        function handleSession(sess) {
+            session = sess;
+            document.getElementById('view-auth').style.display = 'none';
+            document.getElementById('vst-steps-bar').style.display = 'flex';
             
-            setTimeout(() => {
-                authView.style.display = 'none';
-                document.getElementById('vst-steps-bar').style.display = 'flex';
-                
-                // Update footer user
-                document.getElementById('footer-status-text').textContent = 'Conectado a OFFSZN';
-                document.getElementById('footer-user').style.display = 'flex';
-                
-                goToStep(1);
-            }, 500);
+            // Update footer
+            document.getElementById('footer-status-text').textContent = 'Conectado a OFFSZN';
+            document.getElementById('footer-user').style.display = 'flex';
+            document.getElementById('footer-user').querySelector('span').textContent = sess.user.email.split('@')[0];
+            document.getElementById('footer-user').querySelector('.user-avatar').textContent = sess.user.email[0].toUpperCase();
+            
+            goToStep(1);
+        }
+
+        function showAuthView() {
+            document.getElementById('view-auth').style.display = 'flex';
+            document.getElementById('vst-steps-bar').style.display = 'none';
+            document.getElementById('footer-status-text').textContent = 'Desconectado';
+            document.getElementById('footer-user').style.display = 'none';
         }
 
         function goToStep(stepNum) {
@@ -1087,7 +1171,6 @@
             if (stepNum === 1) {
                 document.getElementById('view-audio').classList.add('active');
                 document.getElementById('step-lbl-1').className = 'step-item active';
-                callNativeHost('checkTimelineRender');
             } else if (stepNum === 2) {
                 document.getElementById('view-details').classList.add('active');
                 document.getElementById('step-lbl-1').className = 'step-item completed';
@@ -1101,7 +1184,73 @@
             }
         }
 
-        // Cover recommendations logic
+        // ═══════════════════════════════════════════════════════════
+        //  FILE DROPS & NATIVE SELECTORS
+        // ═══════════════════════════════════════════════════════════
+        function toggleRecorderSection() {
+            const section = document.getElementById('recorder-section');
+            const arrow = document.getElementById('recorder-arrow');
+            if (section.style.display === 'none') {
+                section.style.display = 'flex';
+                arrow.className = 'fa-solid fa-chevron-up';
+            } else {
+                section.style.display = 'none';
+                arrow.className = 'fa-solid fa-chevron-down';
+            }
+        }
+
+        function handleFileSelect(type, file) {
+            if (!file) return;
+            const maxMB = type === 'wav' ? 60 : (type === 'mp3' ? 50 : 20);
+            if (file.size > maxMB * 1024 * 1024) {
+                alert(`El archivo excede el límite de ${maxMB}MB.`);
+                return;
+            }
+            uploadedFiles[type] = file;
+            if (type === 'wav') {
+                document.getElementById('wav-status-lbl').textContent = `${file.name.substring(0,22)}...`;
+                document.getElementById('wav-status-lbl').style.color = 'var(--green)';
+            } else if (type === 'mp3') {
+                document.getElementById('mp3-status-lbl').textContent = `${file.name.substring(0,22)}...`;
+                document.getElementById('mp3-status-lbl').style.color = 'var(--green)';
+            }
+            validateStep1Continue();
+        }
+
+        function handleFileDrop(e) {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                for (let file of files) {
+                    if (file.name.toLowerCase().endsWith('.wav')) {
+                        handleFileSelect('wav', file);
+                    } else if (file.name.toLowerCase().endsWith('.mp3')) {
+                        handleFileSelect('mp3', file);
+                    } else if (file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.png') || file.name.toLowerCase().endsWith('.webp')) {
+                        uploadedFiles.cover = file;
+                        logDebug(`Custom cover selected: ${file.name}`);
+                    }
+                }
+            }
+        }
+
+        function validateStep1Continue() {
+            const canContinue = !!uploadedFiles.wav;
+            const btn = document.getElementById('btn-audio-continue');
+            if (canContinue) {
+                btn.removeAttribute('disabled');
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            } else {
+                btn.setAttribute('disabled', 'true');
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        //  COVER ART GENERATOR & RECOMMENDATION
+        // ═══════════════════════════════════════════════════════════
         function onTitleChange() {
             const titleVal = document.getElementById('beat-title-input').value.toLowerCase();
             let genre = 'random';
@@ -1141,67 +1290,74 @@
 
         function renderVariations(genre) {
             const container = document.getElementById('variations-container');
-            container.innerHTML = '';
-
-            currentKeywords.forEach((kw, idx) => {
-                const badge = document.createElement('div');
-                badge.className = `variation-badge ${idx === 0 ? 'active' : ''}`;
-                badge.textContent = kw;
-                badge.onclick = () => setKeywordSearch(kw, genre);
-                container.appendChild(badge);
-            });
-
-            document.getElementById('search-tag-indicator').textContent = `Búsqueda: ${currentKeywords[0]}`;
+            if (container) {
+                container.innerHTML = '';
+                currentKeywords.forEach((kw, idx) => {
+                    const badge = document.createElement('div');
+                    badge.className = `variation-badge ${idx === 0 ? 'active' : ''}`;
+                    badge.textContent = kw;
+                    badge.onclick = () => setKeywordSearch(kw, genre);
+                    container.appendChild(badge);
+                });
+                document.getElementById('search-tag-indicator').textContent = `Búsqueda: ${currentKeywords[0]}`;
+            }
         }
 
         function renderCovers(genre) {
             const container = document.getElementById('covers-container');
-            container.innerHTML = '';
+            if (container) {
+                container.innerHTML = '';
+                const titleInput = document.getElementById('beat-title-input').value;
+                const templates = coverTemplates[genre] || coverTemplates['random'];
 
-            const titleInput = document.getElementById('beat-title-input').value;
-            const templates = coverTemplates[genre] || coverTemplates['random'];
+                templates.forEach((tpl, idx) => {
+                    const card = document.createElement('div');
+                    card.className = `cover-option-card ${idx === selectedCoverIndex ? 'selected' : ''}`;
+                    card.style.background = tpl.grad;
+                    card.onclick = () => selectCover(idx);
 
-            templates.forEach((tpl, idx) => {
-                const card = document.createElement('div');
-                card.className = `cover-option-card ${idx === selectedCoverIndex ? 'selected' : ''}`;
-                card.style.background = tpl.grad;
-                card.onclick = () => selectCover(idx);
+                    const icon = document.createElement('i');
+                    icon.className = `${tpl.icon} cover-icon`;
+                    card.appendChild(icon);
 
-                const icon = document.createElement('i');
-                icon.className = `${tpl.icon} cover-icon`;
-                card.appendChild(icon);
+                    const overlay = document.createElement('div');
+                    overlay.className = 'cover-overlay';
+                    card.appendChild(overlay);
 
-                const overlay = document.createElement('div');
-                overlay.className = 'cover-overlay';
-                card.appendChild(overlay);
+                    const titleSpan = document.createElement('span');
+                    titleSpan.className = 'cover-title';
+                    titleSpan.textContent = titleInput || 'Mi Beat';
+                    card.appendChild(titleSpan);
 
-                const titleSpan = document.createElement('span');
-                titleSpan.className = 'cover-title';
-                titleSpan.textContent = titleInput || 'Mi Beat';
-                card.appendChild(titleSpan);
+                    container.appendChild(card);
+                });
 
-                container.appendChild(card);
-            });
-
-            const customCard = document.createElement('div');
-            customCard.className = 'custom-upload-card';
-            customCard.innerHTML = `<i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px;"></i><span style="font-size:9px; font-weight:700;">Subir Imagen</span>`;
-            customCard.onclick = () => {
-                callNativeHost('openFileExplorer', { type: 'image' });
-                alert('Simulación: Seleccionar archivo del sistema...');
-            };
-            container.appendChild(customCard);
+                const customCard = document.createElement('div');
+                customCard.className = 'custom-upload-card';
+                customCard.innerHTML = `<i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px;"></i><span style="font-size:9px; font-weight:700;">Subir Imagen</span>`;
+                customCard.onclick = () => {
+                    const inp = document.createElement('input');
+                    inp.type = 'file';
+                    inp.accept = 'image/*';
+                    inp.onchange = (e) => {
+                        if (e.target.files[0]) {
+                            uploadedFiles.cover = e.target.files[0];
+                            logDebug('Custom cover uploaded: ' + e.target.files[0].name);
+                        }
+                    };
+                    inp.click();
+                };
+                container.appendChild(customCard);
+            }
         }
 
         function selectCover(idx) {
             selectedCoverIndex = idx;
+            uploadedFiles.cover = null;
             const cards = document.querySelectorAll('.cover-option-card');
             cards.forEach((c, i) => {
-                if (i === idx) {
-                    c.classList.add('selected');
-                } else {
-                    c.classList.remove('selected');
-                }
+                if (i === idx) c.classList.add('selected');
+                else c.classList.remove('selected');
             });
         }
 
@@ -1215,15 +1371,48 @@
             const toggle = document.getElementById('yt-toggle');
             const leftArea = document.getElementById('yt-left-area');
             selectedYoutube = toggle.checked;
-
-            if (selectedYoutube) {
-                leftArea.classList.add('youtube-active');
-            } else {
-                leftArea.classList.remove('youtube-active');
-            }
+            if (selectedYoutube) leftArea.classList.add('youtube-active');
+            else leftArea.classList.remove('youtube-active');
         }
 
-        function startProcess() {
+        async function getSelectedCoverBlob() {
+            if (uploadedFiles.cover) return uploadedFiles.cover;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 1000; canvas.height = 1000;
+            const ctx = canvas.getContext('2d');
+            const titleInput = document.getElementById('beat-title-input').value || 'MI BEAT';
+            
+            const grad = ctx.createLinearGradient(0, 0, 1000, 1000);
+            grad.addColorStop(0, '#020202');
+            grad.addColorStop(0.5, '#222226');
+            grad.addColorStop(1, '#050505');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 1000, 1000);
+            
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(500, 500, 400, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.font = '900 85px sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(titleInput.toUpperCase(), 500, 500);
+            
+            ctx.font = '700 20px sans-serif';
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fillText('OFFSZN EXPORTER', 500, 850);
+            
+            return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        //  SUBMIT PUBLISH PROCESS
+        // ═══════════════════════════════════════════════════════════
+        async function startProcess() {
             document.getElementById('view-targets').classList.remove('active');
             document.getElementById('vst-steps-bar').style.display = 'none';
             document.getElementById('view-progress').style.display = 'flex';
@@ -1233,11 +1422,8 @@
             const stepUploadStore = document.getElementById('step-upload-store');
             const stepYoutube = document.getElementById('step-youtube');
 
-            if (!selectedYoutube) {
-                stepYoutube.style.display = 'none';
-            } else {
-                stepYoutube.style.display = 'flex';
-            }
+            if (!selectedYoutube) stepYoutube.style.display = 'none';
+            else stepYoutube.style.display = 'flex';
 
             stepRender.className = 'status-step active';
             stepRender.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
@@ -1246,39 +1432,53 @@
             stepYoutube.className = 'status-step';
             stepYoutube.querySelector('i').className = 'fa-regular fa-circle';
 
-            // Trigger C++ audio render & cloud publication
-            const titleText = document.getElementById('beat-title-input').value || 'Beat';
-            callNativeHost('publishBeat', {
-                title: titleText,
-                syncYoutube: selectedYoutube
-            });
+            try {
+                progressVal.textContent = '10%';
+                const coverBlob = await getSelectedCoverBlob();
 
-            // Fast simulation speed (20ms interval ticks)
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 4; // faster steps
-                progressVal.textContent = `${progress}%`;
+                progressVal.textContent = '25%';
+                const files = {
+                    cover: coverBlob,
+                    wav: uploadedFiles.wav,
+                    mp3: uploadedFiles.mp3 || uploadedFiles.wav
+                };
 
-                if (progress === 28) {
+                const metadata = {
+                    title: document.getElementById('beat-title-input').value || 'Beat',
+                    bpm: 140,
+                    key: 'C Min'
+                };
+
+                if (window.BeatPostService && session && window.BeatPostService.uploadBeatProduct) {
                     stepRender.className = 'status-step completed';
                     stepRender.querySelector('i').className = 'fa-solid fa-circle-check';
                     stepUploadStore.className = 'status-step active';
                     stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
-                }
 
-                if (progress === 72) {
+                    progressVal.textContent = '50%';
+                    const result = await window.BeatPostService.uploadBeatProduct(
+                        supabaseClient,
+                        session,
+                        metadata,
+                        files,
+                        selectedYoutube,
+                        (stage, msg) => {
+                            logDebug(msg);
+                            if (stage === 'upload_store') {
+                                progressVal.textContent = '70%';
+                            } else if (stage === 'render_video') {
+                                progressVal.textContent = '85%';
+                                stepUploadStore.className = 'status-step completed';
+                                stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-check';
+                                stepYoutube.className = 'status-step active';
+                                stepYoutube.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
+                            }
+                        }
+                    );
+
+                    progressVal.textContent = '100%';
                     stepUploadStore.className = 'status-step completed';
                     stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-check';
-
-                    if (selectedYoutube) {
-                        stepYoutube.className = 'status-step active';
-                        stepYoutube.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
-                    }
-                }
-
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    
                     if (selectedYoutube) {
                         stepYoutube.className = 'status-step completed';
                         stepYoutube.querySelector('i').className = 'fa-solid fa-circle-check';
@@ -1287,32 +1487,74 @@
                     setTimeout(() => {
                         document.getElementById('view-progress').style.display = 'none';
                         const successView = document.getElementById('view-success');
-                        
                         const msg = selectedYoutube 
-                            ? `"${titleText}" ha sido renderizado en MP3/WAV, subido a tu tienda OFFSZN y publicado en YouTube.`
-                            : `"${titleText}" ha sido renderizado en MP3/WAV y subido directamente a tu tienda virtual de OFFSZN.`;
-                        
+                            ? `"${metadata.title}" ha sido publicado en tu tienda OFFSZN y tu canal de YouTube.`
+                            : `"${metadata.title}" ha sido añadido a tu catálogo de venta en OFFSZN.`;
                         document.getElementById('success-message').textContent = msg;
                         successView.style.display = 'flex';
-                    }, 300);
+                    }, 500);
+
+                } else {
+                    logDebug('OFFSZN Service bypassed. Simulating mock upload...');
+                    let progress = 25;
+                    const interval = setInterval(() => {
+                        progress += 5;
+                        progressVal.textContent = `${progress}%`;
+                        if (progress === 45) {
+                            stepRender.className = 'status-step completed';
+                            stepRender.querySelector('i').className = 'fa-solid fa-circle-check';
+                            stepUploadStore.className = 'status-step active';
+                            stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
+                        }
+                        if (progress === 80) {
+                            stepUploadStore.className = 'status-step completed';
+                            stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-check';
+                            if (selectedYoutube) {
+                                stepYoutube.className = 'status-step active';
+                                stepYoutube.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
+                            }
+                        }
+                        if (progress >= 100) {
+                            clearInterval(interval);
+                            if (selectedYoutube) {
+                                stepYoutube.className = 'status-step completed';
+                                stepYoutube.querySelector('i').className = 'fa-solid fa-circle-check';
+                            }
+                            setTimeout(() => {
+                                document.getElementById('view-progress').style.display = 'none';
+                                const successView = document.getElementById('view-success');
+                                successView.style.display = 'flex';
+                            }, 500);
+                        }
+                    }, 100);
                 }
-            }, 20); // 20ms animation tick rate for rapid testing
+            } catch (err) {
+                logDebug('Upload failed: ' + err.message);
+                alert('Fallo al subir beat: ' + err.message);
+                resetProcessUI();
+            }
+        }
+
+        function resetProcessUI() {
+            document.getElementById('view-progress').style.display = 'none';
+            document.getElementById('view-targets').classList.add('active');
+            document.getElementById('vst-steps-bar').style.display = 'flex';
         }
 
         function resetMockup() {
             document.getElementById('view-success').style.display = 'none';
             document.getElementById('vst-steps-bar').style.display = 'flex';
             
-            // Reset recording statuses
-            document.getElementById('wav-status-lbl').textContent = 'Sin grabar';
-            document.getElementById('render-status-lbl').textContent = 'Listo para grabar';
-            document.getElementById('render-status-lbl').style.color = 'var(--dim)';
-            document.getElementById('btn-rec-start').style.display = 'block';
-            document.getElementById('btn-rec-stop').style.display = 'none';
+            document.getElementById('wav-status-lbl').textContent = 'Cargar archivo';
+            document.getElementById('wav-status-lbl').style.color = 'var(--dim)';
+            document.getElementById('mp3-status-lbl').textContent = 'Cargar archivo';
+            document.getElementById('mp3-status-lbl').style.color = 'var(--dim)';
+            
             document.getElementById('btn-audio-continue').disabled = true;
             document.getElementById('btn-audio-continue').style.opacity = '0.5';
             document.getElementById('btn-audio-continue').style.cursor = 'not-allowed';
             
+            uploadedFiles = { wav: null, mp3: null, cover: null };
             recordedWavPath = null;
             goToStep(1);
         }
@@ -1320,23 +1562,6 @@
         // ═══════════════════════════════════════════════════════════
         //  VST MASTER RECORDING INTEGRATION
         // ═══════════════════════════════════════════════════════════
-        let recordedWavPath = null;
-
-        async function callNativeFunction(funcName, ...args) {
-            if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.getNativeFunction === 'function') {
-                try {
-                    return await window.__JUCE__.backend.getNativeFunction(funcName)(...args);
-                } catch (e) {
-                    logDebug(`Error native function call ${funcName}: ${e.message}`);
-                }
-            }
-            // WebView2 fallback
-            if (window.chrome && window.chrome.webview) {
-                window.chrome.webview.postMessage({ action: funcName, payload: args });
-            }
-            return null;
-        }
-
         async function startVSTRecording() {
             logDebug('Starting real-time DAW Master recording...');
             document.getElementById('render-status-lbl').textContent = 'Grabando...';
@@ -1344,7 +1569,6 @@
             document.getElementById('btn-rec-start').style.display = 'none';
             document.getElementById('btn-rec-stop').style.display = 'block';
 
-            // Invoke C++
             const ok = await callNativeFunction('startRecordingNative');
             logDebug(ok ? 'C++ Audio Recorder started. Play DAW project!' : 'Failed to start C++ Audio Recorder.');
         }
@@ -1354,21 +1578,19 @@
             document.getElementById('render-status-lbl').textContent = 'Procesando WAV...';
             document.getElementById('render-status-lbl').style.color = '#ffcc00';
 
-            // Invoke C++
             const path = await callNativeFunction('stopRecordingNative');
-            
             if (path && path.length > 0) {
                 recordedWavPath = path;
                 document.getElementById('render-status-lbl').textContent = 'Grabación Completa';
                 document.getElementById('render-status-lbl').style.color = 'var(--green)';
                 document.getElementById('wav-status-lbl').textContent = 'recorded_beat.wav (Listo)';
+                document.getElementById('wav-status-lbl').style.color = 'var(--green)';
                 logDebug('Saved WAV to: ' + path);
 
-                // Enable continue button
-                const btn = document.getElementById('btn-audio-continue');
-                btn.disabled = false;
-                btn.style.opacity = '1';
-                btn.style.cursor = 'pointer';
+                uploadedFiles.wav = new File([""], "recorded_beat.wav", { type: "audio/wav" });
+                uploadedFiles.wav.localPath = path;
+
+                validateStep1Continue();
             } else {
                 document.getElementById('render-status-lbl').textContent = 'Error al grabar';
                 document.getElementById('render-status-lbl').style.color = 'var(--red)';
