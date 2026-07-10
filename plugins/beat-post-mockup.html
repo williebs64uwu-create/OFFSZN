@@ -728,6 +728,178 @@
             font-size: 9px;
             color: #fff;
         }
+
+        /* Custom Premium Sleek Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            transition: background 0.2s;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+
+        /* Cover Search Modal Overlay */
+        .cover-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 11000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .cover-modal-content {
+            background: #0d0d11;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+        }
+
+        .cover-modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cover-modal-header h3 {
+            font-size: 11px;
+            font-weight: 800;
+            color: #fff;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-close-modal {
+            background: transparent;
+            border: none;
+            color: var(--dim);
+            font-size: 16px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .btn-close-modal:hover {
+            color: #fff;
+        }
+
+        .cover-modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .cover-search-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .modal-covers-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .modal-cover-card {
+            aspect-ratio: 1/1;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+
+        .modal-cover-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .modal-cover-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .modal-cover-card.selected {
+            border-color: var(--accent);
+        }
+
+        .btn-download-cover {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 26px;
+            height: 26px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            cursor: pointer;
+            z-index: 5;
+            transition: all 0.2s;
+        }
+
+        .btn-download-cover:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: scale(1.1);
+        }
+
+        .btn-load-more {
+            background: var(--panel-light);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .btn-load-more:hover {
+            border-color: var(--accent);
+            background: rgba(255,255,255,0.02);
+        }
     </style>
 </head>
 <body>
@@ -816,23 +988,23 @@
                     <p style="color: var(--dim); font-size: 11.5px; margin-bottom: 14px; line-height: 1.5;">Arrastra tus archivos WAV/MP3 exportados o haz clic para cargarlos desde el explorador.</p>
                     
                     <!-- DRAG & DROP ZONE -->
-                    <div id="drop-zone" class="custom-upload-card" style="width: 100%; height: 140px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: #060608; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px; transition: border-color 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border-light)'" ondrop="handleFileDrop(event)" onclick="document.getElementById('file-input-wav').click()">
+                    <div id="drop-zone" class="custom-upload-card" style="width: 100%; height: 140px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: #060608; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin-bottom: 16px; transition: border-color 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border-light)'" ondrop="handleFileDrop(event)" onclick="document.getElementById('file-input-mp3').click()">
                         <i class="fa-solid fa-cloud-arrow-up" style="font-size: 26px; color: var(--dim);"></i>
-                        <span style="font-size: 12px; font-weight: 700; color: #fff;">Arrastra aquí tus archivos WAV y MP3</span>
-                        <span style="font-size: 10px; color: var(--dim);">O haz clic para seleccionar tu WAV principal</span>
+                        <span style="font-size: 12px; font-weight: 700; color: #fff;">Arrastra aquí tus archivos MP3 y WAV</span>
+                        <span style="font-size: 10px; color: var(--dim);">O haz clic para seleccionar tu MP3 principal (máx. 60MB)</span>
                         <input type="file" id="file-input-wav" accept=".wav" style="display: none;" onchange="handleFileSelect('wav', this.files[0])">
                         <input type="file" id="file-input-mp3" accept=".mp3" style="display: none;" onchange="handleFileSelect('mp3', this.files[0])">
                     </div>
 
                     <!-- SELECTED FILES LIST -->
                     <div class="capture-files" style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
-                        <div class="file-row" onclick="document.getElementById('file-input-wav').click()" style="cursor: pointer;">
-                            <span class="file-name"><i class="fa-regular fa-file-audio"></i> WAV Master (Obligatorio)</span>
-                            <span class="file-status" id="wav-status-lbl" style="color: var(--dim);">Cargar WAV</span>
-                        </div>
                         <div class="file-row" onclick="document.getElementById('file-input-mp3').click()" style="cursor: pointer;">
-                            <span class="file-name"><i class="fa-regular fa-file-audio"></i> MP3 Demo (Opcional)</span>
+                            <span class="file-name"><i class="fa-regular fa-file-audio"></i> MP3 con Tag (Obligatorio)</span>
                             <span class="file-status" id="mp3-status-lbl" style="color: var(--dim);">Cargar MP3</span>
+                        </div>
+                        <div class="file-row" onclick="document.getElementById('file-input-wav').click()" style="cursor: pointer;">
+                            <span class="file-name"><i class="fa-regular fa-file-audio"></i> WAV sin Tag (Opcional)</span>
+                            <span class="file-status" id="wav-status-lbl" style="color: var(--dim);">Cargar WAV</span>
                         </div>
                     </div>
                 </div>
@@ -858,8 +1030,18 @@
                     <input type="text" id="beat-title-input" class="text-input" value="R&B Type Beat" placeholder="Ej. Lofi Chill Type Beat" oninput="onTitleChange()">
                 </div>
 
+                <div class="form-group" style="margin-top: 10px;">
+                    <h3 class="section-title">Descripción</h3>
+                    <textarea id="beat-desc-input" class="text-input" style="height: 60px; resize: none; font-size: 12px; padding: 10px 12px; background: #000;" placeholder="Ej. Beat de R&B suave con vibras vintage. Ideal para Drake o Bryson Tiller."></textarea>
+                </div>
+
+                <div class="form-group" style="margin-top: 10px;">
+                    <h3 class="section-title">Tags (separadas por comas)</h3>
+                    <input type="text" id="beat-tags-input" class="text-input" style="padding: 10px 12px; font-size: 12px; background: #000;" value="rnb, vintage, smooth, drake, Bryson Tiller" placeholder="Ej. trap, hard, dark, 808">
+                </div>
+
                 <!-- Cover Recommender Engine Block -->
-                <div class="cover-recommender">
+                <div class="cover-recommender" style="margin-top: 14px;">
                     <div class="recommender-header">
                         <span>Recomendación de Portada</span>
                         <span id="search-tag-indicator" style="color: #fff; font-family: 'Geist Mono', monospace; font-size: 9px;">Búsqueda: R&B</span>
@@ -874,9 +1056,12 @@
                     <div class="covers-grid" id="covers-container">
                         <!-- Filled by JS -->
                     </div>
+
+                    <!-- Ver más button -->
+                    <button type="button" class="btn-load-more" style="width: 100%; margin-top: 6px;" onclick="openMoreCoversModal()">Ver más recomendaciones</button>
                 </div>
 
-                <div class="nav-buttons">
+                <div class="nav-buttons" style="margin-top: 14px;">
                     <button class="btn-prev" onclick="goToStep(1)"><i class="fa-solid fa-chevron-left"></i> Atrás</button>
                     <button class="btn-next" onclick="goToStep(3)">
                         Continuar <i class="fa-solid fa-chevron-right"></i>
@@ -996,29 +1181,48 @@
         let selectedCoverIndex = 0;
         let currentKeywords = ['rnb'];
 
-        // Premium B&W gradients
-        const coverTemplates = {
-            'rnb': [
-                { grad: 'linear-gradient(135deg, #111, #444, #222)', label: 'Sunset Vibe', icon: 'fa-regular fa-moon' },
-                { grad: 'linear-gradient(135deg, #050505, #666, #1a1a1a)', label: 'Neo-Soul Groove', icon: 'fa-solid fa-droplet' },
-                { grad: 'linear-gradient(135deg, #0d0d0d, #222, #000)', label: 'Late Night R&B', icon: 'fa-solid fa-wand-magic-sparkles' }
-            ],
-            'trap': [
-                { grad: 'linear-gradient(135deg, #000, #333, #000)', label: 'Metro Trap', icon: 'fa-solid fa-skull' },
-                { grad: 'linear-gradient(135deg, #121212, #555, #1c1c1c)', label: 'Dark Haze', icon: 'fa-solid fa-gun' },
-                { grad: 'linear-gradient(135deg, #08080a, #777, #000)', label: 'Cachin', icon: 'fa-solid fa-money-bill-wave' }
-            ],
-            'lofi': [
-                { grad: 'linear-gradient(135deg, #222, #555)', label: 'Study Session', icon: 'fa-solid fa-mug-saucer' },
-                { grad: 'linear-gradient(135deg, #0f0f12, #666)', label: 'Rainy Day', icon: 'fa-solid fa-cloud-showers-heavy' },
-                { grad: 'linear-gradient(135deg, #030303, #444, #1f1f1f)', label: 'Chill Vintage', icon: 'fa-solid fa-compact-disc' }
-            ],
-            'random': [
-                { grad: 'linear-gradient(135deg, #121215, #3a3a42)', label: 'Abstract Wave', icon: 'fa-solid fa-compass-drafting' },
-                { grad: 'linear-gradient(135deg, #050505, #505055)', label: 'Cloud Beats', icon: 'fa-solid fa-cloud' },
-                { grad: 'linear-gradient(135deg, #000000, #2b2b2b)', label: 'Deep Space', icon: 'fa-solid fa-satellite' }
-            ]
-        };
+        // Curated high quality cover arts from Unsplash
+        const curatedCovers = [
+            // TRAP & DRILL
+            { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=80', tags: ['trap', 'drill', 'neon', 'dark', 'purple', 'abstract'] },
+            { url: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=500&auto=format&fit=crop&q=80', tags: ['trap', 'gold', 'black', 'dark', 'drill'] },
+            { url: 'https://images.unsplash.com/photo-1604871000636-074fa5117945?w=500&auto=format&fit=crop&q=80', tags: ['trap', 'red', 'neon', 'dark', 'drill'] },
+            { url: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=500&auto=format&fit=crop&q=80', tags: ['trap', 'abstract', 'art', 'dark', 'drill'] },
+            { url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=500&auto=format&fit=crop&q=80', tags: ['dark', 'abstract', 'blue', 'smoke', 'trap'] },
+            { url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=500&auto=format&fit=crop&q=80', tags: ['cyberpunk', 'city', 'neon', 'synthwave', 'trap'] },
+            { url: 'https://images.unsplash.com/photo-1515260268569-9271009adfdb?w=500&auto=format&fit=crop&q=80', tags: ['neon', 'street', 'night', 'cyberpunk', 'drill'] },
+            { url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&auto=format&fit=crop&q=80', tags: ['trap', 'hard', 'dark', 'drill', 'hiphop', 'rap'] },
+            // R&B & SOUL & VINTAGE
+            { url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80', tags: ['rnb', 'soul', 'vintage', 'mic', 'microphone'] },
+            { url: 'https://images.unsplash.com/photo-1487180142328-0c4e37023af5?w=500&auto=format&fit=crop&q=80', tags: ['rnb', 'vintage', 'vinyl', 'cassette', 'tape', 'soul'] },
+            { url: 'https://images.unsplash.com/photo-1516280440614-37939bbacd6a?w=500&auto=format&fit=crop&q=80', tags: ['rnb', 'singer', 'neon', 'purple', 'live', 'soul'] },
+            { url: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500&auto=format&fit=crop&q=80', tags: ['rnb', 'soul', 'vinyl', 'sunset', 'retro'] },
+            { url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80', tags: ['rnb', 'stage', 'lights', 'concert', 'soul'] },
+            { url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=500&auto=format&fit=crop&q=80', tags: ['art', 'fluid', 'purple', 'abstract', 'rnb'] },
+            { url: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80', tags: ['cinematic', 'lights', 'neon', 'vintage', 'rnb'] },
+            // LOFI & CHILL
+            { url: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'chill', 'rain', 'window', 'ambient'] },
+            { url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'chill', 'headphones', 'music', 'coffee'] },
+            { url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'chill', 'lights', 'bokeh'] },
+            { url: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'pastel', 'abstract', 'art'] },
+            { url: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'chill', 'stars', 'night', 'sky'] },
+            { url: 'https://images.unsplash.com/photo-1526481280693-3bfa7568e0f3?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'sunset', 'chill', 'sky'] },
+            { url: 'https://images.unsplash.com/photo-1494905998402-395d579af36f?w=500&auto=format&fit=crop&q=80', tags: ['retro', 'car', 'chill', 'lofi'] },
+            { url: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'forest', 'moody', 'chill'] },
+            { url: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'bridge', 'chill', 'mist'] },
+            // GENERAL & OTHERS
+            { url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500&auto=format&fit=crop&q=80', tags: ['singer', 'shadow', 'music', 'soul'] },
+            { url: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=500&auto=format&fit=crop&q=80', tags: ['concert', 'hands', 'crowd', 'festival'] },
+            { url: 'https://images.unsplash.com/photo-1518972559570-7cc1309f3229?w=500&auto=format&fit=crop&q=80', tags: ['synth', 'keys', 'music', 'piano'] },
+            { url: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=500&auto=format&fit=crop&q=80', tags: ['neon', 'headphones', 'music', 'gaming'] },
+            { url: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=500&auto=format&fit=crop&q=80', tags: ['sunset', 'city', 'chill', 'skyline'] },
+            { url: 'https://images.unsplash.com/photo-1513829096960-ef0931e87d5a?w=500&auto=format&fit=crop&q=80', tags: ['retro', 'boombox', 'music', 'hiphop'] },
+            { url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80', tags: ['minimal', 'artwork', 'abstract'] },
+            { url: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=500&auto=format&fit=crop&q=80', tags: ['gradient', 'background', 'colorful'] }
+        ];
+
+        let selectedCoverUrl = '';
+        let recommendedCovers = [];
 
         // ═══════════════════════════════════════════════════════════
         //  SUPABASE & FILE CONFIGURATION
@@ -1144,15 +1348,37 @@
             window.open(tokenUrl, '_blank');
         }
 
-        function handleSession(sess) {
+        async function handleSession(sess) {
             session = sess;
             document.getElementById('view-auth').style.display = 'none';
             document.getElementById('vst-steps-bar').style.display = 'flex';
             
             document.getElementById('footer-status-text').textContent = 'Conectado a OFFSZN';
             document.getElementById('footer-user').style.display = 'flex';
-            document.getElementById('footer-user').querySelector('span').textContent = sess.user.email.split('@')[0];
-            document.getElementById('footer-user').querySelector('.user-avatar').textContent = sess.user.email[0].toUpperCase();
+            
+            let displayName = sess.user.email ? sess.user.email.split('@')[0] : 'vst-user';
+            let avatarChar = displayName[0].toUpperCase();
+            
+            document.getElementById('footer-user').querySelector('span').textContent = displayName;
+            document.getElementById('footer-user').querySelector('.user-avatar').textContent = avatarChar;
+
+            if (supabaseClient && sess.user && sess.user.id) {
+                try {
+                    const { data: profile, error } = await supabaseClient
+                        .from('users')
+                        .select('nickname')
+                        .eq('id', sess.user.id)
+                        .single();
+                    if (!error && profile && profile.nickname) {
+                        displayName = profile.nickname;
+                        avatarChar = displayName[0].toUpperCase();
+                        document.getElementById('footer-user').querySelector('span').textContent = displayName;
+                        document.getElementById('footer-user').querySelector('.user-avatar').textContent = avatarChar;
+                    }
+                } catch (e) {
+                    console.error("Error fetching nickname:", e);
+                }
+            }
             
             goToStep(1);
         }
@@ -1194,12 +1420,26 @@
         // ═══════════════════════════════════════════════════════════
         function handleFileSelect(type, file) {
             if (!file) return;
-            const maxMB = type === 'wav' ? 60 : (type === 'mp3' ? 50 : 20);
+            
+            // Check file extension
+            const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+            if (type === 'wav' && ext !== '.wav') {
+                alert('El archivo seleccionado para WAV sin Tag debe ser un archivo .wav');
+                return;
+            }
+            if (type === 'mp3' && ext !== '.mp3') {
+                alert('El archivo seleccionado para MP3 con Tag debe ser un archivo .mp3');
+                return;
+            }
+
+            const maxMB = 60; // Max size is 60MB for both
             if (file.size > maxMB * 1024 * 1024) {
                 alert(`El archivo excede el límite de ${maxMB}MB. (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
                 return;
             }
+            
             uploadedFiles[type] = file;
+            
             if (type === 'wav') {
                 document.getElementById('wav-status-lbl').textContent = `${file.name.substring(0,18)}... (${(file.size/1024/1024).toFixed(1)}MB)`;
                 document.getElementById('wav-status-lbl').style.color = 'var(--green)';
@@ -1215,20 +1455,26 @@
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 for (let file of files) {
-                    if (file.name.toLowerCase().endsWith('.wav')) {
+                    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+                    if (ext === '.wav') {
                         handleFileSelect('wav', file);
-                    } else if (file.name.toLowerCase().endsWith('.mp3')) {
+                    } else if (ext === '.mp3') {
                         handleFileSelect('mp3', file);
-                    } else if (file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.png') || file.name.toLowerCase().endsWith('.webp')) {
+                    } else if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) {
                         uploadedFiles.cover = file;
+                        selectedCoverUrl = ''; // Clear URL selection
                         logDebug(`Custom cover selected: ${file.name}`);
+                        renderCoversCurrent();
+                    } else {
+                        alert(`El archivo "${file.name}" no tiene un formato válido (solo se permiten .mp3, .wav o imágenes).`);
                     }
                 }
             }
         }
 
         function validateStep1Continue() {
-            const canContinue = !!uploadedFiles.wav;
+            // ONLY MP3 is REQUIRED
+            const canContinue = !!uploadedFiles.mp3;
             const btn = document.getElementById('btn-audio-continue');
             if (canContinue) {
                 btn.removeAttribute('disabled');
@@ -1265,7 +1511,46 @@
 
             currentKeywords = keywords;
             renderVariations(genre);
-            renderCovers(genre);
+            
+            // Search curated pool for top 2 matches
+            const searchTerms = titleVal.split(/\s+/).filter(Boolean);
+            let matches = [];
+            
+            curatedCovers.forEach(cov => {
+                let score = 0;
+                searchTerms.forEach(term => {
+                    cov.tags.forEach(tag => {
+                        if (tag.includes(term) || term.includes(tag)) {
+                            score += 2;
+                        }
+                    });
+                });
+                if (score > 0) {
+                    matches.push({ ...cov, score });
+                }
+            });
+
+            // Sort matches by score descending
+            matches.sort((a, b) => b.score - a.score);
+
+            // Get top 2. If less than 2, fill with random ones
+            let recCovers = matches.slice(0, 2);
+            if (recCovers.length < 2) {
+                const remaining = curatedCovers.filter(c => !recCovers.some(rc => rc.url === c.url));
+                remaining.sort(() => 0.5 - Math.random());
+                while (recCovers.length < 2 && remaining.length > 0) {
+                    recCovers.push(remaining.pop());
+                }
+            }
+
+            recommendedCovers = recCovers;
+
+            // If selectedCoverUrl is not set or not in the current recommended covers, set it to the first recommendation
+            if (!uploadedFiles.cover && (!selectedCoverUrl || !recommendedCovers.some(rc => rc.url === selectedCoverUrl))) {
+                selectedCoverUrl = recommendedCovers[0]?.url || '';
+            }
+
+            renderCoversCurrent();
         }
 
         function setKeywordSearch(keyword, genre) {
@@ -1278,7 +1563,39 @@
                     b.classList.remove('active');
                 }
             });
-            renderCovers(genre);
+            
+            // Search curated pool specifically for the keyword
+            const searchTerms = keyword.toLowerCase().split(/\s+/);
+            let matches = [];
+            curatedCovers.forEach(cov => {
+                let score = 0;
+                searchTerms.forEach(term => {
+                    cov.tags.forEach(tag => {
+                        if (tag.includes(term) || term.includes(tag)) {
+                            score += 2;
+                        }
+                    });
+                });
+                if (score > 0) {
+                    matches.push({ ...cov, score });
+                }
+            });
+
+            matches.sort((a, b) => b.score - a.score);
+            let recCovers = matches.slice(0, 2);
+            if (recCovers.length < 2) {
+                const remaining = curatedCovers.filter(c => !recCovers.some(rc => rc.url === c.url));
+                remaining.sort(() => 0.5 - Math.random());
+                while (recCovers.length < 2 && remaining.length > 0) {
+                    recCovers.push(remaining.pop());
+                }
+            }
+            
+            recommendedCovers = recCovers;
+            if (!uploadedFiles.cover) {
+                selectedCoverUrl = recommendedCovers[0]?.url || '';
+            }
+            renderCoversCurrent();
         }
 
         function renderVariations(genre) {
@@ -1296,62 +1613,104 @@
             }
         }
 
-        function renderCovers(genre) {
-            const container = document.getElementById('covers-container');
-            if (container) {
-                container.innerHTML = '';
-                const titleInput = document.getElementById('beat-title-input').value;
-                const templates = coverTemplates[genre] || coverTemplates['random'];
-
-                templates.forEach((tpl, idx) => {
-                    const card = document.createElement('div');
-                    card.className = `cover-option-card ${idx === selectedCoverIndex ? 'selected' : ''}`;
-                    card.style.background = tpl.grad;
-                    card.onclick = () => selectCover(idx);
-
-                    const icon = document.createElement('i');
-                    icon.className = `${tpl.icon} cover-icon`;
-                    card.appendChild(icon);
-
-                    const overlay = document.createElement('div');
-                    overlay.className = 'cover-overlay';
-                    card.appendChild(overlay);
-
-                    const titleSpan = document.createElement('span');
-                    titleSpan.className = 'cover-title';
-                    titleSpan.textContent = titleInput || 'Mi Beat';
-                    card.appendChild(titleSpan);
-
-                    container.appendChild(card);
-                });
-
-                const customCard = document.createElement('div');
-                customCard.className = 'custom-upload-card';
-                customCard.innerHTML = `<i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px;"></i><span style="font-size:9px; font-weight:700;">Subir Imagen</span>`;
-                customCard.onclick = () => {
-                    const inp = document.createElement('input');
-                    inp.type = 'file';
-                    inp.accept = 'image/*';
-                    inp.onchange = (e) => {
-                        if (e.target.files[0]) {
-                            uploadedFiles.cover = e.target.files[0];
-                            logDebug('Custom cover uploaded: ' + e.target.files[0].name);
-                        }
-                    };
-                    inp.click();
-                };
-                container.appendChild(customCard);
-            }
+        function selectCoverUrl(url) {
+            selectedCoverUrl = url;
+            uploadedFiles.cover = null;
+            renderCoversCurrent();
         }
 
-        function selectCover(idx) {
-            selectedCoverIndex = idx;
-            uploadedFiles.cover = null;
-            const cards = document.querySelectorAll('.cover-option-card');
-            cards.forEach((c, i) => {
-                if (i === idx) c.classList.add('selected');
-                else c.classList.remove('selected');
+        function renderCoversCurrent() {
+            const container = document.getElementById('covers-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            recommendedCovers.forEach((tpl) => {
+                const card = document.createElement('div');
+                const isSelected = (selectedCoverUrl === tpl.url) && !uploadedFiles.cover;
+                card.className = `cover-option-card ${isSelected ? 'selected' : ''}`;
+                card.style.backgroundImage = `url(${tpl.url})`;
+                card.style.backgroundSize = 'cover';
+                card.style.backgroundPosition = 'center';
+                card.onclick = () => selectCoverUrl(tpl.url);
+
+                const overlay = document.createElement('div');
+                overlay.className = 'cover-overlay';
+                card.appendChild(overlay);
+
+                // Download icon button
+                const dlBtn = document.createElement('button');
+                dlBtn.className = 'btn-download-cover';
+                dlBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
+                dlBtn.onclick = (e) => downloadCoverImage(e, tpl.url);
+                card.appendChild(dlBtn);
+
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'cover-title';
+                titleSpan.textContent = document.getElementById('beat-title-input').value || 'Mi Beat';
+                card.appendChild(titleSpan);
+
+                container.appendChild(card);
             });
+
+            const customCard = document.createElement('div');
+            customCard.className = 'custom-upload-card';
+            
+            if (uploadedFiles.cover) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    customCard.innerHTML = `
+                        <img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:6px;">
+                        <div class="cover-overlay"></div>
+                        <span class="cover-title" style="position:absolute; bottom:8px; left:8px; font-size:8px;">Imagen Subida</span>
+                    `;
+                    customCard.classList.add('selected');
+                };
+                reader.readAsDataURL(uploadedFiles.cover);
+            } else {
+                customCard.innerHTML = `<i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px;"></i><span style="font-size:9px; font-weight:700;">Subir Imagen</span>`;
+                customCard.classList.remove('selected');
+            }
+
+            customCard.onclick = () => {
+                const inp = document.createElement('input');
+                inp.type = 'file';
+                inp.accept = 'image/*';
+                inp.onchange = (e) => {
+                    if (e.target.files[0]) {
+                        uploadedFiles.cover = e.target.files[0];
+                        selectedCoverUrl = ''; // Clear URL selection
+                        logDebug('Custom cover uploaded: ' + e.target.files[0].name);
+                        renderCoversCurrent();
+                    }
+                };
+                inp.click();
+            };
+
+            container.appendChild(customCard);
+        }
+
+        function downloadCoverImage(event, url) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = blobUrl;
+                    a.download = 'OFFSZN_Cover.jpg';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(blobUrl);
+                    document.body.removeChild(a);
+                })
+                .catch(err => {
+                    console.error("Failed to download image directly, opening in tab", err);
+                    window.open(url, '_blank');
+                });
         }
 
         function toggleYoutube() {
@@ -1370,6 +1729,16 @@
 
         async function getSelectedCoverBlob() {
             if (uploadedFiles.cover) return uploadedFiles.cover;
+            if (selectedCoverUrl) {
+                try {
+                    const res = await fetch(selectedCoverUrl);
+                    if (res.ok) {
+                        return await res.blob();
+                    }
+                } catch (e) {
+                    console.error("Error fetching cover image:", e);
+                }
+            }
             
             const canvas = document.createElement('canvas');
             canvas.width = 1000; canvas.height = 1000;
@@ -1400,6 +1769,99 @@
             ctx.fillText('OFFSZN EXPORTER', 500, 850);
             
             return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
+        }
+
+        // Modal cover recommender functions
+        let modalSearchOffset = 0;
+        let currentModalResults = [];
+
+        function openMoreCoversModal() {
+            const modal = document.getElementById('cover-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                const titleVal = document.getElementById('beat-title-input').value || '';
+                document.getElementById('modal-cover-search').value = titleVal;
+                modalSearchOffset = 0;
+                runModalSearch(titleVal, false);
+            }
+        }
+
+        function closeMoreCoversModal() {
+            const modal = document.getElementById('cover-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function runModalSearch(query, append = false) {
+            const searchTerms = query.toLowerCase().split(/\s+/).filter(Boolean);
+            let matches = [];
+
+            if (searchTerms.length === 0) {
+                matches = [...curatedCovers];
+            } else {
+                curatedCovers.forEach(cov => {
+                    let score = 0;
+                    searchTerms.forEach(term => {
+                        cov.tags.forEach(tag => {
+                            if (tag.includes(term) || term.includes(tag)) {
+                                score += 2;
+                            }
+                        });
+                    });
+                    if (score > 0) {
+                        matches.push({ ...cov, score });
+                    }
+                });
+
+                matches.sort((a, b) => b.score - a.score);
+
+                if (matches.length === 0) {
+                    matches = [...curatedCovers].sort(() => 0.5 - Math.random());
+                }
+            }
+
+            const limit = 15;
+            if (!append) {
+                modalSearchOffset = 0;
+                currentModalResults = matches;
+                document.getElementById('modal-covers-grid').innerHTML = '';
+            }
+
+            const pageResults = currentModalResults.slice(modalSearchOffset, modalSearchOffset + limit);
+            modalSearchOffset += limit;
+
+            const grid = document.getElementById('modal-covers-grid');
+            pageResults.forEach(cov => {
+                const card = document.createElement('div');
+                const isSelected = (selectedCoverUrl === cov.url) && !uploadedFiles.cover;
+                card.className = `modal-cover-card ${isSelected ? 'selected' : ''}`;
+                
+                const img = document.createElement('img');
+                img.src = cov.url;
+                img.alt = 'Cover option';
+                card.appendChild(img);
+
+                const dlBtn = document.createElement('button');
+                dlBtn.className = 'btn-download-cover';
+                dlBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
+                dlBtn.onclick = (e) => downloadCoverImage(e, cov.url);
+                card.appendChild(dlBtn);
+
+                card.onclick = () => {
+                    selectCoverUrl(cov.url);
+                    closeMoreCoversModal();
+                };
+
+                grid.appendChild(card);
+            });
+
+            const loadMoreBtn = document.getElementById('btn-load-more-modal');
+            if (modalSearchOffset < currentModalResults.length) {
+                loadMoreBtn.style.display = 'block';
+            } else {
+                loadMoreBtn.style.display = 'none';
+            }
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -1433,11 +1895,18 @@
                 const files = {
                     cover: coverBlob,
                     wav: uploadedFiles.wav,
-                    mp3: uploadedFiles.mp3 || uploadedFiles.wav
+                    mp3: uploadedFiles.mp3
                 };
+
+                const rawTags = (document.getElementById('beat-tags-input')?.value || '')
+                    .split(',')
+                    .map(t => t.trim())
+                    .filter(Boolean);
 
                 const metadata = {
                     title: document.getElementById('beat-title-input').value || 'Beat',
+                    description: document.getElementById('beat-desc-input')?.value || '',
+                    tags: rawTags,
                     bpm: 140,
                     key: 'C Min'
                 };
@@ -1551,5 +2020,25 @@
             goToStep(1);
         }
     </script>
+
+    <!-- Cover Search Modal -->
+    <div class="cover-modal-overlay" id="cover-modal">
+        <div class="cover-modal-content">
+            <div class="cover-modal-header">
+                <h3>Recomendaciones de Portada</h3>
+                <button class="btn-close-modal" onclick="closeMoreCoversModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="cover-modal-body">
+                <div class="cover-search-row">
+                    <input type="text" id="modal-cover-search" class="text-input" style="flex: 1; padding: 10px 14px; font-size: 12px; background: #000;" placeholder="Buscar portadas...">
+                    <button class="btn-next" style="margin: 0; padding: 10px 18px; font-size: 12px; font-weight: 700; flex: initial;" onclick="runModalSearch(document.getElementById('modal-cover-search').value, false)">Buscar</button>
+                </div>
+                <div class="modal-covers-grid" id="modal-covers-grid">
+                    <!-- Filled by JS -->
+                </div>
+                <button class="btn-load-more" id="btn-load-more-modal" style="display: none;" onclick="runModalSearch(document.getElementById('modal-cover-search').value, true)">Ver más recomendaciones</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

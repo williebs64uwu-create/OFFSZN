@@ -100,7 +100,7 @@ async function uploadBeatProduct(supabaseClient, session, metadata, files, isYou
                 window.YouTubeUploader.setRenderedVideo(videoBlob);
                 youtubeVideoId = await window.YouTubeUploader.handleUpload({
                     title: metadata.title,
-                    description: `Comprar/Descargar beat: ${metadata.title}\nBPM: ${metadata.bpm}\nKey: ${metadata.key}`,
+                    description: metadata.description || `Comprar/Descargar beat: ${metadata.title}\nBPM: ${metadata.bpm}\nKey: ${metadata.key}`,
                     tags: metadata.tags || []
                 });
             } else {
@@ -133,6 +133,8 @@ async function uploadBeatProduct(supabaseClient, session, metadata, files, isYou
     const dbPayload = {
         name: metadata.title,
         title: metadata.title,
+        description: metadata.description || '',
+        tags: (metadata.tags || []).slice(0, 3),
         bpm: parseInt(metadata.bpm) || 0,
         key: metadata.key || 'C Min',
         product_type: 'beat',
