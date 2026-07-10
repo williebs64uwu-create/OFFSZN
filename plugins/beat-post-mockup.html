@@ -1015,16 +1015,30 @@
             }
         }
 
-        // Listener for Host answers
-        if (window.chrome && window.chrome.webview) {
-            window.chrome.webview.addEventListener('message', function(e) {
-                const data = e.data;
-                logDebug(`Host answered: ${data.event}`);
-                if (data.event === 'audioRendered') {
+        // Initialize BeatPostService WebView2 host listener
+        if (window.BeatPostService) {
+            window.BeatPostService.initNativeBridgeListener((action, payload) => {
+                logDebug(`Host command received: ${action}`);
+                if (action === 'audioRendered' || action === 'setExportedAudio') {
                     document.getElementById('render-status-lbl').textContent = 'Listo';
                     document.getElementById('wav-status-lbl').textContent = 'Audio WAV cargado';
+                    logDebug('Audio files updated from native host.');
+                } else if (action === 'setSessionToken') {
+                    logDebug('Session token injected from C++ host.');
                 }
             });
+        } else {
+            // Standalone mock fallback
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.addEventListener('message', function(e) {
+                    const data = e.data;
+                    logDebug(`Host answered: ${data.event}`);
+                    if (data.event === 'audioRendered') {
+                        document.getElementById('render-status-lbl').textContent = 'Listo';
+                        document.getElementById('wav-status-lbl').textContent = 'Audio WAV cargado';
+                    }
+                });
+            }
         }
 
         // ═══════════════════════════════════════════════════════════

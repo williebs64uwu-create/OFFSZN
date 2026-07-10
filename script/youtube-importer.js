@@ -57,7 +57,7 @@
     }
 
     // Proxy function for Auth requests (used by youtube-uploader-v2.js as well)
-    window._googleRequestAuth = function (callback) {
+    window._googleRequestAuth = function (callback, scopeOverride) {
         if (!tokenClient) {
             console.error("❌ [GIS] tokenClient no disponible para auth");
             if (callback) callback({ error: 'token_client_not_ready' });
@@ -74,7 +74,12 @@
 
         try {
             // Initiate the auth prompt
-            tokenClient.requestAccessToken({ prompt: 'consent' });
+            const options = { prompt: 'consent' };
+            if (scopeOverride) {
+                console.log("📹 [GIS] Requesting custom scope override:", scopeOverride);
+                options.scope = scopeOverride;
+            }
+            tokenClient.requestAccessToken(options);
 
             // Detection logic for when the user closes the popup
             // Google Identity Services doesn't natively expose the popup window object

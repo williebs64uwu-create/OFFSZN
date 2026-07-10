@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beat Post - Developer Test Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase SDK & Central Config -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/env.js" onerror="console.log('Running standalone/mockup mode')"></script>
+    <script src="/script/config.js" onerror="console.log('Config omitted')"></script>
+    
+    <!-- Google API & GIS Client for Real YouTube Uploads -->
+    <script src="/script/youtube-importer.js"></script>
+    <script src="https://accounts.google.com/gsi/client" onload="gisLoaded()" async defer></script>
+    <script src="https://apis.google.com/js/api.js" onload="gapiLoaded()" async defer></script>
+    <script src="/script/youtube-uploader-v2.js"></script>
+    
+    <script src="beat-post-service.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #050505;
+            --panel: #0d0d0e;
+            --panel-light: #151518;
+            --border: #222226;
+            --border-light: #33333b;
+            --text: #ffffff;
+            --dim: #8e8e93;
+            --accent: #ffffff;
+            --green: #30d158;
+            --red: #ff453a;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Geist', sans-serif;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            gap: 40px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        .header {
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--dim);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--dim);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            background: var(--panel-light);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            color: var(--text);
+            font-family: 'Geist', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            border-color: var(--border-light);
+        }
+
+        .file-inputs {
+            background: var(--panel-light);
+            border: 1px dashed var(--border-light);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .file-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .file-label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            background: var(--border);
+            color: var(--dim);
+            cursor: not-allowed;
+        }
+
+        .console-container {
+            flex: 1;
+            max-width: 500px;
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .console-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .console-title {
+            font-family: 'Geist Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .console-log {
+            flex: 1;
+            font-family: 'Geist Mono', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-y: auto;
+            color: #ccc;
+            white-space: pre-wrap;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255,69,58,0.1);
+            color: var(--red);
+        }
+
+        .status-badge.connected {
+            background: rgba(48,209,88,0.1);
+            color: var(--green);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h1>Beat Post - Test Portal</h1>
+                <div id="authStatus" class="status-badge">
+                    <i class="fa-solid fa-circle-xmark"></i> Desconectado
+                </div>
+            </div>
+            <p>Pruebas de subida a la base de datos de OFFSZN</p>
+        </div>
+
+        <form id="uploadForm">
+            <div class="form-group">
+                <label>Título del Beat</label>
+                <input type="text" id="beatTitle" value="My New Fire Beat" required>
+            </div>
+
+            <div style="display:flex; gap:15px;">
+                <div class="form-group" style="flex:1;">
+                    <label>BPM</label>
+                    <input type="number" id="beatBpm" value="140" required>
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label>Key</label>
+                    <select id="beatKey">
+                        <option value="C Min">Do menor (C Min)</option>
+                        <option value="A Min">La menor (A Min)</option>
+                        <option value="F# Maj">Fa sostenido mayor (F# Maj)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label style="display:flex; justify-content:space-between;">
+                    <span>Sincronizar con YouTube</span>
+                    <input type="checkbox" id="syncYoutube">
+                </label>
+            </div>
+
+            <div class="file-inputs">
+                <div class="file-row">
+                    <span class="file-label">Cover (Max 20MB)</span>
+                    <input type="file" id="coverFileInput" accept="image/*" required>
+                </div>
+                <div class="file-row">
+                    <span class="file-label">Vista Previa MP3 (Max 50MB)</span>
+                    <input type="file" id="mp3FileInput" accept="audio/mp3, audio/mpeg" required>
+                </div>
+                <div class="file-row">
+                    <span class="file-label">Master WAV (Max 60MB)</span>
+                    <input type="file" id="wavFileInput" accept="audio/wav, audio/x-wav" required>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn" disabled>Iniciar Prueba de Subida</button>
+        </form>
+    </div>
+
+    <div class="console-container">
+        <div class="console-header">
+            <div class="console-title">DEBUG CONSOLE</div>
+            <button onclick="clearConsole()" style="background:none; border:none; color:var(--dim); cursor:pointer; font-size:11px;">Limpiar</button>
+        </div>
+        <div id="consoleLog" class="console-log">> Inicia el portal de pruebas.
+Esperando sesión de Supabase...</div>
+    </div>
+
+    <script>
+        const consoleEl = document.getElementById('consoleLog');
+        let supabaseInstance = null;
+        let activeSession = null;
+
+        function log(msg, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            let prefix = '> ';
+            if (type === 'error') prefix = '❌ ';
+            if (type === 'success') prefix = '✅ ';
+            consoleEl.innerText += `\n[${time}] ${prefix}${msg}`;
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function clearConsole() {
+            consoleEl.innerText = '> Consola limpia.';
+        }
+
+        // Initialize Supabase and check session
+        async function checkConnection() {
+            try {
+                if (window.supabase) {
+                    // Try to initialize supabase using the window config or loaded credentials
+                    const supabaseUrl = window.SUPABASE_URL || localStorage.getItem('supabase_url');
+                    const supabaseKey = window.SUPABASE_ANON_KEY || localStorage.getItem('supabase_anon_key');
+                    
+                    if (supabaseUrl && supabaseKey) {
+                        supabaseInstance = window.supabase.createClient(supabaseUrl, supabaseKey);
+                        const { data: { session }, error } = await supabaseInstance.auth.getSession();
+                        
+                        if (session) {
+                            activeSession = session;
+                            const badge = document.getElementById('authStatus');
+                            badge.className = 'status-badge connected';
+                            badge.innerHTML = `<i class="fa-solid fa-circle-check"></i> Conectado: ${session.user.email}`;
+                            document.getElementById('submitBtn').disabled = false;
+                            log(`Sesión activa detectada para: ${session.user.email}`, 'success');
+                            return;
+                        }
+                    }
+                }
+                log('No se detectó sesión activa de Supabase. Ingresa en OFFSZN primero para autenticarte.', 'error');
+            } catch (err) {
+                log('Error conectando a Supabase: ' + err.message, 'error');
+            }
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const files = {
+                cover: document.getElementById('coverFileInput').files[0],
+                mp3: document.getElementById('mp3FileInput').files[0],
+                wav: document.getElementById('wavFileInput').files[0]
+            };
+
+            log('Iniciando validación de pesos...');
+            const validation = BeatPostService.validateFileSizes(files);
+            
+            if (!validation.valid) {
+                validation.errors.forEach(err => log(err, 'error'));
+                return;
+            }
+            log('Validación de archivos correcta.', 'success');
+
+            const metadata = {
+                title: document.getElementById('beatTitle').value,
+                bpm: document.getElementById('beatBpm').value,
+                key: document.getElementById('beatKey').value
+            };
+
+            const syncYt = document.getElementById('syncYoutube').checked;
+
+            try {
+                document.getElementById('submitBtn').disabled = true;
+                log(`Preparando subida de: "${metadata.title}" (YouTube Sync: ${syncYt ? 'SÍ' : 'NO'})...`);
+
+                const result = await BeatPostService.uploadBeatProduct(
+                    supabaseInstance,
+                    activeSession,
+                    metadata,
+                    files,
+                    syncYt,
+                    (stage, message) => {
+                        log(`[Progreso: ${stage}] ${message}`);
+                    }
+                );
+
+                if (result.success) {
+                    log(`¡Subida completada con éxito! Beat registrado con ID: ${result.product.id}`, 'success');
+                }
+            } catch (err) {
+                log('Fallo en la subida: ' + err.message, 'error');
+            } finally {
+                document.getElementById('submitBtn').disabled = false;
+            }
+        });
+
+        // Delay slightly to allow scripts to load
+        setTimeout(checkConnection, 1000);
+    </script>
+
+</body>
+</html>

@@ -142,9 +142,9 @@ app.use(helmet({
                 "https://ui-avatars.com",
                 // PayPal
                 "https://www.paypalobjects.com", "https://*.paypal.com",
-                "https://offszn.lat", "http://localhost:*"
+                "https://offszn.lat", "https://*.offszn.lat", "http://localhost:*"
             ],
-            mediaSrc: ["'self'", "data:", "blob:", "https://*.supabase.co", "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://res.cloudinary.com", "https://offszn.lat", "http://localhost:*"],
+            mediaSrc: ["'self'", "data:", "blob:", "https://*.supabase.co", "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://res.cloudinary.com", "https://offszn.lat", "https://*.offszn.lat", "http://localhost:*"],
             connectSrc: ["'self'", "blob:",
                 "https://*.supabase.co", "wss://*.supabase.co",
                 "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://*.r2.dev",
@@ -153,7 +153,7 @@ app.use(helmet({
                 // PayPal
                 "https://api.paypal.com", "https://www.paypal.com", "https://www.sandbox.paypal.com",
                 "https://api-m.paypal.com", "https://api-m.sandbox.paypal.com",
-                "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://offszn.lat",
+                "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://offszn.lat", "https://*.offszn.lat",
                 "https://offszn-oc7c.onrender.com", "https://*.onrender.com",
                 "http://localhost:*",
                 "https://*.googleapis.com", "https://accounts.google.com", "https://apis.google.com",

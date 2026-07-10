@@ -7,7 +7,7 @@
  */
 
 // --- size constraints matching upload/beats-yt.js ---
-export const MAX_SIZES = {
+const MAX_SIZES = {
     PORTADA: 20 * 1024 * 1024, // 20 MB (artwork/cover)
     MP3: 50 * 1024 * 1024,     // 50 MB (tagged MP3 preview)
     WAV: 60 * 1024 * 1024,     // 60 MB (untagged master WAV)
@@ -16,7 +16,7 @@ export const MAX_SIZES = {
 /**
  * Validates audio/image file sizes before initiating upload.
  */
-export function validateFileSizes(files) {
+function validateFileSizes(files) {
     const errors = [];
     if (files.cover && files.cover.size > MAX_SIZES.PORTADA) {
         errors.push(`La portada excede el límite de 20MB (Tamaño: ${(files.cover.size / 1024 / 1024).toFixed(1)}MB)`);
@@ -36,7 +36,7 @@ export function validateFileSizes(files) {
 /**
  * Native VST WebView2 Host communication wrapper.
  */
-export function callNativeHost(action, payload = {}) {
+function callNativeHost(action, payload = {}) {
     console.log(`[BeatPostService] Dispatching event to native host: ${action}`, payload);
     if (window.chrome && window.chrome.webview) {
         window.chrome.webview.postMessage({
@@ -51,7 +51,7 @@ export function callNativeHost(action, payload = {}) {
 /**
  * Publishes the beat either as a simple listing or with YouTube syncing.
  */
-export async function uploadBeatProduct(supabaseClient, session, metadata, files, isYouTubeUpload, onProgress) {
+async function uploadBeatProduct(supabaseClient, session, metadata, files, isYouTubeUpload, onProgress) {
     if (!supabaseClient) {
         throw new Error('Supabase client no inicializado.');
     }
@@ -63,6 +63,13 @@ export async function uploadBeatProduct(supabaseClient, session, metadata, files
     const token = session.access_token;
     let youtubeVideoId = null;
 
+    // Resolve API URL dynamically
+    const apiBase = (window.AuthUtils && typeof window.AuthUtils._getApiUrl === 'function')
+        ? window.AuthUtils._getApiUrl()
+        : (window.location.origin.includes('127.0.0.1') || window.location.origin.includes('localhost'))
+            ? 'http://localhost:3000/api'
+            : '/api';
+
     // 1. YouTube Interception & Video Render Flow
     if (isYouTubeUpload) {
         if (onProgress) onProgress('render_video', 'Generando video en 720p...');
@@ -73,7 +80,7 @@ export async function uploadBeatProduct(supabaseClient, session, metadata, files
             formData.append('audio', files.mp3, 'audio.mp3');
 
             // Hit the server-side FFmpeg rendering controller
-            const renderRes = await fetch('/api/youtube/render-video', {
+            const renderRes = await fetch(`${apiBase}/youtube/render-video`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
@@ -124,7 +131,6 @@ export async function uploadBeatProduct(supabaseClient, session, metadata, files
     if (onProgress) onProgress('save_db', 'Registrando beat en tu tienda...');
     
     const dbPayload = {
-        producer_id: userId,
         name: metadata.title,
         title: metadata.title,
         bpm: parseInt(metadata.bpm) || 0,
@@ -134,27 +140,50 @@ export async function uploadBeatProduct(supabaseClient, session, metadata, files
         audio_url: mp3Url,
         mp3_url: mp3Url,
         wav_url: wavUrl,
-        youtube_video_id: youtubeVideoId,
+        youtube_id: youtubeVideoId,
         youtube_url: youtubeVideoId ? `https://youtube.com/watch?v=${youtubeVideoId}` : null,
         status: 'approved',
-        visibility: 'public',
-        created_at: new Date().toISOString()
+        visibility: 'public'
     };
 
-    const { data, error } = await supabaseClient
-        .from('products')
-        .insert([dbPayload])
-        .select()
-        .single();
+    const response = await fetch(`${apiBase}/products`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(dbPayload)
+    });
 
-    if (error) {
-        throw new Error(`Error guardando beat: ${error.message}`);
+    if (!response.ok) {
+        const errInfo = await response.json().catch(() => ({}));
+        throw new Error(errInfo.error || `Error ${response.status} al guardar el beat.`);
     }
 
+    const data = await response.json();
     return {
         success: true,
-        product: data
+        product: data.product || data
     };
+}
+
+/**
+ * Initializes the WebView2 message event listener for communication with the C++ host.
+ */
+function initNativeBridgeListener(onCommandReceived) {
+    if (window.chrome && window.chrome.webview) {
+        window.chrome.webview.addEventListener('message', (event) => {
+            const data = event.data;
+            console.log('[BeatPostService] Received command from C++ Host:', data);
+            if (onCommandReceived && typeof onCommandReceived === 'function') {
+                onCommandReceived(data.action, data.payload || {});
+            }
+        });
+        console.log('[BeatPostService] Native WebView2 event listener initialized successfully.');
+        return true;
+    }
+    console.warn('[BeatPostService] Not running inside WebView2 container. Native bridge listener skipped.');
+    return false;
 }
 
 // Attach to window for global access
@@ -162,6 +191,8 @@ window.BeatPostService = {
     MAX_SIZES,
     validateFileSizes,
     callNativeHost,
-    uploadBeatProduct
+    uploadBeatProduct,
+    initNativeBridgeListener
 };
+
 

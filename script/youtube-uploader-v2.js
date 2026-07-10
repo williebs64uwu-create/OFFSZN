@@ -270,7 +270,7 @@ const YouTubeUploader = (function () {
                 } else {
                     reject(new Error('Respuesta de Google sin token de acceso.'));
                 }
-            });
+            }, CONFIG.SCOPES);
         });
     }
 
