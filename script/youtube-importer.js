@@ -1,6 +1,9 @@
 (function () {
     const CLIENT_ID = '804444303530-bl8gtp4sdjkcnrkjl1295vns59tqp4tc.apps.googleusercontent.com';
-    const SCOPES = 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload';
+    const isUploaderPage = window.location.pathname.includes('beats-yt.html') || window.location.pathname.includes('beat-post-tester.html');
+    const SCOPES = isUploaderPage 
+        ? 'https://www.googleapis.com/auth/youtube.upload' 
+        : 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube.upload';
     const targetUrl = '/upload/beats.html';
 
     let tokenClient;
