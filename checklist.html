@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checklist Rápido - Proyecto Académico</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: rgba(22, 24, 30, 0.8);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f5f6f9;
+            --text-secondary: #949aab;
+            --accent-purple: #8b5cf6;
+            --accent-teal: #06b6d4;
+            --accent-green: #10b981;
+            --accent-pink: #ec4899;
+            --shadow-glow: 0 8px 32px 0 rgba(139, 92, 246, 0.15);
+            --transition-speed: 0.3s;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            line-height: 1.5;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(6, 118, 212, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Header Premium Styles */
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header-badge {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-teal));
+            color: #fff;
+            padding: 0.35rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #ffffff, #a78bfa, #22d3ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Floating Dashboard / Progress Bar */
+        .dashboard-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-glow);
+            position: sticky;
+            top: 1rem;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+        }
+
+        .progress-section {
+            flex-grow: 1;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, var(--accent-purple), var(--accent-teal));
+            border-radius: 5px;
+            transition: width 0.4s cubic-bezier(0.1, 0.8, 0.25, 1);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-accent {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(6, 182, 212, 0.2));
+            border: 1px solid var(--accent-purple);
+        }
+
+        .btn-accent:hover {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.35), rgba(6, 182, 212, 0.35));
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Section Cards */
+        .section-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: border-color var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+        }
+
+        .section-card:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .section-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.75rem;
+        }
+
+        .section-icon {
+            color: var(--accent-purple);
+            font-size: 1.5rem;
+        }
+
+        /* Checklist Items */
+        .checklist-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .checklist-item {
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .checklist-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.07);
+        }
+
+        .item-main {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            cursor: pointer;
+        }
+
+        /* Custom Checkbox */
+        .checkbox-wrapper {
+            position: relative;
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            margin-top: 0.1rem;
+        }
+
+        .real-checkbox {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+
+        .custom-checkbox {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 24px;
+            width: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-checkbox::after {
+            content: '';
+            width: 5px;
+            height: 10px;
+            border: solid #000;
+            border-width: 0 2.5px 2.5px 0;
+            transform: rotate(45deg) scale(0);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 2px;
+        }
+
+        .real-checkbox:checked + .custom-checkbox {
+            background: linear-gradient(135deg, var(--accent-teal), var(--accent-green));
+            border-color: transparent;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+        }
+
+        .real-checkbox:checked + .custom-checkbox::after {
+            transform: rotate(45deg) scale(1);
+        }
+
+        .item-label {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            user-select: none;
+            transition: color var(--transition-speed) ease;
+        }
+
+        .real-checkbox:checked ~ .item-label {
+            color: var(--text-secondary);
+            text-decoration: line-through;
+            text-decoration-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Description and Details inside items */
+        .item-description {
+            margin-top: 0.5rem;
+            margin-left: 2.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Collapsible Badge / Examples */
+        .badge-trigger {
+            background: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            color: #c084fc;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: all var(--transition-speed);
+        }
+
+        .badge-trigger:hover {
+            background: rgba(139, 92, 246, 0.25);
+            color: #e9d5ff;
+        }
+
+        .collapsible-example {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0, 1, 0, 1);
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-left: 2.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .collapsible-example.expanded {
+            max-height: 1000px;
+            transition: max-height 0.4s ease-in-out;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+        }
+
+        .example-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--accent-teal);
+            margin-bottom: 0.5rem;
+        }
+
+        .example-content {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            border-left: 2px solid var(--accent-teal);
+            padding-left: 0.75rem;
+        }
+
+        /* Draft Note Section */
+        .notes-section {
+            margin-top: 0.75rem;
+            margin-left: 2.5rem;
+        }
+
+        .notes-toggle {
+            background: none;
+            border: none;
+            color: var(--accent-teal);
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.2/rem 0;
+            opacity: 0.7;
+            transition: opacity var(--transition-speed) ease;
+        }
+
+        .notes-toggle:hover {
+            opacity: 1;
+        }
+
+        .notes-textarea {
+            width: 100%;
+            height: 80px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            margin-top: 0.5rem;
+            display: none;
+            transition: border-color var(--transition-speed);
+        }
+
+        .notes-textarea:focus {
+            outline: none;
+            border-color: rgba(6, 182, 212, 0.5);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.1);
+        }
+
+        .notes-textarea.show {
+            display: block;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 1.5rem;
+        }
+
+        .author-tag {
+            color: #ffffff;
+            font-weight: 600;
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(16, 185, 129, 0.15));
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        /* Animations */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); }
+            50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.3); }
+        }
+
+        .pulse {
+            animation: pulse-glow 3s infinite;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <span class="header-badge">Control de Calidad Académica</span>
+        <h1>Checklist de Entregable</h1>
+        <p style="color: var(--text-secondary); font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+            Valida los componentes de tu proyecto en tiempo real. Escribe borradores y guarda tu progreso automáticamente.
+        </p>
+    </header>
+
+    <!-- Dashboard sticky bar -->
+    <div class="dashboard-card pulse">
+        <div class="progress-section">
+            <div class="progress-label">
+                <span>Progreso del Entregable</span>
+                <span id="progress-percentage">0%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progress-bar"></div>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn btn-accent" onclick="exportDrafts()" title="Exporta todas tus notas cargadas a un archivo Markdown">
+                Exportar Borrador
+            </button>
+            <button class="btn" onclick="resetChecklist()" title="Restablecer todas las marcas y notas">
+                Resetear
+            </button>
+        </div>
+    </div>
+
+    <!-- Secciones del Entregable -->
+    
+    <!-- 1.1 Datos del grupo -->
+    <div class="section-card">
+        <h2 class="section-title">
+            <span class="section-icon">👥</span> 1.1. Datos del grupo
+        </h2>
+        <ul class="checklist-list">
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-1-1')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-1-1" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.1.1. Integrantes del Grupo</span>
+                </div>
+                <div class="item-description">
+                    Nombres y apellidos completos de los estudiantes y el código universitario de cada uno.
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-1-1')">✍️ Borrador de integrantes</button>
+                    <textarea id="notes-1-1-1" class="notes-textarea" placeholder="Ejemplo: Willie Perez (U20210342), Juan Perez (U2021...)" oninput="saveNote('notes-1-1-1')"></textarea>
+                </div>
+            </li>
+            
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-1-2')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-1-2" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.1.2. Nombre del Curso</span>
+                </div>
+                <div class="item-description">
+                    Asegurarse de escribir el nombre exacto de la materia.
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-1-2')">✍️ Borrador del curso</button>
+                    <textarea id="notes-1-1-2" class="notes-textarea" placeholder="Curso: ..." oninput="saveNote('notes-1-1-2')"></textarea>
+                </div>
+            </li>
+
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-1-3')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-1-3" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.1.3. Datos del Docente</span>
+                </div>
+                <div class="item-description">
+                    Nombres y apellidos completos del docente a cargo de la sección.
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-1-3')">✍️ Borrador del docente</button>
+                    <textarea id="notes-1-1-3" class="notes-textarea" placeholder="Profesor(a): ..." oninput="saveNote('notes-1-1-3')"></textarea>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 1.2 Integración de conceptos -->
+    <div class="section-card">
+        <h2 class="section-title">
+            <span class="section-icon">🧠</span> 1.2. Integración de conceptos
+        </h2>
+        <ul class="checklist-list">
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-2-1')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-2-1" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.2.1. Desafío específico (barrera educativa)</span>
+                </div>
+                <div class="item-description">
+                    Descripción clara de la barrera de aprendizaje o desafío específico que aborda el proyecto.
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-2-1')">✍️ Borrador de la barrera</button>
+                    <textarea id="notes-1-2-1" class="notes-textarea" placeholder="¿Cuál es la barrera educativa identificada?..." oninput="saveNote('notes-1-2-1')"></textarea>
+                </div>
+            </li>
+
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-2-2')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-2-2" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.2.2. Grupo humano estudiado</span>
+                </div>
+                <div class="item-description">
+                    Definición del público objetivo o la población sobre la cual se enfoca el estudio.
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-2-2')">✍️ Borrador del grupo humano</button>
+                    <textarea id="notes-1-2-2" class="notes-textarea" placeholder="¿Quiénes son? (Edad, ubicación, perfil)..." oninput="saveNote('notes-1-2-2')"></textarea>
+                </div>
+            </li>
+
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-2-3')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-2-3" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.2.3. Objetivo SMART para el proyecto</span>
+                </div>
+                <div class="item-description">
+                    El objetivo del proyecto debe cumplir con los criterios SMART: Específico (S), Medible (M), Alcanzable (A), Relevante (R) y Temporal (T).
+                    <br>
+                    <button class="badge-trigger" onclick="toggleExample(event, 'ex-smart')">💡 Ver Ejemplo SMART</button>
+                </div>
+                <div class="collapsible-example" id="ex-smart">
+                    <div class="example-title">Ejemplo de referencia:</div>
+                    <div class="example-content">
+                        "Mejorar los mecanismos para utilizar el transporte público que usan los alumnos de los últimos años de secundaria del colegio ABC para garantizar su traslado seguro, accesible y adecuado."
+                    </div>
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-2-3')">✍️ Borrador del objetivo SMART</button>
+                    <textarea id="notes-1-2-3" class="notes-textarea" placeholder="Escribe tu objetivo SMART..." oninput="saveNote('notes-1-2-3')"></textarea>
+                </div>
+            </li>
+
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-2-4')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-2-4" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.2.4. Fundamento teórico y relación de conceptos</span>
+                </div>
+                <div class="item-description">
+                    Aplicar cuatro conceptos del curso: <strong>Dos sobre la problemática o la solución</strong> y <strong>dos sobre el trabajo grupal</strong> (integrar retroalimentación del TB2). Explicar concepto, fuente y aplicación. Indicar sesión y actividad.
+                    <br>
+                    <button class="badge-trigger" onclick="toggleExample(event, 'ex-teorico')">💡 Ver Ejemplo de Relación</button>
+                </div>
+                <div class="collapsible-example" id="ex-teorico">
+                    <div class="example-title">Ejemplo de referencia (Sesgos):</div>
+                    <div class="example-content">
+                        "Sesgos cognitivos (sesión 2, actividad 5): Los sesgos cognitivos provienen de un estado mental interno… (explicación del concepto). En el caso de los conductores, se observa en ellos el sesgo cognitivo llamado '...' cuando excusan su mal comportamiento al pasarse la luz roja..."
+                    </div>
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-2-4')">✍️ Borrador de conceptos teóricos</button>
+                    <textarea id="notes-1-2-4" class="notes-textarea" style="height: 140px;" placeholder="1. Concepto Problema (Sesión X, Actividad Y):&#10;2. Concepto Solución (Sesión X, Actividad Y):&#10;3. Concepto Grupal 1 (Sesión X, Actividad Y):&#10;4. Concepto Grupal 2 (Sesión X, Actividad Y):" oninput="saveNote('notes-1-2-4')"></textarea>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 1.3 Novedad de la propuesta -->
+    <div class="section-card">
+        <h2 class="section-title">
+            <span class="section-icon">✨</span> 1.3. Novedad de la propuesta
+        </h2>
+        <ul class="checklist-list">
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-3-1')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-3-1" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.3.1. Explicación breve de la propuesta</span>
+                </div>
+                <div class="item-description">
+                    Resumen conciso y directo de la solución planteada.
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-3-1')">✍️ Borrador de propuesta</button>
+                    <textarea id="notes-1-3-1" class="notes-textarea" placeholder="Nuestra propuesta consiste en..." oninput="saveNote('notes-1-3-1')"></textarea>
+                </div>
+            </li>
+
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-3-2')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-3-2" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.3.2. Prototipado y ejecución</span>
+                </div>
+                <div class="item-description">
+                    ¿Cómo se ejecutaría? Brindar detalles específicos para la puesta en marcha de la propuesta.
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-3-2')">✍️ Borrador de ejecución</button>
+                    <textarea id="notes-1-3-2" class="notes-textarea" placeholder="Pasos para la ejecución, diagramas, flujos o fases..." oninput="saveNote('notes-1-3-2')"></textarea>
+                </div>
+            </li>
+
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-3-3')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-3-3" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.3.3. Recursos necesarios</span>
+                </div>
+                <div class="item-description">
+                    Listar materiales, software, hardware, humanos o financieros para la implementación.
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-3-3')">✍️ Borrador de recursos</button>
+                    <textarea id="notes-1-3-3" class="notes-textarea" placeholder="Tecnológicos, físicos, económicos, humanos..." oninput="saveNote('notes-1-3-3')"></textarea>
+                </div>
+            </li>
+
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-3-4')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-3-4" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.3.4. Justificación de la novedad (Creativo / Innovador)</span>
+                </div>
+                <div class="item-description">
+                    ¿Qué característica hace que la propuesta sea creativa o innovadora? (Tener en cuenta la retroalimentación del TB2).
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-3-4')">✍️ Borrador de justificación</button>
+                    <textarea id="notes-1-3-4" class="notes-textarea" placeholder="Nuestra propuesta es innovadora porque..." oninput="saveNote('notes-1-3-4')"></textarea>
+                </div>
+            </li>
+
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-3-5')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-3-5" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.3.5. Utilidad de las entrevistas</span>
+                </div>
+                <div class="item-description">
+                    ¿Qué ideas o aprendizajes clave extraídos de las entrevistas ayudaron a refinar y consolidar la propuesta final?
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-3-5')">✍️ Borrador de utilidad de entrevistas</button>
+                    <textarea id="notes-1-3-5" class="notes-textarea" placeholder="El entrevistado X mencionó que... lo cual nos sirvió para..." oninput="saveNote('notes-1-3-5')"></textarea>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 1.4 Generación de valor -->
+    <div class="section-card">
+        <h2 class="section-title">
+            <span class="section-icon">📈</span> 1.4. Generación de valor
+        </h2>
+        <ul class="checklist-list">
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-4')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-4" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.4.1. Beneficios o impacto esperado</span>
+                </div>
+                <div class="item-description">
+                    Explicación de los beneficios o impacto positivo que se espera para el grupo humano estudiado y/o el entorno donde se aplica.
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-4')">✍️ Borrador de generación de valor</button>
+                    <textarea id="notes-1-4" class="notes-textarea" placeholder="El impacto positivo se reflejará en..." oninput="saveNote('notes-1-4')"></textarea>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 1.5 Carpeta de trabajo -->
+    <div class="section-card">
+        <h2 class="section-title">
+            <span class="section-icon">📁</span> 1.5. Carpeta de trabajo
+        </h2>
+        <ul class="checklist-list">
+            <li class="checklist-item">
+                <div class="item-main" onclick="toggleItem('item-1-5')">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="item-1-5" class="real-checkbox" onchange="updateProgress()">
+                        <span class="custom-checkbox"></span>
+                    </div>
+                    <span class="item-label">1.5.1. Carpeta en OneDrive con evidencias</span>
+                </div>
+                <div class="item-description">
+                    Verificar que la carpeta compartida en OneDrive incluya esquemas, borradores de entrevistas, fotos, etc., que evidencien el proceso grupal.
+                </div>
+                <div class="notes-section">
+                    <button class="notes-toggle" onclick="toggleNotes('notes-1-5')">✍️ Link/Notas de OneDrive</button>
+                    <textarea id="notes-1-5" class="notes-textarea" placeholder="Link de OneDrive: ..." oninput="saveNote('notes-1-5')"></textarea>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+    <footer>
+        <p>Generado rápidamente para revisión grupal. Creado por <span class="author-tag">Antigravity AI</span> para Willie.</p>
+    </footer>
+</div>
+
+<script>
+    // Toggle check state when clicking the parent checklist item layout (excluding textareas/buttons)
+    function toggleItem(id) {
+        // Handled by default event if target is the checkbox itself
+        const checkbox = document.getElementById(id);
+        if (event.target.tagName !== 'INPUT' && 
+            event.target.tagName !== 'TEXTAREA' && 
+            event.target.tagName !== 'BUTTON' && 
+            !event.target.classList.contains('notes-toggle') &&
+            !event.target.classList.contains('badge-trigger')) {
+            checkbox.checked = !checkbox.checked;
+            updateProgress();
+            saveCheckboxState(id, checkbox.checked);
+        }
+    }
+
+    // Toggle note textareas
+    function toggleNotes(textareaId) {
+        event.stopPropagation();
+        const textarea = document.getElementById(textareaId);
+        textarea.classList.toggle('show');
+        if (textarea.classList.contains('show')) {
+            textarea.focus();
+        }
+    }
+
+    // Toggle Collapsible Example
+    function toggleExample(e, id) {
+        e.stopPropagation();
+        const example = document.getElementById(id);
+        example.classList.toggle('expanded');
+        if (example.classList.contains('expanded')) {
+            e.target.textContent = "🙈 Ocultar Ejemplo";
+        } else {
+            e.target.textContent = "💡 Ver Ejemplo";
+        }
+    }
+
+    // Save and load checkbox states to/from localStorage
+    function saveCheckboxState(id, checked) {
+        localStorage.setItem('checklist-check-' + id, checked);
+    }
+
+    function saveNote(id) {
+        const textarea = document.getElementById(id);
+        localStorage.setItem('checklist-note-' + id, textarea.value);
+        
+        // Update toggle text based on whether it has content or not
+        const toggleBtn = textarea.previousElementSibling;
+        if (toggleBtn) {
+            if (textarea.value.trim() !== '') {
+                if (!toggleBtn.textContent.includes('(Contiene texto)')) {
+                    toggleBtn.textContent = toggleBtn.textContent.replace('✍️', '📝') + ' (Contiene texto)';
+                }
+            } else {
+                toggleBtn.textContent = toggleBtn.textContent.replace('📝', '✍️').replace(' (Contiene texto)', '');
+            }
+        }
+    }
+
+    // Load everything from localStorage
+    function loadSavedState() {
+        const checkboxes = document.querySelectorAll('.real-checkbox');
+        checkboxes.forEach(cb => {
+            const savedState = localStorage.getItem('checklist-check-' + cb.id);
+            if (savedState === 'true') {
+                cb.checked = true;
+            }
+        });
+
+        const textareas = document.querySelectorAll('.notes-textarea');
+        textareas.forEach(ta => {
+            const savedNote = localStorage.getItem('checklist-note-' + ta.id);
+            if (savedNote) {
+                ta.value = savedNote;
+                const toggleBtn = ta.previousElementSibling;
+                if (toggleBtn && !toggleBtn.textContent.includes('(Contiene texto)')) {
+                    toggleBtn.textContent = toggleBtn.textContent.replace('✍️', '📝') + ' (Contiene texto)';
+                }
+            }
+        });
+
+        updateProgress();
+    }
+
+    // Update global progress bar
+    function updateProgress() {
+        const checkboxes = document.querySelectorAll('.real-checkbox');
+        const total = checkboxes.length;
+        let checkedCount = 0;
+
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                checkedCount++;
+                saveCheckboxState(cb.id, true);
+            } else {
+                saveCheckboxState(cb.id, false);
+            }
+        });
+
+        const percentage = total > 0 ? Math.round((checkedCount / total) * 100) : 0;
+        document.getElementById('progress-bar').style.width = percentage + '%';
+        document.getElementById('progress-percentage').textContent = percentage + '%';
+    }
+
+    // Reset Checklist
+    function resetChecklist() {
+        if (confirm('¿Estás seguro de que quieres reiniciar el checklist y borrar todas tus notas escritas?')) {
+            const checkboxes = document.querySelectorAll('.real-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+                localStorage.removeItem('checklist-check-' + cb.id);
+            });
+
+            const textareas = document.querySelectorAll('.notes-textarea');
+            textareas.forEach(ta => {
+                ta.value = '';
+                ta.classList.remove('show');
+                localStorage.removeItem('checklist-note-' + ta.id);
+                const toggleBtn = ta.previousElementSibling;
+                if (toggleBtn) {
+                    toggleBtn.textContent = toggleBtn.textContent.replace('📝', '✍️').replace(' (Contiene texto)', '');
+                }
+            });
+
+            updateProgress();
+        }
+    }
+
+    // Export Notes as Markdown document
+    function exportDrafts() {
+        let mdContent = `# BORRADOR DE TRABAJO - ENTREGABLE\n`;
+        mdContent += `Generado el: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}\n\n`;
+        mdContent += `---\n\n`;
+
+        const sections = document.querySelectorAll('.section-card');
+        sections.forEach(section => {
+            const secTitle = section.querySelector('.section-title').innerText;
+            mdContent += `## ${secTitle}\n\n`;
+
+            const items = section.querySelectorAll('.checklist-item');
+            items.forEach(item => {
+                const label = item.querySelector('.item-label').innerText;
+                const checkbox = item.querySelector('.real-checkbox');
+                const noteTextarea = item.querySelector('.notes-textarea');
+                
+                const status = checkbox.checked ? '[x]' : '[ ]';
+                mdContent += `### ${status} ${label}\n`;
+                
+                if (noteTextarea && noteTextarea.value.trim() !== '') {
+                    mdContent += `**Notas / Borrador:**\n\`\`\`text\n${noteTextarea.value.trim()}\n\`\`\`\n\n`;
+                } else {
+                    mdContent += `*Sin notas redactadas.*\n\n`;
+                }
+            });
+
+            mdContent += `---\n\n`;
+        });
+
+        // Download link
+        const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'borrador_entregable.md');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Initialize state on page load
+    window.addEventListener('DOMContentLoaded', loadSavedState);
+</script>
+
+</body>
+</html>

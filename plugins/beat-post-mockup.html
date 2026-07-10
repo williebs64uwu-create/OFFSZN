@@ -797,21 +797,26 @@
             <!-- STEP 1: AUDIO RENDER STATUS (MP3/WAV) -->
             <div class="step-pane" id="view-audio">
                 <div>
-                    <h3 class="section-title">Archivos del Render (Master Track)</h3>
-                    <p style="color: var(--dim); font-size: 11.5px; margin-bottom: 12px; line-height: 1.5;">El plugin detecta automáticamente las exportaciones activas en el canal de salida principal de tu FL Studio.</p>
-                    <div class="master-capture-card">
+                    <h3 class="section-title">Grabar Instrumental (Master Bus)</h3>
+                    <p style="color: var(--dim); font-size: 11.5px; margin-bottom: 12px; line-height: 1.5;">El plugin captura el audio directamente desde tu canal Master. Dale Play en tu DAW para iniciar.</p>
+                    
+                    <div class="master-capture-card" style="margin-bottom: 16px;">
                         <div class="capture-header">
-                            <span>Estado de Captura</span>
-                            <span style="color: #fff;" id="render-status-lbl">Archivos Listos</span>
+                            <span>Control de Grabación</span>
+                            <span style="color: var(--dim);" id="render-status-lbl">Listo para grabar</span>
                         </div>
-                        <div class="capture-files">
+                        <div style="display: flex; gap: 10px; margin-top: 8px;">
+                            <button id="btn-rec-start" class="btn-next" style="background: #ff453a; color: #fff; margin: 0; padding: 10px; font-size: 12px; font-weight: 700; border-radius: 6px;" onclick="startVSTRecording()">
+                                <i class="fa-solid fa-circle"></i> Iniciar Grabación
+                            </button>
+                            <button id="btn-rec-stop" class="btn-next" style="background: #3a3a3c; color: #fff; margin: 0; padding: 10px; font-size: 12px; font-weight: 700; border-radius: 6px; display: none;" onclick="stopVSTRecording()">
+                                <i class="fa-solid fa-square"></i> Detener y Guardar
+                            </button>
+                        </div>
+                        <div class="capture-files" style="margin-top: 12px;">
                             <div class="file-row">
-                                <span class="file-name"><i class="fa-regular fa-file-audio"></i> master_timeline.wav</span>
-                                <span class="file-status" id="wav-status-lbl">Audio WAV (24-bit)</span>
-                            </div>
-                            <div class="file-row">
-                                <span class="file-name"><i class="fa-regular fa-file-audio"></i> master_timeline.mp3</span>
-                                <span class="file-status" id="mp3-status-lbl">Audio MP3 (320k)</span>
+                                <span class="file-name"><i class="fa-regular fa-file-audio"></i> recorded_beat.wav</span>
+                                <span class="file-status" id="wav-status-lbl">Sin grabar</span>
                             </div>
                         </div>
                     </div>
@@ -825,7 +830,7 @@
                 </div>
 
                 <div class="nav-buttons">
-                    <button class="btn-next" onclick="goToStep(2)">
+                    <button class="btn-next" id="btn-audio-continue" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="goToStep(2)">
                         Continuar <i class="fa-solid fa-chevron-right"></i>
                     </button>
                 </div>
@@ -1297,7 +1302,79 @@
         function resetMockup() {
             document.getElementById('view-success').style.display = 'none';
             document.getElementById('vst-steps-bar').style.display = 'flex';
+            
+            // Reset recording statuses
+            document.getElementById('wav-status-lbl').textContent = 'Sin grabar';
+            document.getElementById('render-status-lbl').textContent = 'Listo para grabar';
+            document.getElementById('render-status-lbl').style.color = 'var(--dim)';
+            document.getElementById('btn-rec-start').style.display = 'block';
+            document.getElementById('btn-rec-stop').style.display = 'none';
+            document.getElementById('btn-audio-continue').disabled = true;
+            document.getElementById('btn-audio-continue').style.opacity = '0.5';
+            document.getElementById('btn-audio-continue').style.cursor = 'not-allowed';
+            
+            recordedWavPath = null;
             goToStep(1);
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        //  VST MASTER RECORDING INTEGRATION
+        // ═══════════════════════════════════════════════════════════
+        let recordedWavPath = null;
+
+        async function callNativeFunction(funcName, ...args) {
+            if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.getNativeFunction === 'function') {
+                try {
+                    return await window.__JUCE__.backend.getNativeFunction(funcName)(...args);
+                } catch (e) {
+                    logDebug(`Error native function call ${funcName}: ${e.message}`);
+                }
+            }
+            // WebView2 fallback
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ action: funcName, payload: args });
+            }
+            return null;
+        }
+
+        async function startVSTRecording() {
+            logDebug('Starting real-time DAW Master recording...');
+            document.getElementById('render-status-lbl').textContent = 'Grabando...';
+            document.getElementById('render-status-lbl').style.color = 'var(--red)';
+            document.getElementById('btn-rec-start').style.display = 'none';
+            document.getElementById('btn-rec-stop').style.display = 'block';
+
+            // Invoke C++
+            const ok = await callNativeFunction('startRecordingNative');
+            logDebug(ok ? 'C++ Audio Recorder started. Play DAW project!' : 'Failed to start C++ Audio Recorder.');
+        }
+
+        async function stopVSTRecording() {
+            logDebug('Stopping DAW Master recording...');
+            document.getElementById('render-status-lbl').textContent = 'Procesando WAV...';
+            document.getElementById('render-status-lbl').style.color = '#ffcc00';
+
+            // Invoke C++
+            const path = await callNativeFunction('stopRecordingNative');
+            
+            if (path && path.length > 0) {
+                recordedWavPath = path;
+                document.getElementById('render-status-lbl').textContent = 'Grabación Completa';
+                document.getElementById('render-status-lbl').style.color = 'var(--green)';
+                document.getElementById('wav-status-lbl').textContent = 'recorded_beat.wav (Listo)';
+                logDebug('Saved WAV to: ' + path);
+
+                // Enable continue button
+                const btn = document.getElementById('btn-audio-continue');
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+            } else {
+                document.getElementById('render-status-lbl').textContent = 'Error al grabar';
+                document.getElementById('render-status-lbl').style.color = 'var(--red)';
+                document.getElementById('btn-rec-start').style.display = 'block';
+                document.getElementById('btn-rec-stop').style.display = 'none';
+            }
         }
     </script>
 </body>
