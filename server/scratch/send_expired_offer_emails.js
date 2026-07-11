@@ -91,7 +91,7 @@ async function main() {
                 </p>
 
                 <p style="color: #ffffff; font-size: 16px; font-weight: bold; line-height: 1.6; margin-bottom: 24px; border-left: 4px solid #FFD600; padding-left: 12px;">
-                    Solo por hoy, consigue tu Licencia Completa (Lifetime) de Easy Mix por solo $10.
+                    Solo hasta este lunes 13, consigue tu Licencia Completa (Lifetime) de Easy Mix por solo $5.
                 </p>
 
                 <!-- Benefits List -->
@@ -107,7 +107,7 @@ async function main() {
                 <!-- CTA Button -->
                 <div style="text-align: center; margin-bottom: 28px;">
                     <a href="https://offszn.lat/plugins/easy-mix" style="background-color: #FFD600; color: #000000; font-weight: bold; text-decoration: none; padding: 14px 28px; border-radius: 8px; display: inline-block; font-size: 15px; transition: background 0.2s;">
-                        Conseguir Licencia por $10
+                        Conseguir Licencia por $5
                     </a>
                 </div>
 
@@ -137,7 +137,7 @@ async function main() {
         try {
             await sendOffsznEmail({
                 to: TEST_EMAIL,
-                subject: '🔥 Oferta Especial: Easy Mix Full por $10 (Solo Hoy)',
+                subject: '🔥 Oferta Especial: Easy Mix Full por $5 (Solo hasta este lunes 13)',
                 html,
                 fromName: 'Easy Mix by OFFSZN',
                 type: 'transactional'
@@ -162,7 +162,7 @@ async function main() {
             try {
                 await sendOffsznEmail({
                     to: email,
-                    subject: '🔥 Oferta Especial: Easy Mix Full por $10 (Solo Hoy)',
+                    subject: '🔥 Oferta Especial: Easy Mix Full por $5 (Solo hasta este lunes 13)',
                     html,
                     fromName: 'Easy Mix by OFFSZN',
                     type: 'transactional'

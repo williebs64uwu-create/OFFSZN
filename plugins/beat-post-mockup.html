@@ -1257,31 +1257,55 @@
             }
         }
 
-        // Initialize Supabase Client
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (window.supabase) {
-                if (!window.supabaseClient && window.OFFSZN_CONFIG) {
-                    window.supabaseClient = window.supabase.createClient(
-                        window.OFFSZN_CONFIG.SUPABASE_URL,
-                        window.OFFSZN_CONFIG.SUPABASE_ANON_KEY
-                    );
-                }
-                if (window.supabaseClient) {
-                    supabaseClient = window.supabaseClient;
-                    const { data } = await supabaseClient.auth.getSession();
-                    if (data.session) {
-                        handleSession(data.session);
-                    }
-                    supabaseClient.auth.onAuthStateChange((_event, newSession) => {
-                        if (newSession) {
-                            handleSession(newSession);
-                        } else {
-                            showAuthView();
-                        }
-                    });
+        // ═══════════════════════════════════════════════════════════
+        //  SUPABASE INIT — robust fallback for WebView2 environment
+        // ═══════════════════════════════════════════════════════════
+        async function initSupabase() {
+            if (!window.supabase) {
+                console.warn('Supabase JS SDK not loaded yet, retrying...');
+                await new Promise(r => setTimeout(r, 500));
+                if (!window.supabase) {
+                    console.error('Supabase SDK unavailable.');
+                    return;
                 }
             }
-        });
+
+            // 1st priority: already-created global client (from auth-utils.js)
+            if (window.supabaseClient) {
+                supabaseClient = window.supabaseClient;
+            }
+            // 2nd priority: create from OFFSZN_CONFIG (set by env.js / config.js)
+            else if (window.OFFSZN_CONFIG) {
+                supabaseClient = window.supabase.createClient(
+                    window.OFFSZN_CONFIG.SUPABASE_URL,
+                    window.OFFSZN_CONFIG.SUPABASE_ANON_KEY
+                );
+                window.supabaseClient = supabaseClient;
+            }
+            // 3rd priority: hardcoded fallback so WebView2 always has a working client
+            else {
+                const SUPA_URL  = 'https://uwpjkrgusgywxkiyasmm.supabase.co';
+                const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3cGprcmd1c2d5d3hraXlhc21tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5MTg4MDYsImV4cCI6MjA1MDQ5NDgwNn0.D1UXKJ_Ja8ZIzb79YtoFqF9jVL0sW3pUv4xKJLqPi1c';
+                supabaseClient = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+                window.supabaseClient = supabaseClient;
+                console.log('[BeatPost] Using hardcoded Supabase fallback.');
+            }
+
+            const { data } = await supabaseClient.auth.getSession();
+            if (data.session) {
+                handleSession(data.session);
+            }
+
+            supabaseClient.auth.onAuthStateChange((_event, newSession) => {
+                if (newSession) {
+                    handleSession(newSession);
+                } else {
+                    showAuthView();
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initSupabase);
 
         // ═══════════════════════════════════════════════════════════
         //  LOGIN LOGIC (Email/Password & VST Token copy-paste)
@@ -1495,6 +1519,56 @@
         // ═══════════════════════════════════════════════════════════
         //  COVER ART GENERATOR & RECOMMENDATION
         // ═══════════════════════════════════════════════════════════
+        async function fetchLiveCovers(term) {
+            const container = document.getElementById('covers-container');
+            if (!container) return;
+
+            // Show a loading state
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 8px; height: 80px; color: var(--dim); font-size: 11px;">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Buscando portadas para "${term}"...
+                </div>`;
+
+            try {
+                const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&media=music&entity=album&limit=8&lang=es_es`);
+                const data = await res.json();
+
+                if (data.results && data.results.length > 0) {
+                    // Deduplicate by artwork URL, get high-res
+                    const seen = new Set();
+                    recommendedCovers = data.results
+                        .filter(r => r.artworkUrl100)
+                        .map(r => ({
+                            url: r.artworkUrl100.replace('100x100bb', '600x600bb'),
+                            label: `${r.artistName} — ${r.collectionName}`,
+                            tags: [r.collectionName, r.artistName]
+                        }))
+                        .filter(r => {
+                            if (seen.has(r.url)) return false;
+                            seen.add(r.url);
+                            return true;
+                        })
+                        .slice(0, 6);
+
+                    if (!uploadedFiles.cover) selectedCoverUrl = recommendedCovers[0]?.url || '';
+                    renderCoversCurrent();
+                } else {
+                    // No results — show curated fallback
+                    const fallback = [...curatedCovers].sort(() => 0.5 - Math.random()).slice(0, 4);
+                    recommendedCovers = fallback;
+                    if (!uploadedFiles.cover) selectedCoverUrl = fallback[0]?.url || '';
+                    renderCoversCurrent();
+                }
+            } catch (e) {
+                console.error('Cover fetch error:', e);
+                // Show fallback covers from curated list on error
+                const fallback = [...curatedCovers].sort(() => 0.5 - Math.random()).slice(0, 4);
+                recommendedCovers = fallback;
+                if (!uploadedFiles.cover) selectedCoverUrl = fallback[0]?.url || '';
+                renderCoversCurrent();
+            }
+        }
+
         function onTitleChange() {
             const titleVal = document.getElementById('beat-title-input').value.toLowerCase();
             let genre = 'random';
@@ -1516,46 +1590,7 @@
 
             currentKeywords = keywords;
             renderVariations(genre);
-            
-            // Search curated pool for top 2 matches
-            const searchTerms = titleVal.split(/\s+/).filter(Boolean);
-            let matches = [];
-            
-            curatedCovers.forEach(cov => {
-                let score = 0;
-                searchTerms.forEach(term => {
-                    cov.tags.forEach(tag => {
-                        if (tag.includes(term) || term.includes(tag)) {
-                            score += 2;
-                        }
-                    });
-                });
-                if (score > 0) {
-                    matches.push({ ...cov, score });
-                }
-            });
-
-            // Sort matches by score descending
-            matches.sort((a, b) => b.score - a.score);
-
-            // Get top 2. If less than 2, fill with random ones
-            let recCovers = matches.slice(0, 2);
-            if (recCovers.length < 2) {
-                const remaining = curatedCovers.filter(c => !recCovers.some(rc => rc.url === c.url));
-                remaining.sort(() => 0.5 - Math.random());
-                while (recCovers.length < 2 && remaining.length > 0) {
-                    recCovers.push(remaining.pop());
-                }
-            }
-
-            recommendedCovers = recCovers;
-
-            // If selectedCoverUrl is not set or not in the current recommended covers, set it to the first recommendation
-            if (!uploadedFiles.cover && (!selectedCoverUrl || !recommendedCovers.some(rc => rc.url === selectedCoverUrl))) {
-                selectedCoverUrl = recommendedCovers[0]?.url || '';
-            }
-
-            renderCoversCurrent();
+            fetchLiveCovers(keywords[0]);
         }
 
         function setKeywordSearch(keyword, genre) {
@@ -1569,38 +1604,8 @@
                 }
             });
             
-            // Search curated pool specifically for the keyword
-            const searchTerms = keyword.toLowerCase().split(/\s+/);
-            let matches = [];
-            curatedCovers.forEach(cov => {
-                let score = 0;
-                searchTerms.forEach(term => {
-                    cov.tags.forEach(tag => {
-                        if (tag.includes(term) || term.includes(tag)) {
-                            score += 2;
-                        }
-                    });
-                });
-                if (score > 0) {
-                    matches.push({ ...cov, score });
-                }
-            });
-
-            matches.sort((a, b) => b.score - a.score);
-            let recCovers = matches.slice(0, 2);
-            if (recCovers.length < 2) {
-                const remaining = curatedCovers.filter(c => !recCovers.some(rc => rc.url === c.url));
-                remaining.sort(() => 0.5 - Math.random());
-                while (recCovers.length < 2 && remaining.length > 0) {
-                    recCovers.push(remaining.pop());
-                }
-            }
-            
-            recommendedCovers = recCovers;
-            if (!uploadedFiles.cover) {
-                selectedCoverUrl = recommendedCovers[0]?.url || '';
-            }
-            renderCoversCurrent();
+            // Fetch live album artwork from iTunes for the badge keyword
+            fetchLiveCovers(keyword);
         }
 
         function renderVariations(genre) {
