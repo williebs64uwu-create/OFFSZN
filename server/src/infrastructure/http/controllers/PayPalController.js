@@ -235,22 +235,30 @@ export const createPayPalOrder = async (req, res) => {
             return res.status(400).json({ error: 'Carrito vacío' });
         }
 
-        // 2. Fetch Producer details for PayPal Emails AND LICENSE SETTINGS
-        const producerIds = [...new Set(cartItems.map(item => item.product.producer_id))];
-        const [{ data: producers, error: producerError }, { data: profiles, error: profileError }] = await Promise.all([
-            supabase.from('users').select('id, paypal_email, license_settings, nickname, payment_methods').in('id', producerIds),
-            supabase.from('users').select('id, plan').in('id', producerIds)
-        ]);
+        // Separate standard items from plugin items (plugins don't exist in products table)
+        const pluginItems = cartItems.filter(item => item.product?.id === 99999 || item.product?.name?.toLowerCase().includes('easy mix') || item.product?.name?.toLowerCase().includes('easymix'));
+        const standardCartItems = cartItems.filter(item => item.product?.id !== 99999 && !item.product?.name?.toLowerCase().includes('easy mix') && !item.product?.name?.toLowerCase().includes('easymix'));
 
-        if (producerError) console.error('[PayPalDebug] Error fetching producers:', producerError);
-        if (profileError) console.error('[PayPalDebug] Error fetching profiles:', profileError);
+        // 2. Fetch Producer details for standard items only
+        const producerIds = [...new Set(standardCartItems.map(item => item.product.producer_id))];
+        let producers = [];
+        let profiles = [];
+
+        if (producerIds.length > 0) {
+            const [producersRes, profilesRes] = await Promise.all([
+                supabase.from('users').select('id, paypal_email, license_settings, nickname, payment_methods').in('id', producerIds),
+                supabase.from('users').select('id, plan').in('id', producerIds)
+            ]);
+            if (producersRes.error) console.error('[PayPalDebug] Error fetching producers:', producersRes.error);
+            if (profilesRes.error) console.error('[PayPalDebug] Error fetching profiles:', profilesRes.error);
+            producers = producersRes.data || [];
+            profiles = profilesRes.data || [];
+        }
 
         const producerMap = new Map();
         producers?.forEach(u => {
             const profile = profiles?.find(p => p.id === u.id);
-            // Use paypal_email column primarily, fallback to payment_methods.paypal
             const finalPaypalEmail = u.paypal_email || u.payment_methods?.paypal;
-
             producerMap.set(u.id, {
                 id: u.id,
                 email: finalPaypalEmail,
@@ -262,9 +270,9 @@ export const createPayPalOrder = async (req, res) => {
 
         console.log('[PayPalOrder] Producer Map entries:', Array.from(producerMap.entries()).map(([id, p]) => ({ id, email: p.email, nickname: p.nickname })));
 
-        // --- NEW: Identify Producers without PayPal ---
+        // Identify standard producers without PayPal configuration
         const missingPaymentProducers = [];
-        cartItems.forEach(item => {
+        standardCartItems.forEach(item => {
             const p = producerMap.get(item.product.producer_id);
             if (!p || !p.email || !p.email.includes('@')) {
                 missingPaymentProducers.push({
@@ -309,27 +317,40 @@ export const createPayPalOrder = async (req, res) => {
             exclusive: 500.00
         };
 
-        const productIds = cartItems.map(item => item.product.id);
-        const { data: dbProducts, error: dbError } = await supabase
-            .from('products')
-            .select('id, name, price_basic, price_premium, price_stems, price_exclusive, product_type, licenses, producer_id, status')
-            .in('id', productIds)
-            .or('status.eq.approved,status.eq.published');
+        // 3. SECURE PRICE RE-CALCULATION
+        const FACTORY_DEFAULTS = {
+            basic: 20.00,
+            premium: 50.00,
+            trackout: 100.00,
+            unlimited: 300.00,
+            exclusive: 500.00
+        };
 
-        if (dbError) throw dbError;
+        const productIds = standardCartItems.map(item => item.product.id);
+        let dbProducts = [];
+        if (productIds.length > 0) {
+            const { data, error: dbError } = await supabase
+                .from('products')
+                .select('id, name, price_basic, price_premium, price_stems, price_exclusive, product_type, licenses, producer_id, status')
+                .in('id', productIds)
+                .or('status.eq.approved,status.eq.published');
+            if (dbError) throw dbError;
+            dbProducts = data || [];
+        }
 
-        console.log(`[PayPalOrder] DB Products found: ${dbProducts?.length || 0}/${productIds.length}`);
+        console.log(`[PayPalOrder] Standard DB Products found: ${dbProducts.length}/${productIds.length}`);
 
         let subtotal = 0;
         let serviceFee = 0;
         const verifiedCartItems = [];
 
-        cartItems.forEach(item => {
+        // Verify standard items
+        standardCartItems.forEach(item => {
             const prodIdToFind = String(item.product?.id);
             const dbProd = dbProducts.find(p => String(p.id) === prodIdToFind);
 
             if (!dbProd) {
-                console.warn(`[PayPalOrder] Product ${prodIdToFind} not found in DB or not approved/publishedStatus: ${item.product?.id}`);
+                console.warn(`[PayPalOrder] Product ${prodIdToFind} not found in DB or not approved/published: ${item.product?.id}`);
                 return;
             }
 
@@ -390,6 +411,19 @@ export const createPayPalOrder = async (req, res) => {
 
             console.log(`[PayPalOrder] Item: ${dbProd.name} | Plan: ${producer?.plan || 'free'} | Price: ${verifiedPrice} | Fee: ${commission.toFixed(2)}`);
 
+            verifiedCartItems.push({
+                ...item,
+                variant_price: verifiedPrice
+            });
+        });
+
+        // Verify plugin items (Easy Mix VST)
+        pluginItems.forEach(item => {
+            const verifiedPrice = 5.00; // Promo price for Easy Mix
+            subtotal += verifiedPrice;
+            
+            console.log(`[PayPalOrder] Plugin Item: ${item.product?.name} | Price: ${verifiedPrice} | Fee: 0.00`);
+            
             verifiedCartItems.push({
                 ...item,
                 variant_price: verifiedPrice
@@ -498,13 +532,24 @@ export const createPayPalOrder = async (req, res) => {
 
         // 1. Group Producers by Payee Identifier
         verifiedCartItems.forEach(item => {
-            const producer = producerMap.get(item.product.producer_id);
-            if (!producer?.email) return;
+            const isPlugin = item.product?.id === 99999 || item.product?.name?.toLowerCase().includes('easy mix') || item.product?.name?.toLowerCase().includes('easymix');
+            
+            let payeeId = '';
+            let nickname = '';
+            
+            if (isPlugin) {
+                payeeId = PLATFORM_PAYPAL_EMAIL ? PLATFORM_PAYPAL_EMAIL.toLowerCase().trim() : 'willie2008garay@gmail.com';
+                nickname = 'OFFSZN';
+            } else {
+                const producer = producerMap.get(item.product.producer_id);
+                if (!producer?.email) return;
+                payeeId = producer.email.toLowerCase().trim();
+                nickname = producer.nickname;
+            }
 
-            const payeeId = producer.email.toLowerCase().trim();
             const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
 
-            const current = payeeGroups.get(payeeId) || { amount: 0, type: 'email', nickname: producer.nickname };
+            const current = payeeGroups.get(payeeId) || { amount: 0, type: payeeId.includes('@') ? 'email' : 'id', nickname: nickname };
             current.amount += itemNet;
             payeeGroups.set(payeeId, current);
         });
@@ -789,76 +834,75 @@ export const capturePayPalOrder = async (req, res) => {
             const globalDiscountFactor = subtotalForCoupon > 0 ? (subtotalForCoupon - totalOrderDiscount) / subtotalForCoupon : 1.0;
 
             cartItems.forEach(item => {
-                const dbProd = (dbProducts || []).find(p => String(p.id) === String(item.product?.id));
-                if (!dbProd) {
-                    console.warn(`[PayPalCapture] Skipping item — product ${item.product?.id} not found (approved/published)`);
-                    return;
-                }
-
-                const producer = producerSettings?.find(u => u.id === dbProd.producer_id);
+                const isPlugin = item.product?.id === 99999 || item.product?.name?.toLowerCase().includes('easy mix') || item.product?.name?.toLowerCase().includes('easymix');
+                
                 let verifiedPrice = 0;
-
-                if (dbProd.product_type === 'beat') {
-                    if (item.is_negotiation) {
-                        verifiedPrice = item.variant_price;
-                    } else {
-                        const licKey = mapLicenseToKey(item.license_name || 'basic');
-                        const productOverride = dbProd.licenses ? dbProd.licenses[licKey]?.price : null;
-                        const producerPrice = producer?.license_settings ? producer.license_settings[licKey]?.price : null;
-                        const dbFieldMap = {
-                            basic: dbProd.price_basic,
-                            premium: dbProd.price_premium,
-                            trackout: dbProd.price_stems,
-                            stems: dbProd.price_stems,
-                            unlimited: dbProd.price_exclusive,
-                            exclusive: dbProd.price_exclusive
-                        };
-                        verifiedPrice = productOverride || dbFieldMap[licKey] || producerPrice || FACTORY_DEFAULTS[licKey] || 0;
-                    }
-                } else {
-                    verifiedPrice = item.is_negotiation ? item.variant_price : (dbProd.price_basic || 0);
-                }
-
-                verifiedPrice = parseFloat(verifiedPrice);
-
                 let commission = 0;
-                if (verifiedPrice > 0) {
-                    const producerProfile = producerPlans?.find(pp => pp.id === dbProd.producer_id);
-                    const producerPlan = producerProfile?.plan || 'free';
+                let finalProducerAmount = 0;
 
-                    if (producerPlan === 'starter') {
-                        // Starter: 3% (min $0.50 if < $20)
-                        if (verifiedPrice < 20) {
-                            commission = 0.50;
+                if (isPlugin) {
+                    verifiedPrice = parseFloat(item.variant_price) || 5.00;
+                    finalProducerAmount = verifiedPrice * globalDiscountFactor;
+                } else {
+                    const dbProd = (dbProducts || []).find(p => String(p.id) === String(item.product?.id));
+                    if (!dbProd) {
+                        console.warn(`[PayPalCapture] Skipping item — product ${item.product?.id} not found (approved/published)`);
+                        return;
+                    }
+
+                    const producer = producerSettings?.find(u => u.id === dbProd.producer_id);
+
+                    if (dbProd.product_type === 'beat') {
+                        if (item.is_negotiation) {
+                            verifiedPrice = item.variant_price;
                         } else {
-                            commission = verifiedPrice * 0.03;
+                            const licKey = mapLicenseToKey(item.license_name || 'basic');
+                            const productOverride = dbProd.licenses ? dbProd.licenses[licKey]?.price : null;
+                            const producerPrice = producer?.license_settings ? producer.license_settings[licKey]?.price : null;
+                            const dbFieldMap = {
+                                basic: dbProd.price_basic,
+                                premium: dbProd.price_premium,
+                                trackout: dbProd.price_stems,
+                                stems: dbProd.price_stems,
+                                unlimited: dbProd.price_exclusive,
+                                exclusive: dbProd.price_exclusive
+                            };
+                            verifiedPrice = productOverride || dbFieldMap[licKey] || producerPrice || FACTORY_DEFAULTS[licKey] || 0;
                         }
-                    } else if (producerPlan === 'pro') {
-                        // Pro: 0%
-                        commission = 0;
                     } else {
-                        // Free: 5% (min $1.00 if < $20)
-                        if (verifiedPrice < 20) {
-                            commission = 1.00;
+                        verifiedPrice = item.is_negotiation ? item.variant_price : (dbProd.price_basic || 0);
+                    }
+
+                    verifiedPrice = parseFloat(verifiedPrice);
+
+                    if (verifiedPrice > 0) {
+                        const producerProfile = producerPlans?.find(pp => pp.id === dbProd.producer_id);
+                        const producerPlan = producerProfile?.plan || 'free';
+
+                        if (producerPlan === 'starter') {
+                            // Starter: 3% (min $0.50 if < $20)
+                            if (verifiedPrice < 20) {
+                                commission = 0.50;
+                            } else {
+                                commission = verifiedPrice * 0.03;
+                            }
+                        } else if (producerPlan === 'pro') {
+                            // Pro: 0%
+                            commission = 0;
                         } else {
-                            commission = verifiedPrice * 0.05;
+                            // Free: 5% (min $1.00 if < $20)
+                            if (verifiedPrice < 20) {
+                                commission = 1.00;
+                            } else {
+                                commission = verifiedPrice * 0.05;
+                            }
                         }
                     }
+                    finalProducerAmount = verifiedPrice * globalDiscountFactor;
                 }
-
-                // Calculate specific discount for this item
-                let itemPriceAfterDiscount = verifiedPrice;
-
-                // If it's a product-specific coupon, check if it applies here
-                // Note: This logic assumes we re-query the coupon in the loop or use the 'coupon' object if it exists
-                // For simplicity and to match 'create', we'll use a more direct approach:
-                // If the coupon was valid and applied, we scale the price.
-                itemPriceAfterDiscount = verifiedPrice * globalDiscountFactor;
-
-                const finalProducerAmount = itemPriceAfterDiscount;
 
                 transactions.push({
-                    user_id: userId,
+                    user_id: userId || null,
                     related_order: order.id,
                     amount: finalProducerAmount + commission,
                     currency: 'USD',
