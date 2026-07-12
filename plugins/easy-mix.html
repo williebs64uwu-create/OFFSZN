@@ -1210,11 +1210,105 @@
                                     style="color: #ff9f0a; margin-right: 8px;"></i> Serial Key por correo al instante
                             </li>
                         </ul>
-                        <!-- PayPal Checkout Direct -->
-                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=willie2008garay@gmail.com&item_name=EASY+MIX+Lifetime+License+Promo&amount=5.00&currency_code=USD"
-                            target="_blank" class="btn-auth"
-                            style="width: 100%; text-align: center; display: block; box-sizing: border-box; background: #ff9f0a; color: #000; font-weight: 800; font-size: 1.05rem; padding: 16px;">Comprar
-                            Ahora — $5</a>
+                        <!-- Integrated PayPal Checkout Buttons -->
+                        <div id="paypal-button-container-landing" style="width: 100%; margin-top: 15px; min-height: 50px; position: relative; z-index: 10;"></div>
+                        <script>
+                            (function() {
+                                const clientId = 'ATPgFaKnGSf4hJZEN_lkw82QVO2sNc6O9d6QX7GcWBny9tqchRoXpZ89UxkUtD1U2ZWsbv9uAkwruu2B';
+                                function initPaypal() {
+                                    window.paypal.Buttons({
+                                        style: {
+                                            layout: 'vertical',
+                                            color: 'gold',
+                                            shape: 'rect',
+                                            label: 'pay'
+                                        },
+                                        createOrder: function(data, actions) {
+                                            const email = window.localStorage.getItem('offszn_user_email') || '';
+                                            const body = {
+                                                cartItems: [
+                                                    {
+                                                        product: {
+                                                            id: 99999,
+                                                            name: "Easy Mix VST",
+                                                            producer_id: null
+                                                        },
+                                                        license_name: "lifetime",
+                                                        variant_price: 5.00
+                                                    }
+                                                ],
+                                                guestEmail: email
+                                            };
+                                            const token = window.localStorage.getItem('authToken');
+                                            return fetch('/api/orders/paypal/create', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Authorization': token ? `Bearer ${token}` : ''
+                                                },
+                                                body: JSON.stringify(body)
+                                            })
+                                            .then(res => res.json())
+                                            .then(orderData => {
+                                                if (orderData.error) throw new Error(orderData.error);
+                                                return orderData.id;
+                                            })
+                                            .catch(err => {
+                                                console.error('Error creating order:', err);
+                                                alert('Error al iniciar el pago: ' + err.message);
+                                            });
+                                        },
+                                        onApprove: function(data, actions) {
+                                            const token = window.localStorage.getItem('authToken');
+                                            const container = document.getElementById('paypal-button-container-landing');
+                                            container.innerHTML = '<p style="color:#ff9f0a; font-weight:700; text-align:center; margin-top:20px;">🔄 Procesando tu pago y generando tu licencia...</p>';
+                                            
+                                            return fetch('/api/orders/paypal/capture', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Authorization': token ? `Bearer ${token}` : ''
+                                                },
+                                                body: JSON.stringify({
+                                                    orderID: data.orderID,
+                                                    cartItems: [
+                                                        {
+                                                            product: {
+                                                                id: 99999,
+                                                                name: "Easy Mix VST",
+                                                                producer_id: null
+                                                            },
+                                                            license_name: "lifetime",
+                                                            variant_price: 5.00
+                                                        }
+                                                    ]
+                                                })
+                                            })
+                                            .then(res => res.json())
+                                            .then(captureData => {
+                                                if (captureData.error) throw new Error(captureData.error);
+                                                window.location.href = `/pages/purchase-succes.html?orderId=${data.orderID}&plugin=easymix`;
+                                            })
+                                            .catch(err => {
+                                                console.error('Error capturing order:', err);
+                                                alert('Error al confirmar el pago: ' + err.message);
+                                                container.innerHTML = '';
+                                                initPaypal();
+                                            });
+                                        }
+                                    }).render('#paypal-button-container-landing');
+                                }
+
+                                if (window.paypal) {
+                                    initPaypal();
+                                } else {
+                                    const script = document.createElement('script');
+                                    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`;
+                                    script.onload = initPaypal;
+                                    document.head.appendChild(script);
+                                }
+                            })();
+                        </script>
                     </div>
 
                 </div>
