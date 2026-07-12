@@ -317,15 +317,6 @@ export const createPayPalOrder = async (req, res) => {
             exclusive: 500.00
         };
 
-        // 3. SECURE PRICE RE-CALCULATION
-        const FACTORY_DEFAULTS = {
-            basic: 20.00,
-            premium: 50.00,
-            trackout: 100.00,
-            unlimited: 300.00,
-            exclusive: 500.00
-        };
-
         const productIds = standardCartItems.map(item => item.product.id);
         let dbProducts = [];
         if (productIds.length > 0) {
