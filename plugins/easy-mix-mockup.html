@@ -632,6 +632,42 @@
             }
         }
 
+        /* ── TRIAL BADGE ── */
+        #trial-badge {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 159, 10, 0.12);
+            border: 1px solid rgba(255, 159, 10, 0.3);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 9px;
+            font-weight: 700;
+            color: #ff9f0a;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            animation: badgeFadeIn 0.4s ease;
+        }
+        #trial-badge.visible {
+            display: flex;
+        }
+        #trial-badge .trial-dot {
+            width: 6px;
+            height: 6px;
+            background: #ff9f0a;
+            border-radius: 50%;
+            animation: trialDotPulse 2s ease-in-out infinite;
+        }
+        @keyframes trialDotPulse {
+            0%, 100% { opacity: 0.4; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        @keyframes badgeFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* ── EXPIRED / HARD LOCK overlay ── */
         #license-expired-overlay {
             display: none;
@@ -948,6 +984,7 @@
             <!-- Left: Logo & Tabs & Trial -->
             <div style="flex: 1; display: flex; align-items: center; gap: 15px;">
                 <div class="logo">EASY <span>MIX</span></div>
+                <div id="trial-badge"><span class="trial-dot"></span> PRUEBA · <span id="trial-time-left">--</span></div>
             </div>
 
             <!-- Center: Presets -->
@@ -4972,6 +5009,8 @@ setTimeout(function () {
                 try {
                   localStorage.setItem('offszn_serial', serial);
                 } catch (e) {}
+                // Show trial badge with remaining time
+                showTrialBadge(response.expires_at);
               } else {
                 // Expired trial
                 triggerLicenseExpired("Prueba Expirada", "Tu periodo de prueba de 24 horas ha expirado. Adquiere una licencia FULL en offszn.lat para seguir usando Easy Mix.");
@@ -5004,9 +5043,49 @@ setTimeout(function () {
 }, 100);
 
 // ─────────────────────────────────────────────────────────────
+//  TRIAL BADGE — shows remaining time in header
+// ─────────────────────────────────────────────────────────────
+var trialBadgeInterval = null;
+function showTrialBadge(expiresAt) {
+  if (!expiresAt || expiresAt === 'never') return;
+  var badge = document.getElementById('trial-badge');
+  var timeSpan = document.getElementById('trial-time-left');
+  if (!badge || !timeSpan) return;
+  var expiryMs = new Date(expiresAt).getTime();
+  function updateBadge() {
+    var now = Date.now();
+    var diff = expiryMs - now;
+    if (diff <= 0) {
+      badge.classList.remove('visible');
+      if (trialBadgeInterval) clearInterval(trialBadgeInterval);
+      return;
+    }
+    var totalMin = Math.floor(diff / 60000);
+    var h = Math.floor(totalMin / 60);
+    var m = totalMin % 60;
+    if (h > 0) {
+      timeSpan.textContent = h + 'h ' + m + 'min';
+    } else {
+      timeSpan.textContent = m + ' min';
+    }
+    badge.classList.add('visible');
+  }
+  updateBadge();
+  if (trialBadgeInterval) clearInterval(trialBadgeInterval);
+  trialBadgeInterval = setInterval(updateBadge, 60000); // update every minute
+}
+function hideTrialBadge() {
+  var badge = document.getElementById('trial-badge');
+  if (badge) badge.classList.remove('visible');
+  if (trialBadgeInterval) clearInterval(trialBadgeInterval);
+}
+
+// ─────────────────────────────────────────────────────────────
 //  HARD LOCK: show the expired overlay (cannot be dismissed)
 // ─────────────────────────────────────────────────────────────
 function triggerLicenseExpired(title, subtitle) {
+  // 0) Hide trial badge
+  hideTrialBadge();
   // 1) Cut audio via C++
   callNative("setLicenseStatus", false);
   // 2) Clear localStorage so next open also asks for serial
