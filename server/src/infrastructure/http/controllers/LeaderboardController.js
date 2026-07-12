@@ -28,15 +28,33 @@ export const getLeaderboard = async (req, res) => {
 
         const producerIds = producers.map(p => p.id);
 
-        // 2. Fetch Product Stats
-        // We use the "Real Data" columns as requested: views_count, plays_count, downloads_count, sales_count
-        const { data: products, error: prodError } = await supabase
-            .from('products')
-            .select('producer_id, views_count, plays_count, downloads_count, sales_count')
-            .in('producer_id', producerIds)
-            .eq('status', 'approved'); // Only active products count
+        // 2. Fetch Product Stats in chunks of 100 to avoid HeadersOverflowError / URL length limits
+        const chunkSize = 100;
+        const products = [];
+        const chunks = [];
+        for (let i = 0; i < producerIds.length; i += chunkSize) {
+            chunks.push(producerIds.slice(i, i + chunkSize));
+        }
 
-        if (prodError) throw prodError;
+        console.log(`Fetching product stats in ${chunks.length} batches...`);
+        const fetchPromises = chunks.map(chunk => 
+            supabase
+                .from('products')
+                .select('producer_id, views_count, plays_count, downloads_count, sales_count')
+                .in('producer_id', chunk)
+                .eq('status', 'approved')
+        );
+
+        const fetchResults = await Promise.all(fetchPromises);
+        for (const r of fetchResults) {
+            if (r.error) {
+                console.error("Batch Fetch Error:", r.error);
+                throw r.error;
+            }
+            if (r.data) {
+                products.push(...r.data);
+            }
+        }
 
         // 3. Followers Count (Real Data)
         // We fetch count per user_id
