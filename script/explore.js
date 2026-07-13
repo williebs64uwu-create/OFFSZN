@@ -360,7 +360,7 @@ function renderExploreFeed() {
     }
 
     // --- NEW: Inject Top Slim Banner ---
-    injectTopBanner();
+    // injectTopBanner(); // Disabled purple banner as per user request to only show the orange plugin banner
 
     // 3. THE LIST GRID (Section 2: Trending / Fresh) - 2 Columns
     const listGridContainer = document.createElement('div');
