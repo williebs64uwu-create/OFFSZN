@@ -235,30 +235,22 @@ export const createPayPalOrder = async (req, res) => {
             return res.status(400).json({ error: 'Carrito vacío' });
         }
 
-        // Separate standard items from plugin items (plugins don't exist in products table)
-        const pluginItems = cartItems.filter(item => item.product?.id === 99999 || item.product?.name?.toLowerCase().includes('easy mix') || item.product?.name?.toLowerCase().includes('easymix'));
-        const standardCartItems = cartItems.filter(item => item.product?.id !== 99999 && !item.product?.name?.toLowerCase().includes('easy mix') && !item.product?.name?.toLowerCase().includes('easymix'));
+        // 2. Fetch Producer details for PayPal Emails AND LICENSE SETTINGS
+        const producerIds = [...new Set(cartItems.map(item => item.product.producer_id))];
+        const [{ data: producers, error: producerError }, { data: profiles, error: profileError }] = await Promise.all([
+            supabase.from('users').select('id, paypal_email, license_settings, nickname, payment_methods').in('id', producerIds),
+            supabase.from('users').select('id, plan').in('id', producerIds)
+        ]);
 
-        // 2. Fetch Producer details for standard items only
-        const producerIds = [...new Set(standardCartItems.map(item => item.product.producer_id))];
-        let producers = [];
-        let profiles = [];
-
-        if (producerIds.length > 0) {
-            const [producersRes, profilesRes] = await Promise.all([
-                supabase.from('users').select('id, paypal_email, license_settings, nickname, payment_methods').in('id', producerIds),
-                supabase.from('users').select('id, plan').in('id', producerIds)
-            ]);
-            if (producersRes.error) console.error('[PayPalDebug] Error fetching producers:', producersRes.error);
-            if (profilesRes.error) console.error('[PayPalDebug] Error fetching profiles:', profilesRes.error);
-            producers = producersRes.data || [];
-            profiles = profilesRes.data || [];
-        }
+        if (producerError) console.error('[PayPalDebug] Error fetching producers:', producerError);
+        if (profileError) console.error('[PayPalDebug] Error fetching profiles:', profileError);
 
         const producerMap = new Map();
         producers?.forEach(u => {
             const profile = profiles?.find(p => p.id === u.id);
+            // Use paypal_email column primarily, fallback to payment_methods.paypal
             const finalPaypalEmail = u.paypal_email || u.payment_methods?.paypal;
+
             producerMap.set(u.id, {
                 id: u.id,
                 email: finalPaypalEmail,
@@ -270,9 +262,9 @@ export const createPayPalOrder = async (req, res) => {
 
         console.log('[PayPalOrder] Producer Map entries:', Array.from(producerMap.entries()).map(([id, p]) => ({ id, email: p.email, nickname: p.nickname })));
 
-        // Identify standard producers without PayPal configuration
+        // --- NEW: Identify Producers without PayPal ---
         const missingPaymentProducers = [];
-        standardCartItems.forEach(item => {
+        cartItems.forEach(item => {
             const p = producerMap.get(item.product.producer_id);
             if (!p || !p.email || !p.email.includes('@')) {
                 missingPaymentProducers.push({
@@ -317,31 +309,27 @@ export const createPayPalOrder = async (req, res) => {
             exclusive: 500.00
         };
 
-        const productIds = standardCartItems.map(item => item.product.id);
-        let dbProducts = [];
-        if (productIds.length > 0) {
-            const { data, error: dbError } = await supabase
-                .from('products')
-                .select('id, name, price_basic, price_premium, price_stems, price_exclusive, product_type, licenses, producer_id, status')
-                .in('id', productIds)
-                .or('status.eq.approved,status.eq.published');
-            if (dbError) throw dbError;
-            dbProducts = data || [];
-        }
+        const productIds = cartItems.map(item => item.product.id);
+        const { data: dbProducts, error: dbError } = await supabase
+            .from('products')
+            .select('id, name, price_basic, price_premium, price_stems, price_exclusive, product_type, licenses, producer_id, status')
+            .in('id', productIds)
+            .or('status.eq.approved,status.eq.published');
 
-        console.log(`[PayPalOrder] Standard DB Products found: ${dbProducts.length}/${productIds.length}`);
+        if (dbError) throw dbError;
+
+        console.log(`[PayPalOrder] DB Products found: ${dbProducts?.length || 0}/${productIds.length}`);
 
         let subtotal = 0;
         let serviceFee = 0;
         const verifiedCartItems = [];
 
-        // Verify standard items
-        standardCartItems.forEach(item => {
+        cartItems.forEach(item => {
             const prodIdToFind = String(item.product?.id);
             const dbProd = dbProducts.find(p => String(p.id) === prodIdToFind);
 
             if (!dbProd) {
-                console.warn(`[PayPalOrder] Product ${prodIdToFind} not found in DB or not approved/published: ${item.product?.id}`);
+                console.warn(`[PayPalOrder] Product ${prodIdToFind} not found in DB or not approved/publishedStatus: ${item.product?.id}`);
                 return;
             }
 
@@ -402,19 +390,6 @@ export const createPayPalOrder = async (req, res) => {
 
             console.log(`[PayPalOrder] Item: ${dbProd.name} | Plan: ${producer?.plan || 'free'} | Price: ${verifiedPrice} | Fee: ${commission.toFixed(2)}`);
 
-            verifiedCartItems.push({
-                ...item,
-                variant_price: verifiedPrice
-            });
-        });
-
-        // Verify plugin items (Easy Mix VST)
-        pluginItems.forEach(item => {
-            const verifiedPrice = 5.00; // Promo price for Easy Mix
-            subtotal += verifiedPrice;
-            
-            console.log(`[PayPalOrder] Plugin Item: ${item.product?.name} | Price: ${verifiedPrice} | Fee: 0.00`);
-            
             verifiedCartItems.push({
                 ...item,
                 variant_price: verifiedPrice
@@ -523,24 +498,13 @@ export const createPayPalOrder = async (req, res) => {
 
         // 1. Group Producers by Payee Identifier
         verifiedCartItems.forEach(item => {
-            const isPlugin = item.product?.id === 99999 || item.product?.name?.toLowerCase().includes('easy mix') || item.product?.name?.toLowerCase().includes('easymix');
-            
-            let payeeId = '';
-            let nickname = '';
-            
-            if (isPlugin) {
-                payeeId = PLATFORM_PAYPAL_EMAIL ? PLATFORM_PAYPAL_EMAIL.toLowerCase().trim() : 'willie2008garay@gmail.com';
-                nickname = 'OFFSZN';
-            } else {
-                const producer = producerMap.get(item.product.producer_id);
-                if (!producer?.email) return;
-                payeeId = producer.email.toLowerCase().trim();
-                nickname = producer.nickname;
-            }
+            const producer = producerMap.get(item.product.producer_id);
+            if (!producer?.email) return;
 
+            const payeeId = producer.email.toLowerCase().trim();
             const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
 
-            const current = payeeGroups.get(payeeId) || { amount: 0, type: payeeId.includes('@') ? 'email' : 'id', nickname: nickname };
+            const current = payeeGroups.get(payeeId) || { amount: 0, type: 'email', nickname: producer.nickname };
             current.amount += itemNet;
             payeeGroups.set(payeeId, current);
         });
@@ -825,75 +789,76 @@ export const capturePayPalOrder = async (req, res) => {
             const globalDiscountFactor = subtotalForCoupon > 0 ? (subtotalForCoupon - totalOrderDiscount) / subtotalForCoupon : 1.0;
 
             cartItems.forEach(item => {
-                const isPlugin = item.product?.id === 99999 || item.product?.name?.toLowerCase().includes('easy mix') || item.product?.name?.toLowerCase().includes('easymix');
-                
-                let verifiedPrice = 0;
-                let commission = 0;
-                let finalProducerAmount = 0;
-
-                if (isPlugin) {
-                    verifiedPrice = parseFloat(item.variant_price) || 5.00;
-                    finalProducerAmount = verifiedPrice * globalDiscountFactor;
-                } else {
-                    const dbProd = (dbProducts || []).find(p => String(p.id) === String(item.product?.id));
-                    if (!dbProd) {
-                        console.warn(`[PayPalCapture] Skipping item — product ${item.product?.id} not found (approved/published)`);
-                        return;
-                    }
-
-                    const producer = producerSettings?.find(u => u.id === dbProd.producer_id);
-
-                    if (dbProd.product_type === 'beat') {
-                        if (item.is_negotiation) {
-                            verifiedPrice = item.variant_price;
-                        } else {
-                            const licKey = mapLicenseToKey(item.license_name || 'basic');
-                            const productOverride = dbProd.licenses ? dbProd.licenses[licKey]?.price : null;
-                            const producerPrice = producer?.license_settings ? producer.license_settings[licKey]?.price : null;
-                            const dbFieldMap = {
-                                basic: dbProd.price_basic,
-                                premium: dbProd.price_premium,
-                                trackout: dbProd.price_stems,
-                                stems: dbProd.price_stems,
-                                unlimited: dbProd.price_exclusive,
-                                exclusive: dbProd.price_exclusive
-                            };
-                            verifiedPrice = productOverride || dbFieldMap[licKey] || producerPrice || FACTORY_DEFAULTS[licKey] || 0;
-                        }
-                    } else {
-                        verifiedPrice = item.is_negotiation ? item.variant_price : (dbProd.price_basic || 0);
-                    }
-
-                    verifiedPrice = parseFloat(verifiedPrice);
-
-                    if (verifiedPrice > 0) {
-                        const producerProfile = producerPlans?.find(pp => pp.id === dbProd.producer_id);
-                        const producerPlan = producerProfile?.plan || 'free';
-
-                        if (producerPlan === 'starter') {
-                            // Starter: 3% (min $0.50 if < $20)
-                            if (verifiedPrice < 20) {
-                                commission = 0.50;
-                            } else {
-                                commission = verifiedPrice * 0.03;
-                            }
-                        } else if (producerPlan === 'pro') {
-                            // Pro: 0%
-                            commission = 0;
-                        } else {
-                            // Free: 5% (min $1.00 if < $20)
-                            if (verifiedPrice < 20) {
-                                commission = 1.00;
-                            } else {
-                                commission = verifiedPrice * 0.05;
-                            }
-                        }
-                    }
-                    finalProducerAmount = verifiedPrice * globalDiscountFactor;
+                const dbProd = (dbProducts || []).find(p => String(p.id) === String(item.product?.id));
+                if (!dbProd) {
+                    console.warn(`[PayPalCapture] Skipping item — product ${item.product?.id} not found (approved/published)`);
+                    return;
                 }
 
+                const producer = producerSettings?.find(u => u.id === dbProd.producer_id);
+                let verifiedPrice = 0;
+
+                if (dbProd.product_type === 'beat') {
+                    if (item.is_negotiation) {
+                        verifiedPrice = item.variant_price;
+                    } else {
+                        const licKey = mapLicenseToKey(item.license_name || 'basic');
+                        const productOverride = dbProd.licenses ? dbProd.licenses[licKey]?.price : null;
+                        const producerPrice = producer?.license_settings ? producer.license_settings[licKey]?.price : null;
+                        const dbFieldMap = {
+                            basic: dbProd.price_basic,
+                            premium: dbProd.price_premium,
+                            trackout: dbProd.price_stems,
+                            stems: dbProd.price_stems,
+                            unlimited: dbProd.price_exclusive,
+                            exclusive: dbProd.price_exclusive
+                        };
+                        verifiedPrice = productOverride || dbFieldMap[licKey] || producerPrice || FACTORY_DEFAULTS[licKey] || 0;
+                    }
+                } else {
+                    verifiedPrice = item.is_negotiation ? item.variant_price : (dbProd.price_basic || 0);
+                }
+
+                verifiedPrice = parseFloat(verifiedPrice);
+
+                let commission = 0;
+                if (verifiedPrice > 0) {
+                    const producerProfile = producerPlans?.find(pp => pp.id === dbProd.producer_id);
+                    const producerPlan = producerProfile?.plan || 'free';
+
+                    if (producerPlan === 'starter') {
+                        // Starter: 3% (min $0.50 if < $20)
+                        if (verifiedPrice < 20) {
+                            commission = 0.50;
+                        } else {
+                            commission = verifiedPrice * 0.03;
+                        }
+                    } else if (producerPlan === 'pro') {
+                        // Pro: 0%
+                        commission = 0;
+                    } else {
+                        // Free: 5% (min $1.00 if < $20)
+                        if (verifiedPrice < 20) {
+                            commission = 1.00;
+                        } else {
+                            commission = verifiedPrice * 0.05;
+                        }
+                    }
+                }
+
+                // Calculate specific discount for this item
+                let itemPriceAfterDiscount = verifiedPrice;
+
+                // If it's a product-specific coupon, check if it applies here
+                // Note: This logic assumes we re-query the coupon in the loop or use the 'coupon' object if it exists
+                // For simplicity and to match 'create', we'll use a more direct approach:
+                // If the coupon was valid and applied, we scale the price.
+                itemPriceAfterDiscount = verifiedPrice * globalDiscountFactor;
+
+                const finalProducerAmount = itemPriceAfterDiscount;
+
                 transactions.push({
-                    user_id: userId || null,
+                    user_id: userId,
                     related_order: order.id,
                     amount: finalProducerAmount + commission,
                     currency: 'USD',
@@ -1539,4 +1504,194 @@ export const simulatePurchaseEmail = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+// ─── Webhook Helper: Retrieve PayPal Access Token ─────────────────────────────
+const getPayPalAccessToken = async () => {
+    const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64');
+    const res = await fetch(`${PAYPAL_API_BASE}/v1/oauth2/token`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'grant_type=client_credentials'
+    });
+    if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error_description || 'Failed to get PayPal access token');
+    }
+    const data = await res.json();
+    return data.access_token;
+};
+
+// ─── Webhook Helper: Retrieve Capture Details (v2 API) ────────────────────────
+const getPayPalCaptureDetails = async (captureId, accessToken) => {
+    const res = await fetch(`${PAYPAL_API_BASE}/v2/payments/captures/${captureId}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+        }
+    });
+    if (!res.ok) {
+        throw new Error(`Failed to fetch PayPal capture details for ID: ${captureId}`);
+    }
+    return await res.json();
+};
+
+// ─── Webhook Helper: Retrieve Order Details (v2 API) ──────────────────────────
+const getOrderDetails = async (orderId, accessToken) => {
+    const res = await fetch(`${PAYPAL_API_BASE}/v2/checkout/orders/${orderId}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+        }
+    });
+    if (!res.ok) {
+        throw new Error(`Failed to fetch PayPal order details for ID: ${orderId}`);
+    }
+    return await res.json();
+};
+
+// ─── Webhook: Process Successful PayPal Payments automatically ────────────────
+export const handlePayPalWebhook = async (req, res) => {
+    const event = req.body;
+    
+    // Accept event immediately to prevent PayPal retries while we process
+    res.status(200).json({ received: true });
+
+    try {
+        console.log(`🔔 [PayPalWebhook] Processing event: ${event.event_type} | Event ID: ${event.id}`);
+        const eventType = event.event_type;
+        let transactionId = '';
+        let isSale = false;
+        let isOrder = false;
+
+        if (eventType === 'PAYMENT.SALE.COMPLETED') {
+            transactionId = event.resource?.id;
+            isSale = true;
+        } else if (eventType === 'CHECKOUT.ORDER.APPROVED' || eventType === 'CHECKOUT.ORDER.COMPLETED') {
+            transactionId = event.resource?.id;
+            isOrder = true;
+        }
+
+        if (!transactionId) {
+            console.log(`[PayPalWebhook] Event ignored or did not contain transaction ID.`);
+            return;
+        }
+
+        // Check if order already exists in the orders table
+        const { data: existingOrder } = await supabase
+            .from('orders')
+            .select('id')
+            .eq('transaction_id', transactionId)
+            .maybeSingle();
+
+        if (existingOrder) {
+            console.log(`[PayPalWebhook] Order with transaction ID ${transactionId} already processed. Skipping.`);
+            return;
+        }
+
+        // Fetch official API details to secure verification
+        const accessToken = await getPayPalAccessToken();
+        let payerEmail = '';
+        let amountPaid = 0;
+        let isEasyMixPurchase = false;
+
+        if (isSale) {
+            const captureDetails = await getPayPalCaptureDetails(transactionId, accessToken);
+            const orderId = captureDetails.supplementary_data?.related_ids?.order_id;
+
+            if (orderId) {
+                const orderDetails = await getOrderDetails(orderId, accessToken);
+                payerEmail = orderDetails.payer?.email_address;
+                
+                const purchaseUnit = orderDetails.purchase_units?.[0];
+                amountPaid = parseFloat(purchaseUnit?.amount?.value || '0');
+                
+                const description = purchaseUnit?.description || '';
+                const items = purchaseUnit?.items || [];
+                const hasEasyMixInItems = items.some(item => 
+                    item.name?.toLowerCase().includes('easy mix') || 
+                    item.name?.toLowerCase().includes('easymix')
+                );
+                
+                isEasyMixPurchase = description.toLowerCase().includes('easy mix') || 
+                                    description.toLowerCase().includes('easymix') || 
+                                    hasEasyMixInItems;
+            }
+        } else if (isOrder) {
+            const orderDetails = await getOrderDetails(transactionId, accessToken);
+            payerEmail = orderDetails.payer?.email_address;
+            
+            const purchaseUnit = orderDetails.purchase_units?.[0];
+            amountPaid = parseFloat(purchaseUnit?.amount?.value || '0');
+            
+            const description = purchaseUnit?.description || '';
+            const items = purchaseUnit?.items || [];
+            const hasEasyMixInItems = items.some(item => 
+                item.name?.toLowerCase().includes('easy mix') || 
+                item.name?.toLowerCase().includes('easymix')
+            );
+            
+            isEasyMixPurchase = description.toLowerCase().includes('easy mix') || 
+                                description.toLowerCase().includes('easymix') || 
+                                hasEasyMixInItems;
+        }
+
+        if (!payerEmail) {
+            console.warn(`[PayPalWebhook] Could not resolve payer email for transaction: ${transactionId}`);
+            return;
+        }
+
+        console.log(`[PayPalWebhook] Verified details: Email=${payerEmail}, Amount=${amountPaid}, isEasyMix=${isEasyMixPurchase}`);
+
+        if (isEasyMixPurchase) {
+            // Find matched user
+            let matchedUserId = null;
+            const { data: matchedUser } = await supabase
+                .from('users')
+                .select('id')
+                .eq('email', payerEmail)
+                .maybeSingle();
+            
+            if (matchedUser) {
+                matchedUserId = matchedUser.id;
+            }
+
+            // Create Order Record to prevent double-processing and show in "Mis Compras"
+            const { data: newOrder, error: orderError } = await supabase
+                .from('orders')
+                .insert({
+                    user_id: matchedUserId,
+                    transaction_id: transactionId,
+                    status: 'completed',
+                    total_price: amountPaid,
+                    amount: amountPaid,
+                    guest_email: matchedUserId ? null : payerEmail
+                })
+                .select()
+                .single();
+
+            if (orderError) throw orderError;
+
+            // Generate license and send email automatically
+            const result = await generatePluginLicense({
+                licenseType: 'lifetime',
+                userEmail: payerEmail,
+                userId: matchedUserId,
+                pluginName: 'Easy Mix'
+            });
+
+            console.log(`[PayPalWebhook] Successfully processed! Generated license ${result.serialKey} for ${payerEmail}`);
+        } else {
+            console.log(`[PayPalWebhook] Transaction ${transactionId} is not an Easy Mix purchase. Skipping license generation.`);
+        }
+
+    } catch (err) {
+        console.error('❌ [PayPalWebhook] Error processing webhook event:', err);
+    }
+};
+
 
