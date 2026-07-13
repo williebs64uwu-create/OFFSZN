@@ -29,46 +29,26 @@ function signPayload(payload) {
 async function sendActivationEmail({ to, serialKey, licenseType, expiresAt }) {
     if (!to) return; // No email, skip silently
     try {
-        const licenseLabels = {
-            trial:        '🎁 Prueba Gratuita (24 horas)',
-            subscription: '📅 Suscripción Mensual OFFSZN',
-            lifetime:     '⭐ Licencia Lifetime — Acceso de por vida'
-        };
-        const expiryLine = expiresAt === 'never'
-            ? '<p style="color:#30d158;font-weight:bold;">✅ Acceso de por vida — Sin vencimiento</p>'
-            : `<p>Tu licencia vence el: <strong>${new Date(expiresAt).toLocaleDateString('es-MX', { year:'numeric', month:'long', day:'numeric' })}</strong></p>`;
-
-        const isFullLicense = licenseType !== 'trial';
-        const sauceBankHtml = isFullLicense ? `
-            <div style="background: linear-gradient(135deg, #1f1c00 0%, #332a00 100%); border: 1px solid #FFD600; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                <h3 style="color:#FFD600; margin-top:0;">🎁 BONUS EXCLUSIVO: +50 SAUCE BANK PRESETS</h3>
-                <p style="color:#ddd; font-size:14px;">Por adquirir la licencia completa de Easy Mix, te regalamos nuestra expansi&oacute;n privada con 50 presets listos para usar en tus voces.</p>
-                <a href="https://drive.google.com/file/d/1t10xb_5XdNPtZ8SqGAvSIjLx3yPzNx6C/view?usp=sharing" style="display:inline-block; background:#FFD600; color:#000; font-weight:bold; text-decoration:none; padding:10px 20px; border-radius:6px; margin-top:10px;">⬇️ Descargar SAUCE BANK</a>
-                <p style="color:#aaa; font-size:12px; margin-bottom:0; margin-top:10px;"><em>Instrucciones: Solo descarga el instalador, ejec&uacute;talo y los presets aparecer&aacute;n autom&aacute;ticamente en tu plugin.</em></p>
-            </div>
-        ` : '';
+        const isTrial = licenseType === 'trial';
+        const greeting = isTrial ? 'Aqui tienes los datos de tu prueba!' : 'Felicidades por tu compra!';
+        const typeLabel = isTrial ? 'TRIAL' : 'FULL';
 
         const html = `
-        <div style="background:#0d0d0d;color:#f0f0f0;font-family:sans-serif;padding:40px;border-radius:12px;max-width:520px;margin:auto;">
-            <h1 style="color:#FFD600;letter-spacing:2px;">EASY MIX</h1>
-            <h2 style="color:#fff;">¡Plugin Activado Exitosamente! 🎉</h2>
-            <p>Tu licencia de <strong>Easy Mix by OFFSZN</strong> ha sido activada.</p>
-            <div style="background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:20px;margin:20px 0;">
-                <p style="color:#aaa;font-size:13px;margin:0 0 6px;">Tu Serial Key:</p>
-                <p style="font-family:monospace;font-size:18px;color:#FFD600;letter-spacing:1px;margin:0;">${serialKey}</p>
-            </div>
-            <p><strong>Tipo de licencia:</strong> ${licenseLabels[licenseType] || licenseType}</p>
-            ${expiryLine}
-            ${sauceBankHtml}
-            <hr style="border:1px solid #222;margin:24px 0;">
-            <p style="font-size:13px;color:#888;">Guarda este correo. Si cambias de equipo necesitarás tu serial key para reactivar.<br>Soporte: <a href="https://offszn.lat" style="color:#FFD600;">offszn.lat</a></p>
+        <div style="font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
+            <p>${greeting}</p>
+            <p>Aqui estan los datos para activar tu plugin:</p>
+            <p>1- SERIAL KEY : <strong>${serialKey}</strong></p>
+            <p>2- TIPO DE LICENCIA: <strong>${typeLabel}</strong></p>
+            <br>
+            <p>Que tengas un buen día!</p>
+            <p>- Soporte de OFFSZN</p>
         </div>`;
 
         await sendOffsznEmail({
             to,
-            subject: '✅ Easy Mix Activado — Tu Serial Key de OFFSZN',
+            subject: 'Tus datos de activacion - Easy Mix',
             html,
-            fromName: 'Easy Mix by OFFSZN',
+            fromName: 'Soporte OFFSZN',
             type: 'transactional'
         });
         console.log('[Plugin] Activation email sent to:', to);
