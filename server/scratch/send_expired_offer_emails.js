@@ -81,10 +81,8 @@ async function main() {
         </div>
         <div style="font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
             <p>Hola ${nickname || 'Productor'},</p>
-            <p>Vimos que tu prueba gratuita de Easy Mix ha expirado, pero no queremos que dejes de mezclar tus voces de forma facil.</p>
-            <p>Consigue tu Licencia Completa (Lifetime) de Easy Mix por solo $5. Esta oferta especial estara disponible hasta el fin del mundial 2026.</p>
-            <p>La licencia te da acceso de por vida sin suscripciones, actualizaciones gratis para siempre y el pack extra de presets (Sauce Bank) listos para usar en tus voces.</p>
-            <p>Puedes conseguir la licencia de por vida por $5 en el siguiente enlace:</p>
+            <p>Vimos que tu prueba gratuita de Easy Mix ha expirado. Hemos actualizado Easy mix con mejoras sin latencia para grabar y ahora puedes usarlo mucho más fácil.</p>
+            <p>Consigue tu Licencia Completa (Lifetime) de Easy Mix por solo $5. Esta oferta especial estará disponible hasta el fin del mundial 2026.</p>
             <p><a href="https://offszn.lat/plugins/easy-mix" style="color: #0066cc; font-weight: bold; text-decoration: underline;">https://offszn.lat/plugins/easy-mix</a></p>
             <br>
             <p>Que tengas un buen dia,</p>
