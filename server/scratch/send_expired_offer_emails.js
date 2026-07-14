@@ -75,6 +75,10 @@ async function main() {
     // Function to generate the email HTML
     const getOfferTemplate = (nickname) => {
         return `
+        <!-- Preheader / Preview Text -->
+        <div style="display: none; max-height: 0px; overflow: hidden; font-size: 1px; color: transparent; line-height: 1px; max-width: 0px; opacity: 0;">
+            el plugin puede ser tuyo en segundos...
+        </div>
         <div style="background-color: #050505; color: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 40px 20px; text-align: center;">
             <div style="max-width: 500px; margin: 0 auto; background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 16px; padding: 32px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
                 
@@ -91,7 +95,7 @@ async function main() {
                 </p>
 
                 <p style="color: #ffffff; font-size: 16px; font-weight: bold; line-height: 1.6; margin-bottom: 24px; border-left: 4px solid #FFD600; padding-left: 12px;">
-                    Solo hasta este lunes 13, consigue tu Licencia Completa (Lifetime) de Easy Mix por solo $5.
+                    Consigue tu Licencia Completa (Lifetime) de Easy Mix por solo $5. Oferta válida hasta el fin del mundial 2026.
                 </p>
 
                 <!-- Benefits List -->
@@ -137,7 +141,7 @@ async function main() {
         try {
             await sendOffsznEmail({
                 to: TEST_EMAIL,
-                subject: '🔥 Oferta Especial: Easy Mix Full por $5 (Solo hasta este lunes 13)',
+                subject: 'tu plugin mundialista',
                 html,
                 fromName: 'Easy Mix by OFFSZN',
                 type: 'transactional'
@@ -162,7 +166,7 @@ async function main() {
             try {
                 await sendOffsznEmail({
                     to: email,
-                    subject: '🔥 Oferta Especial: Easy Mix Full por $5 (Solo hasta este lunes 13)',
+                    subject: 'tu plugin mundialista',
                     html,
                     fromName: 'Easy Mix by OFFSZN',
                     type: 'transactional'
