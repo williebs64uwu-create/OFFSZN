@@ -79,48 +79,16 @@ async function main() {
         <div style="display: none; max-height: 0px; overflow: hidden; font-size: 1px; color: transparent; line-height: 1px; max-width: 0px; opacity: 0;">
             el plugin puede ser tuyo en segundos...
         </div>
-        <div style="background-color: #050505; color: #f0f0f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 40px 20px; text-align: center;">
-            <div style="max-width: 500px; margin: 0 auto; background: #0d0d0d; border: 1px solid #1a1a1a; border-radius: 16px; padding: 32px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-                
-                <!-- Header -->
-                <div style="text-align: center; margin-bottom: 24px;">
-                    <span style="font-size: 24px; font-weight: 900; color: #FFD600; letter-spacing: 2px;">OFFSZN</span>
-                    <span style="font-size: 24px; font-weight: 400; color: #ffffff; letter-spacing: 1px;"> | EASY MIX</span>
-                </div>
-
-                <h2 style="color: #ffffff; font-size: 20px; font-weight: 700; margin-top: 0; margin-bottom: 16px;">¡Hola, ${nickname || 'Productor'}! 🚀</h2>
-                
-                <p style="color: #b3b3b3; font-size: 15px; line-height: 1.6; margin-bottom: 20px;">
-                    Vimos que tu prueba gratuita de <strong>Easy Mix</strong> ha expirado. ¡Pero no queremos que dejes de mezclar tus voces con esta facilidad!
-                </p>
-
-                <p style="color: #ffffff; font-size: 16px; font-weight: bold; line-height: 1.6; margin-bottom: 24px; border-left: 4px solid #FFD600; padding-left: 12px;">
-                    Consigue tu Licencia Completa (Lifetime) de Easy Mix por solo $5. Oferta válida hasta el fin del mundial 2026.
-                </p>
-
-                <!-- Benefits List -->
-                <div style="background: #141414; border: 1px solid #1c1c1c; border-radius: 12px; padding: 20px; margin-bottom: 28px;">
-                    <h3 style="color: #FFD600; font-size: 14px; margin-top: 0; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">¿Qué incluye esta oferta?</h3>
-                    <ul style="color: #b3b3b3; font-size: 14px; line-height: 1.6; padding-left: 20px; margin: 0;">
-                        <li style="margin-bottom: 8px;"><strong>Acceso de por vida (Lifetime)</strong> sin suscripciones.</li>
-                        <li style="margin-bottom: 8px;"><strong>Actualizaciones gratis</strong> para siempre.</li>
-                        <li style="margin-bottom: 0;"><strong>🎁 Regalo Extra:</strong> +50 presets (Sauce Bank) listos para usar en tus voces.</li>
-                    </ul>
-                </div>
-
-                <!-- CTA Button -->
-                <div style="text-align: center; margin-bottom: 28px;">
-                    <a href="https://offszn.lat/plugins/easy-mix" style="background-color: #FFD600; color: #000000; font-weight: bold; text-decoration: none; padding: 14px 28px; border-radius: 8px; display: inline-block; font-size: 15px; transition: background 0.2s;">
-                        Conseguir Licencia por $5
-                    </a>
-                </div>
-
-                <hr style="border: 0; border-top: 1px solid #1c1c1c; margin-bottom: 20px;">
-
-                <p style="color: #666666; font-size: 12px; line-height: 1.5; margin: 0; text-align: center;">
-                    Este es un correo automático de OFFSZN. Si tienes dudas o necesitas soporte, contáctanos en <a href="https://offszn.lat" style="color: #FFD600; text-decoration: none;">offszn.lat</a>.
-                </p>
-            </div>
+        <div style="font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
+            <p>Hola ${nickname || 'Productor'},</p>
+            <p>Vimos que tu prueba gratuita de Easy Mix ha expirado, pero no queremos que dejes de mezclar tus voces de forma facil.</p>
+            <p>Consigue tu Licencia Completa (Lifetime) de Easy Mix por solo $5. Esta oferta especial estara disponible hasta el fin del mundial 2026.</p>
+            <p>La licencia te da acceso de por vida sin suscripciones, actualizaciones gratis para siempre y el pack extra de presets (Sauce Bank) listos para usar en tus voces.</p>
+            <p>Puedes conseguir la licencia de por vida por $5 en el siguiente enlace:</p>
+            <p><a href="https://offszn.lat/plugins/easy-mix" style="color: #0066cc; font-weight: bold; text-decoration: underline;">https://offszn.lat/plugins/easy-mix</a></p>
+            <br>
+            <p>Que tengas un buen dia,</p>
+            <p>Soporte de OFFSZN</p>
         </div>
         `;
     };
