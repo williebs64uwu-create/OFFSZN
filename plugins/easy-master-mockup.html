@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>EASY MASTER by OFFSZN</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
@@ -31,6 +31,9 @@
             width: 100vw;
             overflow: hidden;
             user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: none;
         }
 
         .plugin-container {
@@ -265,6 +268,37 @@
         .dropdown-content div:hover {
             background: rgba(255, 255, 255, 0.05);
             color: var(--primary);
+        }
+
+        /* TRIAL BADGE */
+        #trial-badge {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 115, 0, 0.12);
+            border: 1px solid rgba(255, 115, 0, 0.35);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        #trial-badge.visible {
+            display: flex;
+        }
+        #trial-badge .trial-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: trialDotPulse 2s ease-in-out infinite;
+        }
+        @keyframes trialDotPulse {
+            0%, 100% { opacity: 0.4; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
         }
 
         /* PRESETS DROPDOWN */
@@ -733,6 +767,9 @@
                         <div onclick="selectMode(2, event)">MODO SAUCE</div>
                     </div>
                 </div>
+
+                <!-- TRIAL BADGE -->
+                <div id="trial-badge"><span class="trial-dot"></span> PRUEBA · <span id="trial-time-left">3 DÍAS</span></div>
             </div>
             
             <div class="header-right" style="display:flex; align-items:center; gap:8px;">
@@ -788,10 +825,10 @@
                             <path d="M50,10 C50,10 42,25 42,35 C42,42 47,48 50,48 C53,48 58,42 58,35 C58,25 50,10 50,10 Z M46,55 C46,55 35,62 35,72 C35,82 43,88 50,88 C57,88 65,82 65,72 C65,62 54,55 54,55 C54,55 53,60 50,60 C47,60 46,55 46,55 Z"/>
                         </svg>
                         <div class="knob-indicator" id="ind-amount" style="z-index:2;"></div>
-                        <span class="knob-value" id="val-amount" style="z-index:2;">0%</span>
+                        <span class="knob-value" id="val-amount" style="z-index:2;">100%</span>
                     </div>
                 </div>
-                <div class="label" style="margin-top: -5px;">CANTIDAD</div>
+                <!-- Label removed per user request -->
             </div>
 
             <!-- SALSA EXTRA GAIN -->
@@ -882,17 +919,36 @@
         <!-- ACTIVATION OVERLAY -->
         <div class="activation-overlay active" id="activation-overlay">
             <div class="activation-box">
-                <img src="https://offszn.lat/assets/img/OFZ_Logo.png" alt="OFFSZN" class="offszn-logo-activation">
                 <div class="loading-spinner" id="loading-spinner"></div>
                 <p id="loading-text" style="margin-top:15px; font-size:14px; color:rgba(255,255,255,0.6);">Verificando licencia...</p>
                 <div class="activation-content" id="activation-content">
-                    <h2>Ingresa tu Serial Key FULL</h2>
+                    <h2>Ingresa tu Serial Key</h2>
                     <p>Activa tu plugin para siempre. Consigue tu licencia en OFFSZN.</p>
-                    <input type="text" id="serial-input" class="serial-input" placeholder="Ingresa tu Serial Key..." autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()">
+                    <input type="text" id="serial-input" class="serial-input" placeholder="MASTER-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()">
                     <button class="activate-btn" id="activate-btn" onclick="verifyLicense()">Activar Plugin</button>
                     <p class="error-msg" id="activation-error"></p>
                     <a href="#" onclick="callNative('openURLNative','https://offszn.lat/plugins/easy-master.html'); return false;" class="buy-link">CONSIGUE TU LICENCIA</a>
                 </div>
+            </div>
+        </div>
+
+        <!-- EXPIRED / HARD LOCK OVERLAY (no close button) -->
+        <div id="license-expired-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(10,10,10,0.98);backdrop-filter:blur(10px);z-index:1100;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.4s;border-radius:12px;">
+            <div style="font-size:40px;margin-bottom:15px;">&#128274;</div>
+            <div id="exp-title" style="font-size:16px;font-weight:800;color:#fff;letter-spacing:1px;margin-bottom:8px;">Activar Licencia</div>
+            <div id="exp-subtitle" style="font-size:12px;color:#888;text-align:center;max-width:320px;line-height:1.5;margin-bottom:20px;">Ingresa tu serial gratis o el full para activarlo.</div>
+            <input id="exp-serial-input" type="text" placeholder="MASTER-XXXX-XXXX-XXXX" spellcheck="false" autocomplete="off" oninput="this.value=this.value.toUpperCase()" style="width:260px;padding:12px;background:#0a0a0a;border:1px solid #444;border-radius:8px;color:#fff;font-family:monospace;font-size:14px;text-align:center;margin-bottom:15px;outline:none;">
+            <button id="exp-submit-btn" onclick="submitExpiredSerial()" style="background:var(--primary);color:#000;border:none;padding:12px 30px;border-radius:8px;font-weight:bold;font-family:'Outfit';font-size:13px;cursor:pointer;margin-bottom:10px;transition:0.2s;">Activar Nueva Licencia</button>
+            <button id="exp-link-btn" onclick="callNative('openURLNative','https://offszn.lat/plugins/easy-master.html')" style="background:transparent;border:1px solid #444;color:#888;padding:10px 24px;border-radius:8px;font-family:'Outfit';font-size:11px;cursor:pointer;transition:0.2s;">Consigue tu licencia &rarr;</button>
+        </div>
+
+        <!-- WELCOME MODAL -->
+        <div id="welcome-modal" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);z-index:1200;display:none;align-items:center;justify-content:center;border-radius:12px;">
+            <div style="background:#151515;border:1px solid #333;padding:40px;border-radius:16px;text-align:center;width:340px;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
+                <div style="font-size:36px;margin-bottom:12px;">🎉</div>
+                <h3 style="color:#fff;margin:0 0 10px;font-size:16px;font-weight:800;">¡Bienvenido a Easy Master!</h3>
+                <p style="color:#888;font-size:12px;margin-bottom:20px;line-height:1.5;">El plugin ha sido activado exitosamente.<br>Prepárate para llevar tus masters al siguiente nivel.</p>
+                <button onclick="document.getElementById('welcome-modal').style.display='none'" style="background:var(--primary);color:#000;border:none;padding:12px 30px;border-radius:8px;font-weight:bold;font-family:'Outfit';font-size:14px;cursor:pointer;transition:0.2s;">Comenzar</button>
             </div>
         </div>
 
@@ -1099,7 +1155,7 @@
             } catch (e) {}
         }
 
-        // --- LICENSE LOGIC ---
+        // --- LICENSE LOGIC (replicating Easy Mix mature system) ---
         function getOrCreateDeviceId() {
             let id = localStorage.getItem('offszn_device_id');
             if (!id) {
@@ -1110,13 +1166,34 @@
         }
 
         function getHwidAsync() {
-            if (window.OFFSZN_HWID) {
-                return Promise.resolve(window.OFFSZN_HWID);
-            }
+            if (window.OFFSZN_HWID) return Promise.resolve(window.OFFSZN_HWID);
             if (hasJuceBridge()) {
                 return callNative("getHardwareId").then(hwid => hwid || getOrCreateDeviceId());
             }
             return Promise.resolve(getOrCreateDeviceId());
+        }
+
+        function getFriendlyLicenseErrorMessage(serial, serverError) {
+            const err = (serverError || "").toLowerCase();
+            const key = (serial || "").toUpperCase();
+            const isDeviceLimit = err.includes("device") || err.includes("dispositivo") || err.includes("limit") || err.includes("límite") || err.includes("alcanzado");
+            if (isDeviceLimit) {
+                return "Límite de dispositivos alcanzado (Máx: 3). Revoca un dispositivo activo en tu cuenta de OFFSZN para poder activar este.";
+            }
+            return serverError || "Licencia inválida. Por favor verifica tu Serial Key.";
+        }
+
+        function updateTrialBadge(isTrial, timeText) {
+            const badge = document.getElementById('trial-badge');
+            const timeEl = document.getElementById('trial-time-left');
+            if (badge) {
+                if (isTrial) {
+                    badge.classList.add('visible');
+                    if (timeEl) timeEl.textContent = timeText || '3 DÍAS';
+                } else {
+                    badge.classList.remove('visible');
+                }
+            }
         }
 
         function verifyLicense() {
@@ -1124,7 +1201,9 @@
             if (!serial) return;
 
             const btn = document.getElementById('activate-btn');
+            const errorEl = document.getElementById('activation-error');
             if (btn) btn.innerText = "Verificando...";
+            if (errorEl) errorEl.textContent = '';
 
             getHwidAsync().then((hwid) => {
                 fetch(`${apiBase}/api/plugin/activate`, {
@@ -1138,17 +1217,121 @@
                     if (response && response.success) {
                         try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
                         callNative("setLicenseStatus", true, serial);
+                        callNative("saveLicense", serial);
                         window.setLicenseStatus(true);
+
+                        const isTrial = serial.toUpperCase().indexOf("TRIAL-") !== -1;
+                        const daysLeft = response.days_remaining || response.remaining_days || 3;
+                        updateTrialBadge(isTrial, `${daysLeft} DÍAS`);
+
+                        // Show welcome modal
+                        const welcome = document.getElementById('welcome-modal');
+                        if (welcome) welcome.style.display = 'flex';
                     } else {
                         callNative("setLicenseStatus", false);
-                        alert(response.error || "Licencia inválida");
+                        const msg = getFriendlyLicenseErrorMessage(serial, response.error || "Licencia inválida");
+                        if (errorEl) errorEl.textContent = msg;
                     }
                 })
                 .catch(err => {
                     if (btn) btn.innerText = "Activar Plugin";
-                    alert("Error de conexión. Activa tu conexión a Internet para validar la licencia.");
+                    if (errorEl) errorEl.textContent = "Error de conexión. Activa tu conexión a Internet para validar la licencia.";
                 });
             });
+        }
+
+        // Submit from expired overlay
+        function submitExpiredSerial() {
+            const input = document.getElementById('exp-serial-input');
+            if (!input || !input.value.trim()) return;
+            const serial = input.value.trim();
+            const btn = document.getElementById('exp-submit-btn');
+            if (btn) btn.innerText = "Verificando...";
+
+            getHwidAsync().then(hwid => {
+                fetch(`${apiBase}/api/plugin/activate`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Master" })
+                }).then(res => res.json()).then(response => {
+                    if (btn) btn.innerText = "Activar Nueva Licencia";
+                    if (response && response.success) {
+                        callNative("setLicenseStatus", true, serial);
+                        callNative("saveLicense", serial);
+                        try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
+                        
+                        const isTrial = serial.toUpperCase().indexOf("TRIAL-") !== -1;
+                        const daysLeft = response.days_remaining || response.remaining_days || 3;
+                        updateTrialBadge(isTrial, `${daysLeft} DÍAS`);
+
+                        // Hide expired overlay
+                        const overlay = document.getElementById('license-expired-overlay');
+                        if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; }
+                        // Also hide activation overlay if visible
+                        window.setLicenseStatus(true);
+                        input.value = '';
+                    } else {
+                        input.style.borderColor = '#ff453a';
+                        setTimeout(() => { input.style.borderColor = ''; }, 2000);
+                    }
+                }).catch(() => {
+                    if (btn) btn.innerText = "Activar Nueva Licencia";
+                });
+            });
+        }
+
+        function triggerLicenseExpired(title, subtitle) {
+            callNative("setLicenseStatus", false);
+            try { localStorage.removeItem('offszn_serial'); } catch (e) { }
+            if (hasJuceBridge()) callNative("saveLicense", "");
+            const overlay = document.getElementById('license-expired-overlay');
+            if (overlay) {
+                const titleEl = document.getElementById('exp-title');
+                const subEl = document.getElementById('exp-subtitle');
+                if (titleEl) titleEl.textContent = title || 'Activar Licencia';
+                if (subEl) subEl.textContent = subtitle || 'Ingresa tu serial gratis o el full para activarlo.';
+                // Show input and buttons
+                const input = document.getElementById('exp-serial-input');
+                const btn = document.getElementById('exp-submit-btn');
+                const btnSec = document.getElementById('exp-link-btn');
+                const retryBtn = document.getElementById('exp-retry-btn');
+                if (input) input.style.display = 'block';
+                if (btn) btn.style.display = 'block';
+                if (btnSec) btnSec.style.display = 'block';
+                if (retryBtn) retryBtn.style.display = 'none';
+                overlay.style.opacity = '1';
+                overlay.style.pointerEvents = 'auto';
+            }
+        }
+
+        function triggerLicenseOffline(title, subtitle) {
+            callNative("setLicenseStatus", false);
+            const overlay = document.getElementById('license-expired-overlay');
+            if (overlay) {
+                const titleEl = document.getElementById('exp-title');
+                const subEl = document.getElementById('exp-subtitle');
+                if (titleEl) titleEl.textContent = title || 'Sin Conexión';
+                if (subEl) subEl.textContent = subtitle || 'El plugin requiere conexión a Internet.';
+                // Hide input/buttons, show retry
+                const input = document.getElementById('exp-serial-input');
+                const btn = document.getElementById('exp-submit-btn');
+                const btnSec = document.getElementById('exp-link-btn');
+                if (input) input.style.display = 'none';
+                if (btn) btn.style.display = 'none';
+                if (btnSec) btnSec.style.display = 'none';
+                let retryBtn = document.getElementById('exp-retry-btn');
+                if (!retryBtn) {
+                    retryBtn = document.createElement('button');
+                    retryBtn.id = 'exp-retry-btn';
+                    retryBtn.textContent = 'Reintentar Conexión';
+                    retryBtn.style.cssText = 'background:var(--primary);color:#000;border:none;padding:12px 30px;border-radius:8px;font-weight:bold;font-family:Outfit;font-size:13px;cursor:pointer;';
+                    retryBtn.onclick = () => window.location.reload();
+                    overlay.appendChild(retryBtn);
+                }
+                retryBtn.style.display = 'block';
+                overlay.style.opacity = '1';
+                overlay.style.pointerEvents = 'auto';
+            }
         }
 
         window.updateParameter = function(id, val) {
@@ -1164,24 +1347,22 @@
             const loadText = document.getElementById('loading-text');
             const content = document.getElementById('activation-content');
             if (isValid) {
-                overlay.classList.remove('active');
-                overlay.style.display = 'none'; // Unblock all mouse pointer clicks!
+                if (overlay) { overlay.classList.remove('active'); overlay.style.display = 'none'; }
             } else {
-                overlay.classList.add('active');
-                overlay.style.display = 'flex';
+                if (overlay) { overlay.classList.add('active'); overlay.style.display = 'flex'; }
                 if (spinner) spinner.style.display = 'none';
                 if (loadText) loadText.style.display = 'none';
                 if (content) content.classList.add('visible');
             }
         };
 
-
-
         // Init visuals
         updateKnobVisuals('global-in', 25);
         updateKnobVisuals('global-out', 0);
         updateKnobVisuals('amount', 100);
 
+        // --- LICENSE BOOT SEQUENCE (mirrors Easy Mix) ---
+        // Serial format: MASTER-TRIAL-xxxx-xxxx / MASTER-FULL-xxxx-xxxx
         setTimeout(() => {
             if (hasJuceBridge()) {
                 callNative("getLicenseState").then((state) => {
@@ -1189,45 +1370,42 @@
                     const serial = (state && state.serial || "").trim();
 
                     if (serial) {
-                        const isTrial = serial.toUpperCase().startsWith("TRIAL-");
+                        const isTrial = serial.toUpperCase().indexOf("TRIAL-") !== -1;
                         if (isTrial) {
-                            // Silently verify trial key online
-                            callNative("getHardwareId").then(hwid => {
-                                const effectiveHwid = hwid || 'device-no-hwid';
+                            // Silently verify the trial key online every session
+                            getHwidAsync().then(hwid => {
                                 fetch(`${apiBase}/api/plugin/activate`, {
                                     method: "POST",
                                     headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ serial_key: serial, hwid: effectiveHwid, plugin_name: "Easy Master" })
+                                    body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Master" })
                                 }).then(res => res.json()).then(response => {
                                     if (response && response.success) {
-                                        // Still valid trial! Activate for this session
                                         callNative("setLicenseStatus", true, serial);
                                         window.setLicenseStatus(true);
                                         try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
+                                        const daysLeft = response.days_remaining || response.remaining_days || 3;
+                                        updateTrialBadge(true, `${daysLeft} DÍAS`);
                                     } else {
-                                        // Expired trial -> force modal
-                                        callNative("setLicenseStatus", false);
-                                        callNative("saveLicense", "");
-                                        window.setLicenseStatus(false);
+                                        // Expired trial
+                                        triggerLicenseExpired("Prueba Expirada", "Tu periodo de prueba de 3 días ha expirado. Adquiere una licencia FULL en offszn.lat para seguir usando Easy Master.");
                                     }
                                 }).catch(() => {
-                                    // Offline
-                                    callNative("setLicenseStatus", false);
-                                    window.setLicenseStatus(false);
-                                    alert("El plugin requiere conexión a Internet para validar tu periodo de prueba.");
+                                    triggerLicenseOffline("Sin Conexión", "El plugin requiere conexión a Internet para validar tu periodo de prueba. Conéctate para continuar.");
                                 });
                             });
                         } else {
-                            // FULL license: trust local validation completely
+                            // FULL Key: trust local validation completely, no internet check
                             if (isValid) {
                                 try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
                                 window.setLicenseStatus(true);
+                                updateTrialBadge(false);
                             } else {
                                 callNative("setLicenseStatus", false);
                                 window.setLicenseStatus(false);
                             }
                         }
                     } else {
+                        // No serial at all -> ask for activation
                         callNative("setLicenseStatus", false);
                         window.setLicenseStatus(false);
                     }
@@ -1617,6 +1795,33 @@
 
         // Also wire loadDefaultPreset to use new system
         function loadDefaultPreset() { loadPreset(0); }
+
+        // ==================== BLOCK ZOOM / RIGHT-CLICK / DOUBLE-CLICK ====================
+        // Prevent right-click context menu
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // Prevent double-click text selection / zoom
+        document.addEventListener('dblclick', e => e.preventDefault());
+
+        // Prevent Ctrl+scroll zoom and Ctrl+plus/minus zoom
+        document.addEventListener('wheel', e => {
+            if (e.ctrlKey || e.metaKey) e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('keydown', e => {
+            // Block Ctrl/Cmd + / - / 0 (zoom shortcuts)
+            if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
+                e.preventDefault();
+            }
+        });
+
+        // Prevent pinch-to-zoom on touch devices
+        document.addEventListener('touchstart', e => {
+            if (e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('gesturechange', e => e.preventDefault());
     </script>
 </body>
 </html>
