@@ -126,7 +126,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: transform 0.05s ease-out; /* Smooth scaling transition */
+            /* No transition on transform - must follow cursor exactly */
         }
 
         .knob-indicator {
@@ -176,7 +176,7 @@
         .ring-bg { stroke: #222; }
         .ring-fg { 
             stroke: var(--primary); 
-            transition: stroke-dashoffset 0.1s;
+            /* No transition - immediate real-time response */
         }
 
         /* LARGE KNOB (CANTIDAD) */
@@ -265,6 +265,103 @@
         .dropdown-content div:hover {
             background: rgba(255, 255, 255, 0.05);
             color: var(--primary);
+        }
+
+        /* PRESETS DROPDOWN */
+        .presets-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .presets-trigger {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #ccc;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            letter-spacing: 0.08em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .presets-trigger:hover {
+            border-color: var(--primary);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.2);
+        }
+        .presets-trigger .arrow {
+            font-size: 9px;
+            opacity: 0.5;
+            transition: transform 0.2s;
+        }
+        .presets-dropdown.open .presets-trigger .arrow {
+            transform: rotate(180deg);
+        }
+        .presets-dropdown.open .presets-trigger {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .presets-menu {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: calc(100% + 6px);
+            background: rgba(12, 12, 14, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            min-width: 170px;
+            z-index: 10000;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.7);
+            backdrop-filter: blur(12px);
+            overflow: hidden;
+        }
+        .presets-menu.show {
+            display: block;
+        }
+        .preset-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: 0.08em;
+            color: #999;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .preset-item:last-child { border-bottom: none; }
+        .preset-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--primary);
+        }
+        .preset-item.active {
+            color: var(--primary);
+            background: rgba(var(--accent-rgb), 0.08);
+        }
+        .preset-item .preset-emoji {
+            font-size: 13px;
+        }
+        .preset-item .preset-info {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .preset-item .preset-name {
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .preset-item .preset-sub {
+            font-size: 9px;
+            opacity: 0.4;
+            font-weight: 400;
+            letter-spacing: 0;
         }
 
         /* FOOTER STYLE */
@@ -406,6 +503,174 @@
             margin-top: 10px;
             height: 15px;
         }
+
+        /* ==================== SETTINGS MODAL ==================== */
+        .settings-backdrop {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(6px);
+            z-index: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            border-radius: 12px;
+        }
+        .settings-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .settings-panel {
+            background: linear-gradient(145deg, #1a1a1a 0%, #111 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 28px 32px;
+            width: 360px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            transform: translateY(10px) scale(0.97);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .settings-backdrop.open .settings-panel {
+            transform: translateY(0) scale(1);
+        }
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+        }
+        .settings-header h3 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            text-transform: uppercase;
+        }
+        .settings-close {
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            transition: color 0.2s, background 0.2s;
+            font-family: 'Outfit', sans-serif;
+            line-height: 1;
+        }
+        .settings-close:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.08);
+        }
+        .setting-row {
+            margin-bottom: 20px;
+        }
+        .setting-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .setting-name {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            color: #aaa;
+            text-transform: uppercase;
+        }
+        .setting-val {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 38px;
+            text-align: right;
+        }
+        .setting-desc {
+            font-size: 10px;
+            color: #555;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+        .setting-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            border-radius: 4px;
+            background: #2a2a2a;
+            outline: none;
+            cursor: pointer;
+        }
+        .setting-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6);
+            transition: box-shadow 0.2s;
+        }
+        .setting-slider::-webkit-slider-thumb:hover {
+            box-shadow: 0 0 14px rgba(var(--accent-rgb), 0.9);
+        }
+        .setting-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6);
+        }
+        .settings-divider {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            margin: 18px 0;
+        }
+        .settings-reset-btn {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #888;
+            padding: 9px;
+            border-radius: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .settings-reset-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .gear-btn {
+            background: transparent;
+            border: 1px solid #333;
+            color: #666;
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .gear-btn:hover {
+            color: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.2);
+        }
     </style>
 </head>
 <body>
@@ -413,8 +678,53 @@
     <div class="plugin-container">
         <!-- HEADER -->
         <div class="header">
-            <div class="header-left" style="display: flex; align-items: center;">
-                <button class="preset-btn" onclick="loadDefaultPreset()">Default</button>
+            <div class="header-left" style="display: flex; align-items: center; gap: 10px;">
+                <!-- PRESETS DROPDOWN -->
+                <div class="presets-dropdown" id="presets-dropdown">
+                    <button class="presets-trigger" id="presets-trigger-btn" onclick="togglePresetsMenu(event)">
+                        <span id="active-preset-name">DEFAULT</span>
+                        <span class="arrow">▾</span>
+                    </button>
+                    <div class="presets-menu" id="presets-menu">
+                        <div class="preset-item active" id="preset-item-0" onclick="loadPreset(0, event)">
+                            <span class="preset-emoji">⭐</span>
+                            <div class="preset-info">
+                                <span class="preset-name">DEFAULT</span>
+                                <span class="preset-sub">Punto de partida</span>
+                            </div>
+                        </div>
+                        <div class="preset-item" id="preset-item-1" onclick="loadPreset(1, event)">
+                            <span class="preset-emoji">🔥</span>
+                            <div class="preset-info">
+                                <span class="preset-name">TRAP / DRILL</span>
+                                <span class="preset-sub">Agresivo y pegado</span>
+                            </div>
+                        </div>
+                        <div class="preset-item" id="preset-item-2" onclick="loadPreset(2, event)">
+                            <span class="preset-emoji">🌴</span>
+                            <div class="preset-info">
+                                <span class="preset-name">REGGAETÓN</span>
+                                <span class="preset-sub">Amplio y brillante</span>
+                            </div>
+                        </div>
+                        <div class="preset-item" id="preset-item-3" onclick="loadPreset(3, event)">
+                            <span class="preset-emoji">✨</span>
+                            <div class="preset-info">
+                                <span class="preset-name">R&B SUAVE</span>
+                                <span class="preset-sub">Cálido y envolvente</span>
+                            </div>
+                        </div>
+                        <div class="preset-item" id="preset-item-4" onclick="loadPreset(4, event)">
+                            <span class="preset-emoji">🚀</span>
+                            <div class="preset-info">
+                                <span class="preset-name">FULL SAUCE</span>
+                                <span class="preset-sub">Todo al máximo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODOS -->
                 <div class="modes-dropdown" id="modes-dropdown">
                     <button class="dropdown-trigger" id="active-mode-btn" onclick="toggleDropdown(event)">MODO PREMIUM</button>
                     <div class="dropdown-content" id="dropdown-content">
@@ -425,8 +735,15 @@
                 </div>
             </div>
             
-            <div class="header-right">
+            <div class="header-right" style="display:flex; align-items:center; gap:8px;">
                 <button class="reset-btn" onclick="resetAll()">RESETEAR</button>
+                <!-- Settings Gear Icon -->
+                <button class="gear-btn" id="gear-btn" onclick="openSettings(event)" title="Configuración avanzada">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -440,7 +757,7 @@
                         <circle class="ring-bg" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="70.7" transform="rotate(135 55 55)"></circle>
                         <circle class="ring-fg" id="ring-global-in" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="282.7" transform="rotate(135 55 55)"></circle>
                     </svg>
-                    <div class="knob-dial" onmousedown="startDrag(event, 'global-in')">
+                    <div class="knob-dial" onpointerdown="startDrag(event, 'global-in')">
                         <div class="knob-indicator" id="ind-global-in"></div>
                         <span class="knob-value" id="val-global-in">0.0</span>
                     </div>
@@ -465,7 +782,7 @@
                         <div class="mode-label" id="lbl-sauce" style="transform: translate(-50%, -50%) rotate(135deg) translateY(-185px) rotate(-135deg);">SAUCE</div>
                     </div>
 
-                    <div class="knob-dial" onmousedown="startDrag(event, 'amount')">
+                    <div class="knob-dial" onpointerdown="startDrag(event, 'amount')">
                         <canvas id="particles-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; border-radius:50%; z-index:1;"></canvas>
                         <svg id="salsa-drip" viewBox="0 0 100 100" style="position: absolute; top: 25%; left: 25%; width: 50%; height: 50%; opacity: 0.12; pointer-events: none; fill: var(--primary); transition: fill 0.3s; z-index:0;">
                             <path d="M50,10 C50,10 42,25 42,35 C42,42 47,48 50,48 C53,48 58,42 58,35 C58,25 50,10 50,10 Z M46,55 C46,55 35,62 35,72 C35,82 43,88 50,88 C57,88 65,82 65,72 C65,62 54,55 54,55 C54,55 53,60 50,60 C47,60 46,55 46,55 Z"/>
@@ -484,12 +801,81 @@
                         <circle class="ring-bg" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="70.7" transform="rotate(135 55 55)"></circle>
                         <circle class="ring-fg" id="ring-global-out" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="282.7" transform="rotate(135 55 55)"></circle>
                     </svg>
-                    <div class="knob-dial" onmousedown="startDrag(event, 'global-out')">
+                    <div class="knob-dial" onpointerdown="startDrag(event, 'global-out')">
                         <div class="knob-indicator" id="ind-global-out"></div>
                         <span class="knob-value" id="val-global-out">0%</span>
                     </div>
                 </div>
                 <div class="label">SALSA EXTRA</div>
+            </div>
+        </div>
+
+        <!-- SETTINGS MODAL -->
+        <div class="settings-backdrop" id="settings-backdrop" onclick="closeSettingsOnBackdrop(event)">
+            <div class="settings-panel" id="settings-panel">
+                <div class="settings-header">
+                    <h3>⚙ Configuración</h3>
+                    <button class="settings-close" onclick="closeSettings()">✕</button>
+                </div>
+
+                <!-- Stereo Width -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <span class="setting-name">↔ Ancho Stereo</span>
+                        <span class="setting-val" id="sv-stereo">50%</span>
+                    </div>
+                    <div class="setting-desc">Qué tan ancho y envolvente suena tu mezcla</div>
+                    <input type="range" class="setting-slider" id="sl-stereo" min="0" max="100" value="50"
+                        oninput="updateSetting('stereo', this.value)">
+                </div>
+
+                <!-- Air & Brightness -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <span class="setting-name">✨ Claridad & Brillo</span>
+                        <span class="setting-val" id="sv-air">40%</span>
+                    </div>
+                    <div class="setting-desc">Agudos, presencia y definición vocal</div>
+                    <input type="range" class="setting-slider" id="sl-air" min="0" max="100" value="40"
+                        oninput="updateSetting('air', this.value)">
+                </div>
+
+                <!-- Punch -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <span class="setting-name">👊 Pegada Vocal</span>
+                        <span class="setting-val" id="sv-punch">60%</span>
+                    </div>
+                    <div class="setting-desc">Firmeza y fuerza del compresor en la voz</div>
+                    <input type="range" class="setting-slider" id="sl-punch" min="0" max="100" value="60"
+                        oninput="updateSetting('punch', this.value)">
+                </div>
+
+                <!-- Warmth -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <span class="setting-name">🔥 Cuerpo & Calidez</span>
+                        <span class="setting-val" id="sv-warmth">30%</span>
+                    </div>
+                    <div class="setting-desc">Peso y riqueza en bajos y medios</div>
+                    <input type="range" class="setting-slider" id="sl-warmth" min="0" max="100" value="30"
+                        oninput="updateSetting('warmth', this.value)">
+                </div>
+
+                <hr class="settings-divider">
+
+                <!-- Peak Ceiling -->
+                <div class="setting-row">
+                    <div class="setting-label">
+                        <span class="setting-name">🔊 Límite de Volumen</span>
+                        <span class="setting-val" id="sv-ceiling">-1.0 dB</span>
+                    </div>
+                    <div class="setting-desc">Nivel máximo de salida para evitar saturación</div>
+                    <input type="range" class="setting-slider" id="sl-ceiling" min="0" max="30" value="10"
+                        oninput="updateSetting('ceiling', this.value)">
+                </div>
+
+                <button class="settings-reset-btn" onclick="resetSettings()">↺ Restaurar por defecto</button>
             </div>
         </div>
 
@@ -591,31 +977,45 @@
         let currentKnob = null;
         let startY = 0;
         let startVal = 0;
+        let activePointerEl = null;
 
         function startDrag(e, knobId) {
+            e.preventDefault();
             isDragging = true;
             currentKnob = knobId;
             startY = e.clientY;
             startVal = params[knobId];
-            window.addEventListener('mousemove', onDrag);
-            window.addEventListener('mouseup', stopDrag);
+            activePointerEl = e.currentTarget;
+            // Capture pointer so it never escapes the element, even at ultra-fast drag speeds
+            try { activePointerEl.setPointerCapture(e.pointerId); } catch(ex) {}
+            activePointerEl.addEventListener('pointermove', onDrag);
+            activePointerEl.addEventListener('pointerup', stopDrag);
+            activePointerEl.addEventListener('pointercancel', stopDrag);
             document.body.style.cursor = 'ns-resize';
         }
 
         function onDrag(e) {
             if (!isDragging) return;
+            e.preventDefault();
+            // Normalize delta by currentScale so knob speed matches pixel distance exactly
             let deltaY = (startY - e.clientY) / currentScale;
-            let newVal = Math.max(0, Math.min(100, startVal + (deltaY * 0.5))); // 0.5 sensitivity
+            // Sensitivity: 0.5 units per pixel → full range (0-100) in 200 scaled pixels
+            let newVal = Math.max(0, Math.min(100, startVal + (deltaY * 0.5)));
             params[currentKnob] = newVal;
-            
             updateKnobVisuals(currentKnob, newVal);
             sendParam(currentKnob, newVal);
         }
 
-        function stopDrag() {
+        function stopDrag(e) {
+            if (!isDragging) return;
             isDragging = false;
-            window.removeEventListener('mousemove', onDrag);
-            window.removeEventListener('mouseup', stopDrag);
+            if (activePointerEl) {
+                activePointerEl.removeEventListener('pointermove', onDrag);
+                activePointerEl.removeEventListener('pointerup', stopDrag);
+                activePointerEl.removeEventListener('pointercancel', stopDrag);
+                try { activePointerEl.releasePointerCapture(e.pointerId); } catch(ex) {}
+                activePointerEl = null;
+            }
             document.body.style.cursor = 'default';
         }
 
@@ -1012,6 +1412,211 @@
         }
         window.addEventListener('resize', updateScale);
         updateScale(); // Run once on load
+
+        // ==================== SETTINGS MODAL LOGIC ====================
+        const settingsParams = {
+            stereo: 50,
+            air: 40,
+            punch: 60,
+            warmth: 30,
+            ceiling: 10  // 0-30 maps to -3.0 to 0.0 dB
+        };
+
+        function openSettings(e) {
+            if (e) e.stopPropagation();
+            const bd = document.getElementById('settings-backdrop');
+            if (bd) bd.classList.add('open');
+            // Refresh slider visual fills
+            refreshSliderFills();
+        }
+
+        function closeSettings() {
+            const bd = document.getElementById('settings-backdrop');
+            if (bd) bd.classList.remove('open');
+        }
+
+        function closeSettingsOnBackdrop(e) {
+            if (e.target === document.getElementById('settings-backdrop')) {
+                closeSettings();
+            }
+        }
+
+        function updateSetting(key, rawVal) {
+            rawVal = Number(rawVal);
+            settingsParams[key] = rawVal;
+
+            // Update display value
+            if (key === 'ceiling') {
+                // 0 → -3.0 dB ... 30 → 0.0 dB
+                const dBVal = -3.0 + (rawVal / 30) * 3.0;
+                const display = (dBVal >= 0 ? '+' : '') + dBVal.toFixed(1) + ' dB';
+                const el = document.getElementById('sv-ceiling');
+                if (el) el.textContent = display;
+                sendParam('setting_ceiling', dBVal);
+            } else {
+                const el = document.getElementById('sv-' + key);
+                if (el) el.textContent = Math.round(rawVal) + '%';
+                sendParam('setting_' + key, rawVal);
+            }
+
+            // Update slider fill gradient
+            updateSliderFill(key, rawVal, key === 'ceiling' ? 30 : 100);
+        }
+
+        function updateSliderFill(key, val, maxVal) {
+            const slider = document.getElementById('sl-' + key);
+            if (!slider) return;
+            const pct = (val / maxVal) * 100;
+            const primary = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+            slider.style.background = `linear-gradient(to right, ${primary} ${pct}%, #2a2a2a ${pct}%)`;
+        }
+
+        function refreshSliderFills() {
+            updateSliderFill('stereo', settingsParams.stereo, 100);
+            updateSliderFill('air', settingsParams.air, 100);
+            updateSliderFill('punch', settingsParams.punch, 100);
+            updateSliderFill('warmth', settingsParams.warmth, 100);
+            updateSliderFill('ceiling', settingsParams.ceiling, 30);
+        }
+
+        function resetSettings() {
+            const defaults = { stereo: 50, air: 40, punch: 60, warmth: 30, ceiling: 10 };
+            for (const key in defaults) {
+                settingsParams[key] = defaults[key];
+                const slider = document.getElementById('sl-' + key);
+                if (slider) slider.value = defaults[key];
+                updateSetting(key, defaults[key]);
+            }
+        }
+
+        // Init slider fills on load
+        setTimeout(refreshSliderFills, 100);
+
+        // ==================== PRESETS LOGIC ====================
+        const PRESETS = [
+            {
+                name: 'DEFAULT',
+                knobs: { 'global-in': 25, 'amount': 100, 'global-out': 0 },
+                mode: 1,
+                settings: { stereo: 50, air: 40, punch: 60, warmth: 30, ceiling: 10 }
+            },
+            {
+                name: 'TRAP / DRILL',
+                knobs: { 'global-in': 30, 'amount': 85, 'global-out': 20 },
+                mode: 2,
+                settings: { stereo: 35, air: 55, punch: 80, warmth: 25, ceiling: 15 }
+            },
+            {
+                name: 'REGGAETÓN',
+                knobs: { 'global-in': 25, 'amount': 90, 'global-out': 35 },
+                mode: 1,
+                settings: { stereo: 60, air: 50, punch: 70, warmth: 45, ceiling: 20 }
+            },
+            {
+                name: 'R&B SUAVE',
+                knobs: { 'global-in': 20, 'amount': 70, 'global-out': 10 },
+                mode: 0,
+                settings: { stereo: 75, air: 30, punch: 40, warmth: 65, ceiling: 5 }
+            },
+            {
+                name: 'FULL SAUCE',
+                knobs: { 'global-in': 35, 'amount': 100, 'global-out': 75 },
+                mode: 2,
+                settings: { stereo: 55, air: 70, punch: 90, warmth: 50, ceiling: 25 }
+            }
+        ];
+
+        let activePresetIdx = 0;
+
+        function togglePresetsMenu(e) {
+            if (e) e.stopPropagation();
+            const dd = document.getElementById('presets-dropdown');
+            const menu = document.getElementById('presets-menu');
+            if (!dd || !menu) return;
+            const isOpen = menu.classList.contains('show');
+            // Close modes dropdown if open
+            const modesMenu = document.getElementById('dropdown-content');
+            if (modesMenu) modesMenu.classList.remove('show');
+            if (isOpen) {
+                menu.classList.remove('show');
+                dd.classList.remove('open');
+            } else {
+                menu.classList.add('show');
+                dd.classList.add('open');
+            }
+        }
+
+        function loadPreset(idx, e) {
+            if (e) e.stopPropagation();
+            const preset = PRESETS[idx];
+            if (!preset) return;
+            activePresetIdx = idx;
+
+            // 1. Update active preset label
+            const nameEl = document.getElementById('active-preset-name');
+            if (nameEl) nameEl.textContent = preset.name;
+
+            // 2. Mark active item in menu
+            PRESETS.forEach((_, i) => {
+                const item = document.getElementById('preset-item-' + i);
+                if (item) item.classList.toggle('active', i === idx);
+            });
+
+            // 3. Close menu
+            const menu = document.getElementById('presets-menu');
+            const dd = document.getElementById('presets-dropdown');
+            if (menu) menu.classList.remove('show');
+            if (dd) dd.classList.remove('open');
+
+            // 4. Apply mode (color theme)
+            selectMode(preset.mode);
+
+            // 5. Apply knobs with smooth sequential animation
+            const knobKeys = Object.keys(preset.knobs);
+            knobKeys.forEach((knobId, i) => {
+                const targetVal = preset.knobs[knobId];
+                const startVal_ = params[knobId];
+                const duration = 350; // ms
+                const startTime = performance.now();
+
+                function animateKnob(now) {
+                    const elapsed = now - startTime;
+                    const t = Math.min(1, elapsed / duration);
+                    // Ease out cubic
+                    const eased = 1 - Math.pow(1 - t, 3);
+                    const current = startVal_ + (targetVal - startVal_) * eased;
+                    params[knobId] = current;
+                    updateKnobVisuals(knobId, current);
+                    if (t < 1) requestAnimationFrame(animateKnob);
+                    else {
+                        params[knobId] = targetVal;
+                        updateKnobVisuals(knobId, targetVal);
+                        sendParam(knobId, targetVal);
+                    }
+                }
+                requestAnimationFrame(animateKnob);
+            });
+
+            // 6. Apply settings sliders
+            for (const key in preset.settings) {
+                const val = preset.settings[key];
+                settingsParams[key] = val;
+                const slider = document.getElementById('sl-' + key);
+                if (slider) slider.value = val;
+                updateSetting(key, val);
+            }
+        }
+
+        // Close presets menu when clicking outside
+        window.addEventListener('click', () => {
+            const menu = document.getElementById('presets-menu');
+            const dd = document.getElementById('presets-dropdown');
+            if (menu) menu.classList.remove('show');
+            if (dd) dd.classList.remove('open');
+        });
+
+        // Also wire loadDefaultPreset to use new system
+        function loadDefaultPreset() { loadPreset(0); }
     </script>
 </body>
 </html>
