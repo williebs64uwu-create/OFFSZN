@@ -299,6 +299,9 @@ app.use('/api', subscriptionV2Routes);
 app.use('/api/plugin', pluginLicensingRoutes);
 app.use('/api', r2Routes);
 app.use('/api/imagekit', imagekitRoutes);
+app.use('/api', paypalRoutes);
+app.use('/api', youtubeRoutes);
+app.use('/api', youtubeSyncRoutes);
 
 // B. PROTECTED ROUTERS (Use global router.use(authenticateTokenMiddleware) internally)
 // These MUST come after public/hybrid ones if mounted on the same prefix (/api)
@@ -310,9 +313,6 @@ app.use('/api', chatRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 // app.use('/api/reels', reelsRoutes);
-app.use('/api', paypalRoutes);
-app.use('/api', youtubeRoutes);
-app.use('/api', youtubeSyncRoutes);
 
 // --- 3. CLEAN URLS & STATIC FILES (MIDDLEWARE) ---
 
