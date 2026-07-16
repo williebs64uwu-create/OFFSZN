@@ -682,23 +682,44 @@
             color: #fff;
         }
         .gear-btn {
-            background: transparent;
-            border: 1px solid #333;
-            color: #666;
-            width: 30px;
-            height: 30px;
-            border-radius: 7px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #aaa;
+            padding: 6px 14px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 8px;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 14px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: 'Outfit', sans-serif;
         }
         .gear-btn:hover {
             color: var(--primary);
             border-color: var(--primary);
+            background: rgba(255, 115, 0, 0.05);
             box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.2);
+        }
+
+        /* SALSA METER STYLES */
+        .salsa-segment {
+            height: 3px;
+            width: 100%;
+            background: #1c1c1f;
+            border-radius: 1px;
+            transition: background 0.1s ease, box-shadow 0.1s;
+        }
+        .salsa-segment.lit-orange {
+            background: #ff7300;
+            box-shadow: 0 0 4px rgba(255, 115, 0, 0.7);
+        }
+        .salsa-segment.lit-red {
+            background: #ff375f;
+            box-shadow: 0 0 6px rgba(255, 55, 95, 0.9);
         }
     </style>
 </head>
@@ -768,13 +789,13 @@
             </div>
             
             <div class="header-right" style="display:flex; align-items:center; gap:8px;">
-                <button class="reset-btn" onclick="resetAll()">RESETEAR</button>
-                <!-- Settings Gear Icon -->
-                <button class="gear-btn" id="gear-btn" onclick="openSettings(event)" title="Configuración avanzada">
-                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <!-- Advanced Settings button (gear + text) -->
+                <button class="gear-btn" id="gear-btn" onclick="openSettings(event)" title="Opciones Avanzadas">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
+                    <span>Opciones Avanzadas</span>
                 </button>
             </div>
         </div>
@@ -826,17 +847,32 @@
                 <!-- Label removed per user request -->
             </div>
 
-            <!-- SALSA EXTRA GAIN -->
-            <div class="knob-container small-knob">
-                <div class="knob-track">
-                    <svg class="svg-ring" viewBox="0 0 110 110">
-                        <circle class="ring-bg" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="70.7" transform="rotate(135 55 55)"></circle>
-                        <circle class="ring-fg" id="ring-global-out" cx="55" cy="55" r="45" stroke-dasharray="282.7" stroke-dashoffset="282.7" transform="rotate(135 55 55)"></circle>
-                    </svg>
-                    <div class="knob-dial" onpointerdown="startDrag(event, 'global-out')">
-                        <div class="knob-indicator" id="ind-global-out"></div>
-                        <span class="knob-value" id="val-global-out">0%</span>
-                    </div>
+            <!-- SALSA EXTRA — Vertical Level Meter -->
+            <div class="knob-container" style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                <!-- Meter bar (draggable) -->
+                <div id="salsa-meter-wrap" style="position:relative; cursor:ns-resize; user-select:none;"
+                    onpointerdown="startDrag(event, 'global-out')">
+                    <!-- bar segments built by JS -->
+                    <div id="salsa-meter" style="
+                        display: flex;
+                        flex-direction: column-reverse;
+                        gap: 3px;
+                        width: 28px;
+                        padding: 4px;
+                        background: rgba(0,0,0,0.4);
+                        border: 1px solid rgba(255,255,255,0.08);
+                        border-radius: 6px;
+                    "></div>
+                    <!-- numeric readout -->
+                    <div id="val-global-out" style="
+                        font-size: 11px;
+                        font-weight: 700;
+                        color: var(--primary);
+                        text-align: center;
+                        margin-top: 6px;
+                        letter-spacing: 0.5px;
+                        font-family: monospace;
+                    ">0%</div>
                 </div>
                 <div class="label">SALSA EXTRA</div>
             </div>
@@ -870,14 +906,14 @@
                         oninput="updateSetting('air', this.value)">
                 </div>
 
-                <!-- Punch -->
+                <!-- Sub Bass Attenuation (Pultec-style) -->
                 <div class="setting-row">
                     <div class="setting-label">
-                        <span class="setting-name">👊 Pegada Vocal</span>
-                        <span class="setting-val" id="sv-punch">60%</span>
+                        <span class="setting-name">🎵 Atenuar Graves</span>
+                        <span class="setting-val" id="sv-bass">30%</span>
                     </div>
-                    <input type="range" class="setting-slider" id="sl-punch" min="0" max="100" value="60"
-                        oninput="updateSetting('punch', this.value)">
+                    <input type="range" class="setting-slider" id="sl-bass" min="0" max="100" value="30"
+                        oninput="updateSetting('bass', this.value)">
                 </div>
 
                 <!-- Warmth -->
@@ -892,13 +928,13 @@
 
                 <hr class="settings-divider">
 
-                <!-- Peak Ceiling -->
+                <!-- Peak Ceiling: 0-30 → -3.0 to 0.0 dB, default 29 = -0.1 dB -->
                 <div class="setting-row">
                     <div class="setting-label">
                         <span class="setting-name">🔊 Límite de Volumen</span>
-                        <span class="setting-val" id="sv-ceiling">-1.0 dB</span>
+                        <span class="setting-val" id="sv-ceiling">-0.1 dB</span>
                     </div>
-                    <input type="range" class="setting-slider" id="sl-ceiling" min="0" max="30" value="10"
+                    <input type="range" class="setting-slider" id="sl-ceiling" min="0" max="30" value="29"
                         oninput="updateSetting('ceiling', this.value)">
                 </div>
 
@@ -960,7 +996,7 @@
         // For AMOUNT & OUT: 0 to 100 maps to 0% to 100%
 
         let params = {
-            'global-in': 25, // default to -12dB (25%)
+            'global-in': 0, // default to -24dB (0%)
             'global-out': 0, // default to 0% Salsa Extra (Limiter threshold drive at 0dB)
             'amount': 100, // default Cantidad to 100%
             'mode': 1 // default Premium Mode
@@ -996,6 +1032,21 @@
                     textEl.innerText = (db > 0 ? '+' : '') + db.toFixed(1);
                 } else if (id === 'global-out') {
                     textEl.innerText = Math.round(val) + '%'; // Salsa Extra displays in percentage
+                    
+                    // Update vertical level meter segments
+                    const segments = document.querySelectorAll('.salsa-segment');
+                    const litCount = Math.round(pct * 20);
+                    segments.forEach((seg, idx) => {
+                        if (idx < litCount) {
+                            if (idx >= 15) {
+                                seg.className = 'salsa-segment lit-red';
+                            } else {
+                                seg.className = 'salsa-segment lit-orange';
+                            }
+                        } else {
+                            seg.className = 'salsa-segment';
+                        }
+                    });
                 } else {
                     textEl.innerText = Math.round(val) + '%';
                     updateModeLabels(val);
@@ -1196,6 +1247,22 @@
             if (btn) btn.innerText = "Verificando...";
             if (errorEl) errorEl.textContent = '';
 
+            if (!hasJuceBridge()) {
+                // Browser preview mode fallback
+                setTimeout(() => {
+                    if (btn) btn.innerText = "Activar Plugin";
+                    try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
+                    window.setLicenseStatus(true);
+                    
+                    const isTrial = serial.toUpperCase().indexOf("TRIAL-") !== -1;
+                    updateTrialBadge(isTrial, "3 DÍAS");
+                    
+                    const welcome = document.getElementById('welcome-modal');
+                    if (welcome) welcome.style.display = 'flex';
+                }, 800);
+                return;
+            }
+
             getHwidAsync().then((hwid) => {
                 fetch(`${apiBase}/api/plugin/activate`, {
                     method: "POST",
@@ -1238,6 +1305,23 @@
             const serial = input.value.trim();
             const btn = document.getElementById('exp-submit-btn');
             if (btn) btn.innerText = "Verificando...";
+
+            if (!hasJuceBridge()) {
+                // Browser preview mode fallback
+                setTimeout(() => {
+                    if (btn) btn.innerText = "Activar Nueva Licencia";
+                    try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
+                    
+                    const isTrial = serial.toUpperCase().indexOf("TRIAL-") !== -1;
+                    updateTrialBadge(isTrial, "3 DÍAS");
+
+                    const overlay = document.getElementById('license-expired-overlay');
+                    if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; }
+                    window.setLicenseStatus(true);
+                    input.value = '';
+                }, 800);
+                return;
+            }
 
             getHwidAsync().then(hwid => {
                 fetch(`${apiBase}/api/plugin/activate`, {
@@ -1347,14 +1431,28 @@
             }
         };
 
+        // Build Salsa Meter Segments
+        (function buildSalsaMeter() {
+            const meter = document.getElementById('salsa-meter');
+            if (meter) {
+                meter.innerHTML = '';
+                for (let i = 0; i < 20; i++) {
+                    const seg = document.createElement('div');
+                    seg.className = 'salsa-segment';
+                    seg.dataset.index = i;
+                    meter.appendChild(seg);
+                }
+            }
+        })();
+
         // Init visuals AND send initial params to C++
-        updateKnobVisuals('global-in', 25);
+        updateKnobVisuals('global-in', 0);
         updateKnobVisuals('global-out', 0);
         updateKnobVisuals('amount', 100);
 
         // Sync initial param values to C++ backend on load
         setTimeout(() => {
-            sendParam('global-in', 25);
+            sendParam('global-in', 0);
             sendParam('global-out', 0);
             sendParam('amount', 100);
             sendParam('mode', 1);
@@ -1409,6 +1507,16 @@
                         window.setLicenseStatus(false);
                     }
                 });
+            } else {
+                // Browser preview mode fallback
+                const serial = localStorage.getItem('offszn_serial');
+                if (serial) {
+                    const isTrial = serial.toUpperCase().indexOf("TRIAL-") !== -1;
+                    updateTrialBadge(isTrial, "3 DÍAS");
+                    window.setLicenseStatus(true);
+                } else {
+                    window.setLicenseStatus(false);
+                }
             }
         }, 100);
 
@@ -1594,9 +1702,9 @@
         const settingsParams = {
             stereo: 50,
             air: 40,
-            punch: 60,
+            bass: 30,    // Atenuar Graves (Pultec-style sub attenuation)
             warmth: 30,
-            ceiling: 10  // 0-30 maps to -3.0 to 0.0 dB
+            ceiling: 29  // 0-30 maps to -3.0 to 0.0 dB  (29 = -0.1 dB)
         };
 
         function openSettings(e) {
@@ -1651,13 +1759,13 @@
         function refreshSliderFills() {
             updateSliderFill('stereo', settingsParams.stereo, 100);
             updateSliderFill('air', settingsParams.air, 100);
-            updateSliderFill('punch', settingsParams.punch, 100);
+            updateSliderFill('bass', settingsParams.bass, 100);
             updateSliderFill('warmth', settingsParams.warmth, 100);
             updateSliderFill('ceiling', settingsParams.ceiling, 30);
         }
 
         function resetSettings() {
-            const defaults = { stereo: 50, air: 40, punch: 60, warmth: 30, ceiling: 10 };
+            const defaults = { stereo: 50, air: 40, bass: 30, warmth: 30, ceiling: 29 };
             for (const key in defaults) {
                 settingsParams[key] = defaults[key];
                 const slider = document.getElementById('sl-' + key);
@@ -1673,33 +1781,33 @@
         const PRESETS = [
             {
                 name: 'DEFAULT',
-                knobs: { 'global-in': 25, 'amount': 100, 'global-out': 0 },
+                knobs: { 'global-in': 0, 'amount': 100, 'global-out': 0 },
                 mode: 1,
-                settings: { stereo: 50, air: 40, punch: 60, warmth: 30, ceiling: 10 }
+                settings: { stereo: 50, air: 40, bass: 30, warmth: 30, ceiling: 29 }
             },
             {
                 name: 'TRAP / DRILL',
-                knobs: { 'global-in': 30, 'amount': 85, 'global-out': 20 },
+                knobs: { 'global-in': 0, 'amount': 85, 'global-out': 20 },
                 mode: 2,
-                settings: { stereo: 35, air: 55, punch: 80, warmth: 25, ceiling: 15 }
+                settings: { stereo: 35, air: 55, bass: 50, warmth: 25, ceiling: 29 }
             },
             {
-                name: 'REGGAETÓN',
-                knobs: { 'global-in': 25, 'amount': 90, 'global-out': 35 },
+                name: 'REGGÁETÓN',
+                knobs: { 'global-in': 0, 'amount': 90, 'global-out': 35 },
                 mode: 1,
-                settings: { stereo: 60, air: 50, punch: 70, warmth: 45, ceiling: 20 }
+                settings: { stereo: 60, air: 50, bass: 40, warmth: 45, ceiling: 29 }
             },
             {
                 name: 'R&B SUAVE',
-                knobs: { 'global-in': 20, 'amount': 70, 'global-out': 10 },
+                knobs: { 'global-in': 0, 'amount': 70, 'global-out': 10 },
                 mode: 0,
-                settings: { stereo: 75, air: 30, punch: 40, warmth: 65, ceiling: 5 }
+                settings: { stereo: 75, air: 30, bass: 60, warmth: 65, ceiling: 29 }
             },
             {
                 name: 'FULL SAUCE',
-                knobs: { 'global-in': 35, 'amount': 100, 'global-out': 75 },
+                knobs: { 'global-in': 0, 'amount': 100, 'global-out': 75 },
                 mode: 2,
-                settings: { stereo: 55, air: 70, punch: 90, warmth: 50, ceiling: 25 }
+                settings: { stereo: 55, air: 70, bass: 45, warmth: 50, ceiling: 29 }
             }
         ];
 

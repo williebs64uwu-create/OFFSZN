@@ -117,11 +117,13 @@ export const generateTrialWebLicense = async (req, res) => {
             return res.json({ success: true, serial_key: existingLic.serial_key, expires_at: existingLic.expires_at, license_type: 'trial' });
         }
 
-        // Create new 1-day trial key
-        const basePrefix = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master') ? 'MASTER' : 'EASY';
+        // Create new trial key
+        const isMaster = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
+        const basePrefix = isMaster ? 'MASTER' : 'EASY';
         const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 1); // 1 day trial (24h)
+        const trialDays = isMaster ? 3 : 1;
+        expiryDate.setDate(expiryDate.getDate() + trialDays); // 3 days for Master, 1 day for Mix
         const expiresAt = expiryDate.toISOString();
 
         const { data: newLic, error: licErr } = await supabase
@@ -150,16 +152,18 @@ export const generateTrialWebLicense = async (req, res) => {
 // ─── POST /api/plugin/request-trial ───────────────────────────────────────────
 export const requestTrial = async (req, res) => {
     try {
-        const { hwid, device_name } = req.body;
+        const { hwid, device_name, plugin_name } = req.body;
+        const activePluginName = plugin_name || 'Easy Mix';
         if (!hwid) return res.status(400).json({ error: 'Falta HWID' });
 
         // ── 1. Check if this HWID ALREADY has a trial (past or present) ──────
         // Strict: ONE trial per machine, ever. No re-trials.
         const { data: existingAct } = await supabase
             .from('plugin_activations')
-            .select('license_id, plugin_licenses!inner(serial_key, expires_at, license_type)')
+            .select('license_id, plugin_licenses!inner(serial_key, expires_at, license_type, plugin_name)')
             .eq('hwid', hwid)
             .eq('plugin_licenses.license_type', 'trial')
+            .eq('plugin_licenses.plugin_name', activePluginName)
             .limit(1)
             .maybeSingle();
 
@@ -172,7 +176,7 @@ export const requestTrial = async (req, res) => {
             if (expiry && expiry < now) {
                 // Trial expired → tell them to buy
                 return res.status(403).json({
-                    error: 'Tu periodo de prueba gratuito ha expirado. Adquiere una licencia en offszn.lat/plugins para seguir usando Easy Mix.',
+                    error: `Tu periodo de prueba gratuito ha expirado. Adquiere una licencia en offszn.lat/plugins para seguir usando ${activePluginName}.`,
                     trial_expired: true
                 });
             }
@@ -184,14 +188,17 @@ export const requestTrial = async (req, res) => {
         }
 
         // ── 2. No previous trial → create one ────────────────────────────────
-        const serialKey = `TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+        const isMaster = (activePluginName === 'EASY MASTER' || activePluginName === 'Easy Master');
+        const basePrefix = isMaster ? 'MASTER' : 'EASY';
+        const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 1); // 1 day trial
+        const trialDays = isMaster ? 3 : 1;
+        expiryDate.setDate(expiryDate.getDate() + trialDays); // 3 days for Master, 1 day for Mix
         const expiresAt = expiryDate.toISOString();
 
         const { data: newLic, error: licErr } = await supabase
             .from('plugin_licenses')
-            .insert({ serial_key: serialKey, license_type: 'trial', status: 'active', expires_at: expiresAt, max_devices: 1, plugin_name: 'Easy Mix' })
+            .insert({ serial_key: serialKey, license_type: 'trial', status: 'active', expires_at: expiresAt, max_devices: 1, plugin_name: activePluginName })
             .select('id').single();
         if (licErr) throw licErr;
 
