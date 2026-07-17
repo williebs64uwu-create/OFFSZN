@@ -279,13 +279,14 @@ export const activateSerial = async (req, res) => {
             return res.status(403).json({ error: 'La licencia o prueba ha expirado.' });
         }
 
-        // 3. Prevent Trial Abuse: one trial per HWID ever
+        // 3. Prevent Trial Abuse: one trial per HWID ever per plugin
         if (license.license_type === 'trial' && hwid !== 'device-no-hwid') {
             const { data: pastTrials, error: ptErr } = await supabase
                 .from('plugin_activations')
-                .select('license_id, plugin_licenses!inner(serial_key)')
+                .select('license_id, plugin_licenses!inner(serial_key, plugin_name)')
                 .eq('hwid', hwid)
-                .eq('plugin_licenses.license_type', 'trial');
+                .eq('plugin_licenses.license_type', 'trial')
+                .eq('plugin_licenses.plugin_name', license.plugin_name);
             
             if (!ptErr && pastTrials && pastTrials.length > 0) {
                 // If they have past trials, they can only re-activate the exact same trial key
