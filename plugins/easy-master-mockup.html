@@ -1355,13 +1355,15 @@
             }
         })();
 
-        // Init visuals AND send initial params to C++
+        // Init visuals with neutral defaults (C++ will override these with saved state)
         updateKnobVisuals('global-in', 0);
         updateKnobVisuals('global-out', 0);
         updateKnobVisuals('amount', 100);
 
-        // We do NOT send default params to C++ here, because C++ is the source of truth 
-        // and will send init-params to us with the saved DAW state.
+        // Signal to C++ that the UI is ready — C++ will respond with init-params containing saved state
+        setTimeout(() => {
+            sendParam('ui-ready', 1);
+        }, 300);
 
         // --- LICENSE BOOT SEQUENCE (mirrors Easy Mix) ---
         // Serial format: MASTER-TRIAL-xxxx-xxxx / MASTER-FULL-xxxx-xxxx
@@ -1590,43 +1592,64 @@
             }
         } catch(e){}
 
-        // Handle init-params from C++
+        // Handle init-params from C++ (fired when C++ receives 'ui-ready' signal)
         try {
             if (window.__JUCE__ && window.__JUCE__.backend) {
                 window.__JUCE__.backend.addEventListener('init-params', (ev) => {
                     const data = (typeof ev === 'object' && ev !== null) ? (ev.value || ev) : ev;
-                    if (data) {
-                        if (data['global-in'] !== undefined) {
-                            params['global-in'] = data['global-in'];
-                            updateKnobVisuals('global-in', data['global-in']);
-                        }
-                        if (data['global-out'] !== undefined) {
-                            params['global-out'] = data['global-out'];
-                            updateKnobVisuals('global-out', data['global-out']);
-                        }
-                        if (data['amount'] !== undefined) {
-                            params['amount'] = data['amount'];
-                            updateKnobVisuals('amount', data['amount']);
-                        }
-                        if (data['mode'] !== undefined) {
-                            selectMode(Math.round(data['mode']));
-                        }
-                        
-                        const settingKeys = ['stereo', 'air', 'bass', 'warmth', 'ceiling'];
-                        settingKeys.forEach(key => {
-                            if (data['setting_' + key] !== undefined) {
-                                let val = data['setting_' + key];
-                                if (key === 'ceiling') {
-                                    // Convert dB value to slider value (0-60)
-                                    val = Math.round(((val + 6.0) / 6.0) * 60);
-                                }
-                                settingsParams[key] = val;
-                                const slider = document.getElementById('sl-' + key);
-                                if (slider) slider.value = val;
-                                updateSetting(key, val);
-                            }
-                        });
+                    if (!data) return;
+
+                    // Restore main knobs
+                    if (data['global-in'] !== undefined) {
+                        params['global-in'] = data['global-in'];
+                        updateKnobVisuals('global-in', data['global-in']);
                     }
+                    if (data['global-out'] !== undefined) {
+                        params['global-out'] = data['global-out'];
+                        updateKnobVisuals('global-out', data['global-out']);
+                        // Update salsa meter to reflect saved value
+                        updateSalsaMeter(data['global-out'] / 100);
+                        const valEl = document.getElementById('val-global-out');
+                        if (valEl) valEl.textContent = Math.round(data['global-out']) + '%';
+                    }
+                    if (data['amount'] !== undefined) {
+                        params['amount'] = data['amount'];
+                        updateKnobVisuals('amount', data['amount']);
+                    }
+
+                    // Restore mode (important: this updates the theme color too)
+                    if (data['mode'] !== undefined) {
+                        const modeIdx = Math.round(data['mode']);
+                        params['mode'] = modeIdx;
+                        selectMode(modeIdx);
+                    }
+
+                    // Restore advanced settings sliders
+                    const settingKeys = ['stereo', 'air', 'bass', 'warmth', 'ceiling'];
+                    settingKeys.forEach(key => {
+                        if (data['setting_' + key] !== undefined) {
+                            let val = data['setting_' + key];
+                            if (key === 'ceiling') {
+                                // C++ stores dB (-6.0 to 0.0), convert to slider int (0 to 60)
+                                val = Math.round(((val + 6.0) / 6.0) * 60);
+                                val = Math.max(0, Math.min(60, val));
+                            }
+                            settingsParams[key] = val;
+                            const slider = document.getElementById('sl-' + key);
+                            if (slider) slider.value = val;
+                            // Update the display label and slider fill without re-sending to C++
+                            if (key === 'ceiling') {
+                                const dBVal = -6.0 + (val / 60) * 6.0;
+                                const display = (dBVal >= 0 ? '+' : '') + dBVal.toFixed(1) + ' dB';
+                                const el = document.getElementById('sv-ceiling');
+                                if (el) el.textContent = display;
+                            } else {
+                                const el = document.getElementById('sv-' + key);
+                                if (el) el.textContent = Math.round(val) + '%';
+                            }
+                            updateSliderFill(key, val, key === 'ceiling' ? 60 : 100);
+                        }
+                    });
                 });
             }
         } catch(e){}
