@@ -324,123 +324,125 @@
             text-transform: uppercase;
         }
 
-        /* ACTIVATION OVERLAY */
+        /* ==================== ACTIVATION MODAL (replicating Easy Mix) ==================== */
         .activation-overlay {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(10, 10, 10, 0.98);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.4s ease;
         }
         .activation-overlay.active {
             opacity: 1;
             pointer-events: auto;
+            display: flex !important;
         }
-        
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            border-top-color: var(--accent);
-            animation: spin 1s ease-in-out infinite;
-            margin-top: 20px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .activation-content {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            animation: fadeIn 0.3s ease;
-        }
-        .activation-content.visible { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .activation-box {
-            background: #151515;
-            border: 1px solid #333;
-            padding: 40px;
-            border-radius: 16px;
+        .act-container {
+            width: 300px;
+            background: rgba(22, 22, 25, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            position: relative;
             text-align: center;
-            width: 400px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .activation-box h2 {
-            margin: 0 0 10px 0;
-            color: var(--primary);
-            font-size: 22px;
-        }
-        .activation-box p {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 25px;
-        }
-        .activation-box input {
-            width: 80%;
-            padding: 12px;
-            background: #0a0a0a;
-            border: 1px solid #444;
-            border-radius: 8px;
+        .act-input {
+            width: 90%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 6px;
+            padding: 10px;
             color: #fff;
             font-family: monospace;
-            font-size: 16px;
+            font-size: 11px;
             text-align: center;
-            margin-bottom: 20px;
+            letter-spacing: 1px;
             outline: none;
+            margin-bottom: 10px;
         }
-        .activation-box input:focus {
+        .act-input:focus {
             border-color: var(--primary);
         }
-        .activation-box button {
-            background: var(--primary);
-            color: #000;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-family: 'Outfit';
-            font-size: 14px;
+        .act-btn {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
             cursor: pointer;
-            transition: 0.2s;
+            border: none;
+            margin-bottom: 8px;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: 0.5px;
         }
-        .activation-box button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(255,214,0,0.4);
+        .act-btn-primary {
+            background: linear-gradient(180deg, #ff9f0a, #d68100);
+            color: #fff;
         }
-        
-        .offszn-logo-activation {
-            width: 140px;
-            height: auto;
-            margin-bottom: 20px;
+        .act-btn-primary:hover {
+            box-shadow: 0 0 10px rgba(255, 159, 10, 0.3);
         }
-        .buy-link {
-            display: block;
+        .act-btn-secondary {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transition: all 0.2s ease;
+            margin-bottom: 0;
+        }
+        .act-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .act-btn-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: transparent;
+            border: none;
             color: #666;
-            font-size: 12px;
-            text-decoration: none;
-            margin-top: 15px;
-            transition: color 0.2s;
+            font-size: 16px;
+            cursor: pointer;
         }
-        .buy-link:hover {
-            color: var(--primary);
+        .act-btn-close:hover {
+            color: #fff;
         }
-        .error-msg {
-            color: #ff3333;
-            font-size: 12px;
-            margin-top: 10px;
-            height: 15px;
+        .loading-spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+            pointer-events: none;
+        }
+        .btn-loading::after {
+            content: "";
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            top: 0; left: 0; right: 0; bottom: 0;
+            margin: auto;
+            border: 2px solid transparent;
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
         /* ==================== SETTINGS MODAL ==================== */
@@ -804,37 +806,52 @@
 
         <!-- ACTIVATION OVERLAY -->
         <div class="activation-overlay active" id="activation-overlay">
-            <div class="activation-box">
-                <div class="loading-spinner" id="loading-spinner"></div>
-                <p id="loading-text" style="margin-top:15px; font-size:14px; color:rgba(255,255,255,0.6);">Verificando licencia...</p>
-                <div class="activation-content" id="activation-content">
-                    <h2>Ingresa tu Serial Key</h2>
-                    <p>Activa tu plugin para siempre. Consigue tu licencia en OFFSZN.</p>
-                    <input type="text" id="serial-input" class="serial-input" placeholder="MASTER-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()">
-                    <button class="activate-btn" id="activate-btn" onclick="verifyLicense()">Activar Plugin</button>
-                    <p class="error-msg" id="activation-error"></p>
-                    <a href="#" onclick="callNative('openURLNative','https://offszn.lat/plugins/easy-master.html'); return false;" class="buy-link">CONSIGUE TU LICENCIA</a>
+            <div class="act-container">
+                <button class="act-btn-close" id="btn-close-activation" onclick="closeActivationModal()" style="display: none;">×</button>
+                <div id="loading-spinner-area" style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="loading-spinner"></div>
+                    <p style="font-size:10px; color: #888; margin: 0;">Verificando licencia...</p>
+                </div>
+                <div class="activation-content" id="activation-content" style="width: 100%;">
+                    <h3 style="color:#fff; margin: 0 0 5px 0; font-size:14px; font-weight:800; letter-spacing: 1px;">Ingresa tu Serial Key</h3>
+                    <p style="color:#888; font-size:10px; margin: 0 0 15px 0;">Activa tu plugin para siempre. Consigue tu licencia en OFFSZN.</p>
+                    <input type="text" id="serial-input" class="act-input" placeholder="MASTER-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()">
+                    <button class="act-btn act-btn-primary" id="activate-btn" onclick="verifyLicense()">Activar Plugin</button>
+                    <button class="act-btn act-btn-secondary" id="act-link-btn" onclick="callNative('openURLNative','https://offszn.lat/plugins/easy-master.html');">CONSIGUE TU LICENCIA</button>
                 </div>
             </div>
         </div>
 
         <!-- EXPIRED / HARD LOCK OVERLAY (no close button) -->
-        <div id="license-expired-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(10,10,10,0.98);backdrop-filter:blur(10px);z-index:1100;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.4s;border-radius:12px;">
-            <div style="font-size:40px;margin-bottom:15px;">&#128274;</div>
-            <div id="exp-title" style="font-size:16px;font-weight:800;color:#fff;letter-spacing:1px;margin-bottom:8px;">Activar Licencia</div>
-            <div id="exp-subtitle" style="font-size:12px;color:#888;text-align:center;max-width:320px;line-height:1.5;margin-bottom:20px;">Ingresa tu serial gratis o el full para activarlo.</div>
-            <input id="exp-serial-input" type="text" placeholder="MASTER-XXXX-XXXX-XXXX" spellcheck="false" autocomplete="off" oninput="this.value=this.value.toUpperCase()" style="width:260px;padding:12px;background:#0a0a0a;border:1px solid #444;border-radius:8px;color:#fff;font-family:monospace;font-size:14px;text-align:center;margin-bottom:15px;outline:none;">
-            <button id="exp-submit-btn" onclick="submitExpiredSerial()" style="background:var(--primary);color:#000;border:none;padding:12px 30px;border-radius:8px;font-weight:bold;font-family:'Outfit';font-size:13px;cursor:pointer;margin-bottom:10px;transition:0.2s;">Activar Nueva Licencia</button>
-            <button id="exp-link-btn" onclick="callNative('openURLNative','https://offszn.lat/plugins/easy-master.html')" style="background:transparent;border:1px solid #444;color:#888;padding:10px 24px;border-radius:8px;font-family:'Outfit';font-size:11px;cursor:pointer;transition:0.2s;">Consigue tu licencia &rarr;</button>
+        <div id="license-expired-overlay" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(10,10,12,0.97);backdrop-filter:blur(10px);z-index:10000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;border-radius:12px;">
+            <div style="font-size:36px;" class="exp-icon">&#128274;</div>
+            <div id="exp-title" style="font-size:16px;font-weight:800;color:#ff453a;letter-spacing:1px;text-transform:uppercase;">Activar Licencia</div>
+            <div id="exp-subtitle" style="font-size:11px;color:#8e8e93;text-align:center;max-width:280px;line-height:1.6;">Ingresa tu serial gratis o el full para activarlo.</div>
+            <input id="exp-serial-input" class="act-input" type="text" placeholder="MASTER-XXXX-XXXX-XXXX" spellcheck="false" autocomplete="off" oninput="this.value=this.value.toUpperCase()" style="width:260px; padding:10px; font-size:11px; margin-bottom:10px;">
+            <button id="exp-submit-btn" class="act-btn act-btn-primary" onclick="submitExpiredSerial()" style="width:280px; margin-bottom:5px;">Activar Nueva Licencia</button>
+            <button id="exp-link-btn" class="act-btn act-btn-secondary" onclick="callNative('openURLNative','https://offszn.lat/plugins/easy-master.html')" style="width:280px;">Consigue tu licencia &rarr;</button>
         </div>
 
         <!-- WELCOME MODAL -->
-        <div id="welcome-modal" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);z-index:1200;display:none;align-items:center;justify-content:center;border-radius:12px;">
-            <div style="background:#151515;border:1px solid #333;padding:40px;border-radius:16px;text-align:center;width:340px;box-shadow:0 20px 40px rgba(0,0,0,0.6);">
-                <div style="font-size:36px;margin-bottom:12px;">🎉</div>
-                <h3 style="color:#fff;margin:0 0 10px;font-size:16px;font-weight:800;">¡Bienvenido a Easy Master!</h3>
-                <p style="color:#888;font-size:12px;margin-bottom:20px;line-height:1.5;">El plugin ha sido activado exitosamente.<br>Prepárate para llevar tus masters al siguiente nivel.</p>
-                <button onclick="document.getElementById('welcome-modal').style.display='none'" style="background:var(--primary);color:#000;border:none;padding:12px 30px;border-radius:8px;font-weight:bold;font-family:'Outfit';font-size:14px;cursor:pointer;transition:0.2s;">Comenzar</button>
+        <div id="welcome-modal" class="activation-overlay" style="z-index: 1200;">
+            <div class="act-container">
+                <div style="font-size:30px; margin-bottom:10px;">🎉</div>
+                <h3 style="color:#fff; margin-bottom:10px; font-size:14px; font-weight:800;">¡Bienvenido a Easy Master!</h3>
+                <p style="color:#888; font-size:11px; margin-bottom:15px; line-height:1.4;">El plugin ha sido activado exitosamente.<br>Prepárate para llevar tus masters al siguiente nivel.</p>
+                <button class="act-btn act-btn-primary" onclick="document.getElementById('welcome-modal').classList.remove('active')">Comenzar</button>
+            </div>
+        </div>
+
+        <!-- CUSTOM ALERT MODAL -->
+        <div id="custom-alert-modal" class="activation-overlay" style="z-index: 12000;">
+            <div class="act-container" style="width: 320px;">
+                <div id="custom-alert-icon" style="font-size: 24px; margin-bottom: 8px;">⚠️</div>
+                <h3 id="custom-alert-title" style="color:#fff; margin-bottom:8px; font-size:12px; font-weight:800; letter-spacing: 1px; text-transform: uppercase;">Aviso</h3>
+                <p id="custom-alert-message" style="color:#888; font-size:11px; margin-bottom:18px; line-height: 1.5;"></p>
+                <div style="display: flex; gap: 8px; justify-content: center; width: 100%;">
+                    <button class="act-btn act-btn-primary" id="custom-alert-btn-ok" style="min-width: 100px; margin-bottom: 0;">Aceptar</button>
+                    <button class="act-btn" id="custom-alert-btn-cancel" style="min-width: 100px; background: rgba(255,255,255,0.05); color: #888; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 0; display: none;">Cancelar</button>
+                </div>
             </div>
         </div>
 
@@ -1084,19 +1101,51 @@
             }
         }
 
+        // --- CUSTOM DIALOGS MODALS (replicating Easy Mix) ---
+        function showCustomAlert(title, message, icon = '⚠️', showCancel = false) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('custom-alert-modal');
+                const titleEl = document.getElementById('custom-alert-title');
+                const msgEl = document.getElementById('custom-alert-message');
+                const iconEl = document.getElementById('custom-alert-icon');
+                const btnOk = document.getElementById('custom-alert-btn-ok');
+                const btnCancel = document.getElementById('custom-alert-btn-cancel');
+                if (!modal) {
+                    alert(message);
+                    resolve(true);
+                    return;
+                }
+                titleEl.textContent = title;
+                msgEl.textContent = message;
+                iconEl.textContent = icon;
+                btnCancel.style.display = showCancel ? 'block' : 'none';
+                modal.classList.add('active');
+                
+                btnOk.onclick = () => {
+                    modal.classList.remove('active');
+                    resolve(true);
+                };
+                btnCancel.onclick = () => {
+                    modal.classList.remove('active');
+                    resolve(false);
+                };
+            });
+        }
+
         function verifyLicense() {
             let serial = document.getElementById('serial-input').value.trim();
-            if (!serial) return;
+            if (!serial) {
+                showCustomAlert("Activar Licencia", "Por favor, ingresa tu Serial Key de OFFSZN.", '🔑');
+                return;
+            }
 
             const btn = document.getElementById('activate-btn');
-            const errorEl = document.getElementById('activation-error');
-            if (btn) btn.innerText = "Verificando...";
-            if (errorEl) errorEl.textContent = '';
+            if (btn) btn.classList.add('btn-loading');
 
             if (!hasJuceBridge()) {
                 // Browser preview mode fallback
                 setTimeout(() => {
-                    if (btn) btn.innerText = "Activar Plugin";
+                    if (btn) btn.classList.remove('btn-loading');
                     try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
                     window.setLicenseStatus(true);
                     
@@ -1104,7 +1153,7 @@
                     updateTrialBadge(isTrial, "3 DÍAS");
                     
                     const welcome = document.getElementById('welcome-modal');
-                    if (welcome) welcome.style.display = 'flex';
+                    if (welcome) welcome.classList.add('active');
                 }, 800);
                 return;
             }
@@ -1117,7 +1166,7 @@
                 })
                 .then(res => res.json())
                 .then(response => {
-                    if (btn) btn.innerText = "Activar Plugin";
+                    if (btn) btn.classList.remove('btn-loading');
                     if (response && response.success) {
                         try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
                         callNative("setLicenseStatus", true, serial);
@@ -1130,16 +1179,16 @@
 
                         // Show welcome modal
                         const welcome = document.getElementById('welcome-modal');
-                        if (welcome) welcome.style.display = 'flex';
+                        if (welcome) welcome.classList.add('active');
                     } else {
                         callNative("setLicenseStatus", false);
                         const msg = getFriendlyLicenseErrorMessage(serial, response.error || "Licencia inválida");
-                        if (errorEl) errorEl.textContent = msg;
+                        showCustomAlert("Error de Activación", msg, '❌');
                     }
                 })
                 .catch(err => {
-                    if (btn) btn.innerText = "Activar Plugin";
-                    if (errorEl) errorEl.textContent = "Error de conexión. Activa tu conexión a Internet para validar la licencia.";
+                    if (btn) btn.classList.remove('btn-loading');
+                    showCustomAlert("Error de Conexión", "No se pudo conectar al servidor. Activa tu conexión a Internet para validar la licencia.", '❌');
                 });
             });
         }
@@ -1150,19 +1199,19 @@
             if (!input || !input.value.trim()) return;
             const serial = input.value.trim();
             const btn = document.getElementById('exp-submit-btn');
-            if (btn) btn.innerText = "Verificando...";
+            if (btn) btn.classList.add('btn-loading');
 
             if (!hasJuceBridge()) {
                 // Browser preview mode fallback
                 setTimeout(() => {
-                    if (btn) btn.innerText = "Activar Nueva Licencia";
+                    if (btn) btn.classList.remove('btn-loading');
                     try { localStorage.setItem('offszn_serial', serial); } catch (e) { }
                     
                     const isTrial = serial.toUpperCase().indexOf("TRIAL-") !== -1;
                     updateTrialBadge(isTrial, "3 DÍAS");
 
                     const overlay = document.getElementById('license-expired-overlay');
-                    if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; }
+                    if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; overlay.style.display = 'none'; }
                     window.setLicenseStatus(true);
                     input.value = '';
                 }, 800);
@@ -1175,7 +1224,7 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: "Easy Master" })
                 }).then(res => res.json()).then(response => {
-                    if (btn) btn.innerText = "Activar Nueva Licencia";
+                    if (btn) btn.classList.remove('btn-loading');
                     if (response && response.success) {
                         callNative("setLicenseStatus", true, serial);
                         callNative("saveLicense", serial);
@@ -1187,16 +1236,19 @@
 
                         // Hide expired overlay
                         const overlay = document.getElementById('license-expired-overlay');
-                        if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; }
+                        if (overlay) { overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; overlay.style.display = 'none'; }
                         // Also hide activation overlay if visible
                         window.setLicenseStatus(true);
                         input.value = '';
                     } else {
                         input.style.borderColor = '#ff453a';
                         setTimeout(() => { input.style.borderColor = ''; }, 2000);
+                        const msg = getFriendlyLicenseErrorMessage(serial, response.error || "Licencia inválida");
+                        showCustomAlert("Error de Activación", msg, '❌');
                     }
                 }).catch(() => {
-                    if (btn) btn.innerText = "Activar Nueva Licencia";
+                    if (btn) btn.classList.remove('btn-loading');
+                    showCustomAlert("Error de Conexión", "No se pudo conectar al servidor. Activa tu conexión a Internet para validar la licencia.", '❌');
                 });
             });
         }
@@ -1222,6 +1274,7 @@
                 if (retryBtn) retryBtn.style.display = 'none';
                 overlay.style.opacity = '1';
                 overlay.style.pointerEvents = 'auto';
+                overlay.style.display = 'flex';
             }
         }
 
@@ -1264,15 +1317,13 @@
 
         window.setLicenseStatus = function(isValid) {
             const overlay = document.getElementById('activation-overlay');
-            const spinner = document.getElementById('loading-spinner');
-            const loadText = document.getElementById('loading-text');
+            const spinnerArea = document.getElementById('loading-spinner-area');
             const content = document.getElementById('activation-content');
             if (isValid) {
                 if (overlay) { overlay.classList.remove('active'); overlay.style.display = 'none'; }
             } else {
                 if (overlay) { overlay.classList.add('active'); overlay.style.display = 'flex'; }
-                if (spinner) spinner.style.display = 'none';
-                if (loadText) loadText.style.display = 'none';
+                if (spinnerArea) spinnerArea.style.display = 'none';
                 if (content) content.classList.add('visible');
             }
         };
