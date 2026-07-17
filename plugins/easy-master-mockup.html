@@ -647,7 +647,7 @@
                 </div>
 
                 <!-- TRIAL BADGE -->
-                <div id="trial-badge" style="cursor: pointer;" onclick="triggerLicenseExpired('Activar Licencia', 'Ingresa tu serial gratis o el full para activarlo.')"><span class="trial-dot"></span> PRUEBA · <span id="trial-time-left">3 DÍAS</span></div>
+                <div id="trial-badge" style="cursor: pointer;" onclick="openActivationModalForUpgrade()"><span class="trial-dot"></span> PRUEBA · <span id="trial-time-left">3 DÍAS</span></div>
             </div>
             
             <div class="header-right" style="display:flex; align-items:center; gap:8px;">
@@ -1278,6 +1278,19 @@
             }
         }
 
+        function openActivationModalForUpgrade() {
+            const overlay = document.getElementById('activation-overlay');
+            const closeBtn = document.getElementById('btn-close-activation');
+            const content = document.getElementById('activation-content');
+            
+            if (closeBtn) closeBtn.style.display = 'block';
+            if (overlay) {
+                overlay.classList.add('active');
+                overlay.style.display = 'flex';
+            }
+            if (content) content.classList.add('visible');
+        }
+
         function triggerLicenseOffline(title, subtitle) {
             callNative("setLicenseStatus", false);
             const overlay = document.getElementById('license-expired-overlay');
@@ -1347,13 +1360,8 @@
         updateKnobVisuals('global-out', 0);
         updateKnobVisuals('amount', 100);
 
-        // Sync initial param values to C++ backend on load
-        setTimeout(() => {
-            sendParam('global-in', 0);
-            sendParam('global-out', 0);
-            sendParam('amount', 100);
-            sendParam('mode', 1);
-        }, 200); // slight delay to ensure JUCE bridge is ready
+        // We do NOT send default params to C++ here, because C++ is the source of truth 
+        // and will send init-params to us with the saved DAW state.
 
         // --- LICENSE BOOT SEQUENCE (mirrors Easy Mix) ---
         // Serial format: MASTER-TRIAL-xxxx-xxxx / MASTER-FULL-xxxx-xxxx
