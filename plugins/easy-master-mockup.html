@@ -647,7 +647,7 @@
                 </div>
 
                 <!-- TRIAL BADGE -->
-                <div id="trial-badge"><span class="trial-dot"></span> PRUEBA · <span id="trial-time-left">3 DÍAS</span></div>
+                <div id="trial-badge" style="cursor: pointer;" onclick="triggerLicenseExpired('Activar Licencia', 'Ingresa tu serial gratis o el full para activarlo.')"><span class="trial-dot"></span> PRUEBA · <span id="trial-time-left">3 DÍAS</span></div>
             </div>
             
             <div class="header-right" style="display:flex; align-items:center; gap:8px;">
@@ -790,13 +790,13 @@
 
                 <hr class="settings-divider">
 
-                <!-- Peak Ceiling: 0-30 → -3.0 to 0.0 dB, default 29 = -0.1 dB -->
+                <!-- Peak Ceiling: 0-60 → -6.0 to 0.0 dB, default 59 = -0.1 dB -->
                 <div class="setting-row">
                     <div class="setting-label">
                         <span class="setting-name">🔊 Límite de Volumen</span>
                         <span class="setting-val" id="sv-ceiling">-0.1 dB</span>
                     </div>
-                    <input type="range" class="setting-slider" id="sl-ceiling" min="0" max="30" value="29"
+                    <input type="range" class="setting-slider" id="sl-ceiling" min="0" max="60" value="59"
                         oninput="updateSetting('ceiling', this.value)">
                 </div>
 
@@ -805,7 +805,7 @@
         </div>
 
         <!-- ACTIVATION OVERLAY -->
-        <div class="activation-overlay active" id="activation-overlay">
+        <div class="activation-overlay" id="activation-overlay" style="display: none;">
             <div class="act-container">
                 <button class="act-btn-close" id="btn-close-activation" onclick="closeActivationModal()" style="display: none;">×</button>
                 <div id="loading-spinner-area" style="display: flex; flex-direction: column; align-items: center;">
@@ -1603,6 +1603,21 @@
                         if (data['mode'] !== undefined) {
                             selectMode(Math.round(data['mode']));
                         }
+                        
+                        const settingKeys = ['stereo', 'air', 'bass', 'warmth', 'ceiling'];
+                        settingKeys.forEach(key => {
+                            if (data['setting_' + key] !== undefined) {
+                                let val = data['setting_' + key];
+                                if (key === 'ceiling') {
+                                    // Convert dB value to slider value (0-60)
+                                    val = Math.round(((val + 6.0) / 6.0) * 60);
+                                }
+                                settingsParams[key] = val;
+                                const slider = document.getElementById('sl-' + key);
+                                if (slider) slider.value = val;
+                                updateSetting(key, val);
+                            }
+                        });
                     }
                 });
             }
@@ -1627,7 +1642,7 @@
             air: 40,
             bass: 30,    // Atenuar Graves (Pultec-style sub attenuation)
             warmth: 30,
-            ceiling: 29  // 0-30 maps to -3.0 to 0.0 dB  (29 = -0.1 dB)
+            ceiling: 59  // 0-60 maps to -6.0 to 0.0 dB  (59 = -0.1 dB)
         };
 
         function openSettings(e) {
@@ -1655,8 +1670,8 @@
 
             // Update display value
             if (key === 'ceiling') {
-                // 0 → -3.0 dB ... 30 → 0.0 dB
-                const dBVal = -3.0 + (rawVal / 30) * 3.0;
+                // 0 → -6.0 dB ... 60 → 0.0 dB
+                const dBVal = -6.0 + (rawVal / 60) * 6.0;
                 const display = (dBVal >= 0 ? '+' : '') + dBVal.toFixed(1) + ' dB';
                 const el = document.getElementById('sv-ceiling');
                 if (el) el.textContent = display;
@@ -1668,7 +1683,7 @@
             }
 
             // Update slider fill gradient
-            updateSliderFill(key, rawVal, key === 'ceiling' ? 30 : 100);
+            updateSliderFill(key, rawVal, key === 'ceiling' ? 60 : 100);
         }
 
         function updateSliderFill(key, val, maxVal) {
@@ -1684,11 +1699,11 @@
             updateSliderFill('air', settingsParams.air, 100);
             updateSliderFill('bass', settingsParams.bass, 100);
             updateSliderFill('warmth', settingsParams.warmth, 100);
-            updateSliderFill('ceiling', settingsParams.ceiling, 30);
+            updateSliderFill('ceiling', settingsParams.ceiling, 60);
         }
 
         function resetSettings() {
-            const defaults = { stereo: 50, air: 40, bass: 30, warmth: 30, ceiling: 29 };
+            const defaults = { stereo: 50, air: 40, bass: 30, warmth: 30, ceiling: 59 };
             for (const key in defaults) {
                 settingsParams[key] = defaults[key];
                 const slider = document.getElementById('sl-' + key);
