@@ -301,102 +301,7 @@
             50% { opacity: 1; transform: scale(1.2); }
         }
 
-        /* PRESETS DROPDOWN */
-        .presets-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        .presets-trigger {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: #ccc;
-            padding: 6px 14px;
-            border-radius: 8px;
-            font-weight: 700;
-            font-family: 'Outfit', sans-serif;
-            font-size: 11px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            letter-spacing: 0.08em;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .presets-trigger:hover {
-            border-color: var(--primary);
-            color: #fff;
-            box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.2);
-        }
-        .presets-trigger .arrow {
-            font-size: 9px;
-            opacity: 0.5;
-            transition: transform 0.2s;
-        }
-        .presets-dropdown.open .presets-trigger .arrow {
-            transform: rotate(180deg);
-        }
-        .presets-dropdown.open .presets-trigger {
-            border-color: var(--primary);
-            color: var(--primary);
-        }
-        .presets-menu {
-            display: none;
-            position: absolute;
-            left: 0;
-            top: calc(100% + 6px);
-            background: rgba(12, 12, 14, 0.98);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            min-width: 170px;
-            z-index: 10000;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.7);
-            backdrop-filter: blur(12px);
-            overflow: hidden;
-        }
-        .presets-menu.show {
-            display: block;
-        }
-        .preset-item {
-            padding: 10px 14px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: 600;
-            font-family: 'Outfit', sans-serif;
-            letter-spacing: 0.08em;
-            color: #999;
-            transition: all 0.15s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
-        .preset-item:last-child { border-bottom: none; }
-        .preset-item:hover {
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--primary);
-        }
-        .preset-item.active {
-            color: var(--primary);
-            background: rgba(var(--accent-rgb), 0.08);
-        }
-        .preset-item .preset-emoji {
-            font-size: 13px;
-        }
-        .preset-item .preset-info {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-        .preset-item .preset-name {
-            font-size: 11px;
-            font-weight: 700;
-        }
-        .preset-item .preset-sub {
-            font-size: 9px;
-            opacity: 0.4;
-            font-weight: 400;
-            letter-spacing: 0;
-        }
+        /* Presets removed per user request */
 
         /* FOOTER STYLE */
         .footer {
@@ -729,51 +634,6 @@
         <!-- HEADER -->
         <div class="header">
             <div class="header-left" style="display: flex; align-items: center; gap: 10px;">
-                <!-- PRESETS DROPDOWN -->
-                <div class="presets-dropdown" id="presets-dropdown">
-                    <button class="presets-trigger" id="presets-trigger-btn" onclick="togglePresetsMenu(event)">
-                        <span id="active-preset-name">DEFAULT</span>
-                        <span class="arrow">▾</span>
-                    </button>
-                    <div class="presets-menu" id="presets-menu">
-                        <div class="preset-item active" id="preset-item-0" onclick="loadPreset(0, event)">
-                            <span class="preset-emoji">⭐</span>
-                            <div class="preset-info">
-                                <span class="preset-name">DEFAULT</span>
-                                <span class="preset-sub">Punto de partida</span>
-                            </div>
-                        </div>
-                        <div class="preset-item" id="preset-item-1" onclick="loadPreset(1, event)">
-                            <span class="preset-emoji">🔥</span>
-                            <div class="preset-info">
-                                <span class="preset-name">TRAP / DRILL</span>
-                                <span class="preset-sub">Agresivo y pegado</span>
-                            </div>
-                        </div>
-                        <div class="preset-item" id="preset-item-2" onclick="loadPreset(2, event)">
-                            <span class="preset-emoji">🌴</span>
-                            <div class="preset-info">
-                                <span class="preset-name">REGGAETÓN</span>
-                                <span class="preset-sub">Amplio y brillante</span>
-                            </div>
-                        </div>
-                        <div class="preset-item" id="preset-item-3" onclick="loadPreset(3, event)">
-                            <span class="preset-emoji">✨</span>
-                            <div class="preset-info">
-                                <span class="preset-name">R&B SUAVE</span>
-                                <span class="preset-sub">Cálido y envolvente</span>
-                            </div>
-                        </div>
-                        <div class="preset-item" id="preset-item-4" onclick="loadPreset(4, event)">
-                            <span class="preset-emoji">🚀</span>
-                            <div class="preset-info">
-                                <span class="preset-name">FULL SAUCE</span>
-                                <span class="preset-sub">Todo al máximo</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- MODOS -->
                 <div class="modes-dropdown" id="modes-dropdown">
                     <button class="dropdown-trigger" id="active-mode-btn" onclick="toggleDropdown(event)">MODO PREMIUM</button>
@@ -1032,21 +892,7 @@
                     textEl.innerText = (db > 0 ? '+' : '') + db.toFixed(1);
                 } else if (id === 'global-out') {
                     textEl.innerText = Math.round(val) + '%'; // Salsa Extra displays in percentage
-                    
-                    // Update vertical level meter segments
-                    const segments = document.querySelectorAll('.salsa-segment');
-                    const litCount = Math.round(pct * 20);
-                    segments.forEach((seg, idx) => {
-                        if (idx < litCount) {
-                            if (idx >= 15) {
-                                seg.className = 'salsa-segment lit-red';
-                            } else {
-                                seg.className = 'salsa-segment lit-orange';
-                            }
-                        } else {
-                            seg.className = 'salsa-segment';
-                        }
-                    });
+                    updateSalsaMeter(pct);
                 } else {
                     textEl.innerText = Math.round(val) + '%';
                     updateModeLabels(val);
@@ -1527,6 +1373,28 @@
             { name: 'MODO SAUCE', primary: '#a300ff', accentRgb: '163, 0, 255' }
         ];
 
+        // Helper: re-draws salsa meter using current --primary color
+        function updateSalsaMeter(pct) {
+            const segments = document.querySelectorAll('.salsa-segment');
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+            const litCount = Math.round(pct * 20);
+            segments.forEach((seg, idx) => {
+                if (idx < litCount) {
+                    // Top 5 segments = warning red, rest = primary theme color
+                    if (idx >= 15) {
+                        seg.style.background = '#ff375f';
+                        seg.style.boxShadow = '0 0 6px rgba(255,55,95,0.9)';
+                    } else {
+                        seg.style.background = primaryColor;
+                        seg.style.boxShadow = `0 0 5px ${primaryColor}99`;
+                    }
+                } else {
+                    seg.style.background = '#1c1c1f';
+                    seg.style.boxShadow = 'none';
+                }
+            });
+        }
+
         function selectMode(idx, e) {
             if (e) e.stopPropagation();
             params['mode'] = idx;
@@ -1540,6 +1408,10 @@
             // Close dropdown
             const dropdown = document.getElementById('dropdown-content');
             if (dropdown) dropdown.classList.remove('show');
+
+            // Re-draw salsa meter with new theme color
+            const currentOut = params['global-out'] || 0;
+            updateSalsaMeter(currentOut / 100);
             
             // Send to C++
             sendParam('mode', idx);
