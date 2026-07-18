@@ -30,28 +30,32 @@ async function sendActivationEmail({ to, serialKey, licenseType, expiresAt }) {
     if (!to) return; // No email, skip silently
     try {
         const isTrial = licenseType === 'trial';
-        const greeting = isTrial ? 'Aqui tienes los datos de tu prueba!' : 'Felicidades por tu compra!';
+        const greeting = isTrial ? 'Aquí tienes los datos de tu prueba!' : 'Felicidades por tu compra!';
         const typeLabel = isTrial ? 'TRIAL' : 'FULL';
+
+        // Auto-detect plugin name from serial prefix (MASTER -> Easy Master, others -> Easy Mix)
+        const isMaster = (serialKey || '').toUpperCase().startsWith('MASTER');
+        const pluginName = isMaster ? 'Easy Master' : 'Easy Mix';
 
         const html = `
         <div style="font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
             <p>${greeting}</p>
-            <p>Aqui estan los datos para activar tu plugin:</p>
+            <p>Aquí están los datos para activar tu plugin <strong>${pluginName}</strong>:</p>
             <p>1- SERIAL KEY : <strong>${serialKey}</strong></p>
             <p>2- TIPO DE LICENCIA: <strong>${typeLabel}</strong></p>
             <br>
-            <p>Que tengas un buen día!</p>
+            <p>¡Que tengas un buen día!</p>
             <p>- Soporte de OFFSZN</p>
         </div>`;
 
         await sendOffsznEmail({
             to,
-            subject: 'Tus datos de activacion - Easy Mix',
+            subject: `Tus datos de activacion - ${pluginName}`,
             html,
             fromName: 'Soporte OFFSZN',
             type: 'transactional'
         });
-        console.log('[Plugin] Activation email sent to:', to);
+        console.log(`[Plugin] Activation email for ${pluginName} sent to:`, to);
     } catch (e) {
         console.warn('[Plugin] Could not send activation email:', e.message);
         // Non-fatal — don't fail the activation

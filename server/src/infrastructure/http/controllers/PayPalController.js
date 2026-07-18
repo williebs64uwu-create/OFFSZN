@@ -888,26 +888,28 @@ export const capturePayPalOrder = async (req, res) => {
                 console.log(`[PayPalCapture] Recorded ${orderItems.length} order_item(s) for order ${order.id}`);
             }
 
-            // --- GENERAR LICENCIA DEL PLUGIN SI SE COMPRÓ EASY MIX ---
+            // --- GENERAR LICENCIA DEL PLUGIN SI SE COMPRÓ EASY MIX / EASY MASTER ---
             for (const item of cartItems) {
                 const prodName = item.product?.name || '';
                 const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix');
-                if (isEasyMix) {
+                const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster');
+                if (isEasyMix || isEasyMaster) {
                     try {
+                        const pluginName = isEasyMaster ? 'Easy Master' : 'Easy Mix';
                         const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
                                                (item.product?.product_type && item.product.product_type === 'subscription') || 
                                                (item.variant_price !== undefined && parseFloat(item.variant_price) <= 6.00);
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';
                         
-                        console.log(`[PayPalCapture] Easy Mix detected! Generating ${licenseType} license for user ${userId || 'guest'} (${payerEmail})`);
+                        console.log(`[PayPalCapture] ${pluginName} detected! Generating ${licenseType} license for user ${userId || 'guest'} (${payerEmail})`);
                         await generatePluginLicense({
                             licenseType,
                             userEmail: payerEmail,
                             userId: userId,
-                            pluginName: 'Easy Mix'
+                            pluginName: pluginName
                         });
                     } catch (licError) {
-                        console.error('[PayPalCapture] Error generating plugin license for Easy Mix:', licError);
+                        console.error(`[PayPalCapture] Error generating plugin license for ${pluginName}:`, licError);
                     }
                 }
             }
@@ -1597,7 +1599,7 @@ export const handlePayPalWebhook = async (req, res) => {
         const accessToken = await getPayPalAccessToken();
         let payerEmail = '';
         let amountPaid = 0;
-        let isEasyMixPurchase = false;
+        let pluginToGenerate = null;
 
         if (isSale) {
             const captureDetails = await getPayPalCaptureDetails(transactionId, accessToken);
@@ -1616,10 +1618,16 @@ export const handlePayPalWebhook = async (req, res) => {
                     item.name?.toLowerCase().includes('easy mix') || 
                     item.name?.toLowerCase().includes('easymix')
                 );
+                const hasEasyMasterInItems = items.some(item => 
+                    item.name?.toLowerCase().includes('easy master') || 
+                    item.name?.toLowerCase().includes('easymaster')
+                );
                 
-                isEasyMixPurchase = description.toLowerCase().includes('easy mix') || 
-                                    description.toLowerCase().includes('easymix') || 
-                                    hasEasyMixInItems;
+                if (description.toLowerCase().includes('easy master') || description.toLowerCase().includes('easymaster') || hasEasyMasterInItems) {
+                    pluginToGenerate = 'Easy Master';
+                } else if (description.toLowerCase().includes('easy mix') || description.toLowerCase().includes('easymix') || hasEasyMixInItems) {
+                    pluginToGenerate = 'Easy Mix';
+                }
             }
         } else if (isOrder) {
             const orderDetails = await getOrderDetails(transactionId, accessToken);
@@ -1634,10 +1642,16 @@ export const handlePayPalWebhook = async (req, res) => {
                 item.name?.toLowerCase().includes('easy mix') || 
                 item.name?.toLowerCase().includes('easymix')
             );
+            const hasEasyMasterInItems = items.some(item => 
+                item.name?.toLowerCase().includes('easy master') || 
+                item.name?.toLowerCase().includes('easymaster')
+            );
             
-            isEasyMixPurchase = description.toLowerCase().includes('easy mix') || 
-                                description.toLowerCase().includes('easymix') || 
-                                hasEasyMixInItems;
+            if (description.toLowerCase().includes('easy master') || description.toLowerCase().includes('easymaster') || hasEasyMasterInItems) {
+                pluginToGenerate = 'Easy Master';
+            } else if (description.toLowerCase().includes('easy mix') || description.toLowerCase().includes('easymix') || hasEasyMixInItems) {
+                pluginToGenerate = 'Easy Mix';
+            }
         }
 
         if (!payerEmail) {
@@ -1645,9 +1659,9 @@ export const handlePayPalWebhook = async (req, res) => {
             return;
         }
 
-        console.log(`[PayPalWebhook] Verified details: Email=${payerEmail}, Amount=${amountPaid}, isEasyMix=${isEasyMixPurchase}`);
+        console.log(`[PayPalWebhook] Verified details: Email=${payerEmail}, Amount=${amountPaid}, pluginToGenerate=${pluginToGenerate}`);
 
-        if (isEasyMixPurchase) {
+        if (pluginToGenerate) {
             // Find matched user
             let matchedUserId = null;
             const { data: matchedUser } = await supabase
@@ -1681,12 +1695,12 @@ export const handlePayPalWebhook = async (req, res) => {
                 licenseType: 'lifetime',
                 userEmail: payerEmail,
                 userId: matchedUserId,
-                pluginName: 'Easy Mix'
+                pluginName: pluginToGenerate
             });
 
             console.log(`[PayPalWebhook] Successfully processed! Generated license ${result.serialKey} for ${payerEmail}`);
         } else {
-            console.log(`[PayPalWebhook] Transaction ${transactionId} is not an Easy Mix purchase. Skipping license generation.`);
+            console.log(`[PayPalWebhook] Transaction ${transactionId} is not a supported plugin purchase. Skipping license generation.`);
         }
 
     } catch (err) {
