@@ -224,21 +224,29 @@
             margin-left: 12px;
         }
         .dropdown-trigger {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: var(--text-main);
-            padding: 6px 14px;
-            border-radius: 8px;
-            font-weight: bold;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-left: 3px solid var(--primary);
+            color: #fff;
+            padding: 8px 12px 8px 14px;
+            border-radius: 6px;
+            font-weight: 700;
             font-family: 'Outfit', sans-serif;
-            font-size: 11px;
+            font-size: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-width: 140px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
         }
         .dropdown-trigger:hover {
             border-color: var(--primary);
-            box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.2);
+            background: rgba(var(--accent-rgb), 0.05);
+            box-shadow: 0 0 12px rgba(var(--accent-rgb), 0.25);
         }
         .dropdown-content {
             display: none;
@@ -628,6 +636,32 @@
             background: #ff375f;
             box-shadow: 0 0 6px rgba(255, 55, 95, 0.9);
         }
+        /* SALSA BUTTONS */
+        .salsa-btn {
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease;
+        }
+        .salsa-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--primary);
+            color: #fff;
+            box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.3);
+        }
+        .salsa-btn:active {
+            transform: scale(0.92);
+            background: rgba(var(--accent-rgb), 0.2);
+        }
         /* LOADING SCREEN */
         #plugin-loading-screen {
             position: fixed;
@@ -776,9 +810,9 @@
             </div>
 
             <!-- SALSA EXTRA — Vertical Level Meter -->
-            <div class="knob-container" style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-                <!-- Up arrow -->
-                <div class="salsa-arrow">▲</div>
+            <div class="knob-container" style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+                <!-- Up arrow button -->
+                <button class="salsa-btn" onclick="adjustSalsa(1)" title="Subir +1%">▲</button>
                 <!-- Meter bar (draggable) -->
                 <div id="salsa-meter-wrap" style="position:relative; cursor:ns-resize; user-select:none;"
                     onpointerdown="startDrag(event, 'global-out')">
@@ -804,8 +838,8 @@
                         font-family: monospace;
                     ">0%</div>
                 </div>
-                <!-- Down arrow -->
-                <div class="salsa-arrow">▼</div>
+                <!-- Down arrow button -->
+                <button class="salsa-btn" onclick="adjustSalsa(-1)" title="Bajar -1%">▼</button>
                 <div class="label">SALSA EXTRA</div>
             </div>
         </div>
@@ -1015,6 +1049,14 @@
                     }
                 }
             });
+        }
+
+        function adjustSalsa(delta) {
+            let newVal = (params['global-out'] || 0) + delta;
+            newVal = Math.max(0, Math.min(100, newVal));
+            params['global-out'] = newVal;
+            updateKnobVisuals('global-out', newVal);
+            sendParam('global-out', newVal);
         }
 
         let isDragging = false;
