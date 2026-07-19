@@ -1556,6 +1556,21 @@ const getOrderDetails = async (orderId, accessToken) => {
     return await res.json();
 };
 
+// ─── Webhook Helper: Retrieve Legacy Payment Details (v1 API) ─────────────────
+const getLegacyPaymentDetails = async (paymentId, accessToken) => {
+    const res = await fetch(`${PAYPAL_API_BASE}/v1/payments/payment/${paymentId}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+        }
+    });
+    if (!res.ok) {
+        throw new Error(`Failed to fetch legacy PayPal payment details for ID: ${paymentId}`);
+    }
+    return await res.json();
+};
+
 // ─── Webhook: Process Successful PayPal Payments automatically ────────────────
 export const handlePayPalWebhook = async (req, res) => {
     const event = req.body;
@@ -1602,31 +1617,65 @@ export const handlePayPalWebhook = async (req, res) => {
         let pluginToGenerate = null;
 
         if (isSale) {
-            const captureDetails = await getPayPalCaptureDetails(transactionId, accessToken);
-            const orderId = captureDetails.supplementary_data?.related_ids?.order_id;
+            const parentPayment = event.resource?.parent_payment;
+            if (parentPayment) {
+                console.log(`[PayPalWebhook] Legacy payment detected. Fetching details for Payment ID: ${parentPayment}`);
+                try {
+                    const paymentDetails = await getLegacyPaymentDetails(parentPayment, accessToken);
+                    payerEmail = paymentDetails.payer?.payer_info?.email;
+                    
+                    const transaction = paymentDetails.transactions?.[0];
+                    amountPaid = parseFloat(transaction?.amount?.total || '0');
+                    const description = transaction?.description || '';
+                    const items = transaction?.item_list?.items || [];
+                    const hasEasyMixInItems = items.some(item => 
+                        item.name?.toLowerCase().includes('easy mix') || 
+                        item.name?.toLowerCase().includes('easymix')
+                    );
+                    const hasEasyMasterInItems = items.some(item => 
+                        item.name?.toLowerCase().includes('easy master') || 
+                        item.name?.toLowerCase().includes('easymaster')
+                    );
+                    
+                    if (description.toLowerCase().includes('easy master') || description.toLowerCase().includes('easymaster') || hasEasyMasterInItems) {
+                        pluginToGenerate = 'Easy Master';
+                    } else if (description.toLowerCase().includes('easy mix') || description.toLowerCase().includes('easymix') || hasEasyMixInItems) {
+                        pluginToGenerate = 'Easy Mix';
+                    }
+                } catch (legacyErr) {
+                    console.error('[PayPalWebhook] Error trying to fetch legacy payment details:', legacyErr.message);
+                }
+            } else {
+                try {
+                    const captureDetails = await getPayPalCaptureDetails(transactionId, accessToken);
+                    const orderId = captureDetails.supplementary_data?.related_ids?.order_id;
 
-            if (orderId) {
-                const orderDetails = await getOrderDetails(orderId, accessToken);
-                payerEmail = orderDetails.payer?.email_address;
-                
-                const purchaseUnit = orderDetails.purchase_units?.[0];
-                amountPaid = parseFloat(purchaseUnit?.amount?.value || '0');
-                
-                const description = purchaseUnit?.description || '';
-                const items = purchaseUnit?.items || [];
-                const hasEasyMixInItems = items.some(item => 
-                    item.name?.toLowerCase().includes('easy mix') || 
-                    item.name?.toLowerCase().includes('easymix')
-                );
-                const hasEasyMasterInItems = items.some(item => 
-                    item.name?.toLowerCase().includes('easy master') || 
-                    item.name?.toLowerCase().includes('easymaster')
-                );
-                
-                if (description.toLowerCase().includes('easy master') || description.toLowerCase().includes('easymaster') || hasEasyMasterInItems) {
-                    pluginToGenerate = 'Easy Master';
-                } else if (description.toLowerCase().includes('easy mix') || description.toLowerCase().includes('easymix') || hasEasyMixInItems) {
-                    pluginToGenerate = 'Easy Mix';
+                    if (orderId) {
+                        const orderDetails = await getOrderDetails(orderId, accessToken);
+                        payerEmail = orderDetails.payer?.email_address;
+                        
+                        const purchaseUnit = orderDetails.purchase_units?.[0];
+                        amountPaid = parseFloat(purchaseUnit?.amount?.value || '0');
+                        
+                        const description = purchaseUnit?.description || '';
+                        const items = purchaseUnit?.items || [];
+                        const hasEasyMixInItems = items.some(item => 
+                            item.name?.toLowerCase().includes('easy mix') || 
+                            item.name?.toLowerCase().includes('easymix')
+                        );
+                        const hasEasyMasterInItems = items.some(item => 
+                            item.name?.toLowerCase().includes('easy master') || 
+                            item.name?.toLowerCase().includes('easymaster')
+                        );
+                        
+                        if (description.toLowerCase().includes('easy master') || description.toLowerCase().includes('easymaster') || hasEasyMasterInItems) {
+                            pluginToGenerate = 'Easy Master';
+                        } else if (description.toLowerCase().includes('easy mix') || description.toLowerCase().includes('easymix') || hasEasyMixInItems) {
+                            pluginToGenerate = 'Easy Mix';
+                        }
+                    }
+                } catch (v2Err) {
+                    console.error('[PayPalWebhook] Error trying to fetch v2 capture details:', v2Err.message);
                 }
             }
         } else if (isOrder) {
