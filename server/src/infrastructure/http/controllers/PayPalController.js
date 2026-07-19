@@ -185,6 +185,7 @@ export const createPayPalOrder = async (req, res) => {
     try {
         // Auth header presente: verificado internamente
         const userId = req.user?.userId;
+        let cartItems = [];
         // 1. Get Cart Items (From DB if logged in, from Body if guest, or directly if directProductId)
         const isNegotiation = req.body.isNegotiation || false;
         const negotiateToken = req.body.negotiateToken;
@@ -921,6 +922,7 @@ export const capturePayPalOrder = async (req, res) => {
             }
 
             // --- GENERAR LICENCIA DEL PLUGIN SI SE COMPRÓ EASY MIX / EASY MASTER ---
+            let generatedLicenseKey = null;
             for (const item of cartItems) {
                 const prodName = item.product?.name || '';
                 const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix');
@@ -934,12 +936,15 @@ export const capturePayPalOrder = async (req, res) => {
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';
                         
                         console.log(`[PayPalCapture] ${pluginName} detected! Generating ${licenseType} license for user ${userId || 'guest'} (${payerEmail})`);
-                        await generatePluginLicense({
+                        const licResult = await generatePluginLicense({
                             licenseType,
                             userEmail: payerEmail,
                             userId: userId,
                             pluginName: pluginName
                         });
+                        if (licResult && licResult.serialKey) {
+                            generatedLicenseKey = licResult.serialKey;
+                        }
                     } catch (licError) {
                         console.error(`[PayPalCapture] Error generating plugin license for ${pluginName}:`, licError);
                     }
@@ -1071,7 +1076,8 @@ export const capturePayPalOrder = async (req, res) => {
 
             return res.status(200).json({
                 ...response.result,
-                supabaseOrder: order
+                supabaseOrder: order,
+                generatedLicenseKey: generatedLicenseKey
             });
         }
 
