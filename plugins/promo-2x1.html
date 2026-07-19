@@ -526,9 +526,17 @@
 
         function openVideoModal(videoSrc) {
             videoPlayer.src = videoSrc;
-            videoPlayer.muted = true; // Empieza muteado por políticas del navegador
+            videoPlayer.muted = false; // Iniciar con sonido ya que es una acción del usuario (click)
+            const hint = document.querySelector('.lightbox-unmute-hint');
+            hint.style.display = 'none'; // Ocultar hint de inicio ya que suena directo
+
             lightbox.classList.add('active');
-            videoPlayer.play();
+            videoPlayer.play().catch(err => {
+                console.log("El navegador bloqueó el sonido automático, reproduciendo silenciado:", err);
+                videoPlayer.muted = true;
+                hint.style.display = 'flex';
+                videoPlayer.play();
+            });
         }
 
         function closeVideoModal() {
