@@ -935,8 +935,7 @@ export const capturePayPalOrder = async (req, res) => {
                     try {
                         const pluginName = isEasyMaster ? 'Easy Master' : 'Easy Mix';
                         const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
-                                               (item.product?.product_type && item.product.product_type === 'subscription') || 
-                                               (item.variant_price !== undefined && parseFloat(item.variant_price) <= 6.00);
+                                               (item.product?.product_type && item.product.product_type === 'subscription');
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';
                         
                         console.log(`[PayPalCapture] ${pluginName} detected! Generating ${licenseType} license for user ${userId || 'guest'} (${payerEmail})`);
