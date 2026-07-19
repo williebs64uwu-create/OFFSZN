@@ -3,239 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏆 2x1 Mundialista — OFFSZN Plugins</title>
+    <title>2x1 Mundialista — OFFSZN Plugins</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #080808;
+            background: #060606;
             color: #fff;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
+            padding-top: 50px; /* Space for the top sticky timer banner */
         }
 
-        /* Ambient Glow */
-        .glow {
+        /* ── TOP COUNTDOWN BANNER ── */
+        .countdown-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(90deg, #ff9f0a 0%, #d97706 100%);
+            color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(255, 159, 10, 0.25);
+            text-transform: uppercase;
+        }
+
+        .countdown-timer-text {
+            font-family: 'JetBrains Mono', monospace;
+            background: #000;
+            color: #ff9f0a;
+            padding: 4px 12px;
+            border-radius: 6px;
+            margin-left: 10px;
+            font-size: 0.95rem;
+        }
+
+        /* Ambient background glow */
+        .ambient-glow {
             position: absolute;
-            top: -200px;
+            top: -150px;
             left: 50%;
             transform: translateX(-50%);
-            width: 600px;
+            width: 800px;
             height: 600px;
-            background: radial-gradient(circle, rgba(255, 159, 10, 0.08) 0%, rgba(0,0,0,0) 70%);
+            background: radial-gradient(circle, rgba(255, 159, 10, 0.06) 0%, rgba(0,0,0,0) 70%);
             pointer-events: none;
             z-index: 0;
         }
 
         header {
-            margin-top: 60px;
+            margin-top: 50px;
             text-align: center;
             z-index: 10;
             padding: 0 20px;
         }
 
-        .promo-badge {
-            background: rgba(255, 159, 10, 0.12);
-            border: 1px solid rgba(255, 159, 10, 0.35);
+        .promo-tag {
+            background: rgba(255, 159, 10, 0.08);
+            border: 1px solid rgba(255, 159, 10, 0.25);
             color: #ff9f0a;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 2px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 3px;
             text-transform: uppercase;
-            padding: 6px 18px;
+            padding: 8px 20px;
             border-radius: 100px;
             display: inline-block;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         h1 {
-            font-size: 2.8rem;
+            font-size: 3.2rem;
             font-weight: 900;
-            letter-spacing: -1px;
+            letter-spacing: -1.5px;
             margin-bottom: 12px;
             line-height: 1.1;
+            background: linear-gradient(135deg, #fff 40%, #888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .hero-desc {
             color: #888;
             font-size: 1.1rem;
-            max-width: 500px;
-            margin: 0 auto 40px;
-            line-height: 1.5;
+            max-width: 550px;
+            margin: 0 auto 50px;
+            line-height: 1.6;
         }
 
-        /* ── TWO-COLUMN SHOWCASE ── */
+        /* ── SHOWCASE GRID ── */
         .showcase {
             display: flex;
-            gap: 24px;
-            max-width: 900px;
+            gap: 28px;
+            max-width: 960px;
             width: 100%;
-            padding: 0 20px;
-            margin-bottom: 40px;
+            padding: 0 24px;
+            margin-bottom: 50px;
             z-index: 10;
             flex-wrap: wrap;
         }
 
         .plugin-card {
             flex: 1;
-            min-width: 280px;
-            background: #0d0d0d;
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 20px;
-            padding: 30px;
+            min-width: 300px;
+            background: rgba(255, 255, 255, 0.01);
+            backdrop-filter: blur(12px);
+            border: 1.5px solid rgba(255,255,255,0.04);
+            border-radius: 24px;
+            padding: 32px;
             text-align: center;
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
+            transition: border-color 0.3s, transform 0.3s;
+        }
+
+        .plugin-card:hover {
+            border-color: rgba(255, 255, 255, 0.08);
+            transform: translateY(-4px);
         }
 
         .plugin-card.highlight {
-            border-color: rgba(255, 159, 10, 0.4);
-            box-shadow: 0 10px 40px rgba(255, 159, 10, 0.05);
+            border-color: rgba(255, 159, 10, 0.25);
+            background: linear-gradient(180deg, rgba(255, 159, 10, 0.01) 0%, rgba(0, 0, 0, 0) 100%);
         }
 
-        .gift-tag {
+        .plugin-card.highlight:hover {
+            border-color: rgba(255, 159, 10, 0.4);
+        }
+
+        .gift-badge {
             position: absolute;
             top: -12px;
-            right: 20px;
+            right: 24px;
             background: #ff9f0a;
             color: #000;
             font-size: 0.72rem;
-            font-weight: 800;
-            padding: 4px 12px;
+            font-weight: 900;
+            padding: 4px 14px;
             border-radius: 6px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
         }
 
-        .img-container {
-            height: 220px;
+        .img-wrapper {
+            height: 230px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 24px;
-            overflow: hidden;
             width: 100%;
         }
 
-        .img-container img {
+        .img-wrapper img {
             max-height: 100%;
             max-width: 100%;
             object-fit: contain;
         }
 
-        .plugin-card h2 {
-            font-size: 1.5rem;
+        .plugin-info h2 {
+            font-size: 1.6rem;
             font-weight: 800;
             margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
 
-        .plugin-card p {
-            color: #666;
-            font-size: 0.88rem;
+        .plugin-info p {
+            color: #777;
+            font-size: 0.92rem;
             line-height: 1.5;
             margin-bottom: 20px;
-            max-width: 260px;
+            max-width: 280px;
         }
 
-        .card-price {
-            font-size: 1.1rem;
-            font-weight: 700;
+        .video-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #aaa;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            margin-bottom: 24px;
+        }
+
+        .video-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
             color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
-        .card-price.gift {
+        .card-footer-price {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #555;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            padding-top: 16px;
+            width: 100%;
+        }
+
+        .plugin-card.highlight .card-footer-price {
             color: #ff9f0a;
         }
 
-        /* ── CHECKOUT BOX ── */
-        .checkout-box {
-            background: #0d0d0d;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 24px;
-            max-width: 480px;
+        /* ── CHECKOUT CONTAINER ── */
+        .checkout-container {
+            background: #0c0c0c;
+            border: 1.5px solid rgba(255, 255, 255, 0.04);
+            border-radius: 28px;
+            max-width: 500px;
             width: 90%;
-            padding: 40px;
+            padding: 44px;
             text-align: center;
             z-index: 10;
-            margin-bottom: 60px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            margin-bottom: 80px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
         }
 
-        .price-row {
+        .checkout-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #888;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .price-section {
             display: flex;
             justify-content: center;
             align-items: baseline;
-            gap: 12px;
-            margin-bottom: 8px;
+            gap: 14px;
+            margin-bottom: 24px;
         }
 
-        .price-original {
-            font-size: 1.3rem;
-            color: #444;
+        .original-price {
+            font-size: 1.4rem;
+            color: #3f3f46;
             text-decoration: line-through;
             font-weight: 600;
         }
 
-        .price-final {
-            font-size: 3.2rem;
+        .promo-price {
+            font-size: 3.4rem;
             font-weight: 900;
             color: #fff;
+            letter-spacing: -1px;
         }
 
-        .price-final span {
+        .promo-price span {
             font-size: 1.5rem;
             color: #ff9f0a;
             font-weight: 700;
         }
 
-        .offer-expiry {
-            font-size: 0.8rem;
-            color: #e11d48;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        /* WhatsApp Button styled professionally */
-        .whatsapp-opt-btn {
+        .whatsapp-btn {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             width: 100%;
             background: transparent;
-            border: 1.5px solid rgba(255, 255, 255, 0.15);
-            color: #fff;
-            padding: 14px;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            color: #888;
+            padding: 15px;
             border-radius: 12px;
             font-weight: 700;
             font-size: 0.95rem;
             text-decoration: none;
-            margin-top: 15px;
-            transition: border-color 0.2s;
-        }
-        .whatsapp-opt-btn:hover {
-            border-color: rgba(255, 255, 255, 0.35);
+            margin-top: 18px;
+            transition: all 0.2s;
         }
 
-        .secure-badge {
-            margin-top: 24px;
-            font-size: 0.75rem;
+        .whatsapp-btn:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .security-badge {
+            margin-top: 28px;
+            font-size: 0.72rem;
             color: #444;
             display: flex;
             align-items: center;
@@ -243,22 +312,97 @@
             gap: 6px;
         }
 
-        /* Footer info */
+        /* ── LIGHTBOX VIDEO MODAL ── */
+        .lightbox-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .lightbox-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .lightbox-content {
+            position: relative;
+            max-width: 360px;
+            width: 90%;
+            aspect-ratio: 9 / 16;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: #000;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        .lightbox-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: -45px;
+            right: 0;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+
+        .lightbox-unmute-hint {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #ff9f0a;
+            padding: 8px 16px;
+            border-radius: 30px;
+            color: #ff9f0a;
+            font-weight: 700;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         footer {
             margin-bottom: 60px;
             text-align: center;
-            color: #333;
-            font-size: 0.78rem;
+            color: #222;
+            font-size: 0.75rem;
             z-index: 10;
         }
     </style>
 </head>
 <body>
 
-    <div class="glow"></div>
+    <!-- STICKY COUNTDOWN BANNER -->
+    <div class="countdown-banner">
+        Oferta especial de Campeones expira en:
+        <span class="countdown-timer-text" id="countdown-timer">00h 00m 00s</span>
+    </div>
+
+    <div class="ambient-glow"></div>
 
     <header>
-        <span class="promo-badge">🏆 PROMO MUNDIALISTA 2X1</span>
+        <span class="promo-tag">PROMO MUNDIALISTA 2X1</span>
         <h1>España Campeón del Mundo</h1>
         <p class="hero-desc">Para celebrarlo, llévate Easy Mix por solo $5 USD y recibe Easy Master de regalo hoy.</p>
     </header>
@@ -268,68 +412,135 @@
         
         <!-- CARD 1: EASY MIX -->
         <div class="plugin-card">
-            <div class="img-container">
+            <div class="img-wrapper">
                 <img src="/images/plugins/easy mixx.png" alt="Easy Mix VST">
             </div>
-            <div>
+            <div class="plugin-info">
                 <h2>Easy Mix</h2>
                 <p>Mezcla tus voces e instrumentos con pegada y claridad en un solo clic.</p>
+                <button class="video-btn" onclick="openVideoModal('/videos/video-offsz.mp4')">
+                    <i class="bi bi-play-circle-fill"></i> Ver cómo suena
+                </button>
             </div>
-            <div class="card-price">Licencia de por vida</div>
+            <div class="card-footer-price">Licencia de por vida</div>
         </div>
 
         <!-- CARD 2: EASY MASTER -->
         <div class="plugin-card highlight">
-            <span class="gift-tag">Regalo</span>
-            <div class="img-container">
+            <span class="gift-badge">Regalo</span>
+            <div class="img-wrapper">
                 <img src="/images/plugins/EASY MASTER IMAGE.png" alt="Easy Master VST">
             </div>
-            <div>
+            <div class="plugin-info">
                 <h2>Easy Master</h2>
                 <p>El masterizador final para darle volumen comercial, brillo y pegada a tus temas.</p>
+                <button class="video-btn" onclick="openVideoModal('/videos/video-offszn.mp4')">
+                    <i class="bi bi-play-circle-fill"></i> Ver cómo suena
+                </button>
             </div>
-            <div class="card-price gift">¡Gratis Incluido!</div>
+            <div class="card-footer-price">¡Gratis Incluido!</div>
         </div>
 
     </div>
 
-    <!-- CHECKOUT BOX -->
-    <div class="checkout-box">
+    <!-- CHECKOUT CONTAINER -->
+    <div class="checkout-container">
+        <h2 class="checkout-title">Adquirir Combo 2x1</h2>
         
-        <div class="price-row">
-            <span class="price-original">$48 USD</span>
-            <span class="price-final">$5.00 <span>USD</span></span>
+        <div class="price-section">
+            <span class="original-price">$48 USD</span>
+            <span class="promo-price">$5.00 <span>USD</span></span>
         </div>
 
-        <div class="offer-expiry">
-            <i class="bi bi-clock-fill"></i> Expira hoy al finalizar el día
-        </div>
-
-        <!-- PayPal Container -->
-        <div id="plugin-paypal-button-container" style="min-height: 150px; width: 100%;"></div>
+        <!-- PayPal Button Container -->
+        <div id="plugin-paypal-button-container"></div>
 
         <!-- WhatsApp Button -->
         <a href="https://wa.me/51993525005?text=Vengo%20del%20combo%20%222x1%20Mundial%22%20tienen%20otro%20m%C3%A9todo%20de%20pago%20que%20no%20sea%20paypal%3F" 
-           target="_blank" rel="noopener noreferrer" class="whatsapp-opt-btn">
+           target="_blank" rel="noopener noreferrer" class="whatsapp-btn">
             <i class="bi bi-whatsapp" style="color: #25d366;"></i> Otros Medios de Pago
         </a>
 
-        <div class="secure-badge">
-            <i class="bi bi-shield-lock-fill"></i> Pago procesado de forma segura y encriptada
+        <div class="security-badge">
+            <i class="bi bi-shield-lock-fill"></i> Transacción segura y encriptada
         </div>
-
     </div>
 
     <footer>
         &copy; 2026 OFFSZN. Todos los derechos reservados.
     </footer>
 
+    <!-- LIGHTBOX MODAL FOR VIDEO -->
+    <div class="lightbox-modal" id="video-lightbox" onclick="closeVideoModal()">
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <button class="lightbox-close" onclick="closeVideoModal()">&times;</button>
+            <div class="lightbox-unmute-hint">
+                <i class="bi bi-volume-up-fill"></i> CLIC PARA DESMUTEAR
+            </div>
+            <video class="lightbox-video" id="modal-video-player" loop playsinline autoplay muted onclick="toggleModalMute()"></video>
+        </div>
+    </div>
+
     <!-- Direct Checkout Configuration and Loader -->
     <script src="/env.js"></script>
     <script>
         // Configura el ID del producto que se compra (Easy Mix - $5 USD)
-        // La lógica en backend se encargará de regalar e inyectar la licencia de Easy Master automáticamente
+        // El backend generará automáticamente Easy Mix + Easy Master (2x1) de por vida.
         window.PLUGIN_ID = 899;
+
+        // COUNTDOWN TIMER
+        (function () {
+            const timerElement = document.getElementById('countdown-timer');
+            // La oferta expira mañana a las 7 AM (o ajusta la fecha que desees)
+            const endTime = new Date("2026-07-20T07:00:00-05:00").getTime();
+
+            const interval = setInterval(function () {
+                const now = new Date().getTime();
+                const distance = endTime - now;
+
+                if (distance < 0) {
+                    timerElement.innerHTML = "Oferta Expirada";
+                    clearInterval(interval);
+                    return;
+                }
+
+                const hours = Math.floor(distance / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                timerElement.innerHTML = 
+                    String(hours).padStart(2, '0') + "h " + 
+                    String(minutes).padStart(2, '0') + "m " + 
+                    String(seconds).padStart(2, '0') + "s";
+            }, 1000);
+        })();
+
+        // VIDEO LIGHTBOX LOGIC
+        const lightbox = document.getElementById('video-lightbox');
+        const videoPlayer = document.getElementById('modal-video-player');
+
+        function openVideoModal(videoSrc) {
+            videoPlayer.src = videoSrc;
+            videoPlayer.muted = true; // Empieza muteado por políticas del navegador
+            lightbox.classList.add('active');
+            videoPlayer.play();
+        }
+
+        function closeVideoModal() {
+            lightbox.classList.remove('active');
+            videoPlayer.pause();
+            videoPlayer.src = "";
+        }
+
+        function toggleModalMute() {
+            videoPlayer.muted = !videoPlayer.muted;
+            const hint = document.querySelector('.lightbox-unmute-hint');
+            if (!videoPlayer.muted) {
+                hint.style.display = 'none';
+            } else {
+                hint.style.display = 'flex';
+            }
+        }
     </script>
     <script src="/script/plugin-checkout.js?v=2"></script>
 </body>
