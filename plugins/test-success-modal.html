@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Preview Post-Compra — OFFSZN Plugins</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #080808;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px 80px;
+        }
+
+        .test-badge {
+            background: rgba(255, 159, 10, 0.12);
+            border: 1px solid rgba(255, 159, 10, 0.35);
+            color: #ff9f0a;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            padding: 6px 18px;
+            border-radius: 100px;
+            margin-bottom: 32px;
+        }
+
+        h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; text-align: center; }
+        .subtitle { color: #666; font-size: 0.9rem; margin-bottom: 48px; text-align: center; }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 6px;
+            margin-bottom: 36px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px 24px;
+            background: transparent;
+            border: none;
+            color: #666;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .tab-btn.active { background: #ff9f0a; color: #000; }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 36px;
+        }
+
+        .ctrl-btn {
+            padding: 12px 28px;
+            border-radius: 10px;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ctrl-btn-primary { background: #ff9f0a; color: #000; }
+        .ctrl-btn-outline { background: transparent; border: 1.5px solid rgba(255,255,255,0.15); color: #fff; }
+
+        .section-header {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .section-header h2 { font-size: 1rem; font-weight: 700; }
+        .section-divider { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+        .section-tag { font-size: 0.72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #444; }
+
+        .modal-preview-wrapper {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            padding: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 40px;
+            flex-wrap: wrap;
+            margin-bottom: 48px;
+        }
+
+        /* Processing */
+        .processing-preview {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.9);
+            border-radius: 16px;
+            padding: 40px 60px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.06);
+            min-width: 260px;
+        }
+
+        .plugin-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,159,10,0.1);
+            border-top-color: #ff9f0a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── SUCCESS MODAL ── */
+        .plugin-modal-card {
+            background: #0d0d0d;
+            border: 1.5px solid rgba(255,159,10,0.25);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.7), 0 0 100px rgba(255,159,10,0.05);
+            color: #fff;
+            position: relative;
+        }
+
+        /* X close button */
+        .modal-close-x {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            background: transparent;
+            border: none;
+            color: #555;
+            font-size: 1.3rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px;
+            font-family: 'Inter', sans-serif;
+        }
+        .modal-close-x:hover { color: #aaa; }
+
+        .plugin-modal-success-icon {
+            width: 72px;
+            height: 72px;
+            background: rgba(255,159,10,0.1);
+            border: 2px solid #ff9f0a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: #ff9f0a;
+            font-size: 2.2rem;
+            box-shadow: 0 0 25px rgba(255,159,10,0.2);
+            animation: scaleIn 0.5s ease;
+        }
+        @keyframes scaleIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+        .plugin-modal-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff 30%, #ff9f0a 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .plugin-modal-desc {
+            color: #aaa;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .plugin-key-container {
+            background: rgba(255,255,255,0.03);
+            border: 1px dashed rgba(255,159,10,0.4);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .plugin-key-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #ff9f0a;
+            word-break: break-all;
+            text-align: left;
+        }
+
+        .plugin-copy-btn {
+            background: #ff9f0a;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Download buttons */
+        .plugin-download-section {
+            border-top: 1px solid rgba(255,255,255,0.08);
+            padding-top: 24px;
+        }
+
+        .plugin-download-title {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #888;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .plugin-download-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .plugin-dl-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 12px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Key regen */
+        .key-regen-section {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .key-regen-info h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+        .key-regen-info p { color: #666; font-size: 0.82rem; }
+        .current-key-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ff9f0a;
+            background: rgba(255,159,10,0.08);
+            border: 1px solid rgba(255,159,10,0.25);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        /* ── EMAIL PREVIEW ── */
+        .email-preview-wrapper {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            padding: 32px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .email-card { flex: 1; min-width: 280px; }
+
+        .email-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #555;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .email-label::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+
+        .email-frame {
+            background: #0a0a0a;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            overflow: hidden;
+        }
+
+        .email-subject-bar {
+            background: #111;
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            font-size: 0.8rem;
+            color: #666;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .email-subject-bar strong { color: #fff; font-size: 0.85rem; }
+
+        .email-body { padding: 24px; }
+
+        .buyer-email-content h2 { color: #ff9f0a; margin-bottom: 16px; font-size: 1.1rem; }
+        .buyer-email-content p { color: #ccc; line-height: 1.6; font-size: 0.88rem; margin-bottom: 12px; }
+
+        .email-key-box {
+            background: #111827;
+            border: 2px dashed #ff9f0a;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+            text-align: center;
+        }
+        .email-key-label { color: #ff9f0a; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; margin-bottom: 8px; }
+        .email-key-text { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: 2px; word-break: break-all; }
+        .email-key-hint { color: #666; font-size: 0.72rem; margin-top: 10px; }
+
+        .email-dl-btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .email-dl-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.82rem;
+        }
+
+        .email-footer { color: #444; font-size: 0.72rem; margin-top: 16px; padding-top: 16px; border-top: 1px solid #1a1a1a; }
+
+        .admin-email-content h2 { color: #8B5CF6; margin-bottom: 16px; font-size: 1.1rem; }
+        .admin-email-content p { color: #ccc; line-height: 1.6; font-size: 0.88rem; margin-bottom: 8px; }
+
+        .admin-detail-box {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 16px;
+            margin: 12px 0;
+            font-size: 0.85rem;
+        }
+        .admin-detail-box p { color: #888; margin-bottom: 6px; }
+        .admin-detail-box p:last-child { margin-bottom: 0; }
+
+        .email-admin-btn {
+            display: inline-block;
+            background: #8B5CF6;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.82rem;
+            margin-top: 10px;
+        }
+
+        /* info grid */
+        .info-grid {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 28px 32px;
+        }
+        .info-grid-inner { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .info-item h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; color: #ff9f0a; }
+        .info-item p { color: #666; font-size: 0.82rem; line-height: 1.5; }
+    </style>
+</head>
+<body>
+
+    <span class="test-badge">🧪 Preview Post-Compra — Solo Pruebas</span>
+    <h1>Simulador de Compra Exitosa</h1>
+    <p class="subtitle">Así queda el modal y el email después de un pago real</p>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-mix" onclick="switchPlugin('mix')">🎛️ Easy Mix</button>
+        <button class="tab-btn" id="tab-master" onclick="switchPlugin('master')">🎚️ Easy Master</button>
+    </div>
+
+    <!-- KEY DISPLAY -->
+    <div class="key-regen-section">
+        <div class="key-regen-info">
+            <h3>Serial Key de Prueba</h3>
+            <p>La que aparece en el modal y en el email</p>
+        </div>
+        <div class="current-key-display" id="current-key-display">EASY-FULL-D17B-119D</div>
+        <button class="ctrl-btn ctrl-btn-outline" onclick="regenerateKey()">
+            <i class="bi bi-arrow-clockwise"></i> Nueva Key
+        </button>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+        <button class="ctrl-btn ctrl-btn-outline" onclick="showProcessing()">
+            <i class="bi bi-hourglass-split"></i> Ver "Procesando..."
+        </button>
+        <button class="ctrl-btn ctrl-btn-primary" onclick="showSuccessModal()">
+            <i class="bi bi-check-circle-fill"></i> Ver Modal de Éxito
+        </button>
+    </div>
+
+    <!-- MODAL PREVIEW SECTION -->
+    <div class="section-header">
+        <span class="section-tag">UI · Modal</span>
+        <div class="section-divider"></div>
+        <h2>Modal Post-Compra</h2>
+        <div class="section-divider"></div>
+    </div>
+
+    <div class="modal-preview-wrapper">
+
+        <!-- Processing -->
+        <div class="processing-preview" id="processing-preview">
+            <div class="plugin-spinner"></div>
+            <h3 style="font-weight:700; margin:0 0 8px; font-size:1.1rem;">Procesando Pago...</h3>
+            <p style="color:#888; font-size:0.88rem; margin:0;">Por favor no cierres ni recargues esta pestaña</p>
+        </div>
+
+        <!-- Success Modal -->
+        <div class="plugin-modal-card" id="success-modal-card">
+
+            <!-- X close -->
+            <button class="modal-close-x" title="Cerrar" onclick="alert('En producción simplemente cierra el modal')">✕</button>
+
+            <div class="plugin-modal-success-icon">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <h2 class="plugin-modal-title">¡Compra Completada!</h2>
+            <p class="plugin-modal-desc">
+                ¡Gracias por adquirir <b id="modal-product-name">Easy Mix</b>!
+                Aquí tienes tu Serial Key FULL para activar el plugin en tu DAW:
+            </p>
+
+            <div class="plugin-key-container">
+                <span class="plugin-key-value" id="modal-serial-key">EASY-FULL-D17B-119D</span>
+                <button class="plugin-copy-btn" id="copy-btn" onclick="copyKey()">Copiar</button>
+            </div>
+
+            <div class="plugin-download-section">
+                <h3 class="plugin-download-title">Descargar instaladores</h3>
+                <div class="plugin-download-buttons">
+                    <a class="plugin-dl-btn" id="win-link" href="#" target="_blank" rel="noopener">
+                        <i class="bi bi-windows" style="color:#0078d4;"></i> Windows
+                    </a>
+                    <a class="plugin-dl-btn" id="mac-link" href="#" target="_blank" rel="noopener">
+                        <i class="bi bi-apple"></i> macOS
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- EMAIL PREVIEW SECTION -->
+    <div class="section-header">
+        <span class="section-tag">Email</span>
+        <div class="section-divider"></div>
+        <h2>Emails Enviados Automáticamente</h2>
+        <div class="section-divider"></div>
+    </div>
+
+    <div class="email-preview-wrapper">
+
+        <!-- BUYER EMAIL -->
+        <div class="email-card">
+            <div class="email-label">📩 Al comprador</div>
+            <div class="email-frame">
+                <div class="email-subject-bar">
+                    <strong id="buyer-subject">🔑 Tu Serial Key de Easy Mix — OFFSZN</strong>
+                    <div>Para: <span>compradorejemplo@gmail.com</span></div>
+                    <div>De: OFFSZN &lt;noreply@offszn.lat&gt;</div>
+                </div>
+                <div class="email-body buyer-email-content">
+                    <h2>¡Compra Completada! 🎛️</h2>
+                    <p>Hola <b>ProducerPro99</b>, procesamos correctamente el pago por <b style="color:#fff;" id="email-product-name">Easy Mix</b>.</p>
+
+                    <div class="email-key-box">
+                        <div class="email-key-label">🔑 Tu Serial Key FULL</div>
+                        <div class="email-key-text" id="email-serial-key">EASY-FULL-D17B-119D</div>
+                        <div class="email-key-hint">Guarda esta clave en un lugar seguro. La necesitarás para activar el plugin en tu DAW.</div>
+                    </div>
+
+                    <p style="color:#aaa; font-size:0.82rem; text-transform:uppercase; letter-spacing:2px; font-weight:700; margin-bottom:10px;">Descargar Instaladores</p>
+                    <div class="email-dl-btns">
+                        <a href="#" id="email-win-link" class="email-dl-link" target="_blank"><i class="bi bi-windows" style="color:#0078d4;"></i> Windows</a>
+                        <a href="#" id="email-mac-link" class="email-dl-link" target="_blank"><i class="bi bi-apple"></i> macOS</a>
+                    </div>
+
+                    <div class="email-footer">
+                        Este es un recibo automático de OFFSZN. Si tienes problemas, contáctanos por WhatsApp.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN EMAIL -->
+        <div class="email-card">
+            <div class="email-label">🔔 A ti (willie2008garay@gmail.com)</div>
+            <div class="email-frame">
+                <div class="email-subject-bar">
+                    <strong id="admin-subject">💸 Venta: Easy Mix — $5 USD</strong>
+                    <div>Para: willie2008garay@gmail.com</div>
+                    <div>De: OFFSZN Notificaciones</div>
+                </div>
+                <div class="email-body admin-email-content">
+                    <h2>¡Nueva Venta! 💰 🎛️ Plugin</h2>
+                    <p>El usuario <b>ProducerPro99</b> (<b>compradorejemplo@gmail.com</b>) acaba de comprar <b style="color:#fff;" id="admin-product-name">Easy Mix</b>.</p>
+
+                    <div class="admin-detail-box">
+                        <p><b style="color:#fff;">Monto:</b> $<span id="admin-price">5</span> USD</p>
+                        <p><b style="color:#ff9f0a;">Serial Key generada:</b> <span id="admin-serial-key" style="font-family:'JetBrains Mono',monospace; color:#fff;">EASY-FULL-D17B-119D</span></p>
+                    </div>
+
+                    <a href="#" class="email-admin-btn">VER TRANSACCIONES</a>
+
+                    <div class="email-footer">Notificación automática de OFFSZN.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="section-header">
+        <span class="section-tag">Info</span>
+        <div class="section-divider"></div>
+        <h2>¿Cómo funciona en producción?</h2>
+        <div class="section-divider"></div>
+    </div>
+
+    <div class="info-grid">
+        <div class="info-grid-inner">
+            <div class="info-item">
+                <div style="font-size:1.4rem; margin-bottom:6px;">1️⃣</div>
+                <h3>Usuario paga</h3>
+                <p>Abre el modal PayPal directo en la landing, sin carrito global.</p>
+            </div>
+            <div class="info-item">
+                <div style="font-size:1.4rem; margin-bottom:6px;">2️⃣</div>
+                <h3>Modal "Procesando"</h3>
+                <p>Overlay de carga que evita cerrar la ventana accidentalmente.</p>
+            </div>
+            <div class="info-item">
+                <div style="font-size:1.4rem; margin-bottom:6px;">3️⃣</div>
+                <h3>Serial Key generada</h3>
+                <p>El backend detecta Easy Mix / Easy Master y genera la key en la BD.</p>
+            </div>
+            <div class="info-item">
+                <div style="font-size:1.4rem; margin-bottom:6px;">4️⃣</div>
+                <h3>Modal de éxito</h3>
+                <p>Muestra la serial key con botón copiar, X para cerrar y links de descarga Win/Mac.</p>
+            </div>
+            <div class="info-item">
+                <div style="font-size:1.4rem; margin-bottom:6px;">5️⃣</div>
+                <h3>Email automático</h3>
+                <p>Comprador recibe la key. Tú recibes notificación en willie2008garay@gmail.com.</p>
+            </div>
+            <div class="info-item">
+                <div style="font-size:1.4rem; margin-bottom:6px;">✅</div>
+                <h3>Easy Mix &amp; Easy Master</h3>
+                <p>Ambas páginas usan el mismo <code style="color:#ff9f0a;">plugin-checkout.js</code> diferenciadas por PLUGIN_ID.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const plugins = {
+            mix: {
+                name: 'Easy Mix',
+                price: '5',
+                keyPrefix: 'EASY-FULL',
+                win: 'https://drive.google.com/file/d/1WfaTrrbuaxymcFhnHGjmrump_rG-LGUW/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1o1q0Ca5eghr1CJmtxmOk52MgEXi_wKl9/view?usp=sharing'
+            },
+            master: {
+                name: 'Easy Master',
+                price: '10',
+                keyPrefix: 'MASTER-FULL',
+                win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
+                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+            }
+        };
+
+        let currentPlugin = 'mix';
+        let currentKey = 'EASY-FULL-D17B-119D';
+
+        function generateFakeKey(prefix) {
+            const hex = () => Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+            return `${prefix}-${hex()}-${hex()}`;
+        }
+
+        function regenerateKey() {
+            const plugin = plugins[currentPlugin];
+            currentKey = generateFakeKey(plugin.keyPrefix);
+            updateAllKeys();
+        }
+
+        function updateAllKeys() {
+            document.getElementById('current-key-display').textContent = currentKey;
+            document.getElementById('modal-serial-key').textContent = currentKey;
+            document.getElementById('email-serial-key').textContent = currentKey;
+            document.getElementById('admin-serial-key').textContent = currentKey;
+        }
+
+        function switchPlugin(type) {
+            currentPlugin = type;
+            const plugin = plugins[type];
+            currentKey = generateFakeKey(plugin.keyPrefix);
+
+            document.getElementById('tab-mix').classList.toggle('active', type === 'mix');
+            document.getElementById('tab-master').classList.toggle('active', type === 'master');
+
+            // Modal
+            document.getElementById('modal-product-name').textContent = plugin.name;
+            document.getElementById('win-link').href = plugin.win;
+            document.getElementById('mac-link').href = plugin.mac;
+
+            // Emails
+            document.getElementById('buyer-subject').textContent = `🔑 Tu Serial Key de ${plugin.name} — OFFSZN`;
+            document.getElementById('email-product-name').textContent = plugin.name;
+            document.getElementById('email-win-link').href = plugin.win;
+            document.getElementById('email-mac-link').href = plugin.mac;
+            document.getElementById('admin-subject').textContent = `💸 Venta: ${plugin.name} — $${plugin.price} USD`;
+            document.getElementById('admin-product-name').textContent = plugin.name;
+            document.getElementById('admin-price').textContent = plugin.price;
+
+            updateAllKeys();
+        }
+
+        function showProcessing() {
+            document.getElementById('processing-preview').style.display = 'flex';
+            document.getElementById('success-modal-card').style.display = 'none';
+            setTimeout(() => {
+                document.getElementById('processing-preview').style.display = 'none';
+                document.getElementById('success-modal-card').style.display = 'block';
+            }, 2200);
+        }
+
+        function showSuccessModal() {
+            document.getElementById('processing-preview').style.display = 'none';
+            document.getElementById('success-modal-card').style.display = 'block';
+        }
+
+        function copyKey() {
+            navigator.clipboard.writeText(currentKey).then(() => {
+                const btn = document.getElementById('copy-btn');
+                btn.textContent = '¡Copiado!';
+                btn.style.background = '#10b981';
+                btn.style.color = '#fff';
+                setTimeout(() => {
+                    btn.textContent = 'Copiar';
+                    btn.style.background = '#ff9f0a';
+                    btn.style.color = '#000';
+                }, 2000);
+            });
+        }
+
+        // Init
+        updateAllKeys();
+    </script>
+</body>
+</html>

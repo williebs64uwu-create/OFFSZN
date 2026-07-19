@@ -210,6 +210,7 @@ class PluginDirectCheckout {
                 transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 position: relative;
                 color: #fff;
+                overflow: visible;
             }
             .plugin-modal-overlay.active .plugin-modal-card {
                 transform: scale(1);
@@ -317,31 +318,21 @@ class PluginDirectCheckout {
                 text-decoration: none;
                 font-weight: 600;
                 font-size: 0.9rem;
-                transition: all 0.3s;
-            }
-            .plugin-dl-btn:hover {
-                background: rgba(255, 255, 255, 0.1);
-                border-color: rgba(255, 255, 255, 0.2);
-                color: #fff;
             }
             .plugin-dl-btn i {
                 font-size: 1.15rem;
             }
-            .plugin-modal-close-btn {
-                width: 100%;
+            .plugin-modal-close-x {
+                position: absolute;
+                top: 14px;
+                right: 16px;
                 background: transparent;
-                border: 1.5px solid rgba(255, 255, 255, 0.15);
-                color: #fff;
-                font-weight: 700;
-                padding: 14px;
-                border-radius: 12px;
+                border: none;
+                color: #555;
+                font-size: 1.2rem;
                 cursor: pointer;
-                transition: all 0.3s;
-                font-size: 0.95rem;
-            }
-            .plugin-modal-close-btn:hover {
-                background: rgba(255, 255, 255, 0.05);
-                border-color: rgba(255, 255, 255, 0.3);
+                line-height: 1;
+                padding: 4px;
             }
             /* Processing Overlay Style */
             .plugin-processing-overlay {
@@ -416,6 +407,7 @@ class PluginDirectCheckout {
 
         modal.innerHTML = `
             <div class="plugin-modal-card">
+                <button class="plugin-modal-close-x" id="plugin-modal-close-x" title="Cerrar">&times;</button>
                 <div class="plugin-modal-success-icon">
                     <i class="bi bi-check-lg"></i>
                 </div>
@@ -423,7 +415,7 @@ class PluginDirectCheckout {
                 <p class="plugin-modal-desc">
                     ¡Gracias por adquirir <b>${this.downloads.name}</b>! Aquí tienes tu Serial Key FULL para activar el plugin en tu DAW:
                 </p>
-                
+
                 <div class="plugin-key-container">
                     <span class="plugin-key-value" id="plugin-serial-key-text">${serialKey}</span>
                     <button class="plugin-copy-btn" id="plugin-copy-key-btn">Copiar</button>
@@ -440,17 +432,21 @@ class PluginDirectCheckout {
                         </a>
                     </div>
                 </div>
-
-                <button class="plugin-modal-close-btn" id="plugin-modal-finish-btn">Ir a Mis Compras</button>
             </div>
         `;
 
-        // Bind copy button action
+        // Bind X close button
+        const closeX = modal.querySelector('#plugin-modal-close-x');
+        closeX.addEventListener('click', () => {
+            modal.classList.remove('active');
+        });
+
+        // Bind copy button
         const copyBtn = modal.querySelector('#plugin-copy-key-btn');
         copyBtn.addEventListener('click', () => {
             navigator.clipboard.writeText(serialKey).then(() => {
                 copyBtn.innerText = '¡Copiado!';
-                copyBtn.style.background = '#10b981'; // Green color for success feedback
+                copyBtn.style.background = '#10b981';
                 copyBtn.style.color = '#fff';
                 setTimeout(() => {
                     copyBtn.innerText = 'Copiar';
@@ -460,13 +456,6 @@ class PluginDirectCheckout {
             }).catch(err => {
                 console.error('Copy failed:', err);
             });
-        });
-
-        // Bind finish button action
-        const finishBtn = modal.querySelector('#plugin-modal-finish-btn');
-        finishBtn.addEventListener('click', () => {
-            modal.classList.remove('active');
-            window.location.href = '/mis-compras.html';
         });
 
         // Activate the modal display
