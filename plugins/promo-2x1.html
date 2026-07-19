@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 2x1 Mundialista — OFFSZN Plugins</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #080808;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Glow */
+        .glow {
+            position: absolute;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 159, 10, 0.08) 0%, rgba(0,0,0,0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            margin-top: 60px;
+            text-align: center;
+            z-index: 10;
+            padding: 0 20px;
+        }
+
+        .promo-badge {
+            background: rgba(255, 159, 10, 0.12);
+            border: 1px solid rgba(255, 159, 10, 0.35);
+            color: #ff9f0a;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 6px 18px;
+            border-radius: 100px;
+            display: inline-block;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+            line-height: 1.1;
+        }
+
+        .hero-desc {
+            color: #888;
+            font-size: 1.1rem;
+            max-width: 500px;
+            margin: 0 auto 40px;
+            line-height: 1.5;
+        }
+
+        /* ── TWO-COLUMN SHOWCASE ── */
+        .showcase {
+            display: flex;
+            gap: 24px;
+            max-width: 900px;
+            width: 100%;
+            padding: 0 20px;
+            margin-bottom: 40px;
+            z-index: 10;
+            flex-wrap: wrap;
+        }
+
+        .plugin-card {
+            flex: 1;
+            min-width: 280px;
+            background: #0d0d0d;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .plugin-card.highlight {
+            border-color: rgba(255, 159, 10, 0.4);
+            box-shadow: 0 10px 40px rgba(255, 159, 10, 0.05);
+        }
+
+        .gift-tag {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: #ff9f0a;
+            color: #000;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .img-container {
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .img-container img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .plugin-card h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .plugin-card p {
+            color: #666;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            max-width: 260px;
+        }
+
+        .card-price {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .card-price.gift {
+            color: #ff9f0a;
+        }
+
+        /* ── CHECKOUT BOX ── */
+        .checkout-box {
+            background: #0d0d0d;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            max-width: 480px;
+            width: 90%;
+            padding: 40px;
+            text-align: center;
+            z-index: 10;
+            margin-bottom: 60px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .price-original {
+            font-size: 1.3rem;
+            color: #444;
+            text-decoration: line-through;
+            font-weight: 600;
+        }
+
+        .price-final {
+            font-size: 3.2rem;
+            font-weight: 900;
+            color: #fff;
+        }
+
+        .price-final span {
+            font-size: 1.5rem;
+            color: #ff9f0a;
+            font-weight: 700;
+        }
+
+        .offer-expiry {
+            font-size: 0.8rem;
+            color: #e11d48;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* WhatsApp Button styled professionally */
+        .whatsapp-opt-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            background: transparent;
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-decoration: none;
+            margin-top: 15px;
+            transition: border-color 0.2s;
+        }
+        .whatsapp-opt-btn:hover {
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+
+        .secure-badge {
+            margin-top: 24px;
+            font-size: 0.75rem;
+            color: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* Footer info */
+        footer {
+            margin-bottom: 60px;
+            text-align: center;
+            color: #333;
+            font-size: 0.78rem;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glow"></div>
+
+    <header>
+        <span class="promo-badge">🏆 PROMO MUNDIALISTA 2X1</span>
+        <h1>España Campeón del Mundo</h1>
+        <p class="hero-desc">Para celebrarlo, llévate Easy Mix por solo $5 USD y recibe Easy Master de regalo hoy.</p>
+    </header>
+
+    <!-- SHOWCASE -->
+    <div class="showcase">
+        
+        <!-- CARD 1: EASY MIX -->
+        <div class="plugin-card">
+            <div class="img-container">
+                <img src="/images/plugins/easy mixx.png" alt="Easy Mix VST">
+            </div>
+            <div>
+                <h2>Easy Mix</h2>
+                <p>Mezcla tus voces e instrumentos con pegada y claridad en un solo clic.</p>
+            </div>
+            <div class="card-price">Licencia de por vida</div>
+        </div>
+
+        <!-- CARD 2: EASY MASTER -->
+        <div class="plugin-card highlight">
+            <span class="gift-tag">Regalo</span>
+            <div class="img-container">
+                <img src="/images/plugins/EASY MASTER IMAGE.png" alt="Easy Master VST">
+            </div>
+            <div>
+                <h2>Easy Master</h2>
+                <p>El masterizador final para darle volumen comercial, brillo y pegada a tus temas.</p>
+            </div>
+            <div class="card-price gift">¡Gratis Incluido!</div>
+        </div>
+
+    </div>
+
+    <!-- CHECKOUT BOX -->
+    <div class="checkout-box">
+        
+        <div class="price-row">
+            <span class="price-original">$48 USD</span>
+            <span class="price-final">$5.00 <span>USD</span></span>
+        </div>
+
+        <div class="offer-expiry">
+            <i class="bi bi-clock-fill"></i> Expira hoy al finalizar el día
+        </div>
+
+        <!-- PayPal Container -->
+        <div id="plugin-paypal-button-container" style="min-height: 150px; width: 100%;"></div>
+
+        <!-- WhatsApp Button -->
+        <a href="https://wa.me/51993525005?text=Vengo%20del%20combo%20%222x1%20Mundial%22%20tienen%20otro%20m%C3%A9todo%20de%20pago%20que%20no%20sea%20paypal%3F" 
+           target="_blank" rel="noopener noreferrer" class="whatsapp-opt-btn">
+            <i class="bi bi-whatsapp" style="color: #25d366;"></i> Otros Medios de Pago
+        </a>
+
+        <div class="secure-badge">
+            <i class="bi bi-shield-lock-fill"></i> Pago procesado de forma segura y encriptada
+        </div>
+
+    </div>
+
+    <footer>
+        &copy; 2026 OFFSZN. Todos los derechos reservados.
+    </footer>
+
+    <!-- Direct Checkout Configuration and Loader -->
+    <script src="/env.js"></script>
+    <script>
+        // Configura el ID del producto que se compra (Easy Mix - $5 USD)
+        // La lógica en backend se encargará de regalar e inyectar la licencia de Easy Master automáticamente
+        window.PLUGIN_ID = 899;
+    </script>
+    <script src="/script/plugin-checkout.js?v=2"></script>
+</body>
+</html>

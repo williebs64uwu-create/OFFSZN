@@ -927,10 +927,13 @@ export const capturePayPalOrder = async (req, res) => {
 
             // --- GENERAR LICENCIA DEL PLUGIN SI SE COMPRÓ EASY MIX / EASY MASTER ---
             let generatedLicenseKey = null;
+            let keysGenerated = [];
+
             for (const item of cartItems) {
                 const prodName = item.product?.name || '';
                 const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix');
                 const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster');
+                
                 if (isEasyMix || isEasyMaster) {
                     try {
                         const pluginName = isEasyMaster ? 'Easy Master' : 'Easy Mix';
@@ -945,13 +948,36 @@ export const capturePayPalOrder = async (req, res) => {
                             userId: userId,
                             pluginName: pluginName
                         });
+                        
                         if (licResult && licResult.serialKey) {
-                            generatedLicenseKey = licResult.serialKey;
+                            keysGenerated.push(`${pluginName}: ${licResult.serialKey}`);
+                        }
+
+                        // --- 2x1 PROMO: Si compra Easy Mix Lifetime, regala Easy Master Lifetime ---
+                        if (isEasyMix && licenseType === 'lifetime') {
+                            console.log(`[PayPalCapture] 2x1 Promo triggered! Generating free Easy Master for ${payerEmail}`);
+                            try {
+                                const bonusResult = await generatePluginLicense({
+                                    licenseType: 'lifetime',
+                                    userEmail: payerEmail,
+                                    userId: userId,
+                                    pluginName: 'Easy Master'
+                                });
+                                if (bonusResult && bonusResult.serialKey) {
+                                    keysGenerated.push(`Easy Master (REGALO): ${bonusResult.serialKey}`);
+                                }
+                            } catch (bonusErr) {
+                                console.error(`[PayPalCapture] Error generating bonus Easy Master license:`, bonusErr);
+                            }
                         }
                     } catch (licError) {
                         console.error(`[PayPalCapture] Error generating plugin license for ${pluginName}:`, licError);
                     }
                 }
+            }
+
+            if (keysGenerated.length > 0) {
+                generatedLicenseKey = keysGenerated.join(' | ');
             }
 
             // 4. Update Sales Count
