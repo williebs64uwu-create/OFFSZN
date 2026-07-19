@@ -513,26 +513,30 @@ export const createPayPalOrder = async (req, res) => {
         console.log(`[PayPalOrder] Subtotal: ${subtotal}, Discount: ${totalDiscount}, Factor: ${globalDiscountFactor}`);
 
         // 1. Group Producers by Payee Identifier
+        // NOTE: When the producer's PayPal email is the main OFFSZN account, use merchant_id
+        // to match the SDK's merchant-id parameter and avoid PayPal validation errors.
+        const MAIN_MERCHANT_ID = 'MXV5F6X8JXG4S';
+        const MAIN_MERCHANT_EMAIL = 'willie2008garay@gmail.com';
+
         verifiedCartItems.forEach(item => {
             const producer = producerMap.get(item.product.producer_id);
             if (!producer?.email) return;
 
-            const payeeId = producer.email.toLowerCase().trim();
+            const isMainAccount = producer.email.toLowerCase().trim() === MAIN_MERCHANT_EMAIL.toLowerCase();
+            const payeeId = isMainAccount ? MAIN_MERCHANT_ID : producer.email.toLowerCase().trim();
+            const payeeType = isMainAccount ? 'id' : 'email';
             const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
 
-            const current = payeeGroups.get(payeeId) || { amount: 0, type: 'email', nickname: producer.nickname };
+            const current = payeeGroups.get(payeeId) || { amount: 0, type: payeeType, nickname: producer.nickname };
             current.amount += itemNet;
             payeeGroups.set(payeeId, current);
         });
 
-        // 2. Add Platform Fee (Consolidates if email matches a producer)
+        // 2. Add Platform Fee — always use merchant_id to match SDK
         if (serviceFee > 0) {
-            const isEmail = PLATFORM_PAYPAL_EMAIL && PLATFORM_PAYPAL_EMAIL.includes('@');
-            const platformId = isEmail ? PLATFORM_PAYPAL_EMAIL.toLowerCase().trim() : (PLATFORM_PAYPAL_EMAIL || 'MXV5F6X8JXG4S');
-            
-            const current = payeeGroups.get(platformId) || { amount: 0, type: isEmail ? 'email' : 'id', nickname: 'OFFSZN' };
+            const current = payeeGroups.get(MAIN_MERCHANT_ID) || { amount: 0, type: 'id', nickname: 'OFFSZN' };
             current.amount += serviceFee;
-            payeeGroups.set(platformId, current);
+            payeeGroups.set(MAIN_MERCHANT_ID, current);
         }
 
         // 3. Build Final Purchase Units (One per unique Payee)
