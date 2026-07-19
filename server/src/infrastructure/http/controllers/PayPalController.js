@@ -1033,10 +1033,9 @@ export const capturePayPalOrder = async (req, res) => {
 
                     for (const item of cartItems) {
                         const prodName = item.product?.name || '';
-                        const isPlugin = prodName.toLowerCase().includes('easy mix') || 
-                                         prodName.toLowerCase().includes('easy master') ||
-                                         prodName.toLowerCase().includes('easymix') || 
-                                         prodName.toLowerCase().includes('easymaster');
+                        const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix');
+                        const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster');
+                        const isPlugin = isEasyMix || isEasyMaster;
 
                         // A. Notify Client (Receipt) — includes serial key for plugin purchases
                         const serialKeySection = (isPlugin && generatedLicenseKey) ? `
@@ -1047,14 +1046,27 @@ export const capturePayPalOrder = async (req, res) => {
                             </div>
                         ` : '';
 
-                        const downloadSection = (isPlugin) ? `
+                        const downloadLinks = isPlugin ? (
+                            isEasyMaster ? {
+                                win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
+                                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+                            } : {
+                                win: 'https://drive.google.com/file/d/1WfaTrrbuaxymcFhnHGjmrump_rG-LGUW/view?usp=sharing',
+                                mac: 'https://drive.google.com/file/d/1o1q0Ca5eghr1CJmtxmOk52MgEXi_wKl9/view?usp=sharing'
+                            }
+                        ) : null;
+
+                        const downloadSection = (isPlugin && downloadLinks) ? `
                             <div style="margin:20px 0;">
-                                <p style="color:#aaa; font-size:0.85rem; text-transform:uppercase; letter-spacing:2px; font-weight:700; margin-bottom:12px;">Descargar Instaladores</p>
-                                <a href="https://offszn.lat/plugins/easy-mix.html" style="display:inline-block; background:rgba(255,159,10,0.1); border:1px solid #ff9f0a; color:#ff9f0a; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:600; margin:4px;">⬇ Ir a la página del plugin</a>
+                                <p style="color:#aaa; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; font-weight:700; margin-bottom:12px;">Descargar Instaladores</p>
+                                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                    <a href="${downloadLinks.win}" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xea00; Windows</a>
+                                    <a href="${downloadLinks.mac}" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xf8ff; macOS</a>
+                                </div>
                             </div>
-                        ` : `
+                        ` : (isPlugin ? '' : `
                             <a href="https://offszn.lat/mis-compras" style="display:inline-block; background:#10B981; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER MIS DESCARGAS</a>
-                        `;
+                        `);
 
                         const buyerHtml = `
                             <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
