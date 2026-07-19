@@ -1032,46 +1032,70 @@ export const capturePayPalOrder = async (req, res) => {
                     console.log(`[EmailJS] STARTING email flow for order`);
 
                     for (const item of cartItems) {
-                        // A. Notify Client (Receipt)
+                        const prodName = item.product?.name || '';
+                        const isPlugin = prodName.toLowerCase().includes('easy mix') || 
+                                         prodName.toLowerCase().includes('easy master') ||
+                                         prodName.toLowerCase().includes('easymix') || 
+                                         prodName.toLowerCase().includes('easymaster');
+
+                        // A. Notify Client (Receipt) — includes serial key for plugin purchases
+                        const serialKeySection = (isPlugin && generatedLicenseKey) ? `
+                            <div style="background:#111827; border:2px dashed #ff9f0a; border-radius:12px; padding:20px; margin:20px 0; text-align:center;">
+                                <p style="color:#ff9f0a; font-size:0.8rem; text-transform:uppercase; letter-spacing:2px; margin:0 0 10px; font-weight:700;">🔑 Tu Serial Key FULL</p>
+                                <p style="font-family:monospace; font-size:1.3rem; font-weight:800; color:#fff; letter-spacing:2px; margin:0; word-break:break-all;">${generatedLicenseKey}</p>
+                                <p style="color:#888; font-size:0.78rem; margin:12px 0 0;">Guarda esta clave en un lugar seguro. La necesitarás para activar el plugin en tu DAW.</p>
+                            </div>
+                        ` : '';
+
+                        const downloadSection = (isPlugin) ? `
+                            <div style="margin:20px 0;">
+                                <p style="color:#aaa; font-size:0.85rem; text-transform:uppercase; letter-spacing:2px; font-weight:700; margin-bottom:12px;">Descargar Instaladores</p>
+                                <a href="https://offszn.lat/plugins/easy-mix.html" style="display:inline-block; background:rgba(255,159,10,0.1); border:1px solid #ff9f0a; color:#ff9f0a; padding:10px 20px; border-radius:8px; text-decoration:none; font-weight:600; margin:4px;">⬇ Ir a la página del plugin</a>
+                            </div>
+                        ` : `
+                            <a href="https://offszn.lat/mis-compras" style="display:inline-block; background:#10B981; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER MIS DESCARGAS</a>
+                        `;
+
                         const buyerHtml = `
                             <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
-                                <h2 style="color: #10B981; margin-bottom:20px;">¡Gracias por tu compra!</h2>
+                                <h2 style="color: #ff9f0a; margin-bottom:20px;">¡Compra Completada! 🎛️</h2>
                                 <p style="color:#ccc; line-height:1.6;">Hola <b>${userNickname}</b>, procesamos correctamente el pago por <b style="color:#fff;">${item.product.name}</b>.</p>
-                                <p style="color:#888; line-height:1.5;">Puedes encontrar y descargar todos tus archivos desde la sección "Mis Compras" en tu cuenta.</p>
-                                <a href="https://offszn.lat/mis-compras" style="display:inline-block; background:#10B981; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:15px;">VER MIS DESCARGAS</a>
+                                ${serialKeySection}
+                                ${downloadSection}
                                 <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
-                                <p style="font-size:0.75rem; color:#555;">Este es un recibo automático de OFFSZN.</p>
+                                <p style="font-size:0.75rem; color:#555;">Este es un recibo automático de OFFSZN. Si tienes problemas, contáctanos por WhatsApp.</p>
                             </div>
                         `;
                         await sendOffsznEmail({
                             to: userEmail,
-                            subject: `✅ Confirmación de Compra - ${item.product.name}`,
+                            subject: isPlugin 
+                                ? `🔑 Tu Serial Key de ${item.product.name} — OFFSZN`
+                                : `✅ Confirmación de Compra - ${item.product.name}`,
                             html: buyerHtml,
                             fromName: 'OFFSZN'
                         });
 
-                        // B. Notify Producer (Sale Notification)
+                        // B. Notify Producer / Admin (Sale Notification)
                         const { data: prodData } = await supabase.from('users').select('email, nickname').eq('id', item.product.producer_id).single();
-                        if (prodData?.email) {
-                            const prodHtml = `
-                                <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
-                                    <h2 style="color: #8B5CF6; margin-bottom:20px;">¡Nueva Venta Realizada! 💰</h2>
-                                    <p style="color:#ccc; line-height:1.6;">Hola <b>${prodData.nickname || 'Productor'}</b>, el usuario <b>${userNickname}</b> acaba de comprar tu producto <b style="color:#fff;">${item.product.name}</b>.</p>
-                                    <div style="background:#111; border:1px solid #333; border-radius:10px; padding:20px; margin:20px 0;">
-                                        <p style="color:#888; margin:0;"><b style="color:#fff;">Monto de la Variante:</b> $${item.variant_price} USD</p>
-                                    </div>
-                                    <a href="https://offszn.lat/transacciones" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:10px;">GESTIONAR MI DASHBOARD</a>
-                                    <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
-                                    <p style="font-size:0.75rem; color:#555;">¡Sigue así! OFFSZN.</p>
+                        const adminNotifyEmail = prodData?.email || 'willie2008garay@gmail.com';
+
+                        const adminHtml = `
+                            <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
+                                <h2 style="color: #8B5CF6; margin-bottom:20px;">¡Nueva Venta! 💰 ${isPlugin ? '🎛️ Plugin' : ''}</h2>
+                                <p style="color:#ccc; line-height:1.6;">El usuario <b>${userNickname}</b> (<b>${userEmail}</b>) acaba de comprar <b style="color:#fff;">${item.product.name}</b>.</p>
+                                <div style="background:#111; border:1px solid #333; border-radius:10px; padding:20px; margin:20px 0;">
+                                    <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Monto:</b> $${item.variant_price} USD</p>
+                                    ${(isPlugin && generatedLicenseKey) ? `<p style="color:#888; margin:0;"><b style="color:#ff9f0a;">Serial Key generada:</b> <span style="font-family:monospace; color:#fff;">${generatedLicenseKey}</span></p>` : ''}
                                 </div>
-                            `;
-                            await sendOffsznEmail({
-                                to: prodData.email,
-                                subject: `💸 ¡Venta Confirmada! Alguien compró ${item.product.name}`,
-                                html: prodHtml,
-                                fromName: 'OFFSZN Notificaciones'
-                            });
-                        }
+                                <a href="https://offszn.lat/transacciones" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:10px;">VER TRANSACCIONES</a>
+                            </div>
+                        `;
+                        await sendOffsznEmail({
+                            to: adminNotifyEmail,
+                            subject: `💸 Venta: ${item.product.name} — $${item.variant_price} USD`,
+                            html: adminHtml,
+                            fromName: 'OFFSZN Notificaciones'
+                        });
                     }
                 } catch (emailErr) {
                     console.error("[EmailJS] Async flow error:", emailErr);
