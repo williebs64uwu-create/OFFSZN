@@ -185,13 +185,28 @@ export const createPayPalOrder = async (req, res) => {
     try {
         // Auth header presente: verificado internamente
         const userId = req.user?.userId;
-        let cartItems = [];
-
-        // 1. Get Cart Items (From DB if logged in, from Body if guest)
+        // 1. Get Cart Items (From DB if logged in, from Body if guest, or directly if directProductId)
         const isNegotiation = req.body.isNegotiation || false;
         const negotiateToken = req.body.negotiateToken;
+        const directProductId = req.body.directProductId;
 
-        if (isNegotiation && negotiateToken) {
+        if (directProductId) {
+            const { data: product, error: prodErr } = await supabase
+                .from('products')
+                .select('id, name, price_basic, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url, status')
+                .eq('id', directProductId)
+                .single();
+
+            if (prodErr || !product) {
+                return res.status(404).json({ error: 'Producto no encontrado' });
+            }
+
+            cartItems = [{
+                product,
+                license_name: 'lifetime',
+                variant_price: product.price_basic
+            }];
+        } else if (isNegotiation && negotiateToken) {
             // NEGOTIATION FLOW
             const { data: proposal, error: propError } = await supabase
                 .from('propuestas_offszn')
@@ -594,8 +609,25 @@ export const capturePayPalOrder = async (req, res) => {
             let cartItems = [];
             const isNegotiation = req.body.isNegotiation || false;
             const negotiateToken = req.body.negotiateToken;
+            const directProductId = req.body.directProductId;
 
-            if (isNegotiation && negotiateToken) {
+            if (directProductId) {
+                const { data: product, error: prodErr } = await supabase
+                    .from('products')
+                    .select('id, name, price_basic, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url, status')
+                    .eq('id', directProductId)
+                    .single();
+
+                if (prodErr || !product) {
+                    console.error("[PayPalCapture] Product not found during direct checkout:", directProductId);
+                } else {
+                    cartItems = [{
+                        product,
+                        license_name: 'lifetime',
+                        variant_price: product.price_basic
+                    }];
+                }
+            } else if (isNegotiation && negotiateToken) {
                 const { data: proposal, error: propError } = await supabase
                     .from('propuestas_offszn')
                     .select('*, product:products(id, name, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url)')
