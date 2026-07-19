@@ -1723,11 +1723,14 @@ export const handlePayPalWebhook = async (req, res) => {
                 matchedUserId = matchedUser.id;
             }
 
+            const productId = pluginToGenerate === 'Easy Master' ? 900 : 899;
+
             // Create Order Record to prevent double-processing and show in "Mis Compras"
             const { data: newOrder, error: orderError } = await supabase
                 .from('orders')
                 .insert({
                     user_id: matchedUserId,
+                    product_id: productId,
                     transaction_id: transactionId,
                     status: 'completed',
                     total_price: amountPaid,
