@@ -405,35 +405,116 @@ class PluginDirectCheckout {
             document.body.appendChild(modal);
         }
 
-        modal.innerHTML = `
-            <div class="plugin-modal-card">
-                <button class="plugin-modal-close-x" id="plugin-modal-close-x" title="Cerrar">&times;</button>
-                <div class="plugin-modal-success-icon">
-                    <i class="bi bi-check-lg"></i>
-                </div>
-                <h2 class="plugin-modal-title">¡Compra Completada!</h2>
-                <p class="plugin-modal-desc">
-                    ¡Gracias por adquirir <b>${this.downloads.name}</b>! Aquí tienes tu Serial Key FULL para activar el plugin en tu DAW:
-                </p>
+        // Check if we received multiple keys (e.g. "Easy Mix: KEY1 | Easy Master (REGALO): KEY2")
+        const isMultiKey = serialKey.includes(' | ');
+        let modalHtml = '';
 
-                <div class="plugin-key-container">
-                    <span class="plugin-key-value" id="plugin-serial-key-text">${serialKey}</span>
-                    <button class="plugin-copy-btn" id="plugin-copy-key-btn">Copiar</button>
-                </div>
+        if (isMultiKey) {
+            const keyParts = serialKey.split(' | ');
+            const licenses = keyParts.map(part => {
+                const parts = part.split(': ');
+                return {
+                    name: parts[0] || 'Plugin',
+                    key: parts[1] || part
+                };
+            });
 
-                <div class="plugin-download-section">
-                    <h3 class="plugin-download-title">Descargar instaladores</h3>
-                    <div class="plugin-download-buttons">
-                        <a href="${this.downloads.win}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer">
-                            <i class="bi bi-windows" style="color: #0078d4;"></i> Windows
-                        </a>
-                        <a href="${this.downloads.mac}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer">
-                            <i class="bi bi-apple"></i> macOS
-                        </a>
+            // Links configuration for 2x1 combo
+            const mixLinks = {
+                win: 'https://drive.google.com/file/d/1WfaTrrbuaxymcFhnHGjmrump_rG-LGUW/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1o1q0Ca5eghr1CJmtxmOw52MgEXi_wKl9/view?usp=sharing'
+            };
+            const masterLinks = {
+                win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
+                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+            };
+
+            let keysMarkup = '';
+            licenses.forEach((lic, idx) => {
+                keysMarkup += `
+                    <div style="text-align: left; margin-bottom: 15px;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #ff9f0a; text-transform: uppercase; letter-spacing: 1px;">${lic.name}</span>
+                        <div class="plugin-key-container" style="margin-top: 6px; margin-bottom: 0; padding: 12px 16px;">
+                            <span class="plugin-key-value" style="font-size: 0.95rem;">${lic.key}</span>
+                            <button class="plugin-copy-btn btn-copy-multi" data-key="${lic.key}" style="padding: 6px 12px; font-size: 0.8rem;">Copiar</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            modalHtml = `
+                <div class="plugin-modal-card" style="max-width: 520px;">
+                    <button class="plugin-modal-close-x" id="plugin-modal-close-x" title="Cerrar">&times;</button>
+                    <div class="plugin-modal-success-icon">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    <h2 class="plugin-modal-title">¡Compra Completada!</h2>
+                    <p class="plugin-modal-desc" style="margin-bottom: 20px;">
+                        ¡Gracias por tu compra! Aquí tienes tus Serial Keys de por vida listas para activar en tu DAW:
+                    </p>
+
+                    ${keysMarkup}
+
+                    <!-- MIX DOWNLOADS -->
+                    <div class="plugin-download-section" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 18px; margin-top: 20px; text-align: left;">
+                        <h3 class="plugin-download-title" style="margin-bottom: 10px; font-size: 0.72rem;">Instaladores Easy Mix</h3>
+                        <div class="plugin-download-buttons">
+                            <a href="${mixLinks.win}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer" style="padding: 10px; font-size: 0.85rem;">
+                                <i class="bi bi-windows" style="color: #0078d4;"></i> Windows
+                            </a>
+                            <a href="${mixLinks.mac}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer" style="padding: 10px; font-size: 0.85rem;">
+                                <i class="bi bi-apple"></i> macOS
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- MASTER DOWNLOADS -->
+                    <div class="plugin-download-section" style="border-top: none; padding-top: 12px; margin-top: 5px; text-align: left;">
+                        <h3 class="plugin-download-title" style="margin-bottom: 10px; font-size: 0.72rem;">Instaladores Easy Master</h3>
+                        <div class="plugin-download-buttons">
+                            <a href="${masterLinks.win}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer" style="padding: 10px; font-size: 0.85rem;">
+                                <i class="bi bi-windows" style="color: #0078d4;"></i> Windows
+                            </a>
+                            <a href="${masterLinks.mac}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer" style="padding: 10px; font-size: 0.85rem;">
+                                <i class="bi bi-apple"></i> macOS
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        } else {
+            modalHtml = `
+                <div class="plugin-modal-card">
+                    <button class="plugin-modal-close-x" id="plugin-modal-close-x" title="Cerrar">&times;</button>
+                    <div class="plugin-modal-success-icon">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    <h2 class="plugin-modal-title">¡Compra Completada!</h2>
+                    <p class="plugin-modal-desc">
+                        ¡Gracias por adquirir <b>${this.downloads.name}</b>! Aquí tienes tu Serial Key FULL para activar el plugin en tu DAW:
+                    </p>
+
+                    <div class="plugin-key-container">
+                        <span class="plugin-key-value" id="plugin-serial-key-text">${serialKey}</span>
+                        <button class="plugin-copy-btn" id="plugin-copy-key-btn">Copiar</button>
+                    </div>
+
+                    <div class="plugin-download-section">
+                        <h3 class="plugin-download-title">Descargar instaladores</h3>
+                        <div class="plugin-download-buttons">
+                            <a href="${this.downloads.win}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer">
+                                <i class="bi bi-windows" style="color: #0078d4;"></i> Windows
+                            </a>
+                            <a href="${this.downloads.mac}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer">
+                                <i class="bi bi-apple"></i> macOS
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        modal.innerHTML = modalHtml;
 
         // Bind X close button
         const closeX = modal.querySelector('#plugin-modal-close-x');
@@ -441,22 +522,43 @@ class PluginDirectCheckout {
             modal.classList.remove('active');
         });
 
-        // Bind copy button
-        const copyBtn = modal.querySelector('#plugin-copy-key-btn');
-        copyBtn.addEventListener('click', () => {
-            navigator.clipboard.writeText(serialKey).then(() => {
-                copyBtn.innerText = '¡Copiado!';
-                copyBtn.style.background = '#10b981';
-                copyBtn.style.color = '#fff';
-                setTimeout(() => {
-                    copyBtn.innerText = 'Copiar';
-                    copyBtn.style.background = '#ff9f0a';
-                    copyBtn.style.color = '#000';
-                }, 2000);
-            }).catch(err => {
-                console.error('Copy failed:', err);
+        // Bind copy button(s)
+        if (isMultiKey) {
+            const copyButtons = modal.querySelectorAll('.btn-copy-multi');
+            copyButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const textToCopy = btn.getAttribute('data-key');
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        btn.innerText = 'Copiado';
+                        btn.style.background = '#10b981';
+                        btn.style.color = '#fff';
+                        setTimeout(() => {
+                            btn.innerText = 'Copiar';
+                            btn.style.background = '#ff9f0a';
+                            btn.style.color = '#000';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Copy failed:', err);
+                    });
+                });
             });
-        });
+        } else {
+            const copyBtn = modal.querySelector('#plugin-copy-key-btn');
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(serialKey).then(() => {
+                    copyBtn.innerText = '¡Copiado!';
+                    copyBtn.style.background = '#10b981';
+                    copyBtn.style.color = '#fff';
+                    setTimeout(() => {
+                        copyBtn.innerText = 'Copiar';
+                        copyBtn.style.background = '#ff9f0a';
+                        copyBtn.style.color = '#000';
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Copy failed:', err);
+                });
+            });
+        }
 
         // Activate the modal display
         setTimeout(() => {

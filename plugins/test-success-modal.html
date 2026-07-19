@@ -431,6 +431,7 @@
     <div class="tabs">
         <button class="tab-btn active" id="tab-mix" onclick="switchPlugin('mix')">🎛️ Easy Mix</button>
         <button class="tab-btn" id="tab-master" onclick="switchPlugin('master')">🎚️ Easy Master</button>
+        <button class="tab-btn" id="tab-promo" onclick="switchPlugin('promo')">🏆 Combo 2x1</button>
     </div>
 
     <!-- KEY DISPLAY -->
@@ -613,13 +614,7 @@
             <div class="info-item">
                 <div style="font-size:1.4rem; margin-bottom:6px;">✅</div>
                 <h3>Easy Mix &amp; Easy Master</h3>
-                <p>Ambas páginas usan el mismo <code style="color:#ff9f0a;">plugin-checkout.js</code> diferenciadas por PLUGIN_ID.</p>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        const plugins = {
+                <p>Ambas páginas usan el mismo <code style="col        const plugins = {
             mix: {
                 name: 'Easy Mix',
                 price: '5',
@@ -633,6 +628,14 @@
                 keyPrefix: 'MASTER-FULL',
                 win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
                 mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+            },
+            promo: {
+                name: 'Combo 2x1 Mundialista',
+                price: '5',
+                winMix: 'https://drive.google.com/file/d/1WfaTrrbuaxymcFhnHGjmrump_rG-LGUW/view?usp=sharing',
+                macMix: 'https://drive.google.com/file/d/1o1q0Ca5eghr1CJmtxmOw52MgEXi_wKl9/view?usp=sharing',
+                winMaster: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
+                macMaster: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
             }
         };
 
@@ -645,39 +648,153 @@
         }
 
         function regenerateKey() {
-            const plugin = plugins[currentPlugin];
-            currentKey = generateFakeKey(plugin.keyPrefix);
+            if (currentPlugin === 'promo') {
+                currentKey = `Easy Mix: ${generateFakeKey('EASY-FULL')} | Easy Master (REGALO): ${generateFakeKey('MASTER-FULL')}`;
+            } else {
+                currentKey = generateFakeKey(plugins[currentPlugin].keyPrefix);
+            }
             updateAllKeys();
         }
 
         function updateAllKeys() {
             document.getElementById('current-key-display').textContent = currentKey;
-            document.getElementById('modal-serial-key').textContent = currentKey;
+
+            // Render dynamic modal based on keys count
+            const modalContainer = document.getElementById('success-modal-card');
+            
+            if (currentPlugin === 'promo') {
+                const parts = currentKey.split(' | ');
+                const mixKey = parts[0].split(': ')[1];
+                const masterKey = parts[1].split(': ')[1];
+
+                modalContainer.innerHTML = `
+                    <button class="modal-close-x" onclick="alert('Cerrar')">✕</button>
+                    <div class="plugin-modal-success-icon">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    <h2 class="plugin-modal-title">¡Compra Completada!</h2>
+                    <p class="plugin-modal-desc">
+                        ¡Gracias por tu compra! Aquí tienes tus Serial Keys de por vida listas para activar en tu DAW:
+                    </p>
+
+                    <div style="text-align: left; margin-bottom: 15px;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #ff9f0a; text-transform: uppercase; letter-spacing: 1px;">Easy Mix</span>
+                        <div class="plugin-key-container" style="margin-top: 6px; margin-bottom: 0;">
+                            <span class="plugin-key-value">${mixKey}</span>
+                            <button class="plugin-copy-btn" onclick="copyIndividualKey('${mixKey}', this)">Copiar</button>
+                        </div>
+                    </div>
+
+                    <div style="text-align: left; margin-bottom: 15px;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: #ff9f0a; text-transform: uppercase; letter-spacing: 1px;">Easy Master (REGALO)</span>
+                        <div class="plugin-key-container" style="margin-top: 6px; margin-bottom: 0;">
+                            <span class="plugin-key-value">${masterKey}</span>
+                            <button class="plugin-copy-btn" onclick="copyIndividualKey('${masterKey}', this)">Copiar</button>
+                        </div>
+                    </div>
+
+                    <div class="plugin-download-section" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 18px; margin-top: 20px; text-align: left;">
+                        <h3 class="plugin-download-title" style="margin-bottom: 10px; font-size: 0.72rem;">Instaladores Easy Mix</h3>
+                        <div class="plugin-download-buttons">
+                            <a href="${plugins.promo.winMix}" class="plugin-dl-btn" target="_blank">
+                                <i class="bi bi-windows" style="color: #0078d4;"></i> Windows
+                            </a>
+                            <a href="${plugins.promo.macMix}" class="plugin-dl-btn" target="_blank">
+                                <i class="bi bi-apple"></i> macOS
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="plugin-download-section" style="border-top: none; padding-top: 12px; margin-top: 5px; text-align: left;">
+                        <h3 class="plugin-download-title" style="margin-bottom: 10px; font-size: 0.72rem;">Instaladores Easy Master</h3>
+                        <div class="plugin-download-buttons">
+                            <a href="${plugins.promo.winMaster}" class="plugin-dl-btn" target="_blank">
+                                <i class="bi bi-windows" style="color: #0078d4;"></i> Windows
+                            </a>
+                            <a href="${plugins.promo.macMaster}" class="plugin-dl-btn" target="_blank">
+                                <i class="bi bi-apple"></i> macOS
+                            </a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                modalContainer.innerHTML = `
+                    <button class="modal-close-x" onclick="alert('Cerrar')">✕</button>
+                    <div class="plugin-modal-success-icon">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    <h2 class="plugin-modal-title">¡Compra Completada!</h2>
+                    <p class="plugin-modal-desc">
+                        ¡Gracias por adquirir <b id="modal-product-name">${plugins[currentPlugin].name}</b>!
+                        Aquí tienes tu Serial Key FULL para activar el plugin en tu DAW:
+                    </p>
+
+                    <div class="plugin-key-container">
+                        <span class="plugin-key-value" id="modal-serial-key">${currentKey}</span>
+                        <button class="plugin-copy-btn" id="copy-btn" onclick="copyKey()">Copiar</button>
+                    </div>
+
+                    <div class="plugin-download-section">
+                        <h3 class="plugin-download-title">Descargar instaladores</h3>
+                        <div class="plugin-download-buttons">
+                            <a class="plugin-dl-btn" id="win-link" href="${plugins[currentPlugin].win}" target="_blank">
+                                <i class="bi bi-windows" style="color:#0078d4;"></i> Windows
+                            </a>
+                            <a class="plugin-dl-btn" id="mac-link" href="${plugins[currentPlugin].mac}" target="_blank">
+                                <i class="bi bi-apple"></i> macOS
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+
             document.getElementById('email-serial-key').textContent = currentKey;
             document.getElementById('admin-serial-key').textContent = currentKey;
+        }
+
+        function copyIndividualKey(keyText, btn) {
+            navigator.clipboard.writeText(keyText).then(() => {
+                btn.textContent = 'Copiado';
+                btn.style.background = '#10b981';
+                btn.style.color = '#fff';
+                setTimeout(() => {
+                    btn.textContent = 'Copiar';
+                    btn.style.background = '#ff9f0a';
+                    btn.style.color = '#000';
+                }, 2000);
+            });
         }
 
         function switchPlugin(type) {
             currentPlugin = type;
             const plugin = plugins[type];
-            currentKey = generateFakeKey(plugin.keyPrefix);
 
+            // Update tab styles
             document.getElementById('tab-mix').classList.toggle('active', type === 'mix');
             document.getElementById('tab-master').classList.toggle('active', type === 'master');
+            
+            // Add or handle active tab for promo 2x1 (we will update tabs in DOM shortly)
+            let tabPromo = document.getElementById('tab-promo');
+            if (tabPromo) {
+                tabPromo.classList.toggle('active', type === 'promo');
+            }
 
-            // Modal
-            document.getElementById('modal-product-name').textContent = plugin.name;
-            document.getElementById('win-link').href = plugin.win;
-            document.getElementById('mac-link').href = plugin.mac;
+            if (type === 'promo') {
+                currentKey = `Easy Mix: ${generateFakeKey('EASY-FULL')} | Easy Master (REGALO): ${generateFakeKey('MASTER-FULL')}`;
+            } else {
+                currentKey = generateFakeKey(plugin.keyPrefix);
+            }
 
             // Emails
-            document.getElementById('buyer-subject').textContent = `🔑 Tu Serial Key de ${plugin.name} — OFFSZN`;
-            document.getElementById('email-product-name').textContent = plugin.name;
-            document.getElementById('email-win-link').href = plugin.win;
-            document.getElementById('email-mac-link').href = plugin.mac;
-            document.getElementById('admin-subject').textContent = `💸 Venta: ${plugin.name} — $${plugin.price} USD`;
-            document.getElementById('admin-product-name').textContent = plugin.name;
-            document.getElementById('admin-price').textContent = plugin.price;
+            const nameToUse = type === 'promo' ? 'Easy Mix + Easy Master 2x1' : plugin.name;
+            const priceToUse = type === 'promo' ? '5' : plugin.price;
+            document.getElementById('buyer-subject').textContent = `🔑 Tu Serial Key de ${nameToUse} — OFFSZN`;
+            document.getElementById('email-product-name').textContent = nameToUse;
+            document.getElementById('email-win-link').href = type === 'promo' ? plugins.promo.winMix : plugin.win;
+            document.getElementById('email-mac-link').href = type === 'promo' ? plugins.promo.macMix : plugin.mac;
+            document.getElementById('admin-subject').textContent = `💸 Venta: ${nameToUse} — $${priceToUse} USD`;
+            document.getElementById('admin-product-name').textContent = nameToUse;
+            document.getElementById('admin-price').textContent = priceToUse;
 
             updateAllKeys();
         }
@@ -699,18 +816,20 @@
         function copyKey() {
             navigator.clipboard.writeText(currentKey).then(() => {
                 const btn = document.getElementById('copy-btn');
-                btn.textContent = '¡Copiado!';
-                btn.style.background = '#10b981';
-                btn.style.color = '#fff';
-                setTimeout(() => {
-                    btn.textContent = 'Copiar';
-                    btn.style.background = '#ff9f0a';
-                    btn.style.color = '#000';
-                }, 2000);
+                if (btn) {
+                    btn.textContent = '¡Copiado!';
+                    btn.style.background = '#10b981';
+                    btn.style.color = '#fff';
+                    setTimeout(() => {
+                        btn.textContent = 'Copiar';
+                        btn.style.background = '#ff9f0a';
+                        btn.style.color = '#000';
+                    }, 2000);
+                }
             });
         }
 
-        // Init — call switchPlugin to set all links correctly from the start
+        // Init
         switchPlugin('mix');
     </script>
 </body>
