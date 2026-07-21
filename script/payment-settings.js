@@ -127,22 +127,41 @@ const PaymentSettings = {
 
     fetchSalesHistory: async function () {
         try {
-            const { data, error } = await window.supabaseClient
-                .from('order_items')
-                .select(`
-                    id,
-                    price_at_purchase,
-                    created_at,
-                    product:products!inner(id, name, producer_id),
-                    order:orders(id, transaction_id, status, user_id, guest_email, buyer:users(nickname, email))
-                `)
-                .eq('products.producer_id', this.userId)
-                .order('created_at', { ascending: false });
+            let allSales = [];
+            let page = 0;
+            const pageSize = 1000;
+            let fetchMore = true;
 
-            if (error) throw error;
+            while (fetchMore) {
+                const { data, error } = await window.supabaseClient
+                    .from('order_items')
+                    .select(`
+                        id,
+                        price_at_purchase,
+                        created_at,
+                        product:products!inner(id, name, producer_id),
+                        order:orders(id, transaction_id, status, user_id, guest_email, buyer:users(nickname, email))
+                    `)
+                    .eq('products.producer_id', this.userId)
+                    .order('created_at', { ascending: false })
+                    .range(page * pageSize, (page + 1) * pageSize - 1);
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    allSales = allSales.concat(data);
+                    if (data.length < pageSize) {
+                        fetchMore = false;
+                    } else {
+                        page++;
+                    }
+                } else {
+                    fetchMore = false;
+                }
+            }
 
             // Filter to ensure only items belonging to this producer
-            this.data.sales = data.filter(item => item.product && item.product.producer_id === this.userId);
+            this.data.sales = allSales.filter(item => item.product && item.product.producer_id === this.userId);
         } catch (err) {
             console.error("Error fetching sales history:", err);
             this.data.sales = null; 
