@@ -1258,15 +1258,23 @@
             if (window.supabaseClient) {
                 supabaseClient = window.supabaseClient;
             }
-            // 2nd priority: create from OFFSZN_CONFIG (set by env.js / config.js)
-            else if (window.OFFSZN_CONFIG) {
+            // 2nd priority: create from env.js global variables
+            else if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+                supabaseClient = window.supabase.createClient(
+                    window.SUPABASE_URL,
+                    window.SUPABASE_ANON_KEY
+                );
+                window.supabaseClient = supabaseClient;
+            }
+            // 3rd priority: create from OFFSZN_CONFIG if populated there
+            else if (window.OFFSZN_CONFIG && window.OFFSZN_CONFIG.SUPABASE_URL) {
                 supabaseClient = window.supabase.createClient(
                     window.OFFSZN_CONFIG.SUPABASE_URL,
                     window.OFFSZN_CONFIG.SUPABASE_ANON_KEY
                 );
                 window.supabaseClient = supabaseClient;
             }
-            // 3rd priority: hardcoded fallback so WebView2 always has a working client
+            // 4th priority: hardcoded fallback so WebView2 always has a working client
             else {
                 const SUPA_URL  = 'https://uwpjkrgusgywxkiyasmm.supabase.co';
                 const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3cGprcmd1c2d5d3hraXlhc21tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5MTg4MDYsImV4cCI6MjA1MDQ5NDgwNn0.D1UXKJ_Ja8ZIzb79YtoFqF9jVL0sW3pUv4xKJLqPi1c';
