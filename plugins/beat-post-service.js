@@ -48,6 +48,78 @@ function callNativeHost(action, payload = {}) {
     return false;
 }
 
+// --- Slug Generation ---
+function generatePublicSlug(title) {
+    if (!title) return "";
+    return title
+        .toLowerCase()
+        .trim()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
+        .replace(/\+/g, '-') // Replace + with -
+        .replace(/_/g, '-') // Replace _ with -
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/\s+/g, '-') // Spaces to hyphens
+        .replace(/-+/g, '-') // Multiple hyphens to single
+        .replace(/^-+|-+$/g, '') // Trim hyphens from ends
+        .substring(0, 60); // Max 60 characters
+}
+
+/**
+ * Direct upload helper function to R2 via api base.
+ */
+async function uploadToR2(file, folder, token, apiBase, onProgress) {
+    // 1. Get Signed URL from Backend
+    const response = await fetch(`${apiBase}/r2/upload-url`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            fileName: file.name || `${Math.random().toString(36).substring(2, 7)}.file`,
+            fileType: file.type || 'application/octet-stream',
+            folder: folder,
+            fileSize: file.size,
+            version: 'v3' // Always use Account 3 Scale
+        })
+    });
+
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || 'Error al obtener URL de R2');
+    }
+
+    const { uploadUrl, key, publicUrl } = await response.json();
+
+    // 2. Direct Upload using XMLHttpRequest for progress tracking
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', uploadUrl);
+        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+
+        if (onProgress && xhr.upload) {
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    onProgress(percentComplete);
+                }
+            };
+        }
+
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                console.log(`✅ [R2] Archivo subido con éxito: ${key}`);
+                resolve({ key, publicUrl });
+            } else {
+                reject(new Error(`La subida directa a R2 falló con status ${xhr.status}`));
+            }
+        };
+
+        xhr.onerror = () => reject(new Error('Error de red al subir a R2'));
+        xhr.send(file);
+    });
+}
+
 /**
  * Publishes the beat either as a simple listing or with YouTube syncing.
  */
@@ -115,35 +187,85 @@ async function uploadBeatProduct(supabaseClient, session, metadata, files, isYou
         }
     }
 
-    // 2. Upload Files to Storage Buckets (Store Listing)
-    if (onProgress) onProgress('upload_store', 'Subiendo archivos a OFFSZN...');
-    
-    // In production, we upload files to supabase storage or R2
-    // and retrieve the public urls.
-    const uniqueId = Math.random().toString(36).substring(2, 15);
-    
-    // Simulate uploads and mock urls
-    const coverUrl = `https://storage.offszn.lat/covers/${userId}/${uniqueId}.jpg`;
-    const mp3Url = `https://storage.offszn.lat/previews/${userId}/${uniqueId}.mp3`;
-    const wavUrl = `https://storage.offszn.lat/secure/beats/${userId}/${uniqueId}.wav`;
+    // 2. Real Upload Files to R2 Storage Buckets
+    if (onProgress) onProgress('upload_store', 'Preparando subida de archivos...');
+
+    let image_url = null;
+    let audio_url = null;
+    let mp3_url = null;
+    let wav_url = null;
+
+    const filesToUpload = [];
+    if (files.cover) filesToUpload.push({ file: files.cover, folder: 'products/covers', type: 'cover' });
+    if (files.mp3) filesToUpload.push({ file: files.mp3, folder: 'beats/mp3', type: 'mp3' });
+    if (files.wav) filesToUpload.push({ file: files.wav, folder: 'secure-products/beats/wav', type: 'wav' });
+
+    for (let i = 0; i < filesToUpload.length; i++) {
+        const item = filesToUpload[i];
+        if (onProgress) onProgress('upload_store', `Subiendo ${item.type === 'cover' ? 'portada' : item.type.toUpperCase()}...`);
+        
+        const res = await uploadToR2(item.file, item.folder, token, apiBase, (percent) => {
+            const overallPercent = Math.round((i / filesToUpload.length) * 100 + (percent / filesToUpload.length));
+            if (onProgress) onProgress('upload_store', `Subiendo ${item.type === 'cover' ? 'portada' : item.type.toUpperCase()} (${Math.round(percent)}%)...`);
+        });
+
+        if (item.type === 'cover') image_url = res.key;
+        if (item.type === 'mp3') {
+            audio_url = res.key;
+            mp3_url = res.key;
+        }
+        if (item.type === 'wav') wav_url = res.key;
+    }
 
     // 3. Save Product Listing inside DB
     if (onProgress) onProgress('save_db', 'Registrando beat en tu tienda...');
     
+    // Fetch default license price configuration if available, else defaults
+    let licenseSettings = null;
+    try {
+        const { data: userData } = await supabaseClient
+            .from('users')
+            .select('license_settings')
+            .eq('id', userId)
+            .maybeSingle();
+        if (userData && userData.license_settings) {
+            licenseSettings = userData.license_settings;
+        }
+    } catch (e) {
+        console.warn("Could not fetch user license settings, fallback defaults:", e);
+    }
+
+    const defaultLicenses = {
+        offszn_basic: { name: 'Basic', price: 19.99, enabled: true, features: ['MP3 Tagged'], id: 'offszn_basic' },
+        offszn_premium: { name: 'Premium', price: 49.99, enabled: true, features: ['MP3 Tagged', 'WAV Untagged'], id: 'offszn_premium' },
+        offszn_unlimited: { name: 'Unlimited', price: 99.99, enabled: true, features: ['MP3 Tagged', 'WAV Untagged', 'Stems'], id: 'offszn_unlimited' },
+        offszn_exclusive: { name: 'Exclusive', price: 299.99, enabled: true, features: ['MP3 Tagged', 'WAV Untagged', 'Stems'], id: 'offszn_exclusive' }
+    };
+    const finalLicenses = licenseSettings || defaultLicenses;
+
     const dbPayload = {
+        producer_id: userId,
         name: metadata.title,
         title: metadata.title,
+        public_slug: generatePublicSlug(metadata.title),
         description: metadata.description || '',
         tags: (metadata.tags || []).slice(0, 3),
-        bpm: parseInt(metadata.bpm) || 0,
+        bpm: parseInt(metadata.bpm) || 140,
         key: metadata.key || 'C Min',
         product_type: 'beat',
-        image_url: coverUrl,
-        audio_url: mp3Url,
-        mp3_url: mp3Url,
-        wav_url: wavUrl,
+        image_url: image_url,
+        audio_url: audio_url,
+        mp3_url: mp3_url,
+        wav_url: wav_url,
         youtube_id: youtubeVideoId,
         youtube_url: youtubeVideoId ? `https://youtube.com/watch?v=${youtubeVideoId}` : null,
+        r2_version: 'v3',
+        storage_version: 'v3',
+        price_basic: finalLicenses.offszn_basic.enabled ? finalLicenses.offszn_basic.price : null,
+        price_premium: finalLicenses.offszn_premium.enabled ? finalLicenses.offszn_premium.price : null,
+        price_stems: finalLicenses.offszn_unlimited.enabled ? finalLicenses.offszn_unlimited.price : null,
+        price_exclusive: finalLicenses.offszn_exclusive.enabled ? finalLicenses.offszn_exclusive.price : null,
+        licenses: finalLicenses,
         status: 'approved',
         visibility: 'public'
     };
@@ -196,5 +318,3 @@ window.BeatPostService = {
     uploadBeatProduct,
     initNativeBridgeListener
 };
-
-
