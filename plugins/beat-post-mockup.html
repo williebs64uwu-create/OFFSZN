@@ -1157,12 +1157,23 @@
         </div>
 
         <!-- Footer -->
-        <div class="plugin-footer">
+        <div class="plugin-footer" style="position: relative;">
             <span id="footer-status-text">Desconectado</span>
-            <div class="user-indicator" id="footer-user" style="display: none; align-items: center; gap: 8px;">
-                <div class="user-avatar">W</div>
-                <span>Willie OFFSZN</span>
+            <div class="user-indicator" id="footer-user" style="display: none; align-items: center; gap: 8px; cursor: pointer;" onclick="toggleUserDropdown(event)">
+                <div class="user-avatar" id="footer-user-avatar">W</div>
+                <span id="footer-user-name">Willie OFFSZN</span>
                 <span id="user-plan-badge" style="font-size: 8px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; border: 1.5px solid transparent; display: none;"></span>
+                <i class="fa-solid fa-chevron-up" style="font-size: 8px; opacity: 0.6; margin-left: 2px;"></i>
+            </div>
+            
+            <!-- User Dropdown Menu -->
+            <div id="user-dropdown-menu" style="display: none; position: absolute; bottom: 45px; right: 15px; background: #0c0c0e; border: 1px solid var(--border); border-radius: 8px; width: 150px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 1000; overflow: hidden; flex-direction: column; text-align: left;">
+                <a href="#" onclick="openProfilePage(event)" style="padding: 10px 12px; font-size: 11px; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: background 0.2s; border-bottom: 1px solid rgba(255,255,255,0.03);">
+                    <i class="fa-solid fa-user" style="font-size: 10px; color: var(--dim);"></i> Ver Perfil
+                </a>
+                <a href="#" onclick="logoutUser(event)" style="padding: 10px 12px; font-size: 11px; color: #ff3b30; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
+                    <i class="fa-solid fa-right-from-bracket" style="font-size: 10px;"></i> Cerrar Sesión
+                </a>
             </div>
         </div>
 
@@ -1306,6 +1317,46 @@
                 console.log('[BeatPost] Using production Supabase fallback.');
             }
 
+            // Load saved tokens natively if available
+            let savedSupaToken = '';
+            let savedYtToken = '';
+            if (window.loadTokenNative) {
+                try {
+                    const combinedToken = await window.loadTokenNative();
+                    if (combinedToken) {
+                        if (combinedToken.includes('||yt_token||')) {
+                            const parts = combinedToken.split('||yt_token||');
+                            savedSupaToken = parts[0];
+                            savedYtToken = parts[1];
+                        } else {
+                            savedSupaToken = combinedToken;
+                        }
+                        console.log('[BeatPost] Loaded native VST session token.');
+                    }
+                } catch (e) {
+                    console.error('[BeatPost] Failed to load native token:', e);
+                }
+            }
+
+            // Fallback to localStorage if native load empty
+            if (!savedSupaToken) {
+                savedSupaToken = localStorage.getItem('vst_supa_token');
+                savedYtToken = localStorage.getItem('vst_yt_token');
+            }
+
+            if (savedSupaToken) {
+                console.log('[BeatPost] Restoring saved user session...');
+                const { data, error } = await supabaseClient.auth.setSession({
+                    access_token: savedSupaToken,
+                    refresh_token: savedSupaToken
+                });
+                if (!error && data.session) {
+                    window.ytAccessToken = savedYtToken; // Save YouTube access token globally
+                    handleSession(data.session);
+                    return;
+                }
+            }
+
             const { data } = await supabaseClient.auth.getSession();
             if (data.session) {
                 handleSession(data.session);
@@ -1351,12 +1402,21 @@
         }
 
         async function loginWithToken() {
-            const token = document.getElementById('auth-token-input').value.trim();
-            if (!token) {
+            const combinedToken = document.getElementById('auth-token-input').value.trim();
+            if (!combinedToken) {
                 alert('Pega el token de acceso.');
                 return;
             }
             logDebug('Vinculando token...');
+            
+            let token = combinedToken;
+            let ytToken = '';
+            if (combinedToken.includes('||yt_token||')) {
+                const parts = combinedToken.split('||yt_token||');
+                token = parts[0];
+                ytToken = parts[1];
+            }
+
             if (supabaseClient) {
                 const { data, error } = await supabaseClient.auth.setSession({
                     access_token: token,
@@ -1366,6 +1426,24 @@
                     logDebug('Token inválido: ' + error.message);
                     alert('Token inválido o expirado.');
                 } else if (data.session) {
+                    // Save tokens locally
+                    localStorage.setItem('vst_supa_token', token);
+                    if (ytToken) {
+                        localStorage.setItem('vst_yt_token', ytToken);
+                    } else {
+                        localStorage.removeItem('vst_yt_token');
+                    }
+                    window.ytAccessToken = ytToken;
+
+                    // Save tokens natively in C++ host
+                    if (window.saveTokenNative) {
+                        try {
+                            await window.saveTokenNative(combinedToken);
+                        } catch (e) {
+                            console.error('[BeatPost] Failed to save token natively:', e);
+                        }
+                    }
+
                     handleSession(data.session);
                 }
             } else {
@@ -1456,7 +1534,78 @@
             document.getElementById('vst-steps-bar').style.display = 'none';
             document.getElementById('footer-status-text').textContent = 'Desconectado';
             document.getElementById('footer-user').style.display = 'none';
+            document.getElementById('user-dropdown-menu').style.display = 'none';
         }
+
+        function toggleUserDropdown(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const menu = document.getElementById('user-dropdown-menu');
+            if (menu) {
+                if (menu.style.display === 'flex') {
+                    menu.style.display = 'none';
+                } else {
+                    menu.style.display = 'flex';
+                }
+            }
+        }
+
+        function openProfilePage(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            document.getElementById('user-dropdown-menu').style.display = 'none';
+            if (session && session.user) {
+                const nickname = document.getElementById('footer-user-name').textContent || 'willieinspired';
+                const profileUrl = `https://offszn.lat/user/${nickname}`;
+                if (window.chrome && window.chrome.webview) {
+                    callNativeHost('openExternalBrowser', { url: profileUrl });
+                }
+                window.open(profileUrl, '_blank');
+            }
+        }
+
+        async function logoutUser(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            document.getElementById('user-dropdown-menu').style.display = 'none';
+            logDebug('Cerrando sesión...');
+            
+            localStorage.removeItem('vst_supa_token');
+            localStorage.removeItem('vst_yt_token');
+            window.ytAccessToken = '';
+
+            if (window.deleteTokenNative) {
+                try {
+                    await window.deleteTokenNative();
+                } catch (e) {
+                    console.error('[BeatPost] Failed to delete token natively:', e);
+                }
+            }
+
+            if (supabaseClient) {
+                await supabaseClient.auth.signOut();
+            }
+
+            session = null;
+            document.getElementById('auth-token-input').value = '';
+            showAuthView();
+        }
+
+        window.addEventListener('click', function(e) {
+            const menu = document.getElementById('user-dropdown-menu');
+            if (menu && menu.style.display === 'flex') {
+                const trigger = document.getElementById('footer-user');
+                if (trigger && !trigger.contains(e.target) && !menu.contains(e.target)) {
+                    menu.style.display = 'none';
+                }
+            }
+        });
 
         function goToStep(stepNum) {
             document.getElementById('view-audio').classList.remove('active');
@@ -1895,6 +2044,21 @@
         let isLocalSearch = true;
         let modalSearchOffset = 0;
         let currentModalResults = [];
+        let currentSearchSource = 'itunes'; // 'itunes' or 'unsplash'
+
+        function switchSearchSource(src) {
+            currentSearchSource = src;
+            document.getElementById('tab-src-itunes').style.background = src === 'itunes' ? 'var(--border-light)' : 'transparent';
+            document.getElementById('tab-src-itunes').style.borderColor = src === 'itunes' ? 'var(--border)' : 'transparent';
+            document.getElementById('tab-src-itunes').style.color = src === 'itunes' ? '#fff' : 'var(--dim)';
+            
+            document.getElementById('tab-src-unsplash').style.background = src === 'unsplash' ? 'var(--border-light)' : 'transparent';
+            document.getElementById('tab-src-unsplash').style.borderColor = src === 'unsplash' ? 'var(--border)' : 'transparent';
+            document.getElementById('tab-src-unsplash').style.color = src === 'unsplash' ? '#fff' : 'var(--dim)';
+
+            const query = document.getElementById('modal-cover-search').value;
+            runModalSearch(query, false);
+        }
 
         function openMoreCoversModal() {
             const modal = document.getElementById('cover-modal');
@@ -1941,11 +2105,9 @@
                 return;
             }
 
-            // Real live search on iTunes Search API (CORS-friendly, returns real music artwork)
+            // Show loading spinner
             isLocalSearch = false;
             const grid = document.getElementById('modal-covers-grid');
-            
-            // Show loading spinner
             let loader = document.getElementById('modal-search-loader');
             if (!loader) {
                 loader = document.createElement('div');
@@ -1955,10 +2117,38 @@
                 loader.style.padding = '20px';
                 loader.style.color = 'var(--dim)';
                 loader.style.fontSize = '12px';
-                loader.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando portadas en Spotify/iTunes...';
+                loader.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando en ${currentSearchSource === 'itunes' ? 'iTunes/Spotify' : 'Openverse/Google'}...`;
             }
             grid.appendChild(loader);
 
+            if (currentSearchSource === 'unsplash') {
+                // Query Openverse API for Creative Commons artwork (CORS-friendly, rich graphics)
+                const page = Math.floor(modalSearchOffset / 20) + 1;
+                const url = `https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page=${page}&page_size=20`;
+                fetch(url)
+                    .then(res => {
+                        if (!res.ok) throw new Error('Search failed');
+                        return res.json();
+                    })
+                    .then(data => {
+                        if (loader) loader.remove();
+                        const results = (data.results || []).map(item => ({
+                            url: item.url,
+                            tags: [item.title, item.creator]
+                        }));
+                        renderResultsInModal(results);
+                        modalSearchOffset += 20;
+                        document.getElementById('btn-load-more-modal').style.display = results.length >= 20 ? 'block' : 'none';
+                    })
+                    .catch(err => {
+                        console.error("Openverse search error:", err);
+                        if (loader) loader.remove();
+                        grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--dim);">Fallo al conectar con el motor de búsqueda.</div>';
+                    });
+                return;
+            }
+
+            // iTunes Search API
             const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=30&offset=${modalSearchOffset}`;
             fetch(url)
                 .then(res => {
@@ -2253,10 +2443,21 @@
                 <button class="btn-close-modal" onclick="closeMoreCoversModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="cover-modal-body">
-                <div class="cover-search-row">
+                <div class="cover-search-row" style="margin-bottom: 10px;">
                     <input type="text" id="modal-cover-search" class="text-input" style="flex: 1; padding: 10px 14px; font-size: 12px; background: #000;" placeholder="Buscar portadas...">
                     <button class="btn-next" style="margin: 0; padding: 10px 18px; font-size: 12px; font-weight: 700; flex: initial;" onclick="runModalSearch(document.getElementById('modal-cover-search').value, false)">Buscar</button>
                 </div>
+                
+                <!-- Search Source Tabs -->
+                <div class="search-tabs" style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                    <button id="tab-src-itunes" class="tab-btn active" style="flex: 1; padding: 7px; font-size: 10px; font-weight: 700; border-radius: 4px; border: 1px solid var(--border); background: var(--border-light); color: #fff; cursor: pointer;" onclick="switchSearchSource('itunes')">
+                        🎵 Portadas Reales
+                    </button>
+                    <button id="tab-src-unsplash" class="tab-btn" style="flex: 1; padding: 7px; font-size: 10px; font-weight: 700; border-radius: 4px; border: 1px solid transparent; background: transparent; color: var(--dim); cursor: pointer;" onclick="switchSearchSource('unsplash')">
+                        🎨 Diseños Abstractos
+                    </button>
+                </div>
+
                 <div class="modal-covers-grid" id="modal-covers-grid">
                     <!-- Filled by JS -->
                 </div>

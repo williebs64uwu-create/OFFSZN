@@ -167,8 +167,16 @@ async function uploadBeatProduct(supabaseClient, session, metadata, files, isYou
             
             if (onProgress) onProgress('upload_youtube', 'Subiendo video a YouTube...');
             
-            // Check for WebView2 YouTube Upload helper or upload directly
-            if (window.YouTubeUploader) {
+            // Check for Google access token in global window context or uploader helper
+            const ytToken = window.ytAccessToken || '';
+            if (ytToken) {
+                if (onProgress) onProgress('upload_youtube', 'Subiendo video a YouTube...');
+                youtubeVideoId = await uploadToYouTubeDirectly(videoBlob, {
+                    title: metadata.title,
+                    description: metadata.description || `Comprar/Descargar beat: ${metadata.title}\nBPM: ${metadata.bpm}\nKey: ${metadata.key}`,
+                    tags: metadata.tags || []
+                }, ytToken);
+            } else if (window.YouTubeUploader) {
                 window.YouTubeUploader.setRenderedVideo(videoBlob);
                 youtubeVideoId = await window.YouTubeUploader.handleUpload({
                     title: metadata.title,
@@ -310,11 +318,70 @@ function initNativeBridgeListener(onCommandReceived) {
     return false;
 }
 
+async function uploadToYouTubeDirectly(file, metadata, token) {
+    return new Promise((resolve, reject) => {
+        const url = 'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status';
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+        xhr.setRequestHeader('X-Upload-Content-Length', file.size);
+        xhr.setRequestHeader('X-Upload-Content-Type', 'video/mp4');
+
+        xhr.onload = () => {
+            if (xhr.status === 200) {
+                const location = xhr.getResponseHeader('Location');
+                if (location) {
+                    // Start uploading the actual file
+                    const uploadXhr = new XMLHttpRequest();
+                    uploadXhr.open('PUT', location, true);
+                    uploadXhr.onload = () => {
+                        if (uploadXhr.status === 200 || uploadXhr.status === 201) {
+                            try {
+                                const resp = JSON.parse(uploadXhr.responseText);
+                                resolve(resp.id);
+                            } catch (e) {
+                                reject(new Error('Error al procesar la respuesta de YouTube.'));
+                            }
+                        } else {
+                            reject(new Error(`Error durante la subida: ${uploadXhr.status} ${uploadXhr.responseText}`));
+                        }
+                    };
+                    uploadXhr.onerror = () => reject(new Error('Error de red durante la transferencia del video.'));
+                    uploadXhr.send(file);
+                } else {
+                    reject(new Error('No se recibió la URL de subida de YouTube (Location).'));
+                }
+            } else {
+                reject(new Error(`Error inicializando subida a YouTube: ${xhr.status} ${xhr.responseText}`));
+            }
+        };
+
+        xhr.onerror = () => reject(new Error('Error de red al intentar conectar con YouTube.'));
+
+        const body = {
+            snippet: {
+                title: metadata.title,
+                description: metadata.description,
+                tags: metadata.tags || [],
+                categoryId: '10' // Music
+            },
+            status: {
+                privacyStatus: 'public',
+                selfDeclaredMadeForKids: false
+            }
+        };
+        xhr.send(JSON.stringify(body));
+    });
+}
+
 // Attach to window for global access
 window.BeatPostService = {
     MAX_SIZES,
     validateFileSizes,
     callNativeHost,
     uploadBeatProduct,
-    initNativeBridgeListener
+    initNativeBridgeListener,
+    uploadToYouTubeDirectly
 };

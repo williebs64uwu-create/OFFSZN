@@ -76,6 +76,21 @@
         <span class="w-2.5 h-2.5 bg-green-500 rounded-full"></span>
       </div>
 
+      <!-- YouTube Integration (Optional) -->
+      <div class="bg-[#141418] border border-[#1f1f24] rounded-xl p-4 flex flex-col gap-3 text-left">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="font-bold text-white text-xs">Canal de YouTube (Opcional)</div>
+            <div class="text-[10px] text-[#8e8e93] id="yt-status-text">No conectado. Haz clic para sincronizar.</div>
+          </div>
+          <span class="w-2.5 h-2.5 bg-red-500 rounded-full" id="yt-status-dot"></span>
+        </div>
+        <button onclick="syncYouTubeChannel()" type="button" class="w-full py-2.5 bg-red-600/10 border border-red-500/20 hover:bg-red-600/20 text-red-500 rounded-lg transition-colors font-bold text-xs flex items-center justify-center gap-2 cursor-pointer">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.545 12 3.545 12 3.545s-7.518 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.508 9.388.508 9.388.508s7.518 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          <span id="btn-yt-text">Vincular mi Canal de YouTube</span>
+        </button>
+      </div>
+
       <!-- Token copy area -->
       <div class="flex flex-col gap-2">
         <span class="text-[10px] font-bold text-[#8e8e93] uppercase tracking-wider text-left">Tu Token del Plugin</span>
@@ -98,6 +113,8 @@
     </div>
 
   </div>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <script>
     let currentToken = "";
@@ -131,13 +148,53 @@
       }
     }
 
+    let ytAccessToken = "";
+    let googleTokenClient = null;
+
+    function initGoogleClient() {
+      if (typeof google === 'undefined') {
+        setTimeout(initGoogleClient, 200);
+        return;
+      }
+      googleTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: '804444303530-bl8gtp4sdjkcnrkjl1295vns59tqp4tc.apps.googleusercontent.com',
+        scope: 'https://www.googleapis.com/auth/youtube.upload',
+        callback: (response) => {
+          if (response.access_token) {
+            ytAccessToken = response.access_token;
+            document.getElementById('yt-status-text').textContent = 'Canal vinculado correctamente para esta sesión';
+            document.getElementById('yt-status-dot').className = 'w-2.5 h-2.5 bg-green-500 rounded-full';
+            document.getElementById('btn-yt-text').textContent = 'Canal Sincronizado ✅';
+            updateCombinedToken();
+          }
+        }
+      });
+    }
+
+    function syncYouTubeChannel() {
+      if (googleTokenClient) {
+        googleTokenClient.requestAccessToken();
+      } else {
+        alert("El servicio de Google no está listo aún. Espera unos segundos.");
+      }
+    }
+
+    function updateCombinedToken() {
+      if (ytAccessToken) {
+        document.getElementById('token-input').value = currentToken + '||yt_token||' + ytAccessToken;
+      } else {
+        document.getElementById('token-input').value = currentToken;
+      }
+    }
+
     function showLoggedIn(session) {
       document.getElementById('logged-out-view').classList.add('hidden');
       document.getElementById('logged-in-view').classList.remove('hidden');
 
       currentToken = session.access_token;
-      document.getElementById('token-input').value = currentToken;
+      updateCombinedToken();
       document.getElementById('user-email').textContent = session.user.email;
+      initGoogleClient();
     }
 
     function showLoggedOut() {
