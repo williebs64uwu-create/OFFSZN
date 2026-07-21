@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAPYKIT | FL Studio Project Manager & Drumkit Generator</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="description" content="Organizador de proyectos y extractor de Drumkits inteligente 100% diseñado para FL Studio.">
+
+    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- JSZip for Real Client-side Drumkit ZIP Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- Supabase Client -->
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/script/config.js"></script>
+
+    <style>
+        :root {
+            /* Capybara Studio Earth & Brown Palette */
+            --bg-main: #0c0b0a;
+            --panel-bg: #141210;
+            --card-bg: #1d1a17;
+            --card-hover: #26221f;
+            --border-color: #2b2723;
+            --border-light: rgba(217, 159, 112, 0.2);
+            
+            --accent-capy: #c48b5e;
+            --accent-capy-bright: #e2b186;
+            --accent-capy-dark: #7a5234;
+            --fl-orange: #f97316;
+            --fl-green: #10b981;
+            
+            --badge-flp: #c86432;
+            --badge-wav: #2e8b57;
+            --badge-mp3: #b8860b;
+            
+            --text-main: #ebe5df;
+            --text-muted: #a69c92;
+            --text-dim: #70675f;
+            
+            --font-main: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        /* Top Bar Header */
+        .app-window-header {
+            height: 44px;
+            background: #080706;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            letter-spacing: -0.3px;
+            color: var(--accent-capy-bright);
+        }
+
+        .brand-logo-box {
+            width: 26px;
+            height: 26px;
+            background: var(--accent-capy-dark);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.85rem;
+        }
+
+        .lic-status-badge {
+            font-size: 0.75rem;
+            color: var(--fl-green);
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 3px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Resizable Studio Layout */
+        .app-body {
+            display: flex;
+            height: calc(100vh - 70px);
+            width: 100vw;
+            padding: 6px;
+            background: var(--bg-main);
+            position: relative;
+        }
+
+        .panel-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        /* Resizing handles */
+        .resize-handle {
+            width: 6px;
+            cursor: col-resize;
+            background: transparent;
+            transition: background 0.2s ease;
+            z-index: 10;
+        }
+
+        .resize-handle:hover, .resize-handle.active {
+            background: var(--accent-capy);
+        }
+
+        #panel-left { width: 310px; min-width: 220px; max-width: 480px; }
+        #panel-center { flex: 1; min-width: 400px; }
+        #panel-right { width: 360px; min-width: 260px; max-width: 520px; }
+
+        .panel-title-bar {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* LEFT PANEL: File Tree */
+        .explorer-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 6px;
+            font-size: 0.82rem;
+        }
+
+        .tree-node {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 8px;
+            border-radius: 4px;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.12s ease;
+            margin-bottom: 1px;
+            white-space: nowrap;
+        }
+
+        .tree-node:hover {
+            background: var(--card-bg);
+        }
+
+        .tree-node.active {
+            background: #2b241e;
+            color: #fff;
+        }
+
+        .tree-node-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tree-chevron {
+            font-size: 0.65rem;
+            color: var(--text-dim);
+            width: 12px;
+            display: inline-block;
+        }
+
+        .folder-icon { font-size: 0.9rem; }
+        .folder-fl { color: var(--fl-orange); }
+        .folder-nfo { color: var(--fl-green); }
+
+        .file-badge {
+            font-family: var(--font-mono);
+            font-size: 0.62rem;
+            font-weight: 700;
+            padding: 1px 4px;
+            border-radius: 3px;
+            color: #fff;
+            text-transform: lowercase;
+        }
+
+        .badge-flp { background: var(--badge-flp); }
+        .badge-wav { background: var(--badge-wav); }
+        .badge-nfo { background: #10b981; color: #000; }
+
+        .star-hover-btn {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+
+        .tree-node:hover .star-hover-btn { opacity: 0.6; }
+        .tree-node .star-hover-btn:hover, .star-hover-btn.active {
+            opacity: 1;
+            color: #f59e0b;
+        }
+
+        /* CENTER PANEL: Workspace & Waveform */
+        .center-tabs-bar {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            background: #0a0908;
+            border-bottom: 1px solid var(--border-color);
+            padding: 6px 10px 0;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: transparent;
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--panel-bg);
+            color: #fff;
+            border-color: var(--border-color);
+            border-bottom-color: var(--panel-bg);
+        }
+
+        .workspace-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Metadata Card */
+        .project-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .project-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .project-file-path {
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+            color: var(--accent-capy-bright);
+        }
+
+        .btn-action {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-action.primary {
+            background: var(--accent-capy);
+            color: #000;
+            border: none;
+            font-weight: 700;
+        }
+
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .meta-key {
+            font-size: 0.68rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meta-val {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .tag-pill {
+            display: inline-block;
+            font-size: 0.68rem;
+            padding: 2px 7px;
+            border-radius: 10px;
+            background: #2b231d;
+            color: var(--accent-capy-bright);
+            margin-right: 4px;
+        }
+
+        /* HTML5 Canvas Waveform Box */
+        .waveform-container-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .waveform-header-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .btn-play-large {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--accent-capy);
+            color: #000;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-play-large:hover {
+            background: var(--accent-capy-bright);
+            transform: scale(1.05);
+        }
+
+        .waveform-canvas-box {
+            width: 100%;
+            height: 64px;
+            background: #110e0c;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        #waveform-canvas-el {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Samples Grid View */
+        .samples-section-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .samples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 8px;
+        }
+
+        .sample-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .sample-card:hover {
+            background: var(--card-hover);
+            border-color: var(--border-light);
+        }
+
+        .sample-title-icon {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sample-title-icon i {
+            color: var(--accent-capy);
+        }
+
+        /* FL Studio Browser .NFO & Custom Artwork Generator Card */
+        .fl-nfo-generator-card {
+            background: #16120e;
+            border: 1px solid var(--fl-orange);
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .fl-nfo-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .fl-cartridge-img {
+            width: 48px;
+            height: 56px;
+            background: #20130b;
+            border: 2px solid #ec4899;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ec4899;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(236,72,153,0.3);
+        }
+
+        .fl-nfo-text-title {
+            font-weight: 800;
+            font-size: 0.88rem;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .fl-nfo-subtext {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .btn-fl-nfo {
+            background: var(--fl-orange);
+            color: #000;
+            border: none;
+            font-weight: 800;
+            font-size: 0.78rem;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* RIGHT PANEL: CapyAssistant */
+        .right-section-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px;
+        }
+
+        .capy-greeting-bubble {
+            background: #28221c;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .capy-illustration-box {
+            text-align: center;
+            margin: 4px 0;
+        }
+
+        .capy-illustration-box svg {
+            width: 100px;
+            height: 100px;
+        }
+
+        .ask-capy-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .qa-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.76rem;
+            margin-bottom: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .qa-item {
+            background: #110f0d;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .qa-item:hover {
+            border-color: var(--accent-capy);
+            background: #191512;
+        }
+
+        .qa-q {
+            color: var(--text-dim);
+            margin-bottom: 2px;
+        }
+
+        .qa-a {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        /* Gemini-Style Input Pill */
+        .gemini-input-pill {
+            background: #151311;
+            border: 1px solid var(--border-color);
+            border-radius: 28px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+        }
+
+        .gemini-input-pill input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 0.82rem;
+            flex: 1;
+            font-family: var(--font-main);
+        }
+
+        .mode-dropdown-trigger {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+
+        .mode-dropdown-trigger:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .mode-dropdown-menu {
+            position: absolute;
+            bottom: 44px;
+            right: 12px;
+            background: #1d1a17;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 6px;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            z-index: 50;
+            min-width: 170px;
+        }
+
+        .mode-dropdown-menu.active { display: flex; }
+
+        .mode-option {
+            padding: 8px 10px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mode-option:hover, .mode-option.selected {
+            background: #2b241e;
+            color: #fff;
+        }
+
+        /* MODALS */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: #15120f;
+            border: 1px solid var(--border-light);
+            border-radius: 14px;
+            padding: 32px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .modal-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+
+        .onboarding-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-onboarding-opt {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-onboarding-opt:hover {
+            border-color: var(--accent-capy);
+            background: #25201b;
+            transform: translateX(4px);
+        }
+
+        .serial-input {
+            width: 100%;
+            background: #090807;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            color: #fff;
+            font-family: var(--font-mono);
+            font-size: 0.95rem;
+            text-align: center;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+        .btn-modal-submit {
+            background: var(--accent-capy);
+            color: #000;
+            font-weight: 800;
+            font-size: 0.95rem;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        /* Bottom Status Bar */
+        .app-status-bar {
+            height: 24px;
+            background: #060504;
+            border-top: 1px solid var(--border-color);
+            padding: 0 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Invisible Input for FLP Folder/Files Scanning -->
+    <input type="file" id="flp-file-input" accept=".flp" multiple hidden onchange="handleFileSelect(event)">
+
+    <!-- Header Bar -->
+    <header class="app-window-header">
+        <div class="brand-section">
+            <div class="brand-logo-box"><i class="bi bi-box-seam"></i></div>
+            CAPYKIT <span style="font-size: 0.68rem; background: var(--fl-orange); color: #000; padding: 1px 6px; border-radius: 3px; font-weight: 800;">FL STUDIO EDITION</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div class="lic-status-badge" onclick="openSerialModal()">
+                <i class="bi bi-shield-check"></i> LICENCIA ACTIVA
+            </div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">
+                <i class="bi bi-folder-check" style="color: var(--accent-capy);"></i> FL Studio FLPs: <span id="header-flp-count">200</span> Proyectos
+            </div>
+        </div>
+    </header>
+
+    <!-- App Body (Resizable 3 Columns) -->
+    <div class="app-body">
+
+        <!-- LEFT PANEL: 100% FL Studio Focused File Tree -->
+        <aside class="panel-box" id="panel-left">
+            <div class="panel-title-bar">
+                <span>FL STUDIO EXPLORER</span>
+                <i class="bi bi-folder-plus" style="cursor: pointer;" title="Seleccionar archivos .FLP" onclick="document.getElementById('flp-file-input').click()"></i>
+            </div>
+
+            <div class="explorer-tree" id="explorer-tree-root">
+                <!-- Root FL Studio Projects -->
+                <div class="tree-node">
+                    <div class="tree-node-left">
+                        <span class="tree-chevron"><i class="bi bi-chevron-down"></i></span>
+                        <span class="folder-icon folder-fl"><i class="bi bi-folder-fill"></i></span>
+                        <span style="font-weight: 700;">FL Studio Projects (<span id="root-flp-count">200</span>)</span>
+                    </div>
+                </div>
+
+                <!-- FL Studio Projects List -->
+                <div class="tree-node active" style="padding-left: 20px;" onclick="loadDemoProject('Trap_Dark_140BPM.flp', 24)">
+                    <div class="tree-node-left">
+                        <span class="file-badge badge-flp">.flp</span>
+                        <span>Trap_Dark_140BPM.flp</span>
+                    </div>
+                    <i class="bi bi-star-fill star-hover-btn active" onclick="toggleFav(this)"></i>
+                </div>
+
+                <div class="tree-node" style="padding-left: 20px;" onclick="loadDemoProject('Reggaeton_Perreo_2026.flp', 18)">
+                    <div class="tree-node-left">
+                        <span class="file-badge badge-flp">.flp</span>
+                        <span>Reggaeton_Perreo_2026.flp</span>
+                    </div>
+                    <i class="bi bi-star star-hover-btn" onclick="toggleFav(this)"></i>
+                </div>
+
+                <div class="tree-node" style="padding-left: 20px;" onclick="loadDemoProject('Drill_London_Hit.flp', 31)">
+                    <div class="tree-node-left">
+                        <span class="file-badge badge-flp">.flp</span>
+                        <span>Drill_London_Hit.flp</span>
+                    </div>
+                    <i class="bi bi-star star-hover-btn" onclick="toggleFav(this)"></i>
+                </div>
+
+                <div class="tree-node" style="padding-left: 20px;" onclick="loadDemoProject('Afrobeat_Sunset_Idea.flp', 15)">
+                    <div class="tree-node-left">
+                        <span class="file-badge badge-flp">.flp</span>
+                        <span>Afrobeat_Sunset_Idea.flp</span>
+                    </div>
+                    <i class="bi bi-star star-hover-btn" onclick="toggleFav(this)"></i>
+                </div>
+
+                <div class="tree-node" style="padding-left: 20px;" onclick="loadDemoProject('Boombap_Nostalgia.flp', 29)">
+                    <div class="tree-node-left">
+                        <span class="file-badge badge-flp">.flp</span>
+                        <span>Boombap_Nostalgia.flp</span>
+                    </div>
+                    <i class="bi bi-star-fill star-hover-btn active" onclick="toggleFav(this)"></i>
+                </div>
+
+                <!-- Generated Signature Kits with NFO -->
+                <div class="tree-node" style="margin-top: 14px;">
+                    <div class="tree-node-left">
+                        <span class="tree-chevron"><i class="bi bi-chevron-down"></i></span>
+                        <span class="folder-icon folder-nfo"><i class="bi bi-box"></i></span>
+                        <span style="font-weight: 700; color: var(--fl-green);">Signature Kits (.NFO)</span>
+                    </div>
+                </div>
+
+                <div class="tree-node" style="padding-left: 20px;">
+                    <div class="tree-node-left">
+                        <span class="file-badge badge-nfo">.nfo</span>
+                        <span style="color: var(--accent-capy-bright);">!WILLIE_INSPIRED_DRUMKIT_VOL3</span>
+                    </div>
+                </div>
+
+                <div class="tree-node" style="padding-left: 36px;">
+                    <div class="tree-node-left">
+                        <span class="folder-icon" style="color: var(--fl-orange);"><i class="bi bi-folder-fill"></i></span>
+                        <span style="color: #f97316;">!DRUMS</span>
+                    </div>
+                </div>
+                <div class="tree-node" style="padding-left: 36px;">
+                    <div class="tree-node-left">
+                        <span class="folder-icon" style="color: #ef4444;"><i class="bi bi-folder-fill"></i></span>
+                        <span style="color: #ef4444;">!MASTER</span>
+                    </div>
+                </div>
+                <div class="tree-node" style="padding-left: 36px;">
+                    <div class="tree-node-left">
+                        <span class="folder-icon" style="color: #a855f7;"><i class="bi bi-folder-fill"></i></span>
+                        <span style="color: #a855f7;">!MELODY</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Left Resize Handle -->
+        <div class="resize-handle" id="handle-left"></div>
+
+        <!-- CENTER PANEL: Workspace -->
+        <main class="panel-box" id="panel-center">
+            <!-- Tabs -->
+            <div class="center-tabs-bar">
+                <button class="tab-btn active">PROJECTS (.FLP)</button>
+                <button class="tab-btn">DRUMKIT BUILDER</button>
+                <button class="tab-btn">NFO COLOR GENERATOR</button>
+                <button class="tab-btn">SETTINGS</button>
+            </div>
+
+            <div class="workspace-content">
+                <!-- Metadata Card -->
+                <div class="project-card">
+                    <div class="project-card-header">
+                        <div class="project-file-path" id="active-project-path">FL Studio / Trap_Dark_140BPM.flp</div>
+                        <div class="project-actions">
+                            <button class="btn-action" onclick="document.getElementById('flp-file-input').click()"><i class="bi bi-folder2-open"></i> Seleccionar .FLP Real</button>
+                            <button class="btn-action primary" onclick="exportSignatureKitZip()"><i class="bi bi-download"></i> Exportar Drumkit (.ZIP)</button>
+                        </div>
+                    </div>
+
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <span class="meta-key">DAW</span>
+                            <span class="meta-val">FL Studio 21</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-key">Modificado</span>
+                            <span class="meta-val">Oct 26, 2026</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-key">BPM / Key</span>
+                            <span class="meta-val">140 / C min</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-key">Muestras Únicas</span>
+                            <span class="meta-val" id="samples-count-val" style="color: var(--fl-green);">24 Samples</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Professional HTML5 Canvas Waveform Rendering -->
+                <div class="waveform-container-card">
+                    <div class="waveform-header-controls">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <button class="btn-play-large" id="play-btn" onclick="toggleWavePlay()"><i class="bi bi-play-fill"></i></button>
+                            <div>
+                                <div style="font-weight: 700; font-size: 0.85rem;">Previsualización de Audio</div>
+                                <div style="font-size: 0.72rem; color: var(--text-dim);" id="time-display">0:00 / 0:45</div>
+                            </div>
+                        </div>
+                        <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-capy-bright);">44.1kHz 24-bit WAV</span>
+                    </div>
+
+                    <div class="waveform-canvas-box" onclick="seekWaveform(event)">
+                        <canvas id="waveform-canvas-el"></canvas>
+                    </div>
+                </div>
+
+                <!-- Samples Extracted View -->
+                <div class="samples-section-title">
+                    <span>Muestras Extraídas de este FLP (<span id="samples-label-count">24</span>)</span>
+                    <span style="font-size: 0.7rem; color: var(--fl-green);">Sin duplicados (Checksum MD5)</span>
+                </div>
+
+                <div class="samples-grid" id="samples-grid-box">
+                    <div class="sample-card" onclick="playSynthSound()">
+                        <div class="sample-title-icon">
+                            <i class="bi bi-soundwave"></i>
+                            <span>Sub_808_Deep_Cmin.wav</span>
+                        </div>
+                        <span class="file-badge badge-wav">.wav</span>
+                    </div>
+                    <div class="sample-card" onclick="playSynthSound()">
+                        <div class="sample-title-icon">
+                            <i class="bi bi-soundwave"></i>
+                            <span>Spank_808_Distorted.wav</span>
+                        </div>
+                        <span class="file-badge badge-wav">.wav</span>
+                    </div>
+                    <div class="sample-card" onclick="playSynthSound()">
+                        <div class="sample-title-icon">
+                            <i class="bi bi-soundwave"></i>
+                            <span>Punchy_Short_808.wav</span>
+                        </div>
+                        <span class="file-badge badge-wav">.wav</span>
+                    </div>
+                    <div class="sample-card" onclick="playSynthSound()">
+                        <div class="sample-title-icon">
+                            <i class="bi bi-soundwave"></i>
+                            <span>Clap_Analog_909.wav</span>
+                        </div>
+                        <span class="file-badge badge-wav">.wav</span>
+                    </div>
+                    <div class="sample-card" onclick="playSynthSound()">
+                        <div class="sample-title-icon">
+                            <i class="bi bi-soundwave"></i>
+                            <span>HH_Open_Tight.wav</span>
+                        </div>
+                        <span class="file-badge badge-wav">.wav</span>
+                    </div>
+                    <div class="sample-card" onclick="playSynthSound()">
+                        <div class="sample-title-icon">
+                            <i class="bi bi-soundwave"></i>
+                            <span>Bass_Sub_125BPM.wav</span>
+                        </div>
+                        <span class="file-badge badge-wav">.wav</span>
+                    </div>
+                </div>
+
+                <!-- FL Studio Browser .NFO & Custom Artwork Generator Card -->
+                <div class="fl-nfo-generator-card">
+                    <div class="fl-nfo-info">
+                        <div class="fl-cartridge-img"><i class="bi bi-sd-card-fill"></i></div>
+                        <div>
+                            <div class="fl-nfo-text-title">Generar .NFO & Artwork para FL Studio Browser</div>
+                            <div class="fl-nfo-subtext">Crea portadas tipo cartucho rosa, colores personalizados (!DRUMS, !MASTER) y tips visibles en FL Studio.</div>
+                        </div>
+                    </div>
+                    <button class="btn-fl-nfo" onclick="exportSignatureKitZip()">
+                        DESCARGAR DRUMKIT (.ZIP)
+                    </button>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Right Resize Handle -->
+        <div class="resize-handle" id="handle-right"></div>
+
+        <!-- RIGHT PANEL: CapyAssistant & AI Chat -->
+        <aside class="panel-box" id="panel-right">
+            <div class="panel-title-bar">
+                <span>CAPYASSISTANT</span>
+                <i class="bi bi-x-lg" style="cursor: pointer;"></i>
+            </div>
+
+            <div class="right-section-card">
+                <div class="capy-greeting-bubble">
+                    Hola. He analizado tus proyectos de FL Studio. ¿Qué deseas hacer hoy con tus archivos .flp?
+                </div>
+
+                <div class="capy-illustration-box">
+                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M35 125 C30 75, 70 45, 125 45 C155 45, 178 65, 178 95 C178 135, 150 170, 95 170 C55 170, 35 155, 35 125 Z" fill="#ffffff" stroke="#e4e4e7" stroke-width="4"/>
+                        <circle cx="138" cy="28" r="4" fill="none" stroke="#18181b" stroke-width="2.5"/>
+                        <circle cx="150" cy="24" r="5" fill="none" stroke="#18181b" stroke-width="2.5"/>
+                        <circle cx="164" cy="22" r="6" fill="none" stroke="#18181b" stroke-width="2.5"/>
+                        <path d="M42 120 C42 82, 75 52, 122 52 C150 52, 170 70, 170 98 C170 135, 144 162, 98 162 C58 162, 42 148, 42 120 Z" stroke="#18181b" stroke-width="3.5" stroke-linecap="round"/>
+                        <path d="M128 78 C148 78, 162 88, 162 102 C162 116, 148 122, 128 122 C108 88, 116 78, 128 78 Z" stroke="#18181b" stroke-width="2.8"/>
+                        <path d="M126 92 L138 92 M132 92 L132 108" stroke="#18181b" stroke-width="3" stroke-linecap="round"/>
+                        <line x1="86" y1="84" x2="100" y2="84" stroke="#18181b" stroke-width="3.5" stroke-linecap="round"/>
+                        <line x1="146" y1="84" x2="158" y2="84" stroke="#18181b" stroke-width="3.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Ask Capy Section -->
+            <div class="right-section-card" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="ask-capy-header">
+                    <span>ASK CAPY</span>
+                    <i class="bi bi-chat-text"></i>
+                </div>
+
+                <div class="qa-list" id="qa-list-container">
+                    <div class="qa-item" onclick="triggerPresetPrompt('Extraer 808s de mis proyectos FLP')">
+                        <div class="qa-q">Prompt Sugerido:</div>
+                        <div class="qa-a">Extraer todos mis 808s favoritos de mis FLPs de FL Studio.</div>
+                    </div>
+                    <div class="qa-item" onclick="triggerPresetPrompt('Crear mi Signature Drumkit con archivos NFO')">
+                        <div class="qa-q">Prompt Sugerido:</div>
+                        <div class="qa-a">Crear mi Signature Drumkit oficial listo para FL Studio Browser.</div>
+                    </div>
+                </div>
+
+                <!-- Gemini-Style Input Pill -->
+                <div style="margin-top: auto; position: relative;">
+                    <div class="gemini-input-pill">
+                        <input type="text" id="capy-chat-input" placeholder="Pregúntale a CapyKit..." onkeypress="handleInputKey(event)">
+                        
+                        <div class="mode-dropdown-trigger" onclick="toggleModeDropdown()">
+                            <span id="selected-mode-text">Modo Thinking</span>
+                            <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
+                        </div>
+                    </div>
+
+                    <div class="mode-dropdown-menu" id="mode-dropdown-menu">
+                        <div class="mode-option selected" onclick="selectCapyMode('Modo Thinking')">
+                            <span>Modo Thinking</span>
+                            <i class="bi bi-check2"></i>
+                        </div>
+                        <div class="mode-option" onclick="selectCapyMode('CapyGPT Rápido')">
+                            <span>CapyGPT Rápido</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- Onboarding Modal Inicial -->
+    <div class="modal-overlay active" id="onboarding-modal">
+        <div class="modal-card">
+            <div class="modal-title">¡Bienvenido a CAPYKIT!</div>
+            <div class="modal-desc">
+                ¿Qué deseas hacer primero con tus proyectos de FL Studio? Selecciona una acción rápida para comenzar:
+            </div>
+
+            <div class="onboarding-options">
+                <button class="btn-onboarding-opt" onclick="completeOnboarding('Extraer todos mis 808s y Kicks de mis FLPs')">
+                    <i class="bi bi-disc" style="color: var(--fl-orange);"></i>
+                    <div>Extraer mis 808s y Snares favoritos de mis .flp</div>
+                </button>
+                <button class="btn-onboarding-opt" onclick="completeOnboarding('Crear mi Signature Drumkit con colores .NFO para FL Studio')">
+                    <i class="bi bi-box" style="color: var(--fl-green);"></i>
+                    <div>Crear mi Signature Drumkit con metadatos .NFO</div>
+                </button>
+                <button class="btn-onboarding-opt" onclick="completeOnboarding('Escanear mi carpeta de proyectos de FL Studio')">
+                    <i class="bi bi-folder-check" style="color: var(--accent-capy-bright);"></i>
+                    <div>Escanear mi carpeta de 200 proyectos de FL Studio</div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Validación de Serial Key de OFFSZN -->
+    <div class="modal-overlay" id="serial-modal">
+        <div class="modal-card">
+            <div class="modal-title">Licencia CapyKit Studio</div>
+            <div class="modal-desc">
+                Ingresa tu Serial Key de OFFSZN para activar CapyKit en este equipo.
+            </div>
+
+            <input type="text" class="serial-input" id="serial-key-input" placeholder="CAPYKIT-XXXX-XXXX-XXXX" value="CAPYKIT-2026-STUDIO-PRO">
+
+            <button class="btn-modal-submit" onclick="verifySerialKey()">
+                ACTIVAR LICENCIA
+            </button>
+            <button class="btn-modal-submit" style="background: transparent; color: var(--text-muted); margin-top: 8px;" onclick="closeSerialModal()">
+                Cancelar
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer Status Bar -->
+    <footer class="app-status-bar">
+        <div>CAPYKIT v1.0 | Projects Indexed: <span id="footer-count">200</span> | DAW: FL Studio (Nicho Oficial)</div>
+        <div>OFFSZN STUDIO ENGINE</div>
+    </footer>
+
+    <script>
+        // Store Extracted Samples Data
+        let currentExtractedSamples = [
+            { name: 'Sub_808_Deep_Cmin.wav', category: '808s' },
+            { name: 'Spank_808_Distorted.wav', category: '808s' },
+            { name: 'Punchy_Short_808.wav', category: '808s' },
+            { name: 'Clap_Analog_909.wav', category: 'Claps' },
+            { name: 'HH_Open_Tight.wav', category: 'HiHats' },
+            { name: 'Bass_Sub_125BPM.wav', category: '808s' }
+        ];
+
+        // Resizable Panels Drag Logic
+        const handleLeft = document.getElementById('handle-left');
+        const handleRight = document.getElementById('handle-right');
+        const panelLeft = document.getElementById('panel-left');
+        const panelRight = document.getElementById('panel-right');
+
+        let isResizingLeft = false;
+        let isResizingRight = false;
+
+        handleLeft.addEventListener('mousedown', (e) => {
+            isResizingLeft = true;
+            handleLeft.classList.add('active');
+        });
+
+        handleRight.addEventListener('mousedown', (e) => {
+            isResizingRight = true;
+            handleRight.classList.add('active');
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isResizingLeft) {
+                const newW = e.clientX - 6;
+                if (newW >= 200 && newW <= 500) {
+                    panelLeft.style.width = newW + 'px';
+                }
+            } else if (isResizingRight) {
+                const newW = window.innerWidth - e.clientX - 6;
+                if (newW >= 240 && newW <= 520) {
+                    panelRight.style.width = newW + 'px';
+                }
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isResizingLeft = false;
+            isResizingRight = false;
+            handleLeft.classList.remove('active');
+            handleRight.classList.remove('active');
+        });
+
+        // Interactive Favorite Toggle
+        function toggleFav(starEl) {
+            starEl.classList.toggle('active');
+            if (starEl.classList.contains('active')) {
+                starEl.className = 'bi bi-star-fill star-hover-btn active';
+            } else {
+                starEl.className = 'bi bi-star star-hover-btn';
+            }
+        }
+
+        // Onboarding Handler
+        function completeOnboarding(promptText) {
+            document.getElementById('onboarding-modal').classList.remove('active');
+            const input = document.getElementById('capy-chat-input');
+            input.value = promptText;
+            triggerPresetPrompt(promptText);
+        }
+
+        function triggerPresetPrompt(txt) {
+            const container = document.getElementById('qa-list-container');
+            const mode = document.getElementById('selected-mode-text').innerText;
+            
+            let replyText = `¡Entendido! Procesando análisis de proyectos en FL Studio...`;
+            if (txt.toLowerCase().includes('808')) {
+                replyText = `Encontré 24 808s únicos en tus proyectos. Eliminé 18 duplicados idénticos por checksum MD5.`;
+            } else if (txt.toLowerCase().includes('nfo') || txt.toLowerCase().includes('kit')) {
+                replyText = `Estructura .NFO con colores (!DRUMS, !MASTER, !MELODY) lista para descargar en .ZIP.`;
+            }
+
+            container.innerHTML += `
+                <div class="qa-item">
+                    <div class="qa-q">Q: ${txt}</div>
+                    <div class="qa-a">Capy (${mode}): ${replyText}</div>
+                </div>
+            `;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // REAL FLP BINARY PARSER IN BROWSER
+        function parseFLPBinaryStrings(arrayBuffer) {
+            const bytes = new Uint8Array(arrayBuffer);
+            const strings = [];
+            let cur = '';
+
+            for (let i = 0; i < bytes.length; i++) {
+                const b = bytes[i];
+                if (b >= 32 && b <= 126) {
+                    cur += String.fromCharCode(b);
+                } else {
+                    if (cur.length >= 4) {
+                        if (/\.(wav|mp3|ogg|flac|aif|aiff|fst)$/i.test(cur) || cur.includes('\\') || cur.includes('/')) {
+                            strings.push(cur.trim());
+                        }
+                    }
+                    cur = '';
+                }
+            }
+            return Array.from(new Set(strings.filter(s => /\.(wav|mp3|ogg|flac|aif)$/i.test(s))));
+        }
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            let flpCount = 0;
+            const treeRoot = document.getElementById('explorer-tree-root');
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.name.toLowerCase().endsWith('.flp')) {
+                    flpCount++;
+
+                    // Parse real binary buffer of the selected .flp
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const buffer = e.target.result;
+                        const detectedSamples = parseFLPBinaryStrings(buffer);
+
+                        // Update current extracted samples
+                        currentExtractedSamples = [];
+                        const gridBox = document.getElementById('samples-grid-box');
+                        gridBox.innerHTML = '';
+
+                        if (detectedSamples.length > 0) {
+                            detectedSamples.forEach(s => {
+                                const sampleName = s.split('\\').pop().split('/').pop();
+                                currentExtractedSamples.push({ name: sampleName, category: 'Extracted' });
+                                
+                                gridBox.innerHTML += `
+                                    <div class="sample-card" onclick="playSynthSound()">
+                                        <div class="sample-title-icon">
+                                            <i class="bi bi-soundwave"></i>
+                                            <span>${sampleName}</span>
+                                        </div>
+                                        <span class="file-badge badge-wav">.wav</span>
+                                    </div>
+                                `;
+                            });
+                            document.getElementById('samples-count-val').innerText = `${detectedSamples.length} Samples`;
+                            document.getElementById('samples-label-count').innerText = detectedSamples.length;
+                        }
+                    };
+                    reader.readAsArrayBuffer(file);
+
+                    // Add to UI tree
+                    const node = document.createElement('div');
+                    node.className = 'tree-node';
+                    node.style.paddingLeft = '20px';
+                    node.innerHTML = `
+                        <div class="tree-node-left">
+                            <span class="file-badge badge-flp">.flp</span>
+                            <span>${file.name}</span>
+                        </div>
+                        <i class="bi bi-star star-hover-btn" onclick="toggleFav(this)"></i>
+                    `;
+                    node.onclick = () => {
+                        document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('active'));
+                        node.classList.add('active');
+                        document.getElementById('active-project-path').innerText = `FL Studio / ${file.name}`;
+                    };
+                    treeRoot.appendChild(node);
+                }
+            }
+
+            if (flpCount > 0) {
+                document.getElementById('header-flp-count').innerText = 200 + flpCount;
+                document.getElementById('footer-count').innerText = 200 + flpCount;
+                triggerPresetPrompt(`Se leyó el archivo .flp binario real. ¡Muestras extraídas al instante!`);
+            }
+        }
+
+        function loadDemoProject(name, count) {
+            document.getElementById('active-project-path').innerText = `FL Studio / ${name}`;
+            document.getElementById('samples-count-val').innerText = `${count} Samples`;
+            document.getElementById('samples-label-count').innerText = count;
+            triggerPresetPrompt(`Cargado ${name} (${count} muestras detectadas)`);
+        }
+
+        // REAL ZIP GENERATION AND DOWNLOAD USING JSZIP
+        function exportSignatureKitZip() {
+            if (typeof JSZip === 'undefined') {
+                alert('Generando Signature Drumkit...');
+                return;
+            }
+
+            const zip = new JSZip();
+            const kitFolder = zip.folder("!WILLIE_INSPIRED_SIGNATURE_KIT");
+
+            // Folder .NFO configuration contents for FL Studio Browser
+            const drumsNfo = "Color=$0099FF\nIconNum=35\nTip=Sauce Drums por CapyKit\n";
+            const masterNfo = "Color=$0000FF\nIconNum=8\nTip=Presets de mezcla para FL Studio\n";
+            const melodyNfo = "Color=$A020F0\nIconNum=24\nTip=Melodías y Loops\n";
+            const rootNfo = "Color=$0040FF\nIconNum=12\nTip=Official Signature Drumkit\n";
+
+            // Add FL Studio Browser NFO Files
+            kitFolder.file("folder.nfo", rootNfo);
+            
+            const drumsFolder = kitFolder.folder("!DRUMS");
+            drumsFolder.file("folder.nfo", drumsNfo);
+            
+            const masterFolder = kitFolder.folder("!MASTER");
+            masterFolder.file("folder.nfo", masterNfo);
+            
+            const melodyFolder = kitFolder.folder("!MELODY");
+            melodyFolder.file("folder.nfo", melodyNfo);
+
+            // Add dummy Audio Samples to the Zip
+            drumsFolder.file("808_Sub_Deep_Cmin.wav", "DUMMY_AUDIO_DATA_808");
+            drumsFolder.file("Clap_Analog_909.wav", "DUMMY_AUDIO_DATA_CLAP");
+            drumsFolder.file("Punchy_Kick_FL.wav", "DUMMY_AUDIO_DATA_KICK");
+            melodyFolder.file("Synth_Loop_140BPM.wav", "DUMMY_AUDIO_DATA_LOOP");
+
+            // Readme File
+            kitFolder.file("README_CAPYKIT.txt", "Signature Drumkit creado automáticamente con CAPYKIT para FL Studio.\nOFFSZN Studio Engine.");
+
+            // Generate ZIP Blob and Download
+            zip.generateAsync({ type: "blob" }).then(function (content) {
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(content);
+                a.download = "Signature_Drumkit_FLStudio_CapyKit.zip";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+        }
+
+        // Serial Modal Logic
+        function openSerialModal() {
+            document.getElementById('serial-modal').classList.add('active');
+        }
+
+        function closeSerialModal() {
+            document.getElementById('serial-modal').classList.remove('active');
+        }
+
+        function verifySerialKey() {
+            const key = document.getElementById('serial-key-input').value.trim();
+            if (key) {
+                alert(`¡Licencia ${key} verificada con éxito en el servidor de OFFSZN!`);
+                closeSerialModal();
+            }
+        }
+
+        // HTML5 Canvas Peak Audio Waveform Rendering
+        const canvas = document.getElementById('waveform-canvas-el');
+        const ctx = canvas.getContext('2d');
+        let isPlaying = false;
+        let playProgress = 0.35;
+        let animId = null;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            drawWaveform();
+        }
+
+        function drawWaveform() {
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            const numBars = Math.floor(w / 4);
+            const barWidth = 2;
+            const barGap = 2;
+
+            for (let i = 0; i < numBars; i++) {
+                const x = i * (barWidth + barGap);
+                const rawAmp = Math.abs(Math.sin(i * 0.12) * Math.cos(i * 0.05) * 0.8 + (Math.random() * 0.2));
+                const barHeight = Math.max(4, rawAmp * (h - 12));
+                const y = (h - barHeight) / 2;
+
+                const isPlayed = (x / w) <= playProgress;
+                ctx.fillStyle = isPlayed ? '#c48b5e' : '#3d342d';
+                ctx.fillRect(x, y, barWidth, barHeight);
+            }
+
+            const playheadX = playProgress * w;
+            ctx.fillStyle = '#e2b186';
+            ctx.fillRect(playheadX, 0, 2, h);
+        }
+
+        function seekWaveform(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            playProgress = clickX / rect.width;
+            drawWaveform();
+            updateTimeDisplay();
+        }
+
+        function toggleWavePlay() {
+            isPlaying = !isPlaying;
+            const btnIcon = document.querySelector('#play-btn i');
+            if (isPlaying) {
+                btnIcon.className = 'bi bi-pause-fill';
+                animatePlay();
+                playSynthSound();
+            } else {
+                btnIcon.className = 'bi bi-play-fill';
+                cancelAnimationFrame(animId);
+            }
+        }
+
+        function animatePlay() {
+            if (!isPlaying) return;
+            playProgress += 0.003;
+            if (playProgress >= 1) playProgress = 0;
+            drawWaveform();
+            updateTimeDisplay();
+            animId = requestAnimationFrame(animatePlay);
+        }
+
+        function updateTimeDisplay() {
+            const totalSecs = 45;
+            const curSecs = Math.floor(playProgress * totalSecs);
+            document.getElementById('time-display').innerText = `0:${curSecs < 10 ? '0' : ''}${curSecs} / 0:45`;
+        }
+
+        function playSynthSound() {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(130, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime + 0.6);
+            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.6);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        setTimeout(resizeCanvas, 100);
+
+        // Gemini Input Bar Dropdown Logic
+        function toggleModeDropdown() {
+            const menu = document.getElementById('mode-dropdown-menu');
+            menu.classList.toggle('active');
+        }
+
+        function selectCapyMode(modeName) {
+            document.getElementById('selected-mode-text').innerText = modeName;
+            document.querySelectorAll('.mode-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.innerText.includes(modeName)) opt.classList.add('selected');
+            });
+            document.getElementById('mode-dropdown-menu').classList.remove('active');
+        }
+
+        function handleInputKey(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('capy-chat-input');
+                const txt = input.value.trim();
+                if (!txt) return;
+
+                triggerPresetPrompt(txt);
+                input.value = '';
+            }
+        }
+    </script>
+</body>
+
+</html>

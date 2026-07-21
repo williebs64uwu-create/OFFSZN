@@ -490,11 +490,6 @@ function renderTwoColLists(category = 'Todo') {
     // B. Super Fresh (Showing newest first, regardless of trending status)
     let limitFresh = 5;
     const allFresh = [...filtered]
-        .filter(p =>
-            String(p.producer_id) !== willieId &&
-            (p.producer_nickname || '').toLowerCase() !== 'willieinspired' &&
-            (p.producer_nickname || '').toLowerCase() !== 'willie inspired'
-        )
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     const fresh = allFresh.slice(0, limitFresh);
 
