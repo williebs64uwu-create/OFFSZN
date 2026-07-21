@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Supabase Client for Real Integration -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/script/supabase.js"></script>
     <script src="/env.js" onerror="console.log('Running standalone/mockup mode')"></script>
     <script src="/script/config.js" onerror="console.log('Config omitted')"></script>
     <script src="beat-post-service.js"></script>
@@ -1136,9 +1136,10 @@
         <!-- Footer -->
         <div class="plugin-footer">
             <span id="footer-status-text">Desconectado</span>
-            <div class="user-indicator" id="footer-user" style="display: none;">
+            <div class="user-indicator" id="footer-user" style="display: none; align-items: center; gap: 8px;">
                 <div class="user-avatar">W</div>
                 <span>Willie OFFSZN</span>
+                <span id="user-plan-badge" style="font-size: 8px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; border: 1.5px solid transparent; display: none;"></span>
             </div>
         </div>
 
@@ -1370,6 +1371,7 @@
 
             if (supabaseClient && sess.user && sess.user.id) {
                 try {
+                    // 1. Fetch user profile nickname
                     const { data: profile, error } = await supabaseClient
                         .from('users')
                         .select('nickname')
@@ -1381,8 +1383,37 @@
                         document.getElementById('footer-user').querySelector('span').textContent = displayName;
                         document.getElementById('footer-user').querySelector('.user-avatar').textContent = avatarChar;
                     }
+
+                    // 2. Fetch user subscription plan level
+                    const { data: planData } = await supabaseClient
+                        .from('profiles')
+                        .select('plan')
+                        .eq('id', sess.user.id)
+                        .single();
+
+                    const plan = (planData && planData.plan) ? planData.plan.toLowerCase() : 'free';
+                    const badge = document.getElementById('user-plan-badge');
+                    if (badge) {
+                        badge.style.display = 'inline-block';
+                        if (plan === 'pro') {
+                            badge.textContent = 'PRO';
+                            badge.style.borderColor = '#ffd700';
+                            badge.style.color = '#ffd700';
+                            badge.style.background = 'rgba(255, 215, 0, 0.05)';
+                        } else if (plan === 'starter') {
+                            badge.textContent = 'STARTER';
+                            badge.style.borderColor = '#a855f7';
+                            badge.style.color = '#a855f7';
+                            badge.style.background = 'rgba(168, 85, 247, 0.05)';
+                        } else {
+                            badge.textContent = 'GRATIS';
+                            badge.style.borderColor = '#8e8e93';
+                            badge.style.color = '#8e8e93';
+                            badge.style.background = 'rgba(142, 142, 147, 0.05)';
+                        }
+                    }
                 } catch (e) {
-                    console.error("Error fetching nickname:", e);
+                    console.error("Error fetching user profile and plan:", e);
                 }
             }
             
