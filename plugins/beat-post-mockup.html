@@ -899,6 +899,16 @@
             border-color: var(--accent);
             background: rgba(255,255,255,0.02);
         }
+
+        @keyframes scaleUpSuccess {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        @keyframes pulseSuccess {
+            0% { box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.25); }
+            70% { box-shadow: 0 0 0 15px rgba(48, 209, 88, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(48, 209, 88, 0); }
+        }
     </style>
 </head>
 <body>
@@ -1120,15 +1130,28 @@
             </div>
 
             <!-- STEP 5: SUCCESS -->
-            <div id="view-success">
-                <div class="success-badge">
+            <div id="view-success" style="display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 20px; padding: 35px 20px; animation: scaleUpSuccess 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); margin-top: auto; margin-bottom: auto;">
+                <div class="success-badge" style="width: 72px; height: 72px; border-radius: 50%; background: rgba(48, 209, 88, 0.08); border: 2px solid var(--green); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--green); margin-bottom: 10px; animation: pulseSuccess 2s infinite;">
                     <i class="fa-solid fa-check"></i>
                 </div>
                 <div>
-                    <h2 class="success-title">¡Beat Publicado!</h2>
-                    <p class="success-desc" id="success-message">Tu instrumental ha sido renderizada, subida a tu tienda OFFSZN y ya está lista para la venta.</p>
+                    <h2 class="success-title" style="font-size: 19px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px;">¡Beat Publicado!</h2>
+                    <p class="success-desc" id="success-message" style="color: var(--dim); font-size: 11.5px; line-height: 1.5; max-width: 320px; margin: 0 auto;">Tu instrumental ha sido renderizada y subida de forma exitosa.</p>
                 </div>
-                <button class="btn-restart" onclick="resetMockup()">Publicar otro Beat</button>
+                
+                <!-- Action Buttons Row -->
+                <div id="success-links-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; margin-top: 10px;">
+                    <a id="btn-view-offszn" href="#" target="_blank" class="btn-next" style="margin: 0; padding: 13px; font-size: 12px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px;">
+                        <i class="fa-solid fa-store"></i> Ver en tu Tienda OFFSZN
+                    </a>
+                    <a id="btn-view-youtube" href="#" target="_blank" class="btn-prev" style="margin: 0; padding: 12px; font-size: 11.5px; font-weight: 700; text-decoration: none; display: none; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; border-color: rgba(255, 59, 48, 0.3); color: #ff3b30; background: rgba(255, 59, 48, 0.03);">
+                        <i class="fa-brands fa-youtube"></i> Ver Video en YouTube
+                    </a>
+                </div>
+
+                <button class="btn-prev" onclick="resetMockup()" style="margin-top: 15px; border-color: transparent; color: var(--dim); font-size: 11px; font-weight: 600; background: transparent; padding: 6px 12px; cursor: pointer;">
+                    Publicar otro Beat
+                </button>
             </div>
 
         </div>
@@ -1785,34 +1808,83 @@
                     console.error("Error fetching cover image:", e);
                 }
             }
-            
+
+            // Let's draw a premium graphic cover
             const canvas = document.createElement('canvas');
             canvas.width = 1000; canvas.height = 1000;
             const ctx = canvas.getContext('2d');
             const titleInput = document.getElementById('beat-title-input').value || 'MI BEAT';
+            const producerName = (session && session.user && session.user.email) ? session.user.email.split('@')[0] : 'OFFSZN';
             
+            // Premium background gradient (Deep Obsidian to Cosmic Violet)
             const grad = ctx.createLinearGradient(0, 0, 1000, 1000);
-            grad.addColorStop(0, '#020202');
-            grad.addColorStop(0.5, '#222226');
-            grad.addColorStop(1, '#050505');
+            grad.addColorStop(0, '#040406');
+            grad.addColorStop(0.4, '#120f18');
+            grad.addColorStop(0.7, '#0c0b11');
+            grad.addColorStop(1, '#020203');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, 1000, 1000);
             
-            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-            ctx.lineWidth = 2;
+            // Add subtle noise or texture overlay (premium aesthetic)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.015)';
+            for (let i = 0; i < 8000; i++) {
+                const rx = Math.random() * 1000;
+                const ry = Math.random() * 1000;
+                ctx.fillRect(rx, ry, 2, 2);
+            }
+
+            // Draw glowing abstract concentric circles in the background
+            for (let r = 200; r <= 450; r += 50) {
+                ctx.strokeStyle = `rgba(168, 85, 247, ${0.04 - (r - 200) * 0.0001})`;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(500, 500, r, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Draw clean master circle
+            ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(500, 500, 400, 0, Math.PI * 2);
+            ctx.arc(500, 500, 360, 0, Math.PI * 2);
             ctx.stroke();
+
+            // Draw tiny accent marks on the circle (tick marks like a watch/record)
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 2;
+            for (let angle = 0; angle < 360; angle += 30) {
+                const radAngle = (angle * Math.PI) / 180;
+                const x1 = 500 + Math.cos(radAngle) * 350;
+                const y1 = 500 + Math.sin(radAngle) * 350;
+                const x2 = 500 + Math.cos(radAngle) * 360;
+                const y2 = 500 + Math.sin(radAngle) * 360;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
             
-            ctx.font = '900 85px sans-serif';
+            // Typography
+            ctx.font = '800 68px "Geist", "Montserrat", sans-serif';
             ctx.fillStyle = '#ffffff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(titleInput.toUpperCase(), 500, 500);
             
-            ctx.font = '700 20px sans-serif';
+            // Text shadow for high contrast/glowing feel
+            ctx.shadowColor = 'rgba(168, 85, 247, 0.4)';
+            ctx.shadowBlur = 15;
+            ctx.fillText(titleInput.toUpperCase(), 500, 470);
+            ctx.shadowBlur = 0; // reset
+            
+            // Producer name
+            ctx.font = '500 24px "Geist Mono", monospace';
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.fillText(`PRODUCER: ${producerName.toUpperCase()}`, 500, 550);
+            
+            // Offszn Exporter bottom tagline
+            ctx.font = '800 16px "Geist Mono", monospace';
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.fillText('OFFSZN EXPORTER', 500, 850);
+            ctx.fillText('OFFSZN VST EXPORTER', 500, 850);
             
             return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
         }
@@ -2089,6 +2161,20 @@
                             ? `"${metadata.title}" ha sido publicado en tu tienda OFFSZN y tu canal de YouTube.`
                             : `"${metadata.title}" ha sido añadido a tu catálogo de venta en OFFSZN.`;
                         document.getElementById('success-message').textContent = msg;
+
+                        // Retrieve the created product and set up the link buttons
+                        const product = result.product || {};
+                        const slug = product.public_slug || generatePublicSlug(metadata.title);
+                        document.getElementById('btn-view-offszn').href = `https://offszn.lat/beats/${slug}`;
+                        
+                        const ytBtn = document.getElementById('btn-view-youtube');
+                        if (selectedYoutube && product.youtube_id) {
+                            ytBtn.href = `https://youtube.com/watch?v=${product.youtube_id}`;
+                            ytBtn.style.display = 'flex';
+                        } else {
+                            ytBtn.style.display = 'none';
+                        }
+
                         successView.style.display = 'flex';
                     }, 500);
 
@@ -2121,6 +2207,8 @@
                             setTimeout(() => {
                                 document.getElementById('view-progress').style.display = 'none';
                                 const successView = document.getElementById('view-success');
+                                document.getElementById('btn-view-offszn').href = 'https://offszn.lat/explorar.html';
+                                document.getElementById('btn-view-youtube').style.display = 'none';
                                 successView.style.display = 'flex';
                             }, 500);
                         }
