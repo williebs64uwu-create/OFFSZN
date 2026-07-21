@@ -199,7 +199,7 @@ import { JWT_SECRET, SUPABASE_URL, SUPABASE_ANON_KEY, EMAILJS_PUBLIC_KEY, EMAILO
 app.get('/env.js', (req, res) => {
     res.type('.js');
     res.send(`
-        window.SUPABASE_URL = "${SUPABASE_URL || 'https://qtjpvztpgfymjhhpoouq.supabase.co'}";
+        window.SUPABASE_URL = "${SUPABASE_URL || 'https://qtjpvztpgfymjhhpouuq.supabase.co'}";
         window.SUPABASE_ANON_KEY = "${SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw'}";
         window.EMAILJS_PUBLIC_KEY = "${EMAILJS_PUBLIC_KEY || 'If_WAVcuXiGSPp2SB'}";
         window.PAYPAL_CLIENT_ID = "${process.env.PAYPAL_CLIENT_ID || ''}";
