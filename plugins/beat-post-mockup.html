@@ -943,40 +943,38 @@
             <i class="fa-solid fa-chevron-right step-arrow"></i>
             <div class="step-item" id="step-lbl-3">
                 <span>3. Publicación</span>
-            </div>
-        </div>
-
-        <!-- Interactive Content Viewport -->
-        <div class="content-area">
-
-             <!-- STAGE 1: AUTHENTICATION (Web Token Link Only) -->
-             <div id="view-auth" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: auto; margin-bottom: auto; gap: 24px; width: 100%; max-width: 320px; padding: 20px; margin-left: auto; margin-right: auto;">
-                <i class="fa-solid fa-key auth-logo-icon" style="font-size: 48px; color: var(--accent); opacity: 0.9;"></i>
+              <!-- STAGE 1: AUTHENTICATION (Web Token Link Only) -->
+             <div id="view-auth" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: auto; margin-bottom: auto; gap: 16px; width: 100%; max-width: 320px; padding: 20px; margin-left: auto; margin-right: auto;">
+                <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.03); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">
+                    <i class="fa-solid fa-user-lock" style="font-size: 20px; color: #fff; opacity: 0.8;"></i>
+                </div>
                 <div>
-                    <h2 class="auth-title" style="font-size: 18px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px;">Vincular con tu DAW</h2>
-                    <p class="auth-desc" style="color: var(--dim); font-size: 11.5px; line-height: 1.5; padding: 0 10px;">Para subir beats directo a tu catálogo y YouTube, vincula tu cuenta de OFFSZN mediante un Token de acceso.</p>
+                    <h2 class="auth-title" style="font-size: 16px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 6px; line-height: 1.3;">Inicia sesión o crea tu cuenta para subir beats</h2>
                 </div>
                 
                 <button class="btn-next" onclick="openWebTokenPage()" style="width: 100%; margin: 0; padding: 13px; font-size: 12px; background: #fff; color: #000; font-weight: 800; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Obtener Token desde la Web
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Crear cuenta o iniciar sesión
                 </button>
 
-                <div style="display: flex; align-items: center; gap: 10px; width: 100%; opacity: 0.15; margin: 4px 0;">
-                    <div style="flex: 1; height: 1px; background: #fff;"></div>
-                    <span style="font-size: 8px; font-weight: 700; text-transform: uppercase;">Pega el token abajo</span>
-                    <div style="flex: 1; height: 1px; background: #fff;"></div>
+                <!-- Auto Link Pin Box -->
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 14px; width: 100%; margin-top: 4px;">
+                    <span style="font-size: 9px; color: var(--dim); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">Código de vinculación</span>
+                    <h3 id="linking-pin-display" style="font-size: 24px; font-weight: 800; color: #fff; letter-spacing: 4px; margin-top: 4px; font-family: 'Geist Mono', monospace;">------</h3>
+                    <p style="font-size: 9.5px; color: var(--dim); margin-top: 6px; line-height: 1.4;">El plugin se conectará automáticamente al iniciar sesión en tu navegador.</p>
                 </div>
 
-                <div style="width: 100%; display: flex; flex-direction: column; gap: 8px;">
+                <a href="#" onclick="toggleManualAuth(event)" style="font-size: 10px; color: var(--dim); text-decoration: underline; margin-top: 8px;">Vincular manualmente con Token</a>
+                
+                <div id="manual-auth-box" style="display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: 4px;">
                     <input type="password" id="auth-token-input" class="text-input" placeholder="Pega tu token de acceso aquí" style="width: 100%; padding: 12px; font-size: 11px; background: #000; text-align: center; border-radius: 8px; border: 1px solid var(--border);">
-                    <button class="btn-prev" onclick="loginWithToken()" style="width: 100%; padding: 11px; font-size: 11.5px; font-weight: 700; border-color: var(--border-light); color: #fff; border-radius: 8px;">
+                    <button class="btn-prev" onclick="loginWithToken()" style="width: 100%; padding: 11px; font-size: 11.5px; font-weight: 700; border-color: var(--border-light); color: #fff; border-radius: 8px; cursor: pointer;">
                         Vincular Cuenta
                     </button>
                 </div>
             </div>
 
             <!-- STEP 1: BEAT DETAILS & PORTADA CROPPER -->
-            <div class="step-pane active" id="view-details">
+            <div class="step-pane" id="view-details">
                 <div class="form-group">
                     <h3 class="section-title">Título del Beat</h3>
                     <input type="text" id="beat-title-input" class="text-input" value="R&B Type Beat" placeholder="Ej. Lofi Chill Type Beat" oninput="onTitleChange()">
@@ -1364,6 +1362,8 @@
             const { data } = await supabaseClient.auth.getSession();
             if (data.session) {
                 handleSession(data.session);
+            } else {
+                showAuthView();
             }
 
             supabaseClient.auth.onAuthStateChange((_event, newSession) => {
@@ -1459,13 +1459,47 @@
             }
         }
 
+        let linkingPin = '';
+        let realtimeChannel = null;
+
+        function generateLinkingPin() {
+            linkingPin = Math.floor(100000 + Math.random() * 900000).toString();
+            const display = document.getElementById('linking-pin-display');
+            if (display) display.textContent = `${linkingPin.substring(0,3)} ${linkingPin.substring(3)}`;
+            
+            if (supabaseClient) {
+                if (realtimeChannel) {
+                    realtimeChannel.unsubscribe();
+                }
+                realtimeChannel = supabaseClient.channel(`vst-link-${linkingPin}`);
+                realtimeChannel
+                    .on('broadcast', { event: 'send-token' }, (payload) => {
+                        const receivedToken = payload.payload.token;
+                        if (receivedToken) {
+                            logDebug('Token recibido automáticamente desde el navegador.');
+                            document.getElementById('auth-token-input').value = receivedToken;
+                            loginWithToken();
+                        }
+                    })
+                    .subscribe();
+            }
+        }
+
         function openWebTokenPage() {
             logDebug('Abriendo navegador para token...');
-            const tokenUrl = 'https://offszn.lat/pages/vst-token.html';
+            const tokenUrl = `https://offszn.lat/pages/vst-token.html?pin=${linkingPin}`;
             if (window.chrome && window.chrome.webview) {
                 callNativeHost('openExternalBrowser', { url: tokenUrl });
             }
             window.open(tokenUrl, '_blank');
+        }
+
+        function toggleManualAuth(e) {
+            if (e) e.preventDefault();
+            const box = document.getElementById('manual-auth-box');
+            if (box) {
+                box.style.display = box.style.display === 'none' ? 'flex' : 'none';
+            }
         }
 
         async function handleSession(sess) {
@@ -1539,6 +1573,13 @@
             document.getElementById('footer-status-text').textContent = 'Desconectado';
             document.getElementById('footer-user').style.display = 'none';
             document.getElementById('user-dropdown-menu').style.display = 'none';
+
+            // Remove active classes from steps to prevent bleed-through
+            document.getElementById('view-details').classList.remove('active');
+            document.getElementById('view-audio').classList.remove('active');
+            document.getElementById('view-targets').classList.remove('active');
+
+            generateLinkingPin();
         }
 
         function toggleUserDropdown(event) {

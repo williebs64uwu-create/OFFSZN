@@ -179,11 +179,34 @@
       }
     }
 
+    async function sendTokenToPlugin(pin, tokenVal) {
+      if (!supabaseClient) return;
+      const channel = supabaseClient.channel(`vst-link-${pin}`);
+      channel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.send({
+            type: 'broadcast',
+            event: 'send-token',
+            payload: { token: tokenVal }
+          });
+          console.log(`Token broadcasted successfully to VST on channel: vst-link-${pin}`);
+          const copyStatus = document.getElementById('copy-status');
+          if (copyStatus) {
+            copyStatus.textContent = '¡Vinculación automática exitosa! Ya puedes volver a FL Studio.';
+            copyStatus.className = 'text-xs text-green-400 font-medium opacity-100 transition-opacity duration-300';
+          }
+        }
+      });
+    }
+
     function updateCombinedToken() {
-      if (ytAccessToken) {
-        document.getElementById('token-input').value = currentToken + '||yt_token||' + ytAccessToken;
-      } else {
-        document.getElementById('token-input').value = currentToken;
+      const combinedVal = ytAccessToken ? currentToken + '||yt_token||' + ytAccessToken : currentToken;
+      document.getElementById('token-input').value = combinedVal;
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const pin = urlParams.get('pin');
+      if (pin && currentToken) {
+        sendTokenToPlugin(pin, combinedVal);
       }
     }
 
@@ -195,6 +218,13 @@
       updateCombinedToken();
       document.getElementById('user-email').textContent = session.user.email;
       initGoogleClient();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const pin = urlParams.get('pin');
+      if (pin) {
+        const combinedVal = document.getElementById('token-input').value;
+        sendTokenToPlugin(pin, combinedVal);
+      }
     }
 
     function showLoggedOut() {
