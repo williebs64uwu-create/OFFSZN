@@ -976,40 +976,52 @@
             <!-- STEP 1: BEAT DETAILS & PORTADA CROPPER -->
             <div class="step-pane" id="view-details">
                 <div class="form-group">
-                    <h3 class="section-title">Título del Beat</h3>
-                    <input type="text" id="beat-title-input" class="text-input" value="R&B Type Beat" placeholder="Ej. Lofi Chill Type Beat" oninput="onTitleChange()">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <h3 class="section-title" style="margin-bottom: 0;">Título del Beat</h3>
+                        <span id="title-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/60</span>
+                    </div>
+                    <input type="text" id="beat-title-input" class="text-input" maxlength="60" value="R&B Type Beat" placeholder="Ej. Lofi Chill Type Beat" oninput="onTitleChange()">
                 </div>
 
                 <div class="form-group" style="margin-top: 10px;">
-                    <h3 class="section-title">Descripción</h3>
-                    <textarea id="beat-desc-input" class="text-input" style="height: 52px; resize: none; font-size: 11px; padding: 8px 10px; background: #000;" placeholder="Ej. Beat de R&B suave con vibras vintage. Ideal para Drake o Bryson Tiller."></textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <h3 class="section-title" style="margin-bottom: 0;">Descripción</h3>
+                        <span id="desc-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/3000</span>
+                    </div>
+                    <textarea id="beat-desc-input" class="text-input" maxlength="3000" style="height: 52px; resize: none; font-size: 11px; padding: 8px 10px; background: #000;" placeholder="Ej. Beat de R&B suave con vibras vintage. Ideal para Drake o Bryson Tiller." oninput="onDescChange()"></textarea>
                 </div>
 
                 <div class="form-group" style="margin-top: 10px;">
-                    <h3 class="section-title">Tags (separadas por comas)</h3>
-                    <input type="text" id="beat-tags-input" class="text-input" style="padding: 8px 10px; font-size: 11px; background: #000;" value="rnb, vintage, smooth, drake, Bryson Tiller" placeholder="Ej. trap, hard, dark, 808">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <h3 class="section-title" style="margin-bottom: 0;">Etiquetas / Tags</h3>
+                        <span id="tags-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/500</span>
+                    </div>
+                    <div id="tags-pills-box" onclick="document.getElementById('tag-input-field').focus()" style="display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 8px; background: #000; border: 1px solid var(--border); border-radius: 8px; min-height: 40px; align-items: center; cursor: text;">
+                        <input type="text" id="tag-input-field" placeholder="Escribe un tag y presiona Enter..." style="background: transparent; border: none; outline: none; color: #fff; font-size: 11px; flex: 1; min-width: 140px; font-family: inherit;">
+                    </div>
+                    <span style="font-size: 9px; color: var(--dim); margin-top: 2px;">Máx 40 caract. por tag (Enter para agregar). Primeras 3 van a OFFSZN, todas a YouTube (hasta 500 caract.).</span>
                 </div>
 
                 <!-- Cover Art Selector Box -->
-                <div class="form-group" style="margin-top: 12px;">
+                <div class="form-group" style="margin-top: 10px;">
                     <h3 class="section-title">Portada del Beat (Square 1:1)</h3>
-                    <div style="display: flex; gap: 12px; align-items: center; margin-top: 6px;">
-                        <div id="cover-preview-box" style="width: 80px; height: 80px; border-radius: 6px; border: 1px solid var(--border); background: #060608; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                    <div style="display: flex; gap: 12px; align-items: center; margin-top: 4px;">
+                        <div id="cover-preview-box" style="width: 70px; height: 70px; border-radius: 6px; border: 1px solid var(--border); background: #060608; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
                             <!-- Placeholder icon or generated cover text preview -->
-                            <span id="cover-preview-text" style="font-size: 8px; color: var(--dim); text-align: center; font-weight: 700; padding: 4px;">AUTOGENERADO VINILO</span>
+                            <span id="cover-preview-text" style="font-size: 7.5px; color: var(--dim); text-align: center; font-weight: 700; padding: 4px;">AUTOGENERADO VINILO</span>
                             <img id="cover-preview-img" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;">
                         </div>
-                        <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
-                            <button type="button" class="btn-prev" onclick="document.getElementById('cover-file-input').click()" style="margin: 0; padding: 8px 12px; font-size: 11px; width: fit-content; cursor: pointer;">
+                        <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                            <button type="button" class="btn-prev" onclick="document.getElementById('cover-file-input').click()" style="margin: 0; padding: 7px 12px; font-size: 10.5px; width: fit-content; cursor: pointer;">
                                 <i class="fa-solid fa-image"></i> Seleccionar Imagen
                             </button>
-                            <span style="font-size: 9.5px; color: var(--dim);">Sube tu imagen (JPG/PNG). Se abrirá un recortador para ajustarla a 1:1.</span>
+                            <span style="font-size: 9px; color: var(--dim);">Sube tu imagen (JPG/PNG). Se abrirá un recortador para ajustarla a 1:1.</span>
                         </div>
                     </div>
                     <input type="file" id="cover-file-input" accept="image/*" style="display: none;" onchange="handleCoverFileSelect(this.files[0])">
                 </div>
 
-                <div class="nav-buttons" style="margin-top: 18px;">
+                <div class="nav-buttons" style="margin-top: 14px;">
                     <button class="btn-next" onclick="goToStep(2)">
                         Continuar <i class="fa-solid fa-chevron-right"></i>
                     </button>
@@ -1732,6 +1744,129 @@
             }, 'image/jpeg', 0.9);
         }
 
+        // ─── TAG PILLS & CHARACTER COUNTERS LOGIC ───
+        let tagList = ['rnb', 'vintage', 'smooth', 'drake', 'bryson tiller'];
+
+        function onTitleChange() {
+            const input = document.getElementById('beat-title-input');
+            const counter = document.getElementById('title-char-count');
+            if (input && counter) {
+                const len = input.value.length;
+                counter.textContent = `${len}/60`;
+                counter.style.color = len >= 60 ? '#ff9500' : 'var(--dim)';
+            }
+        }
+
+        function onDescChange() {
+            const input = document.getElementById('beat-desc-input');
+            const counter = document.getElementById('desc-char-count');
+            if (input && counter) {
+                const len = (input.value || '').length;
+                counter.textContent = `${len}/3000`;
+                counter.style.color = len >= 3000 ? '#ff9500' : 'var(--dim)';
+            }
+        }
+
+        function escapeHtml(str) {
+            return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function renderTagPills() {
+            const box = document.getElementById('tags-pills-box');
+            const inputField = document.getElementById('tag-input-field');
+            const countDisplay = document.getElementById('tags-char-count');
+            if (!box || !inputField) return;
+
+            const existingPills = box.querySelectorAll('.tag-pill');
+            existingPills.forEach(p => p.remove());
+
+            let totalChars = 0;
+
+            tagList.forEach((tag, index) => {
+                totalChars += tag.length;
+
+                const pill = document.createElement('div');
+                pill.className = 'tag-pill';
+                pill.style.cssText = `
+                    background: #141418;
+                    border: 1px solid #2d2d35;
+                    border-radius: 16px;
+                    padding: 3px 10px;
+                    font-size: 11px;
+                    color: #fff;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-weight: 500;
+                `;
+                pill.innerHTML = `
+                    <span>${escapeHtml(tag)}</span>
+                    <i class="fa-solid fa-xmark" style="font-size: 10px; color: var(--dim); cursor: pointer; opacity: 0.7;" onclick="removeTag(${index}, event)"></i>
+                `;
+                box.insertBefore(pill, inputField);
+            });
+
+            if (countDisplay) {
+                countDisplay.textContent = `${totalChars}/500`;
+                countDisplay.style.color = totalChars > 500 ? '#ff3b30' : 'var(--dim)';
+            }
+        }
+
+        function removeTag(index, event) {
+            if (event) event.stopPropagation();
+            tagList.splice(index, 1);
+            renderTagPills();
+        }
+
+        function setupTagInputListener() {
+            const inputField = document.getElementById('tag-input-field');
+            if (!inputField || inputField._hasListener) return;
+            inputField._hasListener = true;
+
+            inputField.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ',') {
+                    e.preventDefault();
+                    addTagFromInput();
+                } else if (e.key === 'Backspace' && inputField.value === '' && tagList.length > 0) {
+                    tagList.pop();
+                    renderTagPills();
+                }
+            });
+
+            inputField.addEventListener('blur', function() {
+                if (inputField.value.trim() !== '') {
+                    addTagFromInput();
+                }
+            });
+        }
+
+        function addTagFromInput() {
+            const inputField = document.getElementById('tag-input-field');
+            if (!inputField) return;
+
+            let rawVal = inputField.value.trim().replace(/,/g, '');
+            if (!rawVal) return;
+
+            if (rawVal.length > 40) {
+                rawVal = rawVal.substring(0, 40);
+            }
+
+            const currentTotal = tagList.reduce((acc, t) => acc + t.length, 0);
+            if (currentTotal + rawVal.length > 500) {
+                alert('Límite de 500 caracteres totales alcanzado.');
+                return;
+            }
+
+            const normalized = rawVal.toLowerCase();
+            if (!tagList.some(t => t.toLowerCase() === normalized)) {
+                tagList.push(rawVal);
+                inputField.value = '';
+                renderTagPills();
+            } else {
+                inputField.value = '';
+            }
+        }
+
         function goToStep(stepNum) {
             document.getElementById('view-audio').classList.remove('active');
             document.getElementById('view-details').classList.remove('active');
@@ -1745,6 +1880,9 @@
                 document.getElementById('view-details').classList.add('active');
                 document.getElementById('step-lbl-1').className = 'step-item active';
                 onTitleChange();
+                onDescChange();
+                renderTagPills();
+                setupTagInputListener();
             } else if (stepNum === 2) {
                 document.getElementById('view-audio').classList.add('active');
                 document.getElementById('step-lbl-1').className = 'step-item completed';
@@ -2459,15 +2597,24 @@
                     mp3: uploadedFiles.mp3
                 };
 
-                const rawTags = (document.getElementById('beat-tags-input')?.value || '')
-                    .split(',')
-                    .map(t => t.trim())
-                    .filter(Boolean);
+                // Store tags: first 3
+                const storeTags = tagList.slice(0, 3);
+                
+                // YouTube tags: all tags up to 500 total combined characters
+                let ytTags = [];
+                let accumLen = 0;
+                for (const t of tagList) {
+                    if (accumLen + t.length <= 500) {
+                        ytTags.push(t);
+                        accumLen += t.length;
+                    }
+                }
 
                 const metadata = {
                     title: document.getElementById('beat-title-input').value || 'Beat',
                     description: document.getElementById('beat-desc-input')?.value || '',
-                    tags: rawTags,
+                    tags: storeTags,
+                    youtubeTags: ytTags,
                     bpm: 140,
                     key: 'C Min'
                 };

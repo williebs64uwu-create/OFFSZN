@@ -151,12 +151,20 @@ async function uploadBeatProduct(supabaseClient, session, metadata, files, isYou
             formData.append('cover', files.cover, 'cover.jpg');
             formData.append('audio', files.mp3, 'audio.mp3');
 
-            // Hit the server-side FFmpeg rendering controller
-            const renderRes = await fetch(`${apiBase}/youtube/render-video`, {
+            // Hit the server-side FFmpeg rendering controller with route fallback
+            let renderRes = await fetch(`${apiBase}/youtube/render-video`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
             });
+
+            if (!renderRes.ok) {
+                renderRes = await fetch(`${apiBase}/api/youtube/render-video`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+            }
 
             if (!renderRes.ok) {
                 const errInfo = await renderRes.json().catch(() => ({}));
@@ -167,6 +175,8 @@ async function uploadBeatProduct(supabaseClient, session, metadata, files, isYou
             
             if (onProgress) onProgress('upload_youtube', 'Subiendo video a YouTube...');
             
+            const ytTags = metadata.youtubeTags || metadata.tags || [];
+            
             // Check for Google access token in global window context or uploader helper
             const ytToken = window.ytAccessToken || '';
             if (ytToken) {
@@ -174,21 +184,35 @@ async function uploadBeatProduct(supabaseClient, session, metadata, files, isYou
                 youtubeVideoId = await uploadToYouTubeDirectly(videoBlob, {
                     title: metadata.title,
                     description: metadata.description || `Comprar/Descargar beat: ${metadata.title}\nBPM: ${metadata.bpm}\nKey: ${metadata.key}`,
-                    tags: metadata.tags || []
+                    tags: ytTags
                 }, ytToken);
             } else if (window.YouTubeUploader) {
                 window.YouTubeUploader.setRenderedVideo(videoBlob);
                 youtubeVideoId = await window.YouTubeUploader.handleUpload({
                     title: metadata.title,
                     description: metadata.description || `Comprar/Descargar beat: ${metadata.title}\nBPM: ${metadata.bpm}\nKey: ${metadata.key}`,
-                    tags: metadata.tags || []
+                    tags: ytTags
                 });
             } else {
-                // Fallback / simulated upload progress
                 console.log('Simulating YouTube upload flow...');
                 await new Promise(resolve => setTimeout(resolve, 800));
                 youtubeVideoId = 'simulated_yt_id_' + Math.random().toString(36).substring(7);
             }
+
+            // Increment YouTube Quota Counter on server
+            try {
+                const incUrl = apiBase.endsWith('/api') ? `${apiBase}/youtube/increment-upload` : `${apiBase}/api/youtube/increment-upload`;
+                await fetch(incUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+            } catch (incErr) {
+                console.warn("Quota increment notice:", incErr);
+            }
+
         } catch (ytErr) {
             console.error('Error in YouTube flow:', ytErr);
             throw new Error(`Sincronización de YouTube fallida: ${ytErr.message}`);
