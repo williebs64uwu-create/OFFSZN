@@ -1155,9 +1155,17 @@
             ];
         }
 
+        function getApiBaseUrl() {
+            const host = window.location.hostname;
+            const port = window.location.port;
+            if (host === 'offszn.lat' || host.endsWith('.offszn.lat')) return '';
+            if (host === 'localhost' && port === '3000') return '';
+            return 'https://offszn.lat';
+        }
+
         async function loadEvents() {
             try {
-                const res = await fetch('/api/content-calendar');
+                const res = await fetch(`${getApiBaseUrl()}/api/content-calendar`);
                 if (res.ok) {
                     const data = await res.json();
                     if (data.success && Array.isArray(data.data)) {
@@ -1168,7 +1176,7 @@
                             events = getSeedEventsForJuly27();
                             for (const seed of events) {
                                 try {
-                                    await fetch('/api/content-calendar', {
+                                    await fetch(`${getApiBaseUrl()}/api/content-calendar`, {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify(seed)
@@ -1194,7 +1202,8 @@
         async function saveEvent(eventData) {
             try {
                 const isExisting = events.some(e => e.id === eventData.id);
-                const url = isExisting ? `/api/content-calendar/${eventData.id}` : '/api/content-calendar';
+                const baseUrl = getApiBaseUrl();
+                const url = isExisting ? `${baseUrl}/api/content-calendar/${eventData.id}` : `${baseUrl}/api/content-calendar`;
                 const method = isExisting ? 'PUT' : 'POST';
 
                 await fetch(url, {
@@ -1218,7 +1227,7 @@
         async function deleteEventItem(id) {
             if (!confirm('¿Eliminar este contenido?')) return;
             try {
-                await fetch(`/api/content-calendar/${id}`, { method: 'DELETE' });
+                await fetch(`${getApiBaseUrl()}/api/content-calendar/${id}`, { method: 'DELETE' });
             } catch (e) {}
 
             events = events.filter(e => e.id !== id);
@@ -1230,7 +1239,7 @@
         async function triggerBrevoTest(id) {
             showToast('🚀 Enviando recordatorio por Brevo REST API...');
             try {
-                const res = await fetch(`/api/content-calendar/send-reminder/${id}`, { method: 'POST' });
+                const res = await fetch(`${getApiBaseUrl()}/api/content-calendar/send-reminder/${id}`, { method: 'POST' });
                 const json = await res.json();
                 if (json.success) {
                     showToast('✅ Recordatorio enviado por Brevo');
