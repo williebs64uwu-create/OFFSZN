@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS public.content_calendar (
     email_reminder BOOLEAN DEFAULT true,
     target_email TEXT DEFAULT 'offszn.studio@gmail.com',
     status VARCHAR(20) DEFAULT 'scheduled',
+    price_usd NUMERIC DEFAULT 0,
     notes TEXT,
     reminder_sent BOOLEAN DEFAULT false,
     reminder_sent_at TIMESTAMPTZ,

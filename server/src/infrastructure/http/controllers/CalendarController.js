@@ -203,6 +203,7 @@ export const createEvent = async (req, res) => {
             reminder_at: body.reminder_at || null,
             email_reminder: body.email_reminder !== false,
             target_email: body.target_email || 'offszn.studio@gmail.com',
+            price_usd: body.price_usd ? parseFloat(body.price_usd) : 0,
             status: body.status || 'scheduled',
             notes: body.notes || '',
             reminder_sent: false,

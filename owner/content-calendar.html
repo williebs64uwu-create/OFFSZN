@@ -272,7 +272,7 @@
             box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
         }
 
-        /* CHANNEL FILTERS WITH VIBRANT COLORS */
+        /* CHANNEL FILTERS */
         .channel-filters {
             display: flex;
             gap: 10px;
@@ -325,6 +325,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .timeline-header h3 {
@@ -335,6 +337,20 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .revenue-total-pill {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            color: #34d399;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
         }
 
         .timeline-hint {
@@ -355,7 +371,7 @@
 
         .time-slot-row {
             display: flex;
-            min-height: 80px;
+            min-height: 84px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.08);
             position: relative;
             transition: background 0.15s ease;
@@ -496,6 +512,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
         .channel-pill {
@@ -509,6 +526,17 @@
             color: #ffffff;
             border: 1px solid rgba(255, 255, 255, 0.25);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .price-badge {
+            font-size: 12px;
+            font-weight: 800;
+            background: rgba(16, 185, 129, 0.25);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            padding: 3px 10px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
         }
 
         .event-title {
@@ -834,6 +862,10 @@
         <div id="dailyView" class="timeline-wrapper">
             <div class="timeline-header">
                 <h3>🕒 Timeline Diario (7:00 AM - 11:00 PM)</h3>
+                <div id="revenueTotalPill" class="revenue-total-pill" style="display:none;">
+                    <span>💰 Total Ingresos del Día:</span>
+                    <strong id="revenueTotalText">$0 USD</strong>
+                </div>
                 <div class="timeline-hint">💡 Arrastra el ratón en la cuadrícula para agendar o arrastra las tarjetas para moverlas</div>
             </div>
             <div class="timeline-body" id="dailyTimelineBody">
@@ -859,8 +891,8 @@
                 <input type="hidden" id="fieldId">
 
                 <div class="form-group">
-                    <label>Título del Contenido</label>
-                    <input type="text" id="fieldTitle" class="form-control" placeholder="Ej. Lanzamiento Beat 'Dark Void' - Video Demo" required>
+                    <label>Título del Contenido / Tarea</label>
+                    <input type="text" id="fieldTitle" class="form-control" placeholder="Ej. Beat Cliente Custom / Reel Demo" required>
                 </div>
 
                 <div class="form-row">
@@ -892,7 +924,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Fecha de Publicación</label>
+                        <label>Fecha de Publicación / Trabajo</label>
                         <input type="date" id="fieldDate" class="form-control">
                     </div>
 
@@ -907,26 +939,31 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Fecha/Hora Recordatorio Brevo</label>
-                        <input type="datetime-local" id="fieldReminderAt" class="form-control">
+                        <label>Monto a Cobrar ($ USD)</label>
+                        <input type="number" id="fieldPriceUsd" class="form-control" placeholder="Ej. 25 o 40 (Opcional)" step="1" min="0">
                     </div>
 
                     <div class="form-group">
-                        <label>Correo Destino (Brevo)</label>
-                        <input type="email" id="fieldTargetEmail" class="form-control" value="offszn.studio@gmail.com">
+                        <label>Fecha/Hora Recordatorio Brevo</label>
+                        <input type="datetime-local" id="fieldReminderAt" class="form-control">
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Correo Destino (Brevo)</label>
+                    <input type="email" id="fieldTargetEmail" class="form-control" value="offszn.studio@gmail.com">
                 </div>
 
                 <div style="display:flex; align-items:center; gap:10px;">
                     <input type="checkbox" id="fieldEmailToggle" checked style="width:18px; height:18px; accent-color: var(--accent-magenta);">
                     <label for="fieldEmailToggle" style="font-size:13px; color:#cbd5e1; cursor:pointer; font-weight:700;">
-                        Activar envío automático por Brevo API
+                        Activar envío automático de correo por Brevo API
                     </label>
                 </div>
 
                 <div class="form-group">
-                    <label>Notas / Script / Hashtags</label>
-                    <textarea id="fieldNotes" class="form-control" rows="4" placeholder="Agrega aquí guiones, hashtags, links o copys..."></textarea>
+                    <label>Notas / Script / Hashtags / Detalles</label>
+                    <textarea id="fieldNotes" class="form-control" rows="4" placeholder="Agrega guiones, clientes, detalles de pago o instrucciones..."></textarea>
                 </div>
             </div>
 
@@ -942,7 +979,8 @@
 
     <script>
         let activeView = 'daily';
-        let viewDate = new Date();
+        // Ajustar vista por defecto a Lunes 27 de Julio de 2026 si estamos cerca
+        let viewDate = new Date('2026-07-27T00:00:00');
         let currentFilter = 'all';
         let events = [];
 
@@ -969,6 +1007,154 @@
             }
         }
 
+        // SEED EVENTS FOR MONDAY JULY 27, 2026 (USER SCHEDULE)
+        function getSeedEventsForJuly27() {
+            const d = '2026-07-27';
+            return [
+                {
+                    id: 'evt_seed_1',
+                    title: 'Beat Cliente ($25 USD)',
+                    channel: 'beat_release',
+                    category: 'Beat Post',
+                    scheduled_date: d,
+                    start_time: '07:00',
+                    end_time: '09:00',
+                    price_usd: 25,
+                    reminder_at: `${d}T06:55:00.000Z`,
+                    target_email: 'offszn.studio@gmail.com',
+                    email_reminder: true,
+                    notes: 'Creación y entrega de beat personalizado de 25$ USD.',
+                    status: 'scheduled'
+                },
+                {
+                    id: 'evt_seed_2',
+                    title: 'Beat Jwolf ($40 USD)',
+                    channel: 'beat_release',
+                    category: 'Beat Post',
+                    scheduled_date: d,
+                    start_time: '09:00',
+                    end_time: '11:00',
+                    price_usd: 40,
+                    reminder_at: `${d}T08:55:00.000Z`,
+                    target_email: 'offszn.studio@gmail.com',
+                    email_reminder: true,
+                    notes: 'Creación y mezcla de beat para Jwolf por 40$ USD.',
+                    status: 'scheduled'
+                },
+                {
+                    id: 'evt_seed_3',
+                    title: 'Edición de Reels (2 Reels nuevos)',
+                    channel: 'instagram',
+                    category: 'Reel/Short',
+                    scheduled_date: d,
+                    start_time: '12:00',
+                    end_time: '14:00',
+                    price_usd: 0,
+                    notes: 'Editar 2 reels aproximadamente para la semana.',
+                    status: 'scheduled'
+                },
+                {
+                    id: 'evt_seed_4',
+                    title: 'Descanso / Almuerzo & Organización',
+                    channel: 'general',
+                    category: 'Promo',
+                    scheduled_date: d,
+                    start_time: '14:00',
+                    end_time: '15:00',
+                    price_usd: 0,
+                    notes: 'Mini descanso de almuerzo y recarga de energía.',
+                    status: 'scheduled'
+                },
+                {
+                    id: 'evt_seed_5',
+                    title: 'Revisar Métricas + Programar Emails (EmailOctopus & Brevo)',
+                    channel: 'email_newsletter',
+                    category: 'Promo',
+                    scheduled_date: d,
+                    start_time: '15:00',
+                    end_time: '16:00',
+                    price_usd: 0,
+                    reminder_at: `${d}T15:55:00.000Z`,
+                    target_email: 'offszn.studio@gmail.com',
+                    email_reminder: true,
+                    notes: 'Revisar métricas para programar envío de correos EmailOctopus (martes y jueves) + correos Brevo a compradores. Programar 1 correo para las 6:00 PM.',
+                    status: 'scheduled'
+                },
+                {
+                    id: 'evt_seed_6',
+                    title: 'Métricas de Videos + Crear Nuevos Guiones',
+                    channel: 'tiktok',
+                    category: 'Tutorial',
+                    scheduled_date: d,
+                    start_time: '16:00',
+                    end_time: '17:00',
+                    price_usd: 0,
+                    notes: 'Revisar métricas de videos y crear nuevos guiones para probarlos (aprovechar referentes y grabarlos).',
+                    status: 'scheduled'
+                },
+                {
+                    id: 'evt_seed_7',
+                    title: 'Desarrollo de Plugins: CAPYKIT & BEAT POST',
+                    channel: 'general',
+                    category: 'Lanzamiento',
+                    scheduled_date: d,
+                    start_time: '17:00',
+                    end_time: '18:00',
+                    price_usd: 0,
+                    notes: 'Avanzar y terminar desarrollo de plugins CAPYKIT y Beat Post.',
+                    status: 'scheduled'
+                },
+                {
+                    id: 'evt_seed_8',
+                    title: 'Organización Parte 2 + Descanso & Cena',
+                    channel: 'general',
+                    category: 'General',
+                    scheduled_date: d,
+                    start_time: '18:00',
+                    end_time: '19:00',
+                    price_usd: 0,
+                    notes: 'Organización parte 2, segundo descanso y cena al final.',
+                    status: 'scheduled'
+                },
+                {
+                    id: 'evt_seed_9',
+                    title: 'Responder Mensajes & Feedback IG/TikTok Masivo',
+                    channel: 'instagram',
+                    category: 'Promo',
+                    scheduled_date: d,
+                    start_time: '19:00',
+                    end_time: '20:00',
+                    price_usd: 0,
+                    notes: 'Responder mensajes y mandar feedback IG y TikTok masivo.',
+                    status: 'scheduled'
+                },
+                {
+                    id: 'evt_seed_10',
+                    title: 'Planificación para Mañana & Estrategia',
+                    channel: 'general',
+                    category: 'General',
+                    scheduled_date: d,
+                    start_time: '20:00',
+                    end_time: '21:00',
+                    price_usd: 0,
+                    notes: 'Pensar días de mañana y después.',
+                    status: 'scheduled'
+                },
+                {
+                    id: 'evt_seed_11',
+                    title: 'Cierre del Día & Descanso Libre',
+                    channel: 'general',
+                    category: 'General',
+                    scheduled_date: d,
+                    start_time: '22:00',
+                    end_time: '23:00',
+                    price_usd: 0,
+                    notes: 'Descanso previo, tiempo libre.',
+                    status: 'scheduled'
+                }
+            ];
+        }
+
         async function loadEvents() {
             try {
                 const res = await fetch('/api/content-calendar');
@@ -976,6 +1162,21 @@
                     const data = await res.json();
                     if (data.success && Array.isArray(data.data)) {
                         events = data.data;
+
+                        // Si no hay eventos guardados aún, sembrar los 11 eventos programados para mañana
+                        if (events.length === 0) {
+                            events = getSeedEventsForJuly27();
+                            for (const seed of events) {
+                                try {
+                                    await fetch('/api/content-calendar', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(seed)
+                                    });
+                                } catch (e) {}
+                            }
+                        }
+
                         localStorage.setItem('offszn_calendar_backup', JSON.stringify(events));
                         renderCurrentView();
                         return;
@@ -986,7 +1187,7 @@
             }
 
             const backup = localStorage.getItem('offszn_calendar_backup');
-            events = backup ? JSON.parse(backup) : [];
+            events = backup ? JSON.parse(backup) : getSeedEventsForJuly27();
             renderCurrentView();
         }
 
@@ -1001,7 +1202,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(eventData)
                 });
-                showToast(isExisting ? '✨ Contenido guardado en BD' : '🎉 Contenido guardado en BD');
+                showToast(isExisting ? '✨ Guardado en BD' : '🎉 Guardado en BD');
             } catch (e) {
                 console.error(e);
             }
@@ -1032,10 +1233,10 @@
                 const res = await fetch(`/api/content-calendar/send-reminder/${id}`, { method: 'POST' });
                 const json = await res.json();
                 if (json.success) {
-                    showToast('✅ Recordatorio enviado con éxito por Brevo');
+                    showToast('✅ Recordatorio enviado por Brevo');
                     loadEvents();
                 } else {
-                    showToast('❌ Error al enviar por Brevo: ' + json.error);
+                    showToast('❌ Error Brevo: ' + json.error);
                 }
             } catch (e) {
                 showToast('❌ Error de conexión al enviar correo');
@@ -1064,6 +1265,23 @@
 
             const dayEvents = events.filter(e => e.scheduled_date === dateIso && (currentFilter === 'all' || e.channel === currentFilter));
 
+            // Calcular ingresos totales del día
+            let totalRevenue = 0;
+            dayEvents.forEach(e => {
+                if (e.price_usd && !isNaN(e.price_usd)) {
+                    totalRevenue += parseFloat(e.price_usd);
+                }
+            });
+
+            const revPill = document.getElementById('revenueTotalPill');
+            const revText = document.getElementById('revenueTotalText');
+            if (totalRevenue > 0) {
+                revPill.style.display = 'flex';
+                revText.textContent = `$${totalRevenue.toFixed(2)} USD`;
+            } else {
+                revPill.style.display = 'none';
+            }
+
             const isToday = new Date().toISOString().split('T')[0] === dateIso;
             if (isToday) {
                 const now = new Date();
@@ -1071,7 +1289,7 @@
                 const curM = now.getMinutes();
                 if (curH >= 7 && curH <= 23) {
                     const offsetMinutes = (curH - 7) * 60 + curM;
-                    const topPx = (offsetMinutes / 60) * 80;
+                    const topPx = (offsetMinutes / 60) * 84;
                     const laser = document.createElement('div');
                     laser.className = 'current-time-laser';
                     laser.style.top = `${topPx}px`;
@@ -1194,11 +1412,16 @@
                 evt.dataTransfer.setData('text/plain', e.id);
             };
 
+            const priceHtml = (e.price_usd && parseFloat(e.price_usd) > 0) 
+                ? `<span class="price-badge">💰 $${parseFloat(e.price_usd).toFixed(2)} USD</span>` 
+                : '';
+
             card.innerHTML = `
                 <div class="drag-handle" title="Arrastrar para mover horario">:::</div>
                 <div class="event-main">
                     <div class="event-top-line">
                         <span class="channel-pill">${channelIcons[e.channel] || e.channel}</span>
+                        ${priceHtml}
                         <span class="event-title">${escapeHtml(e.title)}</span>
                     </div>
                     <div class="event-meta">
@@ -1352,6 +1575,7 @@
 
             document.getElementById('fieldStartTime').value = sStr;
             document.getElementById('fieldEndTime').value = eStr;
+            document.getElementById('fieldPriceUsd').value = '';
             document.getElementById('fieldReminderAt').value = `${dIso}T${sStr}`;
             document.getElementById('fieldNotes').value = '';
 
@@ -1370,6 +1594,7 @@
             document.getElementById('fieldDate').value = e.scheduled_date || '';
             document.getElementById('fieldStartTime').value = e.start_time || '10:00';
             document.getElementById('fieldEndTime').value = e.end_time || '11:00';
+            document.getElementById('fieldPriceUsd').value = e.price_usd || '';
             document.getElementById('fieldReminderAt').value = e.reminder_at ? e.reminder_at.slice(0, 16) : '';
             document.getElementById('fieldTargetEmail').value = e.target_email || 'offszn.studio@gmail.com';
             document.getElementById('fieldEmailToggle').checked = e.email_reminder !== false;
@@ -1394,6 +1619,7 @@
                 scheduled_date: document.getElementById('fieldDate').value || viewDate.toISOString().split('T')[0],
                 start_time: document.getElementById('fieldStartTime').value,
                 end_time: document.getElementById('fieldEndTime').value,
+                price_usd: parseFloat(document.getElementById('fieldPriceUsd').value || 0),
                 reminder_at: document.getElementById('fieldReminderAt').value ? new Date(document.getElementById('fieldReminderAt').value).toISOString() : null,
                 target_email: document.getElementById('fieldTargetEmail').value,
                 email_reminder: document.getElementById('fieldEmailToggle').checked,
