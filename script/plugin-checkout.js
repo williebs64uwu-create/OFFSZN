@@ -177,6 +177,24 @@ class PluginDirectCheckout {
         const styles = document.createElement('style');
         styles.id = 'plugin-success-modal-styles';
         styles.innerHTML = `
+            #plugin-paypal-button-container {
+                background: #ffffff;
+                padding: 14px 12px 6px;
+                border-radius: 14px;
+                margin-top: 14px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+                box-sizing: border-box;
+                width: 100%;
+                transition: all 0.3s ease;
+            }
+            #plugin-paypal-button-container iframe {
+                color-scheme: light !important;
+            }
+            .paypal-button-card-fields-container,
+            .paypal-card {
+                background: #ffffff !important;
+                color: #111111 !important;
+            }
             .plugin-modal-overlay {
                 position: fixed;
                 top: 0;
