@@ -497,8 +497,8 @@
         // COUNTDOWN TIMER
         (function () {
             const timerElement = document.getElementById('countdown-timer');
-            // La oferta expira en 2 días
-            const endTime = new Date("2026-07-22T23:59:59-05:00").getTime();
+            // La oferta expira a fin de mes (31 de Julio de 2026)
+            const endTime = new Date("2026-07-31T23:59:59-05:00").getTime();
 
             const interval = setInterval(function () {
                 const now = new Date().getTime();
@@ -510,14 +510,22 @@
                     return;
                 }
 
-                const hours = Math.floor(distance / (1000 * 60 * 60));
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                 const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-                timerElement.innerHTML = 
-                    String(hours).padStart(2, '0') + "h " + 
-                    String(minutes).padStart(2, '0') + "m " + 
-                    String(seconds).padStart(2, '0') + "s";
+                if (days > 0) {
+                    timerElement.innerHTML = days + "d " + 
+                        String(hours).padStart(2, '0') + "h " + 
+                        String(minutes).padStart(2, '0') + "m " + 
+                        String(seconds).padStart(2, '0') + "s";
+                } else {
+                    timerElement.innerHTML = 
+                        String(hours).padStart(2, '0') + "h " + 
+                        String(minutes).padStart(2, '0') + "m " + 
+                        String(seconds).padStart(2, '0') + "s";
+                }
             }, 1000);
         })();
 
