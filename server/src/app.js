@@ -31,6 +31,8 @@ import youtubeRoutes from './infrastructure/http/routes/youtube.routes.js';
 import youtubeSyncRoutes from './infrastructure/http/routes/youtube-sync.routes.js';
 import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
 import pluginLicensingRoutes from './infrastructure/http/routes/plugin-licensing.routes.js';
+import calendarRoutes from './infrastructure/http/routes/calendar.routes.js';
+import { checkAndSendRemindersInternal } from './infrastructure/http/controllers/CalendarController.js';
 import { runSubscriptionScavenger } from './infrastructure/services/subscription-scavenger.js';
 
 import { submitNegotiation, respondNegotiation, generatePurchaseToken, validatePurchaseToken, reportIssue } from './infrastructure/http/controllers/NegotiationController.js';
@@ -302,6 +304,7 @@ app.use('/api/imagekit', imagekitRoutes);
 app.use('/api', paypalRoutes);
 app.use('/api', youtubeRoutes);
 app.use('/api', youtubeSyncRoutes);
+app.use('/api', calendarRoutes);
 
 // B. PROTECTED ROUTERS (Use global router.use(authenticateTokenMiddleware) internally)
 // These MUST come after public/hybrid ones if mounted on the same prefix (/api)
@@ -966,4 +969,7 @@ app.listen(PORT, () => {
     
     // Schedule to run every 12 hours
     setInterval(runSubscriptionScavenger, 12 * 60 * 60 * 1000);
+
+    // Run Content Calendar Brevo Reminder Scanner every 10 minutes
+    setInterval(checkAndSendRemindersInternal, 10 * 60 * 1000);
 });
