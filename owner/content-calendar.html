@@ -1163,9 +1163,22 @@
             return 'https://offszn.lat';
         }
 
+        function getAuthHeaders() {
+            const headers = { 'Content-Type': 'application/json' };
+            try {
+                const sbData = localStorage.getItem('sb-qtjpvztpgfymjhhpouuq-auth-token') || localStorage.getItem('token') || localStorage.getItem('offszn_token');
+                if (sbData) {
+                    const parsed = JSON.parse(sbData);
+                    const token = parsed.access_token || parsed;
+                    if (token) headers['Authorization'] = `Bearer ${token}`;
+                }
+            } catch (e) {}
+            return headers;
+        }
+
         async function loadEvents() {
             try {
-                const res = await fetch(`${getApiBaseUrl()}/api/content-calendar`);
+                const res = await fetch(`${getApiBaseUrl()}/api/content-calendar`, { headers: getAuthHeaders() });
                 if (res.ok) {
                     const data = await res.json();
                     if (data.success && Array.isArray(data.data)) {
@@ -1178,7 +1191,7 @@
                                 try {
                                     await fetch(`${getApiBaseUrl()}/api/content-calendar`, {
                                         method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
+                                        headers: getAuthHeaders(),
                                         body: JSON.stringify(seed)
                                     });
                                 } catch (e) {}
@@ -1208,7 +1221,7 @@
 
                 await fetch(url, {
                     method,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(eventData)
                 });
                 showToast(isExisting ? '✨ Guardado en BD' : '🎉 Guardado en BD');
@@ -1227,7 +1240,7 @@
         async function deleteEventItem(id) {
             if (!confirm('¿Eliminar este contenido?')) return;
             try {
-                await fetch(`${getApiBaseUrl()}/api/content-calendar/${id}`, { method: 'DELETE' });
+                await fetch(`${getApiBaseUrl()}/api/content-calendar/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
             } catch (e) {}
 
             events = events.filter(e => e.id !== id);
@@ -1239,7 +1252,7 @@
         async function triggerBrevoTest(id) {
             showToast('🚀 Enviando recordatorio por Brevo REST API...');
             try {
-                const res = await fetch(`${getApiBaseUrl()}/api/content-calendar/send-reminder/${id}`, { method: 'POST' });
+                const res = await fetch(`${getApiBaseUrl()}/api/content-calendar/send-reminder/${id}`, { method: 'POST', headers: getAuthHeaders() });
                 const json = await res.json();
                 if (json.success) {
                     showToast('✅ Recordatorio enviado por Brevo');

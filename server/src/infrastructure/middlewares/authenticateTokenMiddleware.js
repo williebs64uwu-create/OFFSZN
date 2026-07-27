@@ -6,11 +6,12 @@ export const authenticateTokenMiddleware = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    // Bypass para rutas de descarga R2, links de orden y simulación de compra
+    // Bypass para rutas de descarga R2, links de orden, simulación y calendario
     const bypassRoutes = [
         '/r2/download-url',
         '/api/orders/download-link',
-        '/api/test/simulate-purchase-email'
+        '/api/test/simulate-purchase-email',
+        '/api/content-calendar'
     ];
     
     if (bypassRoutes.some(route => req.originalUrl.includes(route))) {
