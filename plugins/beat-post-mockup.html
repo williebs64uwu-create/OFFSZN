@@ -162,16 +162,20 @@
             overflow-y: auto;
         }
 
-        /* ─── STEP 1: AUTH SCREEN ─── */
+        /* ─── STEP 1: AUTH SCREEN (full-area overlay) ─── */
         #view-auth {
-            display: flex;
+            display: none; /* JS sets to flex when shown */
+            position: absolute;
+            inset: 0;
+            z-index: 100;
+            background: #06060a;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            margin-top: auto;
-            margin-bottom: auto;
-            gap: 24px;
+            gap: 18px;
+            padding: 24px;
+            box-sizing: border-box;
         }
 
         .auth-logo-icon {
@@ -931,7 +935,8 @@
             </div>
         </div>
 
-        <!-- Step Indicator Bar -->
+
+        <!-- Step Indicator Bar (shown only when logged in) -->
         <div class="step-indicator" id="vst-steps-bar" style="display: none;">
             <div class="step-item active" id="step-lbl-1">
                 <span>1. Detalles y Portada</span>
@@ -943,232 +948,241 @@
             <i class="fa-solid fa-chevron-right step-arrow"></i>
             <div class="step-item" id="step-lbl-3">
                 <span>3. Publicación</span>
-              <!-- STAGE 1: AUTHENTICATION (Web Token Link Only) -->
-             <div id="view-auth" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; margin-top: auto; margin-bottom: auto; gap: 16px; width: 100%; max-width: 320px; padding: 20px; margin-left: auto; margin-right: auto;">
-                <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.03); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">
-                    <i class="fa-solid fa-user-lock" style="font-size: 20px; color: #fff; opacity: 0.8;"></i>
+            </div>
+        </div>
+
+        <!-- Plugin Content Area (relative so auth overlay can cover it fully) -->
+        <div id="plugin-content-area" style="position: relative; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+
+            <!-- AUTH OVERLAY (covers everything when logged out) -->
+            <div id="view-auth" style="display: none; position: absolute; inset: 0; z-index: 100; background: #06060a; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 18px; padding: 24px;">
+                <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-user-lock" style="font-size: 22px; color: #fff; opacity: 0.75;"></i>
                 </div>
-                <div>
-                    <h2 class="auth-title" style="font-size: 16px; font-weight: 800; letter-spacing: -0.3px; margin-bottom: 6px; line-height: 1.3;">Inicia sesión o crea tu cuenta para subir beats</h2>
+                <div style="max-width: 280px;">
+                    <h2 style="font-size: 17px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 8px; line-height: 1.3; color: #fff;">Inicia sesión o crea tu cuenta para subir beats</h2>
                 </div>
-                
-                <button class="btn-next" onclick="openWebTokenPage()" style="width: 100%; margin: 0; padding: 13px; font-size: 12px; background: #fff; color: #000; font-weight: 800; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+
+                <button onclick="openWebTokenPage()" style="width: 100%; max-width: 280px; padding: 14px; font-size: 12.5px; background: #fff; color: #000; font-weight: 800; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: -0.2px;">
                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Crear cuenta o iniciar sesión
                 </button>
 
                 <!-- Auto Link Pin Box -->
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 14px; width: 100%; margin-top: 4px;">
-                    <span style="font-size: 9px; color: var(--dim); text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">Código de vinculación</span>
-                    <h3 id="linking-pin-display" style="font-size: 24px; font-weight: 800; color: #fff; letter-spacing: 4px; margin-top: 4px; font-family: 'Geist Mono', monospace;">------</h3>
-                    <p style="font-size: 9.5px; color: var(--dim); margin-top: 6px; line-height: 1.4;">El plugin se conectará automáticamente al iniciar sesión en tu navegador.</p>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 18px; width: 100%; max-width: 280px;">
+                    <span style="font-size: 9px; color: var(--dim); text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Código de vinculación automática</span>
+                    <h3 id="linking-pin-display" style="font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 6px; margin: 8px 0 6px; font-family: 'Geist Mono', 'Courier New', monospace;">--- ---</h3>
+                    <p style="font-size: 9.5px; color: var(--dim); line-height: 1.5;">El plugin se conectará automáticamente al iniciar sesión en tu navegador.</p>
                 </div>
 
-                <a href="#" onclick="toggleManualAuth(event)" style="font-size: 10px; color: var(--dim); text-decoration: underline; margin-top: 8px;">Vincular manualmente con Token</a>
-                
-                <div id="manual-auth-box" style="display: none; width: 100%; flex-direction: column; gap: 8px; margin-top: 4px;">
-                    <input type="password" id="auth-token-input" class="text-input" placeholder="Pega tu token de acceso aquí" style="width: 100%; padding: 12px; font-size: 11px; background: #000; text-align: center; border-radius: 8px; border: 1px solid var(--border);">
-                    <button class="btn-prev" onclick="loginWithToken()" style="width: 100%; padding: 11px; font-size: 11.5px; font-weight: 700; border-color: var(--border-light); color: #fff; border-radius: 8px; cursor: pointer;">
+                <a href="#" onclick="toggleManualAuth(event)" style="font-size: 10px; color: var(--dim); text-decoration: underline; margin-top: 4px;">Vincular manualmente con Token</a>
+
+                <div id="manual-auth-box" style="display: none; width: 100%; max-width: 280px; flex-direction: column; gap: 8px;">
+                    <input type="password" id="auth-token-input" class="text-input" placeholder="Pega tu token de acceso aquí" style="width: 100%; padding: 12px; font-size: 11px; background: #000; text-align: center; border-radius: 8px; border: 1px solid var(--border); box-sizing: border-box;">
+                    <button onclick="loginWithToken()" style="width: 100%; padding: 11px; font-size: 11.5px; font-weight: 700; background: transparent; border: 1px solid var(--border-light); color: #fff; border-radius: 8px; cursor: pointer;">
                         Vincular Cuenta
                     </button>
                 </div>
             </div>
 
-            <!-- STEP 1: BEAT DETAILS & PORTADA CROPPER -->
-            <div class="step-pane" id="view-details">
-                <div class="form-group">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <h3 class="section-title" style="margin-bottom: 0;">Título del Beat</h3>
-                        <span id="title-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/60</span>
-                    </div>
-                    <input type="text" id="beat-title-input" class="text-input" maxlength="60" value="R&B Type Beat" placeholder="Ej. Lofi Chill Type Beat" oninput="onTitleChange()">
-                </div>
+            <!-- STEP PANES (hidden behind auth overlay when logged out) -->
+            <div id="steps-content" style="flex: 1; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden;">
 
-                <div class="form-group" style="margin-top: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <h3 class="section-title" style="margin-bottom: 0;">Descripción</h3>
-                        <span id="desc-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/3000</span>
-                    </div>
-                    <textarea id="beat-desc-input" class="text-input" maxlength="3000" style="height: 52px; resize: none; font-size: 11px; padding: 8px 10px; background: #000;" placeholder="Ej. Beat de R&B suave con vibras vintage. Ideal para Drake o Bryson Tiller." oninput="onDescChange()"></textarea>
-                </div>
-
-                <div class="form-group" style="margin-top: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                        <h3 class="section-title" style="margin-bottom: 0;">Etiquetas / Tags</h3>
-                        <span id="tags-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/500</span>
-                    </div>
-                    <div id="tags-pills-box" onclick="document.getElementById('tag-input-field').focus()" style="display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 8px; background: #000; border: 1px solid var(--border); border-radius: 8px; min-height: 40px; align-items: center; cursor: text;">
-                        <input type="text" id="tag-input-field" placeholder="Escribe un tag y presiona Enter..." style="background: transparent; border: none; outline: none; color: #fff; font-size: 11px; flex: 1; min-width: 140px; font-family: inherit;">
-                    </div>
-                    <span style="font-size: 9px; color: var(--dim); margin-top: 2px;">Máx 40 caract. por tag (Enter para agregar). Primeras 3 van a OFFSZN, todas a YouTube (hasta 500 caract.).</span>
-                </div>
-
-                <!-- Cover Art Selector Box -->
-                <div class="form-group" style="margin-top: 10px;">
-                    <h3 class="section-title">Portada del Beat (Square 1:1)</h3>
-                    <div style="display: flex; gap: 12px; align-items: center; margin-top: 4px;">
-                        <div id="cover-preview-box" style="width: 70px; height: 70px; border-radius: 6px; border: 1px solid var(--border); background: #060608; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
-                            <!-- Placeholder icon or generated cover text preview -->
-                            <span id="cover-preview-text" style="font-size: 7.5px; color: var(--dim); text-align: center; font-weight: 700; padding: 4px;">AUTOGENERADO VINILO</span>
-                            <img id="cover-preview-img" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                <!-- STEP 1: BEAT DETAILS & PORTADA CROPPER -->
+                <div class="step-pane" id="view-details">
+                    <div class="form-group">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <h3 class="section-title" style="margin-bottom: 0;">Título del Beat</h3>
+                            <span id="title-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/60</span>
                         </div>
-                        <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-                            <button type="button" class="btn-prev" onclick="document.getElementById('cover-file-input').click()" style="margin: 0; padding: 7px 12px; font-size: 10.5px; width: fit-content; cursor: pointer;">
-                                <i class="fa-solid fa-image"></i> Seleccionar Imagen
-                            </button>
-                            <span style="font-size: 9px; color: var(--dim);">Sube tu imagen (JPG/PNG). Se abrirá un recortador para ajustarla a 1:1.</span>
+                        <input type="text" id="beat-title-input" class="text-input" maxlength="60" value="R&B Type Beat" placeholder="Ej. Lofi Chill Type Beat" oninput="onTitleChange()">
+                    </div>
+
+                    <div class="form-group" style="margin-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <h3 class="section-title" style="margin-bottom: 0;">Descripción</h3>
+                            <span id="desc-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/3000</span>
                         </div>
+                        <textarea id="beat-desc-input" class="text-input" maxlength="3000" style="height: 52px; resize: none; font-size: 11px; padding: 8px 10px; background: #000;" placeholder="Ej. Beat de R&B suave con vibras vintage. Ideal para Drake o Bryson Tiller." oninput="onDescChange()"></textarea>
                     </div>
-                    <input type="file" id="cover-file-input" accept="image/*" style="display: none;" onchange="handleCoverFileSelect(this.files[0])">
-                </div>
 
-                <div class="nav-buttons" style="margin-top: 14px;">
-                    <button class="btn-next" onclick="goToStep(2)">
-                        Continuar <i class="fa-solid fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- STEP 2: AUDIO CONFIGURATION (MP3 & WAV SELECTOR) -->
-            <div class="step-pane" id="view-audio">
-                <div>
-                    <h3 class="section-title">Cargar Instrumental</h3>
-                    <p style="color: var(--dim); font-size: 11px; margin-bottom: 12px; line-height: 1.4;">Arrastra tus archivos WAV/MP3 exportados o haz clic para cargarlos desde el explorador.</p>
-                    
-                    <!-- DRAG & DROP ZONE -->
-                    <div id="drop-zone" class="custom-upload-card" style="width: 100%; height: 120px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: #060608; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; margin-bottom: 14px; transition: border-color 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border-light)'" ondrop="handleFileDrop(event)" onclick="if (!uploadedFiles.mp3) { document.getElementById('file-input-mp3').click(); } else { document.getElementById('file-input-wav').click(); }">
-                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 22px; color: var(--dim);"></i>
-                        <span style="font-size: 11.5px; font-weight: 700; color: #fff;">Arrastra aquí tus archivos MP3 y WAV</span>
-                        <span id="drop-zone-help" style="font-size: 9.5px; color: var(--dim);">O haz clic para seleccionar tu MP3 principal (WAV opcional)</span>
-                    </div>
-                    <input type="file" id="file-input-wav" accept=".wav" style="display: none;" onchange="handleFileSelect('wav', this.files[0])">
-                    <input type="file" id="file-input-mp3" accept=".mp3" style="display: none;" onchange="handleFileSelect('mp3', this.files[0])">
-
-                    <!-- SELECTED FILES LIST -->
-                    <div class="capture-files" style="margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px;">
-                        <div class="file-row" onclick="document.getElementById('file-input-mp3').click()" style="cursor: pointer;">
-                            <span class="file-name"><i class="fa-regular fa-file-audio"></i> MP3 con Tag (Obligatorio)</span>
-                            <span class="file-status" id="mp3-status-lbl" style="color: var(--dim);">Cargar MP3</span>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <h3 class="section-title" style="margin-bottom: 0;">Etiquetas / Tags</h3>
+                            <span id="tags-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/500</span>
                         </div>
-                        <div class="file-row" onclick="document.getElementById('file-input-wav').click()" style="cursor: pointer;">
-                            <span class="file-name"><i class="fa-regular fa-file-audio"></i> WAV sin Tag (Opcional)</span>
-                            <span class="file-status" id="wav-status-lbl" style="color: var(--dim);">Cargar WAV</span>
+                        <div id="tags-pills-box" onclick="document.getElementById('tag-input-field').focus()" style="display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 8px; background: #000; border: 1px solid var(--border); border-radius: 8px; min-height: 40px; align-items: center; cursor: text;">
+                            <input type="text" id="tag-input-field" placeholder="Escribe un tag y presiona Enter..." style="background: transparent; border: none; outline: none; color: #fff; font-size: 11px; flex: 1; min-width: 140px; font-family: inherit;">
                         </div>
+                        <span style="font-size: 9px; color: var(--dim); margin-top: 2px; display: block;">Máx 40 caract. por tag (Enter para agregar). Las 3 primeras van a OFFSZN, todas a YouTube (hasta 500 caract.).</span>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <h3 class="section-title">Debug & Host Bridge</h3>
-                    <div class="debug-console" id="dbg-console" style="height: 50px; font-size: 9.5px;">
-                        <div class="debug-line"><span class="debug-tag">[SYS]</span> VST enlazado al Master Bus.</div>
-                    </div>
-                </div>
-
-                <div class="nav-buttons" style="margin-top: 14px;">
-                    <button class="btn-prev" onclick="goToStep(1)"><i class="fa-solid fa-chevron-left"></i> Atrás</button>
-                    <button class="btn-next" id="btn-audio-continue" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="goToStep(3)">
-                        Continuar <i class="fa-solid fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- STEP 3: DESTINATIONS & PUBLISH -->
-            <div class="step-pane" id="view-targets">
-                <div>
-                    <h3 class="section-title">Destinos de Publicación</h3>
-                    
-                    <!-- Store target (Required) -->
-                    <div class="dest-option">
-                        <div class="dest-left store-active">
-                            <i class="fa-solid fa-store dest-icon"></i>
-                            <div class="dest-details">
-                                <h4>Tienda Virtual OFFSZN</h4>
-                                <p>Publicar beat en tu catálogo automáticamente</p>
+                    <!-- Cover Art Selector Box -->
+                    <div class="form-group" style="margin-top: 10px;">
+                        <h3 class="section-title">Portada del Beat (Square 1:1)</h3>
+                        <div style="display: flex; gap: 12px; align-items: center; margin-top: 4px;">
+                            <div id="cover-preview-box" style="width: 70px; height: 70px; border-radius: 6px; border: 1px solid var(--border); background: #060608; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                                <span id="cover-preview-text" style="font-size: 7.5px; color: var(--dim); text-align: center; font-weight: 700; padding: 4px;">AUTOGENERADO VINILO</span>
+                                <img id="cover-preview-img" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                            <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                                <button type="button" class="btn-prev" onclick="document.getElementById('cover-file-input').click()" style="margin: 0; padding: 7px 12px; font-size: 10.5px; width: fit-content; cursor: pointer;">
+                                    <i class="fa-solid fa-image"></i> Seleccionar Imagen
+                                </button>
+                                <span style="font-size: 9px; color: var(--dim);">Sube tu imagen (JPG/PNG). Se abrirá un recortador para ajustarla a 1:1.</span>
                             </div>
                         </div>
-                        <span style="font-size: 9px; font-weight: 800; color: #fff; padding-right: 6px; letter-spacing: 0.5px;">ACTIVO</span>
+                        <input type="file" id="cover-file-input" accept="image/*" style="display: none;" onchange="handleCoverFileSelect(this.files[0])">
                     </div>
 
-                    <!-- YouTube target -->
-                    <div class="dest-option" id="yt-dest-card" onclick="toggleYoutube()">
-                        <div class="dest-left" id="yt-left-area">
-                            <i class="fa-brands fa-youtube dest-icon"></i>
-                            <div class="dest-details">
-                                <h4>Canal de YouTube</h4>
-                                <p id="yt-desc-text">Publicar video de fondo sin marca de agua</p>
+                    <div class="nav-buttons" style="margin-top: 14px;">
+                        <button class="btn-next" onclick="goToStep(2)">
+                            Continuar <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 2: AUDIO CONFIGURATION (MP3 & WAV SELECTOR) -->
+                <div class="step-pane" id="view-audio">
+                    <div>
+                        <h3 class="section-title">Cargar Instrumental</h3>
+                        <p style="color: var(--dim); font-size: 11px; margin-bottom: 12px; line-height: 1.4;">Arrastra tus archivos WAV/MP3 exportados o haz clic para cargarlos desde el explorador.</p>
+
+                        <!-- DRAG & DROP ZONE -->
+                        <div id="drop-zone" class="custom-upload-card" style="width: 100%; height: 120px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: #060608; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; margin-bottom: 14px; transition: border-color 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border-light)'" ondrop="handleFileDrop(event)" onclick="if (!uploadedFiles.mp3) { document.getElementById('file-input-mp3').click(); } else { document.getElementById('file-input-wav').click(); }">
+                            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 22px; color: var(--dim);"></i>
+                            <span style="font-size: 11.5px; font-weight: 700; color: #fff;">Arrastra aquí tus archivos MP3 y WAV</span>
+                            <span id="drop-zone-help" style="font-size: 9.5px; color: var(--dim);">O haz clic para seleccionar tu MP3 principal (WAV opcional)</span>
+                        </div>
+                        <input type="file" id="file-input-wav" accept=".wav" style="display: none;" onchange="handleFileSelect('wav', this.files[0])">
+                        <input type="file" id="file-input-mp3" accept=".mp3" style="display: none;" onchange="handleFileSelect('mp3', this.files[0])">
+
+                        <!-- SELECTED FILES LIST -->
+                        <div class="capture-files" style="margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px;">
+                            <div class="file-row" onclick="document.getElementById('file-input-mp3').click()" style="cursor: pointer;">
+                                <span class="file-name"><i class="fa-regular fa-file-audio"></i> MP3 con Tag (Obligatorio)</span>
+                                <span class="file-status" id="mp3-status-lbl" style="color: var(--dim);">Cargar MP3</span>
+                            </div>
+                            <div class="file-row" onclick="document.getElementById('file-input-wav').click()" style="cursor: pointer;">
+                                <span class="file-name"><i class="fa-regular fa-file-audio"></i> WAV sin Tag (Opcional)</span>
+                                <span class="file-status" id="wav-status-lbl" style="color: var(--dim);">Cargar WAV</span>
                             </div>
                         </div>
-                        <div style="display: flex; align-items: center;" onclick="event.stopPropagation()">
-                            <!-- Connect link button if no connected status -->
-                            <a id="btn-link-yt-web" href="https://offszn.lat/cuenta/youtube.html" target="_blank" class="btn-prev" style="margin: 0; padding: 5px 8px; font-size: 9.5px; border-radius: 4px; display: none; border-color: rgba(255, 59, 48, 0.4); color: #ff3b30; font-weight: 700; background: rgba(255, 59, 48, 0.05);">
-                                Vincular Canal
-                            </a>
-                            <label class="switch" id="yt-switch-container">
-                                <input type="checkbox" id="yt-toggle" onchange="updateYtState()">
-                                <span class="slider"></span>
-                            </label>
+                    </div>
+
+                    <div class="form-group">
+                        <h3 class="section-title">Debug &amp; Host Bridge</h3>
+                        <div class="debug-console" id="dbg-console" style="height: 50px; font-size: 9.5px;">
+                            <div class="debug-line"><span class="debug-tag">[SYS]</span> VST enlazado al Master Bus.</div>
+                        </div>
+                    </div>
+
+                    <div class="nav-buttons" style="margin-top: 14px;">
+                        <button class="btn-prev" onclick="goToStep(1)"><i class="fa-solid fa-chevron-left"></i> Atrás</button>
+                        <button class="btn-next" id="btn-audio-continue" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="goToStep(3)">
+                            Continuar <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 3: DESTINATIONS & PUBLISH -->
+                <div class="step-pane" id="view-targets">
+                    <div>
+                        <h3 class="section-title">Destinos de Publicación</h3>
+
+                        <!-- Store target (Required) -->
+                        <div class="dest-option">
+                            <div class="dest-left store-active">
+                                <i class="fa-solid fa-store dest-icon"></i>
+                                <div class="dest-details">
+                                    <h4>Tienda Virtual OFFSZN</h4>
+                                    <p>Publicar beat en tu catálogo automáticamente</p>
+                                </div>
+                            </div>
+                            <span style="font-size: 9px; font-weight: 800; color: #fff; padding-right: 6px; letter-spacing: 0.5px;">ACTIVO</span>
+                        </div>
+
+                        <!-- YouTube target -->
+                        <div class="dest-option" id="yt-dest-card" onclick="toggleYoutube()">
+                            <div class="dest-left" id="yt-left-area">
+                                <i class="fa-brands fa-youtube dest-icon"></i>
+                                <div class="dest-details">
+                                    <h4>Canal de YouTube</h4>
+                                    <p id="yt-desc-text">Publicar video de fondo sin marca de agua</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center;" onclick="event.stopPropagation()">
+                                <a id="btn-link-yt-web" href="https://offszn.lat/cuenta/youtube.html" target="_blank" class="btn-prev" style="margin: 0; padding: 5px 8px; font-size: 9.5px; border-radius: 4px; display: none; border-color: rgba(255, 59, 48, 0.4); color: #ff3b30; font-weight: 700; background: rgba(255, 59, 48, 0.05);">
+                                    Vincular Canal
+                                </a>
+                                <label class="switch" id="yt-switch-container">
+                                    <input type="checkbox" id="yt-toggle" onchange="updateYtState()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="nav-buttons" style="margin-top: 40px;">
+                        <button class="btn-prev" onclick="goToStep(2)"><i class="fa-solid fa-chevron-left"></i> Atrás</button>
+                        <button class="btn-next" onclick="startProcess()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> PUBLICAR BEAT
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 4: UPLOAD & PROCESS PROGRESS -->
+                <div id="view-progress">
+                    <div class="progress-spinner-container">
+                        <div class="outer-ring"></div>
+                        <div class="progress-percentage" id="progress-val">0%</div>
+                    </div>
+
+                    <div>
+                        <h3 style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;">Publicando instrumental</h3>
+                        <p style="color: var(--dim); font-size: 11px;">El DAW está procesando y subiendo tus archivos...</p>
+                    </div>
+
+                    <div class="status-list">
+                        <div class="status-step" id="step-render">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> <span>Preparando archivos MP3 y WAV del Master</span>
+                        </div>
+                        <div class="status-step" id="step-upload-store">
+                            <i class="fa-regular fa-circle"></i> <span>Subiendo archivos y portada a OFFSZN</span>
+                        </div>
+                        <div class="status-step" id="step-youtube">
+                            <i class="fa-regular fa-circle"></i> <span>Publicando a YouTube (sin marca de agua)</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="nav-buttons" style="margin-top: 40px;">
-                    <button class="btn-prev" onclick="goToStep(2)"><i class="fa-solid fa-chevron-left"></i> Atrás</button>
-                    <button class="btn-next" onclick="startProcess()">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> PUBLICAR BEAT
+                <!-- STEP 5: SUCCESS -->
+                <div id="view-success" style="display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 20px; padding: 35px 20px; animation: scaleUpSuccess 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); margin-top: auto; margin-bottom: auto;">
+                    <div class="success-badge" style="width: 72px; height: 72px; border-radius: 50%; background: rgba(48, 209, 88, 0.08); border: 2px solid var(--green); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--green); margin-bottom: 10px; animation: pulseSuccess 2s infinite;">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <div>
+                        <h2 class="success-title" style="font-size: 19px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px;">¡Beat Publicado!</h2>
+                        <p class="success-desc" id="success-message" style="color: var(--dim); font-size: 11.5px; line-height: 1.5; max-width: 320px; margin: 0 auto;">Tu instrumental ha sido renderizada y subida de forma exitosa.</p>
+                    </div>
+
+                    <!-- Action Buttons Row -->
+                    <div id="success-links-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; margin-top: 10px;">
+                        <a id="btn-view-offszn" href="#" target="_blank" class="btn-next" style="margin: 0; padding: 13px; font-size: 12px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px;">
+                            <i class="fa-solid fa-store"></i> Ver en tu Tienda OFFSZN
+                        </a>
+                        <a id="btn-view-youtube" href="#" target="_blank" class="btn-prev" style="margin: 0; padding: 12px; font-size: 11.5px; font-weight: 700; text-decoration: none; display: none; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; border-color: rgba(255, 59, 48, 0.3); color: #ff3b30; background: rgba(255, 59, 48, 0.03);">
+                            <i class="fa-brands fa-youtube"></i> Ver Video en YouTube
+                        </a>
+                    </div>
+
+                    <button class="btn-prev" onclick="resetMockup()" style="margin-top: 15px; border-color: transparent; color: var(--dim); font-size: 11px; font-weight: 600; background: transparent; padding: 6px 12px; cursor: pointer;">
+                        Publicar otro Beat
                     </button>
                 </div>
-            </div>
 
-            <!-- STEP 4: UPLOAD & PROCESS PROGRESS -->
-            <div id="view-progress">
-                <div class="progress-spinner-container">
-                    <div class="outer-ring"></div>
-                    <div class="progress-percentage" id="progress-val">0%</div>
-                </div>
-                
-                <div>
-                    <h3 style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;">Publicando instrumental</h3>
-                    <p style="color: var(--dim); font-size: 11px;">El DAW está procesando y subiendo tus archivos...</p>
-                </div>
+            </div><!-- /#steps-content -->
 
-                <div class="status-list">
-                    <div class="status-step" id="step-render">
-                        <i class="fa-solid fa-circle-notch fa-spin"></i> <span>Preparando archivos MP3 y WAV del Master</span>
-                    </div>
-                    <div class="status-step" id="step-upload-store">
-                        <i class="fa-regular fa-circle"></i> <span>Subiendo archivos y portada a OFFSZN</span>
-                    </div>
-                    <div class="status-step" id="step-youtube">
-                        <i class="fa-regular fa-circle"></i> <span>Publicando a YouTube (sin marca de agua)</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- STEP 5: SUCCESS -->
-            <div id="view-success" style="display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 20px; padding: 35px 20px; animation: scaleUpSuccess 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); margin-top: auto; margin-bottom: auto;">
-                <div class="success-badge" style="width: 72px; height: 72px; border-radius: 50%; background: rgba(48, 209, 88, 0.08); border: 2px solid var(--green); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--green); margin-bottom: 10px; animation: pulseSuccess 2s infinite;">
-                    <i class="fa-solid fa-check"></i>
-                </div>
-                <div>
-                    <h2 class="success-title" style="font-size: 19px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px;">¡Beat Publicado!</h2>
-                    <p class="success-desc" id="success-message" style="color: var(--dim); font-size: 11.5px; line-height: 1.5; max-width: 320px; margin: 0 auto;">Tu instrumental ha sido renderizada y subida de forma exitosa.</p>
-                </div>
-                
-                <!-- Action Buttons Row -->
-                <div id="success-links-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; margin-top: 10px;">
-                    <a id="btn-view-offszn" href="#" target="_blank" class="btn-next" style="margin: 0; padding: 13px; font-size: 12px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px;">
-                        <i class="fa-solid fa-store"></i> Ver en tu Tienda OFFSZN
-                    </a>
-                    <a id="btn-view-youtube" href="#" target="_blank" class="btn-prev" style="margin: 0; padding: 12px; font-size: 11.5px; font-weight: 700; text-decoration: none; display: none; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; border-color: rgba(255, 59, 48, 0.3); color: #ff3b30; background: rgba(255, 59, 48, 0.03);">
-                        <i class="fa-brands fa-youtube"></i> Ver Video en YouTube
-                    </a>
-                </div>
-
-                <button class="btn-prev" onclick="resetMockup()" style="margin-top: 15px; border-color: transparent; color: var(--dim); font-size: 11px; font-weight: 600; background: transparent; padding: 6px 12px; cursor: pointer;">
-                    Publicar otro Beat
-                </button>
-            </div>
-
-        </div>
+        </div><!-- /#plugin-content-area -->
 
         <!-- Footer -->
         <div class="plugin-footer" style="position: relative;">
