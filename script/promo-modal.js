@@ -118,7 +118,7 @@ class PromoModal2x1 {
         sideTab.innerHTML = `
             <button class="side-tab-close" id="side-tab-close-btn" title="Cerrar pestaña">&times;</button>
             <div class="side-tab-content" id="side-tab-open-btn">
-                <span>🎁 Oferta 2x1 — Master de Regalo</span>
+                <span>🎁 Oferta 2x1 — Plugin de master gratis</span>
             </div>
         `;
 
