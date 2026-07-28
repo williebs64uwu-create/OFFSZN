@@ -345,7 +345,6 @@ class PromoModal2x1 {
                 cursor: pointer;
                 box-shadow: 4px 0 20px rgba(0, 0, 0, 0.6);
                 writing-mode: vertical-rl;
-                transform: rotate(180deg);
                 letter-spacing: 0.5px;
                 white-space: nowrap;
                 transition: background 0.2s, border-color 0.2s;
