@@ -1,6 +1,6 @@
 /**
  * OFFSZN Mercado Pago Banner & Alternative Payment Link for Willieinspired Products
- * 1. Smooth 2-second top banner above navbar: "HAZ CLICK AQUÍ = PARA PAGAR CON MERCADO PAGO 🇦🇷" -> https://wa.link/ebw8ut
+ * 1. Slim & thin top banner above navbar: "HAZ CLICK AQUÍ = PARA PAGAR CON MERCADO PAGO 🇦🇷" -> https://wa.link/ebw8ut
  * 2. Underlined text link "Otros Métodos de Pago" under "COMPRAR - $10.00" -> https://wa.link/r1cm47
  */
 
@@ -114,7 +114,7 @@
         const style = document.createElement('style');
         style.id = 'mercadopago-willie-banner-styles';
         style.innerHTML = `
-            /* TOP BANNER ABOVE NAVBAR WITH 2s SMOOTH FADE */
+            /* SLIM & THIN TOP BANNER ABOVE NAVBAR (Match Easy Mix height) */
             .willie-mp-topbanner {
                 display: flex;
                 align-items: center;
@@ -123,15 +123,18 @@
                 background: linear-gradient(90deg, #009EE3 0%, #0073B7 100%);
                 color: #ffffff !important;
                 text-decoration: none !important;
-                padding: 11px 16px;
+                padding: 6px 12px;
+                height: 32px;
                 box-sizing: border-box;
                 position: relative;
                 z-index: 10001;
                 opacity: 0;
                 transform: translateY(-100%);
                 transition: opacity 1.8s cubic-bezier(0.16, 1, 0.3, 1), transform 1.8s cubic-bezier(0.16, 1, 0.3, 1);
-                box-shadow: 0 4px 15px rgba(0, 158, 227, 0.35);
-                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                box-shadow: 0 2px 10px rgba(0, 158, 227, 0.3);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+                white-space: nowrap;
+                overflow: hidden;
             }
             .willie-mp-topbanner.visible {
                 opacity: 1;
@@ -145,23 +148,39 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 10px;
+                gap: 6px;
                 text-align: center;
                 font-weight: 800;
-                font-size: 0.9rem;
+                font-size: 0.78rem;
                 letter-spacing: 0.5px;
                 text-transform: uppercase;
+                white-space: nowrap;
             }
             .mp-flag {
-                font-size: 1.25rem;
+                font-size: 0.95rem;
                 line-height: 1;
             }
             .mp-arrow {
-                font-size: 1.05rem;
+                font-size: 0.85rem;
                 transition: transform 0.25s ease;
             }
             .willie-mp-topbanner:hover .mp-arrow {
-                transform: translateX(5px);
+                transform: translateX(4px);
+            }
+
+            @media (max-width: 768px) {
+                .willie-mp-topbanner {
+                    padding: 5px 8px;
+                    height: 30px;
+                }
+                .mp-topbanner-inner {
+                    font-size: 0.68rem;
+                    gap: 4px;
+                    letter-spacing: 0.2px;
+                }
+                .mp-flag {
+                    font-size: 0.85rem;
+                }
             }
 
             /* OTROS MÉTODOS DE PAGO UNDERLINED LINK UNDER COMPRAR $10 */
