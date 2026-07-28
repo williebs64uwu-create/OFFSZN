@@ -18,6 +18,32 @@ export const submitNegotiation = async (req, res) => {
     }
 
     try {
+        // Check product type
+        const { data: productCheck } = await supabase
+            .from('products')
+            .select('name, product_type, category, is_free')
+            .eq('id', productId)
+            .single();
+
+        if (productCheck) {
+            const pType = (productCheck.product_type || productCheck.category || '').toLowerCase();
+            const pName = (productCheck.name || '').toLowerCase();
+            const isNonNegotiable = 
+                pType.includes('preset') || 
+                pType.includes('plantilla') || 
+                pType.includes('kit') || 
+                pType.includes('pack') || 
+                pType.includes('bank') || 
+                pName.includes('preset') || 
+                pName.includes('plantilla') || 
+                (pType !== 'beat' && pType !== 'beats' && pType !== 'instrumental') ||
+                productCheck.is_free;
+
+            if (isNonNegotiable) {
+                return res.status(400).json({ error: 'este producto no se puede negociar por ahora' });
+            }
+        }
+
         // 0. Save the proposal to the database (bypasses RLS since backend uses SERVICE_ROLE_KEY)
         const { error: insertError } = await supabase.from('propuestas_offszn').insert({
             product_id: productId,

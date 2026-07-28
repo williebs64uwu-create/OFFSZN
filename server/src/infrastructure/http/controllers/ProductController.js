@@ -134,7 +134,13 @@ export const createProduct = async (req, res) => {
             .eq('id', userId)
             .single();
 
-        const userPlan = profile?.plan || 'free';
+        const rawPlan = (profile?.plan || 'free').toLowerCase().trim();
+        let userPlan = 'free';
+        if (rawPlan.includes('pro') || rawPlan.includes('unlimited') || rawPlan.includes('admin') || rawPlan.includes('lifetime')) {
+            userPlan = 'pro';
+        } else if (rawPlan.includes('starter')) {
+            userPlan = 'starter';
+        }
         const maxLimit = PLAN_LIMITS[userPlan] || PLAN_LIMITS.free;
 
         if (maxLimit !== Infinity) {

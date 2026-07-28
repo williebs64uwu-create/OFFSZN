@@ -9,68 +9,43 @@
 
 
 window.PLAN_LIMITS = {
-
     free: {
-
         name: 'Básico',
-
         price: 'Free',
-
         max_uploads: 20,
-
         commission: 0.05,
-
         youtube_uploads_per_month: 1,
-
         requests_per_day: 1,
-
         credits_per_month: 0,
-
         badge: 'None'
-
     },
-
     starter: {
-
         name: 'Starter',
-
         price: '$9/mo',
-
         max_uploads: 60,
-
         commission: 0.03,
-
         youtube_uploads_per_month: 5,
-
         requests_per_day: 5,
-
         credits_per_month: 60,
-
         badge: 'Purple'
-
     },
-
     pro: {
-
         name: 'PRO',
-
         price: '$19/mo',
-
         max_uploads: Infinity,
-
         commission: 0.0,
-
         youtube_uploads_per_month: 30,
-
         requests_per_day: Infinity,
-
         credits_per_month: 100,
-
         badge: 'Gold'
-
     }
-
 };
+
+window.PLAN_LIMITS['pro_lifetime'] = window.PLAN_LIMITS.pro;
+window.PLAN_LIMITS['pro-lifetime'] = window.PLAN_LIMITS.pro;
+window.PLAN_LIMITS['unlimited'] = window.PLAN_LIMITS.pro;
+window.PLAN_LIMITS['admin'] = window.PLAN_LIMITS.pro;
+window.PLAN_LIMITS['offszn_pro'] = window.PLAN_LIMITS.pro;
 
 
 
@@ -752,115 +727,86 @@ window.AuthUtils = {
      */
 
     getUserPlanData: async function () {
+        if (this._userPlanCache && this._userPlanCache.plan === 'pro') return this._userPlanCache;
 
-        if (this._userPlanCache) return this._userPlanCache;
-
-
-
-        // Try SessionStorage first
-
+        // Try SessionStorage first if plan is PRO
         const sessionPlan = sessionStorage.getItem('offszn_user_plan');
-
         if (sessionPlan) {
-
             try {
-
-                this._userPlanCache = JSON.parse(sessionPlan);
-
-                return this._userPlanCache;
-
+                const parsed = JSON.parse(sessionPlan);
+                if (parsed && (parsed.plan === 'pro' || parsed.limits?.max_uploads === Infinity)) {
+                    this._userPlanCache = parsed;
+                    return this._userPlanCache;
+                }
             } catch (e) { }
-
         }
-
-
 
         if (!window.supabaseClient) return null;
 
-
-
         const { data: { session } } = await window.supabaseClient.auth.getSession();
-
         if (!session) return null;
 
+        let rawPlan = 'free';
 
-
-        const { data, error } = await window.supabaseClient
-
+        // Check profiles table first
+        const { data: profData } = await window.supabaseClient
             .from('profiles')
-
             .select('plan')
-
             .eq('id', session.user.id)
-
             .maybeSingle();
 
+        if (profData && profData.plan) {
+            rawPlan = profData.plan;
+        } else {
+            // Fallback to users table
+            const { data: userData } = await window.supabaseClient
+                .from('users')
+                .select('plan')
+                .eq('id', session.user.id)
+                .maybeSingle();
+            if (userData && userData.plan) {
+                rawPlan = userData.plan;
+            }
+        }
 
-
-        if (error || !data) return null;
-
-
-
-        const planKey = data.plan || 'free';
-
-
-
-        // Try to fetch YouTube quota columns (may not exist if SQL migration not run yet)
+        const normalizedPlan = (rawPlan || '').toLowerCase().trim();
+        let planKey = 'free';
+        if (normalizedPlan.includes('pro') || normalizedPlan.includes('unlimited') || normalizedPlan.includes('admin') || normalizedPlan.includes('lifetime')) {
+            planKey = 'pro';
+        } else if (normalizedPlan.includes('starter')) {
+            planKey = 'starter';
+        }
 
         let ytUploadsThisMonth = 0;
-
         try {
-
             const { data: quotaData } = await window.supabaseClient
-
                 .from('profiles')
-
                 .select('youtube_uploads_this_month, youtube_quota_reset_date')
-
                 .eq('id', session.user.id)
-
                 .maybeSingle();
 
-
-
             if (quotaData) {
-
                 ytUploadsThisMonth = quotaData.youtube_uploads_this_month || 0;
-
                 const resetDate = quotaData.youtube_quota_reset_date ? new Date(quotaData.youtube_quota_reset_date) : null;
-
                 if (resetDate && new Date() > resetDate) {
-
                     ytUploadsThisMonth = 0;
-
                 }
-
             }
+        } catch (_) { }
 
-        } catch (_) { /* Columns may not exist yet — graceful fallback to 0 */ }
-
-
+        const planLimits = window.PLAN_LIMITS[planKey] || window.PLAN_LIMITS[rawPlan] || window.PLAN_LIMITS.pro;
 
         const planData = {
-
             plan: planKey,
-
-            limits: window.PLAN_LIMITS[planKey] || window.PLAN_LIMITS.free,
-
+            rawPlan: rawPlan,
+            limits: planLimits,
             usage: {
-
                 youtube_uploads_this_month: ytUploadsThisMonth
-
             }
-
         };
 
-
-
         this._userPlanCache = planData;
-
         sessionStorage.setItem('offszn_user_plan', JSON.stringify(planData));
-
         return planData;
 
     },
@@ -1175,10 +1121,8 @@ window.AuthUtils = {
 
         const limit = planData.limits?.max_uploads ?? 20;
 
-        if (limit === Infinity) {
-
+        if (limit === Infinity || planData.plan === 'pro') {
             return { isLimited: false, count: 0, limit: Infinity, plan: planData.plan };
-
         }
 
 

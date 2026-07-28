@@ -900,22 +900,32 @@ function renderProductPage(product) {
                         <div class="tab-pane" id="pane-negotiate">
                             <div class="negotiate-pane-content">
                                 ${(() => {
-            const pType = (product.product_type || '').toLowerCase();
-            // Bloqueamos solo si es un producto gratuito que NO es un Beat.
-            // Los Beats, aunque tengan demo gratis, tienen licencias de pago.
-            if (product.is_free && pType !== 'beat') {
+            const pType = (product.product_type || product.type || product.category || '').toLowerCase();
+            const pTitle = (product.title || product.name || '').toLowerCase();
+            const isPresetOrPlantillaOrKit = 
+                pType.includes('preset') || 
+                pType.includes('plantilla') || 
+                pType.includes('kit') || 
+                pType.includes('pack') || 
+                pType.includes('bank') || 
+                pTitle.includes('preset') || 
+                pTitle.includes('plantilla') || 
+                (pType !== 'beat' && pType !== 'beats' && pType !== 'instrumental') ||
+                product.is_free;
+
+            if (isPresetOrPlantillaOrKit) {
                 return `
-                                            <div style="text-align:center; padding: 20px 0;">
-                                                <div style="font-weight:800; color:#fff; font-size:1.2rem; margin-bottom:15px;">No se puede negociar este producto</div>
-                                                <div style="color:#888; font-size:1rem; margin-bottom:25px; line-height:1.4;">Este producto es gratuito, por lo que no es necesaria una negociación.</div>
-                                                
-                                                <button class="btn-glass-secondary" 
-                                                        style="padding:12px 25px; border-radius:10px; font-weight:700; font-size:0.9rem; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); color:#888; cursor:pointer; transition:0.2s;"
-                                                        onclick="window.location.href='/@${encodeURIComponent(producerName)}'">
-                                                    EXPLORAR MÁS DEL PRODUCTOR
-                                                </button>
-                                            </div>
-                                        `;
+                    <div style="text-align:center; padding: 30px 20px;">
+                        <div style="font-weight:800; color:#fff; font-size:1.2rem; margin-bottom:12px;">este producto no se puede negociar por ahora</div>
+                        <div style="color:#888; font-size:0.95rem; margin-bottom:25px; line-height:1.5;">Las ofertas y negociaciones de precio no están disponibles para presets o plantillas.</div>
+                        
+                        <button class="btn-glass-secondary" 
+                                style="padding:12px 25px; border-radius:10px; font-weight:700; font-size:0.9rem; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); color:#fff; cursor:pointer; transition:0.2s;"
+                                onclick="window.location.href='/@${encodeURIComponent(producerName)}'">
+                            EXPLORAR MÁS DEL PRODUCTOR
+                        </button>
+                    </div>
+                `;
             }
 
             return `
