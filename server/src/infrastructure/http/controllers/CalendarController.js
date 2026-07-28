@@ -294,6 +294,9 @@ export const sendReminderNow = async (req, res) => {
 };
 
 export const checkAndSendRemindersInternal = async () => {
+    // DESHABILITADO TEMPORALMENTE A PETICIÓN DEL USUARIO
+    // console.log('[CalendarController Background] Envíos automáticos de Brevo deshabilitados temporalmente.');
+    return;
     try {
         const events = await getStoredEvents();
         const now = new Date();

@@ -970,6 +970,6 @@ app.listen(PORT, () => {
     // Schedule to run every 12 hours
     setInterval(runSubscriptionScavenger, 12 * 60 * 60 * 1000);
 
-    // Run Content Calendar Brevo Reminder Scanner every 10 minutes
-    setInterval(checkAndSendRemindersInternal, 10 * 60 * 1000);
+    // Run Content Calendar Brevo Reminder Scanner (Deshabilitado temporalmente a petición del usuario)
+    // setInterval(checkAndSendRemindersInternal, 10 * 60 * 1000);
 });
