@@ -14,11 +14,11 @@ class PromoModal2x1 {
     }
 
     init() {
-        // En local o navegadores, verificar si ya cerró el modal en esta sesión
+        const isLocal = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1');
         const hasSeen = sessionStorage.getItem(this.storageKey);
         
-        // En entorno local (localhost/127.0.0.1) permitir ver el modal para pruebas si no ha cerrado
-        if (hasSeen && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+        // En producción, solo mostrar 1 vez por sesión. En local, mostrar siempre al recargar.
+        if (hasSeen && !isLocal) {
             return;
         }
 
