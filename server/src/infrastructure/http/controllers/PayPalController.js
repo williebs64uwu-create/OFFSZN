@@ -254,8 +254,8 @@ export const createPayPalOrder = async (req, res) => {
         // 2. Fetch Producer details for PayPal Emails AND LICENSE SETTINGS
         const producerIds = [...new Set(cartItems.map(item => item.product.producer_id))];
         const [{ data: producers, error: producerError }, { data: profiles, error: profileError }] = await Promise.all([
-            supabase.from('users').select('id, paypal_email, license_settings, nickname, payment_methods').in('id', producerIds),
-            supabase.from('users').select('id, plan').in('id', producerIds)
+            supabase.from('users').select('id, paypal_email, license_settings, nickname, payment_methods, plan, role').in('id', producerIds),
+            supabase.from('users').select('id, plan, role').in('id', producerIds)
         ]);
 
         if (producerError) console.error('[PayPalDebug] Error fetching producers:', producerError);
@@ -266,13 +266,16 @@ export const createPayPalOrder = async (req, res) => {
             const profile = profiles?.find(p => p.id === u.id);
             // Use paypal_email column primarily, fallback to payment_methods.paypal
             const finalPaypalEmail = u.paypal_email || u.payment_methods?.paypal;
+            const finalPlan = profile?.plan || u.plan || 'free';
+            const finalRole = profile?.role || u.role || 'user';
 
             producerMap.set(u.id, {
                 id: u.id,
                 email: finalPaypalEmail,
                 settings: u.license_settings,
                 nickname: u.nickname,
-                plan: profile?.plan || 'free'
+                plan: finalPlan,
+                role: finalRole
             });
         });
 
@@ -381,17 +384,26 @@ export const createPayPalOrder = async (req, res) => {
 
             let commission = 0;
             if (verifiedPrice > 0) {
-                const producerProfile = profiles?.find(p => p.id === dbProd.producer_id);
-                const producerPlan = producerProfile?.plan || 'free';
+                const producerObj = producerMap.get(dbProd.producer_id);
+                const rawPlan = (producerObj?.plan || '').toLowerCase();
+                const rawRole = (producerObj?.role || '').toLowerCase();
+                const rawNick = (producerObj?.nickname || '').toLowerCase();
 
-                if (producerPlan === 'starter') {
+                // PRO Lifetime / PRO accounts / Admin / Willieinspired have 0 commission / 0 service fee
+                const isProAccount = rawPlan.includes('pro') || 
+                                     rawPlan.includes('lifetime') || 
+                                     rawRole === 'admin' || 
+                                     rawNick.includes('willie') || 
+                                     dbProd.producer_id === '00000000-0000-0000-0000-000000000001';
+
+                if (isProAccount) {
+                    commission = 0;
+                } else if (rawPlan === 'starter') {
                     if (verifiedPrice < 20) {
                         commission = 0.50;
                     } else {
                         commission = verifiedPrice * 0.03;
                     }
-                } else if (producerPlan === 'pro') {
-                    commission = 0;
                 } else {
                     if (verifiedPrice < 20) {
                         commission = 1.00;

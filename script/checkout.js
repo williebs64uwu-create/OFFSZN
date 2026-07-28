@@ -1470,6 +1470,13 @@ const CheckoutManager = {
     const container = document.getElementById('paypal-button-container');
     if (!container) return;
 
+    // Immediately hide all skeletons to prevent ghost loading artifacts
+    const skeleton = document.getElementById('paypal-skeleton');
+    const headerSkeleton = document.getElementById('paypal-header-skeleton');
+    if (skeleton) skeleton.style.display = 'none';
+    if (headerSkeleton) headerSkeleton.style.display = 'none';
+    container.style.display = 'block';
+
     this._renderInProgress = true;
     container.innerHTML = '';
     this._paypalRendered = true;

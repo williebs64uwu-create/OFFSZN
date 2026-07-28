@@ -1,7 +1,7 @@
 /**
- * OFFSZN Mercado Pago Banner & Alternative Payment Button for Willieinspired Products
+ * OFFSZN Mercado Pago Banner & Alternative Payment Link for Willieinspired Products
  * 1. Smooth 2-second top banner above navbar: "HAZ CLICK AQUÍ = PARA PAGAR CON MERCADO PAGO 🇦🇷" -> https://wa.link/ebw8ut
- * 2. "OTROS MÉTODOS DE PAGO" button under "COMPRAR - $10.00" -> https://wa.link/r1cm47
+ * 2. Underlined text link "Otros Métodos de Pago" under "COMPRAR - $10.00" -> https://wa.link/r1cm47
  */
 
 (function () {
@@ -71,42 +71,43 @@
         if (!isWillieProduct(product) && !window.location.pathname.includes('preset-de-remers')) return;
 
         // Find main buy button / license box container
-        const buyButton = document.querySelector('.btn-buy-license') ||
-                          document.querySelector('.license-buy-btn') ||
-                          document.querySelector('.btn-checkout-single') ||
-                          document.querySelector('.btn-buy') ||
-                          document.querySelector('.license-selector-container') ||
-                          document.querySelector('.price-card') ||
-                          document.querySelector('.product-price-section');
+        const targetContainer = document.getElementById('buying-modules') ||
+                                document.querySelector('.buying-section-wrapper') ||
+                                document.querySelector('.btn-buy-license') ||
+                                document.querySelector('.license-buy-btn') ||
+                                document.querySelector('.btn-checkout-single') ||
+                                document.querySelector('.license-selector-container') ||
+                                document.querySelector('.price-card') ||
+                                document.querySelector('.product-price-section') ||
+                                document.querySelector('.product-main-content');
 
-        if (!buyButton) return;
+        if (!targetContainer) return;
 
         const otrosBtn = document.createElement('a');
         otrosBtn.id = 'willie-otros-pagos-btn';
         otrosBtn.href = OTROS_PAGOS_WA_LINK;
         otrosBtn.target = '_blank';
         otrosBtn.rel = 'noopener noreferrer';
-        otrosBtn.className = 'willie-otros-pagos-btn';
-        otrosBtn.innerHTML = `
-            <i class="bi bi-wallet2"></i> OTROS MÉTODOS DE PAGO
-        `;
+        otrosBtn.className = 'willie-otros-pagos-link';
+        otrosBtn.innerText = 'Otros Métodos de Pago';
 
-        // Insert directly after the buy button / container
-        buyButton.insertAdjacentElement('afterend', otrosBtn);
+        targetContainer.insertAdjacentElement('beforeend', otrosBtn);
     }
 
     // Auto-check periodically until DOM is ready
     let attempts = 0;
     const interval = setInterval(() => {
         attempts++;
-        const hasProductData = window.currentProductData || document.querySelector('.product-hero') || attempts > 25;
+        const hasProductData = window.currentProductData || document.querySelector('.product-hero') || document.getElementById('buying-modules') || attempts > 25;
         
         if (hasProductData) {
             injectTopBanner();
             injectOtrosPagosBtn();
-            if (window.currentProductData || attempts > 25) clearInterval(interval);
+            if ((window.currentProductData || document.getElementById('buying-modules')) && attempts > 5) {
+                clearInterval(interval);
+            }
         }
-    }, 350);
+    }, 300);
 
     // Style Injection
     if (!document.getElementById('mercadopago-willie-banner-styles')) {
@@ -163,32 +164,23 @@
                 transform: translateX(5px);
             }
 
-            /* OTROS MÉTODOS DE PAGO BUTTON UNDER COMPRAR $10 */
-            .willie-otros-pagos-btn {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
+            /* OTROS MÉTODOS DE PAGO UNDERLINED LINK UNDER COMPRAR $10 */
+            .willie-otros-pagos-link {
+                display: block !important;
                 width: 100%;
-                margin-top: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                color: #ffffff !important;
-                font-weight: 800;
-                font-size: 0.95rem;
-                padding: 13px 20px;
-                border-radius: 12px;
-                text-decoration: none !important;
-                box-sizing: border-box;
-                transition: all 0.25s ease;
+                text-align: center;
+                margin-top: 14px;
+                margin-bottom: 10px;
+                color: #aaaaaa !important;
+                text-decoration: underline !important;
+                font-weight: 700;
+                font-size: 0.9rem;
                 letter-spacing: 0.5px;
+                transition: color 0.2s ease;
+                cursor: pointer;
             }
-            .willie-otros-pagos-btn:hover {
-                background: rgba(255, 255, 255, 0.12);
-                border-color: rgba(255, 255, 255, 0.3);
+            .willie-otros-pagos-link:hover {
                 color: #ffffff !important;
-                transform: translateY(-2px);
-                box-shadow: 0 6px 20px rgba(255, 255, 255, 0.08);
             }
         `;
         document.head.appendChild(style);
