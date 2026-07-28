@@ -25,7 +25,7 @@ async function main() {
                 license_type: 'lifetime',
                 status: 'active',
                 expires_at: null,
-                max_devices: 3
+                max_devices: parseInt(process.argv[3] || '1', 10)
             })
             .select('*')
             .single();
