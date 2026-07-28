@@ -5,7 +5,7 @@
  */
 
 (function () {
-    const MERCADOPAGO_WA_LINK = 'https://wa.link/8762r5';
+    const MERCADOPAGO_WA_LINK = 'https://wa.link/ebw8ut';
 
     function isWillieProduct(product) {
         const path = window.location.pathname.toLowerCase();
