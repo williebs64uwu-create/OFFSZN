@@ -278,6 +278,25 @@ export const activateSerial = async (req, res) => {
         if (licErr || !license) return res.status(404).json({ error: 'Licencia no encontrada o inválida.' });
         if (license.status !== 'active') return res.status(403).json({ error: 'Esta licencia está inactiva o suspendida.' });
 
+        // ── Validation: Match Plugin product (Easy Mix vs Easy Master) ──
+        const upperSerial = (serial_key || '').toUpperCase();
+        const requestedPlugin = (req.body.plugin_name || '').toLowerCase();
+        const registeredPlugin = (license.plugin_name || '').toLowerCase();
+
+        // Detect target plugin
+        const isMasterKey = upperSerial.startsWith('MASTER') || registeredPlugin.includes('master');
+        const isMasterReq = requestedPlugin.includes('master');
+
+        const isMixKey = (upperSerial.startsWith('EASY-') && !upperSerial.startsWith('EASY-MASTER')) || (registeredPlugin.includes('mix') && !registeredPlugin.includes('master'));
+        const isMixReq = requestedPlugin.includes('mix') && !requestedPlugin.includes('master');
+
+        if (isMasterReq && !isMasterKey) {
+            return res.status(403).json({ error: 'Esta licencia es para Easy Mix y no sirve para Easy Master.' });
+        }
+        if (isMixReq && !isMixKey) {
+            return res.status(403).json({ error: 'Esta licencia es para Easy Master y no sirve para Easy Mix.' });
+        }
+
         // 2. Check expiration
         if (license.expires_at && new Date(license.expires_at) < new Date()) {
             return res.status(403).json({ error: 'La licencia o prueba ha expirado.' });
