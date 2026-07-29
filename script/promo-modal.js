@@ -48,12 +48,12 @@ class PromoModal2x1 {
 
                 <div class="promo-2x1-showcase">
                     <a href="/plugins/easy-mix.html" target="_blank" rel="noopener noreferrer" class="promo-plugin-item" title="Ver Easy Mix VST (Clic para abrir)">
-                        <img src="/images/plugins/easy mixx.png" alt="Easy Mix VST">
+                        <img src="/images/plugins/easy-mix.png" alt="Easy Mix VST">
                         <span>Easy Mix VST</span>
                     </a>
                     <div class="promo-plus-sign">+</div>
                     <a href="/plugins/easy-master.html" target="_blank" rel="noopener noreferrer" class="promo-plugin-item" title="Ver Easy Master VST (Clic para abrir)">
-                        <img src="/images/plugins/EASY MASTER IMAGE.png" alt="Easy Master VST">
+                        <img src="/images/plugins/easy-master.png" alt="Easy Master VST">
                         <span>Easy Master VST</span>
                     </a>
                 </div>
