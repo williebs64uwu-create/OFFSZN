@@ -650,26 +650,35 @@
         const config = { ...baseConfig, ...baseConfig[currentInterval][currentCurrency] };
 
         const paypalPlanId = baseConfig[currentInterval]['USD'].paypalPlanId;
-        const hasTrial = baseConfig[currentInterval]['USD'].hasTrial;
+        // FREE TRIALS ONLY APPLY TO USD (RECURRING CARD/PAYPAL). NO FREE TRIALS FOR PEN (YAPE).
+        const hasTrial = currentCurrency === 'USD' ? baseConfig[currentInterval]['USD'].hasTrial : false;
 
         async function init() {
             const sym = currentCurrency === 'PEN' ? 'S/' : '$';
 
             // UI Setup - Left Panel
             document.getElementById('planNameLabel').textContent = `Suscribirse a ${config.fullName} (${currentInterval === 'annual' ? 'Anual' : 'Mensual'})`;
-
             const annualNote = document.getElementById('annualTotalLabel');
-            if (currentInterval === 'annual') {
-                const monthlyEquiv = (parseFloat(config.price) / 12).toFixed(2);
-                document.getElementById('priceAmountLabel').textContent = `${sym}${monthlyEquiv}`;
-                document.getElementById('priceIntervalLabel').textContent = `${currentCurrency} / mes`;
 
-                annualNote.textContent = `Facturado anualmente (${sym}${config.price})`;
-                annualNote.style.display = 'block';
-            } else {
-                document.getElementById('priceAmountLabel').textContent = `${sym}${config.price}`;
-                document.getElementById('priceIntervalLabel').textContent = `${currentCurrency} / mes`;
+            if (hasTrial) {
+                // Free Trial Active (USD): show $0.00 HOY on left panel without extra notes
+                document.getElementById('priceAmountLabel').textContent = `${sym}0.00`;
+                document.getElementById('priceIntervalLabel').textContent = `HOY`;
                 annualNote.style.display = 'none';
+            } else {
+                // Regular Payment (PEN or no trial)
+                if (currentInterval === 'annual') {
+                    const monthlyEquiv = (parseFloat(config.price) / 12).toFixed(2);
+                    document.getElementById('priceAmountLabel').textContent = `${sym}${monthlyEquiv}`;
+                    document.getElementById('priceIntervalLabel').textContent = `${currentCurrency} / mes`;
+
+                    annualNote.textContent = `Facturado anualmente (${sym}${config.price})`;
+                    annualNote.style.display = 'block';
+                } else {
+                    document.getElementById('priceAmountLabel').textContent = `${sym}${config.price}`;
+                    document.getElementById('priceIntervalLabel').textContent = `${currentCurrency} / mes`;
+                    annualNote.style.display = 'none';
+                }
             }
 
             document.getElementById('benefitsTitleLabel').textContent = config.benefitsTitle;
@@ -688,23 +697,23 @@
             // UI Setup - Right Panel (Summary)
             const summaryInterval = currentInterval === 'annual' ? 'Anual' : 'Mensual';
             document.getElementById('summaryPlanName').textContent = `Plan ${config.name} (${summaryInterval})`;
-            document.getElementById('summaryPlanPrice').textContent = `${sym}${config.price}`;
-
-            const mobilePlanNameEl = document.getElementById('mobilePlanName');
-            if (mobilePlanNameEl) mobilePlanNameEl.textContent = config.name;
-            const mobileTogglePriceEl = document.getElementById('mobileTogglePrice');
-            if (mobileTogglePriceEl) mobileTogglePriceEl.textContent = `${sym}${config.price}`;
 
             const trialRow = document.getElementById('summaryTrialRow');
             const totalAmount = document.getElementById('summaryTotalAmount');
+            const mobileTogglePriceEl = document.getElementById('mobileTogglePrice');
 
             if (hasTrial) {
+                // USD Trial: Clean $30.00 plan price, -$30.00 trial discount, and "$0 hoy" total
+                document.getElementById('summaryPlanPrice').textContent = `${sym}${config.price}`;
                 trialRow.style.display = 'flex';
                 document.getElementById('summaryTrialDiscount').textContent = `-${sym}${config.price}`;
-                totalAmount.textContent = `${sym}0.00`;
+                totalAmount.textContent = `$0 hoy`;
+                if (mobileTogglePriceEl) mobileTogglePriceEl.textContent = `$0 hoy`;
             } else {
+                document.getElementById('summaryPlanPrice').textContent = `${sym}${config.price}`;
                 trialRow.style.display = 'none';
                 totalAmount.textContent = `${sym}${config.price}`;
+                if (mobileTogglePriceEl) mobileTogglePriceEl.textContent = `${sym}${config.price}`;
             }
 
             // Expiration Date calculation

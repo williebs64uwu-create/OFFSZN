@@ -20,13 +20,12 @@
 
     <style>
         :root {
-            --bg-dark: #000000;
+            --bg-dark: #09090b;
             --text-main: #ffffff;
             --text-secondary: #888888;
-            --card-bg: #0F0F0F;
-            --border-color: #222222;
+            --card-bg: #111115;
+            --border-color: rgba(255, 255, 255, 0.1);
             --accent-white: #ffffff;
-            --hover-bg: #1A1A1A;
         }
 
         * {
@@ -37,19 +36,47 @@
         }
 
         body {
-            background-color: #000;
+            background-color: var(--bg-dark);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
+            position: relative;
         }
+
+        /* Ambient floating cover art backdrop */
+        .ambient-covers-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .cover-art-float {
+            position: absolute;
+            border-radius: 16px;
+            opacity: 0.12;
+            filter: grayscale(30%) contrast(110%);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .cover-art-1 { top: 8%; left: -2%; width: 220px; height: 220px; transform: rotate(-8deg); }
+        .cover-art-2 { top: 12%; right: -3%; width: 260px; height: 260px; transform: rotate(6deg); }
+        .cover-art-3 { bottom: 15%; left: 3%; width: 200px; height: 200px; transform: rotate(5deg); }
+        .cover-art-4 { bottom: 10%; right: 2%; width: 240px; height: 240px; transform: rotate(-6deg); }
 
         /* Nav */
         .nav-stub {
             width: 100%;
-            padding: 20px 40px;
+            padding: 24px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -65,11 +92,10 @@
             color: #fff;
             font-weight: 700;
             font-size: 20px;
-            font-family: 'Geist', sans-serif;
         }
 
         .btn-back {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.06);
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -79,7 +105,7 @@
             color: #fff;
             text-decoration: none;
             transition: 0.2s;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
 
         .btn-back:hover {
@@ -89,21 +115,22 @@
         /* Header */
         .header {
             text-align: center;
-            margin-top: 10px;
-            margin-bottom: 40px;
+            margin-top: 15px;
+            margin-bottom: 45px;
             padding: 0 20px;
+            z-index: 2;
         }
 
         .header h1 {
-            font-family: 'Geist', sans-serif;
-            font-size: 48px;
+            font-size: 42px;
             font-weight: 800;
             margin-bottom: 28px;
             color: #fff;
-            letter-spacing: -1px;
+            letter-spacing: -1.2px;
+            line-height: 1.1;
         }
 
-        /* === STACKED TOGGLES === */
+        /* === STACKED CONTROLS === */
         .controls-wrapper {
             display: flex;
             flex-direction: column;
@@ -113,39 +140,51 @@
 
         /* Toggle 1: Frequency */
         .freq-toggle {
-            background: #111;
-            border: 1px solid #222;
+            background: #141418;
+            border: 1px solid rgba(255, 255, 255, 0.12);
             padding: 4px;
-            border-radius: 14px;
+            border-radius: 100px;
             display: inline-flex;
             gap: 4px;
         }
 
         .freq-opt {
-            padding: 12px 28px;
-            border-radius: 10px;
+            padding: 10px 24px;
+            border-radius: 100px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 700;
-            color: #666;
+            color: #777788;
             transition: all 0.25s ease;
             user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .freq-opt:hover {
-            color: #999;
+            color: #bbb;
         }
 
         .freq-opt.active {
-            background: #fff;
-            color: #000;
-            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+            background: #272730;
+            color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
         }
 
-        /* Toggle 2: Currency */
+        .discount-pill {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 100px;
+        }
+
+        /* Toggle 2: Currency (Placed cleanly below) */
         .curr-toggle {
-            background: #000;
-            border: 1px solid #222;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             padding: 3px;
             border-radius: 100px;
             display: inline-flex;
@@ -153,306 +192,60 @@
         }
 
         .curr-opt {
-            padding: 8px 20px;
+            padding: 6px 16px;
             border-radius: 100px;
             cursor: pointer;
             font-size: 11px;
             font-weight: 800;
-            color: #555;
-            transition: all 0.3s ease;
-            min-width: 80px;
+            color: #666;
+            transition: all 0.22s ease;
+            min-width: 68px;
             text-align: center;
             user-select: none;
+            letter-spacing: 0.5px;
         }
 
         .curr-opt.active {
-            background: #222;
+            background: rgba(255, 255, 255, 0.15);
             color: #fff;
         }
 
         /* Savings badge */
         .savings-badge {
-            color: #fff;
-            font-size: 13px;
+            color: #a0eab0;
+            font-size: 12px;
             font-weight: 700;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             opacity: 0;
             transition: opacity 0.3s ease;
-            padding: 6px 16px;
-            background: #1A1A1A;
+            padding: 4px 12px;
+            background: rgba(40, 180, 80, 0.1);
             border-radius: 100px;
-            border: 1px solid #333;
+            border: 1px solid rgba(40, 180, 80, 0.25);
         }
 
         .savings-badge.visible {
             opacity: 1;
         }
 
-        /* === PRICING GRID === */
+        /* === PRICING GRID (Sleek Dark Cards) === */
         .pricing-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            max-width: 1200px;
+            gap: 20px;
+            max-width: 1160px;
             width: 100%;
             padding: 0 20px 80px 20px;
-            margin-top: 10px;
-        }
-
-        @media (max-width: 768px) {
-            .pricing-grid {
-                grid-template-columns: 1fr;
-                padding-bottom: 40px;
-            }
-
-            /* Ocultar plan Básico ($0) en móvil para ahorrar espacio */
-            .pricing-card:first-child {
-                display: none;
-            }
-        }
-
-        .pricing-card {
-            background: #000;
-            border: 1px solid #222;
-            border-radius: 20px;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            transition: all 0.3s ease;
-        }
-
-        .pricing-card:hover {
-            border-color: #444;
-        }
-
-        .pricing-card.popular {
-            border-color: #fff;
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.05);
-        }
-
-        .plan-header-box {
-            background: #0A0A0A;
-            border: 1px solid #1A1A1A;
-            border-radius: 16px;
-            padding: 35px 25px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .plan-name {
-            font-size: 13px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #555;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .plan-price {
-            font-size: 52px;
-            font-weight: 800;
-            font-family: 'Geist', sans-serif;
-            color: #fff;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: baseline;
-            gap: 4px;
-            letter-spacing: -2px;
-        }
-
-        .plan-price span {
-            font-size: 15px;
-            color: #666;
-            font-weight: 500;
-            letter-spacing: normal;
-        }
-
-        .billed-note {
-            font-size: 11px;
-            color: #444;
-            margin-bottom: 8px;
-            /* Compacted layout */
-            min-height: 16px;
-            font-weight: 600;
-        }
-
-        .plan-desc {
-            color: #888;
-            font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 0;
-        }
-
-        .features-container {
-            padding: 30px 20px;
-            flex: 1;
-        }
-
-        .feature-subhead {
-            font-size: 12px;
-            font-weight: 800;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 25px;
-            display: block;
-        }
-
-        .feature-list {
-            list-style: none;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 12px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            color: #888;
-            transition: color 0.2s;
-        }
-
-        .feature-item:hover {
-            color: #fff;
-        }
-
-        .feature-item i {
-            font-size: 16px;
-            color: #fff;
-            flex-shrink: 0;
-        }
-
-        .feature-item.check i {
-            color: #fff;
-        }
-
-        .feature-item.cross i {
-            color: #333;
-        }
-
-        .feature-item b {
-            color: #fff;
-            font-weight: 700;
-        }
-
-        /* Buttons */
-        .btn-plan {
-            width: 100%;
-            padding: 16px;
-            border-radius: 10px;
-            font-weight: 800;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.2s;
-            border: none;
-            font-family: 'Geist', sans-serif;
-            text-align: center;
-            text-decoration: none;
-            margin-top: 4px;
-        }
-
-        .btn-basic {
-            background: transparent;
-            border: 1px solid #222;
-            color: #666;
-        }
-
-        .btn-basic:hover {
-            border-color: #444;
-            color: #999;
-        }
-
-        .btn-upgrade {
-            background: #fff;
-            color: #000;
-        }
-
-        .btn-upgrade:hover {
-            background: #e0e0e0;
-            transform: scale(1.02);
-        }
-
-        .tag-badge {
-            background: #fff;
-            color: #000;
-            padding: 3px 10px;
-            border-radius: 100px;
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-
-        /* Entry Animation */
-        .entry-anim {
-            opacity: 0;
-            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* === WHITE PRO STYLE === */
-        .pricing-card.pro-white {
-            border-color: #fff;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, #000 100%);
-            box-shadow: 0 0 40px rgba(255, 255, 255, 0.05);
-        }
-
-        .pricing-card.pro-white .plan-header-box {
-            background: #fff;
-            border: none;
-        }
-
-        .pricing-card.pro-white .plan-name,
-        .pricing-card.pro-white .plan-price,
-        .pricing-card.pro-white .plan-price span {
-            color: #000 !important;
-        }
-
-        .pricing-card.pro-white .plan-desc {
-            color: rgba(0, 0, 0, 0.7) !important;
-        }
-
-        .pricing-card.pro-white .btn-upgrade {
-            background: #000 !important;
-            color: #fff !important;
-            font-weight: 800;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .pricing-card.pro-white .btn-upgrade:hover {
-            transform: scale(1.02);
-            background: #111 !important;
-        }
-
-        .pricing-card.pro-white .feature-item i {
-            color: #FFD700 !important;
-        }
-
-        .pricing-card.pro-white .tag-badge {
-            background: #000;
-            color: #fff;
+            z-index: 2;
+            align-items: stretch;
         }
 
         @media (max-width: 991px) {
             .pricing-grid {
                 grid-template-columns: 1fr;
-                gap: 20px;
+                gap: 24px;
             }
 
             .header h1 {
@@ -464,47 +257,211 @@
             }
         }
 
-        /* Support Chat Link */
+        /* Continuous Dark Card Container */
+        .pricing-card {
+            background: #111116;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 32px 28px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            border-color: rgba(255, 255, 255, 0.22);
+            transform: translateY(-4px);
+        }
+
+        /* PRO CARD HIGHLIGHT (Subtle Border Glow + Uniform Dark Background) */
+        .pricing-card.pro-card-highlight {
+            background: #131319;
+            border-color: rgba(255, 255, 255, 0.35);
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.05), 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Header info inside card */
+        .card-top-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .plan-tag-badge {
+            background: #1e1e24;
+            color: #ffffff;
+            padding: 4px 14px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .recommended-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #888899;
+        }
+
+        .plan-price-row {
+            font-size: 52px;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+            letter-spacing: -2px;
+        }
+
+        .plan-price-row span {
+            font-size: 14px;
+            color: #777788;
+            font-weight: 500;
+            letter-spacing: normal;
+        }
+
+        .billed-note-text {
+            font-size: 12px;
+            color: #666677;
+            margin-bottom: 22px;
+            min-height: 16px;
+            font-weight: 500;
+        }
+
+        /* Buttons inside Cards */
+        .btn-plan {
+            width: 100%;
+            padding: 14px;
+            border-radius: 100px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-family: 'Geist', sans-serif;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+
+        .btn-dark-outline {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .btn-dark-outline:hover {
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .btn-white-solid {
+            background: #ffffff;
+            color: #000000;
+            font-weight: 800;
+        }
+
+        .btn-white-solid:hover {
+            background: #e2e2e5;
+            transform: scale(1.01);
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .cancel-anytime-note {
+            font-size: 11px;
+            text-align: center;
+            color: #666677;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        /* Features Section */
+        .features-container {
+            margin-top: 28px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .feature-subhead {
+            font-size: 11px;
+            font-weight: 800;
+            color: #666677;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 18px;
+            display: block;
+        }
+
+        .feature-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 14px;
+            color: #aaaaee;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.4;
+        }
+
+        .feature-item i {
+            font-size: 15px;
+            color: #ffffff;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .feature-item b {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .pro-star-icon i {
+            color: #e5b800 !important;
+        }
+
         .whatsapp-chat {
             font-size: 13px;
-            color: #888;
+            color: #666677;
             text-decoration: none;
-            margin-top: 15px;
+            margin-top: 24px;
             display: inline-block;
             transition: color 0.2s;
             font-weight: 500;
         }
 
         .whatsapp-chat:hover {
-            color: #fff !important;
+            color: #ffffff !important;
             text-decoration: underline !important;
         }
 
-        /* Circular Icons Style */
-        .icon-circle {
-            background: #222;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+        /* Entry Animation */
+        .entry-anim {
+            opacity: 0;
+            animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .icon-circle i {
-            font-size: 12px !important;
-            color: #fff !important;
-            margin: 0 !important;
-        }
-
-        /* Adjust White Plan Icons */
-        .pro-white .icon-circle {
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .pro-white .icon-circle i {
-            color: #FFD700 !important;
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* === NEW SECTIONS === */
@@ -613,78 +570,98 @@
             color: #000;
         }
 
-        /* FAQ Section */
+        /* FAQ Section (Beatstars / Premium Dark Aesthetic) */
         .faq-section {
             width: 100%;
-            max-width: 800px;
-            padding: 80px 20px;
+            max-width: 840px;
+            padding: 90px 20px;
             margin: 0 auto;
         }
 
         .faq-container {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
         }
 
         .faq-item {
-            background: #000;
-            border: 1px solid #222;
-            border-radius: 12px;
+            background: #111116;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
             overflow: hidden;
-            transition: border-color 0.2s;
+            transition: all 0.3s ease;
         }
 
         .faq-item:hover {
-            border-color: #444;
+            border-color: rgba(255, 255, 255, 0.2);
+            background: #14141a;
+            transform: translateY(-2px);
+        }
+
+        .faq-item.active {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: #14141c;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .faq-question {
             width: 100%;
-            padding: 22px 25px;
+            padding: 24px 28px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: none;
             border: none;
-            color: #fff;
+            color: #ffffff;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             text-align: left;
             cursor: pointer;
-            transition: 0.2s;
+            transition: color 0.2s;
+            letter-spacing: -0.2px;
         }
 
         .faq-question i {
-            font-size: 14px;
-            color: #666;
-            transition: transform 0.3s;
+            font-size: 13px;
+            color: #888899;
+            background: rgba(255, 255, 255, 0.06);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s, color 0.2s;
+            flex-shrink: 0;
+            margin-left: 16px;
         }
 
         .faq-item.active .faq-question i {
             transform: rotate(180deg);
+            background: #ffffff;
+            color: #000000;
         }
 
         .faq-answer {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease-out, padding 0.3s ease;
-            color: #888;
-            font-size: 14px;
-            line-height: 1.6;
-            padding: 0 25px;
+            transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), padding 0.35s ease;
+            color: #a0a0b0;
+            font-size: 14.5px;
+            line-height: 1.65;
+            padding: 0 28px;
         }
 
         .faq-item.active .faq-answer {
             max-height: 500px;
-            padding-bottom: 25px;
+            padding-bottom: 28px;
         }
 
         /* Contact Footer */
         .contact-footer {
             width: 100%;
-            background: #000;
-            border-top: 1px solid #111;
+            background: var(--bg-dark);
+            border-top: 1px solid rgba(255,255,255,0.06);
             padding: 60px 20px;
             text-align: center;
             display: flex;
@@ -743,9 +720,9 @@
 
         .particle {
             position: absolute;
-            background: #fff;
+            background: rgba(180,180,255,0.6);
             border-radius: 50%;
-            opacity: 0.15;
+            opacity: 0.06;
             filter: blur(1px);
             animation: floatParticle linear infinite;
         }
@@ -764,6 +741,14 @@
 
 <body>
 
+    <!-- Ambient floating album covers in background -->
+    <div class="ambient-covers-bg">
+        <img src="https://ik.imagekit.io/6gzqp4xam/avatars/avatar_91dbeab3-deae-443c-b5c9-af14448884dc_f0ciUJIfE" class="cover-art-float cover-art-1" alt="">
+        <img src="https://ik.imagekit.io/6gzqp4xam/avatars/006ef3b7-48d4-43a4-8527-1aaea68292f2.jpg" class="cover-art-float cover-art-2" alt="">
+        <img src="https://ik.imagekit.io/6gzqp4xam/avatars/87baed37-f611-4760-8193-ed6b8cf226a5.jpg" class="cover-art-float cover-art-3" alt="">
+        <img src="https://ik.imagekit.io/6gzqp4xam/avatars/avatar_0382a813-85c7-46c3-8d2c-61a5692adffd_vkCmhNcg7" class="cover-art-float cover-art-4" alt="">
+    </div>
+
     <div id="bg-particles"></div>
 
     <div class="nav-stub">
@@ -779,112 +764,148 @@
         <h1>Sube de Nivel</h1>
 
         <div class="controls-wrapper">
-            <!-- Toggle 1: Billing Frequency -->
+            <!-- Toggle 1: Frequency Switch (Anual seleccionado por defecto primero) -->
             <div class="freq-toggle">
-                <div class="freq-opt active" id="freq-monthly" onclick="setFrequency('monthly')">Mensual</div>
-                <div class="freq-opt" id="freq-annual" onclick="setFrequency('annual')">Anual <i class="bi bi-star-fill"
-                        style="margin-left:5px; font-size:10px;"></i></div>
+                <div class="freq-opt active" id="freq-annual" onclick="setFrequency('annual')">
+                    Anual <span class="discount-pill">-60%</span>
+                </div>
+                <div class="freq-opt" id="freq-monthly" onclick="setFrequency('monthly')">Mensual</div>
             </div>
 
-            <!-- Toggle 2: Currency -->
+            <!-- Toggle 2: Currency Switch (USD / PEN) justo debajo -->
             <div class="curr-toggle">
                 <div class="curr-opt active" id="curr-USD" onclick="setCurrency('USD')">USD $</div>
                 <div class="curr-opt" id="curr-PEN" onclick="setCurrency('PEN')">PEN S/</div>
-            </div>
-
-            <div class="savings-badge" id="savings-badge">
-                <i class="bi bi-star-fill"></i> Ahorra hasta 60% con el plan anual
             </div>
         </div>
     </div>
 
     <div class="pricing-grid">
-        <!-- BASICO -->
+        <!-- BÁSICO -->
         <div class="pricing-card entry-anim" style="animation-delay: 0.2s;">
-            <div class="plan-header-box">
-                <div class="plan-name">Básico</div>
-                <div class="plan-price" id="price-basic">$0<span>/mes</span></div>
-                <div class="billed-note" id="note-basic"></div>
-                <button id="btn-plan-free" class="btn-plan btn-basic">Plan Actual</button>
+            <div class="card-top-bar">
+                <span class="plan-tag-badge">BÁSICO</span>
             </div>
+            
+            <div class="plan-price-row" id="price-basic" style="margin-bottom: 20px;">$0<span>/mes</span></div>
+
+            <button id="btn-plan-free" class="btn-plan btn-dark-outline">Plan Actual</button>
 
             <div class="features-container">
-                <span class="feature-subhead">Características:</span>
+                <span class="feature-subhead">Características incluidas:</span>
                 <ul class="feature-list">
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span>
-                        <span><b>20 subidas</b> de productos</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span>
-                        <span><b>5% Comisión</b> por venta</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span>
-                        <span><b>3</b> automatizaciones de Youtube</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span>
-                        <span><b>40 créditos</b> para sonidos con IA</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span>
-                        <span>Soporte Estándar</span></li>
+                    <li class="feature-item">
+                        <i class="bi bi-check2"></i>
+                        <span><b>20 subidas</b> de productos</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="bi bi-check2"></i>
+                        <span><b>5% Comisión</b> por venta</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="bi bi-check2"></i>
+                        <span><b>3</b> automatizaciones de Youtube</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="bi bi-check2"></i>
+                        <span><b>40 créditos</b> para sonidos con IA</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="bi bi-check2"></i>
+                        <span>Soporte Estándar</span>
+                    </li>
                 </ul>
+                <div style="margin-top: auto; padding-top: 20px;">
+                    <a href="#faq-section" style="font-size: 12px; font-weight: 700; color: #666677; text-decoration: underline; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#666677'">Ver detalles</a>
+                </div>
             </div>
         </div>
 
         <!-- STARTER -->
         <div class="pricing-card entry-anim" style="animation-delay: 0.3s;">
-            <div class="plan-header-box">
-                <div class="plan-name">Starter</div>
-                <div class="plan-price" id="price-starter">$5<span>/mes</span></div>
-                <div class="billed-note" id="note-starter"></div>
-                <button id="btn-plan-starter" onclick="goToCheckout('starter')" class="btn-plan btn-upgrade">Mejorar
-                    Plan</button>
+            <div class="card-top-bar">
+                <span class="plan-tag-badge">STARTER</span>
             </div>
+
+            <div class="plan-price-row" id="price-starter" style="margin-bottom: 20px;">$5<span>/mes</span></div>
+
+            <button id="btn-plan-starter" onclick="goToCheckout('starter')" class="btn-plan btn-dark-outline">Mejorar Plan</button>
 
             <div class="features-container">
                 <span class="feature-subhead">Todo en Básico más:</span>
                 <ul class="feature-list">
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span>
-                        <span><b>60 subidas</b> de productos</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span>
-                        <span><b>3% Comisión</b> por venta</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span>
-                        <span><b>10</b> automatizaciones de Youtube</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span>
-                        <span><b>150 créditos</b> para sonidos con IA</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-check-lg"></i></span>
-                        <span>Insignia de Verificación</span></li>
+                    <li class="feature-item">
+                        <i class="bi bi-check2"></i>
+                        <span><b>60 subidas</b> de productos</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="bi bi-check2"></i>
+                        <span><b>3% Comisión</b> por venta</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="bi bi-check2"></i>
+                        <span><b>10</b> automatizaciones de Youtube</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="bi bi-check2"></i>
+                        <span><b>150 créditos</b> para sonidos con IA</span>
+                    </li>
+                    <li class="feature-item">
+                        <i class="bi bi-check2"></i>
+                        <span>Insignia de Verificación</span>
+                    </li>
                 </ul>
-                <a href="https://wa.link/66n1ux" target="_blank" class="whatsapp-chat">Preguntas? Escríbenos por
-                    whatsapp</a>
+                <div style="margin-top: auto; padding-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <a href="https://wa.link/66n1ux" target="_blank" class="whatsapp-chat" style="margin-top:0;">¿Preguntas? WhatsApp</a>
+                    <a href="#faq-section" style="font-size: 12px; font-weight: 700; color: #666677; text-decoration: underline; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#666677'">Ver detalles</a>
+                </div>
             </div>
         </div>
 
-        <!-- PRO -->
-        <div class="pricing-card pro-white entry-anim" style="animation-delay: 0.4s;">
-            <div class="plan-header-box">
-                <div class="plan-name">PRO <span class="tag-badge">RECOMENDADO</span></div>
-                <div class="plan-price" id="price-pro">$7<span>/mes</span></div>
-                <div class="billed-note" id="note-pro"></div>
-                <button id="btn-plan-pro" onclick="goToCheckout('pro')" class="btn-plan btn-upgrade">Probar 7 días
-                    gratis</button>
-                <p
-                    style="font-size: 10px; text-align: center; color: #000; margin-top: 8px; font-weight: 700; opacity: 0.6;">
-                    Cancela cuando quieras</p>
+        <!-- PRO (RECOMMENDED - FULL UNIFIED DARK CARD WITH WHITE CTA BUTTON) -->
+        <div class="pricing-card pro-card-highlight entry-anim" style="animation-delay: 0.4s;">
+            <div class="card-top-bar">
+                <span class="plan-tag-badge">PRO</span>
+                <span class="recommended-label">Recomendado</span>
             </div>
+
+            <div class="plan-price-row" id="price-pro" style="margin-bottom: 20px;">$7<span>/mes</span></div>
+
+            <button id="btn-plan-pro" onclick="goToCheckout('pro')" class="btn-plan btn-white-solid">Probar 7 días gratis</button>
+            <p class="cancel-anytime-note">Cancela cuando quieras</p>
 
             <div class="features-container">
                 <span class="feature-subhead">Todo en Starter más:</span>
                 <ul class="feature-list">
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span>
-                        <span><b>Subidas Ilimitadas</b></span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span>
-                        <span><b>0% Comisión</b> por venta</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span>
-                        <span><b>30</b> automatizaciones de Youtube</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span>
-                        <span><b>300 créditos</b> para sonidos con IA</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span>
-                        <span>Soporte VIP 24/7</span></li>
-                    <li class="feature-item check"><span class="icon-circle"><i class="bi bi-star-fill"></i></span>
-                        <span>Promoción en Feed</span></li>
+                    <li class="feature-item pro-star-icon">
+                        <i class="bi bi-star-fill"></i>
+                        <span><b>Subidas Ilimitadas</b></span>
+                    </li>
+                    <li class="feature-item pro-star-icon">
+                        <i class="bi bi-star-fill"></i>
+                        <span><b>0% Comisión</b> por venta</span>
+                    </li>
+                    <li class="feature-item pro-star-icon">
+                        <i class="bi bi-star-fill"></i>
+                        <span><b>30</b> automatizaciones de Youtube</span>
+                    </li>
+                    <li class="feature-item pro-star-icon">
+                        <i class="bi bi-star-fill"></i>
+                        <span><b>300 créditos</b> para sonidos con IA</span>
+                    </li>
+                    <li class="feature-item pro-star-icon">
+                        <i class="bi bi-star-fill"></i>
+                        <span>Soporte VIP 24/7</span>
+                    </li>
+                    <li class="feature-item pro-star-icon">
+                        <i class="bi bi-star-fill"></i>
+                        <span>Promoción en Feed</span>
+                    </li>
                 </ul>
-                <a href="https://wa.link/jgult2" target="_blank" class="whatsapp-chat">Preguntas? Escríbenos por
-                    whatsapp</a>
+                <div style="margin-top: auto; padding-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <a href="https://wa.link/jgult2" target="_blank" class="whatsapp-chat" style="margin-top:0;">¿Preguntas? WhatsApp</a>
+                    <a href="#faq-section" style="font-size: 12px; font-weight: 700; color: #666677; text-decoration: underline; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#666677'">Ver detalles</a>
+                </div>
             </div>
         </div>
     </div>
@@ -1097,7 +1118,7 @@
 
     <script>
         // === STATE ===
-        let currentFrequency = 'monthly';
+        let currentFrequency = 'annual';
         let currentCurrency = localStorage.getItem('OFFSZN_CURRENCY') || 'USD';
 
         // === PRICING DATA ===
@@ -1119,13 +1140,6 @@
             currentFrequency = freq;
             document.querySelectorAll('.freq-opt').forEach(function (el) { el.classList.remove('active'); });
             document.getElementById('freq-' + freq).classList.add('active');
-
-            var badge = document.getElementById('savings-badge');
-            if (freq === 'annual') {
-                badge.classList.add('visible');
-            } else {
-                badge.classList.remove('visible');
-            }
             renderPrices();
         }
 
@@ -1144,14 +1158,21 @@
             var sym = data.symbol;
             var prices = data[currentFrequency];
 
+            var proBtn = document.getElementById('btn-plan-pro');
+            var cancelNote = document.querySelector('.cancel-anytime-note');
+
+            if (currentCurrency === 'USD') {
+                if (proBtn) proBtn.textContent = 'Probar 7 días gratis';
+                if (cancelNote) cancelNote.textContent = 'Cancela cuando quieras';
+            } else {
+                if (proBtn) proBtn.textContent = 'Mejorar Plan';
+                if (cancelNote) cancelNote.textContent = 'Acceso inmediato';
+            }
+
             if (currentFrequency === 'monthly') {
                 document.getElementById('price-basic').innerHTML = sym + prices.basic + '<span>/mes</span>';
                 document.getElementById('price-starter').innerHTML = sym + prices.starter + '<span>/mes</span>';
                 document.getElementById('price-pro').innerHTML = sym + prices.pro + '<span>/mes</span>';
-
-                document.getElementById('note-basic').textContent = '';
-                document.getElementById('note-starter').textContent = '';
-                document.getElementById('note-pro').textContent = '';
             } else {
                 // Annual: show attractive per-month price
                 var starterMonthly = (prices.starter / 12).toFixed(2);
@@ -1160,10 +1181,6 @@
                 document.getElementById('price-basic').innerHTML = sym + '0<span>/mes</span>';
                 document.getElementById('price-starter').innerHTML = sym + starterMonthly + '<span>/mes</span>';
                 document.getElementById('price-pro').innerHTML = sym + proMonthly + '<span>/mes</span>';
-
-                document.getElementById('note-basic').textContent = '';
-                document.getElementById('note-starter').textContent = 'Cobrado anualmente (' + sym + prices.starter + '/año)';
-                document.getElementById('note-pro').textContent = 'Cobrado anualmente (' + sym + prices.pro + '/año)';
             }
         }
 
