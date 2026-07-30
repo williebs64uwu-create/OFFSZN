@@ -26,6 +26,37 @@
             touch-action: none;
         }
 
+        /* ─── LOADING SCREEN ─── */
+        .loading-overlay {
+            position: absolute; inset: 0;
+            background: #080b12;
+            z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.4s ease;
+        }
+        .loading-overlay.fade-out {
+            opacity: 0; pointer-events: none;
+        }
+        .loading-logo {
+            font-size: 22px; font-weight: 800; letter-spacing: 4px; color: var(--gold);
+            margin-bottom: 4px;
+        }
+        .loading-sub {
+            font-size: 10px; font-weight: 700; letter-spacing: 3px; color: var(--dim);
+            margin-bottom: 24px;
+        }
+        .loading-track {
+            width: 140px; height: 3px;
+            background: rgba(255,255,255,0.08); border-radius: 2px;
+            overflow: hidden; position: relative;
+        }
+        .loading-bar {
+            width: 0%; height: 100%;
+            background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+            border-radius: 2px;
+            transition: width 0.7s ease;
+        }
+
         /* ─── PLUGIN CONTAINER ─── */
         .plugin {
             width: 580px;
@@ -273,6 +304,15 @@
 <body>
 <div class="plugin">
 
+    <!-- PANTALLA DE CARGA INKA KOLA -->
+    <div id="loading-screen" class="loading-overlay">
+        <div class="loading-logo">INKA KOLA</div>
+        <div class="loading-sub">BY OFFSZN</div>
+        <div class="loading-track">
+            <div class="loading-bar" id="loadingBar"></div>
+        </div>
+    </div>
+
     <div class="hdr">
         <div class="hdr-l">
             <div class="flag"></div>
@@ -385,6 +425,18 @@
 </div>
 
 <script>
+// ─── PANTALLA DE CARGA (1s, animación de barra suave + fade out) ───────────
+(function() {
+    var screen = document.getElementById('loading-screen');
+    var bar = document.getElementById('loadingBar');
+    if (!screen || !bar) return;
+    setTimeout(function() { bar.style.width = '100%'; }, 50);
+    setTimeout(function() {
+        screen.classList.add('fade-out');
+        setTimeout(function() { screen.style.display = 'none'; }, 450);
+    }, 900);
+})();
+
 // ─── JUCE NATIVE BRIDGE ──────────────────────────────────────────────────────
 function sendToJUCE(id, v) {
     try {
@@ -412,26 +464,21 @@ const ff       = document.getElementById('ffill');
 const fth      = document.getElementById('fthumb');
 
 // ─── UNIFIED REAL-TIME UPDATE FUNCTION ──────────────────────────────────────
-// Updates GAS Fader, Bottle Liquid Level, and Percentage Input in 100% REAL-TIME SYNC
 function updateGas(val, updateInput) {
     S.gas = Math.min(100, Math.max(0, Math.round(val)));
     localStorage.setItem('inka_gas', S.gas);
     
-    // 1. Update Percentage Input (if user is not currently typing)
     if (updateInput !== false) {
         pctInput.value = S.gas;
     }
 
-    // 2. Update Bottle Liquid Clip (0% -> 96% top clip, 100% -> 12% top clip)
     const topClip = 96 - (S.gas / 100) * 84;
     bFull.style.clipPath = 'inset(' + topClip.toFixed(1) + '% 0 0 0)';
 
-    // 3. Update GAS Fader Height & Thumb Position
     const h = S.gas + '%';
     ff.style.height  = h;
     fth.style.bottom = h;
 
-    // 4. Send to C++ DSP Audio Processor
     sendToJUCE('refill', S.gas);
     sendToJUCE('outputGain', S.gas);
 }
@@ -517,11 +564,9 @@ function makeKnob(wrapId, arcId, pipId, valId, min, max, initVal, paramKey, form
 
         var pct = (currentVal - min) / (max - min);
 
-        // Arc: fill = pct × 0.75 of full circumference
         var filledLen = pct * C * 0.75;
         arc.style.strokeDashoffset = (C - filledLen).toFixed(2);
 
-        // Pip rotation: -135° (min) to +135° (max)
         var angle = -135 + pct * 270;
         pip.style.transform = 'rotate(' + angle.toFixed(1) + 'deg)';
 
@@ -553,7 +598,6 @@ function makeKnob(wrapId, arcId, pipId, valId, min, max, initVal, paramKey, form
 }
 
 // ─── INITIALIZE ─────────────────────────────────────────────────────────────
-// Start everything at 50% in 100% sync!
 updateGas(S.gas);
 
 makeKnob('kW', 'aW', 'pW', 'vW',  0,   200, S.width, 'width', function(v) { return Math.round(v) + '%'; });
