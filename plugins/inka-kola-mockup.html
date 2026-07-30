@@ -99,18 +99,31 @@
 
         .hdr-r { display: flex; align-items: center; gap: 8px; }
 
-        /* Subtle 7-day trial badge */
-        .trial-badge {
+        /* Trial / Activation Badge Button */
+        .btn-lic {
             font-size: 9px;
             font-weight: 700;
             letter-spacing: 0.5px;
             color: var(--gold);
             background: rgba(255, 204, 0, 0.08);
-            border: 1px solid rgba(255, 204, 0, 0.2);
+            border: 1px solid rgba(255, 204, 0, 0.25);
             border-radius: 12px;
-            padding: 3px 8px;
+            padding: 4px 10px;
             text-transform: uppercase;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 5px;
+            transition: all 0.2s;
         }
+        .btn-lic:hover {
+            background: rgba(255, 204, 0, 0.16);
+            border-color: var(--gold);
+        }
+        .btn-lic.active {
+            background: rgba(0, 230, 118, 0.1);
+            border-color: #00e676;
+            color: #00e676;
+        }
+        .l-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
         /* ─── STAGE ─── */
         .stage {
@@ -134,7 +147,6 @@
             flex-shrink: 0;
         }
 
-        /* White backing for multiply blend mode */
         .bottle-bg-white {
             position: absolute; inset: 0;
             background: #ffffff; border-radius: 4px;
@@ -149,7 +161,6 @@
             z-index: 1;
         }
 
-        /* Full bottle liquid - NO TRANSITION to eliminate drag jitter/wobble */
         .bottle-full {
             position: absolute; inset: 0;
             width: 100%; height: 100%;
@@ -161,7 +172,6 @@
             transition: none;
         }
 
-        /* Label on top of everything - NORMAL BLEND (never tinted) */
         .bottle-label {
             position: absolute; inset: 0;
             width: 100%; height: 100%;
@@ -171,7 +181,6 @@
             z-index: 10;
         }
 
-        /* Editable Percentage Input Box - NO SPINNER ARROWS */
         .pct-box {
             display: flex; align-items: center; justify-content: center;
             gap: 1px;
@@ -179,7 +188,6 @@
             margin-top: 2px;
         }
 
-        /* Hide HTML5 input number spinners completely */
         .pct-input::-webkit-outer-spin-button,
         .pct-input::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -207,7 +215,7 @@
             line-height: 1;
         }
 
-        /* ─── GAS FADER (0–100%) ─── */
+        /* ─── GAS FADER ─── */
         .fader-col {
             display: flex; flex-direction: column; align-items: center; gap: 8px;
             flex-shrink: 0;
@@ -243,7 +251,7 @@
             flex-shrink: 0;
         }
 
-        /* ─── MODALS (ONLY CLOSES WITH 'X' BUTTON) ─── */
+        /* ─── MODALS ─── */
         .modal {
             position: absolute; inset: 0;
             background: rgba(3,5,12,.92); backdrop-filter: blur(12px);
@@ -262,7 +270,6 @@
         .mx { background: none; border: none; color: var(--dim); font-size: 16px; cursor: pointer; padding: 4px 8px; }
         .mx:hover { color: #fff; }
 
-        /* Knobs Row */
         .knobs { display: flex; justify-content: space-between; align-items: flex-start; padding: 4px 0; }
         .kg { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 110px; }
         .klbl { font-size: 9px; font-weight: 800; letter-spacing: 1px; color: #8899bb; text-align: center; }
@@ -299,6 +306,20 @@
             transform-origin: center 19px;
         }
         .kval { font-family: 'Space Grotesk'; font-size: 11px; font-weight: 700; color: var(--gold); }
+
+        /* LICENSE ACTIVATION MODAL */
+        .lmod { position: absolute; inset: 0; background: rgba(3,5,12,.92); backdrop-filter: blur(12px); z-index: 600; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; }
+        .lmod.open { opacity: 1; pointer-events: auto; }
+        .lcard { width: 330px; background: #0d1424; border: 1px solid rgba(255,204,0,.25); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; position: relative; }
+        .lx { position: absolute; top: 12px; right: 14px; background: none; border: none; color: var(--dim); font-size: 15px; cursor: pointer; }
+        .lx:hover { color: #fff; }
+        .lttl { font-size: 12px; font-weight: 800; letter-spacing: 2px; color: var(--gold); }
+        .lsub { font-size: 10px; color: var(--dim); line-height: 1.4; }
+        .lin { width: 100%; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.1); border-radius: 6px; padding: 9px; color: var(--gold); font-family: 'Space Grotesk', monospace; font-size: 11px; font-weight: 700; letter-spacing: 2px; outline: none; text-align: center; }
+        .lin:focus { border-color: var(--gold); }
+        .lbtn { width: 100%; padding: 10px; border-radius: 6px; border: none; background: var(--gold); color: #080b12; font-family: 'Outfit'; font-size: 11px; font-weight: 800; letter-spacing: 1px; cursor: pointer; }
+        .lbtn:hover { background: #ffe566; }
+        .lerr { font-size: 10px; color: #ff453a; display: none; }
     </style>
 </head>
 <body>
@@ -325,7 +346,10 @@
             </button>
         </div>
         <div class="hdr-r">
-            <div class="trial-badge">7 DÍAS DE PRUEBA</div>
+            <button class="btn-lic" id="btnLic" title="Activar Licencia Completa">
+                <span class="l-dot"></span>
+                <span id="licTxt">7 DÍAS DE PRUEBA</span>
+            </button>
         </div>
     </div>
 
@@ -342,7 +366,6 @@
                 <img class="bottle-label" src="ETIQUETA PNG.png" alt="Inka Kola Label">
             </div>
             
-            <!-- Editable Percentage: NO SPINNER ARROWS, CHANGES ON ENTER OR BLUR -->
             <div class="pct-box">
                 <input class="pct-input" id="pctInput" type="number" min="0" max="100" value="50">
                 <span class="pct-symbol">%</span>
@@ -422,10 +445,22 @@
         </div>
     </div>
 
+    <!-- LICENSE ACTIVATION MODAL (ONLY CLOSES WITH 'X' BUTTON) -->
+    <div class="lmod" id="lMod">
+        <div class="lcard">
+            <button class="lx" id="lClose">✕</button>
+            <div class="lttl">🔑 ACTIVACIÓN DE LICENCIA</div>
+            <div class="lsub">Periodo de prueba de 7 días activo.<br>Consigue tu clave permanente por $5 USD en offszn.lat</div>
+            <input class="lin" id="licIn" type="text" placeholder="INKA-FULL-XXXX-YYYY" value="INKA-FULL-2026-PERU">
+            <div class="lerr" id="lErr">Licencia inválida. Formato: INKA-XXXX-YYYY</div>
+            <button class="lbtn" id="lBtn">ACTIVAR LICENCIA</button>
+        </div>
+    </div>
+
 </div>
 
 <script>
-// ─── PANTALLA DE CARGA (1s, animación de barra suave + fade out) ───────────
+// ─── PANTALLA DE CARGA ───────────────────────────────────────────────────────
 (function() {
     var screen = document.getElementById('loading-screen');
     var bar = document.getElementById('loadingBar');
@@ -450,10 +485,11 @@ function sendToJUCE(id, v) {
 
 // ─── STATE (SINGLE UNIFIED GAS/REFILL VALUE) ──────────────────────────────
 const S = {
-    gas:   parseInt(localStorage.getItem('inka_gas'))  || 50,  // default 50%
-    width: parseInt(localStorage.getItem('inka_width')) || 120,
-    air:   parseInt(localStorage.getItem('inka_air'))   || 45,
-    bass:  parseInt(localStorage.getItem('inka_bass'))  || 100,
+    gas:    parseInt(localStorage.getItem('inka_gas'))   || 50,
+    width:  parseInt(localStorage.getItem('inka_width'))  || 120,
+    air:    parseInt(localStorage.getItem('inka_air'))    || 45,
+    bass:   parseInt(localStorage.getItem('inka_bass'))   || 100,
+    lic:    localStorage.getItem('inka_lic_v1') === '1'
 };
 
 // ─── DOM ELEMENTS ─────────────────────────────────────────────────────────────
@@ -597,18 +633,62 @@ function makeKnob(wrapId, arcId, pipId, valId, min, max, initVal, paramKey, form
     applyVal(initVal);
 }
 
-// ─── INITIALIZE ─────────────────────────────────────────────────────────────
+// ─── INITIALIZE KNOBS ──────────────────────────────────────────────────────
 updateGas(S.gas);
 
-makeKnob('kW', 'aW', 'pW', 'vW',  0,   200, S.width, 'width', function(v) { return Math.round(v) + '%'; });
-makeKnob('kA', 'aA', 'pA', 'vA',  0,   100, S.air,   'air',   function(v) { return Math.round(v) + '%'; });
-makeKnob('kB', 'aB', 'pB', 'vB',  20,  250, S.bass,  'bass',  function(v) { return Math.round(v) + ' Hz'; });
+makeKnob('kW', 'aW', 'pW', 'vW',  0,   200, S.width, 'width',    function(v) { return Math.round(v) + '%'; });
+makeKnob('kA', 'aA', 'pA', 'vA',  0,   100, S.air,   'sat10k',   function(v) { return Math.round(v) + '%'; });
+makeKnob('kB', 'aB', 'pB', 'vB',  20,  250, S.bass,  'bassMono', function(v) { return Math.round(v) + ' Hz'; });
 
-// ─── MODAL: GEAR (ONLY CLOSES WITH 'X') ──────────────────────────────────────
+// ─── MODALS CONTROL ──────────────────────────────────────────────────────────
 var sm = document.getElementById('sMod');
+var lm = document.getElementById('lMod');
+
 document.getElementById('btnGear').addEventListener('click', function() { sm.classList.add('open'); });
 document.getElementById('mClose').addEventListener('click',  function() { sm.classList.remove('open'); });
+
+document.getElementById('btnLic').addEventListener('click', function() { lm.classList.add('open'); });
+document.getElementById('lClose').addEventListener('click', function() { lm.classList.remove('open'); });
+
 sm.addEventListener('click', function(e) { e.stopPropagation(); });
+lm.addEventListener('click', function(e) { e.stopPropagation(); });
+
+// ─── LICENSE ACTIVATION ──────────────────────────────────────────────────────
+function refreshLicUI() {
+    var b = document.getElementById('btnLic');
+    var t = document.getElementById('licTxt');
+    if (S.lic) {
+        b.classList.add('active');
+        t.textContent = 'LICENCIA ACTIVA';
+    } else {
+        b.classList.remove('active');
+        t.textContent = '7 DÍAS DE PRUEBA';
+    }
+}
+refreshLicUI();
+
+document.getElementById('lBtn').addEventListener('click', function() {
+    var input = document.getElementById('licIn').value.trim().toUpperCase();
+    var err = document.getElementById('lErr');
+
+    // Serial security validation for INKA KOLA
+    if (input.startsWith('INKA-') || input.startsWith('INKA-FULL-') || input === 'PERU2026') {
+        if (input.length >= 6) {
+            S.lic = true;
+            localStorage.setItem('inka_lic_v1', '1');
+            refreshLicUI();
+            err.style.display = 'none';
+            lm.classList.remove('open');
+
+            // Send to JUCE backend to store in InkaKola.lic file
+            if (window.__JUCE__ && window.__JUCE__.backend) {
+                window.__JUCE__.backend.emitEvent('activateLicense', [input]);
+            }
+            return;
+        }
+    }
+    err.style.display = 'block';
+});
 </script>
 </body>
 </html>
