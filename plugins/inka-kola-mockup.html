@@ -99,7 +99,6 @@
 
         .hdr-r { display: flex; align-items: center; gap: 8px; }
 
-        /* Trial / Activation Badge Button */
         .btn-lic {
             font-size: 9px;
             font-weight: 700;
@@ -445,7 +444,7 @@
         </div>
     </div>
 
-    <!-- LICENSE ACTIVATION MODAL (ONLY CLOSES WITH 'X' BUTTON) -->
+    <!-- LICENSE ACTIVATION MODAL -->
     <div class="lmod" id="lMod">
         <div class="lcard">
             <button class="lx" id="lClose">✕</button>
@@ -479,17 +478,22 @@ function sendToJUCE(id, v) {
             window.__JUCE__.backend.emitEvent('setParam', [id, v]);
         }
     } catch(e) {
-        // standalone browser preview: ignore
+        // standalone browser preview
     }
 }
 
-// ─── STATE (SINGLE UNIFIED GAS/REFILL VALUE) ──────────────────────────────
+// ─── STATE (PROPER DEFAULT VALUES IF LOCALSTORAGE IS UNSET OR INVALID) ──────
+let rawGas = parseInt(localStorage.getItem('inka_gas'));
+let rawW   = parseInt(localStorage.getItem('inka_width'));
+let rawA   = parseInt(localStorage.getItem('inka_sat10k'));
+let rawB   = parseInt(localStorage.getItem('inka_bassMono'));
+
 const S = {
-    gas:    parseInt(localStorage.getItem('inka_gas'))   || 50,
-    width:  parseInt(localStorage.getItem('inka_width'))  || 120,
-    air:    parseInt(localStorage.getItem('inka_air'))    || 45,
-    bass:   parseInt(localStorage.getItem('inka_bass'))   || 100,
-    lic:    localStorage.getItem('inka_lic_v1') === '1'
+    gas:   (!isNaN(rawGas) && rawGas >= 0 && rawGas <= 100) ? rawGas : 50,
+    width: (!isNaN(rawW) && rawW >= 0 && rawW <= 200)       ? rawW   : 120,
+    air:   (!isNaN(rawA) && rawA >= 0 && rawA <= 100)       ? rawA   : 45,
+    bass:  (!isNaN(rawB) && rawB >= 20 && rawB <= 250)      ? rawB   : 100,
+    lic:   localStorage.getItem('inka_lic_v1') === '1'
 };
 
 // ─── DOM ELEMENTS ─────────────────────────────────────────────────────────────
@@ -519,7 +523,7 @@ function updateGas(val, updateInput) {
     sendToJUCE('outputGain', S.gas);
 }
 
-// ─── PERCENTAGE INPUT VALIDATION & REAL-TIME EVENT HANDLERS ────────────────
+// ─── PERCENTAGE INPUT EVENT HANDLERS ──────────────────────────────────────
 pctInput.addEventListener('input', function(e) {
     var val = parseInt(e.target.value);
     if (val > 100) e.target.value = 100;
@@ -581,6 +585,8 @@ document.addEventListener('touchmove', function(e) { if (ffd) calcGain(e.touches
 document.addEventListener('touchend', function() { ffd = false; });
 
 // ─── KNOBS ENGINE ────────────────────────────────────────────────────────────
+const knobRegistry = {};
+
 function makeKnob(wrapId, arcId, pipId, valId, min, max, initVal, paramKey, formatFn) {
     var wrap = document.getElementById(wrapId);
     var arc  = document.getElementById(arcId);
@@ -593,7 +599,7 @@ function makeKnob(wrapId, arcId, pipId, valId, min, max, initVal, paramKey, form
     var currentVal = initVal;
     var dragging = false, startY = 0, startVal = initVal;
 
-    function applyVal(nv) {
+    function applyVal(nv, notifyJUCE) {
         currentVal = Math.min(max, Math.max(min, nv));
         S[paramKey] = currentVal;
         localStorage.setItem('inka_' + paramKey, currentVal);
@@ -607,7 +613,9 @@ function makeKnob(wrapId, arcId, pipId, valId, min, max, initVal, paramKey, form
         pip.style.transform = 'rotate(' + angle.toFixed(1) + 'deg)';
 
         lbl.textContent = formatFn(currentVal);
-        sendToJUCE(paramKey, currentVal);
+        if (notifyJUCE !== false) {
+            sendToJUCE(paramKey, currentVal);
+        }
     }
 
     wrap.addEventListener('mousedown', function(e) {
@@ -630,15 +638,42 @@ function makeKnob(wrapId, arcId, pipId, valId, min, max, initVal, paramKey, form
     }, { passive: false });
     document.addEventListener('touchend', function() { dragging = false; });
 
-    applyVal(initVal);
+    applyVal(initVal, true);
+
+    knobRegistry[paramKey] = {
+        setValue: function(v) { applyVal(v, false); }
+    };
 }
 
-// ─── INITIALIZE KNOBS ──────────────────────────────────────────────────────
+// ─── INITIALIZE KNOBS WITH DEFAULT/SAVED VALUES ────────────────────────────
 updateGas(S.gas);
 
 makeKnob('kW', 'aW', 'pW', 'vW',  0,   200, S.width, 'width',    function(v) { return Math.round(v) + '%'; });
 makeKnob('kA', 'aA', 'pA', 'vA',  0,   100, S.air,   'sat10k',   function(v) { return Math.round(v) + '%'; });
 makeKnob('kB', 'aB', 'pB', 'vB',  20,  250, S.bass,  'bassMono', function(v) { return Math.round(v) + ' Hz'; });
+
+// ─── SYNC FROM JUCE C++ PROCESSOR ON LOAD ────────────────────────────────────
+function syncFromJUCE() {
+    try {
+        if (window.__JUCE__ && window.__JUCE__.backend && window.__JUCE__.backend.emitEvent) {
+            // Fetch live C++ parameters from JUCE AudioProcessor
+            window.__JUCE__.backend.emitEvent('getParams', [], function(res) {
+                if (res) {
+                    if (res.refill !== undefined) updateGas(res.refill, true);
+                    if (res.width !== undefined && knobRegistry['width']) knobRegistry['width'].setValue(res.width);
+                    if (res.sat10k !== undefined && knobRegistry['sat10k']) knobRegistry['sat10k'].setValue(res.sat10k);
+                    if (res.bassMono !== undefined && knobRegistry['bassMono']) knobRegistry['bassMono'].setValue(res.bassMono);
+                    if (res.isLicensed !== undefined) {
+                        S.lic = res.isLicensed;
+                        refreshLicUI();
+                    }
+                }
+            });
+        }
+    } catch(e) {}
+}
+
+setTimeout(syncFromJUCE, 200);
 
 // ─── MODALS CONTROL ──────────────────────────────────────────────────────────
 var sm = document.getElementById('sMod');
@@ -671,7 +706,6 @@ document.getElementById('lBtn').addEventListener('click', function() {
     var input = document.getElementById('licIn').value.trim().toUpperCase();
     var err = document.getElementById('lErr');
 
-    // Serial security validation for INKA KOLA
     if (input.startsWith('INKA-') || input.startsWith('INKA-FULL-') || input === 'PERU2026') {
         if (input.length >= 6) {
             S.lic = true;
@@ -680,7 +714,6 @@ document.getElementById('lBtn').addEventListener('click', function() {
             err.style.display = 'none';
             lm.classList.remove('open');
 
-            // Send to JUCE backend to store in InkaKola.lic file
             if (window.__JUCE__ && window.__JUCE__.backend) {
                 window.__JUCE__.backend.emitEvent('activateLicense', [input]);
             }
