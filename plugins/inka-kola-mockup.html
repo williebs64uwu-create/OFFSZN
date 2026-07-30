@@ -26,7 +26,7 @@
             touch-action: none;
         }
 
-        /* ─── PLUGIN CONTAINER (COMPACT FIXED WIDTH) ─── */
+        /* ─── PLUGIN CONTAINER ─── */
         .plugin {
             width: 580px;
             height: 520px;
@@ -62,7 +62,9 @@
             color: var(--gold); cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
+            transition: background 0.15s;
         }
+        .btn-gear:hover { background: rgba(255,204,0,.14); }
 
         .hdr-r { display: flex; align-items: center; gap: 8px; }
 
@@ -79,17 +81,7 @@
             text-transform: uppercase;
         }
 
-        .btn-lic {
-            padding: 4px 10px;
-            background: rgba(255,204,0,.06); border: 1px solid rgba(255,204,0,.2);
-            border-radius: 16px; color: var(--gold);
-            font-size: 10px; font-weight: 700; letter-spacing: 1px; cursor: pointer;
-            display: flex; align-items: center; gap: 5px;
-        }
-        .btn-lic.active { background: rgba(0,230,118,.08); border-color: #00e676; color: #00e676; }
-        .l-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
-
-        /* ─── STAGE (FIXED LAYOUT - NO JITTER) ─── */
+        /* ─── STAGE ─── */
         .stage {
             flex: 1;
             display: flex; align-items: center; justify-content: center;
@@ -138,7 +130,7 @@
             transition: none;
         }
 
-        /* Label on top of everything - 100% OPAQUE NORMAL BLEND MODE */
+        /* Label on top of everything - NORMAL BLEND (never tinted) */
         .bottle-label {
             position: absolute; inset: 0;
             width: 100%; height: 100%;
@@ -148,7 +140,7 @@
             z-index: 10;
         }
 
-        /* Editable Percentage Input Box - NO SPINNER ARROWS & PERFECT FIT */
+        /* Editable Percentage Input Box - NO SPINNER ARROWS */
         .pct-box {
             display: flex; align-items: center; justify-content: center;
             gap: 1px;
@@ -184,16 +176,11 @@
             line-height: 1;
         }
 
-        /* ─── GAS FADER (FIXED WIDTH - NO JITTER) ─── */
+        /* ─── GAS FADER (0–100%) ─── */
         .fader-col {
             display: flex; flex-direction: column; align-items: center; gap: 8px;
             flex-shrink: 0;
             width: 60px;
-        }
-        .fader-db {
-            font-family: 'Space Grotesk'; font-size: 11px; font-weight: 700; color: var(--gold);
-            width: 60px; text-align: center;
-            flex-shrink: 0;
         }
         .fader-track {
             position: relative; width: 22px; height: 230px;
@@ -230,7 +217,7 @@
             position: absolute; inset: 0;
             background: rgba(3,5,12,.92); backdrop-filter: blur(12px);
             z-index: 500; display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; border-radius: 14px;
+            opacity: 0; pointer-events: none;
         }
         .modal.open { opacity: 1; pointer-events: auto; }
         .mcard {
@@ -241,7 +228,7 @@
         }
         .mhdr { display: flex; justify-content: space-between; align-items: center; }
         .mttl { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--gold); display: flex; align-items: center; gap: 6px; }
-        .mx { background: none; border: none; color: var(--dim); font-size: 16px; cursor: pointer; }
+        .mx { background: none; border: none; color: var(--dim); font-size: 16px; cursor: pointer; padding: 4px 8px; }
         .mx:hover { color: #fff; }
 
         /* Knobs Row */
@@ -254,11 +241,10 @@
             display: flex; align-items: center; justify-content: center;
         }
         
-        /* SVG Knob Arc Alignment Fix */
         .ksvg {
             position: absolute; inset: 0;
             width: 100%; height: 100%;
-            transform: rotate(135deg); /* 135deg rotation aligns 0% at 7:30 o'clock */
+            transform: rotate(135deg);
         }
         .kbg {
             fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 5;
@@ -282,18 +268,6 @@
             transform-origin: center 19px;
         }
         .kval { font-family: 'Space Grotesk'; font-size: 11px; font-weight: 700; color: var(--gold); }
-
-        /* License modal */
-        .lmod { position: absolute; inset: 0; background: rgba(3,5,12,.92); backdrop-filter: blur(12px); z-index: 600; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; border-radius: 14px; }
-        .lmod.open { opacity: 1; pointer-events: auto; }
-        .lcard { width: 330px; background: #0d1424; border: 1px solid rgba(255,204,0,.2); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; position: relative; }
-        .lx { position: absolute; top: 12px; right: 14px; background: none; border: none; color: var(--dim); font-size: 15px; cursor: pointer; }
-        .lx:hover { color: #fff; }
-        .lttl { font-size: 12px; font-weight: 800; letter-spacing: 2px; color: var(--gold); }
-        .lsub { font-size: 10px; color: var(--dim); line-height: 1.4; }
-        .lin { width: 100%; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.1); border-radius: 6px; padding: 9px; color: var(--gold); font-family: 'Space Grotesk', monospace; font-size: 11px; font-weight: 700; letter-spacing: 2px; outline: none; text-align: center; }
-        .lin:focus { border-color: var(--gold); }
-        .lbtn { width: 100%; padding: 10px; border-radius: 6px; border: none; background: var(--gold); color: #080b12; font-family: 'Outfit'; font-size: 11px; font-weight: 800; letter-spacing: 1px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -312,10 +286,6 @@
         </div>
         <div class="hdr-r">
             <div class="trial-badge">7 DÍAS DE PRUEBA</div>
-            <button class="btn-lic" id="btnLic">
-                <span class="l-dot"></span>
-                <span id="licTxt">ACTIVAR</span>
-            </button>
         </div>
     </div>
 
@@ -332,7 +302,7 @@
                 <img class="bottle-label" src="ETIQUETA PNG.png" alt="Inka Kola Label">
             </div>
             
-            <!-- Editable Percentage Number: NO SPINNER ARROWS, FIT TO 100%, CHANGES ON ENTER OR BLUR -->
+            <!-- Editable Percentage: NO SPINNER ARROWS, CHANGES ON ENTER OR BLUR -->
             <div class="pct-box">
                 <input class="pct-input" id="pctInput" type="number" min="0" max="100" value="50">
                 <span class="pct-symbol">%</span>
@@ -340,10 +310,9 @@
         </div>
 
         <div class="fader-col">
-            <div class="fader-db" id="fdb">0.0 dB</div>
             <div class="fader-track" id="ftrack">
-                <div class="fader-fill" id="ffill" style="height:66%"></div>
-                <div class="fader-thumb" id="fthumb" style="bottom:66%"></div>
+                <div class="fader-fill" id="ffill" style="height:50%"></div>
+                <div class="fader-thumb" id="fthumb" style="bottom:50%"></div>
             </div>
             <div class="fader-lbl">GAS</div>
         </div>
@@ -413,202 +382,189 @@
         </div>
     </div>
 
-    <!-- LICENSE MODAL (ONLY CLOSES WITH 'X' BUTTON) -->
-    <div class="lmod" id="lMod">
-        <div class="lcard">
-            <button class="lx" id="lClose">✕</button>
-            <div class="lttl">🔑 ACTIVACIÓN</div>
-            <div class="lsub">Periodo de prueba de 7 días activo.<br>Consigue tu clave permanente por $5 USD en offszn.lat</div>
-            <input class="lin" id="licIn" type="text" placeholder="INKA-FULL-XXXX-YYYY" value="INKA-FULL-2026-PERU">
-            <button class="lbtn" id="lBtn">ACTIVAR LICENCIA</button>
-        </div>
-    </div>
-
 </div>
 
 <script>
-// ─── STATE ───────────────────────────────────────────────────────────────────
+// ─── JUCE NATIVE BRIDGE ──────────────────────────────────────────────────────
+function sendToJUCE(id, v) {
+    try {
+        if (window.__JUCE__ && window.__JUCE__.backend) {
+            window.__JUCE__.backend.emitEvent('setParam', [id, v]);
+        }
+    } catch(e) {
+        // standalone browser preview: ignore
+    }
+}
+
+// ─── STATE (SINGLE UNIFIED GAS/REFILL VALUE) ──────────────────────────────
 const S = {
-    refill: parseInt(localStorage.getItem('inka_refill')) || 50,
-    gain:   parseFloat(localStorage.getItem('inka_gain')) || 0,
-    width:  parseInt(localStorage.getItem('inka_width'))  || 120,
-    air:    parseInt(localStorage.getItem('inka_air'))    || 45,
-    bass:   parseInt(localStorage.getItem('inka_bass'))   || 100,
-    lic:    localStorage.getItem('inka_lic_v1') === '1'
+    gas:   parseInt(localStorage.getItem('inka_gas'))  || 50,  // default 50%
+    width: parseInt(localStorage.getItem('inka_width')) || 120,
+    air:   parseInt(localStorage.getItem('inka_air'))   || 45,
+    bass:  parseInt(localStorage.getItem('inka_bass'))  || 100,
 };
 
-function send(id, v) {
-    if (window.__JUCE__?.postMessageToNative) window.__JUCE__.postMessageToNative('setParam', [id, v]);
-    else if (window.setParam) window.setParam(id, v);
-}
-
+// ─── DOM ELEMENTS ─────────────────────────────────────────────────────────────
 const bFull    = document.getElementById('bFull');
 const pctInput = document.getElementById('pctInput');
+const ft       = document.getElementById('ftrack');
+const ff       = document.getElementById('ffill');
+const fth      = document.getElementById('fthumb');
 
-function updateRefill(val, updateInput = true) {
-    S.refill = Math.min(100, Math.max(0, Math.round(val)));
-    localStorage.setItem('inka_refill', S.refill);
+// ─── UNIFIED REAL-TIME UPDATE FUNCTION ──────────────────────────────────────
+// Updates GAS Fader, Bottle Liquid Level, and Percentage Input in 100% REAL-TIME SYNC
+function updateGas(val, updateInput) {
+    S.gas = Math.min(100, Math.max(0, Math.round(val)));
+    localStorage.setItem('inka_gas', S.gas);
     
-    if (updateInput) {
-        pctInput.value = S.refill;
+    // 1. Update Percentage Input (if user is not currently typing)
+    if (updateInput !== false) {
+        pctInput.value = S.gas;
     }
 
-    // Map 0-100% to liquid height inside bottle
-    // 0% -> 96% top clip (empty)
-    // 100% -> 12% top clip (full liquid)
-    const topClip = 96 - (S.refill / 100) * 84;
-    bFull.style.clipPath = `inset(${topClip.toFixed(1)}% 0 0 0)`;
+    // 2. Update Bottle Liquid Clip (0% -> 96% top clip, 100% -> 12% top clip)
+    const topClip = 96 - (S.gas / 100) * 84;
+    bFull.style.clipPath = 'inset(' + topClip.toFixed(1) + '% 0 0 0)';
 
-    send('refill', S.refill);
+    // 3. Update GAS Fader Height & Thumb Position
+    const h = S.gas + '%';
+    ff.style.height  = h;
+    fth.style.bottom = h;
+
+    // 4. Send to C++ DSP Audio Processor
+    sendToJUCE('refill', S.gas);
+    sendToJUCE('outputGain', S.gas);
 }
 
-// REAL-TIME VALIDATION & CHANGE ONLY ON ENTER / BLUR
-pctInput.addEventListener('input', e => {
-    let val = parseInt(e.target.value);
-    // Real-time validation: prevent values > 100
-    if (val > 100) {
-        e.target.value = 100;
-    } else if (val < 0) {
-        e.target.value = 0;
-    }
+// ─── PERCENTAGE INPUT VALIDATION & REAL-TIME EVENT HANDLERS ────────────────
+pctInput.addEventListener('input', function(e) {
+    var val = parseInt(e.target.value);
+    if (val > 100) e.target.value = 100;
+    else if (val < 0) e.target.value = 0;
 });
 
 function applyPctFromInput() {
-    let val = parseInt(pctInput.value);
-    if (isNaN(val)) val = S.refill;
+    var val = parseInt(pctInput.value);
+    if (isNaN(val)) val = S.gas;
     val = Math.min(100, Math.max(0, val));
-    updateRefill(val, true);
+    updateGas(val, true);
 }
 
-pctInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-        applyPctFromInput();
-        pctInput.blur();
-    }
+pctInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { applyPctFromInput(); pctInput.blur(); }
 });
+pctInput.addEventListener('blur', applyPctFromInput);
 
-pctInput.addEventListener('blur', () => {
-    applyPctFromInput();
-});
+// ─── BOTTLE REAL-TIME DRAG ──────────────────────────────────────────────────
+var bWrap = document.getElementById('bWrap');
+var bd = false, bsy = 0, bsv = 50;
 
-// ─── BOTTLE DRAG (vertical → fill %) ─────────────────────────────────────────
-const bWrap = document.getElementById('bWrap');
-let bd = false, bsy = 0, bsv = 50;
-
-bWrap.addEventListener('mousedown', e => {
-    bd = true; bsy = e.clientY; bsv = S.refill;
+bWrap.addEventListener('mousedown', function(e) {
+    bd = true; bsy = e.clientY; bsv = S.gas;
     document.body.style.cursor = 'ns-resize';
     e.preventDefault();
 });
-window.addEventListener('mousemove', e => {
+document.addEventListener('mousemove', function(e) {
     if (!bd) return;
-    updateRefill(bsv + (bsy - e.clientY) * 0.5);
+    updateGas(bsv + (bsy - e.clientY) * 0.5);
 });
-window.addEventListener('mouseup', () => { bd = false; document.body.style.cursor = ''; });
+document.addEventListener('mouseup', function() { bd = false; document.body.style.cursor = ''; });
 
-bWrap.addEventListener('touchstart', e => {
-    bd = true; bsy = e.touches[0].clientY; bsv = S.refill;
+bWrap.addEventListener('touchstart', function(e) {
+    bd = true; bsy = e.touches[0].clientY; bsv = S.gas;
     e.preventDefault();
 }, { passive: false });
-window.addEventListener('touchmove', e => {
+document.addEventListener('touchmove', function(e) {
     if (!bd) return;
-    updateRefill(bsv + (bsy - e.touches[0].clientY) * 0.5);
+    updateGas(bsv + (bsy - e.touches[0].clientY) * 0.5);
 }, { passive: false });
-window.addEventListener('touchend', () => { bd = false; });
+document.addEventListener('touchend', function() { bd = false; });
 
-// ─── GAS FADER ───────────────────────────────────────────────────────────────
-const ft  = document.getElementById('ftrack');
-const ff  = document.getElementById('ffill');
-const fth = document.getElementById('fthumb');
+// ─── GAS FADER REAL-TIME DRAG ──────────────────────────────────────────────
+var ffd = false;
 
-function setG(v) {
-    S.gain = Math.min(6, Math.max(-12, v));
-    localStorage.setItem('inka_gain', S.gain);
-    const p = (S.gain + 12) / 18, h = (p * 100).toFixed(1) + '%';
-    ff.style.height = h; fth.style.bottom = h;
-    document.getElementById('fdb').textContent = S.gain.toFixed(1) + ' dB';
-    send('outputGain', S.gain);
+function calcGain(clientY) {
+    var r = ft.getBoundingClientRect();
+    var p = Math.min(1, Math.max(0, (r.bottom - clientY) / r.height));
+    updateGas(p * 100);
 }
 
-let fd = false;
-ft.addEventListener('mousedown', e => { fd = true; cg(e.clientY); e.preventDefault(); });
-window.addEventListener('mousemove', e => { if (fd) cg(e.clientY); });
-window.addEventListener('mouseup', () => { fd = false; });
-function cg(cy) {
-    const r = ft.getBoundingClientRect();
-    setG(-12 + Math.min(1, Math.max(0, (r.bottom - cy) / r.height)) * 18);
-}
+ft.addEventListener('mousedown', function(e) { ffd = true; calcGain(e.clientY); e.preventDefault(); });
+document.addEventListener('mousemove', function(e) { if (ffd) calcGain(e.clientY); });
+document.addEventListener('mouseup',   function()  { ffd = false; });
 
-// ─── KNOBS ENGINE WITH PERFECT SVG ALIGNMENT ─────────────────────────────────
-function knob(wi, ai, pi, vi, min, max, initVal, keyName, fmt) {
-    const wrap = document.getElementById(wi);
-    const arc  = document.getElementById(ai);
-    const pip  = document.getElementById(pi);
-    const val  = document.getElementById(vi);
+ft.addEventListener('touchstart', function(e) { ffd = true; calcGain(e.touches[0].clientY); e.preventDefault(); }, { passive: false });
+document.addEventListener('touchmove', function(e) { if (ffd) calcGain(e.touches[0].clientY); }, { passive: false });
+document.addEventListener('touchend', function() { ffd = false; });
 
-    // r = 28, C = 2 * PI * 28 = 175.93
-    const C = 2 * Math.PI * 28;
-    const ARC_SPAN = 0.75; // 270 degrees sweep
+// ─── KNOBS ENGINE ────────────────────────────────────────────────────────────
+function makeKnob(wrapId, arcId, pipId, valId, min, max, initVal, paramKey, formatFn) {
+    var wrap = document.getElementById(wrapId);
+    var arc  = document.getElementById(arcId);
+    var pip  = document.getElementById(pipId);
+    var lbl  = document.getElementById(valId);
 
-    let currentVal = initVal;
+    if (!wrap || !arc || !pip || !lbl) return;
 
-    function set(nv) {
+    var C = 2 * Math.PI * 28;   // circumference for r=28
+    var currentVal = initVal;
+    var dragging = false, startY = 0, startVal = initVal;
+
+    function applyVal(nv) {
         currentVal = Math.min(max, Math.max(min, nv));
-        S[keyName] = currentVal;
-        localStorage.setItem('inka_' + keyName, currentVal);
+        S[paramKey] = currentVal;
+        localStorage.setItem('inka_' + paramKey, currentVal);
 
-        const pct = (currentVal - min) / (max - min);
+        var pct = (currentVal - min) / (max - min);
 
-        // Arc dashoffset: C * (1 - pct * 0.75)
-        const filledLen = pct * C * ARC_SPAN;
+        // Arc: fill = pct × 0.75 of full circumference
+        var filledLen = pct * C * 0.75;
         arc.style.strokeDashoffset = (C - filledLen).toFixed(2);
 
-        // Indicator needle rotation: -135deg (min) to +135deg (max)
-        const angle = -135 + pct * 270;
-        pip.style.transform = `rotate(${angle.toFixed(1)}deg)`;
+        // Pip rotation: -135° (min) to +135° (max)
+        var angle = -135 + pct * 270;
+        pip.style.transform = 'rotate(' + angle.toFixed(1) + 'deg)';
 
-        val.textContent = fmt(currentVal);
-        send(keyName, currentVal);
+        lbl.textContent = formatFn(currentVal);
+        sendToJUCE(paramKey, currentVal);
     }
 
-    let kd = false, ky = 0, kv = initVal;
-    wrap.addEventListener('mousedown', e => { kd = true; ky = e.clientY; kv = currentVal; e.preventDefault(); });
-    window.addEventListener('mousemove', e => {
-        if (!kd) return;
-        set(kv + (ky - e.clientY) / 140 * (max - min));
+    wrap.addEventListener('mousedown', function(e) {
+        dragging = true; startY = e.clientY; startVal = currentVal;
+        e.preventDefault(); e.stopPropagation();
     });
-    window.addEventListener('mouseup', () => { kd = false; });
+    document.addEventListener('mousemove', function(e) {
+        if (!dragging) return;
+        applyVal(startVal + (startY - e.clientY) / 140 * (max - min));
+    });
+    document.addEventListener('mouseup', function() { dragging = false; });
 
-    set(initVal);
+    wrap.addEventListener('touchstart', function(e) {
+        dragging = true; startY = e.touches[0].clientY; startVal = currentVal;
+        e.preventDefault();
+    }, { passive: false });
+    document.addEventListener('touchmove', function(e) {
+        if (!dragging) return;
+        applyVal(startVal + (startY - e.touches[0].clientY) / 140 * (max - min));
+    }, { passive: false });
+    document.addEventListener('touchend', function() { dragging = false; });
+
+    applyVal(initVal);
 }
 
-// Initialize Knobs with saved/initial values
-knob('kW', 'aW', 'pW', 'vW',  0, 200, S.width, 'width', v => Math.round(v) + '%');
-knob('kA', 'aA', 'pA', 'vA',  0, 100, S.air,   'air',   v => Math.round(v) + '%');
-knob('kB', 'aB', 'pB', 'vB', 20, 250, S.bass,  'bass',  v => Math.round(v) + ' Hz');
+// ─── INITIALIZE ─────────────────────────────────────────────────────────────
+// Start everything at 50% in 100% sync!
+updateGas(S.gas);
 
-// Initial state application
-updateRefill(S.refill);
-setG(S.gain);
+makeKnob('kW', 'aW', 'pW', 'vW',  0,   200, S.width, 'width', function(v) { return Math.round(v) + '%'; });
+makeKnob('kA', 'aA', 'pA', 'vA',  0,   100, S.air,   'air',   function(v) { return Math.round(v) + '%'; });
+makeKnob('kB', 'aB', 'pB', 'vB',  20,  250, S.bass,  'bass',  function(v) { return Math.round(v) + ' Hz'; });
 
-// ─── MODALS (ONLY CLOSES WITH 'X' BUTTON, NOT ON BACKDROP CLICK) ─────────────
-const sm = document.getElementById('sMod'), lm = document.getElementById('lMod');
-document.getElementById('btnGear').onclick = () => sm.classList.add('open');
-document.getElementById('mClose').onclick  = () => sm.classList.remove('open');
-document.getElementById('btnLic').onclick  = () => lm.classList.add('open');
-document.getElementById('lClose').onclick  = () => lm.classList.remove('open');
-
-function rLic() {
-    const b = document.getElementById('btnLic'), t = document.getElementById('licTxt');
-    if (S.lic) { b.classList.add('active'); t.textContent = 'LICENCIA ACTIVA'; }
-    else { b.classList.remove('active'); t.textContent = 'ACTIVAR'; }
-}
-rLic();
-document.getElementById('lBtn').onclick = () => {
-    if (document.getElementById('licIn').value.trim().length >= 6) {
-        S.lic = true; localStorage.setItem('inka_lic_v1', '1'); rLic(); lm.classList.remove('open');
-    }
-};
+// ─── MODAL: GEAR (ONLY CLOSES WITH 'X') ──────────────────────────────────────
+var sm = document.getElementById('sMod');
+document.getElementById('btnGear').addEventListener('click', function() { sm.classList.add('open'); });
+document.getElementById('mClose').addEventListener('click',  function() { sm.classList.remove('open'); });
+sm.addEventListener('click', function(e) { e.stopPropagation(); });
 </script>
 </body>
 </html>
