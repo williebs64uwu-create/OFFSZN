@@ -1,781 +1,614 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>INKA KOLA - Mastering Polish Plugin | OFFSZN</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-dark: #07090e;
-      --bg-panel: #0d111a;
-      --bg-card: #141a26;
-      --gold-primary: #ffcc00;
-      --gold-dark: #d49b00;
-      --text-main: #f0f4ff;
-      --text-sub: #7888a6;
-      --accent-green: #00e676;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>INKA KOLA by OFFSZN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gold: #ffcc00;
+            --gold-dark: #b88800;
+            --bg: #080b12;
+            --panel: #0c1020;
+            --dim: #4e5e78;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-    }
+        body {
+            background: var(--bg);
+            color: #f0f4ff;
+            font-family: 'Outfit', sans-serif;
+            display: flex; align-items: center; justify-content: center;
+            height: 100vh; width: 100vw;
+            overflow: hidden;
+            user-select: none; -webkit-user-select: none;
+            touch-action: none;
+        }
 
-    body {
-      background-color: var(--bg-dark);
-      color: var(--text-main);
-      font-family: 'Outfit', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
+        /* ─── PLUGIN CONTAINER (COMPACT FIXED WIDTH) ─── */
+        .plugin {
+            width: 580px;
+            height: 520px;
+            background: var(--panel);
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.08);
+            display: flex; flex-direction: column;
+            position: relative; overflow: hidden;
+            flex-shrink: 0;
+        }
 
-    .plugin-container {
-      width: 780px;
-      height: 560px;
-      background: var(--bg-panel);
-      border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      position: relative;
-    }
+        /* ─── HEADER ─── */
+        .hdr {
+            height: 48px;
+            background: rgba(4,7,14,0.98);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 0 16px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+        .hdr-l { display: flex; align-items: center; gap: 10px; }
+        .flag {
+            width: 20px; height: 13px;
+            background: linear-gradient(90deg, #d91424 33.3%, #fff 33.3%, #fff 66.6%, #d91424 66.6%);
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .brand { font-size: 15px; font-weight: 800; letter-spacing: 2px; color: var(--gold); }
+        
+        .btn-gear {
+            width: 28px; height: 28px; border-radius: 6px;
+            background: rgba(255,204,0,.06); border: 1px solid rgba(255,204,0,.18);
+            color: var(--gold); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
 
-    header {
-      height: 60px;
-      padding: 0 20px;
-      background: rgba(10, 14, 22, 0.95);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
+        .hdr-r { display: flex; align-items: center; gap: 8px; }
 
-    .brand-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+        /* Subtle 7-day trial badge */
+        .trial-badge {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--gold);
+            background: rgba(255, 204, 0, 0.08);
+            border: 1px solid rgba(255, 204, 0, 0.2);
+            border-radius: 12px;
+            padding: 3px 8px;
+            text-transform: uppercase;
+        }
 
-    .peru-flag {
-      width: 22px;
-      height: 15px;
-      background: linear-gradient(90deg, #d91424 33.3%, #ffffff 33.3%, #ffffff 66.6%, #d91424 66.6%);
-      border-radius: 2px;
-    }
+        .btn-lic {
+            padding: 4px 10px;
+            background: rgba(255,204,0,.06); border: 1px solid rgba(255,204,0,.2);
+            border-radius: 16px; color: var(--gold);
+            font-size: 10px; font-weight: 700; letter-spacing: 1px; cursor: pointer;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .btn-lic.active { background: rgba(0,230,118,.08); border-color: #00e676; color: #00e676; }
+        .l-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
-    .brand-title {
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      color: var(--gold-primary);
-    }
+        /* ─── STAGE (FIXED LAYOUT - NO JITTER) ─── */
+        .stage {
+            flex: 1;
+            display: flex; align-items: center; justify-content: center;
+            gap: 40px; padding: 10px 20px;
+        }
 
-    .btn-gear {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: var(--bg-card);
-      border: 1px solid rgba(255, 204, 0, 0.25);
-      color: var(--gold-primary);
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+        /* ─── BOTTLE CONTAINER ─── */
+        .bottle-zone {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            flex-shrink: 0;
+            width: 220px;
+        }
 
-    .btn-gear:hover {
-      transform: rotate(45deg);
-      border-color: var(--gold-primary);
-    }
+        .bottle-wrap {
+            position: relative;
+            width: 220px;
+            height: 360px;
+            cursor: ns-resize;
+            flex-shrink: 0;
+        }
 
-    .btn-license {
-      background: rgba(255, 204, 0, 0.08);
-      border: 1px solid rgba(255, 204, 0, 0.3);
-      color: var(--gold-primary);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+        /* White backing for multiply blend mode */
+        .bottle-bg-white {
+            position: absolute; inset: 0;
+            background: #ffffff; border-radius: 4px;
+        }
 
-    .btn-license.active-license {
-      background: rgba(0, 230, 118, 0.1);
-      border-color: var(--accent-green);
-      color: var(--accent-green);
-    }
+        .bottle-empty {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: contain;
+            mix-blend-mode: multiply;
+            pointer-events: none;
+            z-index: 1;
+        }
 
-    .main-stage {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 60px;
-      position: relative;
-    }
+        /* Full bottle liquid - NO TRANSITION to eliminate drag jitter/wobble */
+        .bottle-full {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: contain;
+            mix-blend-mode: multiply;
+            pointer-events: none;
+            z-index: 2;
+            clip-path: inset(50% 0 0 0);
+            transition: none;
+        }
 
-    .bottle-stage {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-    }
+        /* Label on top of everything - 100% OPAQUE NORMAL BLEND MODE */
+        .bottle-label {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            object-fit: contain;
+            mix-blend-mode: normal;
+            pointer-events: none;
+            z-index: 10;
+        }
 
-    .bottle-box {
-      position: relative;
-      width: 200px;
-      height: 360px;
-      cursor: ns-resize;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+        /* Editable Percentage Input Box - NO SPINNER ARROWS & PERFECT FIT */
+        .pct-box {
+            display: flex; align-items: center; justify-content: center;
+            gap: 1px;
+            width: 120px;
+            margin-top: 2px;
+        }
 
-    .bottle-img-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      z-index: 3;
-      pointer-events: none;
-    }
+        /* Hide HTML5 input number spinners completely */
+        .pct-input::-webkit-outer-spin-button,
+        .pct-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .pct-input[type=number] {
+            -moz-appearance: textfield;
+        }
 
-    #liquidCanvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 2;
-    }
+        .pct-input {
+            width: 72px;
+            background: transparent;
+            border: none;
+            color: var(--gold);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 36px; font-weight: 700;
+            text-align: right;
+            outline: none;
+            padding: 0;
+            box-shadow: none;
+        }
+        .pct-symbol {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 36px; font-weight: 700; color: var(--gold);
+            line-height: 1;
+        }
 
-    .refill-readout {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-    }
+        /* ─── GAS FADER (FIXED WIDTH - NO JITTER) ─── */
+        .fader-col {
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            flex-shrink: 0;
+            width: 60px;
+        }
+        .fader-db {
+            font-family: 'Space Grotesk'; font-size: 11px; font-weight: 700; color: var(--gold);
+            width: 60px; text-align: center;
+            flex-shrink: 0;
+        }
+        .fader-track {
+            position: relative; width: 22px; height: 230px;
+            background: rgba(0,0,0,.8); border-radius: 11px;
+            border: 1px solid rgba(255,255,255,.08);
+            cursor: ns-resize; display: flex; align-items: flex-end; padding: 3px;
+            flex-shrink: 0;
+        }
+        .fader-fill {
+            width: 100%; background: linear-gradient(0deg, var(--gold-dark), var(--gold), #ffe566);
+            border-radius: 8px; min-height: 4px;
+            transition: none;
+        }
+        .fader-thumb {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            width: 30px; height: 12px;
+            background: linear-gradient(135deg, #1e2d42, #111825);
+            border: 1.5px solid var(--gold); border-radius: 4px; pointer-events: none;
+            transition: none;
+        }
+        .fader-lbl { font-size: 10px; font-weight: 900; letter-spacing: 3px; color: var(--gold); }
 
-    .percentage-text {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 42px;
-      font-weight: 700;
-      color: var(--gold-primary);
-      line-height: 1;
-    }
+        /* ─── FOOTER ─── */
+        .ftr {
+            height: 32px; background: rgba(4,7,14,.98);
+            border-top: 1px solid rgba(255,255,255,.05); padding: 0 18px;
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 9px; color: var(--dim); font-weight: 600; letter-spacing: 1px;
+            flex-shrink: 0;
+        }
 
-    .gas-fader-stage {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      height: 320px;
-      justify-content: center;
-    }
+        /* ─── MODALS (ONLY CLOSES WITH 'X' BUTTON) ─── */
+        .modal {
+            position: absolute; inset: 0;
+            background: rgba(3,5,12,.92); backdrop-filter: blur(12px);
+            z-index: 500; display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; border-radius: 14px;
+        }
+        .modal.open { opacity: 1; pointer-events: auto; }
+        .mcard {
+            width: 420px;
+            background: #0d1424;
+            border: 1px solid rgba(255,204,0,.2); border-radius: 12px; padding: 20px 24px;
+            display: flex; flex-direction: column; gap: 16px; position: relative;
+        }
+        .mhdr { display: flex; justify-content: space-between; align-items: center; }
+        .mttl { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--gold); display: flex; align-items: center; gap: 6px; }
+        .mx { background: none; border: none; color: var(--dim); font-size: 16px; cursor: pointer; }
+        .mx:hover { color: #fff; }
 
-    .gas-val {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--gold-primary);
-      font-family: 'Space Grotesk', sans-serif;
-    }
+        /* Knobs Row */
+        .knobs { display: flex; justify-content: space-between; align-items: flex-start; padding: 4px 0; }
+        .kg { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 110px; }
+        .klbl { font-size: 9px; font-weight: 800; letter-spacing: 1px; color: #8899bb; text-align: center; }
+        
+        .kw {
+            position: relative; width: 70px; height: 70px; cursor: ns-resize;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        /* SVG Knob Arc Alignment Fix */
+        .ksvg {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%;
+            transform: rotate(135deg); /* 135deg rotation aligns 0% at 7:30 o'clock */
+        }
+        .kbg {
+            fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 5;
+            stroke-linecap: round;
+        }
+        .kfg {
+            fill: none; stroke: var(--gold); stroke-width: 5; stroke-linecap: round;
+        }
 
-    .fader-track-wrap {
-      position: relative;
-      width: 28px;
-      height: 240px;
-      background: rgba(0, 0, 0, 0.7);
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 3px;
-      cursor: ns-resize;
-    }
+        .kcap {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: linear-gradient(145deg, #182436, #0e1624);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,.6), 0 4px 8px rgba(0,0,0,.4);
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .kpip {
+            width: 3px; height: 11px; background: var(--gold); border-radius: 2px;
+            position: absolute; top: 5px;
+            transform-origin: center 19px;
+        }
+        .kval { font-family: 'Space Grotesk'; font-size: 11px; font-weight: 700; color: var(--gold); }
 
-    .fader-fill {
-      width: 100%;
-      background: var(--gold-primary);
-      border-radius: 10px;
-      transition: height 0.05s ease-out;
-      min-height: 6px;
-    }
-
-    .fader-handle {
-      position: absolute;
-      width: 36px;
-      height: 16px;
-      background: linear-gradient(135deg, #243047, #131a28);
-      border: 2px solid var(--gold-primary);
-      border-radius: 5px;
-      left: 50%;
-      transform: translateX(-50%);
-      pointer-events: none;
-    }
-
-    .gas-label {
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      color: var(--gold-primary);
-    }
-
-    footer {
-      height: 40px;
-      background: rgba(10, 14, 22, 0.95);
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-      padding: 0 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 10px;
-      color: var(--text-sub);
-    }
-
-    .modal-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(5, 7, 12, 0.88);
-      backdrop-filter: blur(10px);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease;
-    }
-
-    .modal-overlay.open {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .modal-card {
-      width: 440px;
-      background: var(--bg-card);
-      border: 1px solid rgba(255, 204, 0, 0.3);
-      border-radius: 16px;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      position: relative;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 14px;
-      right: 16px;
-      background: none;
-      border: none;
-      color: var(--text-sub);
-      font-size: 18px;
-      cursor: pointer;
-    }
-
-    .modal-title {
-      font-size: 16px;
-      font-weight: 800;
-      color: var(--gold-primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .modal-knobs-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-top: 6px;
-    }
-
-    .knob-group {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .knob-container {
-      position: relative;
-      width: 65px;
-      height: 65px;
-      cursor: ns-resize;
-    }
-
-    .knob-svg {
-      width: 100%;
-      height: 100%;
-      transform: rotate(-135deg);
-    }
-
-    .knob-bg {
-      fill: none;
-      stroke: rgba(255, 255, 255, 0.08);
-      stroke-width: 8;
-    }
-
-    .knob-val {
-      fill: none;
-      stroke: var(--gold-primary);
-      stroke-width: 8;
-      stroke-linecap: round;
-      stroke-dasharray: 220;
-      stroke-dashoffset: 100;
-      transition: stroke-dashoffset 0.1s ease-out;
-    }
-
-    .knob-cap {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      background: linear-gradient(145deg, #1c2538, #111726);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .knob-dot {
-      width: 3px;
-      height: 12px;
-      background: var(--gold-primary);
-      border-radius: 2px;
-      position: absolute;
-      top: 4px;
-      transform-origin: bottom center;
-    }
-
-    .knob-label {
-      font-size: 10px;
-      font-weight: 700;
-      color: var(--text-main);
-      text-align: center;
-    }
-
-    .knob-readout {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--gold-primary);
-      font-family: 'Space Grotesk', sans-serif;
-    }
-
-    .license-input {
-      background: rgba(10, 14, 22, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
-      padding: 10px 14px;
-      color: var(--gold-primary);
-      font-family: 'Space Grotesk', monospace;
-      font-size: 13px;
-      font-weight: 700;
-      outline: none;
-    }
-
-    .btn-activate {
-      background: var(--gold-primary);
-      border: none;
-      color: #07090e;
-      font-size: 13px;
-      font-weight: 800;
-      padding: 12px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-  </style>
+        /* License modal */
+        .lmod { position: absolute; inset: 0; background: rgba(3,5,12,.92); backdrop-filter: blur(12px); z-index: 600; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; border-radius: 14px; }
+        .lmod.open { opacity: 1; pointer-events: auto; }
+        .lcard { width: 330px; background: #0d1424; border: 1px solid rgba(255,204,0,.2); border-radius: 12px; padding: 22px; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; position: relative; }
+        .lx { position: absolute; top: 12px; right: 14px; background: none; border: none; color: var(--dim); font-size: 15px; cursor: pointer; }
+        .lx:hover { color: #fff; }
+        .lttl { font-size: 12px; font-weight: 800; letter-spacing: 2px; color: var(--gold); }
+        .lsub { font-size: 10px; color: var(--dim); line-height: 1.4; }
+        .lin { width: 100%; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.1); border-radius: 6px; padding: 9px; color: var(--gold); font-family: 'Space Grotesk', monospace; font-size: 11px; font-weight: 700; letter-spacing: 2px; outline: none; text-align: center; }
+        .lin:focus { border-color: var(--gold); }
+        .lbtn { width: 100%; padding: 10px; border-radius: 6px; border: none; background: var(--gold); color: #080b12; font-family: 'Outfit'; font-size: 11px; font-weight: 800; letter-spacing: 1px; cursor: pointer; }
+    </style>
 </head>
 <body>
+<div class="plugin">
 
-  <div class="plugin-container">
-    <header>
-      <div class="brand-group">
-        <div class="peru-flag"></div>
-        <div class="brand-title">INKA KOLA</div>
-        <button id="btnGear" class="btn-gear" title="Ajustes Avanzados">⚙️</button>
-      </div>
-
-      <button id="btnLicense" class="btn-license">
-        <span id="licenseIcon">🔒</span> <span id="licenseText">ACTIVAR LICENCIA</span>
-      </button>
-    </header>
-
-    <div class="main-stage">
-      <div class="bottle-stage">
-        <div class="bottle-box" id="bottleWrapper">
-          <img src="bottle.png" alt="Inka Kola Bottle" class="bottle-img-overlay">
-          <canvas id="liquidCanvas" width="200" height="360"></canvas>
+    <div class="hdr">
+        <div class="hdr-l">
+            <div class="flag"></div>
+            <div class="brand">INKA KOLA</div>
+            <button class="btn-gear" id="btnGear" title="Ajustes Avanzados">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
         </div>
-
-        <div class="refill-readout">
-          <div class="percentage-text" id="pctReadout">50%</div>
+        <div class="hdr-r">
+            <div class="trial-badge">7 DÍAS DE PRUEBA</div>
+            <button class="btn-lic" id="btnLic">
+                <span class="l-dot"></span>
+                <span id="licTxt">ACTIVAR</span>
+            </button>
         </div>
-      </div>
-
-      <div class="gas-fader-stage">
-        <div class="gas-val" id="valOut">0.0 dB</div>
-        <div class="fader-track-wrap" id="trackOut">
-          <div class="fader-fill" id="fillOut" style="height:66%;"></div>
-          <div class="fader-handle" id="handleOut" style="bottom:66%;"></div>
-        </div>
-        <div class="gas-label">GAS</div>
-      </div>
     </div>
 
-    <footer>
-      <span>OFFSZN Plugins</span>
-      <span>Edición Aniversario Perú 🇵🇪</span>
-    </footer>
+    <div class="stage">
 
-    <div class="modal-overlay" id="settingsModal">
-      <div class="modal-card">
-        <button class="modal-close" id="btnCloseSettings">✕</button>
-        <div class="modal-title">
-          <span>⚙️</span> AJUSTES AVANZADOS
+        <div class="bottle-zone">
+            <div class="bottle-wrap" id="bWrap">
+                <div class="bottle-bg-white"></div>
+                <!-- Layer 1: Empty Bottle -->
+                <img class="bottle-empty" src="KOLA VACIA.png" alt="Empty Inka Kola">
+                <!-- Layer 2: Full Liquid Bottle (clipped by refill %) -->
+                <img class="bottle-full" id="bFull" src="KOLA LLENA.png" alt="Full Inka Kola Liquid">
+                <!-- Layer 3: Label on top of everything! -->
+                <img class="bottle-label" src="ETIQUETA PNG.png" alt="Inka Kola Label">
+            </div>
+            
+            <!-- Editable Percentage Number: NO SPINNER ARROWS, FIT TO 100%, CHANGES ON ENTER OR BLUR -->
+            <div class="pct-box">
+                <input class="pct-input" id="pctInput" type="number" min="0" max="100" value="50">
+                <span class="pct-symbol">%</span>
+            </div>
         </div>
 
-        <div class="modal-knobs-grid">
-          <div class="knob-group">
-            <div class="knob-label">STEREO WIDER</div>
-            <div class="knob-container" id="knobWidth">
-              <svg class="knob-svg" viewBox="0 0 100 100">
-                <circle class="knob-bg" cx="50" cy="50" r="35"/>
-                <circle class="knob-val" id="arcWidth" cx="50" cy="50" r="35"/>
-              </svg>
-              <div class="knob-cap"><div class="knob-dot" id="dotWidth"></div></div>
+        <div class="fader-col">
+            <div class="fader-db" id="fdb">0.0 dB</div>
+            <div class="fader-track" id="ftrack">
+                <div class="fader-fill" id="ffill" style="height:66%"></div>
+                <div class="fader-thumb" id="fthumb" style="bottom:66%"></div>
             </div>
-            <div class="knob-readout" id="valWidth">120%</div>
-          </div>
-
-          <div class="knob-group">
-            <div class="knob-label">10kHz AIR</div>
-            <div class="knob-container" id="knobSat">
-              <svg class="knob-svg" viewBox="0 0 100 100">
-                <circle class="knob-bg" cx="50" cy="50" r="35"/>
-                <circle class="knob-val" id="arcSat" cx="50" cy="50" r="35"/>
-              </svg>
-              <div class="knob-cap"><div class="knob-dot" id="dotSat"></div></div>
-            </div>
-            <div class="knob-readout" id="valSat">45%</div>
-          </div>
-
-          <div class="knob-group">
-            <div class="knob-label">BASS MONO</div>
-            <div class="knob-container" id="knobBass">
-              <svg class="knob-svg" viewBox="0 0 100 100">
-                <circle class="knob-bg" cx="50" cy="50" r="35"/>
-                <circle class="knob-val" id="arcBass" cx="50" cy="50" r="35"/>
-              </svg>
-              <div class="knob-cap"><div class="knob-dot" id="dotBass"></div></div>
-            </div>
-            <div class="knob-readout" id="valBass">100 Hz</div>
-          </div>
+            <div class="fader-lbl">GAS</div>
         </div>
-      </div>
+
     </div>
 
-    <div class="modal-overlay" id="licenseModal">
-      <div class="modal-card">
-        <button class="modal-close" id="btnCloseLicense">✕</button>
-        <div class="modal-title">
-          <span>🔑</span> ACTIVACIÓN DE LICENCIA
-        </div>
-        <div style="font-size:11px; color:var(--text-sub);">
-          Introduce tu código de serie oficial de OFFSZN INKA KOLA.
-        </div>
-        <input type="text" id="licenseKeyInput" class="license-input" placeholder="INKA-FULL-XXXX-YYYY" value="INKA-FULL-2026-PERU">
-        <button class="btn-activate" id="btnConfirmActivate">ACTIVAR LICENCIA</button>
-      </div>
+    <div class="ftr">
+        <span>MADE BY OFFSZN</span>
+        <span>VERSIÓN 1.0.0</span>
     </div>
-  </div>
 
-  <script>
-    const state = {
-      refill: 50,
-      width: 120,
-      sat10k: 45,
-      bassMono: 100,
-      outputGain: 0.0,
-      isActivated: localStorage.getItem('offszn_inka_activated') === 'true'
-    };
+    <!-- MODAL AJUSTES AVANZADOS (ONLY CLOSES WITH 'X' BUTTON) -->
+    <div class="modal" id="sMod">
+        <div class="mcard">
+            <div class="mhdr">
+                <div class="mttl">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    AJUSTES AVANZADOS
+                </div>
+                <button class="mx" id="mClose">✕</button>
+            </div>
+            <div class="knobs">
+                
+                <!-- MÁS STEREO (0-200%) -->
+                <div class="kg">
+                    <div class="klbl">MÁS STEREO</div>
+                    <div class="kw" id="kW">
+                        <svg class="ksvg" viewBox="0 0 80 80">
+                            <circle class="kbg" cx="40" cy="40" r="28" stroke-dasharray="131.95" stroke-dashoffset="0"/>
+                            <circle class="kfg" id="aW" cx="40" cy="40" r="28" stroke-dasharray="175.93" stroke-dashoffset="175.93"/>
+                        </svg>
+                        <div class="kcap"><div class="kpip" id="pW"></div></div>
+                    </div>
+                    <div class="kval" id="vW">120%</div>
+                </div>
 
-    function sendNativeParam(id, val) {
-      if (window.setParam) {
-        window.setParam(id, val);
-      }
+                <!-- MÁS BRILLO (0-100%) -->
+                <div class="kg">
+                    <div class="klbl">MÁS BRILLO</div>
+                    <div class="kw" id="kA">
+                        <svg class="ksvg" viewBox="0 0 80 80">
+                            <circle class="kbg" cx="40" cy="40" r="28" stroke-dasharray="131.95" stroke-dashoffset="0"/>
+                            <circle class="kfg" id="aA" cx="40" cy="40" r="28" stroke-dasharray="175.93" stroke-dashoffset="175.93"/>
+                        </svg>
+                        <div class="kcap"><div class="kpip" id="pA"></div></div>
+                    </div>
+                    <div class="kval" id="vA">45%</div>
+                </div>
+
+                <!-- MÁS BAJOS (20-250 Hz) -->
+                <div class="kg">
+                    <div class="klbl">MÁS BAJOS</div>
+                    <div class="kw" id="kB">
+                        <svg class="ksvg" viewBox="0 0 80 80">
+                            <circle class="kbg" cx="40" cy="40" r="28" stroke-dasharray="131.95" stroke-dashoffset="0"/>
+                            <circle class="kfg" id="aB" cx="40" cy="40" r="28" stroke-dasharray="175.93" stroke-dashoffset="175.93"/>
+                        </svg>
+                        <div class="kcap"><div class="kpip" id="pB"></div></div>
+                    </div>
+                    <div class="kval" id="vB">100 Hz</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- LICENSE MODAL (ONLY CLOSES WITH 'X' BUTTON) -->
+    <div class="lmod" id="lMod">
+        <div class="lcard">
+            <button class="lx" id="lClose">✕</button>
+            <div class="lttl">🔑 ACTIVACIÓN</div>
+            <div class="lsub">Periodo de prueba de 7 días activo.<br>Consigue tu clave permanente por $5 USD en offszn.lat</div>
+            <input class="lin" id="licIn" type="text" placeholder="INKA-FULL-XXXX-YYYY" value="INKA-FULL-2026-PERU">
+            <button class="lbtn" id="lBtn">ACTIVAR LICENCIA</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const S = {
+    refill: parseInt(localStorage.getItem('inka_refill')) || 50,
+    gain:   parseFloat(localStorage.getItem('inka_gain')) || 0,
+    width:  parseInt(localStorage.getItem('inka_width'))  || 120,
+    air:    parseInt(localStorage.getItem('inka_air'))    || 45,
+    bass:   parseInt(localStorage.getItem('inka_bass'))   || 100,
+    lic:    localStorage.getItem('inka_lic_v1') === '1'
+};
+
+function send(id, v) {
+    if (window.__JUCE__?.postMessageToNative) window.__JUCE__.postMessageToNative('setParam', [id, v]);
+    else if (window.setParam) window.setParam(id, v);
+}
+
+const bFull    = document.getElementById('bFull');
+const pctInput = document.getElementById('pctInput');
+
+function updateRefill(val, updateInput = true) {
+    S.refill = Math.min(100, Math.max(0, Math.round(val)));
+    localStorage.setItem('inka_refill', S.refill);
+    
+    if (updateInput) {
+        pctInput.value = S.refill;
     }
 
-    const canvas = document.getElementById('liquidCanvas');
-    const ctx = canvas.getContext('2d');
-    const pctReadout = document.getElementById('pctReadout');
-    const btnGear = document.getElementById('btnGear');
-    const settingsModal = document.getElementById('settingsModal');
-    const btnLicense = document.getElementById('btnLicense');
-    const licenseModal = document.getElementById('licenseModal');
+    // Map 0-100% to liquid height inside bottle
+    // 0% -> 96% top clip (empty)
+    // 100% -> 12% top clip (full liquid)
+    const topClip = 96 - (S.refill / 100) * 84;
+    bFull.style.clipPath = `inset(${topClip.toFixed(1)}% 0 0 0)`;
 
-    btnGear.addEventListener('click', () => { settingsModal.classList.add('open'); });
-    document.getElementById('btnCloseSettings').addEventListener('click', () => { settingsModal.classList.remove('open'); });
+    send('refill', S.refill);
+}
 
-    function updateLicenseUI() {
-      if (state.isActivated) {
-        btnLicense.classList.add('active-license');
-        document.getElementById('licenseIcon').innerText = '🔓';
-        document.getElementById('licenseText').innerText = 'LICENCIA ACTIVA';
-      } else {
-        btnLicense.classList.remove('active-license');
-        document.getElementById('licenseIcon').innerText = '🔒';
-        document.getElementById('licenseText').innerText = 'ACTIVAR LICENCIA';
-      }
+// REAL-TIME VALIDATION & CHANGE ONLY ON ENTER / BLUR
+pctInput.addEventListener('input', e => {
+    let val = parseInt(e.target.value);
+    // Real-time validation: prevent values > 100
+    if (val > 100) {
+        e.target.value = 100;
+    } else if (val < 0) {
+        e.target.value = 0;
     }
-    updateLicenseUI();
+});
 
-    btnLicense.addEventListener('click', () => { licenseModal.classList.add('open'); });
-    document.getElementById('btnCloseLicense').addEventListener('click', () => { licenseModal.classList.remove('open'); });
+function applyPctFromInput() {
+    let val = parseInt(pctInput.value);
+    if (isNaN(val)) val = S.refill;
+    val = Math.min(100, Math.max(0, val));
+    updateRefill(val, true);
+}
 
-    document.getElementById('btnConfirmActivate').addEventListener('click', () => {
-      const key = document.getElementById('licenseKeyInput').value.trim();
-      if (key.length > 5) {
-        state.isActivated = true;
-        localStorage.setItem('offszn_inka_activated', 'true');
-        updateLicenseUI();
-        licenseModal.classList.remove('open');
-        alert('¡Licencia OFFSZN activada exitosamente!');
-      } else {
-        alert('Por favor introduce un número de serie válido.');
-      }
-    });
-
-    const bubbles = [];
-    for (let i = 0; i < 20; i++) {
-      bubbles.push({
-        x: Math.random() * 80 + 60,
-        y: Math.random() * 240 + 70,
-        r: Math.random() * 2 + 1,
-        speed: Math.random() * 0.5 + 0.3,
-        wobble: Math.random() * Math.PI * 2
-      });
+pctInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+        applyPctFromInput();
+        pctInput.blur();
     }
+});
 
-    let waveOffset = 0;
+pctInput.addEventListener('blur', () => {
+    applyPctFromInput();
+});
 
-    function renderBottleLiquid() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      waveOffset += 0.03;
+// ─── BOTTLE DRAG (vertical → fill %) ─────────────────────────────────────────
+const bWrap = document.getElementById('bWrap');
+let bd = false, bsy = 0, bsv = 50;
 
-      const w = canvas.width;
-      const pct = state.refill / 100;
+bWrap.addEventListener('mousedown', e => {
+    bd = true; bsy = e.clientY; bsv = S.refill;
+    document.body.style.cursor = 'ns-resize';
+    e.preventDefault();
+});
+window.addEventListener('mousemove', e => {
+    if (!bd) return;
+    updateRefill(bsv + (bsy - e.clientY) * 0.5);
+});
+window.addEventListener('mouseup', () => { bd = false; document.body.style.cursor = ''; });
 
-      ctx.save();
+bWrap.addEventListener('touchstart', e => {
+    bd = true; bsy = e.touches[0].clientY; bsv = S.refill;
+    e.preventDefault();
+}, { passive: false });
+window.addEventListener('touchmove', e => {
+    if (!bd) return;
+    updateRefill(bsv + (bsy - e.touches[0].clientY) * 0.5);
+}, { passive: false });
+window.addEventListener('touchend', () => { bd = false; });
 
-      ctx.beginPath();
-      ctx.moveTo(82, 60);
-      ctx.lineTo(118, 60);
-      ctx.bezierCurveTo(122, 100, 156, 132, 160, 170);
-      ctx.lineTo(160, 305);
-      ctx.bezierCurveTo(160, 328, 140, 335, 100, 335);
-      ctx.bezierCurveTo(60, 335, 40, 328, 40, 305);
-      ctx.lineTo(40, 170);
-      ctx.bezierCurveTo(44, 132, 78, 100, 82, 60);
-      ctx.closePath();
-      ctx.clip();
+// ─── GAS FADER ───────────────────────────────────────────────────────────────
+const ft  = document.getElementById('ftrack');
+const ff  = document.getElementById('ffill');
+const fth = document.getElementById('fthumb');
 
-      const minY = 70;
-      const maxY = 330;
-      const fillY = maxY - (maxY - minY) * pct;
+function setG(v) {
+    S.gain = Math.min(6, Math.max(-12, v));
+    localStorage.setItem('inka_gain', S.gain);
+    const p = (S.gain + 12) / 18, h = (p * 100).toFixed(1) + '%';
+    ff.style.height = h; fth.style.bottom = h;
+    document.getElementById('fdb').textContent = S.gain.toFixed(1) + ' dB';
+    send('outputGain', S.gain);
+}
 
-      if (pct > 0.01) {
-        const liqGrad = ctx.createLinearGradient(0, fillY, 0, maxY);
-        liqGrad.addColorStop(0, '#ffee33');
-        liqGrad.addColorStop(0.3, '#ffcc00');
-        liqGrad.addColorStop(1, '#d48800');
+let fd = false;
+ft.addEventListener('mousedown', e => { fd = true; cg(e.clientY); e.preventDefault(); });
+window.addEventListener('mousemove', e => { if (fd) cg(e.clientY); });
+window.addEventListener('mouseup', () => { fd = false; });
+function cg(cy) {
+    const r = ft.getBoundingClientRect();
+    setG(-12 + Math.min(1, Math.max(0, (r.bottom - cy) / r.height)) * 18);
+}
 
-        ctx.fillStyle = liqGrad;
-        ctx.beginPath();
-        ctx.moveTo(0, maxY + 20);
+// ─── KNOBS ENGINE WITH PERFECT SVG ALIGNMENT ─────────────────────────────────
+function knob(wi, ai, pi, vi, min, max, initVal, keyName, fmt) {
+    const wrap = document.getElementById(wi);
+    const arc  = document.getElementById(ai);
+    const pip  = document.getElementById(pi);
+    const val  = document.getElementById(vi);
 
-        for (let x = 0; x <= w; x += 4) {
-          const waveY = fillY + Math.sin(x * 0.04 + waveOffset) * 2.5 + Math.cos(x * 0.02 - waveOffset * 0.3) * 1.2;
-          ctx.lineTo(x, waveY);
-        }
+    // r = 28, C = 2 * PI * 28 = 175.93
+    const C = 2 * Math.PI * 28;
+    const ARC_SPAN = 0.75; // 270 degrees sweep
 
-        ctx.lineTo(w, maxY + 20);
-        ctx.closePath();
-        ctx.fill();
+    let currentVal = initVal;
 
-        ctx.fillStyle = 'rgba(255, 255, 210, 0.7)';
-        ctx.beginPath();
-        for (let x = 0; x <= w; x += 4) {
-          const waveY = fillY + Math.sin(x * 0.04 + waveOffset) * 2.5;
-          ctx.lineTo(x, waveY - 1);
-        }
-        for (let x = w; x >= 0; x -= 4) {
-          const waveY = fillY + Math.sin(x * 0.04 + waveOffset) * 2.5;
-          ctx.lineTo(x, waveY + 3);
-        }
-        ctx.closePath();
-        ctx.fill();
+    function set(nv) {
+        currentVal = Math.min(max, Math.max(min, nv));
+        S[keyName] = currentVal;
+        localStorage.setItem('inka_' + keyName, currentVal);
 
-        ctx.fillStyle = 'rgba(255, 255, 200, 0.65)';
-        bubbles.forEach(b => {
-          b.y -= b.speed;
-          b.wobble += 0.02;
-          const bubbleX = b.x + Math.sin(b.wobble) * 1.5;
+        const pct = (currentVal - min) / (max - min);
 
-          if (b.y < fillY) {
-            b.y = maxY - Math.random() * 15;
-            b.x = Math.random() * 80 + 60;
-          }
+        // Arc dashoffset: C * (1 - pct * 0.75)
+        const filledLen = pct * C * ARC_SPAN;
+        arc.style.strokeDashoffset = (C - filledLen).toFixed(2);
 
-          if (b.y >= fillY) {
-            ctx.beginPath();
-            ctx.arc(bubbleX, b.y, b.r, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        });
-      }
+        // Indicator needle rotation: -135deg (min) to +135deg (max)
+        const angle = -135 + pct * 270;
+        pip.style.transform = `rotate(${angle.toFixed(1)}deg)`;
 
-      ctx.restore();
-      requestAnimationFrame(renderBottleLiquid);
+        val.textContent = fmt(currentVal);
+        send(keyName, currentVal);
     }
 
-    renderBottleLiquid();
-
-    const bottleWrapper = document.getElementById('bottleWrapper');
-    let isDraggingBottle = false;
-    let startY = 0;
-    let startVal = 50;
-
-    bottleWrapper.addEventListener('mousedown', e => {
-      isDraggingBottle = true;
-      startY = e.clientY;
-      startVal = state.refill;
-      document.body.style.cursor = 'ns-resize';
-    });
-
+    let kd = false, ky = 0, kv = initVal;
+    wrap.addEventListener('mousedown', e => { kd = true; ky = e.clientY; kv = currentVal; e.preventDefault(); });
     window.addEventListener('mousemove', e => {
-      if (!isDraggingBottle) return;
-      const deltaY = startY - e.clientY;
-      let newVal = Math.min(100, Math.max(0, startVal + deltaY * 0.35));
-      state.refill = Math.round(newVal);
-      pctReadout.innerText = state.refill + '%';
-      sendNativeParam('refill', state.refill);
+        if (!kd) return;
+        set(kv + (ky - e.clientY) / 140 * (max - min));
     });
+    window.addEventListener('mouseup', () => { kd = false; });
 
-    window.addEventListener('mouseup', () => {
-      isDraggingBottle = false;
-      document.body.style.cursor = 'default';
-    });
+    set(initVal);
+}
 
-    function setupKnob(id, min, max, initial, unit, paramKey) {
-      const knob = document.getElementById(id);
-      const arc = knob.querySelector('.knob-val');
-      const dot = knob.querySelector('.knob-dot');
-      const readout = knob.parentNode.querySelector('.knob-readout');
+// Initialize Knobs with saved/initial values
+knob('kW', 'aW', 'pW', 'vW',  0, 200, S.width, 'width', v => Math.round(v) + '%');
+knob('kA', 'aA', 'pA', 'vA',  0, 100, S.air,   'air',   v => Math.round(v) + '%');
+knob('kB', 'aB', 'pB', 'vB', 20, 250, S.bass,  'bass',  v => Math.round(v) + ' Hz');
 
-      let val = initial;
+// Initial state application
+updateRefill(S.refill);
+setG(S.gain);
 
-      function updateUI(v) {
-        val = v;
-        const pct = (val - min) / (max - min);
-        const dashoffset = 220 - (pct * 165);
-        arc.style.strokeDashoffset = dashoffset;
-        const angle = -135 + (pct * 270);
-        dot.style.transform = `rotate(${angle}deg)`;
-        readout.innerText = Math.round(val) + ' ' + unit;
-        sendNativeParam(paramKey, val);
-      }
+// ─── MODALS (ONLY CLOSES WITH 'X' BUTTON, NOT ON BACKDROP CLICK) ─────────────
+const sm = document.getElementById('sMod'), lm = document.getElementById('lMod');
+document.getElementById('btnGear').onclick = () => sm.classList.add('open');
+document.getElementById('mClose').onclick  = () => sm.classList.remove('open');
+document.getElementById('btnLic').onclick  = () => lm.classList.add('open');
+document.getElementById('lClose').onclick  = () => lm.classList.remove('open');
 
-      updateUI(initial);
-
-      let dragging = false;
-      let startY = 0;
-      let startV = initial;
-
-      knob.addEventListener('mousedown', e => {
-        dragging = true;
-        startY = e.clientY;
-        startV = val;
-      });
-
-      window.addEventListener('mousemove', e => {
-        if (!dragging) return;
-        const dy = startY - e.clientY;
-        const range = max - min;
-        let nV = Math.min(max, Math.max(min, startV + (dy / 140) * range));
-        updateUI(nV);
-      });
-
-      window.addEventListener('mouseup', () => { dragging = false; });
+function rLic() {
+    const b = document.getElementById('btnLic'), t = document.getElementById('licTxt');
+    if (S.lic) { b.classList.add('active'); t.textContent = 'LICENCIA ACTIVA'; }
+    else { b.classList.remove('active'); t.textContent = 'ACTIVAR'; }
+}
+rLic();
+document.getElementById('lBtn').onclick = () => {
+    if (document.getElementById('licIn').value.trim().length >= 6) {
+        S.lic = true; localStorage.setItem('inka_lic_v1', '1'); rLic(); lm.classList.remove('open');
     }
-
-    setupKnob('knobWidth', 0, 200, state.width, '%', 'width');
-    setupKnob('knobSat', 0, 100, state.sat10k, '%', 'sat10k');
-    setupKnob('knobBass', 20, 250, state.bassMono, 'Hz', 'bassMono');
-
-    function setupFader() {
-      const track = document.getElementById('trackOut');
-      const fill = document.getElementById('fillOut');
-      const handle = document.getElementById('handleOut');
-      const valOut = document.getElementById('valOut');
-
-      function update(v) {
-        state.outputGain = Math.min(6, Math.max(-12, v));
-        const pct = (state.outputGain - (-12)) / (6 - (-12));
-        fill.style.height = (pct * 100).toFixed(1) + '%';
-        handle.style.bottom = (pct * 100).toFixed(1) + '%';
-        valOut.innerText = state.outputGain.toFixed(1) + ' dB';
-        sendNativeParam('outputGain', state.outputGain);
-      }
-
-      update(0.0);
-      let dragging = false;
-
-      track.addEventListener('mousedown', e => {
-        dragging = true;
-        calc(e.clientY);
-      });
-
-      window.addEventListener('mousemove', e => {
-        if (dragging) calc(e.clientY);
-      });
-
-      window.addEventListener('mouseup', () => { dragging = false; });
-
-      function calc(clientY) {
-        const rect = track.getBoundingClientRect();
-        const offsetY = rect.bottom - clientY;
-        const pct = Math.min(1, Math.max(0, offsetY / rect.height));
-        update(-12 + pct * 18);
-      }
-    }
-    setupFader();
-  </script>
+};
+</script>
 </body>
 </html>
