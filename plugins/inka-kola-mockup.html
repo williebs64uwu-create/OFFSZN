@@ -463,18 +463,22 @@
     }, 900);
 })();
 
-// ─── JUCE NATIVE BRIDGE (ALL INVOCATION MECHANISMS) ──────────────────────────
+// ─── JUCE NATIVE BRIDGE ──────────────────────────────────────────────────────
+// JUCE 8 WebBrowserComponent: calling a NativeFunction from remote JS requires
+// emitting the internal "__juce__invoke" event with { name, params, resultId }.
+// This is the same protocol JUCE's own index.js uses inside getNativeFunction().
+var __juceCallId = 0;
 function sendToJUCE(id, v) {
     try {
-        if (window.__JUCE__ && typeof window.__JUCE__.getNativeFunction === 'function') {
-            var fn = window.__JUCE__.getNativeFunction('setParam');
-            if (fn) { fn(id, v); }
-        }
-        if (typeof window.setParam === 'function') {
-            window.setParam(id, v);
-        }
         if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.emitEvent === 'function') {
-            window.__JUCE__.backend.emitEvent('setParam', [id, v]);
+            // Path 1: Call NativeFunction directly via __juce__invoke protocol
+            window.__JUCE__.backend.emitEvent('__juce__invoke', {
+                name: 'setParam',
+                params: [id, v],
+                resultId: __juceCallId++
+            });
+            // Path 2: Call withEventListener("setParam") with object {id, val}
+            window.__JUCE__.backend.emitEvent('setParam', { id: id, val: v });
         }
     } catch(e) {}
 }
