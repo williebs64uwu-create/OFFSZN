@@ -57,13 +57,11 @@
             transition: width 0.7s ease;
         }
 
-        /* ─── PLUGIN CONTAINER ─── */
+        /* ─── PLUGIN CONTAINER (100% full inside plugin window) ─── */
         .plugin {
-            width: 580px;
-            height: 520px;
+            width: 100%;
+            height: 100%;
             background: var(--panel);
-            border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.08);
             display: flex; flex-direction: column;
             position: relative; overflow: hidden;
             flex-shrink: 0;
@@ -103,9 +101,9 @@
             font-size: 9px;
             font-weight: 700;
             letter-spacing: 0.5px;
-            color: var(--gold);
-            background: rgba(255, 204, 0, 0.08);
-            border: 1px solid rgba(255, 204, 0, 0.25);
+            color: #00e676;
+            background: rgba(0, 230, 118, 0.1);
+            border: 1px solid rgba(0, 230, 118, 0.3);
             border-radius: 12px;
             padding: 4px 10px;
             text-transform: uppercase;
@@ -114,13 +112,7 @@
             transition: all 0.2s;
         }
         .btn-lic:hover {
-            background: rgba(255, 204, 0, 0.16);
-            border-color: var(--gold);
-        }
-        .btn-lic.active {
-            background: rgba(0, 230, 118, 0.1);
-            border-color: #00e676;
-            color: #00e676;
+            background: rgba(0, 230, 118, 0.2);
         }
         .l-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
@@ -345,9 +337,9 @@
             </button>
         </div>
         <div class="hdr-r">
-            <button class="btn-lic" id="btnLic" title="Activar Licencia Completa">
+            <button class="btn-lic" id="btnLic" title="Estado de Licencia">
                 <span class="l-dot"></span>
-                <span id="licTxt">7 DÍAS DE PRUEBA</span>
+                <span id="licTxt">LICENCIA ACTIVA</span>
             </button>
         </div>
     </div>
@@ -448,11 +440,11 @@
     <div class="lmod" id="lMod">
         <div class="lcard">
             <button class="lx" id="lClose">✕</button>
-            <div class="lttl">🔑 ACTIVACIÓN DE LICENCIA</div>
-            <div class="lsub">Periodo de prueba de 7 días activo.<br>Consigue tu clave permanente por $5 USD en offszn.lat</div>
-            <input class="lin" id="licIn" type="text" placeholder="INKA-FULL-XXXX-YYYY" value="INKA-FULL-2026-PERU">
-            <div class="lerr" id="lErr">Licencia inválida. Formato: INKA-XXXX-YYYY</div>
-            <button class="lbtn" id="lBtn">ACTIVAR LICENCIA</button>
+            <div class="lttl">🔑 LICENCIA INKA KOLA</div>
+            <div class="lsub">Licencia pre-activada permanente por OFFSZN.</div>
+            <input class="lin" id="licIn" type="text" value="INKA-FULL-2026-OFFSZN" readonly>
+            <div class="lerr" id="lErr">Licencia activa correctamente.</div>
+            <button class="lbtn" id="lBtn">LICENCIA PRE-ACTIVADA</button>
         </div>
     </div>
 
@@ -471,29 +463,29 @@
     }, 900);
 })();
 
-// ─── JUCE NATIVE BRIDGE ──────────────────────────────────────────────────────
+// ─── JUCE NATIVE BRIDGE (ALL INVOCATION MECHANISMS) ──────────────────────────
 function sendToJUCE(id, v) {
     try {
-        if (window.__JUCE__ && window.__JUCE__.backend) {
+        if (window.__JUCE__ && typeof window.__JUCE__.getNativeFunction === 'function') {
+            var fn = window.__JUCE__.getNativeFunction('setParam');
+            if (fn) { fn(id, v); }
+        }
+        if (typeof window.setParam === 'function') {
+            window.setParam(id, v);
+        }
+        if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.emitEvent === 'function') {
             window.__JUCE__.backend.emitEvent('setParam', [id, v]);
         }
-    } catch(e) {
-        // standalone browser preview
-    }
+    } catch(e) {}
 }
 
-// ─── STATE (PROPER DEFAULT VALUES IF LOCALSTORAGE IS UNSET OR INVALID) ──────
-let rawGas = parseInt(localStorage.getItem('inka_gas'));
-let rawW   = parseInt(localStorage.getItem('inka_width'));
-let rawA   = parseInt(localStorage.getItem('inka_sat10k'));
-let rawB   = parseInt(localStorage.getItem('inka_bassMono'));
-
+// ─── STATE (PRE-ACTIVATED BY DEFAULT, 120% STEREO, 45% AIR, 100Hz BASS) ──────
 const S = {
-    gas:   (!isNaN(rawGas) && rawGas >= 0 && rawGas <= 100) ? rawGas : 50,
-    width: (!isNaN(rawW) && rawW >= 0 && rawW <= 200)       ? rawW   : 120,
-    air:   (!isNaN(rawA) && rawA >= 0 && rawA <= 100)       ? rawA   : 45,
-    bass:  (!isNaN(rawB) && rawB >= 20 && rawB <= 250)      ? rawB   : 100,
-    lic:   localStorage.getItem('inka_lic_v1') === '1'
+    gas:   50,
+    width: 120,
+    air:   45,
+    bass:  100,
+    lic:   true
 };
 
 // ─── DOM ELEMENTS ─────────────────────────────────────────────────────────────
@@ -506,7 +498,6 @@ const fth      = document.getElementById('fthumb');
 // ─── UNIFIED REAL-TIME UPDATE FUNCTION ──────────────────────────────────────
 function updateGas(val, updateInput) {
     S.gas = Math.min(100, Math.max(0, Math.round(val)));
-    localStorage.setItem('inka_gas', S.gas);
     
     if (updateInput !== false) {
         pctInput.value = S.gas;
@@ -595,17 +586,15 @@ function makeKnob(wrapId, arcId, pipId, valId, min, max, initVal, paramKey, form
 
     if (!wrap || !arc || !pip || !lbl) return;
 
-    var C = 2 * Math.PI * 28;   // circumference for r=28
+    var C = 2 * Math.PI * 28;
     var currentVal = initVal;
     var dragging = false, startY = 0, startVal = initVal;
 
     function applyVal(nv, notifyJUCE) {
         currentVal = Math.min(max, Math.max(min, nv));
         S[paramKey] = currentVal;
-        localStorage.setItem('inka_' + paramKey, currentVal);
 
         var pct = (currentVal - min) / (max - min);
-
         var filledLen = pct * C * 0.75;
         arc.style.strokeDashoffset = (C - filledLen).toFixed(2);
 
@@ -645,35 +634,38 @@ function makeKnob(wrapId, arcId, pipId, valId, min, max, initVal, paramKey, form
     };
 }
 
-// ─── INITIALIZE KNOBS WITH DEFAULT/SAVED VALUES ────────────────────────────
+// ─── INITIALIZE ─────────────────────────────────────────────────────────────
 updateGas(S.gas);
 
 makeKnob('kW', 'aW', 'pW', 'vW',  0,   200, S.width, 'width',    function(v) { return Math.round(v) + '%'; });
 makeKnob('kA', 'aA', 'pA', 'vA',  0,   100, S.air,   'sat10k',   function(v) { return Math.round(v) + '%'; });
 makeKnob('kB', 'aB', 'pB', 'vB',  20,  250, S.bass,  'bassMono', function(v) { return Math.round(v) + ' Hz'; });
 
-// ─── SYNC FROM JUCE C++ PROCESSOR ON LOAD ────────────────────────────────────
-function syncFromJUCE() {
+// ─── REGISTER HWID & SYNC HWID TO BACKEND ──────────────────────────────────
+function registerHWID() {
     try {
-        if (window.__JUCE__ && window.__JUCE__.backend && window.__JUCE__.backend.emitEvent) {
-            // Fetch live C++ parameters from JUCE AudioProcessor
-            window.__JUCE__.backend.emitEvent('getParams', [], function(res) {
-                if (res) {
-                    if (res.refill !== undefined) updateGas(res.refill, true);
-                    if (res.width !== undefined && knobRegistry['width']) knobRegistry['width'].setValue(res.width);
-                    if (res.sat10k !== undefined && knobRegistry['sat10k']) knobRegistry['sat10k'].setValue(res.sat10k);
-                    if (res.bassMono !== undefined && knobRegistry['bassMono']) knobRegistry['bassMono'].setValue(res.bassMono);
-                    if (res.isLicensed !== undefined) {
-                        S.lic = res.isLicensed;
-                        refreshLicUI();
+        if (window.__JUCE__ && typeof window.__JUCE__.getNativeFunction === 'function') {
+            var getHWID = window.__JUCE__.getNativeFunction('getHardwareId');
+            if (getHWID) {
+                getHWID(function(hwid) {
+                    if (hwid) {
+                        fetch('https://offszn.lat/api/plugins/register', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                plugin: 'INKA_KOLA',
+                                hwid: hwid,
+                                serial: 'INKA-FULL-2026-OFFSZN',
+                                status: 'ACTIVATED'
+                            })
+                        }).catch(function() {});
                     }
-                }
-            });
+                });
+            }
         }
     } catch(e) {}
 }
-
-setTimeout(syncFromJUCE, 200);
+setTimeout(registerHWID, 1200);
 
 // ─── MODALS CONTROL ──────────────────────────────────────────────────────────
 var sm = document.getElementById('sMod');
@@ -687,41 +679,6 @@ document.getElementById('lClose').addEventListener('click', function() { lm.clas
 
 sm.addEventListener('click', function(e) { e.stopPropagation(); });
 lm.addEventListener('click', function(e) { e.stopPropagation(); });
-
-// ─── LICENSE ACTIVATION ──────────────────────────────────────────────────────
-function refreshLicUI() {
-    var b = document.getElementById('btnLic');
-    var t = document.getElementById('licTxt');
-    if (S.lic) {
-        b.classList.add('active');
-        t.textContent = 'LICENCIA ACTIVA';
-    } else {
-        b.classList.remove('active');
-        t.textContent = '7 DÍAS DE PRUEBA';
-    }
-}
-refreshLicUI();
-
-document.getElementById('lBtn').addEventListener('click', function() {
-    var input = document.getElementById('licIn').value.trim().toUpperCase();
-    var err = document.getElementById('lErr');
-
-    if (input.startsWith('INKA-') || input.startsWith('INKA-FULL-') || input === 'PERU2026') {
-        if (input.length >= 6) {
-            S.lic = true;
-            localStorage.setItem('inka_lic_v1', '1');
-            refreshLicUI();
-            err.style.display = 'none';
-            lm.classList.remove('open');
-
-            if (window.__JUCE__ && window.__JUCE__.backend) {
-                window.__JUCE__.backend.emitEvent('activateLicense', [input]);
-            }
-            return;
-        }
-    }
-    err.style.display = 'block';
-});
 </script>
 </body>
 </html>
