@@ -6,20 +6,16 @@
   <title>INKA KOLA - Mastering Polish Plugin | OFFSZN</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #070910;
-      --bg-panel: #0d121f;
-      --bg-card: #151c2e;
+      --bg-dark: #07090e;
+      --bg-panel: #0d111a;
+      --bg-card: #141a26;
       --gold-primary: #ffcc00;
-      --gold-glow: #ffe600;
-      --gold-dark: #d4a000;
-      --blue-inka: #003896;
-      --blue-glow: #0055ff;
+      --gold-dark: #d49b00;
       --text-main: #f0f4ff;
-      --text-sub: #8a9bbd;
-      --accent-red: #d91424;
+      --text-sub: #7888a6;
       --accent-green: #00e676;
     }
 
@@ -39,203 +35,128 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      overflow-x: hidden;
-      background-image: 
-        radial-gradient(circle at 50% 20%, rgba(0, 56, 150, 0.28) 0%, transparent 60%),
-        radial-gradient(circle at 50% 80%, rgba(255, 204, 0, 0.14) 0%, transparent 50%);
+      overflow: hidden;
     }
 
     .plugin-container {
-      width: 950px;
-      height: 700px;
+      width: 780px;
+      height: 560px;
       background: var(--bg-panel);
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 45px rgba(255, 204, 0, 0.15);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       flex-direction: column;
       overflow: hidden;
       position: relative;
     }
 
-    /* HEADER BAR */
     header {
-      height: 70px;
-      padding: 0 24px;
-      background: rgba(10, 14, 24, 0.95);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      height: 60px;
+      padding: 0 20px;
+      background: rgba(10, 14, 22, 0.95);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      backdrop-filter: blur(12px);
-      z-index: 10;
     }
 
-    .brand {
+    .brand-group {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
     }
 
-    .peru-flag-badge {
-      width: 26px;
-      height: 17px;
+    .peru-flag {
+      width: 22px;
+      height: 15px;
       background: linear-gradient(90deg, #d91424 33.3%, #ffffff 33.3%, #ffffff 66.6%, #d91424 66.6%);
-      border-radius: 3px;
-      box-shadow: 0 2px 10px rgba(217, 20, 36, 0.6);
+      border-radius: 2px;
     }
 
     .brand-title {
-      font-size: 22px;
-      font-weight: 900;
-      letter-spacing: 1.5px;
-      background: linear-gradient(135deg, #ffffff 0%, var(--gold-primary) 100%);
-      background-clip: text;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--gold-primary);
     }
 
-    .brand-subtitle {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-sub);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-
-    .header-actions {
+    .btn-gear {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--bg-card);
+      border: 1px solid rgba(255, 204, 0, 0.25);
+      color: var(--gold-primary);
+      font-size: 16px;
       display: flex;
       align-items: center;
-      gap: 10px;
-    }
-
-    .preset-selector {
-      background: var(--bg-card);
-      border: 1px solid rgba(255, 204, 0, 0.3);
-      color: var(--gold-primary);
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 12px;
-      font-weight: 600;
-      outline: none;
+      justify-content: center;
       cursor: pointer;
       transition: all 0.2s ease;
     }
 
-    .preset-selector:hover {
-      border-color: var(--gold-glow);
-      box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
-    }
-
-    .btn-toggle {
-      background: var(--bg-card);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: var(--text-sub);
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .btn-toggle.active {
-      background: linear-gradient(135deg, var(--blue-inka), var(--blue-glow));
-      color: white;
-      border-color: var(--blue-glow);
-      box-shadow: 0 0 15px rgba(0, 85, 255, 0.4);
-    }
-
-    .btn-bypass.active {
-      background: #d91424;
-      border-color: #ff3344;
-      color: white;
-      box-shadow: 0 0 15px rgba(217, 20, 36, 0.5);
+    .btn-gear:hover {
+      transform: rotate(45deg);
+      border-color: var(--gold-primary);
     }
 
     .btn-license {
-      background: rgba(255, 204, 0, 0.1);
-      border: 1px solid rgba(255, 204, 0, 0.4);
+      background: rgba(255, 204, 0, 0.08);
+      border: 1px solid rgba(255, 204, 0, 0.3);
       color: var(--gold-primary);
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s ease;
-    }
-
-    .btn-license:hover {
-      background: rgba(255, 204, 0, 0.2);
-      box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
     }
 
     .btn-license.active-license {
-      background: rgba(0, 230, 118, 0.12);
+      background: rgba(0, 230, 118, 0.1);
       border-color: var(--accent-green);
       color: var(--accent-green);
     }
 
-    /* MAIN CONTENT LAYOUT */
-    .main-body {
+    .main-stage {
       flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 310px;
-      gap: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 60px;
       position: relative;
-      overflow: hidden;
     }
 
-    .center-stage {
+    .bottle-stage {
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      padding: 20px;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .bottle-box {
       position: relative;
-      background: radial-gradient(circle at 50% 50%, rgba(255, 204, 0, 0.06) 0%, transparent 70%);
-    }
-
-    .skin-switcher-bar {
-      display: flex;
-      gap: 10px;
-      background: rgba(10, 14, 24, 0.85);
-      padding: 5px;
-      border-radius: 30px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      z-index: 10;
-    }
-
-    .skin-btn {
-      padding: 7px 20px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-sub);
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .skin-btn.active {
-      background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
-      color: #070910;
-      box-shadow: 0 4px 15px rgba(255, 204, 0, 0.4);
-    }
-
-    .bottle-canvas-wrapper {
-      position: relative;
-      width: 240px;
-      height: 380px;
+      width: 200px;
+      height: 360px;
+      cursor: ns-resize;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: ns-resize;
+    }
+
+    .bottle-img-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      z-index: 3;
+      pointer-events: none;
     }
 
     #liquidCanvas {
@@ -256,234 +177,97 @@
 
     .percentage-text {
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 46px;
+      font-size: 42px;
       font-weight: 700;
       color: var(--gold-primary);
-      text-shadow: 0 0 30px rgba(255, 204, 0, 0.6);
       line-height: 1;
     }
 
-    .percentage-label {
-      font-size: 11px;
-      letter-spacing: 2px;
-      color: var(--text-sub);
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    /* RIGHT SIDE CONTROL PANEL WITH VERTICAL SLIDERS */
-    .side-control-panel {
-      background: rgba(13, 18, 31, 0.95);
-      border-left: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 20px 18px;
+    .gas-fader-stage {
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      backdrop-filter: blur(12px);
-      box-shadow: -10px 0 30px rgba(0, 0, 0, 0.4);
-      z-index: 5;
-    }
-
-    .side-panel-header {
-      display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 15px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      gap: 10px;
+      height: 320px;
+      justify-content: center;
     }
 
-    .side-panel-title {
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 1.5px;
+    .gas-val {
+      font-size: 13px;
+      font-weight: 700;
       color: var(--gold-primary);
-      text-transform: uppercase;
+      font-family: 'Space Grotesk', sans-serif;
     }
 
-    .vertical-sliders-grid {
-      display: flex;
-      justify-content: space-around;
-      align-items: flex-end;
-      flex: 1;
-      padding: 10px 0;
-    }
-
-    .vertical-slider-column {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      height: 100%;
-      justify-content: space-between;
-    }
-
-    .slider-track-wrap {
+    .fader-track-wrap {
       position: relative;
-      width: 32px;
+      width: 28px;
       height: 240px;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 14px;
       border: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-end;
-      padding: 4px;
+      padding: 3px;
       cursor: ns-resize;
-      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
     }
 
-    .slider-fill-level {
+    .fader-fill {
       width: 100%;
-      background: linear-gradient(0deg, var(--gold-dark), var(--gold-primary));
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(255, 204, 0, 0.4);
+      background: var(--gold-primary);
+      border-radius: 10px;
       transition: height 0.05s ease-out;
-      min-height: 10px;
+      min-height: 6px;
     }
 
-    .slider-handle {
+    .fader-handle {
       position: absolute;
-      width: 42px;
-      height: 20px;
-      background: linear-gradient(135deg, #2a3652, #182035);
+      width: 36px;
+      height: 16px;
+      background: linear-gradient(135deg, #243047, #131a28);
       border: 2px solid var(--gold-primary);
-      border-radius: 6px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.6), 0 0 10px rgba(255, 204, 0, 0.4);
+      border-radius: 5px;
       left: 50%;
       transform: translateX(-50%);
       pointer-events: none;
     }
 
-    .slider-label {
-      font-size: 10px;
+    .gas-label {
+      font-size: 12px;
       font-weight: 800;
-      color: var(--text-main);
-      letter-spacing: 0.5px;
-      text-align: center;
-      max-width: 65px;
-      line-height: 1.2;
-    }
-
-    .slider-val-tag {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 11px;
-      font-weight: 700;
+      letter-spacing: 1.5px;
       color: var(--gold-primary);
-      background: rgba(255, 204, 0, 0.1);
-      padding: 3px 6px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 204, 0, 0.2);
     }
 
-    /* FOOTER AUDIO BAR */
-    .audio-test-bar {
-      height: 60px;
-      background: rgba(10, 14, 24, 0.95);
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 0 24px;
+    footer {
+      height: 40px;
+      background: rgba(10, 14, 22, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 0 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      z-index: 10;
-    }
-
-    .audio-controls {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .btn-play {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
-      border: none;
-      color: #070910;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(255, 204, 0, 0.4);
-      transition: all 0.2s ease;
-    }
-
-    .btn-play:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 20px rgba(255, 204, 0, 0.6);
-    }
-
-    .file-input-label {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px dashed rgba(255, 255, 255, 0.2);
+      font-size: 10px;
       color: var(--text-sub);
-      padding: 7px 14px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
     }
 
-    .file-input-label:hover {
-      border-color: var(--gold-primary);
-      color: var(--text-main);
-    }
-
-    .meters-container {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-    }
-
-    .meter-box {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      width: 90px;
-    }
-
-    .meter-label {
-      font-size: 9px;
-      font-weight: 700;
-      color: var(--text-sub);
-      letter-spacing: 1px;
-    }
-
-    .meter-track {
-      height: 7px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .meter-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #0055ff 0%, var(--gold-primary) 70%, #ff3344 100%);
-      border-radius: 4px;
-      transition: width 0.05s ease-out;
-    }
-
-    /* MODAL ACTIVACION */
     .modal-overlay {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(5, 7, 12, 0.85);
-      backdrop-filter: blur(12px);
+      background: rgba(5, 7, 12, 0.88);
+      backdrop-filter: blur(10px);
       z-index: 100;
       display: flex;
       align-items: center;
       justify-content: center;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.25s ease;
     }
 
     .modal-overlay.open {
@@ -494,89 +278,137 @@
     .modal-card {
       width: 440px;
       background: var(--bg-card);
-      border: 1px solid rgba(255, 204, 0, 0.4);
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(255, 204, 0, 0.2);
+      border: 1px solid rgba(255, 204, 0, 0.3);
+      border-radius: 16px;
+      padding: 24px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
       position: relative;
     }
 
     .modal-close {
       position: absolute;
-      top: 16px;
-      right: 18px;
+      top: 14px;
+      right: 16px;
       background: none;
       border: none;
       color: var(--text-sub);
-      font-size: 20px;
+      font-size: 18px;
       cursor: pointer;
     }
 
     .modal-title {
-      font-size: 20px;
+      font-size: 16px;
       font-weight: 800;
       color: var(--gold-primary);
       display: flex;
       align-items: center;
-      gap: 10px;
-    }
-
-    .modal-desc {
-      font-size: 13px;
-      color: var(--text-sub);
-      line-height: 1.5;
-    }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
       gap: 8px;
     }
 
-    .input-label {
-      font-size: 11px;
+    .modal-knobs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .knob-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .knob-container {
+      position: relative;
+      width: 65px;
+      height: 65px;
+      cursor: ns-resize;
+    }
+
+    .knob-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-135deg);
+    }
+
+    .knob-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 8;
+    }
+
+    .knob-val {
+      fill: none;
+      stroke: var(--gold-primary);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 220;
+      stroke-dashoffset: 100;
+      transition: stroke-dashoffset 0.1s ease-out;
+    }
+
+    .knob-cap {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #1c2538, #111726);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .knob-dot {
+      width: 3px;
+      height: 12px;
+      background: var(--gold-primary);
+      border-radius: 2px;
+      position: absolute;
+      top: 4px;
+      transform-origin: bottom center;
+    }
+
+    .knob-label {
+      font-size: 10px;
       font-weight: 700;
       color: var(--text-main);
-      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    .knob-readout {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gold-primary);
+      font-family: 'Space Grotesk', sans-serif;
     }
 
     .license-input {
-      background: rgba(10, 14, 24, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 10px;
-      padding: 12px 16px;
+      background: rgba(10, 14, 22, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 10px 14px;
       color: var(--gold-primary);
       font-family: 'Space Grotesk', monospace;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       outline: none;
-      letter-spacing: 1.5px;
-    }
-
-    .license-input:focus {
-      border-color: var(--gold-primary);
-      box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
     }
 
     .btn-activate {
-      background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+      background: var(--gold-primary);
       border: none;
-      color: #070910;
-      font-size: 14px;
+      color: #07090e;
+      font-size: 13px;
       font-weight: 800;
-      padding: 14px;
-      border-radius: 12px;
+      padding: 12px;
+      border-radius: 10px;
       cursor: pointer;
-      box-shadow: 0 6px 20px rgba(255, 204, 0, 0.4);
       transition: all 0.2s ease;
-    }
-
-    .btn-activate:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(255, 204, 0, 0.6);
     }
   </style>
 </head>
@@ -584,157 +416,132 @@
 
   <div class="plugin-container">
     <header>
-      <div class="brand">
-        <div class="peru-flag-badge"></div>
-        <div>
-          <div class="brand-title">INKA KOLA</div>
-          <div class="brand-subtitle">Mastering Polish & Air Exciter</div>
-        </div>
+      <div class="brand-group">
+        <div class="peru-flag"></div>
+        <div class="brand-title">INKA KOLA</div>
+        <button id="btnGear" class="btn-gear" title="Ajustes Avanzados">⚙️</button>
       </div>
 
-      <div class="header-actions">
-        <button id="btnLicense" class="btn-license">
-          <span id="licenseIcon">🔒</span> <span id="licenseText">ACTIVAR LICENCIA</span>
-        </button>
-        <select id="presetSelect" class="preset-selector">
-          <option value="gold">🇵🇪 Fiestas Patrias Gold</option>
-          <option value="vidrio">🍾 Master Limpio Vidrio</option>
-          <option value="air">✨ Extra Air 10kHz</option>
-          <option value="wider">🌊 Super Stereo 3D</option>
-          <option value="plastic">🥤 Crisp Plastic</option>
-        </select>
-        <button id="btnAb" class="btn-toggle">A / B</button>
-        <button id="btnBypass" class="btn-toggle btn-bypass">BYPASS</button>
-      </div>
+      <button id="btnLicense" class="btn-license">
+        <span id="licenseIcon">🔒</span> <span id="licenseText">ACTIVAR LICENCIA</span>
+      </button>
     </header>
 
-    <div class="main-body">
-      <div class="center-stage">
-        <div class="skin-switcher-bar">
-          <button id="skinVidrio" class="skin-btn active">🍾 Vidrio Classic</button>
-          <button id="skinPlastico" class="skin-btn">🥤 Plástico PET</button>
-        </div>
-
-        <div class="bottle-canvas-wrapper" id="bottleWrapper">
-          <canvas id="liquidCanvas" width="240" height="380"></canvas>
+    <div class="main-stage">
+      <div class="bottle-stage">
+        <div class="bottle-box" id="bottleWrapper">
+          <img src="bottle.png" alt="Inka Kola Bottle" class="bottle-img-overlay">
+          <canvas id="liquidCanvas" width="200" height="360"></canvas>
         </div>
 
         <div class="refill-readout">
           <div class="percentage-text" id="pctReadout">50%</div>
-          <div class="percentage-label">Nivel de Gaseosa (Master Refill)</div>
         </div>
       </div>
 
-      <div class="side-control-panel">
-        <div class="side-panel-header">
-          <div class="side-panel-title">CONTROLES LATERALES</div>
-          <div style="font-size:10px; color:var(--text-sub);">OFFSZN PRO</div>
+      <div class="gas-fader-stage">
+        <div class="gas-val" id="valOut">0.0 dB</div>
+        <div class="fader-track-wrap" id="trackOut">
+          <div class="fader-fill" id="fillOut" style="height:66%;"></div>
+          <div class="fader-handle" id="handleOut" style="bottom:66%;"></div>
         </div>
-
-        <div class="vertical-sliders-grid">
-          <div class="vertical-slider-column">
-            <div class="slider-val-tag" id="valWidth">120%</div>
-            <div class="slider-track-wrap" id="trackWidth">
-              <div class="slider-fill-level" id="fillWidth" style="height:60%;"></div>
-              <div class="slider-handle" id="handleWidth" style="bottom:60%;"></div>
-            </div>
-            <div class="slider-label">STEREO WIDER</div>
-          </div>
-
-          <div class="vertical-slider-column">
-            <div class="slider-val-tag" id="valSat">45%</div>
-            <div class="slider-track-wrap" id="trackSat">
-              <div class="slider-fill-level" id="fillSat" style="height:45%;"></div>
-              <div class="slider-handle" id="handleSat" style="bottom:45%;"></div>
-            </div>
-            <div class="slider-label">10kHz AIR</div>
-          </div>
-
-          <div class="vertical-slider-column">
-            <div class="slider-val-tag" id="valBass">100Hz</div>
-            <div class="slider-track-wrap" id="trackBass">
-              <div class="slider-fill-level" id="fillBass" style="height:35%;"></div>
-              <div class="slider-handle" id="handleBass" style="bottom:35%;"></div>
-            </div>
-            <div class="slider-label">BASS MONO</div>
-          </div>
-
-          <div class="vertical-slider-column">
-            <div class="slider-val-tag" id="valOut">0.0dB</div>
-            <div class="slider-track-wrap" id="trackOut">
-              <div class="slider-fill-level" id="fillOut" style="height:66%;"></div>
-              <div class="slider-handle" id="handleOut" style="bottom:66%;"></div>
-            </div>
-            <div class="slider-label">OUTPUT GAIN</div>
-          </div>
-        </div>
+        <div class="gas-label">GAS</div>
       </div>
     </div>
 
-    <div class="audio-test-bar">
-      <div class="audio-controls">
-        <button id="btnPlay" class="btn-play">▶</button>
-        <label class="file-input-label">
-          📁 Cargar Demo MP3/WAV
-          <input type="file" id="audioFileInput" accept="audio/*" style="display:none;">
-        </label>
-        <span id="audioFileName" style="font-size:12px; color:var(--text-sub);">InkaKola_Demo.wav</span>
-      </div>
+    <footer>
+      <span>OFFSZN Plugins</span>
+      <span>Edición Aniversario Perú 🇵🇪</span>
+    </footer>
 
-      <div class="meters-container">
-        <div class="meter-box">
-          <div class="meter-label">INPUT</div>
-          <div class="meter-track"><div class="meter-fill" id="meterIn"></div></div>
+    <div class="modal-overlay" id="settingsModal">
+      <div class="modal-card">
+        <button class="modal-close" id="btnCloseSettings">✕</button>
+        <div class="modal-title">
+          <span>⚙️</span> AJUSTES AVANZADOS
         </div>
-        <div class="meter-box">
-          <div class="meter-label">OUTPUT</div>
-          <div class="meter-track"><div class="meter-fill" id="meterOut"></div></div>
+
+        <div class="modal-knobs-grid">
+          <div class="knob-group">
+            <div class="knob-label">STEREO WIDER</div>
+            <div class="knob-container" id="knobWidth">
+              <svg class="knob-svg" viewBox="0 0 100 100">
+                <circle class="knob-bg" cx="50" cy="50" r="35"/>
+                <circle class="knob-val" id="arcWidth" cx="50" cy="50" r="35"/>
+              </svg>
+              <div class="knob-cap"><div class="knob-dot" id="dotWidth"></div></div>
+            </div>
+            <div class="knob-readout" id="valWidth">120%</div>
+          </div>
+
+          <div class="knob-group">
+            <div class="knob-label">10kHz AIR</div>
+            <div class="knob-container" id="knobSat">
+              <svg class="knob-svg" viewBox="0 0 100 100">
+                <circle class="knob-bg" cx="50" cy="50" r="35"/>
+                <circle class="knob-val" id="arcSat" cx="50" cy="50" r="35"/>
+              </svg>
+              <div class="knob-cap"><div class="knob-dot" id="dotSat"></div></div>
+            </div>
+            <div class="knob-readout" id="valSat">45%</div>
+          </div>
+
+          <div class="knob-group">
+            <div class="knob-label">BASS MONO</div>
+            <div class="knob-container" id="knobBass">
+              <svg class="knob-svg" viewBox="0 0 100 100">
+                <circle class="knob-bg" cx="50" cy="50" r="35"/>
+                <circle class="knob-val" id="arcBass" cx="50" cy="50" r="35"/>
+              </svg>
+              <div class="knob-cap"><div class="knob-dot" id="dotBass"></div></div>
+            </div>
+            <div class="knob-readout" id="valBass">100 Hz</div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="modal-overlay" id="licenseModal">
       <div class="modal-card">
-        <button class="modal-close" id="btnCloseModal">✕</button>
+        <button class="modal-close" id="btnCloseLicense">✕</button>
         <div class="modal-title">
-          <span>🔑</span> ACTIVACIÓN DE LICENCIA OFFSZN
+          <span>🔑</span> ACTIVACIÓN DE LICENCIA
         </div>
-        <div class="modal-desc">
-          Introduce tu código de serie oficial de **OFFSZN INKA KOLA** para desbloquear la versión completa sin restricciones.
+        <div style="font-size:11px; color:var(--text-sub);">
+          Introduce tu código de serie oficial de OFFSZN INKA KOLA.
         </div>
-        <div class="input-group">
-          <div class="input-label">CÓDIGO DE SERIE (SERIAL KEY)</div>
-          <input type="text" id="licenseKeyInput" class="license-input" placeholder="INKA-FULL-XXXX-YYYY" value="INKA-FULL-2026-PERU">
-        </div>
-        <div class="input-group">
-          <div class="input-label">ID DE DISPOSITIVO (HWID)</div>
-          <div style="font-family:monospace; font-size:12px; color:var(--text-sub);" id="hwidText">HWID-PERU-8F3A-99B2</div>
-        </div>
-        <button class="btn-activate" id="btnConfirmActivate">ACTIVAR LICENCIA AHORA</button>
+        <input type="text" id="licenseKeyInput" class="license-input" placeholder="INKA-FULL-XXXX-YYYY" value="INKA-FULL-2026-PERU">
+        <button class="btn-activate" id="btnConfirmActivate">ACTIVAR LICENCIA</button>
       </div>
     </div>
   </div>
 
   <script>
     const state = {
-      refill: 50,      // 0 - 100 %
-      width: 120,      // 0 - 200 %
-      sat10k: 45,      // 0 - 100 %
-      bassMono: 100,   // 20 - 250 Hz
-      outputGain: 0.0, // -12 to +6 dB
-      skin: 'vidrio',  // 'vidrio' | 'plastico'
-      bypass: false,
-      isActivated: localStorage.getItem('offszn_inka_activated') === 'true',
-      isPlaying: false
+      refill: 50,
+      width: 120,
+      sat10k: 45,
+      bassMono: 100,
+      outputGain: 0.0,
+      isActivated: localStorage.getItem('offszn_inka_activated') === 'true'
     };
+
+    function sendNativeParam(id, val) {
+      if (window.setParam) {
+        window.setParam(id, val);
+      }
+    }
 
     const canvas = document.getElementById('liquidCanvas');
     const ctx = canvas.getContext('2d');
     const pctReadout = document.getElementById('pctReadout');
-    const btnSkinVidrio = document.getElementById('skinVidrio');
-    const btnSkinPlastico = document.getElementById('skinPlastico');
+    const btnGear = document.getElementById('btnGear');
+    const settingsModal = document.getElementById('settingsModal');
     const btnLicense = document.getElementById('btnLicense');
     const licenseModal = document.getElementById('licenseModal');
+
+    btnGear.addEventListener('click', () => { settingsModal.classList.add('open'); });
+    document.getElementById('btnCloseSettings').addEventListener('click', () => { settingsModal.classList.remove('open'); });
 
     function updateLicenseUI() {
       if (state.isActivated) {
@@ -750,7 +557,7 @@
     updateLicenseUI();
 
     btnLicense.addEventListener('click', () => { licenseModal.classList.add('open'); });
-    document.getElementById('btnCloseModal').addEventListener('click', () => { licenseModal.classList.remove('open'); });
+    document.getElementById('btnCloseLicense').addEventListener('click', () => { licenseModal.classList.remove('open'); });
 
     document.getElementById('btnConfirmActivate').addEventListener('click', () => {
       const key = document.getElementById('licenseKeyInput').value.trim();
@@ -759,71 +566,53 @@
         localStorage.setItem('offszn_inka_activated', 'true');
         updateLicenseUI();
         licenseModal.classList.remove('open');
-        alert('¡Licencia OFFSZN activada exitosamente! Disfruta de INKA KOLA Mastering.');
+        alert('¡Licencia OFFSZN activada exitosamente!');
       } else {
         alert('Por favor introduce un número de serie válido.');
       }
     });
 
     const bubbles = [];
-    for (let i = 0; i < 35; i++) {
+    for (let i = 0; i < 20; i++) {
       bubbles.push({
-        x: Math.random() * 160 + 40,
-        y: Math.random() * 300 + 50,
-        r: Math.random() * 3.5 + 1,
-        speed: Math.random() * 1.5 + 0.8,
+        x: Math.random() * 80 + 60,
+        y: Math.random() * 240 + 70,
+        r: Math.random() * 2 + 1,
+        speed: Math.random() * 0.5 + 0.3,
         wobble: Math.random() * Math.PI * 2
       });
     }
 
     let waveOffset = 0;
 
-    function renderBottle() {
+    function renderBottleLiquid() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      waveOffset += 0.08;
+      waveOffset += 0.03;
 
       const w = canvas.width;
-      const h = canvas.height;
       const pct = state.refill / 100;
 
       ctx.save();
+
       ctx.beginPath();
-
-      if (state.skin === 'vidrio') {
-        ctx.moveTo(100, 30);
-        ctx.lineTo(140, 30);
-        ctx.lineTo(142, 70);
-        ctx.bezierCurveTo(145, 110, 185, 150, 190, 200);
-        ctx.lineTo(190, 330);
-        ctx.bezierCurveTo(190, 355, 175, 365, 120, 365);
-        ctx.bezierCurveTo(65, 365, 50, 355, 50, 330);
-        ctx.lineTo(50, 200);
-        ctx.bezierCurveTo(55, 150, 95, 110, 98, 70);
-        ctx.closePath();
-      } else {
-        ctx.moveTo(102, 25);
-        ctx.lineTo(138, 25);
-        ctx.lineTo(140, 65);
-        ctx.bezierCurveTo(142, 100, 178, 140, 182, 180);
-        ctx.lineTo(182, 230);
-        ctx.bezierCurveTo(175, 250, 182, 270, 182, 335);
-        ctx.bezierCurveTo(182, 358, 165, 362, 120, 362);
-        ctx.bezierCurveTo(75, 362, 58, 358, 58, 335);
-        ctx.bezierCurveTo(58, 270, 65, 250, 58, 230);
-        ctx.lineTo(58, 180);
-        ctx.bezierCurveTo(62, 140, 98, 100, 100, 65);
-        ctx.closePath();
-      }
-
+      ctx.moveTo(82, 60);
+      ctx.lineTo(118, 60);
+      ctx.bezierCurveTo(122, 100, 156, 132, 160, 170);
+      ctx.lineTo(160, 305);
+      ctx.bezierCurveTo(160, 328, 140, 335, 100, 335);
+      ctx.bezierCurveTo(60, 335, 40, 328, 40, 305);
+      ctx.lineTo(40, 170);
+      ctx.bezierCurveTo(44, 132, 78, 100, 82, 60);
+      ctx.closePath();
       ctx.clip();
 
-      const minY = 80;
-      const maxY = 355;
+      const minY = 70;
+      const maxY = 330;
       const fillY = maxY - (maxY - minY) * pct;
 
       if (pct > 0.01) {
         const liqGrad = ctx.createLinearGradient(0, fillY, 0, maxY);
-        liqGrad.addColorStop(0, '#ffe600');
+        liqGrad.addColorStop(0, '#ffee33');
         liqGrad.addColorStop(0.3, '#ffcc00');
         liqGrad.addColorStop(1, '#d48800');
 
@@ -832,7 +621,7 @@
         ctx.moveTo(0, maxY + 20);
 
         for (let x = 0; x <= w; x += 4) {
-          const waveY = fillY + Math.sin(x * 0.05 + waveOffset) * 4 + Math.cos(x * 0.02 - waveOffset * 0.5) * 2;
+          const waveY = fillY + Math.sin(x * 0.04 + waveOffset) * 2.5 + Math.cos(x * 0.02 - waveOffset * 0.3) * 1.2;
           ctx.lineTo(x, waveY);
         }
 
@@ -840,28 +629,28 @@
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = 'rgba(255, 255, 230, 0.7)';
+        ctx.fillStyle = 'rgba(255, 255, 210, 0.7)';
         ctx.beginPath();
         for (let x = 0; x <= w; x += 4) {
-          const waveY = fillY + Math.sin(x * 0.05 + waveOffset) * 4;
-          ctx.lineTo(x, waveY - 2);
+          const waveY = fillY + Math.sin(x * 0.04 + waveOffset) * 2.5;
+          ctx.lineTo(x, waveY - 1);
         }
         for (let x = w; x >= 0; x -= 4) {
-          const waveY = fillY + Math.sin(x * 0.05 + waveOffset) * 4;
-          ctx.lineTo(x, waveY + 4);
+          const waveY = fillY + Math.sin(x * 0.04 + waveOffset) * 2.5;
+          ctx.lineTo(x, waveY + 3);
         }
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = 'rgba(255, 255, 200, 0.75)';
+        ctx.fillStyle = 'rgba(255, 255, 200, 0.65)';
         bubbles.forEach(b => {
           b.y -= b.speed;
-          b.wobble += 0.05;
-          const bubbleX = b.x + Math.sin(b.wobble) * 3;
+          b.wobble += 0.02;
+          const bubbleX = b.x + Math.sin(b.wobble) * 1.5;
 
           if (b.y < fillY) {
-            b.y = maxY - Math.random() * 20;
-            b.x = Math.random() * 120 + 60;
+            b.y = maxY - Math.random() * 15;
+            b.x = Math.random() * 80 + 60;
           }
 
           if (b.y >= fillY) {
@@ -873,87 +662,10 @@
       }
 
       ctx.restore();
-
-      ctx.save();
-      ctx.lineWidth = 3.5;
-      ctx.strokeStyle = state.skin === 'vidrio' ? 'rgba(255, 255, 255, 0.5)' : 'rgba(180, 220, 255, 0.4)';
-
-      if (state.skin === 'vidrio') {
-        ctx.beginPath();
-        ctx.moveTo(100, 30);
-        ctx.lineTo(140, 30);
-        ctx.lineTo(142, 70);
-        ctx.bezierCurveTo(145, 110, 185, 150, 190, 200);
-        ctx.lineTo(190, 330);
-        ctx.bezierCurveTo(190, 355, 175, 365, 120, 365);
-        ctx.bezierCurveTo(65, 365, 50, 355, 50, 330);
-        ctx.lineTo(50, 200);
-        ctx.bezierCurveTo(55, 150, 95, 110, 98, 70);
-        ctx.closePath();
-        ctx.stroke();
-
-        ctx.fillStyle = '#003896';
-        ctx.fillRect(96, 16, 48, 14);
-        ctx.fillStyle = '#ffcc00';
-        ctx.fillRect(96, 27, 48, 3);
-
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-        ctx.lineWidth = 2;
-        for (let y = 140; y < 190; y += 12) {
-          ctx.beginPath();
-          ctx.arc(120, y, 55, Math.PI * 0.2, Math.PI * 0.8);
-          ctx.stroke();
-        }
-
-        ctx.fillStyle = '#003896';
-        ctx.fillRect(60, 210, 120, 75);
-        ctx.strokeStyle = '#ffcc00';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(64, 214, 112, 67);
-
-        ctx.fillStyle = '#ffcc00';
-        ctx.font = 'bold 16px Outfit';
-        ctx.textAlign = 'center';
-        ctx.fillText('INCA KOLA', 120, 245);
-        ctx.font = '9px Outfit';
-        ctx.fillText('DESDE 1935', 120, 265);
-
-      } else {
-        ctx.beginPath();
-        ctx.moveTo(102, 25);
-        ctx.lineTo(138, 25);
-        ctx.lineTo(140, 65);
-        ctx.bezierCurveTo(142, 100, 178, 140, 182, 180);
-        ctx.lineTo(182, 230);
-        ctx.bezierCurveTo(175, 250, 182, 270, 182, 335);
-        ctx.bezierCurveTo(182, 358, 165, 362, 120, 362);
-        ctx.bezierCurveTo(75, 362, 58, 358, 58, 335);
-        ctx.bezierCurveTo(58, 270, 65, 250, 58, 230);
-        ctx.lineTo(58, 180);
-        ctx.bezierCurveTo(62, 140, 98, 100, 100, 65);
-        ctx.closePath();
-        ctx.stroke();
-
-        ctx.fillStyle = '#0055ff';
-        ctx.fillRect(98, 10, 44, 15);
-        ctx.fillStyle = '#003896';
-        ctx.fillRect(98, 22, 44, 4);
-
-        ctx.fillStyle = '#003896';
-        ctx.fillRect(60, 195, 120, 80);
-        ctx.fillStyle = '#ffcc00';
-        ctx.font = 'bold 15px Outfit';
-        ctx.textAlign = 'center';
-        ctx.fillText('INCA KOLA', 120, 232);
-        ctx.font = 'bold 10px Outfit';
-        ctx.fillText('sabor original', 120, 252);
-      }
-
-      ctx.restore();
-      requestAnimationFrame(renderBottle);
+      requestAnimationFrame(renderBottleLiquid);
     }
 
-    renderBottle();
+    renderBottleLiquid();
 
     const bottleWrapper = document.getElementById('bottleWrapper');
     let isDraggingBottle = false;
@@ -970,9 +682,10 @@
     window.addEventListener('mousemove', e => {
       if (!isDraggingBottle) return;
       const deltaY = startY - e.clientY;
-      let newVal = Math.min(100, Math.max(0, startVal + deltaY * 0.5));
+      let newVal = Math.min(100, Math.max(0, startVal + deltaY * 0.35));
       state.refill = Math.round(newVal);
       pctReadout.innerText = state.refill + '%';
+      sendNativeParam('refill', state.refill);
     });
 
     window.addEventListener('mouseup', () => {
@@ -980,112 +693,89 @@
       document.body.style.cursor = 'default';
     });
 
-    btnSkinVidrio.addEventListener('click', () => {
-      state.skin = 'vidrio';
-      btnSkinVidrio.classList.add('active');
-      btnSkinPlastico.classList.remove('active');
-    });
+    function setupKnob(id, min, max, initial, unit, paramKey) {
+      const knob = document.getElementById(id);
+      const arc = knob.querySelector('.knob-val');
+      const dot = knob.querySelector('.knob-dot');
+      const readout = knob.parentNode.querySelector('.knob-readout');
 
-    btnSkinPlastico.addEventListener('click', () => {
-      state.skin = 'plastico';
-      btnSkinPlastico.classList.add('active');
-      btnSkinVidrio.classList.remove('active');
-    });
-
-    function setupVerticalSlider(trackId, fillId, handleId, valTagId, min, max, initial, unit, callback) {
-      const track = document.getElementById(trackId);
-      const fill = document.getElementById(fillId);
-      const handle = document.getElementById(handleId);
-      const valTag = document.getElementById(valTagId);
-
-      let value = initial;
+      let val = initial;
 
       function updateUI(v) {
-        value = Math.min(max, Math.max(min, v));
-        const pct = (value - min) / (max - min);
-        const fillHeightPct = (pct * 100).toFixed(1) + '%';
-        fill.style.height = fillHeightPct;
-        handle.style.bottom = fillHeightPct;
-
-        if (unit === 'dB') valTag.innerText = value.toFixed(1) + 'dB';
-        else if (unit === 'Hz') valTag.innerText = Math.round(value) + 'Hz';
-        else valTag.innerText = Math.round(value) + '%';
-
-        callback(value);
+        val = v;
+        const pct = (val - min) / (max - min);
+        const dashoffset = 220 - (pct * 165);
+        arc.style.strokeDashoffset = dashoffset;
+        const angle = -135 + (pct * 270);
+        dot.style.transform = `rotate(${angle}deg)`;
+        readout.innerText = Math.round(val) + ' ' + unit;
+        sendNativeParam(paramKey, val);
       }
 
       updateUI(initial);
 
-      let isDragging = false;
+      let dragging = false;
+      let startY = 0;
+      let startV = initial;
 
-      track.addEventListener('mousedown', e => {
-        isDragging = true;
-        calculateFromY(e.clientY);
+      knob.addEventListener('mousedown', e => {
+        dragging = true;
+        startY = e.clientY;
+        startV = val;
       });
 
       window.addEventListener('mousemove', e => {
-        if (isDragging) calculateFromY(e.clientY);
+        if (!dragging) return;
+        const dy = startY - e.clientY;
+        const range = max - min;
+        let nV = Math.min(max, Math.max(min, startV + (dy / 140) * range));
+        updateUI(nV);
       });
 
-      window.addEventListener('mouseup', () => { isDragging = false; });
+      window.addEventListener('mouseup', () => { dragging = false; });
+    }
 
-      function calculateFromY(clientY) {
+    setupKnob('knobWidth', 0, 200, state.width, '%', 'width');
+    setupKnob('knobSat', 0, 100, state.sat10k, '%', 'sat10k');
+    setupKnob('knobBass', 20, 250, state.bassMono, 'Hz', 'bassMono');
+
+    function setupFader() {
+      const track = document.getElementById('trackOut');
+      const fill = document.getElementById('fillOut');
+      const handle = document.getElementById('handleOut');
+      const valOut = document.getElementById('valOut');
+
+      function update(v) {
+        state.outputGain = Math.min(6, Math.max(-12, v));
+        const pct = (state.outputGain - (-12)) / (6 - (-12));
+        fill.style.height = (pct * 100).toFixed(1) + '%';
+        handle.style.bottom = (pct * 100).toFixed(1) + '%';
+        valOut.innerText = state.outputGain.toFixed(1) + ' dB';
+        sendNativeParam('outputGain', state.outputGain);
+      }
+
+      update(0.0);
+      let dragging = false;
+
+      track.addEventListener('mousedown', e => {
+        dragging = true;
+        calc(e.clientY);
+      });
+
+      window.addEventListener('mousemove', e => {
+        if (dragging) calc(e.clientY);
+      });
+
+      window.addEventListener('mouseup', () => { dragging = false; });
+
+      function calc(clientY) {
         const rect = track.getBoundingClientRect();
         const offsetY = rect.bottom - clientY;
         const pct = Math.min(1, Math.max(0, offsetY / rect.height));
-        const calculatedVal = min + pct * (max - min);
-        updateUI(calculatedVal);
+        update(-12 + pct * 18);
       }
     }
-
-    setupVerticalSlider('trackWidth', 'fillWidth', 'handleWidth', 'valWidth', 0, 200, state.width, '%', v => { state.width = v; });
-    setupVerticalSlider('trackSat', 'fillSat', 'handleSat', 'valSat', 0, 100, state.sat10k, '%', v => { state.sat10k = v; });
-    setupVerticalSlider('trackBass', 'fillBass', 'handleBass', 'valBass', 20, 250, state.bassMono, 'Hz', v => { state.bassMono = v; });
-    setupVerticalSlider('trackOut', 'fillOut', 'handleOut', 'valOut', -12, 6, state.outputGain, 'dB', v => { state.outputGain = v; });
-
-    const btnPlay = document.getElementById('btnPlay');
-    btnPlay.addEventListener('click', () => {
-      state.isPlaying = !state.isPlaying;
-      btnPlay.innerText = state.isPlaying ? '⏸' : '▶';
-    });
-
-    function startMeterLoop() {
-      const meterIn = document.getElementById('meterIn');
-      const meterOut = document.getElementById('meterOut');
-
-      function updateMeters() {
-        if (state.isPlaying) {
-          const valIn = Math.min(100, Math.random() * 40 + 40);
-          const valOut = Math.min(100, valIn * (1 + state.refill / 200));
-          meterIn.style.width = valIn + '%';
-          meterOut.style.width = valOut + '%';
-        } else {
-          meterIn.style.width = '0%';
-          meterOut.style.width = '0%';
-        }
-        requestAnimationFrame(updateMeters);
-      }
-      updateMeters();
-    }
-    startMeterLoop();
-
-    document.getElementById('presetSelect').addEventListener('change', e => {
-      const p = e.target.value;
-      if (p === 'gold') { state.refill = 75; state.width = 135; state.sat10k = 50; state.skin = 'vidrio'; }
-      if (p === 'vidrio') { state.refill = 50; state.width = 110; state.sat10k = 30; state.skin = 'vidrio'; }
-      if (p === 'air') { state.refill = 85; state.width = 120; state.sat10k = 85; state.skin = 'vidrio'; }
-      if (p === 'wider') { state.refill = 90; state.width = 180; state.sat10k = 60; state.skin = 'plastico'; }
-      if (p === 'plastic') { state.refill = 60; state.width = 125; state.sat10k = 40; state.skin = 'plastico'; }
-
-      pctReadout.innerText = state.refill + '%';
-      btnSkinVidrio.classList.toggle('active', state.skin === 'vidrio');
-      btnSkinPlastico.classList.toggle('active', state.skin === 'plastico');
-    });
-
-    document.getElementById('btnBypass').addEventListener('click', e => {
-      state.bypass = !state.bypass;
-      e.target.classList.toggle('active', state.bypass);
-    });
+    setupFader();
   </script>
 </body>
 </html>
