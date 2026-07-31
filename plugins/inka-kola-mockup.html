@@ -429,11 +429,25 @@ var PLUGIN_NAME = 'INKA KOLA';
     }, 900);
 })();
 
-// ─── JUCE BRIDGE ─────────────────────────────────────────────────────────────
+// ─── JUCE BRIDGE — IDENTICAL TO EASY MASTER ──────────────────────────────────
 var __juceCallId = 0;
+var __jucePromises = {};
 
 function hasJuceBridge() {
-    return !!(window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.emitEvent === 'function');
+    if (window.__JUCE__ && window.__JUCE__.backend) return true;
+    if (window.chrome && window.chrome.webview) return true;
+    return false;
+}
+
+// Set up the completion listener ONCE — Easy Master style
+if (window.__JUCE__ && window.__JUCE__.backend) {
+    window.__JUCE__.backend.addEventListener("__juce__complete", function(ev) {
+        var pid = ev.promiseId;
+        if (__jucePromises[pid]) {
+            __jucePromises[pid](ev.result);
+            delete __jucePromises[pid];
+        }
+    });
 }
 
 function sendToJUCE(id, v) {
@@ -447,34 +461,30 @@ function sendToJUCE(id, v) {
     } catch(e) {}
 }
 
-function callNative(name, args) {
-    return new Promise(function(resolve) {
-        try {
-            if (hasJuceBridge()) {
-                var rid = __juceCallId++;
-                window.__JUCE__.backend.emitEvent('__juce__invoke', {
-                    name: name,
-                    params: Array.isArray(args) ? args : (args !== undefined ? [args] : []),
-                    resultId: rid
-                });
-                // Listen for response on __juce__result
-                var handler = function(e) {
-                    try {
-                        var d = typeof e.detail === 'string' ? JSON.parse(e.detail) : e.detail;
-                        if (d && (d.resultId === rid || d.id === rid)) {
-                            document.removeEventListener('__juce__result', handler);
-                            resolve(d.result !== undefined ? d.result : d);
-                        }
-                    } catch(err) {}
-                };
-                document.addEventListener('__juce__result', handler);
-                setTimeout(function() { resolve(null); }, 3000);
-            } else {
-                resolve(null);
-            }
-        } catch(e) { resolve(null); }
-    });
+function callNative(name) {
+    var args = [];
+    for (var i = 1; i < arguments.length; i++) args.push(arguments[i]);
+    try {
+        if (window.__JUCE__ && window.__JUCE__.backend) {
+            var promiseId = Math.floor(Math.random() * 1000000000);
+            var p = new Promise(function(resolve) {
+                __jucePromises[promiseId] = resolve;
+            });
+            window.__JUCE__.backend.emitEvent("__juce__invoke", {
+                name: name,
+                params: args,
+                resultId: promiseId
+            });
+            return p;
+        }
+        if (window.chrome && window.chrome.webview) {
+            window.chrome.webview.postMessage(JSON.stringify({ func: name, args: args }));
+            return Promise.resolve();
+        }
+    } catch(e) {}
+    return Promise.resolve(null);
 }
+
 
 // ─── UI PROTECTION & ANTI-INSPECT ───────────────────────────────────────────
 (function() {
@@ -716,7 +726,22 @@ function openActivationModal(canClose) {
     overlay.classList.add('active');
 }
 
-
+// window.setLicenseStatus — IDENTICAL TO EASY MASTER
+// This directly shows/hides the activation overlay
+window.setLicenseStatus = function(isValid) {
+    var overlay = document.getElementById('activation-overlay');
+    var spinnerArea = document.getElementById('loading-spinner-area');
+    var content = document.getElementById('activation-content');
+    hideLoadingScreen();
+    if (isValid) {
+        if (overlay) { overlay.classList.remove('active'); }
+        S.lic = true;
+    } else {
+        if (overlay) { overlay.classList.add('active'); }
+        if (spinnerArea) spinnerArea.style.display = 'none';
+        if (content) content.style.display = 'block';
+    }
+};
 
 function closeActivationModal() {
     document.getElementById('activation-overlay').classList.remove('active');
@@ -960,7 +985,7 @@ function startTrialBackgroundCheck() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ═══ LICENSE BOOT SEQUENCE — IDENTICAL TO EASY MIX & EASY MASTER ══════════════
+// ═══ LICENSE BOOT SEQUENCE — IDENTICAL TO EASY MASTER (line 1494-1554) ═══════
 // ═══════════════════════════════════════════════════════════════════════════════
 setTimeout(function() {
     if (hasJuceBridge()) {
@@ -968,42 +993,68 @@ setTimeout(function() {
             var isValid = state && state.isValid;
             var serial  = ((state && state.serial) || '').trim();
 
-            if (serial && isValid) {
-                // ─ LICENSE VALID ON DISK: Trust local activation immediately ─
-                try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
-                S.lic = true;
-                hideLoadingScreen();
+            if (serial) {
                 var isTrial = serial.toUpperCase().indexOf('TRIAL') !== -1;
                 if (isTrial) {
-                    _currentTrialSerial = serial;
-                    updateTrialBadge(true, (state.trialDaysLeft || 7) + ' DÍAS');
-                    verifyTrialOnlineSilently(serial);
-                    startTrialBackgroundCheck();
+                    // ─ TRIAL KEY: Silently verify online every session ─
+                    getHwidAsync().then(function(hwid) {
+                        fetch(apiBase + '/api/plugin/activate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: PLUGIN_NAME })
+                        }).then(function(r) { return r.json(); }).then(function(response) {
+                            if (response && response.success) {
+                                callNative('setLicenseStatus', true, serial);
+                                window.setLicenseStatus(true);
+                                try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+                                var daysLeft = response.days_remaining || response.remaining_days || 7;
+                                updateTrialBadge(true, daysLeft + ' DÍAS');
+                                startTrialBackgroundCheck();
+                            } else {
+                                // Expired trial
+                                triggerLicenseExpired(
+                                    'Prueba Expirada',
+                                    'Tu periodo de prueba ha terminado. Puedes adquirir una licencia en offszn.lat para seguir usando Inka Kola.'
+                                );
+                            }
+                        }).catch(function() {
+                            triggerLicenseOffline(
+                                'Sin Conexión',
+                                'El plugin requiere conexión a Internet para validar tu periodo de prueba. Conéctate para continuar.'
+                            );
+                        });
+                    });
                 } else {
-                    updateTrialBadge(false); // Hide badge completely for FULL
+                    // ─ FULL KEY: Trust local validation completely, no internet check ─
+                    if (isValid) {
+                        try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+                        window.setLicenseStatus(true);
+                        updateTrialBadge(false);
+                    } else {
+                        callNative('setLicenseStatus', false);
+                        window.setLicenseStatus(false);
+                    }
                 }
             } else {
-                // ─ NO SERIAL OR INVALID → Open blocking activation modal ─
+                // ─ NO SERIAL AT ALL → ask for activation ─
                 callNative('setLicenseStatus', false);
-                openActivationModal(false); // No close button — user MUST activate
+                window.setLicenseStatus(false);
             }
-        }).catch(function() {
-            // Bridge error — open activation modal
-            openActivationModal(false);
         });
     } else {
-        // Browser preview mode
+        // Browser preview mode fallback
         var serial = '';
         try { serial = localStorage.getItem('offszn_serial') || ''; } catch(e) {}
         if (serial) {
             var isTrial = serial.toUpperCase().indexOf('TRIAL') !== -1;
-            hideLoadingScreen();
             updateTrialBadge(isTrial, '7 DÍAS');
+            window.setLicenseStatus(true);
         } else {
-            openActivationModal(false);
+            window.setLicenseStatus(false);
         }
     }
-}, 300);
+}, 100);
+
 
 
 
