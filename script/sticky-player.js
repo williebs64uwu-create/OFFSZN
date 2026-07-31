@@ -68,6 +68,59 @@ window.StickyPlayer = (function () {
             '';
     }
 
+    function getLowestProductPrice(trackData) {
+        if (!trackData) return null;
+
+        const parseValidPrice = (val) => {
+            if (val === undefined || val === null || val === '') return null;
+            const p = parseFloat(val);
+            return (!isNaN(p) && p >= 0) ? p : null;
+        };
+
+        const candidatePrices = [];
+
+        // 1. Direct price attributes
+        [
+            trackData.price_basic,
+            trackData.price,
+            trackData.price_premium,
+            trackData.price_stems,
+            trackData.price_trackout,
+            trackData.price_exclusive
+        ].forEach(val => {
+            const p = parseValidPrice(val);
+            if (p !== null) candidatePrices.push(p);
+        });
+
+        // 2. Check available_licenses array if present
+        if (trackData.available_licenses && Array.isArray(trackData.available_licenses)) {
+            trackData.available_licenses.forEach(lic => {
+                if (lic && (lic.enabled === undefined || lic.enabled)) {
+                    const p = parseValidPrice(lic.price);
+                    if (p !== null) candidatePrices.push(p);
+                }
+            });
+        }
+
+        // 3. Check licenses object if present
+        if (trackData.licenses && typeof trackData.licenses === 'object' && !Array.isArray(trackData.licenses)) {
+            Object.values(trackData.licenses).forEach(lic => {
+                if (lic) {
+                    const p = parseValidPrice(typeof lic === 'object' ? lic.price : lic);
+                    if (p !== null && (typeof lic !== 'object' || lic.enabled === undefined || lic.enabled)) {
+                        candidatePrices.push(p);
+                    }
+                }
+            });
+        }
+
+        if (candidatePrices.length > 0) {
+            return Math.min(...candidatePrices);
+        }
+
+        return null;
+    }
+
     function init() {
         if (document.getElementById('sticky-player-bar')) return;
 
