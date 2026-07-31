@@ -476,9 +476,40 @@ function callNative(name, args) {
     });
 }
 
+// ─── UI PROTECTION & ANTI-INSPECT ───────────────────────────────────────────
+(function() {
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    }, false);
+
+    document.addEventListener('keydown', function(e) {
+        if (
+            e.key === 'F12' ||
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) ||
+            (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S' || e.key === 'p' || e.key === 'P'))
+        ) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    }, true);
+
+    document.addEventListener('dragstart', function(e) { e.preventDefault(); }, false);
+    document.addEventListener('selectstart', function(e) {
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+        }
+    }, false);
+
+    document.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) { e.preventDefault(); }
+    }, { passive: false });
+})();
+
 function openExternalURL(url) {
     if (hasJuceBridge()) {
-        callNative('openURLNative', url);
+        callNative('openURLNative', [url]);
     } else {
         window.open(url, '_blank');
     }
@@ -486,6 +517,8 @@ function openExternalURL(url) {
 
 function getOrCreateDeviceId() {
     try {
+        var cached = localStorage.getItem('offszn_device_hwid');
+        if (cached && cached.trim().length > 0 && !cached.startsWith('web-')) return cached.trim();
         var id = localStorage.getItem('offszn_device_id');
         if (!id) {
             id = 'web-' + Math.random().toString(36).substr(2,9) + '-' + Date.now();
@@ -497,8 +530,17 @@ function getOrCreateDeviceId() {
 
 function getHwidAsync() {
     if (hasJuceBridge()) {
-        return callNative('getHardwareId').then(function(hwid) {
-            return hwid || getOrCreateDeviceId();
+        return Promise.race([
+            callNative('getHardwareId'),
+            new Promise(function(resolve) { setTimeout(function() { resolve(null); }, 1500); })
+        ]).then(function(hwid) {
+            if (hwid && typeof hwid === 'string' && hwid.trim().length > 0) {
+                try { localStorage.setItem('offszn_device_hwid', hwid.trim()); } catch(e) {}
+                return hwid.trim();
+            }
+            return getOrCreateDeviceId();
+        }).catch(function() {
+            return getOrCreateDeviceId();
         });
     }
     return Promise.resolve(getOrCreateDeviceId());
@@ -701,6 +743,17 @@ function retryTrialVerification() {
     verifyTrialOnline(_currentTrialSerial);
 }
 
+function calcDaysLeft(response) {
+    if (!response) return 7;
+    if (response.days_remaining !== undefined && response.days_remaining !== null) return response.days_remaining;
+    if (response.remaining_days !== undefined && response.remaining_days !== null) return response.remaining_days;
+    if (response.expires_at && response.expires_at !== 'never') {
+        var ms = new Date(response.expires_at) - new Date();
+        return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+    }
+    return 7;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // ═══ LICENSE VERIFICATION ═════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -718,7 +771,7 @@ function verifyTrialOnline(serial) {
                 callNative('setLicenseStatus', true, serial);
                 try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
                 S.lic = true;
-                var daysLeft = response.days_remaining || response.remaining_days || 7;
+                var daysLeft = calcDaysLeft(response);
                 updateTrialBadge(true, daysLeft + ' DÍAS');
             } else {
                 triggerLicenseExpired(
@@ -774,7 +827,7 @@ function verifyLicense() {
                 callNative('saveLicense', serial);
                 S.lic = true;
                 var isTrial  = serial.indexOf('TRIAL') !== -1;
-                var daysLeft = response.days_remaining || response.remaining_days || 7;
+                var daysLeft = calcDaysLeft(response);
                 closeActivationModal();
                 updateTrialBadge(isTrial, daysLeft + ' DÍAS');
                 document.getElementById('welcome-modal').classList.add('active');
@@ -821,7 +874,7 @@ function submitExpiredSerial() {
                 try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
                 S.lic = true;
                 var isTrial  = serial.indexOf('TRIAL') !== -1;
-                var daysLeft = response.days_remaining || response.remaining_days || 7;
+                var daysLeft = calcDaysLeft(response);
                 document.getElementById('license-expired-overlay').style.display = 'none';
                 updateTrialBadge(isTrial, daysLeft + ' DÍAS');
                 if (isTrial) { _currentTrialSerial = serial; startTrialBackgroundCheck(); }

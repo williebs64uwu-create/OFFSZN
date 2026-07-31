@@ -369,12 +369,20 @@ export const activateSerial = async (req, res) => {
         const payload = `${serial_key}|${expiresAtStr}`;
         const signature = signPayload(payload);
 
-        console.log("✅ [API /activate] Success!", { serial_key, license_type: license.license_type, expires_at: expiresAtStr });
+        let daysRemaining = null;
+        if (license.license_type === 'trial' && license.expires_at) {
+            const ms = new Date(license.expires_at) - new Date();
+            daysRemaining = Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+        }
+
+        console.log("✅ [API /activate] Success!", { serial_key, license_type: license.license_type, expires_at: expiresAtStr, days_remaining: daysRemaining });
         return res.json({
             success: true,
             serial_key,
             license_type: license.license_type,   // 'trial' | 'subscription' | 'lifetime'
             expires_at: expiresAtStr,
+            days_remaining: daysRemaining,
+            remaining_days: daysRemaining,
             signature
         });
     } catch (error) {
