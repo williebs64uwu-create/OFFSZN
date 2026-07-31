@@ -764,7 +764,7 @@ function calcDaysLeft(response) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ═══ LICENSE VERIFICATION ═════════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════════════════════════
-function verifyTrialOnline(serial) {
+function verifyTrialOnlineSilently(serial) {
     _currentTrialSerial = serial;
     getHwidAsync().then(function(hwid) {
         fetch(apiBase + '/api/plugin/activate', {
@@ -775,12 +775,9 @@ function verifyTrialOnline(serial) {
         .then(function(r) { return r.json(); })
         .then(function(response) {
             if (response && response.success) {
-                callNative('setLicenseStatus', true, serial);
-                try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
-                S.lic = true;
                 var daysLeft = calcDaysLeft(response);
                 updateTrialBadge(true, daysLeft + ' DÍAS');
-            } else {
+            } else if (response && response.error && (response.error.toLowerCase().includes('expired') || response.error.toLowerCase().includes('expirad'))) {
                 triggerLicenseExpired(
                     'Prueba Expirada',
                     'Tu periodo de prueba ha terminado. Puedes adquirir una licencia en offszn.lat para seguir usando Inka Kola.'
@@ -788,13 +785,15 @@ function verifyTrialOnline(serial) {
             }
         })
         .catch(function() {
-            triggerLicenseOffline(
-                'Sin Conexión',
-                'El plugin requiere conexión a Internet para validar tu periodo de prueba. Conéctate para continuar e ingresa una Serial Key válida.'
-            );
+            // Offline or network delay: DO NOT lock out user if locally validated
         });
     });
 }
+
+function verifyTrialOnline(serial) {
+    verifyTrialOnlineSilently(serial);
+}
+
 
 // Called when user submits from the activation modal
 function verifyLicense() {
@@ -947,27 +946,21 @@ setTimeout(function() {
             var isValid = state && state.isValid;
             var serial  = ((state && state.serial) || '').trim();
 
-            if (serial) {
+            if (serial && isValid) {
+                // ─ LICENSE VALID ON DISK: Trust local activation immediately ─
+                try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+                S.lic = true;
                 var isTrial = serial.toUpperCase().indexOf('TRIAL') !== -1;
                 if (isTrial) {
-                    // ─ TRIAL KEY: ALWAYS requires internet verification ─
                     _currentTrialSerial = serial;
-                    verifyTrialOnline(serial);
+                    updateTrialBadge(true, (state.trialDaysLeft || 7) + ' DÍAS');
+                    verifyTrialOnlineSilently(serial);
                     startTrialBackgroundCheck();
                 } else {
-                    // ─ FULL KEY: Trust local validation, NO internet needed ─
-                    if (isValid) {
-                        try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
-                        S.lic = true;
-                        updateTrialBadge(false); // Hide badge completely for FULL
-                    } else {
-                        // Full key present but C++ says invalid → ask for new activation
-                        callNative('setLicenseStatus', false);
-                        openActivationModal(false); // No close button
-                    }
+                    updateTrialBadge(false); // Hide badge completely for FULL
                 }
             } else {
-                // ─ NO SERIAL AT ALL → Open blocking activation modal ─
+                // ─ NO SERIAL OR INVALID → Open blocking activation modal ─
                 callNative('setLicenseStatus', false);
                 openActivationModal(false); // No close button — user MUST activate
             }
@@ -986,9 +979,8 @@ setTimeout(function() {
             openActivationModal(false);
         }
     }
-// NOTE: 500ms delay ensures window.OFFSZN_HWID is injected by C++ (via evaluateJavascript
-// called from sendAllParamsToUI) BEFORE getHwidAsync() is called inside verifyTrialOnline.
-}, 500);
+}, 300);
+
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
