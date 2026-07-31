@@ -453,17 +453,24 @@ window.StickyPlayer = (function () {
                 // Regular Product Mode
                 els.secondaryBtn.style.display = 'none';
                 // --- PRICING LOGIC FIX ---
-                // For beats, we only show 'FREE' if price_basic is 0 (explicitly set as a free license).
+                // For beats, we only show 'FREE' if price is 0 (explicitly set as a free license).
                 // Many beats have is_free=true meaning 'Free Download' (demo) is allowed, but they still have paid licenses.
                 const isBeat = trackData.product_type === 'beat';
-                const rawPrice = trackData.price_basic !== undefined && trackData.price_basic !== null ? parseFloat(trackData.price_basic) : null;
+                const rawPrice = getLowestProductPrice(trackData);
                 
                 // Fix: If it's a beat and price is null but is_free is true, it should be FREE
                 const isTrulyFree = isBeat 
                     ? (rawPrice === 0 || (rawPrice === null && (trackData.is_free === true || String(trackData.is_free) === 'true'))) 
                     : (trackData.is_free === true || String(trackData.is_free) === 'true' || rawPrice === 0);
 
-                els.priceLabel.innerText = isTrulyFree ? 'FREE' : (window.CurrencyManager && rawPrice !== null ? window.CurrencyManager.format(rawPrice) : (rawPrice !== null ? `$${rawPrice}` : '—'));
+                let priceDisplay = 'FREE';
+                if (!isTrulyFree) {
+                    if (rawPrice !== null) {
+                        priceDisplay = window.CurrencyManager ? window.CurrencyManager.format(rawPrice) : `$${rawPrice.toFixed(2)}`;
+                    }
+                }
+
+                els.priceLabel.innerText = priceDisplay;
                 if (els.buyBtn) {
                     const icon = els.buyBtn.querySelector('i');
                     if (icon) icon.className = 'bi bi-cart-plus';
@@ -1061,7 +1068,7 @@ window.StickyPlayer = (function () {
             return;
         }
 
-        const price = parseFloat(currentTrack.price_basic) || 0;
+        const price = getLowestProductPrice(currentTrack) || 0;
         const isFree = (currentTrack.is_free === true || String(currentTrack.is_free) === 'true' || price === 0) && currentTrack.product_type !== 'beat';
 
         if (isFree) {

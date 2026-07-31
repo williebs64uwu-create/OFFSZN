@@ -1155,6 +1155,7 @@ window.playProductCover = async function () {
     // Play via StickyPlayer
     if (window.StickyPlayer && window.StickyPlayer.play) {
         window.StickyPlayer.play({
+            ...product,
             id: product.id,
             name: product.name,
             audio_url: finalAudioUrl,
