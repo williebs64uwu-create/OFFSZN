@@ -736,6 +736,9 @@ window.setLicenseStatus = function(isValid) {
     if (isValid) {
         if (overlay) { overlay.classList.remove('active'); }
         S.lic = true;
+        if (typeof syncParamsFromNative === 'function') {
+            syncParamsFromNative();
+        }
     } else {
         if (overlay) { overlay.classList.add('active'); }
         if (spinnerArea) spinnerArea.style.display = 'none';
@@ -1060,30 +1063,53 @@ setTimeout(function() {
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ═══ PARAM SYNC: Listen for "init-params" pushed by C++ timerCallback ══════════
+// ═══ PARAM SYNC: Restore UI controls from C++ APVTS state ═════════════════════
 // ═══════════════════════════════════════════════════════════════════════════════
-// C++ pushes params via emitEventIfBrowserIsVisible — replaces old callNative('getParams')
-if (typeof window.__JUCE__ !== 'undefined') {
+function applyUIParams(res) {
+    if (!res) return;
+    var refillVal = (res.refill !== undefined) ? res.refill : res.outputGain;
+    if (refillVal !== undefined && !isNaN(refillVal)) {
+        updateGas(refillVal, true, false);
+    }
+    if (res.width !== undefined && !isNaN(res.width) && knobRegistry['width']) {
+        knobRegistry['width'].setValue(res.width);
+    }
+    if (res.sat10k !== undefined && !isNaN(res.sat10k) && knobRegistry['sat10k']) {
+        knobRegistry['sat10k'].setValue(res.sat10k);
+    }
+    if (res.bassMono !== undefined && !isNaN(res.bassMono) && knobRegistry['bassMono']) {
+        knobRegistry['bassMono'].setValue(res.bassMono);
+    }
+}
+
+// 1. Listen for C++ event push (emitEventIfBrowserIsVisible)
+if (window.__JUCE__ && window.__JUCE__.backend) {
     try {
-        var _inkaBridge = window.__JUCE__.getEventLoop();
-        _inkaBridge.addEventListener('init-params', function(res) {
-            if (!res) return;
-            if (res.refill    !== undefined) updateGas(res.refill, true, false);
-            if (res.width     !== undefined && knobRegistry['width'])    knobRegistry['width'].setValue(res.width);
-            if (res.sat10k    !== undefined && knobRegistry['sat10k'])   knobRegistry['sat10k'].setValue(res.sat10k);
-            if (res.bassMono  !== undefined && knobRegistry['bassMono']) knobRegistry['bassMono'].setValue(res.bassMono);
+        window.__JUCE__.backend.addEventListener('init-params', function(ev) {
+            var res = (ev && ev.detail !== undefined) ? ev.detail : ev;
+            applyUIParams(res);
         });
-    } catch(e) { console.warn('[INKA KOLA] init-params listener error:', e); }
+    } catch(e) {}
+}
+
+// 2. Fetch parameters directly from native C++ APVTS state as well (bulletproof)
+function syncParamsFromNative() {
+    if (hasJuceBridge()) {
+        callNative('getParams').then(function(params) {
+            if (params) applyUIParams(params);
+        }).catch(function(){});
+    }
 }
 
 // ── Signal C++ that JS is ready → triggers sendAllParamsToUI() + HWID injection ──
-// Must fire BEFORE the license boot sequence (150ms) so window.OFFSZN_HWID is set
 setTimeout(function() {
     if (hasJuceBridge()) {
         try { callNative('setParam', 'ui-ready', 1); } catch(e) {}
+        syncParamsFromNative();
     }
 }, 50);
 
 </script>
 </body>
 </html>
+
