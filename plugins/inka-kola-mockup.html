@@ -677,8 +677,8 @@ function triggerLicenseExpired(title, subtitle) {
 function triggerLicenseOffline(title, subtitle) {
     callNative('setLicenseStatus', false);
     var overlay = document.getElementById('license-expired-overlay');
-    document.getElementById('exp-title').textContent    = title    || 'SIN CONEXIÓN';
-    document.getElementById('exp-subtitle').textContent = subtitle || 'El plugin requiere Internet para validar tu periodo de prueba.';
+    document.getElementById('exp-title').textContent    = title    || 'Sin Conexión';
+    document.getElementById('exp-subtitle').textContent = subtitle || 'El plugin requiere conexión a Internet para validar tu periodo de prueba. Conéctate para continuar.';
     // Show retry button; hide input/activate (can't activate without internet)
     document.getElementById('exp-serial-input').style.display = 'none';
     document.getElementById('exp-submit-btn').style.display   = 'none';
@@ -718,14 +718,14 @@ function verifyTrialOnline(serial) {
                 updateTrialBadge(true, daysLeft + ' DÍAS');
             } else {
                 triggerLicenseExpired(
-                    'PRUEBA EXPIRADA',
-                    'Tu periodo de prueba de ' + PLUGIN_NAME + ' ha expirado. Adquiere tu licencia FULL en offszn.lat'
+                    'Prueba Expirada',
+                    'Tu periodo de prueba de 7 días ha expirado. Adquiere una licencia FULL en offszn.lat para seguir usando INKA KOLA.'
                 );
             }
         })
         .catch(function() {
             triggerLicenseOffline(
-                'SIN CONEXIÓN',
+                'Sin Conexión',
                 'El plugin requiere conexión a Internet para validar tu periodo de prueba. Conéctate para continuar.'
             );
         });
@@ -736,7 +736,7 @@ function verifyTrialOnline(serial) {
 function verifyLicense() {
     var serial = document.getElementById('serial-input').value.trim().toUpperCase();
     if (!serial) {
-        showCustomAlert('Activar Licencia', 'Por favor ingresa tu Serial Key de OFFSZN.', '🔑');
+        showCustomAlert('Activar Licencia', 'Por favor, ingresa tu Serial Key de OFFSZN.', '🔑');
         return;
     }
     var btn = document.getElementById('activate-btn');
@@ -782,14 +782,14 @@ function verifyLicense() {
                 if (btn) btn.classList.remove('btn-loading');
                 showCustomAlert(
                     'Error de Activación',
-                    getFriendlyLicenseError(serial, response && response.error),
+                    getFriendlyLicenseError(serial, response && response.error || 'Licencia inválida'),
                     '❌'
                 );
             }
         })
         .catch(function() {
             if (btn) btn.classList.remove('btn-loading');
-            showCustomAlert('Error de Conexión', 'No se pudo conectar al servidor. Verifica tu conexión a Internet.', '❌');
+            showCustomAlert('Error de Conexión', 'No se pudo conectar al servidor. Activa tu conexión a Internet para validar la licencia.', '❌');
         });
     });
 }
@@ -827,14 +827,14 @@ function submitExpiredSerial() {
                 setTimeout(function() { input.style.borderColor = ''; }, 2000);
                 showCustomAlert(
                     'Error de Activación',
-                    getFriendlyLicenseError(serial, response && response.error),
+                    getFriendlyLicenseError(serial, response && response.error || 'Licencia inválida'),
                     '❌'
                 );
             }
         })
         .catch(function() {
             if (btn) btn.classList.remove('btn-loading');
-            showCustomAlert('Error de Conexión', 'No se pudo conectar al servidor. Verifica tu internet.', '❌');
+            showCustomAlert('Error de Conexión', 'No se pudo conectar al servidor. Activa tu conexión a Internet para validar la licencia.', '❌');
         });
     });
 }
@@ -861,8 +861,8 @@ function startTrialBackgroundCheck() {
                 } else {
                     clearInterval(_bgCheckInterval);
                     triggerLicenseExpired(
-                        'PRUEBA EXPIRADA',
-                        'Tu periodo de prueba ha expirado mientras usabas el plugin. Adquiere tu licencia FULL en offszn.lat'
+                        'Prueba Expirada',
+                        'Tu periodo de prueba de 7 días ha expirado. Adquiere una licencia FULL en offszn.lat para seguir usando INKA KOLA.'
                     );
                 }
             })
