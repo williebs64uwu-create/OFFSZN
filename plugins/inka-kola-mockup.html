@@ -687,6 +687,17 @@ function updateTrialBadge(isTrial, timeText) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ═══ ACTIVATION MODAL CONTROL ═════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════════════════════════
+(function initLoadingScreen() {
+    var screen = document.getElementById('loading-screen');
+    var bar = document.getElementById('loadingBar');
+    if (!screen || !bar) return;
+    setTimeout(function() { bar.style.width = '100%'; }, 50);
+    setTimeout(function() {
+        screen.classList.add('fade-out');
+        setTimeout(function() { screen.style.display = 'none'; }, 450);
+    }, 900);
+})();
+
 function hideLoadingScreen() {
     var ls = document.getElementById('loading-screen');
     if (ls) {
@@ -704,6 +715,7 @@ function openActivationModal(canClose) {
     document.getElementById('activation-content').style.display   = 'block';
     overlay.classList.add('active');
 }
+
 
 
 function closeActivationModal() {
