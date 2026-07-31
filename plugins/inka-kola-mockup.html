@@ -379,16 +379,17 @@
         z-index:10000; display:none; flex-direction:column;
         align-items:center; justify-content:center; gap:12px; border-radius:0;">
         <div style="font-size:36px;">🔒</div>
-        <div id="exp-title" style="font-size:15px; font-weight:800; color:#ff453a; letter-spacing:1px; text-transform:uppercase;">LICENCIA EXPIRADA</div>
-        <div id="exp-subtitle" style="font-size:11px; color:#8e8e93; text-align:center; max-width:280px; line-height:1.6;">Tu periodo de prueba ha expirado.</div>
+        <div id="exp-title" style="font-size:15px; font-weight:800; color:#ff453a; letter-spacing:1px; text-transform:uppercase;">Prueba Expirada</div>
+        <div id="exp-subtitle" style="font-size:11px; color:#8e8e93; text-align:center; max-width:290px; line-height:1.7;">Tu periodo de prueba ha terminado.<br>Puedes adquirir una licencia en <strong style="color:var(--gold)">offszn.lat</strong> para seguir usando Inka Kola.</div>
         <input id="exp-serial-input" class="act-input" type="text"
-               placeholder="INKA-FULL-XXXX-YYYY"
+               placeholder="Ingresa una Serial Key válida"
                spellcheck="false" autocomplete="off"
                oninput="this.value=this.value.toUpperCase()"
                style="width:270px; padding:10px; font-size:11px; margin-bottom:8px;">
         <button id="exp-submit-btn" class="act-btn act-btn-primary" onclick="submitExpiredSerial()" style="width:280px; margin-bottom:4px;">ACTIVAR NUEVA LICENCIA</button>
         <button id="exp-retry-btn"  class="act-btn act-btn-secondary" onclick="retryTrialVerification()" style="width:280px; display:none;">REINTENTAR CONEXIÓN</button>
         <button id="exp-link-btn"   class="act-btn act-btn-secondary" onclick="callNative('openURLNative','https://offszn.lat/plugins/inka-kola');" style="width:280px;">CONSIGUE TU LICENCIA →</button>
+        <button class="act-btn act-btn-secondary" onclick="callNative('openURLNative','https://offszn.lat/soporte');" style="width:280px; opacity:0.65; font-size:9px;">CONTACTAR SOPORTE</button>
     </div>
 
     <!-- ═══ WELCOME MODAL — IGUAL A EASY MASTER ═══ -->
@@ -663,8 +664,8 @@ function triggerLicenseExpired(title, subtitle) {
     if (hasJuceBridge()) callNative('saveLicense', '');
 
     var overlay = document.getElementById('license-expired-overlay');
-    document.getElementById('exp-title').textContent    = title    || 'LICENCIA EXPIRADA';
-    document.getElementById('exp-subtitle').textContent = subtitle || 'Tu periodo de prueba ha expirado.';
+    document.getElementById('exp-title').textContent    = title    || 'Prueba Expirada';
+    document.getElementById('exp-subtitle').textContent = subtitle || 'Tu periodo de prueba ha terminado. Puedes adquirir una licencia en offszn.lat para seguir usando Inka Kola.';
     // Show input + activate button; hide retry
     document.getElementById('exp-serial-input').style.display = 'block';
     document.getElementById('exp-submit-btn').style.display   = 'block';
@@ -678,7 +679,7 @@ function triggerLicenseOffline(title, subtitle) {
     callNative('setLicenseStatus', false);
     var overlay = document.getElementById('license-expired-overlay');
     document.getElementById('exp-title').textContent    = title    || 'Sin Conexión';
-    document.getElementById('exp-subtitle').textContent = subtitle || 'El plugin requiere conexión a Internet para validar tu periodo de prueba. Conéctate para continuar.';
+    document.getElementById('exp-subtitle').textContent = subtitle || 'El plugin requiere conexión a Internet para validar tu periodo de prueba. Conéctate para continuar e ingresa una Serial Key válida.';
     // Show retry button; hide input/activate (can't activate without internet)
     document.getElementById('exp-serial-input').style.display = 'none';
     document.getElementById('exp-submit-btn').style.display   = 'none';
@@ -719,14 +720,14 @@ function verifyTrialOnline(serial) {
             } else {
                 triggerLicenseExpired(
                     'Prueba Expirada',
-                    'Tu periodo de prueba de 7 días ha expirado. Adquiere una licencia FULL en offszn.lat para seguir usando INKA KOLA.'
+                    'Tu periodo de prueba ha terminado. Puedes adquirir una licencia en offszn.lat para seguir usando Inka Kola.'
                 );
             }
         })
         .catch(function() {
             triggerLicenseOffline(
                 'Sin Conexión',
-                'El plugin requiere conexión a Internet para validar tu periodo de prueba. Conéctate para continuar.'
+                'El plugin requiere conexión a Internet para validar tu periodo de prueba. Conéctate para continuar e ingresa una Serial Key válida.'
             );
         });
     });
@@ -862,7 +863,7 @@ function startTrialBackgroundCheck() {
                     clearInterval(_bgCheckInterval);
                     triggerLicenseExpired(
                         'Prueba Expirada',
-                        'Tu periodo de prueba de 7 días ha expirado. Adquiere una licencia FULL en offszn.lat para seguir usando INKA KOLA.'
+                        'Tu periodo de prueba ha terminado. Puedes adquirir una licencia en offszn.lat para seguir usando Inka Kola.'
                     );
                 }
             })
