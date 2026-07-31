@@ -123,11 +123,12 @@ export const generateTrialWebLicense = async (req, res) => {
 
         // Create new trial key
         const isMaster = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
-        const basePrefix = isMaster ? 'MASTER' : 'EASY';
+        const isInka   = (plugin_name === 'INKA KOLA'   || plugin_name === 'Inka Kola');
+        const basePrefix = isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY');
         const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiryDate = new Date();
-        const trialDays = isMaster ? 3 : 1;
-        expiryDate.setDate(expiryDate.getDate() + trialDays); // 3 days for Master, 1 day for Mix
+        const trialDays = isInka ? 7 : (isMaster ? 3 : 1);
+        expiryDate.setDate(expiryDate.getDate() + trialDays); // 7 days for INKA KOLA, 3 for Master, 1 for Mix
         const expiresAt = expiryDate.toISOString();
 
         const { data: newLic, error: licErr } = await supabase
