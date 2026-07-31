@@ -687,7 +687,16 @@ function updateTrialBadge(isTrial, timeText) {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ═══ ACTIVATION MODAL CONTROL ═════════════════════════════════════════════════
 // ═══════════════════════════════════════════════════════════════════════════════
+function hideLoadingScreen() {
+    var ls = document.getElementById('loading-screen');
+    if (ls) {
+        ls.classList.add('fade-out');
+        setTimeout(function() { ls.style.display = 'none'; }, 400);
+    }
+}
+
 function openActivationModal(canClose) {
+    hideLoadingScreen();
     var overlay  = document.getElementById('activation-overlay');
     var closeBtn = document.getElementById('btn-close-activation');
     if (closeBtn) closeBtn.style.display = canClose ? 'block' : 'none';
@@ -695,6 +704,7 @@ function openActivationModal(canClose) {
     document.getElementById('activation-content').style.display   = 'block';
     overlay.classList.add('active');
 }
+
 
 function closeActivationModal() {
     document.getElementById('activation-overlay').classList.remove('active');
@@ -950,6 +960,7 @@ setTimeout(function() {
                 // ─ LICENSE VALID ON DISK: Trust local activation immediately ─
                 try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
                 S.lic = true;
+                hideLoadingScreen();
                 var isTrial = serial.toUpperCase().indexOf('TRIAL') !== -1;
                 if (isTrial) {
                     _currentTrialSerial = serial;
@@ -974,12 +985,14 @@ setTimeout(function() {
         try { serial = localStorage.getItem('offszn_serial') || ''; } catch(e) {}
         if (serial) {
             var isTrial = serial.toUpperCase().indexOf('TRIAL') !== -1;
+            hideLoadingScreen();
             updateTrialBadge(isTrial, '7 DÍAS');
         } else {
             openActivationModal(false);
         }
     }
 }, 300);
+
 
 
 
