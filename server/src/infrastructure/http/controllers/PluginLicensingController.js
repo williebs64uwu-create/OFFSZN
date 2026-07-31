@@ -226,7 +226,9 @@ export const requestTrial = async (req, res) => {
 // ─── Helper: Generate plugin license after purchase ────────────────────────────
 // Called internally from PayPalController after a successful plugin purchase.
 export async function generatePluginLicense({ licenseType, userEmail, userId, pluginName = 'Easy Mix' }) {
-    let basePrefix = (pluginName === 'EASY MASTER' || pluginName === 'Easy Master') ? 'MASTER' : 'EASY';
+    const isInka = (pluginName === 'INKA KOLA' || pluginName === 'Inka Kola');
+    const isMaster = (pluginName === 'EASY MASTER' || pluginName === 'Easy Master');
+    let basePrefix = isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY');
     const prefix = licenseType === 'subscription' ? `${basePrefix}-SUB` : `${basePrefix}-FULL`;
     const serialKey = `${prefix}-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
@@ -283,23 +285,30 @@ export const activateSerial = async (req, res) => {
         if (licErr || !license) return res.status(404).json({ error: 'Licencia no encontrada o inválida.' });
         if (license.status !== 'active') return res.status(403).json({ error: 'Esta licencia está inactiva o suspendida.' });
 
-        // ── Validation: Match Plugin product (Easy Mix vs Easy Master) ──
+        // ── Validation: Match Plugin product (Inka Kola vs Easy Master vs Easy Mix) ──
         const upperSerial = (serial_key || '').toUpperCase();
         const requestedPlugin = (req.body.plugin_name || '').toLowerCase();
         const registeredPlugin = (license.plugin_name || '').toLowerCase();
 
-        // Detect target plugin
+        const isInkaKey = upperSerial.startsWith('INKA') || registeredPlugin.includes('inka');
         const isMasterKey = upperSerial.startsWith('MASTER') || registeredPlugin.includes('master');
-        const isMasterReq = requestedPlugin.includes('master');
-
         const isMixKey = (upperSerial.startsWith('EASY-') && !upperSerial.startsWith('EASY-MASTER')) || (registeredPlugin.includes('mix') && !registeredPlugin.includes('master'));
+
+        const isInkaReq = requestedPlugin.includes('inka');
+        const isMasterReq = requestedPlugin.includes('master');
         const isMixReq = requestedPlugin.includes('mix') && !requestedPlugin.includes('master');
 
+        if (isInkaReq && !isInkaKey) {
+            return res.status(403).json({ error: 'Esta licencia no pertenece a Inka Kola.' });
+        }
         if (isMasterReq && !isMasterKey) {
-            return res.status(403).json({ error: 'Esta licencia es para Easy Mix y no sirve para Easy Master.' });
+            return res.status(403).json({ error: 'Esta licencia no pertenece a Easy Master.' });
         }
         if (isMixReq && !isMixKey) {
-            return res.status(403).json({ error: 'Esta licencia es para Easy Master y no sirve para Easy Mix.' });
+            return res.status(403).json({ error: 'Esta licencia no pertenece a Easy Mix.' });
+        }
+        if (isInkaKey && !isInkaReq && requestedPlugin.length > 0) {
+            return res.status(403).json({ error: 'Esta licencia es exclusiva para Inka Kola y no sirve para otros plugins.' });
         }
 
         // 2. Check expiration

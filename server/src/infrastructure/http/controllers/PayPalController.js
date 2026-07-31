@@ -198,14 +198,23 @@ export const createPayPalOrder = async (req, res) => {
                 .eq('id', directProductId)
                 .single();
 
-            if (prodErr || !product) {
-                return res.status(404).json({ error: 'Producto no encontrado' });
+            let productObj = product;
+            if (!productObj) {
+                if (String(directProductId) === '902') {
+                    productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
+                } else if (String(directProductId) === '900') {
+                    productObj = { id: 900, name: 'Easy Master', price_basic: 5, producer_id: null };
+                } else if (String(directProductId) === '901') {
+                    productObj = { id: 901, name: 'Easy Mix', price_basic: 5, producer_id: null };
+                } else {
+                    return res.status(404).json({ error: 'Producto no encontrado' });
+                }
             }
 
             cartItems = [{
-                product,
+                product: productObj,
                 license_name: 'lifetime',
-                variant_price: product.price_basic
+                variant_price: productObj.price_basic || 5
             }];
         } else if (isNegotiation && negotiateToken) {
             // NEGOTIATION FLOW
@@ -635,13 +644,24 @@ export const capturePayPalOrder = async (req, res) => {
                     .eq('id', directProductId)
                     .single();
 
-                if (prodErr || !product) {
+                let productObj = product;
+                if (!productObj) {
+                    if (String(directProductId) === '902') {
+                        productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
+                    } else if (String(directProductId) === '900') {
+                        productObj = { id: 900, name: 'Easy Master', price_basic: 5, producer_id: null };
+                    } else if (String(directProductId) === '901') {
+                        productObj = { id: 901, name: 'Easy Mix', price_basic: 5, producer_id: null };
+                    }
+                }
+
+                if (!productObj) {
                     console.error("[PayPalCapture] Product not found during direct checkout:", directProductId);
                 } else {
                     cartItems = [{
-                        product,
+                        product: productObj,
                         license_name: 'lifetime',
-                        variant_price: product.price_basic
+                        variant_price: productObj.price_basic || 5
                     }];
                 }
             } else if (isNegotiation && negotiateToken) {
@@ -937,7 +957,7 @@ export const capturePayPalOrder = async (req, res) => {
                 console.log(`[PayPalCapture] Recorded ${orderItems.length} order_item(s) for order ${order.id}`);
             }
 
-            // --- GENERAR LICENCIA DEL PLUGIN SI SE COMPRÓ EASY MIX / EASY MASTER ---
+            // --- GENERAR LICENCIA DEL PLUGIN SI SE COMPRÓ EASY MIX / EASY MASTER / INKA KOLA ---
             let generatedLicenseKey = null;
             let keysGenerated = [];
 
@@ -945,10 +965,11 @@ export const capturePayPalOrder = async (req, res) => {
                 const prodName = item.product?.name || '';
                 const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix');
                 const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster');
+                const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola');
                 
-                if (isEasyMix || isEasyMaster) {
+                if (isEasyMix || isEasyMaster || isInkaKola) {
                     try {
-                        const pluginName = isEasyMaster ? 'Easy Master' : 'Easy Mix';
+                        const pluginName = isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix');
                         const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
                                                (item.product?.product_type && item.product.product_type === 'subscription');
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';

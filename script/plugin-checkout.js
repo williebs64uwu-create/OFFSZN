@@ -10,16 +10,29 @@ class PluginDirectCheckout {
         this.productId = window.PLUGIN_ID;
         this.paypalInitialized = false;
 
-        // Download links based on product ID
-        this.downloads = this.productId === 900 ? {
-            name: 'Easy Master',
-            win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
-            mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
-        } : {
-            name: 'Easy Mix',
-            win: 'https://drive.google.com/file/d/1WfaTrrbuaxymcFhnHGjmrump_rG-LGUW/view?usp=sharing',
-            mac: 'https://drive.google.com/file/d/1o1q0Ca5eghr1CJmtxmOw52MgEXi_wKl9/view?usp=sharing'
-        };
+        // Download links based on product ID / name
+        const isMaster = this.productId === 900 || window.PLUGIN_NAME === 'Easy Master';
+        const isInka = this.productId === 902 || window.PLUGIN_NAME === 'INKA KOLA' || window.PLUGIN_NAME === 'Inka Kola';
+
+        if (isInka) {
+            this.downloads = {
+                name: 'Inka Kola',
+                win: '/installer_output/INKA_KOLA_Setup.exe',
+                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+            };
+        } else if (isMaster) {
+            this.downloads = {
+                name: 'Easy Master',
+                win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
+                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+            };
+        } else {
+            this.downloads = {
+                name: 'Easy Mix',
+                win: 'https://drive.google.com/file/d/1WfaTrrbuaxymcFhnHGjmrump_rG-LGUW/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1o1q0Ca5eghr1CJmtxmOw52MgEXi_wKl9/view?usp=sharing'
+            };
+        }
 
         this.init();
     }
