@@ -446,3 +446,26 @@ export const adminResetLicense = async (req, res) => {
         res.status(500).json({ error: 'Error interno del servidor.' });
     }
 };
+
+// ─── POST /api/plugin/admin/delete-license ─────────────────────────────────────
+// Admin-only: Deletes a license by serial_key (no replacement generated).
+// Body: { admin_key: "...", serial_key: "INKA-FULL-..." }
+export const adminDeleteLicense = async (req, res) => {
+    try {
+        const { admin_key, serial_key } = req.body;
+        const expectedKey = process.env.PLUGIN_ADMIN_KEY || 'offszn-admin-2026';
+        if (admin_key !== expectedKey) return res.status(403).json({ error: 'Unauthorized' });
+        if (!serial_key) return res.status(400).json({ error: 'Falta serial_key' });
+
+        const { data: lic } = await supabase.from('plugin_licenses').select('id').eq('serial_key', serial_key).single();
+        if (lic) {
+            await supabase.from('plugin_activations').delete().eq('license_id', lic.id);
+            await supabase.from('plugin_licenses').delete().eq('id', lic.id);
+            console.log(`🗑️ [Admin] Deleted license ${serial_key}`);
+        }
+        return res.json({ success: true, deleted: serial_key });
+    } catch (error) {
+        console.error('💥 [Admin] Delete License Error:', error);
+        res.status(500).json({ error: 'Error interno.' });
+    }
+};
