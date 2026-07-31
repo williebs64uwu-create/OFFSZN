@@ -34,37 +34,18 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 0.4s ease;
         }
-        .loading-overlay.fade-out {
-            opacity: 0; pointer-events: none;
-        }
-        .loading-logo {
-            font-size: 22px; font-weight: 800; letter-spacing: 4px; color: var(--gold);
-            margin-bottom: 4px;
-        }
-        .loading-sub {
-            font-size: 10px; font-weight: 700; letter-spacing: 3px; color: var(--dim);
-            margin-bottom: 24px;
-        }
-        .loading-track {
-            width: 140px; height: 3px;
-            background: rgba(255,255,255,0.08); border-radius: 2px;
-            overflow: hidden; position: relative;
-        }
-        .loading-bar {
-            width: 0%; height: 100%;
-            background: linear-gradient(90deg, var(--gold-dark), var(--gold));
-            border-radius: 2px;
-            transition: width 0.7s ease;
-        }
+        .loading-overlay.fade-out { opacity: 0; pointer-events: none; }
+        .loading-logo { font-size: 22px; font-weight: 800; letter-spacing: 4px; color: var(--gold); margin-bottom: 4px; }
+        .loading-sub  { font-size: 10px; font-weight: 700; letter-spacing: 3px; color: var(--dim); margin-bottom: 24px; }
+        .loading-track { width: 140px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; }
+        .loading-bar   { width: 0%; height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 2px; transition: width 0.7s ease; }
 
-        /* ─── PLUGIN CONTAINER (100% full inside plugin window) ─── */
+        /* ─── PLUGIN CONTAINER ─── */
         .plugin {
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             background: var(--panel);
             display: flex; flex-direction: column;
-            position: relative; overflow: hidden;
-            flex-shrink: 0;
+            position: relative; overflow: hidden; flex-shrink: 0;
         }
 
         /* ─── HEADER ─── */
@@ -80,260 +61,190 @@
         .flag {
             width: 20px; height: 13px;
             background: linear-gradient(90deg, #d91424 33.3%, #fff 33.3%, #fff 66.6%, #d91424 66.6%);
-            border-radius: 2px;
-            flex-shrink: 0;
+            border-radius: 2px; flex-shrink: 0;
         }
         .brand { font-size: 15px; font-weight: 800; letter-spacing: 2px; color: var(--gold); }
-        
+
         .btn-gear {
             width: 28px; height: 28px; border-radius: 6px;
             background: rgba(255,204,0,.06); border: 1px solid rgba(255,204,0,.18);
             color: var(--gold); cursor: pointer;
             display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            transition: background 0.15s;
+            flex-shrink: 0; transition: background 0.15s;
         }
         .btn-gear:hover { background: rgba(255,204,0,.14); }
 
         .hdr-r { display: flex; align-items: center; gap: 8px; }
 
-        /* EASY MIX STYLE TRIAL BADGE (HIDDEN WHEN FULL ACTIVATED) */
-        .btn-lic {
-            font-size: 9px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
+        /* ═══ TRIAL BADGE — IDENTICAL TO EASY MASTER ═══ */
+        #trial-badge {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 204, 0, 0.10);
+            border: 1px solid rgba(255, 204, 0, 0.32);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 10px;
+            font-weight: 700;
             color: var(--gold);
-            background: rgba(255, 204, 0, 0.08);
-            border: 1px solid rgba(255, 204, 0, 0.25);
-            border-radius: 12px;
-            padding: 4px 10px;
+            letter-spacing: 0.5px;
             text-transform: uppercase;
+            white-space: nowrap;
             cursor: pointer;
-            display: flex; align-items: center; gap: 5px;
-            transition: all 0.2s;
         }
-        .btn-lic:hover {
-            background: rgba(255, 204, 0, 0.16);
-            border-color: var(--gold);
+        #trial-badge.visible { display: flex; }
+        #trial-badge .trial-dot {
+            width: 6px; height: 6px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: trialDotPulse 2s ease-in-out infinite;
         }
-        .btn-lic.hidden { display: none !important; }
-        .l-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+        @keyframes trialDotPulse {
+            0%, 100% { opacity: 0.4; transform: scale(0.8); }
+            50%       { opacity: 1;   transform: scale(1.2); }
+        }
 
         /* ─── STAGE ─── */
-        .stage {
-            flex: 1;
-            display: flex; align-items: center; justify-content: center;
-            gap: 40px; padding: 10px 20px;
-        }
+        .stage { flex: 1; display: flex; align-items: center; justify-content: center; gap: 40px; padding: 10px 20px; }
 
-        /* ─── BOTTLE CONTAINER ─── */
-        .bottle-zone {
-            display: flex; flex-direction: column; align-items: center; gap: 6px;
-            flex-shrink: 0;
-            width: 220px;
-        }
-
-        .bottle-wrap {
-            position: relative;
-            width: 220px;
-            height: 360px;
-            cursor: ns-resize;
-            flex-shrink: 0;
-        }
-
-        .bottle-bg-white {
-            position: absolute; inset: 0;
-            background: #ffffff; border-radius: 4px;
-        }
-
-        .bottle-empty {
-            position: absolute; inset: 0;
-            width: 100%; height: 100%;
-            object-fit: contain;
-            mix-blend-mode: multiply;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .bottle-full {
-            position: absolute; inset: 0;
-            width: 100%; height: 100%;
-            object-fit: contain;
-            mix-blend-mode: multiply;
-            pointer-events: none;
-            z-index: 2;
-            clip-path: inset(50% 0 0 0);
-            transition: none;
-        }
-
-        .bottle-label {
-            position: absolute; inset: 0;
-            width: 100%; height: 100%;
-            object-fit: contain;
-            mix-blend-mode: normal;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .pct-box {
-            display: flex; align-items: center; justify-content: center;
-            gap: 1px;
-            width: 120px;
-            margin-top: 2px;
-        }
-
+        /* ─── BOTTLE ─── */
+        .bottle-zone { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; width: 220px; }
+        .bottle-wrap { position: relative; width: 220px; height: 360px; cursor: ns-resize; flex-shrink: 0; }
+        .bottle-bg-white { position: absolute; inset: 0; background: #ffffff; border-radius: 4px; }
+        .bottle-empty  { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; pointer-events: none; z-index: 1; }
+        .bottle-full   { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; pointer-events: none; z-index: 2; clip-path: inset(50% 0 0 0); transition: none; }
+        .bottle-label  { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: normal; pointer-events: none; z-index: 10; }
+        .pct-box { display: flex; align-items: center; justify-content: center; gap: 1px; width: 120px; margin-top: 2px; }
         .pct-input::-webkit-outer-spin-button,
-        .pct-input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        .pct-input[type=number] {
-            -moz-appearance: textfield;
-        }
+        .pct-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .pct-input[type=number] { -moz-appearance: textfield; }
+        .pct-input  { width: 72px; background: transparent; border: none; color: var(--gold); font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 700; text-align: right; outline: none; padding: 0; }
+        .pct-symbol { font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 700; color: var(--gold); line-height: 1; }
 
-        .pct-input {
-            width: 72px;
-            background: transparent;
-            border: none;
-            color: var(--gold);
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 36px; font-weight: 700;
-            text-align: right;
-            outline: none;
-            padding: 0;
-            box-shadow: none;
-        }
-        .pct-symbol {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 36px; font-weight: 700; color: var(--gold);
-            line-height: 1;
-        }
-
-        /* ─── GAS FADER (ENLARGED) ─── */
-        .fader-col {
-            display: flex; flex-direction: column; align-items: center; gap: 8px;
-            flex-shrink: 0;
-            width: 70px;
-        }
-        .fader-track {
-            position: relative; width: 28px; height: 240px;
-            background: rgba(0,0,0,.8); border-radius: 14px;
-            border: 1px solid rgba(255,255,255,.1);
-            cursor: ns-resize; display: flex; align-items: flex-end; padding: 4px;
-            flex-shrink: 0;
-        }
-        .fader-fill {
-            width: 100%; background: linear-gradient(0deg, var(--gold-dark), var(--gold), #ffe566);
-            border-radius: 10px; min-height: 4px;
-            transition: none;
-        }
-        .fader-thumb {
-            position: absolute; left: 50%; transform: translateX(-50%);
-            width: 36px; height: 14px;
-            background: linear-gradient(135deg, #1e2d42, #111825);
-            border: 1.5px solid var(--gold); border-radius: 5px; pointer-events: none;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-            transition: none;
-        }
+        /* ─── GAS FADER ─── */
+        .fader-col { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; width: 70px; }
+        .fader-track { position: relative; width: 28px; height: 240px; background: rgba(0,0,0,.8); border-radius: 14px; border: 1px solid rgba(255,255,255,.1); cursor: ns-resize; display: flex; align-items: flex-end; padding: 4px; flex-shrink: 0; }
+        .fader-fill  { width: 100%; background: linear-gradient(0deg, var(--gold-dark), var(--gold), #ffe566); border-radius: 10px; min-height: 4px; transition: none; }
+        .fader-thumb { position: absolute; left: 50%; transform: translateX(-50%); width: 36px; height: 14px; background: linear-gradient(135deg, #1e2d42, #111825); border: 1.5px solid var(--gold); border-radius: 5px; pointer-events: none; box-shadow: 0 2px 6px rgba(0,0,0,0.5); transition: none; }
         .fader-lbl { font-size: 11px; font-weight: 900; letter-spacing: 3px; color: var(--gold); }
 
         /* ─── FOOTER ─── */
-        .ftr {
-            height: 32px; background: rgba(4,7,14,.98);
-            border-top: 1px solid rgba(255,255,255,.05); padding: 0 18px;
-            display: flex; align-items: center; justify-content: space-between;
-            font-size: 9px; color: var(--dim); font-weight: 600; letter-spacing: 1px;
-            flex-shrink: 0;
-        }
+        .ftr { height: 32px; background: rgba(4,7,14,.98); border-top: 1px solid rgba(255,255,255,.05); padding: 0 18px; display: flex; align-items: center; justify-content: space-between; font-size: 9px; color: var(--dim); font-weight: 600; letter-spacing: 1px; flex-shrink: 0; }
 
-        /* ─── MODALS ─── */
-        .modal {
-            position: absolute; inset: 0;
-            background: rgba(3,5,12,.92); backdrop-filter: blur(12px);
-            z-index: 500; display: flex; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none;
-        }
+        /* ─── SETTINGS MODAL ─── */
+        .modal { position: absolute; inset: 0; background: rgba(3,5,12,.92); backdrop-filter: blur(12px); z-index: 500; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; }
         .modal.open { opacity: 1; pointer-events: auto; }
-        .mcard {
-            width: 420px;
-            background: #0d1424;
-            border: 1px solid rgba(255,204,0,.2); border-radius: 12px; padding: 20px 24px;
-            display: flex; flex-direction: column; gap: 16px; position: relative;
-        }
+        .mcard { width: 420px; background: #0d1424; border: 1px solid rgba(255,204,0,.2); border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; position: relative; }
         .mhdr { display: flex; justify-content: space-between; align-items: center; }
         .mttl { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--gold); display: flex; align-items: center; gap: 6px; }
         .mx { background: none; border: none; color: var(--dim); font-size: 16px; cursor: pointer; padding: 4px 8px; }
         .mx:hover { color: #fff; }
-
         .knobs { display: flex; justify-content: space-between; align-items: flex-start; padding: 4px 0; }
         .kg { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 110px; }
         .klbl { font-size: 9px; font-weight: 800; letter-spacing: 1px; color: #8899bb; text-align: center; }
-        
-        .kw {
-            position: relative; width: 70px; height: 70px; cursor: ns-resize;
-            display: flex; align-items: center; justify-content: center;
-        }
-        
-        .ksvg {
-            position: absolute; inset: 0;
-            width: 100%; height: 100%;
-            transform: rotate(135deg);
-        }
-        .kbg {
-            fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 5;
-            stroke-linecap: round;
-        }
-        .kfg {
-            fill: none; stroke: var(--gold); stroke-width: 5; stroke-linecap: round;
-        }
-
-        .kcap {
-            width: 48px; height: 48px; border-radius: 50%;
-            background: linear-gradient(145deg, #182436, #0e1624);
-            border: 1px solid rgba(255,255,255,0.08);
-            box-shadow: inset 0 1px 2px rgba(0,0,0,.6), 0 4px 8px rgba(0,0,0,.4);
-            position: relative;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .kpip {
-            width: 3px; height: 11px; background: var(--gold); border-radius: 2px;
-            position: absolute; top: 5px;
-            transform-origin: center 19px;
-        }
+        .kw { position: relative; width: 70px; height: 70px; cursor: ns-resize; display: flex; align-items: center; justify-content: center; }
+        .ksvg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(135deg); }
+        .kbg { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 5; stroke-linecap: round; }
+        .kfg { fill: none; stroke: var(--gold); stroke-width: 5; stroke-linecap: round; }
+        .kcap { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(145deg, #182436, #0e1624); border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 1px 2px rgba(0,0,0,.6), 0 4px 8px rgba(0,0,0,.4); position: relative; display: flex; align-items: center; justify-content: center; }
+        .kpip { width: 3px; height: 11px; background: var(--gold); border-radius: 2px; position: absolute; top: 5px; transform-origin: center 19px; }
         .kval { font-family: 'Space Grotesk'; font-size: 11px; font-weight: 700; color: var(--gold); }
 
-        /* LICENSE ACTIVATION MODAL (EASY MIX MATCH) */
-        .lmod { position: absolute; inset: 0; background: rgba(3,5,12,.94); backdrop-filter: blur(12px); z-index: 600; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; }
-        .lmod.open { opacity: 1; pointer-events: auto; }
-        .lcard { width: 340px; background: #0d1424; border: 1px solid rgba(255,204,0,.25); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center; position: relative; }
-        .lx { position: absolute; top: 12px; right: 14px; background: none; border: none; color: var(--dim); font-size: 16px; cursor: pointer; }
-        .lx:hover { color: #fff; }
-        .lttl { font-size: 13px; font-weight: 800; letter-spacing: 2px; color: var(--gold); }
-        .lsub { font-size: 10px; color: #8899bb; line-height: 1.4; }
-        .lin { width: 100%; background: rgba(0,0,0,.5); border: 1px solid rgba(255,255,255,.15); border-radius: 6px; padding: 10px; color: var(--gold); font-family: 'Space Grotesk', monospace; font-size: 12px; font-weight: 700; letter-spacing: 2px; outline: none; text-align: center; }
-        .lin:focus { border-color: var(--gold); }
-        .lbtn { width: 100%; padding: 10px; border-radius: 6px; border: none; background: var(--gold); color: #080b12; font-family: 'Outfit'; font-size: 11px; font-weight: 800; letter-spacing: 1px; cursor: pointer; }
-        .lbtn:hover { background: #ffe566; }
-        .lerr { font-size: 10px; color: #ff453a; display: none; }
+        /* ═══ ACTIVATION OVERLAY — IDENTICAL TO EASY MASTER ═══ */
+        .activation-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0, 0, 0, 0.88);
+            z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(6px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .activation-overlay.active {
+            opacity: 1; pointer-events: auto; display: flex !important;
+        }
+        .act-container {
+            width: 300px;
+            background: rgba(13, 20, 36, 0.96);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 204, 0, 0.2);
+            border-radius: 12px;
+            padding: 22px 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+            position: relative;
+            text-align: center;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .act-input {
+            width: 90%;
+            background: rgba(0,0,0,0.45);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 6px;
+            padding: 10px;
+            color: #fff;
+            font-family: monospace;
+            font-size: 11px;
+            text-align: center;
+            letter-spacing: 1px;
+            outline: none;
+            margin-bottom: 10px;
+        }
+        .act-input:focus { border-color: var(--gold); }
+        .act-btn {
+            width: 100%; padding: 10px; border-radius: 6px;
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            cursor: pointer; border: none; margin-bottom: 8px;
+            font-family: 'Outfit', sans-serif; letter-spacing: 0.5px;
+        }
+        .act-btn-primary {
+            background: linear-gradient(180deg, #ffcc00, #b88800);
+            color: #080b12;
+        }
+        .act-btn-primary:hover { box-shadow: 0 0 12px rgba(255,204,0,0.35); }
+        .act-btn-secondary {
+            background: transparent; color: #fff;
+            border: 1px solid rgba(255,255,255,0.55);
+            transition: all 0.2s ease; margin-bottom: 0;
+        }
+        .act-btn-secondary:hover { background: rgba(255,255,255,0.08); }
+        .act-btn-close {
+            position: absolute; top: 10px; right: 15px;
+            background: transparent; border: none; color: #666;
+            font-size: 16px; cursor: pointer;
+        }
+        .act-btn-close:hover { color: #fff; }
+        .loading-spinner {
+            width: 28px; height: 28px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-radius: 50%; border-top-color: var(--gold);
+            animation: spin 1s ease-in-out infinite; margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-loading { position: relative; color: transparent !important; pointer-events: none; }
+        .btn-loading::after {
+            content: ""; position: absolute;
+            width: 14px; height: 14px; top: 0; left: 0; right: 0; bottom: 0; margin: auto;
+            border: 2px solid transparent; border-top-color: #080b12;
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 <body>
 <div class="plugin">
 
-    <!-- PANTALLA DE CARGA INKA KOLA -->
+    <!-- LOADING SCREEN -->
     <div id="loading-screen" class="loading-overlay">
         <div class="loading-logo">INKA KOLA</div>
         <div class="loading-sub">BY OFFSZN</div>
-        <div class="loading-track">
-            <div class="loading-bar" id="loadingBar"></div>
-        </div>
+        <div class="loading-track"><div class="loading-bar" id="loadingBar"></div></div>
     </div>
 
     <div class="hdr">
         <div class="hdr-l">
             <div class="flag"></div>
             <div class="brand">INKA KOLA</div>
-            <button class="btn-gear" id="btnGear" title="Ajustes Avanzados & Licencia">
+            <button class="btn-gear" id="btnGear" title="Ajustes Avanzados">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="3"></circle>
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -341,27 +252,22 @@
             </button>
         </div>
         <div class="hdr-r">
-            <!-- EASY MIX STYLE BADGE: HIDDEN WHEN FULL ACTIVATED -->
-            <button class="btn-lic" id="btnLic" title="Activar Licencia Completa">
-                <span class="l-dot"></span>
-                <span id="licTxt">7 DÍAS DE PRUEBA</span>
-            </button>
+            <!-- TRIAL BADGE — IDENTICAL TO EASY MASTER (hidden until license check) -->
+            <div id="trial-badge" onclick="openActivationForUpgrade()">
+                <span class="trial-dot"></span>
+                PRUEBA · <span id="trial-time-left">7 DÍAS</span>
+            </div>
         </div>
     </div>
 
     <div class="stage">
-
         <div class="bottle-zone">
             <div class="bottle-wrap" id="bWrap" title="Doble clic para resetear (50%)">
                 <div class="bottle-bg-white"></div>
-                <!-- Layer 1: Empty Bottle -->
                 <img class="bottle-empty" src="KOLA VACIA.png" alt="Empty Inka Kola">
-                <!-- Layer 2: Full Liquid Bottle (clipped by refill %) -->
-                <img class="bottle-full" id="bFull" src="KOLA LLENA.png" alt="Full Inka Kola Liquid">
-                <!-- Layer 3: Label on top of everything! -->
+                <img class="bottle-full"  id="bFull" src="KOLA LLENA.png" alt="Full Inka Kola Liquid">
                 <img class="bottle-label" src="ETIQUETA PNG.png" alt="Inka Kola Label">
             </div>
-            
             <div class="pct-box">
                 <input class="pct-input" id="pctInput" type="number" min="0" max="100" value="50">
                 <span class="pct-symbol">%</span>
@@ -370,12 +276,11 @@
 
         <div class="fader-col">
             <div class="fader-track" id="ftrack" title="Doble clic para resetear (50%)">
-                <div class="fader-fill" id="ffill" style="height:50%"></div>
+                <div class="fader-fill"  id="ffill"  style="height:50%"></div>
                 <div class="fader-thumb" id="fthumb" style="bottom:50%"></div>
             </div>
             <div class="fader-lbl">GAS</div>
         </div>
-
     </div>
 
     <div class="ftr">
@@ -383,7 +288,7 @@
         <span>VERSIÓN 1.0.0</span>
     </div>
 
-    <!-- MODAL AJUSTES AVANZADOS -->
+    <!-- ═══ SETTINGS MODAL ═══ -->
     <div class="modal" id="sMod">
         <div class="mcard">
             <div class="mhdr">
@@ -397,7 +302,6 @@
                 <button class="mx" id="mClose">✕</button>
             </div>
             <div class="knobs">
-                
                 <!-- MÁS STEREO (0-200%, Default 130%) -->
                 <div class="kg">
                     <div class="klbl">MÁS STEREO</div>
@@ -436,30 +340,91 @@
                     </div>
                     <div class="kval" id="vB">10 kHz</div>
                 </div>
-
             </div>
         </div>
     </div>
 
-    <!-- LICENSE ACTIVATION MODAL (EASY MIX & EASY MASTER MATCH) -->
-    <div class="lmod" id="lMod">
-        <div class="lcard">
-            <button class="lx" id="lClose">✕</button>
-            <div class="lttl">🔑 ACTIVACIÓN DE LICENCIA</div>
-            <div class="lsub" id="lSub">Periodo de prueba de 7 días activo.<br>Ingresa tu serial FULL o consíguela en offszn.lat</div>
-            <input class="lin" id="licIn" type="text" placeholder="INKA-FULL-XXXX-YYYY">
-            <div class="lerr" id="lErr">Licencia inválida. Formato: INKA-FULL-XXXX-YYYY</div>
-            <button class="lbtn" id="lBtn">ACTIVAR LICENCIA FULL</button>
+    <!-- ═══ ACTIVATION OVERLAY (BLOQUEANTE — SIN BOTÓN CERRAR) — IGUAL A EASY MASTER ═══ -->
+    <div class="activation-overlay" id="activation-overlay">
+        <div class="act-container">
+            <!-- Close button: hidden by default, shown only when upgrading from trial -->
+            <button class="act-btn-close" id="btn-close-activation" onclick="closeActivationModal()" style="display:none;">×</button>
+            <!-- Loading state -->
+            <div id="loading-spinner-area" style="display:none; flex-direction:column; align-items:center;">
+                <div class="loading-spinner"></div>
+                <p style="font-size:10px; color:#888; margin:0;">Verificando licencia...</p>
+            </div>
+            <!-- Input state -->
+            <div id="activation-content" style="width:100%;">
+                <div style="font-size:28px; margin-bottom:10px;">🔑</div>
+                <h3 style="color:#fff; margin:0 0 5px 0; font-size:14px; font-weight:800; letter-spacing:1px;">ACTIVAR INKA KOLA</h3>
+                <p style="color:#888; font-size:10px; margin:0 0 14px 0; line-height:1.5;">Ingresa tu serial para activar el plugin.<br>Consigue tu licencia en <strong style="color:var(--gold)">offszn.lat</strong></p>
+                <input type="text" id="serial-input" class="act-input"
+                       placeholder="INKA-FULL-XXXX-YYYY o INKA-TRIAL-XXXX"
+                       autocomplete="off" spellcheck="false"
+                       oninput="this.value=this.value.toUpperCase()">
+                <button class="act-btn act-btn-primary" id="activate-btn" onclick="verifyLicense()">ACTIVAR LICENCIA</button>
+                <button class="act-btn act-btn-secondary" id="act-link-btn"
+                        onclick="callNative('openURLNative', 'https://offszn.lat/plugins/inka-kola');">
+                    CONSIGUE TU LICENCIA →
+                </button>
+            </div>
         </div>
     </div>
 
-</div>
+    <!-- ═══ HARD-LOCK EXPIRED OVERLAY (sin cierre) — IGUAL A EASY MASTER ═══ -->
+    <div id="license-expired-overlay" style="
+        position:absolute; top:0; left:0; right:0; bottom:0;
+        background:rgba(8,11,18,0.97); backdrop-filter:blur(10px);
+        z-index:10000; display:none; flex-direction:column;
+        align-items:center; justify-content:center; gap:12px; border-radius:0;">
+        <div style="font-size:36px;">🔒</div>
+        <div id="exp-title" style="font-size:15px; font-weight:800; color:#ff453a; letter-spacing:1px; text-transform:uppercase;">LICENCIA EXPIRADA</div>
+        <div id="exp-subtitle" style="font-size:11px; color:#8e8e93; text-align:center; max-width:280px; line-height:1.6;">Tu periodo de prueba ha expirado.</div>
+        <input id="exp-serial-input" class="act-input" type="text"
+               placeholder="INKA-FULL-XXXX-YYYY"
+               spellcheck="false" autocomplete="off"
+               oninput="this.value=this.value.toUpperCase()"
+               style="width:270px; padding:10px; font-size:11px; margin-bottom:8px;">
+        <button id="exp-submit-btn" class="act-btn act-btn-primary" onclick="submitExpiredSerial()" style="width:280px; margin-bottom:4px;">ACTIVAR NUEVA LICENCIA</button>
+        <button id="exp-retry-btn"  class="act-btn act-btn-secondary" onclick="retryTrialVerification()" style="width:280px; display:none;">REINTENTAR CONEXIÓN</button>
+        <button id="exp-link-btn"   class="act-btn act-btn-secondary" onclick="callNative('openURLNative','https://offszn.lat/plugins/inka-kola');" style="width:280px;">CONSIGUE TU LICENCIA →</button>
+    </div>
+
+    <!-- ═══ WELCOME MODAL — IGUAL A EASY MASTER ═══ -->
+    <div id="welcome-modal" class="activation-overlay" style="z-index:1200;">
+        <div class="act-container">
+            <div style="font-size:30px; margin-bottom:10px;">🎉</div>
+            <h3 style="color:#fff; margin-bottom:10px; font-size:14px; font-weight:800;">¡Bienvenido a INKA KOLA!</h3>
+            <p style="color:#888; font-size:11px; margin-bottom:16px; line-height:1.5;">El plugin ha sido activado exitosamente.<br>Disfruta del sabor peruano en tu mix 🇵🇪</p>
+            <button class="act-btn act-btn-primary" onclick="document.getElementById('welcome-modal').classList.remove('active')">COMENZAR</button>
+        </div>
+    </div>
+
+    <!-- ═══ CUSTOM ALERT MODAL — IGUAL A EASY MASTER ═══ -->
+    <div id="custom-alert-modal" class="activation-overlay" style="z-index:12000;">
+        <div class="act-container" style="width:320px;">
+            <div id="custom-alert-icon" style="font-size:24px; margin-bottom:8px;">⚠️</div>
+            <h3 id="custom-alert-title" style="color:#fff; margin-bottom:8px; font-size:12px; font-weight:800; letter-spacing:1px; text-transform:uppercase;">Aviso</h3>
+            <p id="custom-alert-message" style="color:#888; font-size:11px; margin-bottom:18px; line-height:1.5;"></p>
+            <div style="display:flex; gap:8px; justify-content:center; width:100%;">
+                <button class="act-btn act-btn-primary" id="custom-alert-btn-ok" style="min-width:100px; margin-bottom:0;">Aceptar</button>
+                <button class="act-btn" id="custom-alert-btn-cancel" style="min-width:100px; background:rgba(255,255,255,0.05); color:#888; border:1px solid rgba(255,255,255,0.1); margin-bottom:0; display:none;">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+</div><!-- end .plugin -->
 
 <script>
-// ─── PANTALLA DE CARGA ───────────────────────────────────────────────────────
+// ─── CONSTANTS ──────────────────────────────────────────────────────────────
+var apiBase = 'https://offszn.lat';
+var PLUGIN_NAME = 'INKA KOLA';
+
+// ─── LOADING SCREEN ──────────────────────────────────────────────────────────
 (function() {
     var screen = document.getElementById('loading-screen');
-    var bar = document.getElementById('loadingBar');
+    var bar    = document.getElementById('loadingBar');
     if (!screen || !bar) return;
     setTimeout(function() { bar.style.width = '100%'; }, 50);
     setTimeout(function() {
@@ -468,276 +433,507 @@
     }, 900);
 })();
 
-// ─── JUCE NATIVE BRIDGE (NATIVE FUNCTION & EVENT BRIDGES) ───────────────────
+// ─── JUCE BRIDGE ─────────────────────────────────────────────────────────────
 var __juceCallId = 0;
+
+function hasJuceBridge() {
+    return !!(window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.emitEvent === 'function');
+}
+
 function sendToJUCE(id, v) {
     try {
-        if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.emitEvent === 'function') {
+        if (hasJuceBridge()) {
             window.__JUCE__.backend.emitEvent('__juce__invoke', {
-                name: 'setParam',
-                params: [id, v],
-                resultId: __juceCallId++
+                name: 'setParam', params: [id, v], resultId: __juceCallId++
             });
             window.__JUCE__.backend.emitEvent('setParam', { id: id, val: v });
         }
     } catch(e) {}
 }
 
-function callNative(name, args, callback) {
-    try {
-        if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.emitEvent === 'function') {
-            window.__JUCE__.backend.emitEvent('__juce__invoke', {
-                name: name,
-                params: Array.isArray(args) ? args : [args],
-                resultId: __juceCallId++
-            });
-        }
-    } catch(e) {}
+function callNative(name, args) {
+    return new Promise(function(resolve) {
+        try {
+            if (hasJuceBridge()) {
+                var rid = __juceCallId++;
+                window.__JUCE__.backend.emitEvent('__juce__invoke', {
+                    name: name,
+                    params: Array.isArray(args) ? args : (args !== undefined ? [args] : []),
+                    resultId: rid
+                });
+                // Listen for response on __juce__result
+                var handler = function(e) {
+                    try {
+                        var d = typeof e.detail === 'string' ? JSON.parse(e.detail) : e.detail;
+                        if (d && (d.resultId === rid || d.id === rid)) {
+                            document.removeEventListener('__juce__result', handler);
+                            resolve(d.result !== undefined ? d.result : d);
+                        }
+                    } catch(err) {}
+                };
+                document.addEventListener('__juce__result', handler);
+                setTimeout(function() { resolve(null); }, 3000);
+            } else {
+                resolve(null);
+            }
+        } catch(e) { resolve(null); }
+    });
 }
 
-// ─── STATE (DEFAULTS: STEREO 130%, AIR 25%, TONE 10k, GAS 50%) ──────────────
-const S = {
-    gas:   50,
-    width: 130,
-    air:   25,
-    bass:  10000,
-    lic:   false,
-    trialDaysLeft: 7
-};
+function getOrCreateDeviceId() {
+    try {
+        var id = localStorage.getItem('offszn_device_id');
+        if (!id) {
+            id = 'web-' + Math.random().toString(36).substr(2,9) + '-' + Date.now();
+            localStorage.setItem('offszn_device_id', id);
+        }
+        return id;
+    } catch(e) { return 'web-fallback-' + Date.now(); }
+}
 
-// ─── DOM ELEMENTS ─────────────────────────────────────────────────────────────
-const bFull    = document.getElementById('bFull');
-const pctInput = document.getElementById('pctInput');
-const ft       = document.getElementById('ftrack');
-const ff       = document.getElementById('ffill');
-const fth      = document.getElementById('fthumb');
-const btnLic   = document.getElementById('btnLic');
-const licTxt   = document.getElementById('licTxt');
+function getHwidAsync() {
+    if (hasJuceBridge()) {
+        return callNative('getHardwareId').then(function(hwid) {
+            return hwid || getOrCreateDeviceId();
+        });
+    }
+    return Promise.resolve(getOrCreateDeviceId());
+}
 
-// ─── UNIFIED REAL-TIME UPDATE FUNCTION ──────────────────────────────────────
+// ─── STATE ───────────────────────────────────────────────────────────────────
+var S = { gas: 50, width: 130, air: 25, bass: 10000, lic: false, trialDaysLeft: 7 };
+
+// ─── DOM REFS ────────────────────────────────────────────────────────────────
+var bFull    = document.getElementById('bFull');
+var pctInput = document.getElementById('pctInput');
+var ft       = document.getElementById('ftrack');
+var ff       = document.getElementById('ffill');
+var fth      = document.getElementById('fthumb');
+
+// ─── GAS / BOTTLE CONTROL ────────────────────────────────────────────────────
 function updateGas(val, updateInput, notifyJUCE) {
     S.gas = Math.min(100, Math.max(0, Math.round(val)));
-    
-    if (updateInput !== false) {
-        pctInput.value = S.gas;
-    }
-
-    const topClip = 96 - (S.gas / 100) * 84;
+    if (updateInput !== false) pctInput.value = S.gas;
+    var topClip = 96 - (S.gas / 100) * 84;
     bFull.style.clipPath = 'inset(' + topClip.toFixed(1) + '% 0 0 0)';
-
-    const h = S.gas + '%';
-    ff.style.height  = h;
-    fth.style.bottom = h;
-
+    var h = S.gas + '%';
+    ff.style.height = h; fth.style.bottom = h;
     if (notifyJUCE !== false) {
         sendToJUCE('refill', S.gas);
         sendToJUCE('outputGain', S.gas);
     }
 }
 
-// ─── PERCENTAGE INPUT EVENT HANDLERS ──────────────────────────────────────
 pctInput.addEventListener('input', function(e) {
-    var val = parseInt(e.target.value);
-    if (val > 100) e.target.value = 100;
-    else if (val < 0) e.target.value = 0;
+    var v = parseInt(e.target.value);
+    if (v > 100) e.target.value = 100;
+    else if (v < 0) e.target.value = 0;
 });
-
 function applyPctFromInput() {
-    var val = parseInt(pctInput.value);
-    if (isNaN(val)) val = S.gas;
-    val = Math.min(100, Math.max(0, val));
-    updateGas(val, true, true);
+    var v = parseInt(pctInput.value); if (isNaN(v)) v = S.gas;
+    updateGas(Math.min(100, Math.max(0, v)), true, true);
 }
-
-pctInput.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { applyPctFromInput(); pctInput.blur(); }
-});
+pctInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') { applyPctFromInput(); pctInput.blur(); } });
 pctInput.addEventListener('blur', applyPctFromInput);
 
-// ─── BOTTLE & GAS FADER REAL-TIME DRAG ────────────────────────────────────
 var bWrap = document.getElementById('bWrap');
 var bd = false, bsy = 0, bsv = 50;
-
-bWrap.addEventListener('mousedown', function(e) {
-    bd = true; bsy = e.clientY; bsv = S.gas;
-    document.body.style.cursor = 'ns-resize';
-    e.preventDefault();
-});
-document.addEventListener('mousemove', function(e) {
-    if (!bd) return;
-    updateGas(bsv + (bsy - e.clientY) * 0.5, true, true);
-});
+bWrap.addEventListener('mousedown', function(e) { bd = true; bsy = e.clientY; bsv = S.gas; document.body.style.cursor = 'ns-resize'; e.preventDefault(); });
+document.addEventListener('mousemove', function(e) { if (!bd) return; updateGas(bsv + (bsy - e.clientY) * 0.5, true, true); });
 document.addEventListener('mouseup', function() { bd = false; document.body.style.cursor = ''; });
-
-// Double click to reset bottle level to default 50%
 bWrap.addEventListener('dblclick', function() { updateGas(50, true, true); });
 
 var ffd = false;
 function calcGain(clientY) {
     var r = ft.getBoundingClientRect();
-    var p = Math.min(1, Math.max(0, (r.bottom - clientY) / r.height));
-    updateGas(p * 100, true, true);
+    updateGas(Math.min(1, Math.max(0, (r.bottom - clientY) / r.height)) * 100, true, true);
 }
-
 ft.addEventListener('mousedown', function(e) { ffd = true; calcGain(e.clientY); e.preventDefault(); });
 document.addEventListener('mousemove', function(e) { if (ffd) calcGain(e.clientY); });
-document.addEventListener('mouseup',   function()  { ffd = false; });
-
-// Double click to reset GAS fader to default 50%
+document.addEventListener('mouseup', function() { ffd = false; });
 ft.addEventListener('dblclick', function() { updateGas(50, true, true); });
 
-// ─── KNOBS ENGINE ────────────────────────────────────────────────────────────
-const knobRegistry = {};
-
+// ─── KNOBS ENGINE ─────────────────────────────────────────────────────────────
+var knobRegistry = {};
 function makeKnob(wrapId, arcId, pipId, valId, min, max, initVal, paramKey, formatFn) {
-    var wrap = document.getElementById(wrapId);
-    var arc  = document.getElementById(arcId);
-    var pip  = document.getElementById(pipId);
-    var lbl  = document.getElementById(valId);
-
+    var wrap = document.getElementById(wrapId), arc = document.getElementById(arcId);
+    var pip  = document.getElementById(pipId),  lbl = document.getElementById(valId);
     if (!wrap || !arc || !pip || !lbl) return;
-
-    var C = 2 * Math.PI * 28;
-    var currentVal = initVal;
-    var dragging = false, startY = 0, startVal = initVal;
-
-    function applyVal(nv, notifyJUCE) {
-        currentVal = Math.min(max, Math.max(min, nv));
-        S[paramKey] = currentVal;
-
-        var pct = (currentVal - min) / (max - min);
-        var filledLen = pct * C * 0.75;
-        arc.style.strokeDashoffset = (C - filledLen).toFixed(2);
-
-        var angle = -135 + pct * 270;
-        pip.style.transform = 'rotate(' + angle.toFixed(1) + 'deg)';
-
-        lbl.textContent = formatFn(currentVal);
-        if (notifyJUCE === true) {
-            sendToJUCE(paramKey, currentVal);
-        }
+    var C = 2 * Math.PI * 28, cur = initVal, drg = false, sy = 0, sv = initVal;
+    function applyVal(nv, notify) {
+        cur = Math.min(max, Math.max(min, nv)); S[paramKey] = cur;
+        var pct = (cur - min) / (max - min);
+        arc.style.strokeDashoffset = (C - pct * C * 0.75).toFixed(2);
+        pip.style.transform = 'rotate(' + (-135 + pct * 270).toFixed(1) + 'deg)';
+        lbl.textContent = formatFn(cur);
+        if (notify === true) sendToJUCE(paramKey, cur);
     }
-
-    wrap.addEventListener('mousedown', function(e) {
-        dragging = true; startY = e.clientY; startVal = currentVal;
-        e.preventDefault(); e.stopPropagation();
-    });
-    document.addEventListener('mousemove', function(e) {
-        if (!dragging) return;
-        applyVal(startVal + (startY - e.clientY) / 140 * (max - min), true);
-    });
-    document.addEventListener('mouseup', function() { dragging = false; });
-
-    // Double click to reset knob to initial default
-    wrap.addEventListener('dblclick', function(e) {
-        applyVal(initVal, true);
-    });
-
+    wrap.addEventListener('mousedown', function(e) { drg = true; sy = e.clientY; sv = cur; e.preventDefault(); e.stopPropagation(); });
+    document.addEventListener('mousemove', function(e) { if (!drg) return; applyVal(sv + (sy - e.clientY) / 140 * (max - min), true); });
+    document.addEventListener('mouseup', function() { drg = false; });
+    wrap.addEventListener('dblclick', function() { applyVal(initVal, true); });
     applyVal(initVal, false);
-
-    knobRegistry[paramKey] = {
-        setValue: function(v) { applyVal(v, false); },
-        getDefault: function() { return initVal; }
-    };
+    knobRegistry[paramKey] = { setValue: function(v) { applyVal(v, false); } };
 }
 
-// ─── INITIALIZE KNOBS ────────────────────────────────────────────────────────
 updateGas(S.gas, true, false);
+makeKnob('kW','aW','pW','vW',  0,    200,   S.width, 'width',    function(v) { return Math.round(v) + '%'; });
+makeKnob('kA','aA','pA','vA',  0,    100,   S.air,   'sat10k',   function(v) { return Math.round(v) + '%'; });
+makeKnob('kB','aB','pB','vB',  2000, 20000, S.bass,  'bassMono', function(v) { return (v >= 1000 ? (v/1000).toFixed(0) + ' kHz' : Math.round(v) + ' Hz'); });
 
-makeKnob('kW', 'aW', 'pW', 'vW',  0,    200,   S.width, 'width',    function(v) { return Math.round(v) + '%'; });
-makeKnob('kA', 'aA', 'pA', 'vA',  0,    100,   S.air,   'sat10k',   function(v) { return Math.round(v) + '%'; });
-makeKnob('kB', 'aB', 'pB', 'vB',  2000, 20000, S.bass,  'bassMono', function(v) { return (v >= 1000 ? (v/1000).toFixed(0) + ' kHz' : Math.round(v) + ' Hz'); });
-
-// ─── EASY MIX BADGE & LICENSE SECURITY UI REFRESH ─────────────────────────
-function updateLicenseUI(isLicensed, isExpired, daysLeft) {
-    S.lic = isLicensed;
-    if (isLicensed) {
-        // FULL KEY ACTIVATED: HIDE BADGE COMPLETELY (EASY MIX MATCH!)
-        btnLic.classList.add('hidden');
-    } else {
-        btnLic.classList.remove('hidden');
-        if (isExpired) {
-            licTxt.textContent = 'PRUEBA EXPIRADA';
-            document.getElementById('lMod').classList.add('open');
-        } else {
-            licTxt.textContent = (daysLeft !== undefined ? daysLeft : 7) + ' DÍAS DE PRUEBA';
-        }
-    }
-}
-
-// ─── SYNC FROM C++ JUCE APVTS ON LOAD (PREVENTS DAW OVERWRITE BUG!) ───────
-function syncFromJUCE() {
-    try {
-        if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.emitEvent === 'function') {
-            callNative('getParams', [], function(res) {
-                if (res) {
-                    if (res.refill !== undefined) updateGas(res.refill, true, false);
-                    if (res.width !== undefined && knobRegistry['width']) knobRegistry['width'].setValue(res.width);
-                    if (res.sat10k !== undefined && knobRegistry['sat10k']) knobRegistry['sat10k'].setValue(res.sat10k);
-                    if (res.bassMono !== undefined && knobRegistry['bassMono']) knobRegistry['bassMono'].setValue(res.bassMono);
-                    updateLicenseUI(res.isLicensed, res.isTrialExpired, res.trialDaysLeft);
-                }
-            });
-            callNative('getLicenseState', [], function(res) {
-                if (res) {
-                    updateLicenseUI(res.isValid, res.isExpired, res.trialDaysLeft);
-                }
-            });
-        }
-    } catch(e) {}
-}
-setTimeout(syncFromJUCE, 250);
-
-// ─── REGISTER HWID TO BACKEND ─────────────────────────────────────────────
-function registerHWID() {
-    try {
-        callNative('getHardwareId', [], function(hwid) {
-            if (hwid) {
-                fetch('https://offszn.lat/api/plugins/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        plugin: 'INKA_KOLA',
-                        hwid: hwid,
-                        status: S.lic ? 'FULL_ACTIVATED' : 'TRIAL',
-                        days_left: S.trialDaysLeft
-                    })
-                }).catch(function() {});
-            }
-        });
-    } catch(e) {}
-}
-setTimeout(registerHWID, 1200);
-
-// ─── MODALS CONTROL ──────────────────────────────────────────────────────────
+// ─── SETTINGS MODAL ──────────────────────────────────────────────────────────
 var sm = document.getElementById('sMod');
-var lm = document.getElementById('lMod');
-
 document.getElementById('btnGear').addEventListener('click', function() { sm.classList.add('open'); });
 document.getElementById('mClose').addEventListener('click',  function() { sm.classList.remove('open'); });
+sm.addEventListener('click', function(e) { e.stopPropagation(); });
 
-btnLic.addEventListener('click', function() { lm.classList.add('open'); });
-document.getElementById('lClose').addEventListener('click', function() { lm.classList.remove('open'); });
+// ─── CUSTOM ALERT ─────────────────────────────────────────────────────────────
+function showCustomAlert(title, message, icon) {
+    return new Promise(function(resolve) {
+        var modal  = document.getElementById('custom-alert-modal');
+        document.getElementById('custom-alert-title').textContent   = title;
+        document.getElementById('custom-alert-message').textContent = message;
+        document.getElementById('custom-alert-icon').textContent    = icon || '⚠️';
+        modal.classList.add('active');
+        document.getElementById('custom-alert-btn-ok').onclick = function() {
+            modal.classList.remove('active'); resolve(true);
+        };
+    });
+}
 
-document.getElementById('lBtn').addEventListener('click', function() {
-    var input = document.getElementById('licIn').value.trim().toUpperCase();
-    var err = document.getElementById('lErr');
+// ─── FRIENDLY ERROR MESSAGES ─────────────────────────────────────────────────
+function getFriendlyLicenseError(serial, serverError) {
+    var err = (serverError || '').toLowerCase();
+    if (err.includes('device') || err.includes('limit') || err.includes('alcanzado')) {
+        return 'Límite de dispositivos alcanzado (Máx: 2). Revoca un dispositivo activo en tu cuenta de OFFSZN para activar este equipo.';
+    }
+    if (err.includes('trial') && (err.includes('used') || err.includes('already') || err.includes('activado'))) {
+        return 'Este equipo ya usó un periodo de prueba de INKA KOLA. Adquiere tu licencia FULL en offszn.lat';
+    }
+    if (err.includes('expired')) {
+        return 'Tu periodo de prueba ha expirado. Adquiere tu licencia FULL por $5 USD en offszn.lat';
+    }
+    return serverError || 'Serial inválido. Verifica tu clave en offszn.lat';
+}
 
-    if (input.startsWith('INKA-') || input.startsWith('INKA-FULL-') || input === 'PERU2026' || input === 'OFFSZN') {
-        if (input.length >= 6) {
-            err.style.display = 'none';
-            lm.classList.remove('open');
-            callNative('saveLicense', [input]);
-            callNative('setLicenseStatus', [true, input]);
-            updateLicenseUI(true, false, 7);
-            return;
+// ═══════════════════════════════════════════════════════════════════════════════
+// ═══ TRIAL BADGE — IDENTICAL TO EASY MASTER ═══════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+function updateTrialBadge(isTrial, timeText) {
+    var badge  = document.getElementById('trial-badge');
+    var timeEl = document.getElementById('trial-time-left');
+    if (!badge) return;
+    if (isTrial) {
+        badge.classList.add('visible');
+        if (timeEl) timeEl.textContent = timeText || '7 DÍAS';
+    } else {
+        badge.classList.remove('visible');
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ═══ ACTIVATION MODAL CONTROL ═════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+function openActivationModal(canClose) {
+    var overlay  = document.getElementById('activation-overlay');
+    var closeBtn = document.getElementById('btn-close-activation');
+    if (closeBtn) closeBtn.style.display = canClose ? 'block' : 'none';
+    document.getElementById('loading-spinner-area').style.display = 'none';
+    document.getElementById('activation-content').style.display   = 'block';
+    overlay.classList.add('active');
+}
+
+function closeActivationModal() {
+    document.getElementById('activation-overlay').classList.remove('active');
+}
+
+function openActivationForUpgrade() {
+    // Called when user clicks the trial badge — allow close since they're already active
+    openActivationModal(true);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ═══ HARD-LOCK OVERLAYS ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+function triggerLicenseExpired(title, subtitle) {
+    // Cut audio via C++
+    callNative('setLicenseStatus', false);
+    // Clear saved serial
+    try { localStorage.removeItem('offszn_serial'); } catch(e) {}
+    if (hasJuceBridge()) callNative('saveLicense', '');
+
+    var overlay = document.getElementById('license-expired-overlay');
+    document.getElementById('exp-title').textContent    = title    || 'LICENCIA EXPIRADA';
+    document.getElementById('exp-subtitle').textContent = subtitle || 'Tu periodo de prueba ha expirado.';
+    // Show input + activate button; hide retry
+    document.getElementById('exp-serial-input').style.display = 'block';
+    document.getElementById('exp-submit-btn').style.display   = 'block';
+    document.getElementById('exp-link-btn').style.display     = 'block';
+    document.getElementById('exp-retry-btn').style.display    = 'none';
+    overlay.style.display = 'flex';
+    updateTrialBadge(false);
+}
+
+function triggerLicenseOffline(title, subtitle) {
+    callNative('setLicenseStatus', false);
+    var overlay = document.getElementById('license-expired-overlay');
+    document.getElementById('exp-title').textContent    = title    || 'SIN CONEXIÓN';
+    document.getElementById('exp-subtitle').textContent = subtitle || 'El plugin requiere Internet para validar tu periodo de prueba.';
+    // Show retry button; hide input/activate (can't activate without internet)
+    document.getElementById('exp-serial-input').style.display = 'none';
+    document.getElementById('exp-submit-btn').style.display   = 'none';
+    document.getElementById('exp-link-btn').style.display     = 'none';
+    document.getElementById('exp-retry-btn').style.display    = 'block';
+    overlay.style.display = 'flex';
+    updateTrialBadge(false);
+}
+
+// Retry for offline
+var _currentTrialSerial = '';
+function retryTrialVerification() {
+    if (!_currentTrialSerial) return;
+    var overlay = document.getElementById('license-expired-overlay');
+    overlay.style.display = 'none';
+    verifyTrialOnline(_currentTrialSerial);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ═══ LICENSE VERIFICATION ═════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+function verifyTrialOnline(serial) {
+    _currentTrialSerial = serial;
+    getHwidAsync().then(function(hwid) {
+        fetch(apiBase + '/api/plugin/activate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: PLUGIN_NAME })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(response) {
+            if (response && response.success) {
+                callNative('setLicenseStatus', true, serial);
+                try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+                S.lic = true;
+                var daysLeft = response.days_remaining || response.remaining_days || 7;
+                updateTrialBadge(true, daysLeft + ' DÍAS');
+            } else {
+                triggerLicenseExpired(
+                    'PRUEBA EXPIRADA',
+                    'Tu periodo de prueba de ' + PLUGIN_NAME + ' ha expirado. Adquiere tu licencia FULL en offszn.lat'
+                );
+            }
+        })
+        .catch(function() {
+            triggerLicenseOffline(
+                'SIN CONEXIÓN',
+                'El plugin requiere conexión a Internet para validar tu periodo de prueba. Conéctate para continuar.'
+            );
+        });
+    });
+}
+
+// Called when user submits from the activation modal
+function verifyLicense() {
+    var serial = document.getElementById('serial-input').value.trim().toUpperCase();
+    if (!serial) {
+        showCustomAlert('Activar Licencia', 'Por favor ingresa tu Serial Key de OFFSZN.', '🔑');
+        return;
+    }
+    var btn = document.getElementById('activate-btn');
+    if (btn) btn.classList.add('btn-loading');
+
+    if (!hasJuceBridge()) {
+        // Browser preview mode
+        setTimeout(function() {
+            if (btn) btn.classList.remove('btn-loading');
+            try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+            var isTrial = serial.indexOf('TRIAL') !== -1;
+            closeActivationModal();
+            updateTrialBadge(isTrial, '7 DÍAS');
+            document.getElementById('welcome-modal').classList.add('active');
+        }, 800);
+        return;
+    }
+
+    getHwidAsync().then(function(hwid) {
+        fetch(apiBase + '/api/plugin/activate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: PLUGIN_NAME })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(response) {
+            if (btn) btn.classList.remove('btn-loading');
+            if (response && response.success) {
+                try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+                callNative('setLicenseStatus', true, serial);
+                callNative('saveLicense', serial);
+                S.lic = true;
+                var isTrial  = serial.indexOf('TRIAL') !== -1;
+                var daysLeft = response.days_remaining || response.remaining_days || 7;
+                closeActivationModal();
+                updateTrialBadge(isTrial, daysLeft + ' DÍAS');
+                document.getElementById('welcome-modal').classList.add('active');
+                if (isTrial) {
+                    _currentTrialSerial = serial;
+                    startTrialBackgroundCheck();
+                }
+            } else {
+                if (btn) btn.classList.remove('btn-loading');
+                showCustomAlert(
+                    'Error de Activación',
+                    getFriendlyLicenseError(serial, response && response.error),
+                    '❌'
+                );
+            }
+        })
+        .catch(function() {
+            if (btn) btn.classList.remove('btn-loading');
+            showCustomAlert('Error de Conexión', 'No se pudo conectar al servidor. Verifica tu conexión a Internet.', '❌');
+        });
+    });
+}
+
+// Called when user submits from the expired hard-lock overlay
+function submitExpiredSerial() {
+    var input  = document.getElementById('exp-serial-input');
+    if (!input || !input.value.trim()) return;
+    var serial = input.value.trim().toUpperCase();
+    var btn    = document.getElementById('exp-submit-btn');
+    if (btn) btn.classList.add('btn-loading');
+
+    getHwidAsync().then(function(hwid) {
+        fetch(apiBase + '/api/plugin/activate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ serial_key: serial, hwid: hwid, plugin_name: PLUGIN_NAME })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(response) {
+            if (btn) btn.classList.remove('btn-loading');
+            if (response && response.success) {
+                callNative('setLicenseStatus', true, serial);
+                callNative('saveLicense', serial);
+                try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+                S.lic = true;
+                var isTrial  = serial.indexOf('TRIAL') !== -1;
+                var daysLeft = response.days_remaining || response.remaining_days || 7;
+                document.getElementById('license-expired-overlay').style.display = 'none';
+                updateTrialBadge(isTrial, daysLeft + ' DÍAS');
+                if (isTrial) { _currentTrialSerial = serial; startTrialBackgroundCheck(); }
+                input.value = '';
+            } else {
+                input.style.borderColor = '#ff453a';
+                setTimeout(function() { input.style.borderColor = ''; }, 2000);
+                showCustomAlert(
+                    'Error de Activación',
+                    getFriendlyLicenseError(serial, response && response.error),
+                    '❌'
+                );
+            }
+        })
+        .catch(function() {
+            if (btn) btn.classList.remove('btn-loading');
+            showCustomAlert('Error de Conexión', 'No se pudo conectar al servidor. Verifica tu internet.', '❌');
+        });
+    });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ═══ BACKGROUND 30-MIN TRIAL CHECK (TRIAL EXPIRES DURING SESSION) ═════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+var _bgCheckInterval = null;
+function startTrialBackgroundCheck() {
+    if (_bgCheckInterval) clearInterval(_bgCheckInterval);
+    _bgCheckInterval = setInterval(function() {
+        if (!_currentTrialSerial) return;
+        getHwidAsync().then(function(hwid) {
+            fetch(apiBase + '/api/plugin/activate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ serial_key: _currentTrialSerial, hwid: hwid, plugin_name: PLUGIN_NAME })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(response) {
+                if (response && response.success) {
+                    var daysLeft = response.days_remaining || response.remaining_days || 0;
+                    updateTrialBadge(true, daysLeft + ' DÍAS');
+                } else {
+                    clearInterval(_bgCheckInterval);
+                    triggerLicenseExpired(
+                        'PRUEBA EXPIRADA',
+                        'Tu periodo de prueba ha expirado mientras usabas el plugin. Adquiere tu licencia FULL en offszn.lat'
+                    );
+                }
+            })
+            .catch(function() {
+                // Offline during session — soft warning but don't hard-lock immediately
+                // (only hard-lock happens if they close and reopen)
+            });
+        });
+    }, 30 * 60 * 1000); // Every 30 minutes
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ═══ LICENSE BOOT SEQUENCE — IDENTICAL TO EASY MIX & EASY MASTER ══════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+setTimeout(function() {
+    if (hasJuceBridge()) {
+        callNative('getLicenseState').then(function(state) {
+            var isValid = state && state.isValid;
+            var serial  = ((state && state.serial) || '').trim();
+
+            if (serial) {
+                var isTrial = serial.toUpperCase().indexOf('TRIAL') !== -1;
+                if (isTrial) {
+                    // ─ TRIAL KEY: ALWAYS requires internet verification ─
+                    _currentTrialSerial = serial;
+                    verifyTrialOnline(serial);
+                    startTrialBackgroundCheck();
+                } else {
+                    // ─ FULL KEY: Trust local validation, NO internet needed ─
+                    if (isValid) {
+                        try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+                        S.lic = true;
+                        updateTrialBadge(false); // Hide badge completely for FULL
+                    } else {
+                        // Full key present but C++ says invalid → ask for new activation
+                        callNative('setLicenseStatus', false);
+                        openActivationModal(false); // No close button
+                    }
+                }
+            } else {
+                // ─ NO SERIAL AT ALL → Open blocking activation modal ─
+                callNative('setLicenseStatus', false);
+                openActivationModal(false); // No close button — user MUST activate
+            }
+        }).catch(function() {
+            // Bridge error — open activation modal
+            openActivationModal(false);
+        });
+    } else {
+        // Browser preview mode
+        var serial = '';
+        try { serial = localStorage.getItem('offszn_serial') || ''; } catch(e) {}
+        if (serial) {
+            var isTrial = serial.toUpperCase().indexOf('TRIAL') !== -1;
+            updateTrialBadge(isTrial, '7 DÍAS');
+        } else {
+            openActivationModal(false);
         }
     }
-    err.style.display = 'block';
-});
+}, 150);
 
-sm.addEventListener('click', function(e) { e.stopPropagation(); });
-lm.addEventListener('click', function(e) { e.stopPropagation(); });
+// ─── SYNC PARAMS FROM C++ ON LOAD ────────────────────────────────────────────
+setTimeout(function() {
+    callNative('getParams').then(function(res) {
+        if (!res) return;
+        if (res.refill    !== undefined) updateGas(res.refill, true, false);
+        if (res.width     !== undefined && knobRegistry['width'])    knobRegistry['width'].setValue(res.width);
+        if (res.sat10k    !== undefined && knobRegistry['sat10k'])   knobRegistry['sat10k'].setValue(res.sat10k);
+        if (res.bassMono  !== undefined && knobRegistry['bassMono']) knobRegistry['bassMono'].setValue(res.bassMono);
+    });
+}, 400);
 </script>
 </body>
 </html>
