@@ -529,13 +529,20 @@ function getOrCreateDeviceId() {
 }
 
 function getHwidAsync() {
+    // ── PRIORITY 1: Read HWID injected by C++ via evaluateJavascript (window.OFFSZN_HWID)
+    // C++ calls sendAllParamsToUI() which runs evaluateJavascript("window.OFFSZN_HWID = '...'").
+    // This guarantees the real hardware HWID is available before the boot sequence runs.
+    if (window.OFFSZN_HWID && window.OFFSZN_HWID.trim().length > 0 && !window.OFFSZN_HWID.startsWith('web-')) {
+        return Promise.resolve(window.OFFSZN_HWID.trim());
+    }
+    // ── PRIORITY 2: Try native bridge (fallback)
     if (hasJuceBridge()) {
         return Promise.race([
             callNative('getHardwareId'),
-            new Promise(function(resolve) { setTimeout(function() { resolve(null); }, 1500); })
+            new Promise(function(resolve) { setTimeout(function() { resolve(null); }, 3000); })
         ]).then(function(hwid) {
-            if (hwid && typeof hwid === 'string' && hwid.trim().length > 0) {
-                try { localStorage.setItem('offszn_device_hwid', hwid.trim()); } catch(e) {}
+            if (hwid && typeof hwid === 'string' && hwid.trim().length > 0 && !hwid.startsWith('web-')) {
+                window.OFFSZN_HWID = hwid.trim();
                 return hwid.trim();
             }
             return getOrCreateDeviceId();
@@ -979,18 +986,36 @@ setTimeout(function() {
             openActivationModal(false);
         }
     }
-}, 150);
+// NOTE: 500ms delay ensures window.OFFSZN_HWID is injected by C++ (via evaluateJavascript
+// called from sendAllParamsToUI) BEFORE getHwidAsync() is called inside verifyTrialOnline.
+}, 500);
 
-// ─── SYNC PARAMS FROM C++ ON LOAD ────────────────────────────────────────────
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ═══ PARAM SYNC: Listen for "init-params" pushed by C++ timerCallback ══════════
+// ═══════════════════════════════════════════════════════════════════════════════
+// C++ pushes params via emitEventIfBrowserIsVisible — replaces old callNative('getParams')
+if (typeof window.__JUCE__ !== 'undefined') {
+    try {
+        var _inkaBridge = window.__JUCE__.getEventLoop();
+        _inkaBridge.addEventListener('init-params', function(res) {
+            if (!res) return;
+            if (res.refill    !== undefined) updateGas(res.refill, true, false);
+            if (res.width     !== undefined && knobRegistry['width'])    knobRegistry['width'].setValue(res.width);
+            if (res.sat10k    !== undefined && knobRegistry['sat10k'])   knobRegistry['sat10k'].setValue(res.sat10k);
+            if (res.bassMono  !== undefined && knobRegistry['bassMono']) knobRegistry['bassMono'].setValue(res.bassMono);
+        });
+    } catch(e) { console.warn('[INKA KOLA] init-params listener error:', e); }
+}
+
+// ── Signal C++ that JS is ready → triggers sendAllParamsToUI() + HWID injection ──
+// Must fire BEFORE the license boot sequence (150ms) so window.OFFSZN_HWID is set
 setTimeout(function() {
-    callNative('getParams').then(function(res) {
-        if (!res) return;
-        if (res.refill    !== undefined) updateGas(res.refill, true, false);
-        if (res.width     !== undefined && knobRegistry['width'])    knobRegistry['width'].setValue(res.width);
-        if (res.sat10k    !== undefined && knobRegistry['sat10k'])   knobRegistry['sat10k'].setValue(res.sat10k);
-        if (res.bassMono  !== undefined && knobRegistry['bassMono']) knobRegistry['bassMono'].setValue(res.bassMono);
-    });
-}, 400);
+    if (hasJuceBridge()) {
+        try { callNative('setParam', 'ui-ready', 1); } catch(e) {}
+    }
+}, 50);
+
 </script>
 </body>
 </html>
