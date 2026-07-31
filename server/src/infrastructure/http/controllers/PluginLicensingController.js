@@ -33,9 +33,11 @@ async function sendActivationEmail({ to, serialKey, licenseType, expiresAt }) {
         const greeting = isTrial ? 'Aquí tienes los datos de tu prueba!' : 'Felicidades por tu compra!';
         const typeLabel = isTrial ? 'TRIAL' : 'FULL';
 
-        // Auto-detect plugin name from serial prefix (MASTER -> Easy Master, others -> Easy Mix)
-        const isMaster = (serialKey || '').toUpperCase().startsWith('MASTER');
-        const pluginName = isMaster ? 'Easy Master' : 'Easy Mix';
+        // Auto-detect plugin name from serial prefix
+        const upperSerial = (serialKey || '').toUpperCase();
+        const isMaster = upperSerial.startsWith('MASTER');
+        const isInka   = upperSerial.startsWith('INKA');
+        const pluginName = isInka ? 'Inka Kola' : (isMaster ? 'Easy Master' : 'Easy Mix');
 
         const html = `
         <div style="font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
@@ -78,7 +80,9 @@ export const generateWebLicense = async (req, res) => {
             return res.json({ success: true, serial_key: existingLic.serial_key, expires_at: existingLic.expires_at, license_type: 'lifetime' });
         }
 
-        const basePrefix = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master') ? 'MASTER' : 'EASY';
+        const isInkaPlugin = (plugin_name === 'INKA KOLA' || plugin_name === 'Inka Kola');
+        const isMasterPlugin = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
+        const basePrefix = isInkaPlugin ? 'INKA' : (isMasterPlugin ? 'MASTER' : 'EASY');
         const serialKey = `${basePrefix}-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiresAt = null;
 
@@ -409,7 +413,9 @@ export const adminResetLicense = async (req, res) => {
         }
 
         // 4. Generate a new FULL lifetime key
-        let basePrefix = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master') ? 'MASTER' : 'EASY';
+        const isInkaReset = (plugin_name === 'INKA KOLA' || plugin_name === 'Inka Kola');
+        const isMasterReset = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
+        let basePrefix = isInkaReset ? 'INKA' : (isMasterReset ? 'MASTER' : 'EASY');
         const newSerial = `${basePrefix}-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const { data: newLic, error: insertErr } = await supabase
             .from('plugin_licenses')
