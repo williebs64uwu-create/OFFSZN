@@ -38,6 +38,8 @@ This is the master index of all professional skills available in the OFFSZN loca
 ## 🚀 [Production](file:///c:/Users/Willie/Desktop/OFFSZN/.agent/skills/production/)
 *Skills for deployment, performance, and maintenance.*
 - **[modo-produccion](file:///c:/Users/Willie/Desktop/OFFSZN/.agent/skills/production/modo-produccion/SKILL.md)**: Best practices for safe production deployment.
+- **[crear-plugin-offszn](file:///d:/!OFFSZN/PROYECTOS/OFFSZN/.agent/skills/production/crear-plugin-offszn/SKILL.md)**: Workflow completo para duplicar landings, personalizar hero/demo video, interfaz VST3 y compilación multiplataforma.
+
 
 ---
 *Last Updated: 2026-04-21*
