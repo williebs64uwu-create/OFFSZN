@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BEAT POST - OFFSZN Plugin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <title>BEAT POST - OFFSZN Producer Suite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Supabase Client for Real Integration -->
     <script src="/script/supabase.js"></script>
     <script src="/env.js" onerror="console.log('Running standalone/mockup mode')"></script>
@@ -20,11 +20,11 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --bg:           #000000;      /* Pure Black */
-            --panel:        #0c0c0e;      /* Ultra Dark Slate */
-            --panel-light:  #141418;      /* Dark Grey Panel */
-            --border:       #1f1f24;      /* Sleek borders */
-            --border-light: #2d2d35;      /* Focus/Light borders */
+            --bg:           #050507;      /* Pure Deep Black */
+            --panel:        #0a0a0d;      /* Dark Slate Panel */
+            --panel-light:  #121217;      /* Light Grey Panel */
+            --border:       #1a1a22;      /* Sleek borders */
+            --border-light: #282834;      /* Focus/Light borders */
             --text:         #ffffff;      /* Pure White Text */
             --dim:          #8e8e93;      /* Muted Slate Text */
             --accent:       #ffffff;      /* Monochrome White Accent */
@@ -50,7 +50,7 @@
         .vst-container {
             width: 100%;
             height: 100%;
-            background: var(--panel);
+            background: var(--bg);
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -60,7 +60,7 @@
         /* VST Title bar */
         .vst-titlebar {
             height: 38px;
-            background: #121215;
+            background: #09090c;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
@@ -70,6 +70,7 @@
             font-weight: 700;
             color: var(--dim);
             letter-spacing: 0.5px;
+            z-index: 50;
         }
 
         .vst-controls {
@@ -80,1213 +81,933 @@
             width: 8px; height: 8px; border-radius: 50%;
             background: var(--border-light);
         }
-        .vst-dot.active { background: var(--accent); }
+        .vst-dot.active { background: var(--green); }
 
-        /* ─── HEADER ─── */
-        .plugin-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border);
-            background: linear-gradient(180deg, rgba(25,25,32,0.5) 0%, rgba(12,12,14,0) 100%);
+        /* ─── MAIN APP LAYOUT (Sidebar + Main Content) ─── */
+        .vst-body {
+            flex: 1;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            overflow: hidden;
+            position: relative;
         }
 
-        .brand {
+        /* ─── SIDEBAR ─── */
+        .vst-sidebar {
+            width: 210px;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 14px;
+            flex-shrink: 0;
+            z-index: 40;
+        }
+
+        .sidebar-brand {
             display: flex;
             align-items: center;
             gap: 10px;
+            padding: 0 8px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            margin-bottom: 16px;
         }
 
-        .logo-mark {
-            color: var(--accent);
-            font-size: 22px;
-        }
-
-        .logo-text {
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: 2px;
+        .sidebar-brand i {
+            font-size: 20px;
             color: #fff;
         }
 
-        .logo-sub {
-            font-weight: 400;
-            color: var(--dim);
-            font-size: 10px;
+        .sidebar-brand-title {
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            color: #fff;
+            line-height: 1;
         }
 
-        /* ─── STEP BAR (wizard indicator) ─── */
+        .sidebar-brand-sub {
+            font-size: 9px;
+            color: var(--dim);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-top: 3px;
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar-label {
+            font-size: 9px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #555;
+            padding: 10px 10px 4px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 12px;
+            border-radius: 10px;
+            color: var(--dim);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+        }
+
+        .sidebar-item:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .sidebar-item.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+            font-weight: 700;
+        }
+
+        .sidebar-item i {
+            font-size: 14px;
+            width: 16px;
+            text-align: center;
+        }
+
+        /* Action button in sidebar */
+        .btn-sidebar-publish {
+            margin-top: 10px;
+            background: #fff;
+            color: #000;
+            font-weight: 800;
+            font-size: 12px;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        .btn-sidebar-publish:hover {
+            opacity: 0.88;
+        }
+
+        /* Sidebar user footer */
+        .sidebar-footer {
+            padding-top: 14px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .user-avatar-sm {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 12px; color: #fff;
+        }
+
+        .user-info-sm {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-info-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .user-info-plan {
+            font-size: 9px;
+            color: var(--dim);
+            font-weight: 600;
+        }
+
+        /* ─── MAIN CONTENT VIEW (Tabs Area) ─── */
+        .vst-main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background: var(--bg);
+            position: relative;
+        }
+
+        .tab-page {
+            display: none;
+            padding: 28px;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .tab-page.active {
+            display: flex;
+        }
+
+        /* Dashboard Banner */
+        .dash-hero {
+            background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .dash-hero-title {
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .dash-hero-desc {
+            font-size: 12px;
+            color: var(--dim);
+            line-height: 1.5;
+        }
+
+        /* Stat cards grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        .stat-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .stat-card-label {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--dim);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-card-val {
+            font-size: 24px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.5px;
+            font-family: 'Geist Mono', monospace;
+        }
+
+        .stat-card-change {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        /* Catalog list */
+        .catalog-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .catalog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 14px;
+        }
+
+        .beat-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+
+        .beat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .beat-cover {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 8px;
+            background: #18181c;
+            object-fit: cover;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .beat-cover img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        .beat-title {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        .beat-meta {
+            font-size: 9.5px;
+            color: var(--dim);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* ─── SLIDE-OVER PUBLISHER DRAWER ─── */
+        .publisher-drawer {
+            position: absolute;
+            top: 0; right: 0; bottom: 0;
+            width: 440px;
+            max-width: 100%;
+            background: #08080b;
+            border-left: 1px solid var(--border-light);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -10px 0 40px rgba(0,0,0,0.8);
+        }
+
+        .publisher-drawer.open {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #0c0c10;
+        }
+
+        .drawer-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .drawer-close {
+            background: transparent;
+            border: none;
+            color: var(--dim);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: color 0.15s;
+        }
+
+        .drawer-close:hover { color: #fff; }
+
+        .drawer-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* ─── STEP BAR (inside drawer) ─── */
         .step-indicator {
             display: flex;
-            background: #060608;
+            background: #050507;
             border-bottom: 1px solid var(--border);
             height: 38px;
             align-items: center;
             justify-content: space-between;
-            padding: 0 24px;
-            font-size: 10px;
+            padding: 0 16px;
+            font-size: 9.5px;
             font-weight: 700;
             color: var(--dim);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
         .step-item {
             display: flex;
             align-items: center;
             gap: 6px;
-            transition: color 0.2s;
         }
+        .step-item.active { color: var(--accent); }
+        .step-arrow { font-size: 8px; opacity: 0.3; }
 
-        .step-item.active {
-            color: var(--accent);
-        }
-
-        .step-item.completed {
-            color: var(--dim);
-            opacity: 0.6;
-        }
-
-        .step-arrow {
-            font-size: 9px;
-            opacity: 0.2;
-        }
-
-        /* ─── VIEWS CONTAINER ─── */
-        .content-area {
-            flex: 1;
-            padding: 28px;
-            display: flex;
+        /* Form Controls */
+        .step-pane {
+            display: none;
             flex-direction: column;
-            overflow-y: auto;
+            gap: 16px;
+        }
+        .step-pane.active { display: flex; }
+
+        .section-title {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--dim);
+            margin-bottom: 4px;
         }
 
-        /* ─── STEP 1: AUTH SCREEN (full-area overlay) ─── */
+        .form-group {
+            display: flex; flex-direction: column; gap: 6px;
+        }
+
+        .text-input {
+            background: #000;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 11px 13px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .text-input:focus { border-color: var(--accent); }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-next {
+            background: #fff;
+            color: #000;
+            font-weight: 800;
+            font-size: 12px;
+            border: none;
+            border-radius: 8px;
+            padding: 11px 20px;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+            transition: opacity 0.15s;
+        }
+        .btn-next:hover { opacity: 0.88; }
+
+        .btn-prev {
+            background: transparent;
+            color: #fff;
+            font-weight: 700;
+            font-size: 12px;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 6px;
+        }
+
+        .dest-option {
+            background: var(--panel-light);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .dest-left { display: flex; align-items: center; gap: 12px; }
+        .dest-icon { font-size: 20px; color: var(--dim); }
+        .dest-details h4 { font-size: 12px; font-weight: 700; color: #fff; }
+        .dest-details p { font-size: 10px; color: var(--dim); }
+
+        /* Switch toggle */
+        .switch { position: relative; display: inline-block; width: 36px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; inset: 0; background-color: #282830; transition: .3s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--green); }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        /* ─── AUTH OVERLAY ─── */
         #view-auth {
-            display: none; /* JS sets to flex when shown */
+            display: none;
             position: absolute;
             inset: 0;
-            z-index: 100;
-            background: #06060a;
+            z-index: 200;
+            background: #050507;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
             gap: 18px;
             padding: 24px;
-            box-sizing: border-box;
-        }
-
-        .auth-logo-icon {
-            font-size: 64px;
-            color: var(--accent);
-        }
-
-        .auth-title {
-            font-size: 20px;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 6px;
-        }
-
-        .auth-desc {
-            font-size: 13px;
-            color: var(--dim);
-            max-width: 360px;
-            line-height: 1.6;
-        }
-
-        .btn-google {
-            background: #fff;
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            padding: 14px 28px;
-            font-weight: 700;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-
-        .btn-google:hover {
-            transform: translateY(-1px);
-            background: #e5e5ea;
-        }
-
-        /* ─── GENERAL STEPS CONTAINER ─── */
-        .step-pane {
-            display: none;
-            flex-direction: column;
-            gap: 24px;
-            height: 100%;
-        }
-
-        .step-pane.active {
-            display: flex;
-        }
-
-        .section-title {
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--dim);
-            margin-bottom: 8px;
-        }
-
-        /* Form Inputs */
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .text-input {
-            background: #000000;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 14px 16px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .text-input:focus {
-            border-color: var(--accent);
-        }
-
-        /* Cover Recommendation Engine */
-        .cover-recommender {
-            background: #060608;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .recommender-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .recommender-header span {
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--dim);
-            text-transform: uppercase;
-        }
-
-        .variations-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .variation-badge {
-            background: var(--panel-light);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 6px 14px;
-            font-size: 10.5px;
-            color: var(--dim);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .variation-badge:hover, .variation-badge.active {
-            border-color: var(--accent);
-            color: #fff;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .covers-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
-        }
-
-        .cover-option-card {
-            aspect-ratio: 1/1;
-            border-radius: 8px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding: 12px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-        }
-
-        .cover-option-card:hover {
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .cover-option-card.selected {
-            border-color: var(--accent);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
-        }
-
-        .cover-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.9) 100%);
-            z-index: 1;
-        }
-
-        .cover-title {
-            font-size: 10px;
-            font-weight: 800;
-            color: #fff;
-            z-index: 2;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            line-height: 1.3;
-            word-break: break-all;
-        }
-
-        .cover-icon {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 30px;
-            color: rgba(255,255,255,0.15);
-            z-index: 1;
-            transition: transform 0.3s;
-        }
-        .cover-option-card:hover .cover-icon {
-            transform: translate(-50%, -50%) scale(1.1);
-        }
-
-        .custom-upload-card {
-            position: relative;
-            background: var(--panel-light);
-            border: 1px dashed var(--border-light);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            cursor: pointer;
-            aspect-ratio: 1/1;
-            gap: 8px;
-            color: var(--dim);
-            transition: all 0.2s;
-        }
-
-        .custom-upload-card:hover {
-            border-color: var(--accent);
-            color: #fff;
-        }
-
-        /* ─── TARGETS & AUDIO STATUS ─── */
-        .dest-option {
-            background: var(--panel-light);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.2s ease;
-            margin-bottom: 12px;
-            cursor: pointer;
-        }
-
-        .dest-option:hover {
-            border-color: var(--border-light);
-        }
-
-        .dest-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .dest-icon {
-            font-size: 20px;
-            color: var(--dim);
-            width: 24px;
-            text-align: center;
-        }
-
-        .dest-left.youtube-active .dest-icon {
-            color: var(--yt-red);
-        }
-
-        .dest-left.store-active .dest-icon {
-            color: #fff;
-        }
-
-        .dest-details h4 {
-            font-size: 13px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .dest-details p {
-            font-size: 10.5px;
-            color: var(--dim);
-        }
-
-        /* Toggle Switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 36px;
-            height: 22px;
-        }
-
-        .switch input { opacity: 0; width: 0; height: 0; }
-
-        .slider {
-            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-            background-color: var(--border-light); transition: .3s; border-radius: 36px;
-        }
-
-        .slider:before {
-            position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px;
-            background-color: #fff; transition: .3s; border-radius: 50%;
-        }
-
-        input:checked + .slider { background-color: #fff; }
-        input:checked + .slider:before { transform: translateX(14px); background-color: #000; }
-
-        /* Master Render Card */
-        .master-capture-card {
-            background: #000000;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .capture-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--dim);
-            text-transform: uppercase;
-        }
-
-        .capture-files {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .file-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--panel-light);
-            padding: 12px 16px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
-        }
-
-        .file-name {
-            font-family: 'Geist Mono', monospace;
-            font-size: 12.5px;
-            color: #eee;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .file-status {
-            font-size: 11px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        /* Debug / Host Info Console */
-        .debug-console {
-            background: #060608;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-family: 'Geist Mono', monospace;
-            font-size: 10px;
-            color: var(--dim);
-            max-height: 80px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .debug-line {
-            display: flex;
-            gap: 8px;
-        }
-        .debug-tag {
-            color: #fff;
-            font-weight: 700;
-        }
-
-        /* Navigation Buttons */
-        .nav-buttons {
-            margin-top: auto;
-            display: flex;
-            gap: 14px;
-        }
-
-        .btn-prev {
-            flex: 1;
-            background: transparent;
-            color: var(--dim);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn-prev:hover {
-            color: #fff;
-            border-color: var(--border-light);
-        }
-
-        .btn-next {
-            flex: 2;
-            background: #fff;
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            padding: 14px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-next:hover {
-            background: #e5e5ea;
-        }
-
-        /* ─── STEP 4: RUNNING PROCESS ─── */
-        #view-progress {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            gap: 28px;
-            margin-top: auto;
-            margin-bottom: auto;
-        }
-
-        .progress-spinner-container {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .outer-ring {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 4px solid var(--border-light);
-            border-top: 4px solid #fff;
-            border-radius: 50%;
-            animation: spin 1.2s linear infinite;
-        }
-
-        .progress-percentage {
-            font-family: 'Geist Mono', monospace;
-            font-size: 16px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .status-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            text-align: left;
-            width: 100%;
-            max-width: 320px;
-        }
-
-        .status-step {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 12.5px;
-            color: var(--dim);
-        }
-
-        .status-step.active { color: #fff; }
-        .status-step.completed { color: #fff; }
-        .status-step i { width: 16px; text-align: center; }
-
-        /* ─── STEP 5: SUCCESS SCREEN ─── */
-        #view-success {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            gap: 28px;
-            margin-top: auto;
-            margin-bottom: auto;
-        }
-
-        .success-badge {
-            width: 64px;
-            height: 64px;
-            background: rgba(255,255,255,0.08);
-            border: 2px solid #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            color: #fff;
-            animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        .success-title {
-            font-size: 20px;
-            font-weight: 800;
-            color: #fff;
-        }
-
-        .success-desc {
-            font-size: 13px;
-            color: var(--dim);
-            max-width: 340px;
-            line-height: 1.6;
-        }
-
-        .btn-restart {
-            background: transparent;
-            color: var(--dim);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px 24px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-restart:hover {
-            color: #fff;
-            border-color: #fff;
-        }
-
-        /* ─── FOOTER BRANDING ─── */
-        .plugin-footer {
-            height: 38px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            background: #0a0a0d;
-            font-size: 10px;
-            color: var(--dim);
-            flex-shrink: 0;
-        }
-
-        .user-indicator {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: #fff;
-            font-weight: 600;
-        }
-
-        .user-avatar {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #333;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 9px;
-            color: #fff;
-        }
-
-        /* Custom Premium Sleek Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            border: 2px solid transparent;
-            background-clip: padding-box;
-            transition: background 0.2s;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.25);
-            border: 2px solid transparent;
-            background-clip: padding-box;
-        }
-
-        /* Cover Search Modal Overlay */
-        .cover-modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            z-index: 11000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .cover-modal-content {
-            background: #0d0d11;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            width: 100%;
-            max-width: 600px;
-            max-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-            overflow: hidden;
-        }
-
-        .cover-modal-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .cover-modal-header h3 {
-            font-size: 11px;
-            font-weight: 800;
-            color: #fff;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn-close-modal {
-            background: transparent;
-            border: none;
-            color: var(--dim);
-            font-size: 16px;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-
-        .btn-close-modal:hover {
-            color: #fff;
-        }
-
-        .cover-modal-body {
-            padding: 20px;
-            overflow-y: auto;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .cover-search-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        .modal-covers-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-
-        .modal-cover-card {
-            aspect-ratio: 1/1;
-            border-radius: 8px;
-            border: 2px solid transparent;
-            cursor: pointer;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: all 0.2s;
-        }
-
-        .modal-cover-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s;
-        }
-
-        .modal-cover-card:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .modal-cover-card.selected {
-            border-color: var(--accent);
-        }
-
-        .btn-download-cover {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 26px;
-            height: 26px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 50%;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            cursor: pointer;
-            z-index: 5;
-            transition: opacity 0.2s;
-        }
-
-        .btn-download-cover:hover {
-            opacity: 0.8;
-        }
-
-        .btn-load-more {
-            background: var(--panel-light);
-            border: 1px solid var(--border);
-            color: #fff;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        .btn-load-more:hover {
-            border-color: var(--accent);
-            background: rgba(255,255,255,0.02);
-        }
-
-        @keyframes scaleUpSuccess {
-            from { transform: scale(0.95); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        @keyframes pulseSuccess {
-            0% { box-shadow: 0 0 0 0 rgba(48, 209, 88, 0.25); }
-            70% { box-shadow: 0 0 0 15px rgba(48, 209, 88, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(48, 209, 88, 0); }
         }
     </style>
 </head>
 <body>
 
-    <!-- VST PLUGIN MOCKUP WINDOW -->
+    <!-- VST WINDOW WRAPPER -->
     <div class="vst-container">
-        
-        <!-- Plugin Header -->
-        <div class="plugin-header">
-            <div class="brand">
-                <i class="fa-solid fa-cloud-arrow-up logo-mark"></i>
+
+        <!-- Title bar -->
+        <div class="vst-titlebar">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-cloud-arrow-up" style="color: #fff;"></i>
+                <span>BEAT POST — OFFSZN Studio Suite</span>
+            </div>
+            <div class="vst-controls">
+                <div class="vst-dot active"></div>
+                <div class="vst-dot"></div>
+                <div class="vst-dot"></div>
+            </div>
+        </div>
+
+        <!-- MAIN LAYOUT (Sidebar + Main Content area) -->
+        <div class="vst-body">
+
+            <!-- SIDEBAR -->
+            <div class="vst-sidebar">
                 <div>
-                    <div class="logo-text">BEAT POST</div>
+                    <div class="sidebar-brand">
+                        <i class="fa-solid fa-bolt"></i>
+                        <div>
+                            <div class="sidebar-brand-title">OFFSZN</div>
+                            <div class="sidebar-brand-sub">BEAT POST v2.0</div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-menu">
+                        <div class="sidebar-label">Menú Principal</div>
+                        <a href="#" class="sidebar-item active" id="nav-analytics" onclick="switchTab('analytics', event)">
+                            <i class="fa-solid fa-chart-pie"></i> Analytics
+                        </a>
+                        <a href="#" class="sidebar-item" id="nav-beats" onclick="switchTab('beats', event)">
+                            <i class="fa-solid fa-music"></i> Mis Beats
+                        </a>
+                        <a href="#" class="sidebar-item" id="nav-account" onclick="switchTab('account', event)">
+                            <i class="fa-solid fa-user"></i> Mi Cuenta
+                        </a>
+
+                        <div class="sidebar-label" style="margin-top: 14px;">Acción Rápida</div>
+                        <button class="btn-sidebar-publish" onclick="openPublisherDrawer()">
+                            <i class="fa-solid fa-plus"></i> Publicar Beat
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Footer User Badge -->
+                <div class="sidebar-footer" id="sidebar-user-box" onclick="switchTab('account', event)">
+                    <div class="user-avatar-sm" id="sidebar-avatar">W</div>
+                    <div class="user-info-sm">
+                        <div class="user-info-name" id="sidebar-user-name">Inicia sesión</div>
+                        <div class="user-info-plan" id="sidebar-user-plan">Plan Gratis</div>
+                    </div>
                 </div>
             </div>
-            <div style="font-size: 9px; font-weight: 700; color: #fff; opacity: 0.8; letter-spacing: 0.5px;">
-                Versión 1.0.0
-            </div>
-        </div>
 
+            <!-- MAIN CONTENT AREA (Tab Views) -->
+            <div class="vst-main-content">
 
-        <!-- Step Indicator Bar (shown only when logged in) -->
-        <div class="step-indicator" id="vst-steps-bar" style="display: none;">
-            <div class="step-item active" id="step-lbl-1">
-                <span>1. Detalles y Portada</span>
-            </div>
-            <i class="fa-solid fa-chevron-right step-arrow"></i>
-            <div class="step-item" id="step-lbl-2">
-                <span>2. Archivos Audio</span>
-            </div>
-            <i class="fa-solid fa-chevron-right step-arrow"></i>
-            <div class="step-item" id="step-lbl-3">
-                <span>3. Publicación</span>
-            </div>
-        </div>
+                <!-- ── TAB 1: ANALYTICS & DASHBOARD ── -->
+                <div class="tab-page active" id="tab-analytics">
+                    <!-- Hero Banner -->
+                    <div class="dash-hero">
+                        <div>
+                            <h2 class="dash-hero-title" id="dash-welcome-name">¡Hola, Productor! 👋</h2>
+                            <p class="dash-hero-desc">Tu suite de publicación y métricas de OFFSZN está lista.</p>
+                        </div>
+                        <button class="btn-next" onclick="openPublisherDrawer()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> + Publicar Beat
+                        </button>
+                    </div>
 
-        <!-- Plugin Content Area (relative so auth overlay can cover it fully) -->
-        <div id="plugin-content-area" style="position: relative; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <!-- Stat Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-card-label"><i class="fa-solid fa-headphones"></i> Reproducciones</div>
+                            <div class="stat-card-val" id="stat-plays-val">1,280</div>
+                            <div class="stat-card-change"><i class="fa-solid fa-arrow-trend-up"></i> +14% este mes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-label"><i class="fa-solid fa-compact-disc"></i> Beats Subidos</div>
+                            <div class="stat-card-val" id="stat-beats-val">12</div>
+                            <div class="stat-card-change" style="color: var(--dim);">Catálogo en OFFSZN</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-label"><i class="fa-brands fa-youtube" style="color: #ff3b30;"></i> YouTube Views</div>
+                            <div class="stat-card-val" id="stat-yt-val">4,920</div>
+                            <div class="stat-card-change"><i class="fa-solid fa-arrow-trend-up"></i> +22% reproducciones</div>
+                        </div>
+                    </div>
 
-            <!-- AUTH OVERLAY (covers everything when logged out) -->
-            <div id="view-auth" style="display: none; position: absolute; inset: 0; z-index: 100; background: #06060a; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 18px; padding: 24px;">
+                    <!-- Recent Beats Section -->
+                    <div>
+                        <div class="catalog-header" style="margin-bottom: 12px;">
+                            <h3 class="section-title" style="margin-bottom: 0;">Beats Recientes en Catálogo</h3>
+                            <a href="#" onclick="switchTab('beats', event)" style="font-size: 11px; color: var(--dim); text-decoration: underline;">Ver todos</a>
+                        </div>
+                        <div class="catalog-grid" id="dash-recent-beats">
+                            <!-- Card 1 -->
+                            <div class="beat-card">
+                                <div class="beat-cover">
+                                    <i class="fa-solid fa-record-vinyl" style="font-size: 32px; color: rgba(255,255,255,0.2);"></i>
+                                </div>
+                                <div class="beat-title">Midnight R&B Type Beat</div>
+                                <div class="beat-meta"><span>340 escuchas</span><span style="color: var(--green);">ACTIVO</span></div>
+                            </div>
+                            <!-- Card 2 -->
+                            <div class="beat-card">
+                                <div class="beat-cover">
+                                    <i class="fa-solid fa-fire" style="font-size: 32px; color: rgba(255,255,255,0.2);"></i>
+                                </div>
+                                <div class="beat-title">Dark Drill Hard</div>
+                                <div class="beat-meta"><span>520 escuchas</span><span style="color: var(--green);">ACTIVO</span></div>
+                            </div>
+                            <!-- Card 3 -->
+                            <div class="beat-card">
+                                <div class="beat-cover">
+                                    <i class="fa-solid fa-cloud-moon" style="font-size: 32px; color: rgba(255,255,255,0.2);"></i>
+                                </div>
+                                <div class="beat-title">Lofi Rain Vibes</div>
+                                <div class="beat-meta"><span>420 escuchas</span><span style="color: var(--green);">ACTIVO</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── TAB 2: MIS BEATS ── -->
+                <div class="tab-page" id="tab-beats">
+                    <div class="catalog-header">
+                        <div>
+                            <h2 style="font-size: 18px; font-weight: 800; color: #fff;">Catálogo de Beats</h2>
+                            <p style="font-size: 11px; color: var(--dim);">Gestiona las instrumentales publicadas en tu tienda OFFSZN</p>
+                        </div>
+                        <button class="btn-next" onclick="openPublisherDrawer()">
+                            <i class="fa-solid fa-plus"></i> Nuevo Beat
+                        </button>
+                    </div>
+
+                    <div class="catalog-grid" id="full-catalog-grid" style="margin-top: 14px;">
+                        <!-- Will be populated dynamically by beat-post-service.js or JS init -->
+                    </div>
+                </div>
+
+                <!-- ── TAB 3: MI CUENTA ── -->
+                <div class="tab-page" id="tab-account">
+                    <div>
+                        <h2 style="font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 4px;">Cuenta &amp; Estado VST</h2>
+                        <p style="font-size: 11px; color: var(--dim);">Detalles de tu perfil y vinculación activa</p>
+                    </div>
+
+                    <div style="background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 14px; max-width: 400px;">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <div class="user-avatar-sm" id="acc-avatar" style="width: 44px; height: 44px; font-size: 16px;">W</div>
+                            <div>
+                                <h3 id="acc-user-name" style="font-size: 15px; font-weight: 800; color: #fff;">Usuario</h3>
+                                <p id="acc-user-email" style="font-size: 11px; color: var(--dim);">email@ejemplo.com</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid var(--border);">
+                            <span style="font-size: 11px; color: var(--dim);">Nivel de Suscripción</span>
+                            <span id="user-plan-badge" style="font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; border: 1.5px solid #ffd700; color: #ffd700; background: rgba(255, 215, 0, 0.05);">PRO</span>
+                        </div>
+
+                        <button class="btn-prev" onclick="logoutUser(event)" style="color: #ff3b30; border-color: rgba(255,59,48,0.3); width: 100%; justify-content: center; margin-top: 8px;">
+                            <i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SLIDE-OVER PUBLISHER DRAWER -->
+            <div class="publisher-drawer" id="publisher-drawer">
+                <div class="drawer-header">
+                    <div class="drawer-title">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>Publicar Beat</span>
+                    </div>
+                    <button class="drawer-close" onclick="closePublisherDrawer()">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Step Indicator Bar inside drawer -->
+                <div class="step-indicator" id="vst-steps-bar">
+                    <div class="step-item active" id="step-lbl-1"><span>1. Detalles</span></div>
+                    <i class="fa-solid fa-chevron-right step-arrow"></i>
+                    <div class="step-item" id="step-lbl-2"><span>2. Archivos</span></div>
+                    <i class="fa-solid fa-chevron-right step-arrow"></i>
+                    <div class="step-item" id="step-lbl-3"><span>3. Publicar</span></div>
+                </div>
+
+                <!-- Drawer Body containing wizard step panes -->
+                <div class="drawer-body">
+                    <div id="steps-content">
+
+                        <!-- STEP 1: DETAILS & COVER -->
+                        <div class="step-pane active" id="view-details">
+                            <div class="form-group">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h3 class="section-title">Título del Beat</h3>
+                                    <span id="title-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/60</span>
+                                </div>
+                                <input type="text" id="beat-title-input" class="text-input" maxlength="60" value="R&B Type Beat" placeholder="Ej. Lofi Chill Type Beat" oninput="onTitleChange()">
+                            </div>
+
+                            <div class="form-group">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h3 class="section-title">Descripción</h3>
+                                    <span id="desc-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/3000</span>
+                                </div>
+                                <textarea id="beat-desc-input" class="text-input" maxlength="3000" style="height: 52px; resize: none; padding: 8px 10px;" placeholder="Ej. Beat de R&B suave con vibras vintage." oninput="onDescChange()"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h3 class="section-title">Etiquetas / Tags</h3>
+                                    <span id="tags-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/500</span>
+                                </div>
+                                <div id="tags-pills-box" onclick="document.getElementById('tag-input-field').focus()" style="display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 8px; background: #000; border: 1px solid var(--border); border-radius: 8px; min-height: 38px; align-items: center; cursor: text;">
+                                    <input type="text" id="tag-input-field" placeholder="Escribe un tag y presiona Enter..." style="background: transparent; border: none; outline: none; color: #fff; font-size: 11px; flex: 1; min-width: 120px; font-family: inherit;">
+                                </div>
+                                <span style="font-size: 9px; color: var(--dim); margin-top: 2px;">Primeras 3 a OFFSZN, todas a YouTube (hasta 500 caract.).</span>
+                            </div>
+
+                            <!-- Cover Selector -->
+                            <div class="form-group">
+                                <h3 class="section-title">Portada del Beat (Square 1:1)</h3>
+                                <div style="display: flex; gap: 12px; align-items: center;">
+                                    <div id="cover-preview-box" style="width: 64px; height: 64px; border-radius: 6px; border: 1px solid var(--border); background: #060608; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
+                                        <span id="cover-preview-text" style="font-size: 7.5px; color: var(--dim); text-align: center; font-weight: 700; padding: 4px;">AUTOGENERADO</span>
+                                        <img id="cover-preview-img" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
+                                    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                                        <button type="button" class="btn-prev" onclick="document.getElementById('cover-file-input').click()" style="margin: 0; padding: 6px 10px; font-size: 10px; width: fit-content; cursor: pointer;">
+                                            <i class="fa-solid fa-image"></i> Seleccionar Imagen
+                                        </button>
+                                        <span style="font-size: 8.5px; color: var(--dim);">Se abrirá un recortador para ajustarla a 1:1.</span>
+                                    </div>
+                                </div>
+                                <input type="file" id="cover-file-input" accept="image/*" style="display: none;" onchange="handleCoverFileSelect(this.files[0])">
+                            </div>
+
+                            <div class="nav-buttons" style="margin-top: 10px;">
+                                <button class="btn-next" onclick="goToStep(2)">Continuar <i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- STEP 2: AUDIO FILES -->
+                        <div class="step-pane" id="view-audio">
+                            <div>
+                                <h3 class="section-title">Cargar Instrumental</h3>
+                                <p style="color: var(--dim); font-size: 10.5px; margin-bottom: 10px;">Arrastra tus archivos WAV/MP3 exportados desde el DAW.</p>
+
+                                <div id="drop-zone" style="width: 100%; height: 100px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: #060608; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin-bottom: 12px;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border-light)'" ondrop="handleFileDrop(event)" onclick="if (!uploadedFiles.mp3) { document.getElementById('file-input-mp3').click(); } else { document.getElementById('file-input-wav').click(); }">
+                                    <i class="fa-solid fa-cloud-arrow-up" style="font-size: 20px; color: var(--dim);"></i>
+                                    <span style="font-size: 11px; font-weight: 700; color: #fff;">Arrastra aquí tus archivos MP3 y WAV</span>
+                                    <span id="drop-zone-help" style="font-size: 9px; color: var(--dim);">O haz clic para explorar</span>
+                                </div>
+                                <input type="file" id="file-input-wav" accept=".wav" style="display: none;" onchange="handleFileSelect('wav', this.files[0])">
+                                <input type="file" id="file-input-mp3" accept=".mp3" style="display: none;" onchange="handleFileSelect('mp3', this.files[0])">
+
+                                <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
+                                    <div style="background: #000; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="document.getElementById('file-input-mp3').click()">
+                                        <span style="font-size: 11px; font-weight: 600;"><i class="fa-regular fa-file-audio"></i> MP3 (Obligatorio)</span>
+                                        <span id="mp3-status-lbl" style="font-size: 10px; color: var(--dim);">Cargar MP3</span>
+                                    </div>
+                                    <div style="background: #000; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="document.getElementById('file-input-wav').click()">
+                                        <span style="font-size: 11px; font-weight: 600;"><i class="fa-regular fa-file-audio"></i> WAV (Opcional)</span>
+                                        <span id="wav-status-lbl" style="font-size: 10px; color: var(--dim);">Cargar WAV</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <h3 class="section-title">Console</h3>
+                                <div class="debug-console" id="dbg-console" style="height: 45px; font-size: 9px; background: #000; padding: 6px; border-radius: 6px; border: 1px solid var(--border); overflow-y: auto;">
+                                    <div><span style="color: var(--dim);">[SYS]</span> VST enlazado al Master Bus.</div>
+                                </div>
+                            </div>
+
+                            <div class="nav-buttons">
+                                <button class="btn-prev" onclick="goToStep(1)"><i class="fa-solid fa-chevron-left"></i> Atrás</button>
+                                <button class="btn-next" id="btn-audio-continue" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="goToStep(3)">Continuar <i class="fa-solid fa-chevron-right"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- STEP 3: DESTINATIONS -->
+                        <div class="step-pane" id="view-targets">
+                            <div>
+                                <h3 class="section-title">Destinos de Publicación</h3>
+
+                                <div class="dest-option">
+                                    <div class="dest-left">
+                                        <i class="fa-solid fa-store dest-icon"></i>
+                                        <div class="dest-details">
+                                            <h4>Tienda Virtual OFFSZN</h4>
+                                            <p>Publicar beat en catálogo</p>
+                                        </div>
+                                    </div>
+                                    <span style="font-size: 9px; font-weight: 800; color: #fff;">ACTIVO</span>
+                                </div>
+
+                                <div class="dest-option" id="yt-dest-card" onclick="toggleYoutube()">
+                                    <div class="dest-left">
+                                        <i class="fa-brands fa-youtube dest-icon"></i>
+                                        <div class="dest-details">
+                                            <h4>Canal de YouTube</h4>
+                                            <p id="yt-desc-text">Publicar video de fondo</p>
+                                        </div>
+                                    </div>
+                                    <div onclick="event.stopPropagation()">
+                                        <label class="switch">
+                                            <input type="checkbox" id="yt-toggle" onchange="updateYtState()">
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="nav-buttons" style="margin-top: 20px;">
+                                <button class="btn-prev" onclick="goToStep(2)"><i class="fa-solid fa-chevron-left"></i> Atrás</button>
+                                <button class="btn-next" onclick="startProcess()"><i class="fa-solid fa-cloud-arrow-up"></i> PUBLICAR BEAT</button>
+                            </div>
+                        </div>
+
+                        <!-- STEP 4: PROGRESS -->
+                        <div id="view-progress" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 30px 10px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: 900; color: #fff; font-family: 'Geist Mono', monospace;" id="progress-val">0%</div>
+                            <div>
+                                <h3 style="font-size: 14px; font-weight: 800; color: #fff;">Publicando instrumental</h3>
+                                <p style="color: var(--dim); font-size: 10.5px;">El DAW está procesando y subiendo tus archivos...</p>
+                            </div>
+                        </div>
+
+                        <!-- STEP 5: SUCCESS -->
+                        <div id="view-success" style="display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 16px; padding: 20px;">
+                            <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(48, 209, 88, 0.08); border: 2px solid var(--green); display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--green);">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <div>
+                                <h2 style="font-size: 17px; font-weight: 800; color: #fff;">¡Beat Publicado!</h2>
+                                <p style="color: var(--dim); font-size: 11px; margin-top: 4px;">Tu instrumental ha sido subida exitosamente.</p>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                                <a id="btn-view-offszn" href="#" target="_blank" class="btn-next" style="justify-content: center; text-decoration: none;">
+                                    <i class="fa-solid fa-store"></i> Ver en Tienda OFFSZN
+                                </a>
+                                <a id="btn-view-youtube" href="#" target="_blank" class="btn-prev" style="justify-content: center; text-decoration: none; display: none; color: #ff3b30; border-color: rgba(255,59,48,0.3);">
+                                    <i class="fa-brands fa-youtube"></i> Ver en YouTube
+                                </a>
+                            </div>
+                            <button class="btn-prev" onclick="resetMockup(); closePublisherDrawer();" style="border: none; color: var(--dim); font-size: 11px; margin-top: 6px;">
+                                Finalizar
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- AUTH OVERLAY (Shown if not logged in) -->
+            <div id="view-auth">
                 <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center;">
                     <i class="fa-solid fa-user-lock" style="font-size: 22px; color: #fff; opacity: 0.75;"></i>
                 </div>
                 <div style="max-width: 280px;">
-                    <h2 style="font-size: 17px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 8px; line-height: 1.3; color: #fff;">Inicia sesión o crea tu cuenta para subir beats</h2>
+                    <h2 style="font-size: 17px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 8px; line-height: 1.3; color: #fff;">Inicia sesión para usar BEAT POST</h2>
+                    <p style="font-size: 11px; color: var(--dim);">Conecta tu cuenta de OFFSZN para sincronizar el VST en tu DAW.</p>
                 </div>
 
-                <button onclick="openWebTokenPage()" style="width: 100%; max-width: 280px; padding: 14px; font-size: 12.5px; background: #fff; color: #000; font-weight: 800; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: -0.2px;">
+                <button onclick="openWebTokenPage()" style="width: 100%; max-width: 280px; padding: 14px; font-size: 12.5px; background: #fff; color: #000; font-weight: 800; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Crear cuenta o iniciar sesión
                 </button>
 
-                <!-- Auto Link Pin Box -->
                 <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 14px 18px; width: 100%; max-width: 280px;">
                     <span style="font-size: 9px; color: var(--dim); text-transform: uppercase; font-weight: 800; letter-spacing: 1px;">Código de vinculación automática</span>
-                    <h3 id="linking-pin-display" style="font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 6px; margin: 8px 0 6px; font-family: 'Geist Mono', 'Courier New', monospace;">--- ---</h3>
-                    <p style="font-size: 9.5px; color: var(--dim); line-height: 1.5;">El plugin se conectará automáticamente al iniciar sesión en tu navegador.</p>
-                </div>
-
-                <a href="#" onclick="toggleManualAuth(event)" style="font-size: 10px; color: var(--dim); text-decoration: underline; margin-top: 4px;">Vincular manualmente con Token</a>
-
-                <div id="manual-auth-box" style="display: none; width: 100%; max-width: 280px; flex-direction: column; gap: 8px;">
-                    <input type="password" id="auth-token-input" class="text-input" placeholder="Pega tu token de acceso aquí" style="width: 100%; padding: 12px; font-size: 11px; background: #000; text-align: center; border-radius: 8px; border: 1px solid var(--border); box-sizing: border-box;">
-                    <button onclick="loginWithToken()" style="width: 100%; padding: 11px; font-size: 11.5px; font-weight: 700; background: transparent; border: 1px solid var(--border-light); color: #fff; border-radius: 8px; cursor: pointer;">
-                        Vincular Cuenta
-                    </button>
+                    <h3 id="linking-pin-display" style="font-size: 26px; font-weight: 900; color: #fff; letter-spacing: 6px; margin: 8px 0 6px; font-family: 'Geist Mono', monospace;">--- ---</h3>
+                    <p style="font-size: 9.5px; color: var(--dim); line-height: 1.5;">El plugin se conectará automáticamente al iniciar sesión.</p>
                 </div>
             </div>
 
-            <!-- STEP PANES (hidden behind auth overlay when logged out) -->
-            <div id="steps-content" style="flex: 1; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden;">
-
-                <!-- STEP 1: BEAT DETAILS & PORTADA CROPPER -->
-                <div class="step-pane" id="view-details">
-                    <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <h3 class="section-title" style="margin-bottom: 0;">Título del Beat</h3>
-                            <span id="title-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/60</span>
-                        </div>
-                        <input type="text" id="beat-title-input" class="text-input" maxlength="60" value="R&B Type Beat" placeholder="Ej. Lofi Chill Type Beat" oninput="onTitleChange()">
-                    </div>
-
-                    <div class="form-group" style="margin-top: 10px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <h3 class="section-title" style="margin-bottom: 0;">Descripción</h3>
-                            <span id="desc-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/3000</span>
-                        </div>
-                        <textarea id="beat-desc-input" class="text-input" maxlength="3000" style="height: 52px; resize: none; font-size: 11px; padding: 8px 10px; background: #000;" placeholder="Ej. Beat de R&B suave con vibras vintage. Ideal para Drake o Bryson Tiller." oninput="onDescChange()"></textarea>
-                    </div>
-
-                    <div class="form-group" style="margin-top: 10px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <h3 class="section-title" style="margin-bottom: 0;">Etiquetas / Tags</h3>
-                            <span id="tags-char-count" style="font-size: 10px; color: var(--dim); font-family: 'Geist Mono', monospace;">0/500</span>
-                        </div>
-                        <div id="tags-pills-box" onclick="document.getElementById('tag-input-field').focus()" style="display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 8px; background: #000; border: 1px solid var(--border); border-radius: 8px; min-height: 40px; align-items: center; cursor: text;">
-                            <input type="text" id="tag-input-field" placeholder="Escribe un tag y presiona Enter..." style="background: transparent; border: none; outline: none; color: #fff; font-size: 11px; flex: 1; min-width: 140px; font-family: inherit;">
-                        </div>
-                        <span style="font-size: 9px; color: var(--dim); margin-top: 2px; display: block;">Máx 40 caract. por tag (Enter para agregar). Las 3 primeras van a OFFSZN, todas a YouTube (hasta 500 caract.).</span>
-                    </div>
-
-                    <!-- Cover Art Selector Box -->
-                    <div class="form-group" style="margin-top: 10px;">
-                        <h3 class="section-title">Portada del Beat (Square 1:1)</h3>
-                        <div style="display: flex; gap: 12px; align-items: center; margin-top: 4px;">
-                            <div id="cover-preview-box" style="width: 70px; height: 70px; border-radius: 6px; border: 1px solid var(--border); background: #060608; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
-                                <span id="cover-preview-text" style="font-size: 7.5px; color: var(--dim); text-align: center; font-weight: 700; padding: 4px;">AUTOGENERADO VINILO</span>
-                                <img id="cover-preview-img" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;">
-                            </div>
-                            <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-                                <button type="button" class="btn-prev" onclick="document.getElementById('cover-file-input').click()" style="margin: 0; padding: 7px 12px; font-size: 10.5px; width: fit-content; cursor: pointer;">
-                                    <i class="fa-solid fa-image"></i> Seleccionar Imagen
-                                </button>
-                                <span style="font-size: 9px; color: var(--dim);">Sube tu imagen (JPG/PNG). Se abrirá un recortador para ajustarla a 1:1.</span>
-                            </div>
-                        </div>
-                        <input type="file" id="cover-file-input" accept="image/*" style="display: none;" onchange="handleCoverFileSelect(this.files[0])">
-                    </div>
-
-                    <div class="nav-buttons" style="margin-top: 14px;">
-                        <button class="btn-next" onclick="goToStep(2)">
-                            Continuar <i class="fa-solid fa-chevron-right"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- STEP 2: AUDIO CONFIGURATION (MP3 & WAV SELECTOR) -->
-                <div class="step-pane" id="view-audio">
-                    <div>
-                        <h3 class="section-title">Cargar Instrumental</h3>
-                        <p style="color: var(--dim); font-size: 11px; margin-bottom: 12px; line-height: 1.4;">Arrastra tus archivos WAV/MP3 exportados o haz clic para cargarlos desde el explorador.</p>
-
-                        <!-- DRAG & DROP ZONE -->
-                        <div id="drop-zone" class="custom-upload-card" style="width: 100%; height: 120px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: #060608; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; margin-bottom: 14px; transition: border-color 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border-light)'" ondrop="handleFileDrop(event)" onclick="if (!uploadedFiles.mp3) { document.getElementById('file-input-mp3').click(); } else { document.getElementById('file-input-wav').click(); }">
-                            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 22px; color: var(--dim);"></i>
-                            <span style="font-size: 11.5px; font-weight: 700; color: #fff;">Arrastra aquí tus archivos MP3 y WAV</span>
-                            <span id="drop-zone-help" style="font-size: 9.5px; color: var(--dim);">O haz clic para seleccionar tu MP3 principal (WAV opcional)</span>
-                        </div>
-                        <input type="file" id="file-input-wav" accept=".wav" style="display: none;" onchange="handleFileSelect('wav', this.files[0])">
-                        <input type="file" id="file-input-mp3" accept=".mp3" style="display: none;" onchange="handleFileSelect('mp3', this.files[0])">
-
-                        <!-- SELECTED FILES LIST -->
-                        <div class="capture-files" style="margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px;">
-                            <div class="file-row" onclick="document.getElementById('file-input-mp3').click()" style="cursor: pointer;">
-                                <span class="file-name"><i class="fa-regular fa-file-audio"></i> MP3 con Tag (Obligatorio)</span>
-                                <span class="file-status" id="mp3-status-lbl" style="color: var(--dim);">Cargar MP3</span>
-                            </div>
-                            <div class="file-row" onclick="document.getElementById('file-input-wav').click()" style="cursor: pointer;">
-                                <span class="file-name"><i class="fa-regular fa-file-audio"></i> WAV sin Tag (Opcional)</span>
-                                <span class="file-status" id="wav-status-lbl" style="color: var(--dim);">Cargar WAV</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <h3 class="section-title">Debug &amp; Host Bridge</h3>
-                        <div class="debug-console" id="dbg-console" style="height: 50px; font-size: 9.5px;">
-                            <div class="debug-line"><span class="debug-tag">[SYS]</span> VST enlazado al Master Bus.</div>
-                        </div>
-                    </div>
-
-                    <div class="nav-buttons" style="margin-top: 14px;">
-                        <button class="btn-prev" onclick="goToStep(1)"><i class="fa-solid fa-chevron-left"></i> Atrás</button>
-                        <button class="btn-next" id="btn-audio-continue" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="goToStep(3)">
-                            Continuar <i class="fa-solid fa-chevron-right"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- STEP 3: DESTINATIONS & PUBLISH -->
-                <div class="step-pane" id="view-targets">
-                    <div>
-                        <h3 class="section-title">Destinos de Publicación</h3>
-
-                        <!-- Store target (Required) -->
-                        <div class="dest-option">
-                            <div class="dest-left store-active">
-                                <i class="fa-solid fa-store dest-icon"></i>
-                                <div class="dest-details">
-                                    <h4>Tienda Virtual OFFSZN</h4>
-                                    <p>Publicar beat en tu catálogo automáticamente</p>
-                                </div>
-                            </div>
-                            <span style="font-size: 9px; font-weight: 800; color: #fff; padding-right: 6px; letter-spacing: 0.5px;">ACTIVO</span>
-                        </div>
-
-                        <!-- YouTube target -->
-                        <div class="dest-option" id="yt-dest-card" onclick="toggleYoutube()">
-                            <div class="dest-left" id="yt-left-area">
-                                <i class="fa-brands fa-youtube dest-icon"></i>
-                                <div class="dest-details">
-                                    <h4>Canal de YouTube</h4>
-                                    <p id="yt-desc-text">Publicar video de fondo sin marca de agua</p>
-                                </div>
-                            </div>
-                            <div style="display: flex; align-items: center;" onclick="event.stopPropagation()">
-                                <a id="btn-link-yt-web" href="https://offszn.lat/cuenta/youtube.html" target="_blank" class="btn-prev" style="margin: 0; padding: 5px 8px; font-size: 9.5px; border-radius: 4px; display: none; border-color: rgba(255, 59, 48, 0.4); color: #ff3b30; font-weight: 700; background: rgba(255, 59, 48, 0.05);">
-                                    Vincular Canal
-                                </a>
-                                <label class="switch" id="yt-switch-container">
-                                    <input type="checkbox" id="yt-toggle" onchange="updateYtState()">
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="nav-buttons" style="margin-top: 40px;">
-                        <button class="btn-prev" onclick="goToStep(2)"><i class="fa-solid fa-chevron-left"></i> Atrás</button>
-                        <button class="btn-next" onclick="startProcess()">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> PUBLICAR BEAT
-                        </button>
-                    </div>
-                </div>
-
-                <!-- STEP 4: UPLOAD & PROCESS PROGRESS -->
-                <div id="view-progress">
-                    <div class="progress-spinner-container">
-                        <div class="outer-ring"></div>
-                        <div class="progress-percentage" id="progress-val">0%</div>
-                    </div>
-
-                    <div>
-                        <h3 style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px;">Publicando instrumental</h3>
-                        <p style="color: var(--dim); font-size: 11px;">El DAW está procesando y subiendo tus archivos...</p>
-                    </div>
-
-                    <div class="status-list">
-                        <div class="status-step" id="step-render">
-                            <i class="fa-solid fa-circle-notch fa-spin"></i> <span>Preparando archivos MP3 y WAV del Master</span>
-                        </div>
-                        <div class="status-step" id="step-upload-store">
-                            <i class="fa-regular fa-circle"></i> <span>Subiendo archivos y portada a OFFSZN</span>
-                        </div>
-                        <div class="status-step" id="step-youtube">
-                            <i class="fa-regular fa-circle"></i> <span>Publicando a YouTube (sin marca de agua)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- STEP 5: SUCCESS -->
-                <div id="view-success" style="display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 20px; padding: 35px 20px; animation: scaleUpSuccess 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); margin-top: auto; margin-bottom: auto;">
-                    <div class="success-badge" style="width: 72px; height: 72px; border-radius: 50%; background: rgba(48, 209, 88, 0.08); border: 2px solid var(--green); display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--green); margin-bottom: 10px; animation: pulseSuccess 2s infinite;">
-                        <i class="fa-solid fa-check"></i>
-                    </div>
-                    <div>
-                        <h2 class="success-title" style="font-size: 19px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px;">¡Beat Publicado!</h2>
-                        <p class="success-desc" id="success-message" style="color: var(--dim); font-size: 11.5px; line-height: 1.5; max-width: 320px; margin: 0 auto;">Tu instrumental ha sido renderizada y subida de forma exitosa.</p>
-                    </div>
-
-                    <!-- Action Buttons Row -->
-                    <div id="success-links-container" style="display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px; margin-top: 10px;">
-                        <a id="btn-view-offszn" href="#" target="_blank" class="btn-next" style="margin: 0; padding: 13px; font-size: 12px; font-weight: 800; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px;">
-                            <i class="fa-solid fa-store"></i> Ver en tu Tienda OFFSZN
-                        </a>
-                        <a id="btn-view-youtube" href="#" target="_blank" class="btn-prev" style="margin: 0; padding: 12px; font-size: 11.5px; font-weight: 700; text-decoration: none; display: none; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; border-color: rgba(255, 59, 48, 0.3); color: #ff3b30; background: rgba(255, 59, 48, 0.03);">
-                            <i class="fa-brands fa-youtube"></i> Ver Video en YouTube
-                        </a>
-                    </div>
-
-                    <button class="btn-prev" onclick="resetMockup()" style="margin-top: 15px; border-color: transparent; color: var(--dim); font-size: 11px; font-weight: 600; background: transparent; padding: 6px 12px; cursor: pointer;">
-                        Publicar otro Beat
-                    </button>
-                </div>
-
-            </div><!-- /#steps-content -->
-
-        </div><!-- /#plugin-content-area -->
-
-        <!-- Footer -->
-        <div class="plugin-footer" style="position: relative;">
-            <span id="footer-status-text">Desconectado</span>
-            <div class="user-indicator" id="footer-user" style="display: none; align-items: center; gap: 8px; cursor: pointer;" onclick="toggleUserDropdown(event)">
-                <div class="user-avatar" id="footer-user-avatar">W</div>
-                <span id="footer-user-name">Willie OFFSZN</span>
-                <span id="user-plan-badge" style="font-size: 8px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; border: 1.5px solid transparent; display: none;"></span>
-                <i class="fa-solid fa-chevron-up" style="font-size: 8px; opacity: 0.6; margin-left: 2px;"></i>
-            </div>
-            
-            <!-- User Dropdown Menu -->
-            <div id="user-dropdown-menu" style="display: none; position: absolute; bottom: 45px; right: 15px; background: #0c0c0e; border: 1px solid var(--border); border-radius: 8px; width: 150px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 1000; overflow: hidden; flex-direction: column; text-align: left;">
-                <a href="#" onclick="openProfilePage(event)" style="padding: 10px 12px; font-size: 11px; color: #fff; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: background 0.2s; border-bottom: 1px solid rgba(255,255,255,0.03);">
-                    <i class="fa-solid fa-user" style="font-size: 10px; color: var(--dim);"></i> Ver Perfil
-                </a>
-                <a href="#" onclick="logoutUser(event)" style="padding: 10px 12px; font-size: 11px; color: #ff3b30; text-decoration: none; display: flex; align-items: center; gap: 8px; transition: background 0.2s;">
-                    <i class="fa-solid fa-right-from-bracket" style="font-size: 10px;"></i> Cerrar Sesión
-                </a>
-            </div>
         </div>
 
     </div>
 
     <!-- MOCKUP INTERACTIVE LOGIC -->
     <script>
-        // Prevent Right-Click context menu
         document.addEventListener('contextmenu', e => e.preventDefault());
-
-        // Prevent Zoom (Ctrl + Wheel)
-        document.addEventListener('wheel', e => {
-            if (e.ctrlKey) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-        // Prevent pinch-to-zoom on touch screens
-        document.addEventListener('gesturestart', e => e.preventDefault());
 
         let selectedYoutube = false;
         let selectedCoverIndex = 0;
-        let currentKeywords = ['rnb'];
-
-        // Curated high quality cover arts from Unsplash
-        const curatedCovers = [
-            // TRAP & DRILL
-            { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500&auto=format&fit=crop&q=80', tags: ['trap', 'drill', 'neon', 'dark', 'purple', 'abstract'] },
-            { url: 'https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=500&auto=format&fit=crop&q=80', tags: ['trap', 'gold', 'black', 'dark', 'drill'] },
-            { url: 'https://images.unsplash.com/photo-1604871000636-074fa5117945?w=500&auto=format&fit=crop&q=80', tags: ['trap', 'red', 'neon', 'dark', 'drill'] },
-            { url: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=500&auto=format&fit=crop&q=80', tags: ['trap', 'abstract', 'art', 'dark', 'drill'] },
-            { url: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab?w=500&auto=format&fit=crop&q=80', tags: ['dark', 'abstract', 'blue', 'smoke', 'trap'] },
-            { url: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=500&auto=format&fit=crop&q=80', tags: ['cyberpunk', 'city', 'neon', 'synthwave', 'trap'] },
-            { url: 'https://images.unsplash.com/photo-1515260268569-9271009adfdb?w=500&auto=format&fit=crop&q=80', tags: ['neon', 'street', 'night', 'cyberpunk', 'drill'] },
-            { url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500&auto=format&fit=crop&q=80', tags: ['trap', 'hard', 'dark', 'drill', 'hiphop', 'rap'] },
-            // R&B & SOUL & VINTAGE
-            { url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=500&auto=format&fit=crop&q=80', tags: ['rnb', 'soul', 'vintage', 'mic', 'microphone'] },
-            { url: 'https://images.unsplash.com/photo-1487180142328-0c4e37023af5?w=500&auto=format&fit=crop&q=80', tags: ['rnb', 'vintage', 'vinyl', 'cassette', 'tape', 'soul'] },
-            { url: 'https://images.unsplash.com/photo-1516280440614-37939bbacd6a?w=500&auto=format&fit=crop&q=80', tags: ['rnb', 'singer', 'neon', 'purple', 'live', 'soul'] },
-            { url: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=500&auto=format&fit=crop&q=80', tags: ['rnb', 'soul', 'vinyl', 'sunset', 'retro'] },
-            { url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80', tags: ['rnb', 'stage', 'lights', 'concert', 'soul'] },
-            { url: 'https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=500&auto=format&fit=crop&q=80', tags: ['art', 'fluid', 'purple', 'abstract', 'rnb'] },
-            { url: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=500&auto=format&fit=crop&q=80', tags: ['cinematic', 'lights', 'neon', 'vintage', 'rnb'] },
-            // LOFI & CHILL
-            { url: 'https://images.unsplash.com/photo-1518173946687-a4c8a383392e?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'chill', 'rain', 'window', 'ambient'] },
-            { url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'chill', 'headphones', 'music', 'coffee'] },
-            { url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'chill', 'lights', 'bokeh'] },
-            { url: 'https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'pastel', 'abstract', 'art'] },
-            { url: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'chill', 'stars', 'night', 'sky'] },
-            { url: 'https://images.unsplash.com/photo-1526481280693-3bfa7568e0f3?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'sunset', 'chill', 'sky'] },
-            { url: 'https://images.unsplash.com/photo-1494905998402-395d579af36f?w=500&auto=format&fit=crop&q=80', tags: ['retro', 'car', 'chill', 'lofi'] },
-            { url: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'forest', 'moody', 'chill'] },
-            { url: 'https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?w=500&auto=format&fit=crop&q=80', tags: ['lofi', 'bridge', 'chill', 'mist'] },
-            // GENERAL & OTHERS
-            { url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500&auto=format&fit=crop&q=80', tags: ['singer', 'shadow', 'music', 'soul'] },
-            { url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=500&auto=format&fit=crop&q=80', tags: ['concert', 'hands', 'crowd', 'festival'] },
-            { url: 'https://images.unsplash.com/photo-1518972559570-7cc1309f3229?w=500&auto=format&fit=crop&q=80', tags: ['synth', 'keys', 'music', 'piano'] },
-            { url: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=500&auto=format&fit=crop&q=80', tags: ['neon', 'headphones', 'music', 'gaming'] },
-            { url: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?w=500&auto=format&fit=crop&q=80', tags: ['sunset', 'city', 'chill', 'skyline'] },
-            { url: 'https://images.unsplash.com/photo-1513829096960-ef0931e87d5a?w=500&auto=format&fit=crop&q=80', tags: ['retro', 'boombox', 'music', 'hiphop'] },
-            { url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=500&auto=format&fit=crop&q=80', tags: ['minimal', 'artwork', 'abstract'] },
-            { url: 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=500&auto=format&fit=crop&q=80', tags: ['gradient', 'background', 'colorful'] }
-        ];
-
-        let selectedCoverUrl = '';
-        let recommendedCovers = [];
-
-        // ═══════════════════════════════════════════════════════════
-        //  SUPABASE & FILE CONFIGURATION
-        // ═══════════════════════════════════════════════════════════
-        let uploadedFiles = {
-            wav: null,
-            mp3: null,
-            cover: null
-        };
+        let uploadedFiles = { wav: null, mp3: null, cover: null };
         let supabaseClient = null;
         let session = null;
 
+        // ── Navigation Tabs Switcher ──
+        function switchTab(tabName, event) {
+            if (event) event.preventDefault();
+            ['analytics', 'beats', 'account'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                const nav = document.getElementById(`nav-${t}`);
+                if (el) el.classList.remove('active');
+                if (nav) nav.classList.remove('active');
+            });
+
+            const activeTab = document.getElementById(`tab-${tabName}`);
+            const activeNav = document.getElementById(`nav-${tabName}`);
+            if (activeTab) activeTab.classList.add('active');
+            if (activeNav) activeNav.classList.add('active');
+        }
+
+        // ── Publisher Drawer Open/Close ──
+        function openPublisherDrawer() {
+            const drawer = document.getElementById('publisher-drawer');
+            if (drawer) drawer.classList.add('open');
+        }
+
+        function closePublisherDrawer() {
+            const drawer = document.getElementById('publisher-drawer');
+            if (drawer) drawer.classList.remove('open');
+        }
+
         function callNativeHost(action, payload = {}) {
-            logDebug(`Calling host: ${action}`);
             if (window.chrome && window.chrome.webview) {
-                window.chrome.webview.postMessage({
-                    action: action,
-                    payload: payload
-                });
+                window.chrome.webview.postMessage({ action, payload });
                 return true;
             }
             return false;
@@ -1296,94 +1017,22 @@
             const consoleEl = document.getElementById('dbg-console');
             if (consoleEl) {
                 const line = document.createElement('div');
-                line.className = 'debug-line';
-                line.innerHTML = `<span class="debug-tag">[SYS]</span> ${msg}`;
+                line.innerHTML = `<span style="color: var(--dim)">[SYS]</span> ${msg}`;
                 consoleEl.appendChild(line);
                 consoleEl.scrollTop = consoleEl.scrollHeight;
             }
         }
 
-        // ═══════════════════════════════════════════════════════════
-        //  SUPABASE INIT — robust fallback for WebView2 environment
-        // ═══════════════════════════════════════════════════════════
+        // ── Supabase Init & Auth ──
         async function initSupabase() {
-            if (!window.supabase) {
-                console.warn('Supabase JS SDK not loaded yet, retrying...');
-                await new Promise(r => setTimeout(r, 500));
-                if (!window.supabase) {
-                    console.error('Supabase SDK unavailable.');
-                    return;
-                }
-            }
-
-            // 1st priority: already-created global client (from auth-utils.js)
-            if (window.supabaseClient) {
+            if (!window.supabaseClient && window.SUPABASE_URL) {
+                supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+                window.supabaseClient = supabaseClient;
+            } else {
                 supabaseClient = window.supabaseClient;
             }
-            // 2nd priority: create from env.js global variables
-            else if (window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
-                supabaseClient = window.supabase.createClient(
-                    window.SUPABASE_URL,
-                    window.SUPABASE_ANON_KEY
-                );
-                window.supabaseClient = supabaseClient;
-            }
-            // 3rd priority: create from OFFSZN_CONFIG if populated there
-            else if (window.OFFSZN_CONFIG && window.OFFSZN_CONFIG.SUPABASE_URL) {
-                supabaseClient = window.supabase.createClient(
-                    window.OFFSZN_CONFIG.SUPABASE_URL,
-                    window.OFFSZN_CONFIG.SUPABASE_ANON_KEY
-                );
-                window.supabaseClient = supabaseClient;
-            }
-            // 4th priority: hardcoded fallback so WebView2 always has a working client
-            else {
-                const SUPA_URL  = 'https://qtjpvztpgfymjhhpouuq.supabase.co';
-                const SUPA_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw';
-                supabaseClient = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-                window.supabaseClient = supabaseClient;
-                console.log('[BeatPost] Using production Supabase fallback.');
-            }
 
-            // Load saved tokens natively if available
-            let savedSupaToken = '';
-            let savedYtToken = '';
-            if (window.loadTokenNative) {
-                try {
-                    const combinedToken = await window.loadTokenNative();
-                    if (combinedToken) {
-                        if (combinedToken.includes('||yt_token||')) {
-                            const parts = combinedToken.split('||yt_token||');
-                            savedSupaToken = parts[0];
-                            savedYtToken = parts[1];
-                        } else {
-                            savedSupaToken = combinedToken;
-                        }
-                        console.log('[BeatPost] Loaded native VST session token.');
-                    }
-                } catch (e) {
-                    console.error('[BeatPost] Failed to load native token:', e);
-                }
-            }
-
-            // Fallback to localStorage if native load empty
-            if (!savedSupaToken) {
-                savedSupaToken = localStorage.getItem('vst_supa_token');
-                savedYtToken = localStorage.getItem('vst_yt_token');
-            }
-
-            if (savedSupaToken) {
-                console.log('[BeatPost] Restoring saved user session...');
-                const { data, error } = await supabaseClient.auth.setSession({
-                    access_token: savedSupaToken,
-                    refresh_token: savedSupaToken
-                });
-                if (!error && data.session) {
-                    window.ytAccessToken = savedYtToken; // Save YouTube access token globally
-                    handleSession(data.session);
-                    return;
-                }
-            }
+            if (!supabaseClient) return;
 
             const { data } = await supabaseClient.auth.getSession();
             if (data.session) {
@@ -1393,856 +1042,173 @@
             }
 
             supabaseClient.auth.onAuthStateChange((_event, newSession) => {
-                if (newSession) {
-                    handleSession(newSession);
-                } else {
-                    showAuthView();
-                }
+                if (newSession) handleSession(newSession);
+                else showAuthView();
             });
         }
 
-        document.addEventListener('DOMContentLoaded', initSupabase);
-
-        // ═══════════════════════════════════════════════════════════
-        //  LOGIN LOGIC (Email/Password & VST Token copy-paste)
-        // ═══════════════════════════════════════════════════════════
-        async function loginWithEmail() {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            if (!email || !password) {
-                alert('Ingresa tu email y contraseña.');
-                return;
-            }
-            logDebug('Iniciando sesión con credenciales...');
-            if (supabaseClient) {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (error) {
-                    logDebug('Error de autenticación: ' + error.message);
-                    alert('Error: ' + error.message);
-                } else if (data.session) {
-                    handleSession(data.session);
-                }
-            } else {
-                logDebug('Simulación de login exitosa.');
-                handleSession({
-                    user: { email: email },
-                    access_token: 'mock_token'
-                });
-            }
-        }
-
-        async function loginWithToken() {
-            const combinedToken = document.getElementById('auth-token-input').value.trim();
-            if (!combinedToken) {
-                alert('Pega el token de acceso.');
-                return;
-            }
-            logDebug('Vinculando token...');
-            
-            let token = combinedToken;
-            let ytToken = '';
-            if (combinedToken.includes('||yt_token||')) {
-                const parts = combinedToken.split('||yt_token||');
-                token = parts[0];
-                ytToken = parts[1];
-            }
-
-            if (supabaseClient) {
-                const { data, error } = await supabaseClient.auth.setSession({
-                    access_token: token,
-                    refresh_token: token
-                });
-                if (error) {
-                    logDebug('Token inválido: ' + error.message);
-                    alert('Token inválido o expirado.');
-                } else if (data.session) {
-                    // Save tokens locally
-                    localStorage.setItem('vst_supa_token', token);
-                    if (ytToken) {
-                        localStorage.setItem('vst_yt_token', ytToken);
-                    } else {
-                        localStorage.removeItem('vst_yt_token');
-                    }
-                    window.ytAccessToken = ytToken;
-
-                    // Save tokens natively in C++ host
-                    if (window.saveTokenNative) {
-                        try {
-                            await window.saveTokenNative(combinedToken);
-                        } catch (e) {
-                            console.error('[BeatPost] Failed to save token natively:', e);
-                        }
-                    }
-
-                    handleSession(data.session);
-                }
-            } else {
-                logDebug('Simulación de token exitosa.');
-                handleSession({
-                    user: { email: 'vst-user@offszn.lat' },
-                    access_token: token
-                });
-            }
-        }
-
-        let linkingPin = '';
-        let realtimeChannel = null;
-
-        function generateLinkingPin() {
-            linkingPin = Math.floor(100000 + Math.random() * 900000).toString();
-            const display = document.getElementById('linking-pin-display');
-            if (display) display.textContent = `${linkingPin.substring(0,3)} ${linkingPin.substring(3)}`;
-            
-            if (supabaseClient) {
-                if (realtimeChannel) {
-                    realtimeChannel.unsubscribe();
-                }
-                realtimeChannel = supabaseClient.channel(`vst-link-${linkingPin}`);
-                realtimeChannel
-                    .on('broadcast', { event: 'send-token' }, (payload) => {
-                        const receivedToken = payload.payload.token;
-                        if (receivedToken) {
-                            logDebug('Token recibido automáticamente desde el navegador.');
-                            document.getElementById('auth-token-input').value = receivedToken;
-                            loginWithToken();
-                        }
-                    })
-                    .subscribe();
-            }
-        }
-
-        function openWebTokenPage() {
-            logDebug('Abriendo navegador para token...');
-            const tokenUrl = `https://offszn.lat/pages/vst-token.html?pin=${linkingPin}`;
-            if (window.chrome && window.chrome.webview) {
-                callNativeHost('openExternalBrowser', { url: tokenUrl });
-            }
-            window.open(tokenUrl, '_blank');
-        }
-
-        function toggleManualAuth(e) {
-            if (e) e.preventDefault();
-            const box = document.getElementById('manual-auth-box');
-            if (box) {
-                box.style.display = box.style.display === 'none' ? 'flex' : 'none';
-            }
-        }
-
-        async function handleSession(sess) {
+        function handleSession(sess) {
             session = sess;
             document.getElementById('view-auth').style.display = 'none';
-            document.getElementById('vst-steps-bar').style.display = 'flex';
-            
-            document.getElementById('footer-status-text').textContent = 'Conectado a OFFSZN';
-            document.getElementById('footer-user').style.display = 'flex';
-            
-            let displayName = sess.user.email ? sess.user.email.split('@')[0] : 'vst-user';
+
+            let displayName = sess.user.email ? sess.user.email.split('@')[0] : 'Productor';
             let avatarChar = displayName[0].toUpperCase();
-            
-            document.getElementById('footer-user').querySelector('span').textContent = displayName;
-            document.getElementById('footer-user').querySelector('.user-avatar').textContent = avatarChar;
 
-            if (supabaseClient && sess.user && sess.user.id) {
-                try {
-                    // 1. Fetch user profile nickname
-                    const { data: profile, error } = await supabaseClient
-                        .from('users')
-                        .select('nickname')
-                        .eq('id', sess.user.id)
-                        .single();
-                    if (!error && profile && profile.nickname) {
-                        displayName = profile.nickname;
-                        avatarChar = displayName[0].toUpperCase();
-                        document.getElementById('footer-user').querySelector('span').textContent = displayName;
-                        document.getElementById('footer-user').querySelector('.user-avatar').textContent = avatarChar;
-                    }
+            // Update sidebar user display
+            const sbName = document.getElementById('sidebar-user-name');
+            const sbAv = document.getElementById('sidebar-avatar');
+            const accName = document.getElementById('acc-user-name');
+            const accEmail = document.getElementById('acc-user-email');
+            const accAv = document.getElementById('acc-avatar');
+            const heroName = document.getElementById('dash-welcome-name');
 
-                    // 2. Fetch user subscription plan level
-                    const { data: planData } = await supabaseClient
-                        .from('profiles')
-                        .select('plan')
-                        .eq('id', sess.user.id)
-                        .single();
-
-                    const plan = (planData && planData.plan) ? planData.plan.toLowerCase() : 'free';
-                    const badge = document.getElementById('user-plan-badge');
-                    if (badge) {
-                        badge.style.display = 'inline-block';
-                        if (plan === 'pro') {
-                            badge.textContent = 'PRO';
-                            badge.style.borderColor = '#ffd700';
-                            badge.style.color = '#ffd700';
-                            badge.style.background = 'rgba(255, 215, 0, 0.05)';
-                        } else if (plan === 'starter') {
-                            badge.textContent = 'STARTER';
-                            badge.style.borderColor = '#a855f7';
-                            badge.style.color = '#a855f7';
-                            badge.style.background = 'rgba(168, 85, 247, 0.05)';
-                        } else {
-                            badge.textContent = 'GRATIS';
-                            badge.style.borderColor = '#8e8e93';
-                            badge.style.color = '#8e8e93';
-                            badge.style.background = 'rgba(142, 142, 147, 0.05)';
-                        }
-                    }
-                } catch (e) {
-                    console.error("Error fetching user profile and plan:", e);
-                }
-            }
-            
-            goToStep(1);
+            if (sbName) sbName.textContent = displayName;
+            if (sbAv) sbAv.textContent = avatarChar;
+            if (accName) accName.textContent = displayName;
+            if (accEmail) accEmail.textContent = sess.user.email || '';
+            if (accAv) accAv.textContent = avatarChar;
+            if (heroName) heroName.textContent = `¡Hola, ${displayName}! 👋`;
         }
 
         function showAuthView() {
             document.getElementById('view-auth').style.display = 'flex';
-            document.getElementById('vst-steps-bar').style.display = 'none';
-            document.getElementById('footer-status-text').textContent = 'Desconectado';
-            document.getElementById('footer-user').style.display = 'none';
-            document.getElementById('user-dropdown-menu').style.display = 'none';
-
-            // Remove active classes from steps to prevent bleed-through
-            document.getElementById('view-details').classList.remove('active');
-            document.getElementById('view-audio').classList.remove('active');
-            document.getElementById('view-targets').classList.remove('active');
-
             generateLinkingPin();
         }
 
-        function toggleUserDropdown(event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            const menu = document.getElementById('user-dropdown-menu');
-            if (menu) {
-                if (menu.style.display === 'flex') {
-                    menu.style.display = 'none';
-                } else {
-                    menu.style.display = 'flex';
-                }
-            }
-        }
-
-        function openProfilePage(event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            document.getElementById('user-dropdown-menu').style.display = 'none';
-            if (session && session.user) {
-                const nickname = document.getElementById('footer-user-name').textContent || 'willieinspired';
-                const profileUrl = `https://offszn.lat/user/${nickname}`;
-                if (window.chrome && window.chrome.webview) {
-                    callNativeHost('openExternalBrowser', { url: profileUrl });
-                }
-                window.open(profileUrl, '_blank');
-            }
-        }
-
-        async function logoutUser(event) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            document.getElementById('user-dropdown-menu').style.display = 'none';
-            logDebug('Cerrando sesión...');
-            
-            localStorage.removeItem('vst_supa_token');
-            localStorage.removeItem('vst_yt_token');
-            window.ytAccessToken = '';
-
-            if (window.deleteTokenNative) {
-                try {
-                    await window.deleteTokenNative();
-                } catch (e) {
-                    console.error('[BeatPost] Failed to delete token natively:', e);
-                }
-            }
+        let linkingPin = '';
+        function generateLinkingPin() {
+            linkingPin = Math.floor(100000 + Math.random() * 900000).toString();
+            const pinDisplay = document.getElementById('linking-pin-display');
+            if (pinDisplay) pinDisplay.textContent = linkingPin;
 
             if (supabaseClient) {
-                await supabaseClient.auth.signOut();
+                const channel = supabaseClient.channel(`vst-link-${linkingPin}`);
+                channel.on('broadcast', { event: 'send-token' }, (payload) => {
+                    const receivedToken = payload.payload.token;
+                    if (receivedToken) {
+                        loginWithTokenDirect(receivedToken);
+                    }
+                }).subscribe();
             }
+        }
 
-            session = null;
-            document.getElementById('auth-token-input').value = '';
+        async function loginWithTokenDirect(token) {
+            if (!supabaseClient) return;
+            const { data } = await supabaseClient.auth.setSession({ access_token: token, refresh_token: token });
+            if (data.session) handleSession(data.session);
+        }
+
+        function openWebTokenPage() {
+            const tokenUrl = `https://offszn.lat/pages/vst-token.html?pin=${linkingPin}`;
+            window.open(tokenUrl, '_blank');
+        }
+
+        function logoutUser(e) {
+            if (e) e.preventDefault();
+            if (supabaseClient) supabaseClient.auth.signOut();
             showAuthView();
         }
 
-        window.addEventListener('click', function(e) {
-            const menu = document.getElementById('user-dropdown-menu');
-            if (menu && menu.style.display === 'flex') {
-                const trigger = document.getElementById('footer-user');
-                if (trigger && !trigger.contains(e.target) && !menu.contains(e.target)) {
-                    menu.style.display = 'none';
-                }
-            }
-        });
-
-        let cropper = null;
-        let croppedCoverBlob = null;
-
-        function handleCoverFileSelect(file) {
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                openCropModal(reader.result || e.target.result);
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function openCropModal(imageSrc) {
-            const modal = document.getElementById('cropModal');
-            const cropImage = document.getElementById('cropImage');
-            if (!modal || !cropImage) return;
-
-            cropImage.src = imageSrc;
-            modal.style.display = 'flex';
-
-            if (cropper) {
-                cropper.destroy();
-            }
-
-            cropper = new Cropper(cropImage, {
-                aspectRatio: 1,
-                viewMode: 1,
-                dragMode: 'move',
-                autoCropArea: 1,
-                restore: false,
-                guides: false,
-                center: true,
-                highlight: false,
-                background: false,
-                modal: true,
-                cropBoxMovable: false,
-                cropBoxResizable: false,
-                ready() {
-                    this.cropper.setCropBoxData({
-                        left: 0,
-                        top: 0,
-                        width: 10000,
-                        height: 10000
-                    });
-                }
-            });
-        }
-
-        function closeCropModal() {
-            const modal = document.getElementById('cropModal');
-            if (modal) modal.style.display = 'none';
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
-            }
-            document.getElementById('cover-file-input').value = '';
-        }
-
-        function saveCroppedImage() {
-            if (!cropper) return;
-            const canvas = cropper.getCroppedCanvas({
-                width: 1000,
-                height: 1000
+        // ── Wizard Navigation ──
+        function goToStep(stepNum) {
+            [1, 2, 3].forEach(i => {
+                const pane = document.getElementById(`view-${i === 1 ? 'details' : i === 2 ? 'audio' : 'targets'}`);
+                const lbl = document.getElementById(`step-lbl-${i}`);
+                if (pane) pane.classList.remove('active');
+                if (lbl) lbl.classList.remove('active');
             });
 
-            canvas.toBlob((blob) => {
-                croppedCoverBlob = blob;
-                
-                const previewImg = document.getElementById('cover-preview-img');
-                const previewText = document.getElementById('cover-preview-text');
-                
-                previewImg.src = canvas.toDataURL('image/jpeg');
-                previewImg.style.display = 'block';
-                previewText.style.display = 'none';
-                
-                closeCropModal();
-                logDebug('Portada recortada y guardada temporalmente.');
-            }, 'image/jpeg', 0.9);
+            const targetPane = document.getElementById(`view-${stepNum === 1 ? 'details' : stepNum === 2 ? 'audio' : 'targets'}`);
+            const targetLbl = document.getElementById(`step-lbl-${stepNum}`);
+            if (targetPane) targetPane.classList.add('active');
+            if (targetLbl) targetLbl.classList.add('active');
         }
-
-        // ─── TAG PILLS & CHARACTER COUNTERS LOGIC ───
-        let tagList = ['rnb', 'vintage', 'smooth', 'drake', 'bryson tiller'];
 
         function onTitleChange() {
-            const input = document.getElementById('beat-title-input');
-            const counter = document.getElementById('title-char-count');
-            if (input && counter) {
-                const len = input.value.length;
-                counter.textContent = `${len}/60`;
-                counter.style.color = len >= 60 ? '#ff9500' : 'var(--dim)';
-            }
+            const val = document.getElementById('beat-title-input').value;
+            document.getElementById('title-char-count').textContent = `${val.length}/60`;
         }
 
         function onDescChange() {
-            const input = document.getElementById('beat-desc-input');
-            const counter = document.getElementById('desc-char-count');
-            if (input && counter) {
-                const len = (input.value || '').length;
-                counter.textContent = `${len}/3000`;
-                counter.style.color = len >= 3000 ? '#ff9500' : 'var(--dim)';
-            }
+            const val = document.getElementById('beat-desc-input').value;
+            document.getElementById('desc-char-count').textContent = `${val.length}/3000`;
         }
 
-        function escapeHtml(str) {
-            return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
-
-        function renderTagPills() {
-            const box = document.getElementById('tags-pills-box');
-            const inputField = document.getElementById('tag-input-field');
-            const countDisplay = document.getElementById('tags-char-count');
-            if (!box || !inputField) return;
-
-            const existingPills = box.querySelectorAll('.tag-pill');
-            existingPills.forEach(p => p.remove());
-
-            let totalChars = 0;
-
-            tagList.forEach((tag, index) => {
-                totalChars += tag.length;
-
-                const pill = document.createElement('div');
-                pill.className = 'tag-pill';
-                pill.style.cssText = `
-                    background: #141418;
-                    border: 1px solid #2d2d35;
-                    border-radius: 16px;
-                    padding: 3px 10px;
-                    font-size: 11px;
-                    color: #fff;
-                    display: flex;
-                    align-items: center;
-                    gap: 6px;
-                    font-weight: 500;
-                `;
-                pill.innerHTML = `
-                    <span>${escapeHtml(tag)}</span>
-                    <i class="fa-solid fa-xmark" style="font-size: 10px; color: var(--dim); cursor: pointer; opacity: 0.7;" onclick="removeTag(${index}, event)"></i>
-                `;
-                box.insertBefore(pill, inputField);
-            });
-
-            if (countDisplay) {
-                countDisplay.textContent = `${totalChars}/500`;
-                countDisplay.style.color = totalChars > 500 ? '#ff3b30' : 'var(--dim)';
-            }
-        }
-
-        function removeTag(index, event) {
-            if (event) event.stopPropagation();
-            tagList.splice(index, 1);
-            renderTagPills();
-        }
-
-        function setupTagInputListener() {
-            const inputField = document.getElementById('tag-input-field');
-            if (!inputField || inputField._hasListener) return;
-            inputField._hasListener = true;
-
-            inputField.addEventListener('keydown', function(e) {
+        // Tags pill system
+        let tagsList = [];
+        const tagInput = document.getElementById('tag-input-field');
+        if (tagInput) {
+            tagInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' || e.key === ',') {
                     e.preventDefault();
-                    addTagFromInput();
-                } else if (e.key === 'Backspace' && inputField.value === '' && tagList.length > 0) {
-                    tagList.pop();
-                    renderTagPills();
-                }
-            });
-
-            inputField.addEventListener('blur', function() {
-                if (inputField.value.trim() !== '') {
-                    addTagFromInput();
+                    let tagText = tagInput.value.trim().replace(/^#/, '');
+                    if (tagText && tagText.length <= 40 && tagsList.length < 15) {
+                        tagsList.push(tagText);
+                        renderTagsPills();
+                        tagInput.value = '';
+                    }
                 }
             });
         }
 
-        function addTagFromInput() {
-            const inputField = document.getElementById('tag-input-field');
-            if (!inputField) return;
-
-            let rawVal = inputField.value.trim().replace(/,/g, '');
-            if (!rawVal) return;
-
-            if (rawVal.length > 40) {
-                rawVal = rawVal.substring(0, 40);
-            }
-
-            const currentTotal = tagList.reduce((acc, t) => acc + t.length, 0);
-            if (currentTotal + rawVal.length > 500) {
-                alert('Límite de 500 caracteres totales alcanzado.');
-                return;
-            }
-
-            const normalized = rawVal.toLowerCase();
-            if (!tagList.some(t => t.toLowerCase() === normalized)) {
-                tagList.push(rawVal);
-                inputField.value = '';
-                renderTagPills();
-            } else {
-                inputField.value = '';
-            }
+        function renderTagsPills() {
+            const container = document.getElementById('tags-pills-box');
+            if (!container) return;
+            container.querySelectorAll('.tag-pill-item').forEach(el => el.remove());
+            let totalChars = 0;
+            tagsList.forEach((tag, idx) => {
+                totalChars += tag.length;
+                const pill = document.createElement('div');
+                pill.className = 'tag-pill-item';
+                pill.style.cssText = 'background: #1c1c24; border: 1px solid var(--border); border-radius: 6px; padding: 2px 8px; font-size: 10.5px; color: #fff; display: flex; align-items: center; gap: 4px;';
+                pill.innerHTML = `<span>#${tag}</span><i class="fa-solid fa-xmark" style="cursor:pointer; font-size: 9px; color: var(--dim);" onclick="removeTag(${idx})"></i>`;
+                container.insertBefore(pill, tagInput);
+            });
+            document.getElementById('tags-char-count').textContent = `${totalChars}/500`;
         }
 
-        function goToStep(stepNum) {
-            document.getElementById('view-audio').classList.remove('active');
-            document.getElementById('view-details').classList.remove('active');
-            document.getElementById('view-targets').classList.remove('active');
-
-            document.getElementById('step-lbl-1').className = 'step-item';
-            document.getElementById('step-lbl-2').className = 'step-item';
-            document.getElementById('step-lbl-3').className = 'step-item';
-
-            if (stepNum === 1) {
-                document.getElementById('view-details').classList.add('active');
-                document.getElementById('step-lbl-1').className = 'step-item active';
-                onTitleChange();
-                onDescChange();
-                renderTagPills();
-                setupTagInputListener();
-            } else if (stepNum === 2) {
-                document.getElementById('view-audio').classList.add('active');
-                document.getElementById('step-lbl-1').className = 'step-item completed';
-                document.getElementById('step-lbl-2').className = 'step-item active';
-            } else if (stepNum === 3) {
-                document.getElementById('view-targets').classList.add('active');
-                document.getElementById('step-lbl-1').className = 'step-item completed';
-                document.getElementById('step-lbl-2').className = 'step-item completed';
-                document.getElementById('step-lbl-3').className = 'step-item active';
-                checkYoutubeStatus();
-            }
+        function removeTag(idx) {
+            tagsList.splice(idx, 1);
+            renderTagsPills();
         }
 
-        async function checkYoutubeStatus() {
-            const btnLink = document.getElementById('btn-link-yt-web');
-            const switchContainer = document.getElementById('yt-switch-container');
-            const descText = document.getElementById('yt-desc-text');
-            
-            // If offline/simulated mode
-            if (!supabaseClient || !session || !session.user) {
-                if (btnLink) btnLink.style.display = 'none';
-                if (switchContainer) switchContainer.style.display = 'block';
-                if (descText) descText.textContent = 'Publicar video de fondo sin marca de agua';
-                return;
-            }
-
-            try {
-                const { data, error } = await supabaseClient
-                    .from('profiles')
-                    .select('youtube_import_done')
-                    .eq('id', session.user.id)
-                    .single();
-
-                if (!error && data && data.youtube_import_done) {
-                    if (btnLink) btnLink.style.display = 'none';
-                    if (switchContainer) switchContainer.style.display = 'block';
-                    if (descText) descText.innerHTML = 'Canal vinculado <span style="color: #34c759;">✅ Listo</span>';
-                } else {
-                    if (btnLink) btnLink.style.display = 'inline-block';
-                    if (switchContainer) switchContainer.style.display = 'none';
-                    if (descText) descText.innerHTML = 'Canal no vinculado <span style="color: #ff3b30;">⚠️ Requiere vinculación</span>';
-                    document.getElementById('yt-toggle').checked = false;
-                    updateYtState();
-                }
-            } catch (e) {
-                console.error("Error checking YouTube link status:", e);
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        //  FILE DROPS & NATIVE SELECTORS
-        // ═══════════════════════════════════════════════════════════
+        // File drop & select logic
         function handleFileSelect(type, file) {
             if (!file) return;
-            
-            // Check file extension
-            const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-            if (type === 'wav' && ext !== '.wav') {
-                alert('El archivo seleccionado para WAV sin Tag debe ser un archivo .wav');
-                return;
-            }
-            if (type === 'mp3' && ext !== '.mp3') {
-                alert('El archivo seleccionado para MP3 con Tag debe ser un archivo .mp3');
-                return;
-            }
-
-            const maxMB = 60; // Max size is 60MB for both
-            if (file.size > maxMB * 1024 * 1024) {
-                alert(`El archivo excede el límite de ${maxMB}MB. (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
-                return;
-            }
-            
             uploadedFiles[type] = file;
-            
-            if (type === 'wav') {
-                document.getElementById('wav-status-lbl').textContent = `${file.name.substring(0,18)}... (${(file.size/1024/1024).toFixed(1)}MB)`;
-                document.getElementById('wav-status-lbl').style.color = 'var(--green)';
-            } else if (type === 'mp3') {
-                document.getElementById('mp3-status-lbl').textContent = `${file.name.substring(0,18)}... (${(file.size/1024/1024).toFixed(1)}MB)`;
+            if (type === 'mp3') {
+                document.getElementById('mp3-status-lbl').textContent = '✔ Cargado';
                 document.getElementById('mp3-status-lbl').style.color = 'var(--green)';
-                
-                // Update helper text if MP3 is uploaded
-                const helpEl = document.getElementById('drop-zone-help');
-                if (helpEl) {
-                    helpEl.textContent = 'O haz clic para seleccionar tu WAV adicional (máx. 60MB)';
-                }
+                document.getElementById('btn-audio-continue').disabled = false;
+                document.getElementById('btn-audio-continue').style.opacity = '1';
+                document.getElementById('btn-audio-continue').style.cursor = 'pointer';
+            } else if (type === 'wav') {
+                document.getElementById('wav-status-lbl').textContent = '✔ Cargado';
+                document.getElementById('wav-status-lbl').style.color = 'var(--green)';
             }
-            validateStep1Continue();
         }
 
         function handleFileDrop(e) {
             e.preventDefault();
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                for (let file of files) {
-                    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
-                    if (ext === '.wav') {
-                        handleFileSelect('wav', file);
-                    } else if (ext === '.mp3') {
-                        handleFileSelect('mp3', file);
-                    } else if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) {
-                        uploadedFiles.cover = file;
-                        selectedCoverUrl = ''; // Clear URL selection
-                        logDebug(`Custom cover selected: ${file.name}`);
-                        renderCoversCurrent();
-                    } else {
-                        alert(`El archivo "${file.name}" no tiene un formato válido (solo se permiten .mp3, .wav o imágenes).`);
-                    }
-                }
-            }
-        }
-
-        function validateStep1Continue() {
-            // ONLY MP3 is REQUIRED
-            const canContinue = !!uploadedFiles.mp3;
-            const btn = document.getElementById('btn-audio-continue');
-            if (canContinue) {
-                btn.removeAttribute('disabled');
-                btn.style.opacity = '1';
-                btn.style.cursor = 'pointer';
-            } else {
-                btn.setAttribute('disabled', 'true');
-                btn.style.opacity = '0.5';
-                btn.style.cursor = 'not-allowed';
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        //  COVER ART GENERATOR & RECOMMENDATION
-        // ═══════════════════════════════════════════════════════════
-        async function fetchLiveCovers(term) {
-            const container = document.getElementById('covers-container');
-            if (!container) return;
-
-            // Show a loading state
-            container.innerHTML = `
-                <div style="grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 8px; height: 80px; color: var(--dim); font-size: 11px;">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i> Buscando portadas para "${term}"...
-                </div>`;
-
-            try {
-                const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&media=music&entity=album&limit=8&lang=es_es`);
-                const data = await res.json();
-
-                if (data.results && data.results.length > 0) {
-                    // Deduplicate by artwork URL, get high-res
-                    const seen = new Set();
-                    recommendedCovers = data.results
-                        .filter(r => r.artworkUrl100)
-                        .map(r => ({
-                            url: r.artworkUrl100.replace('100x100bb', '600x600bb'),
-                            label: `${r.artistName} — ${r.collectionName}`,
-                            tags: [r.collectionName, r.artistName]
-                        }))
-                        .filter(r => {
-                            if (seen.has(r.url)) return false;
-                            seen.add(r.url);
-                            return true;
-                        })
-                        .slice(0, 6);
-
-                    if (!uploadedFiles.cover) selectedCoverUrl = recommendedCovers[0]?.url || '';
-                    renderCoversCurrent();
-                } else {
-                    // No results — show curated fallback
-                    const fallback = [...curatedCovers].sort(() => 0.5 - Math.random()).slice(0, 4);
-                    recommendedCovers = fallback;
-                    if (!uploadedFiles.cover) selectedCoverUrl = fallback[0]?.url || '';
-                    renderCoversCurrent();
-                }
-            } catch (e) {
-                console.error('Cover fetch error:', e);
-                // Show fallback covers from curated list on error
-                const fallback = [...curatedCovers].sort(() => 0.5 - Math.random()).slice(0, 4);
-                recommendedCovers = fallback;
-                if (!uploadedFiles.cover) selectedCoverUrl = fallback[0]?.url || '';
-                renderCoversCurrent();
-            }
-        }
-
-        function onTitleChange() {
-            const titleVal = document.getElementById('beat-title-input').value.toLowerCase();
-            let genre = 'random';
-            let keywords = [];
-
-            if (titleVal.includes('rnb') || titleVal.includes('r&b') || titleVal.includes('soul')) {
-                genre = 'rnb';
-                keywords = ['rnb type beat', 'rnb beat type', 'soul type beat'];
-            } else if (titleVal.includes('trap') || titleVal.includes('hard') || titleVal.includes('drill')) {
-                genre = 'trap';
-                keywords = ['trap type beat', 'drill beat type', 'hard trap beat'];
-            } else if (titleVal.includes('lofi') || titleVal.includes('chill') || titleVal.includes('lo-fi')) {
-                genre = 'lofi';
-                keywords = ['lofi type beat', 'chill lofi beat', 'lo-fi type'];
-            } else {
-                genre = 'random';
-                keywords = ['trap type beat', 'rnb type beat', 'lofi type beat'];
-            }
-
-            currentKeywords = keywords;
-            renderVariations(genre);
-            fetchLiveCovers(keywords[0]);
-        }
-
-        function setKeywordSearch(keyword, genre) {
-            document.getElementById('search-tag-indicator').textContent = `Búsqueda: ${keyword}`;
-            const badges = document.querySelectorAll('.variation-badge');
-            badges.forEach(b => {
-                if (b.textContent.toLowerCase() === keyword.toLowerCase()) {
-                    b.classList.add('active');
-                } else {
-                    b.classList.remove('active');
-                }
+            const files = Array.from(e.dataTransfer.files);
+            files.forEach(f => {
+                if (f.name.endsWith('.mp3')) handleFileSelect('mp3', f);
+                else if (f.name.endsWith('.wav')) handleFileSelect('wav', f);
             });
-            
-            // Fetch live album artwork from iTunes for the badge keyword
-            fetchLiveCovers(keyword);
         }
 
-        function renderVariations(genre) {
-            const container = document.getElementById('variations-container');
-            if (container) {
-                container.innerHTML = '';
-                currentKeywords.forEach((kw, idx) => {
-                    const badge = document.createElement('div');
-                    badge.className = `variation-badge ${idx === 0 ? 'active' : ''}`;
-                    badge.textContent = kw;
-                    badge.onclick = () => setKeywordSearch(kw, genre);
-                    container.appendChild(badge);
-                });
-                document.getElementById('search-tag-indicator').textContent = `Búsqueda: ${currentKeywords[0]}`;
-            }
-        }
-
-        function selectCoverUrl(url) {
-            selectedCoverUrl = url;
-            uploadedFiles.cover = null;
-            
-            // If the selected URL is not in recommendedCovers, insert it at the beginning of recommendedCovers
-            if (url && !recommendedCovers.some(rc => rc.url === url)) {
-                recommendedCovers = [{ url: url, tags: ['selected'] }, recommendedCovers[0]].filter(Boolean);
-            }
-            renderCoversCurrent();
-        }
-
-        function renderCoversCurrent() {
-            const container = document.getElementById('covers-container');
-            if (!container) return;
-            container.innerHTML = '';
-
-            recommendedCovers.forEach((tpl) => {
-                const card = document.createElement('div');
-                const isSelected = (selectedCoverUrl === tpl.url) && !uploadedFiles.cover;
-                card.className = `cover-option-card ${isSelected ? 'selected' : ''}`;
-                card.onclick = () => selectCoverUrl(tpl.url);
-
-                const img = document.createElement('img');
-                img.src = tpl.url;
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'cover';
-                img.style.position = 'absolute';
-                img.style.inset = '0';
-                img.onerror = () => {
-                    img.src = 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=500&auto=format&fit=crop&q=80';
-                };
-                card.appendChild(img);
-
-                const overlay = document.createElement('div');
-                overlay.className = 'cover-overlay';
-                card.appendChild(overlay);
-
-                // Download icon button
-                const dlBtn = document.createElement('button');
-                dlBtn.className = 'btn-download-cover';
-                dlBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
-                dlBtn.onclick = (e) => downloadCoverImage(e, tpl.url);
-                card.appendChild(dlBtn);
-
-                const titleSpan = document.createElement('span');
-                titleSpan.className = 'cover-title';
-                titleSpan.textContent = document.getElementById('beat-title-input').value || 'Mi Beat';
-                card.appendChild(titleSpan);
-
-                container.appendChild(card);
-            });
-
-            const customCard = document.createElement('div');
-            customCard.className = 'custom-upload-card';
-            
-            if (uploadedFiles.cover) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    customCard.innerHTML = `
-                        <img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:6px;">
-                        <div class="cover-overlay"></div>
-                        <span class="cover-title" style="position:absolute; bottom:8px; left:8px; font-size:8px;">Imagen Subida</span>
-                    `;
-                    customCard.classList.add('selected');
-                };
-                reader.readAsDataURL(uploadedFiles.cover);
-            } else {
-                customCard.innerHTML = `<i class="fa-solid fa-arrow-up-from-bracket" style="font-size:16px;"></i><span style="font-size:9px; font-weight:700;">Subir Imagen</span>`;
-                customCard.classList.remove('selected');
-            }
-
-            customCard.onclick = () => {
-                const inp = document.createElement('input');
-                inp.type = 'file';
-                inp.accept = 'image/*';
-                inp.onchange = (e) => {
-                    if (e.target.files[0]) {
-                        uploadedFiles.cover = e.target.files[0];
-                        selectedCoverUrl = ''; // Clear URL selection
-                        logDebug('Custom cover uploaded: ' + e.target.files[0].name);
-                        renderCoversCurrent();
-                    }
-                };
-                inp.click();
+        function handleCoverFileSelect(file) {
+            if (!file) return;
+            uploadedFiles.cover = file;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.getElementById('cover-preview-img');
+                const txt = document.getElementById('cover-preview-text');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                txt.style.display = 'none';
             };
-
-            container.appendChild(customCard);
-        }
-
-        function downloadCoverImage(event, url) {
-            if (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            fetch(url)
-                .then(response => response.blob())
-                .then(blob => {
-                    const blobUrl = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = blobUrl;
-                    a.download = 'OFFSZN_Cover.jpg';
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(blobUrl);
-                    document.body.removeChild(a);
-                })
-                .catch(err => {
-                    console.error("Failed to download image directly, opening in tab", err);
-                    window.open(url, '_blank');
-                });
+            reader.readAsDataURL(file);
         }
 
         function toggleYoutube() {
@@ -2252,564 +1218,32 @@
         }
 
         function updateYtState() {
-            const toggle = document.getElementById('yt-toggle');
-            const leftArea = document.getElementById('yt-left-area');
-            selectedYoutube = toggle.checked;
-            if (selectedYoutube) leftArea.classList.add('youtube-active');
-            else leftArea.classList.remove('youtube-active');
+            const isChecked = document.getElementById('yt-toggle').checked;
+            selectedYoutube = isChecked;
         }
 
-        async function getSelectedCoverBlob() {
-            if (croppedCoverBlob) return croppedCoverBlob;
-            if (uploadedFiles.cover) return uploadedFiles.cover;
-            if (selectedCoverUrl) {
-                try {
-                    const res = await fetch(selectedCoverUrl);
-                    if (res.ok) {
-                        return await res.blob();
-                    }
-                } catch (e) {
-                    console.error("Error fetching cover image:", e);
-                }
-            }
-
-            // Let's draw a premium graphic cover
-            const canvas = document.createElement('canvas');
-            canvas.width = 1000; canvas.height = 1000;
-            const ctx = canvas.getContext('2d');
-            const titleInput = document.getElementById('beat-title-input').value || 'MI BEAT';
-            const producerName = (session && session.user && session.user.email) ? session.user.email.split('@')[0] : 'OFFSZN';
-            
-            // Premium background gradient (Deep Obsidian to Cosmic Violet)
-            const grad = ctx.createLinearGradient(0, 0, 1000, 1000);
-            grad.addColorStop(0, '#040406');
-            grad.addColorStop(0.4, '#120f18');
-            grad.addColorStop(0.7, '#0c0b11');
-            grad.addColorStop(1, '#020203');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, 1000, 1000);
-            
-            // Add subtle noise or texture overlay (premium aesthetic)
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.015)';
-            for (let i = 0; i < 8000; i++) {
-                const rx = Math.random() * 1000;
-                const ry = Math.random() * 1000;
-                ctx.fillRect(rx, ry, 2, 2);
-            }
-
-            // Draw glowing abstract concentric circles in the background
-            for (let r = 200; r <= 450; r += 50) {
-                ctx.strokeStyle = `rgba(168, 85, 247, ${0.04 - (r - 200) * 0.0001})`;
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.arc(500, 500, r, 0, Math.PI * 2);
-                ctx.stroke();
-            }
-
-            // Draw clean master circle
-            ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(500, 500, 360, 0, Math.PI * 2);
-            ctx.stroke();
-
-            // Draw tiny accent marks on the circle (tick marks like a watch/record)
-            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-            ctx.lineWidth = 2;
-            for (let angle = 0; angle < 360; angle += 30) {
-                const radAngle = (angle * Math.PI) / 180;
-                const x1 = 500 + Math.cos(radAngle) * 350;
-                const y1 = 500 + Math.sin(radAngle) * 350;
-                const x2 = 500 + Math.cos(radAngle) * 360;
-                const y2 = 500 + Math.sin(radAngle) * 360;
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
-            }
-            
-            // Typography
-            ctx.font = '800 68px "Geist", "Montserrat", sans-serif';
-            ctx.fillStyle = '#ffffff';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            // Text shadow for high contrast/glowing feel
-            ctx.shadowColor = 'rgba(168, 85, 247, 0.4)';
-            ctx.shadowBlur = 15;
-            ctx.fillText(titleInput.toUpperCase(), 500, 470);
-            ctx.shadowBlur = 0; // reset
-            
-            // Producer name
-            ctx.font = '500 24px "Geist Mono", monospace';
-            ctx.fillStyle = 'rgba(255,255,255,0.6)';
-            ctx.fillText(`PRODUCER: ${producerName.toUpperCase()}`, 500, 550);
-            
-            // Offszn Exporter bottom tagline
-            ctx.font = '800 16px "Geist Mono", monospace';
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.fillText('OFFSZN VST EXPORTER', 500, 850);
-            
-            return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.95));
-        }
-
-        // Modal cover recommender functions
-        let currentSearchQuery = '';
-        let openversePage = 1;
-        let isLocalSearch = true;
-        let modalSearchOffset = 0;
-        let currentModalResults = [];
-        let currentSearchSource = 'itunes'; // 'itunes' or 'unsplash'
-
-        function switchSearchSource(src) {
-            currentSearchSource = src;
-            document.getElementById('tab-src-itunes').style.background = src === 'itunes' ? 'var(--border-light)' : 'transparent';
-            document.getElementById('tab-src-itunes').style.borderColor = src === 'itunes' ? 'var(--border)' : 'transparent';
-            document.getElementById('tab-src-itunes').style.color = src === 'itunes' ? '#fff' : 'var(--dim)';
-            
-            document.getElementById('tab-src-unsplash').style.background = src === 'unsplash' ? 'var(--border-light)' : 'transparent';
-            document.getElementById('tab-src-unsplash').style.borderColor = src === 'unsplash' ? 'var(--border)' : 'transparent';
-            document.getElementById('tab-src-unsplash').style.color = src === 'unsplash' ? '#fff' : 'var(--dim)';
-
-            const query = document.getElementById('modal-cover-search').value;
-            runModalSearch(query, false);
-        }
-
-        function openMoreCoversModal() {
-            const modal = document.getElementById('cover-modal');
-            if (modal) {
-                modal.style.display = 'flex';
-                const titleVal = document.getElementById('beat-title-input').value || '';
-                document.getElementById('modal-cover-search').value = titleVal;
-                runModalSearch(titleVal, false);
-            }
-        }
-
-        function closeMoreCoversModal() {
-            const modal = document.getElementById('cover-modal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        function runModalSearch(query, append = false) {
-            query = query.trim();
-            currentSearchQuery = query;
-
-            if (!append) {
-                modalSearchOffset = 0;
-                document.getElementById('modal-covers-grid').innerHTML = '';
-                document.getElementById('btn-load-more-modal').style.display = 'none';
-            }
-
-            // If query is empty, use local curated covers list
-            if (query === '') {
-                isLocalSearch = true;
-                const limit = 15;
-                const pageResults = curatedCovers.slice(modalSearchOffset, modalSearchOffset + limit);
-                modalSearchOffset += pageResults.length;
-                
-                renderResultsInModal(pageResults);
-                
-                const loadMoreBtn = document.getElementById('btn-load-more-modal');
-                if (modalSearchOffset < curatedCovers.length) {
-                    loadMoreBtn.style.display = 'block';
-                } else {
-                    loadMoreBtn.style.display = 'none';
-                }
-                return;
-            }
-
-            // Show loading spinner
-            isLocalSearch = false;
-            const grid = document.getElementById('modal-covers-grid');
-            let loader = document.getElementById('modal-search-loader');
-            if (!loader) {
-                loader = document.createElement('div');
-                loader.id = 'modal-search-loader';
-                loader.style.gridColumn = '1 / -1';
-                loader.style.textAlign = 'center';
-                loader.style.padding = '20px';
-                loader.style.color = 'var(--dim)';
-                loader.style.fontSize = '12px';
-                loader.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando en ${currentSearchSource === 'itunes' ? 'iTunes/Spotify' : 'Openverse/Google'}...`;
-            }
-            grid.appendChild(loader);
-
-            if (currentSearchSource === 'unsplash') {
-                // Query Openverse API for Creative Commons artwork (CORS-friendly, rich graphics)
-                const page = Math.floor(modalSearchOffset / 20) + 1;
-                const url = `https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page=${page}&page_size=20`;
-                fetch(url)
-                    .then(res => {
-                        if (!res.ok) throw new Error('Search failed');
-                        return res.json();
-                    })
-                    .then(data => {
-                        if (loader) loader.remove();
-                        const results = (data.results || []).map(item => ({
-                            url: item.url,
-                            tags: [item.title, item.creator]
-                        }));
-                        renderResultsInModal(results);
-                        modalSearchOffset += 20;
-                        document.getElementById('btn-load-more-modal').style.display = results.length >= 20 ? 'block' : 'none';
-                    })
-                    .catch(err => {
-                        console.error("Openverse search error:", err);
-                        if (loader) loader.remove();
-                        grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--dim);">Fallo al conectar con el motor de búsqueda.</div>';
-                    });
-                return;
-            }
-
-            // iTunes Search API
-            const url = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=30&offset=${modalSearchOffset}`;
-            fetch(url)
-                .then(res => {
-                    if (!res.ok) throw new Error('Search failed');
-                    return res.json();
-                })
-                .then(data => {
-                    if (loader) loader.remove();
-
-                    if (!data.results || data.results.length === 0) {
-                        if (!append) {
-                            grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: var(--dim);">No se encontraron portadas de este género.</div>';
-                        }
-                        return;
-                    }
-
-                    // Deduplicate album covers and convert to high resolution (600x600)
-                    const formattedResults = [];
-                    const seenUrls = new Set();
-                    data.results.forEach(item => {
-                        let coverUrl = item.artworkUrl100;
-                        if (coverUrl) {
-                            // Replace size parameters to get 600x600 high res image
-                            coverUrl = coverUrl.replace('100x100bb.jpg', '600x600bb.jpg');
-                            if (!seenUrls.has(coverUrl)) {
-                                seenUrls.add(coverUrl);
-                                formattedResults.push({
-                                    url: coverUrl,
-                                    tags: [item.artistName, item.trackName]
-                                });
-                            }
-                        }
-                    });
-
-                    renderResultsInModal(formattedResults);
-
-                    modalSearchOffset += data.results.length;
-
-                    const loadMoreBtn = document.getElementById('btn-load-more-modal');
-                    if (data.results.length >= 30) {
-                        loadMoreBtn.style.display = 'block';
-                    } else {
-                        loadMoreBtn.style.display = 'none';
-                    }
-                })
-                .catch(err => {
-                    console.error("iTunes search error:", err);
-                    if (loader) loader.remove();
-                    
-                    // Local fallback search matching tags
-                    isLocalSearch = true;
-                    const searchTerms = query.toLowerCase().split(/\s+/).filter(Boolean);
-                    let matches = [];
-                    curatedCovers.forEach(cov => {
-                        let score = 0;
-                        searchTerms.forEach(term => {
-                            cov.tags.forEach(tag => {
-                                if (tag.includes(term) || term.includes(tag)) score += 2;
-                            });
-                        });
-                        if (score > 0) matches.push({ ...cov, score });
-                    });
-
-                    matches.sort((a, b) => b.score - a.score);
-                    if (matches.length === 0) {
-                        matches = [...curatedCovers].sort(() => 0.5 - Math.random());
-                    }
-
-                    const limit = 15;
-                    const pageResults = matches.slice(modalSearchOffset, modalSearchOffset + limit);
-                    modalSearchOffset += pageResults.length;
-                    
-                    renderResultsInModal(pageResults);
-                    
-                    const loadMoreBtn = document.getElementById('btn-load-more-modal');
-                    if (modalSearchOffset < matches.length) {
-                        loadMoreBtn.style.display = 'block';
-                    } else {
-                        loadMoreBtn.style.display = 'none';
-                    }
-                });
-        }
-
-        function renderResultsInModal(results) {
-            const grid = document.getElementById('modal-covers-grid');
-            results.forEach(cov => {
-                const card = document.createElement('div');
-                const isSelected = (selectedCoverUrl === cov.url) && !uploadedFiles.cover;
-                card.className = `modal-cover-card ${isSelected ? 'selected' : ''}`;
-                
-                const img = document.createElement('img');
-                img.src = cov.url;
-                img.alt = 'Cover option';
-                img.onerror = () => {
-                    img.src = 'https://images.unsplash.com/photo-1557682250-33bd709cbe85?w=500&auto=format&fit=crop&q=80';
-                };
-                card.appendChild(img);
-
-                const dlBtn = document.createElement('button');
-                dlBtn.className = 'btn-download-cover';
-                dlBtn.innerHTML = '<i class="fa-solid fa-download"></i>';
-                dlBtn.onclick = (e) => downloadCoverImage(e, cov.url);
-                card.appendChild(dlBtn);
-
-                card.onclick = () => {
-                    selectCoverUrl(cov.url);
-                    closeMoreCoversModal();
-                };
-
-                grid.appendChild(card);
-            });
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        //  SUBMIT PUBLISH PROCESS
-        // ═══════════════════════════════════════════════════════════
         async function startProcess() {
             document.getElementById('view-targets').classList.remove('active');
-            document.getElementById('vst-steps-bar').style.display = 'none';
             document.getElementById('view-progress').style.display = 'flex';
 
-            const progressVal = document.getElementById('progress-val');
-            const stepRender = document.getElementById('step-render');
-            const stepUploadStore = document.getElementById('step-upload-store');
-            const stepYoutube = document.getElementById('step-youtube');
-
-            if (!selectedYoutube) stepYoutube.style.display = 'none';
-            else stepYoutube.style.display = 'flex';
-
-            stepRender.className = 'status-step active';
-            stepRender.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
-            stepUploadStore.className = 'status-step';
-            stepUploadStore.querySelector('i').className = 'fa-regular fa-circle';
-            stepYoutube.className = 'status-step';
-            stepYoutube.querySelector('i').className = 'fa-regular fa-circle';
-
-            try {
-                progressVal.textContent = '15%';
-                const coverBlob = await getSelectedCoverBlob();
-
-                progressVal.textContent = '30%';
-                const files = {
-                    cover: coverBlob,
-                    wav: uploadedFiles.wav,
-                    mp3: uploadedFiles.mp3
-                };
-
-                // Store tags: first 3
-                const storeTags = tagList.slice(0, 3);
-                
-                // YouTube tags: all tags up to 500 total combined characters
-                let ytTags = [];
-                let accumLen = 0;
-                for (const t of tagList) {
-                    if (accumLen + t.length <= 500) {
-                        ytTags.push(t);
-                        accumLen += t.length;
-                    }
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 20;
+                document.getElementById('progress-val').textContent = `${progress}%`;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    document.getElementById('view-progress').style.display = 'none';
+                    document.getElementById('view-success').style.display = 'flex';
                 }
-
-                const metadata = {
-                    title: document.getElementById('beat-title-input').value || 'Beat',
-                    description: document.getElementById('beat-desc-input')?.value || '',
-                    tags: storeTags,
-                    youtubeTags: ytTags,
-                    bpm: 140,
-                    key: 'C Min'
-                };
-
-                if (window.BeatPostService && session && window.BeatPostService.uploadBeatProduct) {
-                    stepRender.className = 'status-step completed';
-                    stepRender.querySelector('i').className = 'fa-solid fa-circle-check';
-                    stepUploadStore.className = 'status-step active';
-                    stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
-
-                    progressVal.textContent = '50%';
-                    const result = await window.BeatPostService.uploadBeatProduct(
-                        supabaseClient,
-                        session,
-                        metadata,
-                        files,
-                        selectedYoutube,
-                        (stage, msg) => {
-                            logDebug(msg);
-                            if (stage === 'upload_store') {
-                                progressVal.textContent = '75%';
-                            } else if (stage === 'render_video') {
-                                progressVal.textContent = '90%';
-                                stepUploadStore.className = 'status-step completed';
-                                stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-check';
-                                stepYoutube.className = 'status-step active';
-                                stepYoutube.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
-                            }
-                        }
-                    );
-
-                    progressVal.textContent = '100%';
-                    stepUploadStore.className = 'status-step completed';
-                    stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-check';
-                    if (selectedYoutube) {
-                        stepYoutube.className = 'status-step completed';
-                        stepYoutube.querySelector('i').className = 'fa-solid fa-circle-check';
-                    }
-
-                    setTimeout(() => {
-                        document.getElementById('view-progress').style.display = 'none';
-                        const successView = document.getElementById('view-success');
-                        const msg = selectedYoutube 
-                            ? `"${metadata.title}" ha sido publicado en tu tienda OFFSZN y tu canal de YouTube.`
-                            : `"${metadata.title}" ha sido añadido a tu catálogo de venta en OFFSZN.`;
-                        document.getElementById('success-message').textContent = msg;
-
-                        // Retrieve the created product and set up the link buttons
-                        const product = result.product || {};
-                        const slug = product.public_slug || generatePublicSlug(metadata.title);
-                        document.getElementById('btn-view-offszn').href = `https://offszn.lat/beats/${slug}`;
-                        
-                        const ytBtn = document.getElementById('btn-view-youtube');
-                        if (selectedYoutube && product.youtube_id) {
-                            ytBtn.href = `https://youtube.com/watch?v=${product.youtube_id}`;
-                            ytBtn.style.display = 'flex';
-                        } else {
-                            ytBtn.style.display = 'none';
-                        }
-
-                        successView.style.display = 'flex';
-                    }, 500);
-
-                } else {
-                    logDebug('OFFSZN Service bypassed. Simulating mock upload...');
-                    let progress = 30;
-                    const interval = setInterval(() => {
-                        progress += 10;
-                        progressVal.textContent = `${progress}%`;
-                        if (progress === 50) {
-                            stepRender.className = 'status-step completed';
-                            stepRender.querySelector('i').className = 'fa-solid fa-circle-check';
-                            stepUploadStore.className = 'status-step active';
-                            stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
-                        }
-                        if (progress === 80) {
-                            stepUploadStore.className = 'status-step completed';
-                            stepUploadStore.querySelector('i').className = 'fa-solid fa-circle-check';
-                            if (selectedYoutube) {
-                                stepYoutube.className = 'status-step active';
-                                stepYoutube.querySelector('i').className = 'fa-solid fa-circle-notch fa-spin';
-                            }
-                        }
-                        if (progress >= 100) {
-                            clearInterval(interval);
-                            if (selectedYoutube) {
-                                stepYoutube.className = 'status-step completed';
-                                stepYoutube.querySelector('i').className = 'fa-solid fa-circle-check';
-                            }
-                            setTimeout(() => {
-                                document.getElementById('view-progress').style.display = 'none';
-                                const successView = document.getElementById('view-success');
-                                document.getElementById('btn-view-offszn').href = 'https://offszn.lat/explorar.html';
-                                document.getElementById('btn-view-youtube').style.display = 'none';
-                                successView.style.display = 'flex';
-                            }, 500);
-                        }
-                    }, 150);
-                }
-            } catch (err) {
-                logDebug('Upload failed: ' + err.message);
-                alert('Fallo al subir beat: ' + err.message);
-                resetProcessUI();
-            }
-        }
-
-        function resetProcessUI() {
-            document.getElementById('view-progress').style.display = 'none';
-            document.getElementById('view-targets').classList.add('active');
-            document.getElementById('vst-steps-bar').style.display = 'flex';
+            }, 600);
         }
 
         function resetMockup() {
             document.getElementById('view-success').style.display = 'none';
-            document.getElementById('vst-steps-bar').style.display = 'flex';
-            
-            document.getElementById('wav-status-lbl').textContent = 'Cargar WAV';
-            document.getElementById('wav-status-lbl').style.color = 'var(--dim)';
-            document.getElementById('mp3-status-lbl').textContent = 'Cargar MP3';
-            document.getElementById('mp3-status-lbl').style.color = 'var(--dim)';
-            
-            document.getElementById('btn-audio-continue').disabled = true;
-            document.getElementById('btn-audio-continue').style.opacity = '0.5';
-            document.getElementById('btn-audio-continue').style.cursor = 'not-allowed';
-            
-            uploadedFiles = { wav: null, mp3: null, cover: null };
-            croppedCoverBlob = null;
-            document.getElementById('cover-preview-img').style.display = 'none';
-            document.getElementById('cover-preview-text').style.display = 'block';
             goToStep(1);
         }
+
+        document.addEventListener('DOMContentLoaded', initSupabase);
     </script>
-
-    <!-- Cover Search Modal -->
-    <div class="cover-modal-overlay" id="cover-modal">
-        <div class="cover-modal-content">
-            <div class="cover-modal-header">
-                <h3>Recomendaciones de Portada</h3>
-                <button class="btn-close-modal" onclick="closeMoreCoversModal()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="cover-modal-body">
-                <div class="cover-search-row" style="margin-bottom: 10px;">
-                    <input type="text" id="modal-cover-search" class="text-input" style="flex: 1; padding: 10px 14px; font-size: 12px; background: #000;" placeholder="Buscar portadas...">
-                    <button class="btn-next" style="margin: 0; padding: 10px 18px; font-size: 12px; font-weight: 700; flex: initial;" onclick="runModalSearch(document.getElementById('modal-cover-search').value, false)">Buscar</button>
-                </div>
-                
-                <!-- Search Source Tabs -->
-                <div class="search-tabs" style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
-                    <button id="tab-src-itunes" class="tab-btn active" style="flex: 1; padding: 7px; font-size: 10px; font-weight: 700; border-radius: 4px; border: 1px solid var(--border); background: var(--border-light); color: #fff; cursor: pointer;" onclick="switchSearchSource('itunes')">
-                        🎵 Portadas Reales
-                    </button>
-                    <button id="tab-src-unsplash" class="tab-btn" style="flex: 1; padding: 7px; font-size: 10px; font-weight: 700; border-radius: 4px; border: 1px solid transparent; background: transparent; color: var(--dim); cursor: pointer;" onclick="switchSearchSource('unsplash')">
-                        🎨 Diseños Abstractos
-                    </button>
-                </div>
-
-                <div class="modal-covers-grid" id="modal-covers-grid">
-                    <!-- Filled by JS -->
-                </div>
-                <button class="btn-load-more" id="btn-load-more-modal" style="display: none;" onclick="runModalSearch(document.getElementById('modal-cover-search').value, true)">Ver más recomendaciones</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cropper Modal -->
-    <div class="cover-modal-overlay" id="cropModal" style="display: none; z-index: 1200;">
-        <div class="cover-modal-content" style="max-width: 480px; width: 90%;">
-            <div class="cover-modal-header">
-                <h3>Recortar Portada</h3>
-                <button class="btn-close-modal" onclick="closeCropModal()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="cover-modal-body" style="padding: 15px; display: flex; flex-direction: column; gap: 15px;">
-                <div style="width: 100%; height: 320px; overflow: hidden; background: #000; border-radius: 8px; display: flex; justify-content: center; align-items: center;">
-                    <img id="cropImage" src="" style="max-width: 100%; max-height: 100%;">
-                </div>
-                <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button class="btn-prev" onclick="closeCropModal()" style="margin: 0; padding: 10px 18px; cursor: pointer;">Cancelar</button>
-                    <button class="btn-next" onclick="saveCroppedImage()" style="margin: 0; padding: 10px 24px; font-weight: 800; cursor: pointer;">Recortar y Guardar</button>
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
 </html>
