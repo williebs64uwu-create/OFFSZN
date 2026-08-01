@@ -131,8 +131,8 @@ export const generateTrialWebLicense = async (req, res) => {
         const basePrefix = isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY');
         const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiryDate = new Date();
-        const trialDays = isInka ? 7 : (isMaster ? 3 : 1);
-        expiryDate.setDate(expiryDate.getDate() + trialDays); // 7 days for INKA KOLA, 3 for Master, 1 for Mix
+        const trialDays = isInka ? 7 : 3;
+        expiryDate.setDate(expiryDate.getDate() + trialDays); // 7 days for INKA KOLA, 3 days for Master & Mix
         const expiresAt = expiryDate.toISOString();
 
         const { data: newLic, error: licErr } = await supabase
@@ -201,8 +201,8 @@ export const requestTrial = async (req, res) => {
         const basePrefix = isMaster ? 'MASTER' : 'EASY';
         const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiryDate = new Date();
-        const trialDays = isMaster ? 3 : 1;
-        expiryDate.setDate(expiryDate.getDate() + trialDays); // 3 days for Master, 1 day for Mix
+        const trialDays = 3;
+        expiryDate.setDate(expiryDate.getDate() + trialDays); // 3 days for Easy Master & Easy Mix
         const expiresAt = expiryDate.toISOString();
 
         const { data: newLic, error: licErr } = await supabase
