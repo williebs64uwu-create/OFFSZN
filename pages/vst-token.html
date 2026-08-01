@@ -423,6 +423,18 @@
     }
 
     async function logoutAndRefresh() {
+      const pin = new URLSearchParams(window.location.search).get('pin');
+      if (pin && supabaseClient) {
+        try {
+          const channel = supabaseClient.channel(`vst-link-${pin}`);
+          await channel.send({
+            type: 'broadcast',
+            event: 'logout',
+            payload: { action: 'logout' }
+          });
+          console.log(`[VST Token] Transmitida señal de cierre de sesión al VST pin ${pin}`);
+        } catch(e) { console.warn("Logout broadcast notice:", e); }
+      }
       if (supabaseClient) {
         await supabaseClient.auth.signOut();
       }

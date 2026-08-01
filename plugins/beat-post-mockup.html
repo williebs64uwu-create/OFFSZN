@@ -1032,7 +1032,30 @@
                 supabaseClient = window.supabaseClient;
             }
 
-            if (!supabaseClient) return;
+            if (!supabaseClient) {
+                showAuthView();
+                return;
+            }
+
+            // Restore saved session from local storage if present
+            let savedSupaToken = localStorage.getItem('vst_supa_token');
+            let savedYtToken = localStorage.getItem('vst_yt_token');
+
+            if (savedSupaToken) {
+                const { data, error } = await supabaseClient.auth.setSession({
+                    access_token: savedSupaToken,
+                    refresh_token: savedSupaToken
+                });
+                if (!error && data.session) {
+                    window.ytAccessToken = savedYtToken;
+                    handleSession(data.session);
+                    return;
+                } else {
+                    console.warn('[BeatPost] Saved token is invalid/expired. Resetting session...');
+                    logoutUser();
+                    return;
+                }
+            }
 
             const { data } = await supabaseClient.auth.getSession();
             if (data.session) {
@@ -1083,19 +1106,44 @@
 
             if (supabaseClient) {
                 const channel = supabaseClient.channel(`vst-link-${linkingPin}`);
-                channel.on('broadcast', { event: 'send-token' }, (payload) => {
-                    const receivedToken = payload.payload.token;
-                    if (receivedToken) {
-                        loginWithTokenDirect(receivedToken);
-                    }
-                }).subscribe();
+                channel
+                    .on('broadcast', { event: 'send-token' }, (payload) => {
+                        const receivedToken = payload.payload.token;
+                        if (receivedToken) {
+                            loginWithTokenDirect(receivedToken);
+                        }
+                    })
+                    .on('broadcast', { event: 'logout' }, () => {
+                        console.log('[BeatPost] Remote logout signal received from web.');
+                        logoutUser();
+                    })
+                    .subscribe();
             }
         }
 
         async function loginWithTokenDirect(token) {
             if (!supabaseClient) return;
-            const { data } = await supabaseClient.auth.setSession({ access_token: token, refresh_token: token });
-            if (data.session) handleSession(data.session);
+
+            let supaToken = token;
+            let ytToken = '';
+            if (token.includes('||yt_token||')) {
+                const parts = token.split('||yt_token||');
+                supaToken = parts[0];
+                ytToken = parts[1];
+                window.ytAccessToken = ytToken;
+            }
+
+            localStorage.setItem('vst_supa_token', supaToken);
+            if (ytToken) localStorage.setItem('vst_yt_token', ytToken);
+            if (window.saveTokenNative) window.saveTokenNative(token);
+
+            const { data, error } = await supabaseClient.auth.setSession({ access_token: supaToken, refresh_token: supaToken });
+            if (!error && data.session) {
+                handleSession(data.session);
+            } else {
+                console.warn('[BeatPost] Failed to set session with received token:', error);
+                logoutUser();
+            }
         }
 
         function openWebTokenPage() {
@@ -1105,6 +1153,9 @@
 
         function logoutUser(e) {
             if (e) e.preventDefault();
+            localStorage.removeItem('vst_supa_token');
+            localStorage.removeItem('vst_yt_token');
+            if (window.saveTokenNative) window.saveTokenNative('');
             if (supabaseClient) supabaseClient.auth.signOut();
             showAuthView();
         }
