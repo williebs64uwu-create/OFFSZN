@@ -6,508 +6,288 @@
   <script src="/script/auth-utils.js?v=12"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vincular Plugin — OFFSZN</title>
-  <meta name="description" content="Conecta tu plugin de OFFSZN en tu DAW con un solo clic.">
+  <title>Vinculación BEAT POST — OFFSZN</title>
+  <meta name="description" content="Vincula tu cuenta de OFFSZN con el plugin BEAT POST en tu DAW.">
 
-  <!-- Tailwind -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- OFFSZN Navbar CSS -->
-  <link rel="stylesheet" href="/css/navbar.css?v=13">
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
 
   <style>
-    *, *::before, *::after { font-family: 'Geist', sans-serif; box-sizing: border-box; }
-
-    body {
-      background: #0a0a0a;
-      color: #fff;
-      min-height: 100vh;
+    *, *::before, *::after {
+      font-family: 'Geist', sans-serif;
+      box-sizing: border-box;
     }
 
-    /* ── Autofill override ── */
+    body {
+      background-color: #08080a;
+      color: #ffffff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+    }
+
+    /* Override Autofill background */
     input:-webkit-autofill,
     input:-webkit-autofill:hover,
     input:-webkit-autofill:focus {
-      -webkit-box-shadow: 0 0 0 30px #141414 inset !important;
+      -webkit-box-shadow: 0 0 0 30px #141417 inset !important;
       -webkit-text-fill-color: white !important;
     }
 
-    /* ── Page container ── */
-    .page-wrap {
-      min-height: calc(100vh - 64px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 16px;
+    /* Success pulse animation */
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 25px rgba(34, 197, 94, 0.25); transform: scale(1); }
+      50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.45); transform: scale(1.03); }
     }
 
-    /* ── Card ── */
-    .card {
-      width: 100%;
-      max-width: 420px;
-      background: #111113;
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 20px;
-      padding: 36px 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
+    .success-badge-glow {
+      animation: pulseGlow 3s infinite ease-in-out;
     }
 
-    /* ── Pill badge ── */
-    .pill-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 12px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 100px;
-      font-size: 11px;
-      font-weight: 600;
-      color: #aaa;
-      letter-spacing: 0.3px;
-    }
-
-    /* ── Heading ── */
-    .card-title {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.8px;
-      line-height: 1.2;
-    }
-    .card-subtitle {
-      font-size: 13px;
-      color: #666;
-      line-height: 1.5;
-      margin-top: 4px;
-    }
-
-    /* ── Buttons ── */
-    .btn-primary {
-      width: 100%;
-      background: #fff;
-      color: #000;
-      font-weight: 700;
-      font-size: 14px;
-      border: none;
-      border-radius: 100px;
-      padding: 14px 20px;
-      cursor: pointer;
-      transition: opacity 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      letter-spacing: -0.2px;
-      text-decoration: none;
-    }
-    .btn-primary:hover { opacity: 0.85; }
-
-    .btn-secondary {
-      width: 100%;
-      background: transparent;
-      color: #fff;
-      font-weight: 600;
-      font-size: 13px;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 100px;
-      padding: 13px 20px;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      text-decoration: none;
-    }
-    .btn-secondary:hover {
-      background: rgba(255,255,255,0.05);
-      border-color: rgba(255,255,255,0.2);
+    /* Minimal card styles */
+    .waves-card {
+      background: #0f0f13;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
     }
 
     .btn-google {
-      width: 100%;
-      background: #1a1a1a;
+      background: #18181c;
       color: #fff;
-      font-weight: 600;
-      font-size: 13px;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 100px;
-      padding: 13px 20px;
-      cursor: pointer;
-      transition: background 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s ease;
     }
-    .btn-google:hover { background: #222; }
-
-    /* ── Divider ── */
-    .divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: #333;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-    .divider::before, .divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: rgba(255,255,255,0.06);
+    .btn-google:hover {
+      background: #222228;
+      border-color: rgba(255, 255, 255, 0.2);
     }
 
-    /* ── Inputs ── */
-    .field label {
-      display: block;
-      font-size: 10.5px;
+    .btn-primary {
+      background: #ffffff;
+      color: #000000;
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: #555;
-      margin-bottom: 7px;
+      transition: opacity 0.2s ease;
     }
-    .field input {
-      width: 100%;
-      background: #141414;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 13px 14px;
-      font-size: 14px;
-      color: #fff;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .field input::placeholder { color: #3a3a3a; }
-    .field input:focus { border-color: rgba(255,255,255,0.25); }
-
-    .fields { display: flex; flex-direction: column; gap: 14px; }
-
-    /* ── Status rows ── */
-    .status-row {
-      background: #141414;
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 14px;
-      padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .status-row .info-col { flex: 1; min-width: 0; }
-    .status-row .info-col strong { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .status-row .info-col span { display: block; font-size: 11px; color: #555; margin-top: 2px; }
-    .status-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-    .status-dot.green { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
-    .status-dot.red { background: #ef4444; }
-    .status-dot.yellow { background: #f59e0b; }
-
-    /* ── PIN box ── */
-    .pin-display {
-      font-size: 32px;
-      font-weight: 900;
-      letter-spacing: 10px;
-      color: #fff;
-      text-align: center;
-      font-variant-numeric: tabular-nums;
-      padding: 4px 0;
+    .btn-primary:hover {
+      opacity: 0.88;
     }
 
-    /* ── Token input row ── */
-    .token-row {
-      display: flex;
-      gap: 8px;
+    .btn-logout {
+      background: transparent;
+      color: #71717a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.2s ease;
     }
-    .token-row input {
-      flex: 1;
-      background: #141414;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 12px;
-      font-family: 'Courier New', monospace;
-      color: #555;
-      outline: none;
-    }
-    .token-row button {
-      background: #1a1a1a;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 0 14px;
-      color: #555;
-      cursor: pointer;
-      font-size: 16px;
-      transition: color 0.15s;
-    }
-    .token-row button:hover { color: #fff; }
-
-    /* ── YouTube button ── */
-    .btn-yt {
-      width: 100%;
-      background: rgba(239,68,68,0.07);
-      border: 1px solid rgba(239,68,68,0.2);
-      border-radius: 12px;
+    .btn-logout:hover {
       color: #ef4444;
-      font-weight: 700;
-      font-size: 12px;
-      padding: 11px 16px;
-      cursor: pointer;
-      transition: background 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .btn-yt:hover { background: rgba(239,68,68,0.12); }
-
-    /* ── Success banner ── */
-    .success-banner {
-      background: rgba(34,197,94,0.07);
-      border: 1px solid rgba(34,197,94,0.2);
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-size: 12.5px;
-      color: #22c55e;
-      font-weight: 600;
-      text-align: center;
-      display: none;
+      background: rgba(239, 68, 68, 0.06);
+      border-color: rgba(239, 68, 68, 0.2);
     }
 
-    /* ── Error ── */
-    .err-msg {
-      font-size: 12px;
-      color: #ef4444;
-      background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.15);
-      border-radius: 10px;
-      padding: 10px 12px;
-      display: none;
-    }
-
-    /* ── Footer note ── */
-    .footer-note {
-      text-align: center;
-      font-size: 12px;
-      color: #444;
-    }
-    .footer-note a { color: #777; text-decoration: underline; text-underline-offset: 2px; }
-
-    /* ── Spinner ── */
     @keyframes spin { to { transform: rotate(360deg); } }
     .spinner {
-      width: 20px; height: 20px;
-      border: 2px solid rgba(255,255,255,0.1);
-      border-top-color: #fff;
+      width: 28px; height: 28px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #ffffff;
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      animation: spin 0.8s linear infinite;
     }
-
-    /* ── Page section visibility ── */
-    #view-loading, #view-login, #view-register, #view-connected {
-      display: none;
-    }
-    #view-loading { justify-content: center; align-items: center; padding: 40px; }
-
-    /* ── Navbar override (push content below it) ── */
-    #navbar-placeholder ~ .page-wrap,
-    .page-wrap { margin-top: 0; }
   </style>
 </head>
-<body>
+<body class="antialiased">
 
-  <!-- ======================== NAVBAR ======================== -->
-  <div id="navbar-placeholder"></div>
-  <script src="/script/load-navbar.js?v=25"></script>
+  <!-- ================= TOP HEADER (Standalone, zero dependencies) ================= -->
+  <header class="w-full border-b border-white/5 py-4 px-6 sm:px-10 flex items-center justify-between">
+    <a href="/explorar.html" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+      <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN" class="h-6 w-auto" onerror="this.src='/favicon.ico'">
+      <span class="text-xs font-semibold tracking-widest text-zinc-500 uppercase">BEAT POST</span>
+    </a>
 
-  <!-- ======================== PAGE ======================== -->
-  <main class="page-wrap">
+    <a href="/explorar.html" class="text-xs font-medium text-zinc-400 hover:text-white transition-colors flex items-center gap-1">
+      Ir a OFFSZN.lat →
+    </a>
+  </header>
 
-    <!-- LOADING STATE -->
-    <div id="view-loading" class="card" style="display: flex; justify-content: center; align-items: center; padding: 60px;">
+  <!-- ================= MAIN CONTENT AREA ================= -->
+  <main class="flex-1 flex items-center justify-center p-4 sm:p-6">
+
+    <!-- 1. LOADING SCREEN -->
+    <div id="view-loading" class="waves-card w-full max-w-md p-10 flex flex-col items-center justify-center text-center gap-4">
       <div class="spinner"></div>
+      <p class="text-xs text-zinc-500 font-medium">Verificando sesión...</p>
     </div>
 
-    <!-- ── NOT LOGGED IN ── -->
-    <div id="view-login" class="card">
-      <div style="text-align: center;">
-        <div class="pill-badge" style="margin: 0 auto 16px;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          Plugin de OFFSZN
+    <!-- 2. CONNECTED / SUCCESS SCREEN (Waves Central Style) -->
+    <div id="view-connected" class="waves-card w-full max-w-md p-8 sm:p-10 text-center flex-col items-center gap-6 hidden">
+      
+      <!-- Checkmark Icon Circle -->
+      <div class="w-20 h-20 rounded-full bg-emerald-500/10 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-400 success-badge-glow my-2">
+        <svg class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+
+      <!-- Main Headline requested by user -->
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
+          Tu cuenta ha sido activada en BEAT POST
+        </h1>
+        <p class="text-xs sm:text-sm text-zinc-400 mt-2 leading-relaxed">
+          Tu plugin de exportación VST ha sido vinculado con éxito a tu DAW.
+        </p>
+      </div>
+
+      <!-- User Info Badge -->
+      <div class="w-full bg-zinc-900/80 border border-white/5 rounded-2xl p-4 flex items-center justify-between text-left">
+        <div class="overflow-hidden pr-2">
+          <span class="block text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Cuenta conectada</span>
+          <span id="user-email-display" class="block text-sm font-semibold text-white truncate">Cargando...</span>
         </div>
-        <h1 class="card-title">Conecta tu plugin<br>al DAW</h1>
-        <p class="card-subtitle">Inicia sesión en tu cuenta de OFFSZN para vincular el plugin automáticamente.</p>
+        <div class="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-[11px] font-bold shrink-0">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Activo
+        </div>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button class="btn-google" onclick="loginWithGoogle()">
-          <svg width="18" height="18" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-          </svg>
-          Continuar con Google
-        </button>
-
-        <div class="divider">o</div>
-
-        <form onsubmit="loginWithEmail(event)" style="display: flex; flex-direction: column; gap: 12px;">
-          <div class="fields">
-            <div class="field">
-              <label>Correo electrónico</label>
-              <input type="email" id="login-email" required placeholder="tu@email.com">
-            </div>
-            <div class="field">
-              <label>Contraseña</label>
-              <input type="password" id="login-password" required placeholder="••••••••">
-            </div>
-          </div>
-          <div id="login-error" class="err-msg"></div>
-          <button type="submit" class="btn-primary">Iniciar sesión</button>
-        </form>
-      </div>
-
-      <p class="footer-note">
-        ¿No tienes cuenta?
-        <a href="#" onclick="switchToRegister(event)">Regístrate gratis</a>
+      <!-- Instruction note -->
+      <p class="text-xs text-zinc-500 leading-relaxed px-2">
+        Ya puedes cerrar esta ventana del navegador y regresar a FL Studio o tu DAW para continuar.
       </p>
-    </div>
 
-    <!-- ── REGISTER ── -->
-    <div id="view-register" class="card">
-      <div style="text-align: center;">
-        <div class="pill-badge" style="margin: 0 auto 16px;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          Plugin de OFFSZN
-        </div>
-        <h1 class="card-title">Crea tu cuenta<br>gratis</h1>
-        <p class="card-subtitle">Únete a OFFSZN y sube tus beats directo desde tu DAW a tu tienda y YouTube.</p>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <button class="btn-google" onclick="loginWithGoogle()">
-          <svg width="18" height="18" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      <!-- Bottom Logout Button -->
+      <div class="w-full pt-2 border-t border-white/5">
+        <button onclick="logoutAndRefresh()" class="btn-logout w-full py-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          Registrarse con Google
+          Cerrar sesión
         </button>
-
-        <div class="divider">o con email</div>
-
-        <form onsubmit="registerWithEmail(event)" style="display: flex; flex-direction: column; gap: 12px;">
-          <div class="fields">
-            <div class="field">
-              <label>Correo electrónico</label>
-              <input type="email" id="reg-email" required placeholder="tu@email.com">
-            </div>
-            <div class="field">
-              <label>Contraseña</label>
-              <input type="password" id="reg-password" required placeholder="Mínimo 6 caracteres">
-            </div>
-          </div>
-          <div id="reg-error" class="err-msg"></div>
-          <div id="reg-success" class="err-msg" style="color: #22c55e; background: rgba(34,197,94,0.07); border-color: rgba(34,197,94,0.2);"></div>
-          <button type="submit" class="btn-primary">Crear cuenta gratis</button>
-        </form>
       </div>
 
-      <p class="footer-note">
-        ¿Ya tienes cuenta?
-        <a href="#" onclick="switchToLogin(event)">Inicia sesión</a>
-      </p>
     </div>
 
-    <!-- ── CONNECTED / LOGGED IN ── -->
-    <div id="view-connected" class="card">
-      <div style="text-align: center;">
-        <div class="pill-badge" style="margin: 0 auto 16px;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          Cuenta vinculada
+    <!-- 3. LOGGED OUT SCREEN (Waves Style Login Gate) -->
+    <div id="view-login" class="waves-card w-full max-w-md p-8 sm:p-10 text-center flex-col gap-6 hidden">
+      
+      <div>
+        <div class="w-12 h-12 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center text-xl mx-auto mb-4">
+          🔌
         </div>
-        <h1 class="card-title">Plugin conectado</h1>
-        <p class="card-subtitle">Tu sesión se ha enviado automáticamente a tu DAW. Puedes cerrar esta pestaña.</p>
+        <h1 class="text-2xl font-black tracking-tight text-white">Inicia sesión en BEAT POST</h1>
+        <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">
+          Accede con tu cuenta de OFFSZN para vincular tu plugin en el DAW automáticamente.
+        </p>
       </div>
 
-      <!-- Success auto-link banner -->
-      <div id="auto-link-banner" class="success-banner">
-        ✅ &nbsp;Vinculación automática exitosa — ya puedes volver a FL Studio.
-      </div>
-
-      <!-- User row -->
-      <div class="status-row">
-        <div class="info-col">
-          <strong id="user-email-display">—</strong>
-          <span>Cuenta de OFFSZN</span>
-        </div>
-        <div class="status-dot green"></div>
-      </div>
-
-      <!-- YouTube row (optional) -->
-      <div style="display: flex; flex-direction: column; gap: 10px;">
-        <div class="status-row" id="yt-status-row">
-          <div class="info-col">
-            <strong>Canal de YouTube</strong>
-            <span id="yt-status-text">No vinculado — opcional</span>
-          </div>
-          <div class="status-dot red" id="yt-status-dot"></div>
-        </div>
-        <button class="btn-yt" id="btn-sync-yt" onclick="syncYouTubeChannel()">
-          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.545 12 3.545 12 3.545s-7.518 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.508 9.388.508 9.388.508s7.518 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-          <span id="btn-yt-text">Vincular mi Canal de YouTube</span>
-        </button>
-      </div>
-
-      <!-- Token (collapsed by default, manual fallback) -->
-      <details style="border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden;">
-        <summary style="padding: 12px 14px; font-size: 11.5px; font-weight: 600; color: #555; cursor: pointer; list-style: none; user-select: none;">
-          Copiar token manualmente (avanzado)
-        </summary>
-        <div style="padding: 0 14px 14px; display: flex; flex-direction: column; gap: 10px;">
-          <div class="token-row">
-            <input type="password" id="token-input" readonly value="" placeholder="••••••••••••••••••••">
-            <button onclick="toggleTokenVisibility()" title="Mostrar/ocultar">👁</button>
-          </div>
-          <button class="btn-secondary" onclick="copyTokenToClipboard()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            Copiar Token
-          </button>
-          <div id="copy-status" style="font-size: 11px; color: #22c55e; text-align: center; opacity: 0; transition: opacity 0.3s;">¡Copiado!</div>
-        </div>
-      </details>
-
-      <button class="btn-secondary" style="font-size: 12px; padding: 10px; color: #555; border-color: transparent;" onclick="logoutAndRefresh()">
-        Cerrar sesión
+      <!-- Google Button -->
+      <button onclick="loginWithGoogle()" class="btn-google w-full py-3.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-3 cursor-pointer">
+        <svg class="w-5 h-5" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+        </svg>
+        Continuar con Google
       </button>
+
+      <div class="flex items-center gap-3 my-1">
+        <div class="flex-1 h-px bg-white/10"></div>
+        <span class="text-[10px] uppercase font-bold text-zinc-600 tracking-widest">o con email</span>
+        <div class="flex-1 h-px bg-white/10"></div>
+      </div>
+
+      <!-- Email Login Form -->
+      <form onsubmit="loginWithEmail(event)" class="flex flex-col gap-3 text-left">
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-zinc-500 tracking-wider mb-1.5">Correo electrónico</label>
+          <input type="email" id="login-email" required placeholder="tu@email.com" class="w-full bg-[#141417] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-white/30 transition-all">
+        </div>
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-zinc-500 tracking-wider mb-1.5">Contraseña</label>
+          <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-[#141417] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-white/30 transition-all">
+        </div>
+
+        <div id="login-error" class="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl p-3 hidden"></div>
+
+        <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-bold text-sm mt-1 cursor-pointer">
+          Iniciar sesión
+        </button>
+      </form>
+
+      <p class="text-xs text-zinc-500">
+        ¿No tienes cuenta?
+        <a href="#" onclick="switchToRegister(event)" class="text-zinc-300 underline underline-offset-2 hover:text-white transition-colors font-medium">Regístrate gratis</a>
+      </p>
+
+    </div>
+
+    <!-- 4. REGISTER SCREEN -->
+    <div id="view-register" class="waves-card w-full max-w-md p-8 sm:p-10 text-center flex-col gap-6 hidden">
+      
+      <div>
+        <h1 class="text-2xl font-black tracking-tight text-white">Crea tu cuenta gratis</h1>
+        <p class="text-xs text-zinc-400 mt-1.5 leading-relaxed">
+          Únete a OFFSZN para activar BEAT POST en tu DAW.
+        </p>
+      </div>
+
+      <button onclick="loginWithGoogle()" class="btn-google w-full py-3.5 rounded-2xl font-semibold text-sm flex items-center justify-center gap-3 cursor-pointer">
+        <svg class="w-5 h-5" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+        </svg>
+        Registrarse con Google
+      </button>
+
+      <div class="flex items-center gap-3 my-1">
+        <div class="flex-1 h-px bg-white/10"></div>
+        <span class="text-[10px] uppercase font-bold text-zinc-600 tracking-widest">o con email</span>
+        <div class="flex-1 h-px bg-white/10"></div>
+      </div>
+
+      <form onsubmit="registerWithEmail(event)" class="flex flex-col gap-3 text-left">
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-zinc-500 tracking-wider mb-1.5">Correo electrónico</label>
+          <input type="email" id="reg-email" required placeholder="tu@email.com" class="w-full bg-[#141417] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-white/30 transition-all">
+        </div>
+        <div>
+          <label class="block text-[10px] uppercase font-bold text-zinc-500 tracking-wider mb-1.5">Contraseña</label>
+          <input type="password" id="reg-password" required placeholder="Mínimo 6 caracteres" class="w-full bg-[#141417] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-white/30 transition-all">
+        </div>
+
+        <div id="reg-error" class="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl p-3 hidden"></div>
+        <div id="reg-success" class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 hidden"></div>
+
+        <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-bold text-sm mt-1 cursor-pointer">
+          Crear cuenta gratis
+        </button>
+      </form>
+
+      <p class="text-xs text-zinc-500">
+        ¿Ya tienes cuenta?
+        <a href="#" onclick="switchToLogin(event)" class="text-zinc-300 underline underline-offset-2 hover:text-white transition-colors font-medium">Inicia sesión</a>
+      </p>
+
     </div>
 
   </main>
 
-  <!-- Google GIS for YouTube -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
   <script>
-    let currentToken = "";
     let supabaseClient = null;
-    let ytAccessToken = "";
-    let googleTokenClient = null;
 
-    // ── Init ──────────────────────────────────────────────────────────────────
+    // ── 1. INITIALIZATION ──────────────────────────────────────────────────
     async function initPage() {
-      // Wait for Supabase
+      // Wait for Supabase global
       if (!window.supabaseClient) {
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 200));
       }
 
       supabaseClient = window.supabaseClient;
@@ -533,14 +313,20 @@
       }
     }
 
-    // ── View switcher ────────────────────────────────────────────────────────
+    // ── 2. VIEW SWITCHER ───────────────────────────────────────────────────
     function showView(id) {
       ['view-loading', 'view-login', 'view-register', 'view-connected'].forEach(v => {
         const el = document.getElementById(v);
-        if (el) el.style.display = 'none';
+        if (el) {
+          el.classList.add('hidden');
+          el.classList.remove('flex');
+        }
       });
       const target = document.getElementById(id);
-      if (target) target.style.display = 'flex';
+      if (target) {
+        target.classList.remove('hidden');
+        target.classList.add('flex');
+      }
     }
 
     function switchToRegister(e) {
@@ -553,7 +339,42 @@
       showView('view-login');
     }
 
-    // ── Auth: Google ─────────────────────────────────────────────────────────
+    // ── 3. AUTHENTICATED STATE ─────────────────────────────────────────────
+    async function showConnected(session) {
+      showView('view-connected');
+
+      // Set user email
+      const emailEl = document.getElementById('user-email-display');
+      if (emailEl) {
+        emailEl.textContent = session.user.email || session.user.user_metadata?.full_name || 'Usuario registrado';
+      }
+
+      // Auto-send token via Supabase Realtime broadcast pin
+      const urlParams = new URLSearchParams(window.location.search);
+      const pin = urlParams.get('pin');
+      if (pin && session.access_token) {
+        sendTokenToPlugin(pin, session.access_token);
+      }
+    }
+
+    // ── 4. REALTIME BROADCAST TO VST ──────────────────────────────────────
+    async function sendTokenToPlugin(pin, tokenVal) {
+      if (!supabaseClient || !pin) return;
+      
+      const channel = supabaseClient.channel(`vst-link-${pin}`);
+      channel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.send({
+            type: 'broadcast',
+            event: 'send-token',
+            payload: { token: tokenVal }
+          });
+          console.log(`✅ [BEAT POST] Token transmitido exitosamente al VST (Canal: vst-link-${pin})`);
+        }
+      });
+    }
+
+    // ── 5. AUTH HANDLERS ───────────────────────────────────────────────────
     async function loginWithGoogle() {
       if (!supabaseClient) return;
       const callbackURL = `${window.location.origin}/pages/auth-callback.html?redirect=${encodeURIComponent(window.location.href)}`;
@@ -561,170 +382,58 @@
         provider: 'google',
         options: { redirectTo: callbackURL }
       });
-      if (error) alert("Error con Google: " + error.message);
+      if (error) alert("Error de Google: " + error.message);
     }
 
-    // ── Auth: Email Login ────────────────────────────────────────────────────
     async function loginWithEmail(e) {
       e.preventDefault();
       const email = document.getElementById('login-email').value;
       const password = document.getElementById('login-password').value;
       const errEl = document.getElementById('login-error');
-      errEl.style.display = 'none';
+      errEl.classList.add('hidden');
 
       const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
       if (error) {
         errEl.textContent = error.message;
-        errEl.style.display = 'block';
+        errEl.classList.remove('hidden');
       } else if (data.session) {
         showConnected(data.session);
       }
     }
 
-    // ── Auth: Email Register ─────────────────────────────────────────────────
     async function registerWithEmail(e) {
       e.preventDefault();
       const email = document.getElementById('reg-email').value;
       const password = document.getElementById('reg-password').value;
       const errEl = document.getElementById('reg-error');
       const sucEl = document.getElementById('reg-success');
-      errEl.style.display = 'none';
-      sucEl.style.display = 'none';
+      errEl.classList.add('hidden');
+      sucEl.classList.add('hidden');
 
       const { data, error } = await supabaseClient.auth.signUp({ email, password });
       if (error) {
         errEl.textContent = error.message;
-        errEl.style.display = 'block';
+        errEl.classList.remove('hidden');
       } else if (data.session) {
         showConnected(data.session);
       } else {
-        sucEl.textContent = '¡Cuenta creada! Revisa tu correo para confirmar tu cuenta y luego regresa aquí.';
-        sucEl.style.display = 'block';
+        sucEl.textContent = '¡Cuenta creada! Revisa tu correo para verificar la cuenta y luego regresa aquí.';
+        sucEl.classList.remove('hidden');
       }
     }
 
-    // ── Logout ───────────────────────────────────────────────────────────────
     async function logoutAndRefresh() {
-      await supabaseClient.auth.signOut();
+      if (supabaseClient) {
+        await supabaseClient.auth.signOut();
+      }
       showView('view-login');
     }
 
-    // ── Connected State ───────────────────────────────────────────────────────
-    async function showConnected(session) {
-      showView('view-connected');
-
-      currentToken = session.access_token;
-      updateCombinedToken();
-
-      // Show email
-      const emailEl = document.getElementById('user-email-display');
-      if (emailEl) emailEl.textContent = session.user.email || session.user.user_metadata?.full_name || 'Usuario';
-
-      // Auto-send via realtime pin
-      const urlParams = new URLSearchParams(window.location.search);
-      const pin = urlParams.get('pin');
-      if (pin) {
-        const sent = await sendTokenToPlugin(pin, currentToken);
-        if (sent) {
-          const banner = document.getElementById('auto-link-banner');
-          if (banner) banner.style.display = 'block';
-        }
-      }
-
-      // Init Google GIS for YouTube
-      initGoogleClient();
-    }
-
-    // ── Combined Token ────────────────────────────────────────────────────────
-    function updateCombinedToken() {
-      const combined = ytAccessToken
-        ? `${currentToken}||yt_token||${ytAccessToken}`
-        : currentToken;
-
-      const input = document.getElementById('token-input');
-      if (input) input.value = combined;
-
-      // Re-send if pin exists and YouTube was just added
-      if (ytAccessToken) {
-        const pin = new URLSearchParams(window.location.search).get('pin');
-        if (pin) sendTokenToPlugin(pin, combined);
-      }
-    }
-
-    // ── Realtime Broadcast ────────────────────────────────────────────────────
-    async function sendTokenToPlugin(pin, tokenVal) {
-      if (!supabaseClient || !pin) return false;
-      return new Promise((resolve) => {
-        const channel = supabaseClient.channel(`vst-link-${pin}`);
-        channel.subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            await channel.send({
-              type: 'broadcast',
-              event: 'send-token',
-              payload: { token: tokenVal }
-            });
-            console.log(`[VST Token] Broadcasted to channel vst-link-${pin}`);
-            resolve(true);
-            // Don't unsubscribe immediately — leave open for YT token updates
-          }
-        });
-        setTimeout(() => resolve(false), 8000); // timeout fallback
-      });
-    }
-
-    // ── Google / YouTube ──────────────────────────────────────────────────────
-    function initGoogleClient() {
-      if (typeof google === 'undefined') {
-        setTimeout(initGoogleClient, 300);
-        return;
-      }
-      googleTokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: '804444303530-bl8gtp4sdjkcnrkjl1295vns59tqp4tc.apps.googleusercontent.com',
-        scope: 'https://www.googleapis.com/auth/youtube.upload',
-        callback: (response) => {
-          if (response.access_token) {
-            ytAccessToken = response.access_token;
-            document.getElementById('yt-status-text').textContent = 'Canal vinculado para esta sesión ✓';
-            document.getElementById('yt-status-dot').className = 'status-dot green';
-            document.getElementById('btn-yt-text').textContent = 'Canal de YouTube vinculado ✓';
-            document.getElementById('btn-sync-yt').style.opacity = '0.6';
-            updateCombinedToken();
-          }
-        }
-      });
-    }
-
-    function syncYouTubeChannel() {
-      if (googleTokenClient) {
-        googleTokenClient.requestAccessToken();
-      } else {
-        alert("El servicio de Google no está listo aún. Espera un segundo.");
-      }
-    }
-
-    // ── Token UI ──────────────────────────────────────────────────────────────
-    function toggleTokenVisibility() {
-      const input = document.getElementById('token-input');
-      input.type = input.type === 'password' ? 'text' : 'password';
-    }
-
-    function copyTokenToClipboard() {
-      const input = document.getElementById('token-input');
-      navigator.clipboard.writeText(input.value).then(() => {
-        const status = document.getElementById('copy-status');
-        status.style.opacity = '1';
-        setTimeout(() => { status.style.opacity = '0'; }, 2000);
-      });
-    }
-
-    // ── Boot ──────────────────────────────────────────────────────────────────
+    // ── 6. BOOT ─────────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
       showView('view-loading');
       initPage();
     });
   </script>
-
-  <!-- Navbar JS (auth state for navbar icons) -->
-  <script src="/script/navbar.js?v=20" type="module"></script>
 </body>
 </html>
