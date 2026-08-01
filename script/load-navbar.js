@@ -175,9 +175,8 @@
 
 
         // Dynamically load dependencies
-
+        loadDependency('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css', 'css', 'bootstrap-icons-css');
         loadDependency(pathPrefix + 'script/share-modal.js?v=23', 'js', 'share-modal-script');
-
         loadDependency(pathPrefix + 'css/share-modal.css?v=23', 'css', 'share-modal-css');
 
 
