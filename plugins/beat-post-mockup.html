@@ -57,32 +57,6 @@
             position: relative;
         }
 
-        /* VST Title bar */
-        .vst-titlebar {
-            height: 38px;
-            background: #09090c;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 16px;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--dim);
-            letter-spacing: 0.5px;
-            z-index: 50;
-        }
-
-        .vst-controls {
-            display: flex;
-            gap: 6px;
-        }
-        .vst-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            background: var(--border-light);
-        }
-        .vst-dot.active { background: var(--green); }
-
         /* ─── MAIN APP LAYOUT (Sidebar + Main Content) ─── */
         .vst-body {
             flex: 1;
@@ -251,7 +225,7 @@
 
         .tab-page {
             display: none;
-            padding: 28px;
+            padding: 24px;
             flex-direction: column;
             gap: 24px;
         }
@@ -386,6 +360,36 @@
             color: var(--dim);
             display: flex;
             justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Animated Skeleton Loaders */
+        @keyframes skeletonPulse {
+            0%, 100% { opacity: 0.25; }
+            50% { opacity: 0.65; }
+        }
+
+        .skeleton-card {
+            background: #121217;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .skeleton-box {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.06);
+            animation: skeletonPulse 1.4s infinite ease-in-out;
+        }
+        .skeleton-line {
+            height: 12px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.06);
+            animation: skeletonPulse 1.4s infinite ease-in-out;
         }
 
         /* ─── SLIDE-OVER PUBLISHER DRAWER ─── */
@@ -436,7 +440,6 @@
             border-radius: 6px;
             transition: color 0.15s;
         }
-
         .drawer-close:hover { color: #fff; }
 
         .drawer-body {
@@ -447,7 +450,7 @@
             padding: 20px;
         }
 
-        /* ─── STEP BAR (inside drawer) ─── */
+        /* Step Bar */
         .step-indicator {
             display: flex;
             background: #050507;
@@ -463,20 +466,11 @@
             letter-spacing: 0.5px;
         }
 
-        .step-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+        .step-item { display: flex; align-items: center; gap: 6px; }
         .step-item.active { color: var(--accent); }
         .step-arrow { font-size: 8px; opacity: 0.3; }
 
-        /* Form Controls */
-        .step-pane {
-            display: none;
-            flex-direction: column;
-            gap: 16px;
-        }
+        .step-pane { display: none; flex-direction: column; gap: 16px; }
         .step-pane.active { display: flex; }
 
         .section-title {
@@ -488,9 +482,7 @@
             margin-bottom: 4px;
         }
 
-        .form-group {
-            display: flex; flex-direction: column; gap: 6px;
-        }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
 
         .text-input {
             background: #000;
@@ -505,11 +497,7 @@
         }
         .text-input:focus { border-color: var(--accent); }
 
-        .nav-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
+        .nav-buttons { display: flex; gap: 10px; justify-content: flex-end; }
 
         .btn-next {
             background: #fff;
@@ -581,19 +569,6 @@
     <!-- VST WINDOW WRAPPER -->
     <div class="vst-container">
 
-        <!-- Title bar -->
-        <div class="vst-titlebar">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-cloud-arrow-up" style="color: #fff;"></i>
-                <span>BEAT POST — OFFSZN Studio Suite</span>
-            </div>
-            <div class="vst-controls">
-                <div class="vst-dot active"></div>
-                <div class="vst-dot"></div>
-                <div class="vst-dot"></div>
-            </div>
-        </div>
-
         <!-- MAIN LAYOUT (Sidebar + Main Content area) -->
         <div class="vst-body">
 
@@ -631,7 +606,7 @@
                 <div class="sidebar-footer" id="sidebar-user-box" onclick="switchTab('account', event)">
                     <div class="user-avatar-sm" id="sidebar-avatar">W</div>
                     <div class="user-info-sm">
-                        <div class="user-info-name" id="sidebar-user-name">Inicia sesión</div>
+                        <div class="user-info-name" id="sidebar-user-name">Cargando...</div>
                         <div class="user-info-plan" id="sidebar-user-plan">Plan Gratis</div>
                     </div>
                 </div>
@@ -653,22 +628,22 @@
                         </button>
                     </div>
 
-                    <!-- Stat Cards -->
+                    <!-- Stat Cards (Reproducciones, Beats Subidos, Descargas) -->
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-card-label"><i class="fa-solid fa-headphones"></i> Reproducciones</div>
-                            <div class="stat-card-val" id="stat-plays-val">1,280</div>
-                            <div class="stat-card-change"><i class="fa-solid fa-arrow-trend-up"></i> +14% este mes</div>
+                            <div class="stat-card-val" id="stat-plays-val">0</div>
+                            <div class="stat-card-change" id="stat-plays-change"><i class="fa-solid fa-chart-line"></i> Total en tienda</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-card-label"><i class="fa-solid fa-compact-disc"></i> Beats Subidos</div>
-                            <div class="stat-card-val" id="stat-beats-val">12</div>
-                            <div class="stat-card-change" style="color: var(--dim);">Catálogo en OFFSZN</div>
+                            <div class="stat-card-val" id="stat-beats-val">0</div>
+                            <div class="stat-card-change" style="color: var(--dim);">Catálogo activo</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-card-label"><i class="fa-brands fa-youtube" style="color: #ff3b30;"></i> YouTube Views</div>
-                            <div class="stat-card-val" id="stat-yt-val">4,920</div>
-                            <div class="stat-card-change"><i class="fa-solid fa-arrow-trend-up"></i> +22% reproducciones</div>
+                            <div class="stat-card-label"><i class="fa-solid fa-download"></i> Descargas</div>
+                            <div class="stat-card-val" id="stat-downloads-val">0</div>
+                            <div class="stat-card-change" style="color: var(--green);"><i class="fa-solid fa-arrow-trend-up"></i> Catálogo OFFSZN</div>
                         </div>
                     </div>
 
@@ -679,30 +654,7 @@
                             <a href="#" onclick="switchTab('beats', event)" style="font-size: 11px; color: var(--dim); text-decoration: underline;">Ver todos</a>
                         </div>
                         <div class="catalog-grid" id="dash-recent-beats">
-                            <!-- Card 1 -->
-                            <div class="beat-card">
-                                <div class="beat-cover">
-                                    <i class="fa-solid fa-record-vinyl" style="font-size: 32px; color: rgba(255,255,255,0.2);"></i>
-                                </div>
-                                <div class="beat-title">Midnight R&B Type Beat</div>
-                                <div class="beat-meta"><span>340 escuchas</span><span style="color: var(--green);">ACTIVO</span></div>
-                            </div>
-                            <!-- Card 2 -->
-                            <div class="beat-card">
-                                <div class="beat-cover">
-                                    <i class="fa-solid fa-fire" style="font-size: 32px; color: rgba(255,255,255,0.2);"></i>
-                                </div>
-                                <div class="beat-title">Dark Drill Hard</div>
-                                <div class="beat-meta"><span>520 escuchas</span><span style="color: var(--green);">ACTIVO</span></div>
-                            </div>
-                            <!-- Card 3 -->
-                            <div class="beat-card">
-                                <div class="beat-cover">
-                                    <i class="fa-solid fa-cloud-moon" style="font-size: 32px; color: rgba(255,255,255,0.2);"></i>
-                                </div>
-                                <div class="beat-title">Lofi Rain Vibes</div>
-                                <div class="beat-meta"><span>420 escuchas</span><span style="color: var(--green);">ACTIVO</span></div>
-                            </div>
+                            <!-- Skeletons initially rendered by JS -->
                         </div>
                     </div>
                 </div>
@@ -720,7 +672,14 @@
                     </div>
 
                     <div class="catalog-grid" id="full-catalog-grid" style="margin-top: 14px;">
-                        <!-- Will be populated dynamically by beat-post-service.js or JS init -->
+                        <!-- Skeletons initially rendered by JS -->
+                    </div>
+
+                    <!-- Lock / Coming Soon button requested by user -->
+                    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+                        <button class="btn-prev" disabled style="opacity: 0.6; cursor: not-allowed; width: 100%; justify-content: center; font-size: 11.5px; border-color: rgba(255,255,255,0.08);">
+                            <i class="fa-solid fa-lock" style="font-size: 10px;"></i> Editar Página Web (Próximamente)
+                        </button>
                     </div>
                 </div>
 
@@ -1005,14 +964,6 @@
             if (drawer) drawer.classList.remove('open');
         }
 
-        function callNativeHost(action, payload = {}) {
-            if (window.chrome && window.chrome.webview) {
-                window.chrome.webview.postMessage({ action, payload });
-                return true;
-            }
-            return false;
-        }
-
         function logDebug(msg) {
             const consoleEl = document.getElementById('dbg-console');
             if (consoleEl) {
@@ -1021,6 +972,124 @@
                 consoleEl.appendChild(line);
                 consoleEl.scrollTop = consoleEl.scrollHeight;
             }
+        }
+
+        // ── Render Skeletons for Loading State ──
+        function showSkeletons() {
+            const dashGrid = document.getElementById('dash-recent-beats');
+            const fullGrid = document.getElementById('full-catalog-grid');
+            const skeletonHtml = `
+                <div class="skeleton-card"><div class="skeleton-box"></div><div class="skeleton-line" style="width:70%;"></div><div class="skeleton-line" style="width:40%;"></div></div>
+                <div class="skeleton-card"><div class="skeleton-box"></div><div class="skeleton-line" style="width:70%;"></div><div class="skeleton-line" style="width:40%;"></div></div>
+                <div class="skeleton-card"><div class="skeleton-box"></div><div class="skeleton-line" style="width:70%;"></div><div class="skeleton-line" style="width:40%;"></div></div>
+            `;
+            if (dashGrid) dashGrid.innerHTML = skeletonHtml;
+            if (fullGrid) fullGrid.innerHTML = skeletonHtml;
+        }
+
+        // ── Cover URL Resolver ──
+        function resolveCoverUrl(imgVal) {
+            if (!imgVal) return null;
+            if (imgVal.startsWith('http://') || imgVal.startsWith('https://') || imgVal.startsWith('data:')) {
+                return imgVal;
+            }
+            return `https://pub-f5f4a6e877c44243a41a4a6e838706d8.r2.dev/${imgVal.replace(/^\//, '')}`;
+        }
+
+        // ── Fetch Real Products from Supabase DB ──
+        async function loadUserCatalogAndMetrics(userId) {
+            showSkeletons();
+
+            try {
+                if (!supabaseClient || !userId) {
+                    renderBeatsGrid('dash-recent-beats', []);
+                    renderBeatsGrid('full-catalog-grid', []);
+                    return;
+                }
+
+                // Query DB for user's beats
+                const { data: beats, error } = await supabaseClient
+                    .from('products')
+                    .select('id, name, title, image_url, plays_count, sales_count, downloads_count, status, created_at')
+                    .eq('producer_id', userId)
+                    .neq('status', 'deleted')
+                    .order('created_at', { ascending: false });
+
+                if (error) {
+                    console.error('[BeatPost] Error fetching producer catalog:', error);
+                    renderBeatsGrid('dash-recent-beats', []);
+                    renderBeatsGrid('full-catalog-grid', []);
+                    return;
+                }
+
+                const beatList = beats || [];
+
+                // Calculate metrics
+                const totalBeats = beatList.length;
+                let totalPlays = 0;
+                let totalDownloads = 0;
+
+                beatList.forEach(b => {
+                    totalPlays += (parseInt(b.plays_count) || 0);
+                    totalDownloads += (parseInt(b.downloads_count) || parseInt(b.sales_count) || 0);
+                });
+
+                document.getElementById('stat-plays-val').textContent = totalPlays.toLocaleString();
+                document.getElementById('stat-beats-val').textContent = totalBeats.toString();
+                document.getElementById('stat-downloads-val').textContent = totalDownloads.toLocaleString();
+
+                // Render catalog grids
+                renderBeatsGrid('dash-recent-beats', beatList.slice(0, 4));
+                renderBeatsGrid('full-catalog-grid', beatList);
+
+            } catch (err) {
+                console.error('[BeatPost] Catalog load exception:', err);
+                renderBeatsGrid('dash-recent-beats', []);
+                renderBeatsGrid('full-catalog-grid', []);
+            }
+        }
+
+        function renderBeatsGrid(containerId, beats) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            if (!beats || beats.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; background: var(--panel); border: 1px dashed var(--border-light); border-radius: 16px; padding: 36px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+                        <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--dim);">🎵</div>
+                        <div>
+                            <h4 style="font-size: 13px; font-weight: 800; color: #fff;">Sube tu primer beat y muestra tu talento al mundo</h4>
+                            <p style="font-size: 10.5px; color: var(--dim); margin-top: 2px;">Publica tu música directo a tu tienda OFFSZN.</p>
+                        </div>
+                        <button class="btn-next" onclick="openPublisherDrawer()" style="margin-top: 4px; padding: 9px 16px;">
+                            <i class="fa-solid fa-plus"></i> Publicar mi Primer Beat
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = beats.map(b => {
+                const title = b.title || b.name || 'Sin título';
+                const plays = b.plays_count || 0;
+                const coverSrc = resolveCoverUrl(b.image_url);
+
+                let imgHtml = `<i class="fa-solid fa-compact-disc" style="font-size: 32px; color: rgba(255,255,255,0.2);"></i>`;
+                if (coverSrc) {
+                    imgHtml = `<img src="${coverSrc}" alt="${title}" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\\'fa-solid fa-compact-disc\\' style=\\'font-size: 32px; color: rgba(255,255,255,0.2);\\'></i>'" style="width:100%; height:100%; object-fit:cover;">`;
+                }
+
+                return `
+                    <div class="beat-card">
+                        <div class="beat-cover">${imgHtml}</div>
+                        <div class="beat-title" title="${title}">${title}</div>
+                        <div class="beat-meta">
+                            <span>${plays} views</span>
+                            <span style="color: var(--green); font-weight: 800;">ACTIVO</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // ── Supabase Init & Auth ──
@@ -1077,7 +1146,7 @@
             let displayName = sess.user.email ? sess.user.email.split('@')[0] : 'Productor';
             let avatarChar = displayName[0].toUpperCase();
 
-            // Update sidebar user display
+            // Update user displays
             const sbName = document.getElementById('sidebar-user-name');
             const sbAv = document.getElementById('sidebar-avatar');
             const accName = document.getElementById('acc-user-name');
@@ -1091,6 +1160,9 @@
             if (accEmail) accEmail.textContent = sess.user.email || '';
             if (accAv) accAv.textContent = avatarChar;
             if (heroName) heroName.textContent = `¡Hola, ${displayName}! 👋`;
+
+            // Load producer's real catalog & metrics from DB
+            loadUserCatalogAndMetrics(sess.user.id);
         }
 
         function showAuthView() {
