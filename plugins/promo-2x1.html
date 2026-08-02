@@ -419,8 +419,8 @@
 
     <!-- STICKY COUNTDOWN BANNER -->
     <div class="countdown-banner">
-        OFERTA ESPECIAL DE FIN DE MES EXPIRA EN:
-        <span class="countdown-timer-text" id="countdown-timer">00h 00m 00s</span>
+        OFERTA ESPECIAL POR TIEMPO LIMITADO EXPIRA EN:
+        <span class="countdown-timer-text" id="countdown-timer">24h 00m 00s</span>
     </div>
 
     <div class="ambient-glow"></div>
@@ -428,8 +428,8 @@
     <header>
         <a href="#checkout-container" class="btn-lo-quiero-cta">¡LO QUIERO!</a>
         <h1>
-            RECIBE 50 PRESETS DE VOCES
-            <span class="hero-second-line">+ 50 PRESETS Y 1 PLUGIN DE REGALO</span>
+            OBTÉN +50 PRESETS PARA MEZCLA DE VOCES
+            <span class="hero-second-line">Y 1 PLUGIN DE REGALO PARA MASTERIZAR</span>
         </h1>
         <p class="hero-desc">2 licencias de por vida para ti .</p>
     </header>
@@ -534,39 +534,47 @@
         // El backend generará automáticamente Easy Mix + Easy Master (2x1) de por vida.
         window.PLUGIN_ID = 899;
 
-        // COUNTDOWN TIMER
+        // COUNTDOWN TIMER (Contador local 24h con reinicio automático continuo)
         (function () {
             const timerElement = document.getElementById('countdown-timer');
-            // La oferta expira a fin de mes (31 de Julio de 2026)
-            const endTime = new Date("2026-07-31T23:59:59-05:00").getTime();
+            const DURATION = 24 * 60 * 60 * 1000; // 24 horas
 
-            const interval = setInterval(function () {
-                const now = new Date().getTime();
-                const distance = endTime - now;
+            function getEndTime() {
+                let savedEnd = localStorage.getItem('offszn_promo_24h_timer');
+                let now = new Date().getTime();
 
-                if (distance < 0) {
-                    timerElement.innerHTML = "Oferta Expirada";
-                    clearInterval(interval);
-                    return;
+                if (!savedEnd || isNaN(savedEnd) || parseInt(savedEnd) <= now) {
+                    savedEnd = now + DURATION;
+                    localStorage.setItem('offszn_promo_24h_timer', savedEnd);
+                }
+                return parseInt(savedEnd);
+            }
+
+            let endTime = getEndTime();
+
+            function updateTimer() {
+                let now = new Date().getTime();
+                let distance = endTime - now;
+
+                if (distance <= 0) {
+                    // Si llega a 0, se reinicia automáticamente a 24 horas (nunca muestra oferta expirada)
+                    endTime = now + DURATION;
+                    localStorage.setItem('offszn_promo_24h_timer', endTime);
+                    distance = DURATION;
                 }
 
-                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const hours = Math.floor(distance / (1000 * 60 * 60));
                 const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-                if (days > 0) {
-                    timerElement.innerHTML = days + "d " + 
-                        String(hours).padStart(2, '0') + "h " + 
-                        String(minutes).padStart(2, '0') + "m " + 
-                        String(seconds).padStart(2, '0') + "s";
-                } else {
-                    timerElement.innerHTML = 
-                        String(hours).padStart(2, '0') + "h " + 
-                        String(minutes).padStart(2, '0') + "m " + 
-                        String(seconds).padStart(2, '0') + "s";
-                }
-            }, 1000);
+                timerElement.innerHTML = 
+                    String(hours).padStart(2, '0') + "h " + 
+                    String(minutes).padStart(2, '0') + "m " + 
+                    String(seconds).padStart(2, '0') + "s";
+            }
+
+            updateTimer();
+            setInterval(updateTimer, 1000);
         })();
 
         // VIDEO LIGHTBOX LOGIC
