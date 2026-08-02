@@ -268,13 +268,13 @@
       const LS_KEY = "offszn_content_bank_panel_v1";
 
       const DEFAULTS = {
-        keyword: "PERÚ",
+        keyword: "PLUGIN",
         captionIG:
-          "quien hizo un plugin de inka kola para masterizar? 🇵🇪\n\nsi quieres probar este plugin para darle mas color, grosor y anchura a tus masters sin complicarte, comenta \"PERÚ\" y te lo envio por dm.",
-        hashtagsIG: "#masterizacion #vstplugins #produccionmusical #flstudio #peru",
+          "no necesitas todos los plugins de waves para mezclar bien en fl studio.\n\nsi estas empezando, este plugin te ayuda a limpiar ruido, quitar graves innecesarios, dar brillo, poner tu voz al frente y añadir efectos sin perder horas aprendiendo.\n\ntodo con nombres faciles para que no te compliques.\n\ncomenta \"plugin\" y te lo envio por privado.\n\n#flstudio #mezcladevoces #vstplugins #homestudio #produccionmusical",
+        hashtagsIG: "#flstudio #mezcladevoces #vstplugins #homestudio #produccionmusical",
         captionTT:
-          "plugin de inka kola para masterizar 🇵🇪\n\nsi quieres probarlo, comenta \"PERÚ\" y te lo envio.",
-        hashtagsTT: "#masterizacion #vstplugins #flstudio #homestudio #peru"
+          "si eres nuevo mezclando voces, empieza por aqui.\n\nun solo plugin para limpiar ruido, dar brillo, poner tu voz al frente y añadir efectos con nombres faciles.\n\ncomenta \"plugin\" y te lo envio por privado.\n\n#flstudio #vstplugins #mezcladevoces #homestudio #musicproducer",
+        hashtagsTT: "#flstudio #vstplugins #mezcladevoces #homestudio #musicproducer"
       };
       const DEFAULTS_SIG = JSON.stringify(DEFAULTS);
 
@@ -299,26 +299,27 @@
           const raw = localStorage.getItem(LS_KEY);
           if (!raw) return;
           const s = JSON.parse(raw);
-          if (s.webhookUrl) $("webhookUrl").value = s.webhookUrl;
-          if (s.driveFileId) $("driveFileId").value = s.driveFileId;
-          if (s.keyword) $("keyword").value = s.keyword;
-          if (s.captionIG) $("captionIG").value = s.captionIG;
-          if (s.hashtagsIG) $("hashtagsIG").value = s.hashtagsIG;
-          if (s.captionTT) $("captionTT").value = s.captionTT;
-          if (s.hashtagsTT) $("hashtagsTT").value = s.hashtagsTT;
+          if ("webhookUrl" in s) $("webhookUrl").value = s.webhookUrl;
+          if ("driveFileId" in s) $("driveFileId").value = s.driveFileId;
+          if ("keyword" in s) $("keyword").value = s.keyword;
+          if ("captionIG" in s) $("captionIG").value = s.captionIG;
+          if ("hashtagsIG" in s) $("hashtagsIG").value = s.hashtagsIG;
+          if ("captionTT" in s) $("captionTT").value = s.captionTT;
+          if ("hashtagsTT" in s) $("hashtagsTT").value = s.hashtagsTT;
           return s;
         } catch {}
       }
 
       function syncDefaultsIfChanged(s) {
         const prevSig = s && typeof s.defaultsSig === "string" ? s.defaultsSig : "";
-        if (prevSig === DEFAULTS_SIG) return;
+        if (prevSig === DEFAULTS_SIG) return false;
         $("keyword").value = DEFAULTS.keyword;
         $("captionIG").value = DEFAULTS.captionIG;
         $("hashtagsIG").value = DEFAULTS.hashtagsIG;
         $("captionTT").value = DEFAULTS.captionTT;
         $("hashtagsTT").value = DEFAULTS.hashtagsTT;
         saveState();
+        return true;
       }
 
       function saveState() {
@@ -423,8 +424,8 @@
       });
 
       const s = loadState();
-      syncDefaultsIfChanged(s);
-      applyDefaultsIfEmpty();
+      const didSyncDefaults = syncDefaultsIfChanged(s);
+      if (!s && !didSyncDefaults) applyDefaultsIfEmpty();
       saveState();
     </script>
   </body>
