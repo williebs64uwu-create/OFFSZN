@@ -193,6 +193,8 @@
             border: 1px solid rgba(255,255,255,0.15);
             display: flex; align-items: center; justify-content: center;
             font-weight: 800; font-size: 12px; color: #fff;
+            overflow: hidden;
+            flex-shrink: 0;
         }
 
         .user-info-sm {
@@ -392,12 +394,12 @@
             animation: skeletonPulse 1.4s infinite ease-in-out;
         }
 
-        /* ─── SLIDE-OVER PUBLISHER DRAWER ─── */
+        /* ─── SLIDE-OVER PUBLISHER DRAWER (Extends up to Sidebar) ─── */
         .publisher-drawer {
             position: absolute;
             top: 0; right: 0; bottom: 0;
-            width: 440px;
-            max-width: 100%;
+            left: 210px;
+            width: calc(100% - 210px);
             background: #08080b;
             border-left: 1px solid var(--border-light);
             z-index: 100;
@@ -620,7 +622,7 @@
                     <!-- Hero Banner -->
                     <div class="dash-hero">
                         <div>
-                            <h2 class="dash-hero-title" id="dash-welcome-name">¡Hola, Productor! 👋</h2>
+                            <h2 class="dash-hero-title" id="dash-welcome-name">Hola, Productor</h2>
                             <p class="dash-hero-desc">Tu suite de publicación y métricas de OFFSZN está lista.</p>
                         </div>
                         <button class="btn-next" onclick="openPublisherDrawer()">
@@ -712,7 +714,7 @@
 
             </div>
 
-            <!-- SLIDE-OVER PUBLISHER DRAWER -->
+            <!-- SLIDE-OVER PUBLISHER DRAWER (Extends across main content area up to sidebar) -->
             <div class="publisher-drawer" id="publisher-drawer">
                 <div class="drawer-header">
                     <div class="drawer-title">
@@ -763,22 +765,20 @@
                                 <div id="tags-pills-box" onclick="document.getElementById('tag-input-field').focus()" style="display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 8px; background: #000; border: 1px solid var(--border); border-radius: 8px; min-height: 38px; align-items: center; cursor: text;">
                                     <input type="text" id="tag-input-field" placeholder="Escribe un tag y presiona Enter..." style="background: transparent; border: none; outline: none; color: #fff; font-size: 11px; flex: 1; min-width: 120px; font-family: inherit;">
                                 </div>
-                                <span style="font-size: 9px; color: var(--dim); margin-top: 2px;">Primeras 3 a OFFSZN, todas a YouTube (hasta 500 caract.).</span>
                             </div>
 
-                            <!-- Cover Selector -->
+                            <!-- Cover Selector (Simplified as requested) -->
                             <div class="form-group">
-                                <h3 class="section-title">Portada del Beat (Square 1:1)</h3>
+                                <h3 class="section-title">Portada</h3>
                                 <div style="display: flex; gap: 12px; align-items: center;">
-                                    <div id="cover-preview-box" style="width: 64px; height: 64px; border-radius: 6px; border: 1px solid var(--border); background: #060608; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative;">
-                                        <span id="cover-preview-text" style="font-size: 7.5px; color: var(--dim); text-align: center; font-weight: 700; padding: 4px;">AUTOGENERADO</span>
+                                    <div id="cover-preview-box" onclick="document.getElementById('cover-file-input').click()" style="width: 64px; height: 64px; border-radius: 8px; border: 1px dashed var(--border-light); background: #060608; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer;">
+                                        <i id="cover-preview-icon" class="fa-solid fa-image" style="font-size: 20px; color: var(--dim);"></i>
                                         <img id="cover-preview-img" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;">
                                     </div>
                                     <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-                                        <button type="button" class="btn-prev" onclick="document.getElementById('cover-file-input').click()" style="margin: 0; padding: 6px 10px; font-size: 10px; width: fit-content; cursor: pointer;">
-                                            <i class="fa-solid fa-image"></i> Seleccionar Imagen
+                                        <button type="button" class="btn-prev" onclick="document.getElementById('cover-file-input').click()" style="margin: 0; padding: 7px 12px; font-size: 11px; width: fit-content; cursor: pointer;">
+                                            <i class="fa-solid fa-upload"></i> Seleccionar Imagen
                                         </button>
-                                        <span style="font-size: 8.5px; color: var(--dim);">Se abrirá un recortador para ajustarla a 1:1.</span>
                                     </div>
                                 </div>
                                 <input type="file" id="cover-file-input" accept="image/*" style="display: none;" onchange="handleCoverFileSelect(this.files[0])">
@@ -793,7 +793,7 @@
                         <div class="step-pane" id="view-audio">
                             <div>
                                 <h3 class="section-title">Cargar Instrumental</h3>
-                                <p style="color: var(--dim); font-size: 10.5px; margin-bottom: 10px;">Arrastra tus archivos WAV/MP3 exportados desde el DAW.</p>
+                                <p style="color: var(--dim); font-size: 10.5px; margin-bottom: 10px;">Arrastra tus archivos exportados desde el DAW.</p>
 
                                 <div id="drop-zone" style="width: 100%; height: 100px; border: 1.5px dashed var(--border-light); border-radius: 10px; background: #060608; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin-bottom: 12px;" ondragover="event.preventDefault(); this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border-light)'" ondrop="handleFileDrop(event)" onclick="if (!uploadedFiles.mp3) { document.getElementById('file-input-mp3').click(); } else { document.getElementById('file-input-wav').click(); }">
                                     <i class="fa-solid fa-cloud-arrow-up" style="font-size: 20px; color: var(--dim);"></i>
@@ -804,25 +804,18 @@
                                 <input type="file" id="file-input-mp3" accept=".mp3" style="display: none;" onchange="handleFileSelect('mp3', this.files[0])">
 
                                 <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px;">
-                                    <div style="background: #000; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="document.getElementById('file-input-mp3').click()">
-                                        <span style="font-size: 11px; font-weight: 600;"><i class="fa-regular fa-file-audio"></i> MP3 (Obligatorio)</span>
+                                    <div style="background: #000; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="document.getElementById('file-input-mp3').click()">
+                                        <span style="font-size: 11px; font-weight: 600;"><i class="fa-regular fa-file-audio"></i> MP3</span>
                                         <span id="mp3-status-lbl" style="font-size: 10px; color: var(--dim);">Cargar MP3</span>
                                     </div>
-                                    <div style="background: #000; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="document.getElementById('file-input-wav').click()">
-                                        <span style="font-size: 11px; font-weight: 600;"><i class="fa-regular fa-file-audio"></i> WAV (Opcional)</span>
+                                    <div style="background: #000; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="document.getElementById('file-input-wav').click()">
+                                        <span style="font-size: 11px; font-weight: 600;"><i class="fa-regular fa-file-audio"></i> WAV</span>
                                         <span id="wav-status-lbl" style="font-size: 10px; color: var(--dim);">Cargar WAV</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <h3 class="section-title">Console</h3>
-                                <div class="debug-console" id="dbg-console" style="height: 45px; font-size: 9px; background: #000; padding: 6px; border-radius: 6px; border: 1px solid var(--border); overflow-y: auto;">
-                                    <div><span style="color: var(--dim);">[SYS]</span> VST enlazado al Master Bus.</div>
-                                </div>
-                            </div>
-
-                            <div class="nav-buttons">
+                            <div class="nav-buttons" style="margin-top: 14px;">
                                 <button class="btn-prev" onclick="goToStep(1)"><i class="fa-solid fa-chevron-left"></i> Atrás</button>
                                 <button class="btn-next" id="btn-audio-continue" disabled style="opacity: 0.5; cursor: not-allowed;" onclick="goToStep(3)">Continuar <i class="fa-solid fa-chevron-right"></i></button>
                             </div>
@@ -909,7 +902,7 @@
                 </div>
                 <div style="max-width: 280px;">
                     <h2 style="font-size: 17px; font-weight: 800; letter-spacing: -0.4px; margin-bottom: 8px; line-height: 1.3; color: #fff;">Inicia sesión para usar BEAT POST</h2>
-                    <p style="font-size: 11px; color: var(--dim);">Conecta tu cuenta de OFFSZN para sincronizar el VST en tu DAW.</p>
+                    <p style="font-size: 11px; color: var(--dim);">Conecta tu cuenta de OFFSZN para synchronizar el VST en tu DAW.</p>
                 </div>
 
                 <button onclick="openWebTokenPage()" style="width: 100%; max-width: 280px; padding: 14px; font-size: 12.5px; background: #fff; color: #000; font-weight: 800; border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
@@ -964,16 +957,6 @@
             if (drawer) drawer.classList.remove('open');
         }
 
-        function logDebug(msg) {
-            const consoleEl = document.getElementById('dbg-console');
-            if (consoleEl) {
-                const line = document.createElement('div');
-                line.innerHTML = `<span style="color: var(--dim)">[SYS]</span> ${msg}`;
-                consoleEl.appendChild(line);
-                consoleEl.scrollTop = consoleEl.scrollHeight;
-            }
-        }
-
         // ── Render Skeletons for Loading State ──
         function showSkeletons() {
             const dashGrid = document.getElementById('dash-recent-beats');
@@ -996,7 +979,7 @@
             return `https://pub-f5f4a6e877c44243a41a4a6e838706d8.r2.dev/${imgVal.replace(/^\//, '')}`;
         }
 
-        // ── Fetch Real Products from Supabase DB ──
+        // ── Fetch Real Products & User Profile from Supabase DB ──
         async function loadUserCatalogAndMetrics(userId) {
             showSkeletons();
 
@@ -1007,11 +990,43 @@
                     return;
                 }
 
-                // Query DB for user's beats
+                // 1. Query User Profile (nickname & avatar)
+                const { data: userRow } = await supabaseClient
+                    .from('users')
+                    .select('nickname, avatar_url, display_name')
+                    .eq('id', userId)
+                    .maybeSingle();
+
+                if (userRow) {
+                    const displayName = userRow.nickname || userRow.display_name || (session?.user?.email ? session.user.email.split('@')[0] : 'Productor');
+                    const avatarUrl = userRow.avatar_url;
+
+                    const sbName = document.getElementById('sidebar-user-name');
+                    const accName = document.getElementById('acc-user-name');
+                    const heroName = document.getElementById('dash-welcome-name');
+                    const sbAv = document.getElementById('sidebar-avatar');
+                    const accAv = document.getElementById('acc-avatar');
+
+                    if (sbName) sbName.textContent = displayName;
+                    if (accName) accName.textContent = displayName;
+                    if (heroName) heroName.textContent = `Hola, ${displayName}`;
+
+                    if (avatarUrl) {
+                        const imgTag = `<img src="${avatarUrl}" alt="${displayName}" onerror="this.style.display='none'; this.parentElement.textContent='${displayName[0].toUpperCase()}'" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+                        if (sbAv) sbAv.innerHTML = imgTag;
+                        if (accAv) accAv.innerHTML = imgTag;
+                    } else {
+                        const initial = displayName[0].toUpperCase();
+                        if (sbAv) sbAv.textContent = initial;
+                        if (accAv) accAv.textContent = initial;
+                    }
+                }
+
+                // 2. Query DB for user's real beats
                 const { data: beats, error } = await supabaseClient
                     .from('products')
-                    .select('id, name, title, image_url, plays_count, sales_count, downloads_count, status, created_at')
-                    .eq('producer_id', userId)
+                    .select('*')
+                    .or(`producer_id.eq.${userId},user_id.eq.${userId}`)
                     .neq('status', 'deleted')
                     .order('created_at', { ascending: false });
 
@@ -1030,7 +1045,7 @@
                 let totalDownloads = 0;
 
                 beatList.forEach(b => {
-                    totalPlays += (parseInt(b.plays_count) || 0);
+                    totalPlays += (parseInt(b.plays_count) || parseInt(b.views) || 0);
                     totalDownloads += (parseInt(b.downloads_count) || parseInt(b.sales_count) || 0);
                 });
 
@@ -1056,7 +1071,7 @@
             if (!beats || beats.length === 0) {
                 container.innerHTML = `
                     <div style="grid-column: 1 / -1; background: var(--panel); border: 1px dashed var(--border-light); border-radius: 16px; padding: 36px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px;">
-                        <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--dim);">🎵</div>
+                        <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--dim);"><i class="fa-solid fa-music"></i></div>
                         <div>
                             <h4 style="font-size: 13px; font-weight: 800; color: #fff;">Sube tu primer beat y muestra tu talento al mundo</h4>
                             <p style="font-size: 10.5px; color: var(--dim); margin-top: 2px;">Publica tu música directo a tu tienda OFFSZN.</p>
@@ -1071,7 +1086,7 @@
 
             container.innerHTML = beats.map(b => {
                 const title = b.title || b.name || 'Sin título';
-                const plays = b.plays_count || 0;
+                const plays = b.plays_count || b.views || 0;
                 const coverSrc = resolveCoverUrl(b.image_url);
 
                 let imgHtml = `<i class="fa-solid fa-compact-disc" style="font-size: 32px; color: rgba(255,255,255,0.2);"></i>`;
@@ -1159,7 +1174,7 @@
             if (accName) accName.textContent = displayName;
             if (accEmail) accEmail.textContent = sess.user.email || '';
             if (accAv) accAv.textContent = avatarChar;
-            if (heroName) heroName.textContent = `¡Hola, ${displayName}! 👋`;
+            if (heroName) heroName.textContent = `Hola, ${displayName}`;
 
             // Load producer's real catalog & metrics from DB
             loadUserCatalogAndMetrics(sess.user.id);
@@ -1326,10 +1341,12 @@
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = document.getElementById('cover-preview-img');
-                const txt = document.getElementById('cover-preview-text');
-                img.src = e.target.result;
-                img.style.display = 'block';
-                txt.style.display = 'none';
+                const icon = document.getElementById('cover-preview-icon');
+                if (img) {
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                }
+                if (icon) icon.style.display = 'none';
             };
             reader.readAsDataURL(file);
         }
