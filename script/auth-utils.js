@@ -1055,6 +1055,42 @@ window.AuthUtils = {
 
         if (!pathOrUrl || typeof pathOrUrl !== 'string') return false;
 
+        if (
+
+            pathOrUrl.startsWith('/images') ||
+
+            pathOrUrl.startsWith('../images') ||
+
+            pathOrUrl.startsWith('./images') ||
+
+            pathOrUrl.includes('/images/') ||
+
+            pathOrUrl.startsWith('/assets') ||
+
+            pathOrUrl.startsWith('../assets') ||
+
+            pathOrUrl.startsWith('./assets') ||
+
+            pathOrUrl.includes('/assets/') ||
+
+            pathOrUrl.startsWith('/icon') ||
+
+            pathOrUrl.startsWith('../icon') ||
+
+            pathOrUrl.startsWith('./icon') ||
+
+            pathOrUrl.startsWith('/script') ||
+
+            pathOrUrl.startsWith('../script') ||
+
+            pathOrUrl.startsWith('./script')
+
+        ) {
+
+            return false;
+
+        }
+
         return (
 
             pathOrUrl.includes('r2.cloudflarestorage.com') ||
@@ -1066,14 +1102,6 @@ window.AuthUtils = {
             (!pathOrUrl.startsWith('http') &&
 
                 !pathOrUrl.startsWith('data:') &&
-
-                !pathOrUrl.startsWith('/images') &&
-
-                !pathOrUrl.startsWith('/assets') &&
-
-                !pathOrUrl.startsWith('/icon') &&
-
-                !pathOrUrl.startsWith('/script') &&
 
                 pathOrUrl.includes('/'))
 
@@ -1119,11 +1147,11 @@ window.AuthUtils = {
 
 
 
-        const limit = planData.limits?.max_uploads ?? 20;
+        const rawLimit = planData.limits?.max_uploads ?? 20;
 
-        if (limit === Infinity || planData.plan === 'pro') {
-            return { isLimited: false, count: 0, limit: Infinity, plan: planData.plan };
-        }
+        const isUnlimited = (rawLimit === Infinity || planData.plan === 'pro' || planData.plan === 'admin');
+
+        const limit = isUnlimited ? Infinity : rawLimit;
 
 
 
@@ -1157,7 +1185,17 @@ window.AuthUtils = {
 
             const count = results.reduce((sum, r) => sum + (r.count || 0), 0);
 
-            const status = { isLimited: count >= limit, count, limit, plan: planData.plan };
+            const status = { 
+
+                isLimited: isUnlimited ? false : count >= limit, 
+
+                count, 
+
+                limit, 
+
+                plan: planData.plan 
+
+            };
 
             try {
 

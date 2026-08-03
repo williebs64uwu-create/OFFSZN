@@ -13,6 +13,18 @@
             const src = el.getAttribute('data-r2-src') || el.getAttribute('src');
             if (!src) return;
 
+            // 🔥 STATIC LOCAL IMAGES FAST-PATH: Do not intercept local static site assets
+            if (typeof src === 'string' && (
+                src.includes('/images/') || 
+                src.includes('/assets/') || 
+                src.startsWith('images/') || 
+                src.startsWith('assets/') || 
+                src.startsWith('../images') || 
+                src.startsWith('./images')
+            )) {
+                return;
+            }
+
             // 🔥 EXTERNAL FAST-PATH: If it's already an optimized external URL, show immediately
             if (typeof src === 'string' && src.includes('ik.imagekit.io')) {
                 el.src = src;
