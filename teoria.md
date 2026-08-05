@@ -58,7 +58,50 @@ Tu plugin **ya soluciona gran parte de esto** con los modos **CLA** y **DOUBLER*
   2. **Reverb de Placa (Plate) media (1.5s):** Con un pre-delay de unos 20ms a 30ms. Le da ese brillo metálico clásico del pop a las vocales, aportando un "halo" brillante alrededor de las frecuencias medias.
   3. **Reverb de Salón (Hall) larga (3.0s+):** Con un Pre-Delay calculado al tempo (ej. 1/64 o 1/32 de nota, usualmente 60ms a 100ms). Esto asegura que la consonante de la voz principal "cruce" clara al frente de los monitores, y una fracción de segundo después explote la cola gigante por detrás, sin ensuciar la inteligibilidad.
 
-## 3. Creative FX (Módulos de Efectos Especiales)
+## 3. Arquitectura de Instalación, Licencias y Seguridad (v1.5)
+
+Este apartado define las reglas técnicas oficiales de arquitectura para la compilación, distribución y seguridad de los plugins de OFFSZN (Easy Mix, Easy Master, Inka Kola, etc.).
+
+---
+
+### A. Interfaz Gráfica Local (Resolución de Errores 11 y 13)
+- **Ruta de instalación de la GUI:** El instalador Inno Setup (`.iss`) copia el archivo `mockup.html` a `%AppData%\OFFSZN\<PluginGuiFolder>\mockup.html`.
+- **Carga asíncrona:** `PluginEditor.cpp` intenta cargar mediante protocolo `file:///` desde AppData en primer lugar. Si no existe, realiza fallback a la URL remota `https://offszn.lat/plugins/...`.
+- **Beneficio:** Elimina al 100% los fallos de red WebView2: **Error 11** (`DISCONNECTED`) y **Error 13** (`HOST_NAME_NOT_RESOLVED`).
+
+---
+
+### B. Validación de Licencia C++ Servidor-Autoritativo (Anti-Hackeo Local)
+- **No confianza en JS:** Los archivos HTML locales pueden ser modificados por usuarios. La función puente `setLicenseStatus` en C++ **ignora el parámetro `true` del JS** y realiza su propia petición `POST` HTTPS hacia `https://offszn.lat/api/plugin/activate` enviando `serial_key`, `hwid` y `plugin_name`.
+- **Validación de formato:** `saveLicense` sólo escribe en disco si el serial cumple con el prefijo y longitud adecuada (`EASY-FULL-` / `EASY-TRIAL-`).
+- **DSP Gate:** Si `isLicenseValid == false`, el método `processBlock` entra en **Bypass estricto** en tiempo real. Ningún parámetro procesa audio.
+
+---
+
+### C. Sistema de Expiración Offline y Anti-Modificación de Reloj
+- **Licencias FULL (`EASY-FULL-...`):** 
+  - Validables online 1 sola vez por 5 segundos al activar.
+  - Se guardan en `%AppData%\OFFSZN\<Plugin>.settings`.
+  - **100% Offline de por vida:** No miden marcas de tiempo, no requieren internet nunca más y no se ven afectadas por la hora del sistema.
+- **Licencias TRIAL (`EASY-TRIAL-...`):**
+  - Al activar, el servidor retorna la fecha de vencimiento (`expires_at`).
+  - C++ guarda el formato: `SERIAL|EXPIRES_UNIX_TIMESTAMP|LAST_CHECK_UNIX_TIMESTAMP` en `.settings`.
+  - Al abrir FL Studio (incluso 100% offline):
+    - `now >= EXPIRES_UNIX`: El trial vence automáticamente sin necesidad de internet.
+    - `now < LAST_CHECK_UNIX - 3600`: Se detecta retraso de reloj de la PC (intento de trampa) y se bloquea el acceso.
+    - Se otorga 1 hora de margen para prevenir falsos positivos por cambios de zona horaria o horario de verano.
+
+---
+
+### D. Especificaciones del Instalador Inno Setup (`.iss`)
+- **Firma de Plugin:** Código de fabricante `Ofsz` y código único de plugin por variante (`Esym`, `EsyM`, `Inka`).
+- **Ruta VST3:** Instala `{app}` en `{commoncf}\VST3\<PLUGIN_NAME>.vst3`.
+- **Ruta HTML:** Instala `mockup.html` en `{userappdata}\OFFSZN\<PluginGuiFolder>\mockup.html`.
+- **Compilador:** Inno Setup ISCC.exe (salida `.exe` standalone auto-extraíble).
+
+---
+
+## 4. Creative FX (Módulos de Efectos Especiales)
 
 En la nueva versión, el panel de Efectos cuenta con 4 módulos rediseñados y basados en procesadores profesionales modernos:
 

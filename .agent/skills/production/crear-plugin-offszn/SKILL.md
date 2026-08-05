@@ -1,4 +1,4 @@
-﻿---
+---
 name: crear-plugin-offszn
 description: Workflow completo y arquitectura modular para crear plugins VST3/AU en OFFSZN: landings, assets multimedia, UI responsive/anti-resize, seguridad anti-abuso, seriales y compilación multiplataforma.
 ---
@@ -32,24 +32,29 @@ description: Workflow completo y arquitectura modular para crear plugins VST3/AU
 
 ---
 
-## 🏗️ Arquitectura de Seguridad y Anti-Abuso (Todas las Capas)
+## 🏗️ Arquitectura de Carga Local, Seguridad y Anti-Abuso (v1.5)
 
 ```
-[ FRONTEND UI (JS) ] ──(HWID + Serial)──► [ C++ JUCE NATIVE BRIDGE ] ──(HTTPS)──► [ BACKEND SERVER / SUPABASE ]
-        │                                             │                                      │
-   1. Validar formato                           2. Inyectar HWID                       3. Scavenger Anti-Abuse
-   2. Offline Trust (FULL)                      3. Guardar InkaKola.lic                4. Bloqueo de HWID re-usados
-   3. Bloqueo UI (TRIAL Exp)                    4. Launch URL browser                  5. Expiración de 7 días
+[ FRONTEND UI (LOCAL HTML) ] ──(file:// AppData)──► [ C++ JUCE NATIVE BRIDGE ] ──(HTTPS)──► [ BACKEND SERVER / SUPABASE ]
+           │                                                    │                                       │
+  1. Carga instantánea local                             2. Cero confianza en JS                 3. Scavenger Anti-Abuse
+  2. Cero Errores 11/13                                  3. C++ lanza POST propio                4. Bloqueo de HWID re-usados
+  3. UI aislada de la red                                4. Guardar <Plugin>.settings            5. Expiración de 7 días
 ```
 
-### Matriz de Seguridad de Licencias
-1. **Licencias FULL (`lifetime`):** `<PREFIX>-FULL-XXXX-XXXX`
-   - **Offline Trust Absoluto:** Al activarse por primera vez online, la clave se guarda encriptada/localmente (`InkaKola.lic` / `EasyMaster.lic`).
-   - El plugin **NUNCA** vuelve a requerir internet ni bloquea al usuario si está sin conexión.
-2. **Licencias TRIAL (`trial`):** `<PREFIX>-TRIAL-XXXX-XXXX`
-   - **Verificación Silenciosa cada Sesión:** Al abrir el plugin, valida contra `/api/plugin/activate` con `{ serial_key, hwid, plugin_name }`.
-   - **Scavenger Server-Side:** Evita reciclaje de pruebas por el mismo HWID en Supabase.
-   - **Hard-Lock Overlay:** Si la prueba vence o el servidor responde `success: false`, se activa el modal de **Prueba Expirada**.
+### 1. Interfaz Gráfica Local (`file://` AppData)
+- **Solución a Errores 11 y 13:** Toda la interfaz gráfica HTML/CSS/JS se instala en `%AppData%\OFFSZN\<PluginGuiFolder>\mockup.html`.
+- **Carga en `PluginEditor.cpp`:** Lee desde `file:///` en AppData en primer lugar. Si no existe, realiza fallback a `https://offszn.lat/plugins/<slug>?v=5`.
+
+### 2. Matriz de Seguridad C++ Server-Authoritative
+- **Cero confianza en JS:** El usuario puede editar su HTML local. La función puente `setLicenseStatus` en C++ **ignora el "true" del JS** y realiza su propia petición HTTP POST directa al servidor con `{ serial_key, hwid, plugin_name }`. Solo si el servidor responde `success: true` el C++ activa el DSP de audio.
+- **Licencias FULL (`lifetime`):** `<PREFIX>-FULL-XXXX-XXXX`
+  - **Offline Trust Absoluto:** Al activarse 1 sola vez online, el serial se guarda en `%AppData%\OFFSZN\<Plugin>.settings`.
+  - El plugin **NUNCA** vuelve a requerir internet ni mide timestamps/reloj. Funciona 100% offline para siempre.
+- **Licencias TRIAL (`trial`):** `<PREFIX>-TRIAL-XXXX-XXXX`
+  - **Expiración Offline & Anti-Reloj:** El servidor devuelve `expires_at`. C++ guarda `SERIAL|EXPIRES_UNIX|LAST_CHECK_UNIX` en `.settings`.
+  - Al abrir (incluso offline): Si `now >= EXPIRES_UNIX` o `now < LAST_CHECK_UNIX - 3600` (retrasaron el reloj de la PC), el C++ deniega el acceso y activa el **Bypass Estricto de Audio**.
+  - Otorga 1 hora de tolerancia para cambios legítimos de zona horaria / horario de verano.
 
 ---
 
