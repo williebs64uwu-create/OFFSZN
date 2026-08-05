@@ -1,7 +1,7 @@
 (function () {
     const YT_SYNC_VERSION = '1.0.2';
     const CLIENT_ID = '804444303530-bl8gtp4sdjkcnrkjl1295vns59tqp4tc.apps.googleusercontent.com';
-    const SCOPES = 'https://www.googleapis.com/auth/youtube.readonly';
+    const SCOPES = 'https://www.googleapis.com/auth/youtube.upload';
     
     // Selectors
     const statusTag = document.getElementById('ytSyncStatus');
