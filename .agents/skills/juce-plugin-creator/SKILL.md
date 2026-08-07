@@ -151,23 +151,101 @@ if (settingsFile.existsAsFile())
 
 ---
 
-## 4. Inno Setup Installer Script Standard (`.iss`)
+---
+
+## 4. Ableton Live 11 & DAW Compatibility Standards (JUCE 8 + WebView2)
+
+To prevent immediate host crashes in Ableton Live 11 and other DAWs when opening the VST3 editor:
+
+### A. Windows COM Thread Apartment Initialization
+Ableton Live 11 instantiates VST3 editor windows on threads where COM is not initialized. Before instantiating `juce::WebBrowserComponent` in `PluginEditor.cpp`, call:
+```cpp
+#if JUCE_WINDOWS
+  #include <objbase.h>
+  // In Editor Constructor:
+  CoInitializeEx (nullptr, COINIT_APARTMENTTHREADED);
+#endif
+```
+
+### B. Isolated WebView2 Cache Folder per Plugin
+Never share the same `WebView2Cache` folder across different plugins or plugin instances to prevent file locking conflicts (`ERROR_SHARING_VIOLATION`):
+```cpp
+juce::File wv2Folder = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+                           .getChildFile ("OFFSZN")
+                           .getChildFile ("<PluginName>WV2"); // e.g. InkaKolaWV2, EasyMixWV2
+wv2Folder.createDirectory();
+
+auto options = juce::WebBrowserComponent::Options{}
+    .withWinWebView2Options (juce::WebBrowserComponent::Options::WinWebView2{}.withUserDataFolder (wv2Folder));
+```
+
+### C. Avoid Duplicate Function Listener Registration
+**NEVER** register the same function name in both `.withEventListener("funcName", ...)` and `.withNativeFunction("funcName", ...)`. Having duplicate keys causes JUCE's internal options map to abort during `WebBrowserComponent` construction. Use `.withNativeFunction` exclusively for two-way JS ↔ C++ bridges.
+
+### D. SafePointer Protection for Asynchronous Callbacks
+Always wrap `this` pointers in `juce::Component::SafePointer` when scheduling async tasks to prevent crashes if the DAW closes the plugin window prematurely:
+```cpp
+juce::Component::SafePointer<MyAudioProcessorEditor> safeThis (this);
+juce::MessageManager::callAsync ([safeThis, id, val] {
+    if (safeThis != nullptr)
+        safeThis->audioProcessor.setParamFromUI (id, val);
+});
+```
+
+---
+
+## 5. Inno Setup Installer Standard (`.iss`) & Silent WebView2 Auto-Installation
+
+### Licensing Security Guarantee
+Installing Microsoft Edge WebView2 Runtime **has ZERO impact on plugin licensing or anti-piracy security**. 
+- Licensing is 100% server-verified and enforced in compiled C++ native code (`PluginProcessor.cpp` / `validateKey` / `getHWID`).
+- WebView2 Runtime is strictly an HTML/CSS/JS UI renderer.
+
+### Inno Setup (`.iss`) Script with Background Silent WebView2 Installer
+All OFFSZN plugin installers must automatically check for Microsoft Edge WebView2 Runtime in the Windows Registry and silently install it if missing:
 
 ```ini
 [Setup]
 AppName=OFFSZN <PLUGIN_NAME> VST3
-AppVersion=1.5.0
-DefaultDirName={commoncf}\VST3\<PLUGIN_NAME>.vst3
-OutputBaseFilename=OFFSZN_<PLUGIN_NAME>_v1.5_Setup
-OutputDir=Output
-Compression=lzma
+AppVersion=1.0.0
+DefaultDirName={autopf}\OFFSZN\<PLUGIN_NAME>
+DefaultGroupName=OFFSZN
+OutputDir=.\installer_output
+OutputBaseFilename=<PLUGIN_NAME>_Setup
+Compression=lzma2/max
 SolidCompression=yes
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesAllowed=x64compatible
+PrivilegesRequired=admin
 
 [Files]
-; VST3 binary
-Source: "build\<PLUGIN_NAME>_artefacts\Release\VST3\<PLUGIN_NAME>.vst3\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "build\<PLUGIN_NAME>_artefacts\Release\VST3\<PLUGIN_NAME>.vst3\*"; DestDir: "{commoncf64}\VST3\<PLUGIN_NAME>.vst3"; Flags: recursesubdirs createallsubdirs ignoreversion
 
-; GUI local file
-Source: "mockup.html"; DestDir: "{userappdata}\OFFSZN\<PluginGuiFolder>"; DestName: "mockup.html"; Flags: ignoreversion uninsneveruninstall
+[Code]
+function IsWebView2Installed(): Boolean;
+var
+  verStr: String;
+begin
+  Result := RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3C4FA00-2870-474C-B5E0-F91685E92E76}', 'pv', verStr) or
+            RegQueryStringValue(HKCU, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3C4FA00-2870-474C-B5E0-F91685E92E76}', 'pv', verStr) or
+            RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3C4FA00-2870-474C-B5E0-F91685E92E76}', 'pv', verStr);
+  if verStr = '0.0.0.0' then
+    Result := False;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+var
+  resCode: Integer;
+  psCmd: String;
+begin
+  if CurStep = ssPostInstall then
+  begin
+    if not IsWebView2Installed() then
+    begin
+      // Silent download and background install of WebView2 Runtime (invisible to user)
+      psCmd := '-NoProfile -ExecutionPolicy Bypass -Command "$webClient = New-Object System.Net.WebClient; $webClient.DownloadFile(''https://go.microsoft.com/fwlink/p/?LinkId=2124703'', ''$env:TEMP\wv2setup.exe''); Start-Process ''$env:TEMP\wv2setup.exe'' -ArgumentList ''/silent /install'' -Wait"';
+      Exec('powershell.exe', psCmd, '', SW_HIDE, ewWaitUntilTerminated, resCode);
+    end;
+  end;
+end;
 ```
