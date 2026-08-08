@@ -93,6 +93,7 @@ app.use((req, res, next) => {
 // --- 1. CONFIGURACIÓN CORS ROBUSTA ---
 const allowedOrigins = [
     'https://offszn.lat',
+    'https://www.offszn.lat',
     'http://localhost:3000'
 ];
 

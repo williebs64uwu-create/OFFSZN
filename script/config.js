@@ -7,9 +7,7 @@ const CONFIG = {
     // En producción: https://offszn.lat
     API_BASE_URL: (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
         ? (window.location.port === '3008' ? 'http://localhost:3008' : 'http://localhost:3000')
-        : (window.location.hostname.includes('onrender.com'))
-            ? window.location.origin
-            : 'https://offszn.lat',
+        : window.location.origin,
 
     // Versiones de assets para evitar caché
     VERSIONS: {
