@@ -49,7 +49,7 @@ const CheckoutManager = {
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     this.API_URL = window.OFFSZN_CONFIG?.API_BASE_URL
       ? `${window.OFFSZN_CONFIG.API_BASE_URL}/api`
-      : (isLocal ? 'http://localhost:3000/api' : 'https://offszn.lat/api');
+      : (isLocal ? 'http://localhost:3000/api' : `${window.location.origin}/api`);
 
     console.log("Checkout Manager Initialized");
 

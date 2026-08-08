@@ -16,7 +16,7 @@ window.HistoryManager = (function () {
         // Configuration
         const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
             ? 'http://localhost:3000/api'
-            : 'https://offszn.lat/api';
+            : `${window.location.origin}/api`;
 
         const HISTORY_ENDPOINT = `${API_URL}/me/history`;
 
@@ -81,7 +81,7 @@ window.HistoryManager = (function () {
         try {
             const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
                 ? 'http://localhost:3000/api'
-                : 'https://offszn.lat/api';
+                : `${window.location.origin}/api`;
 
             const response = await fetch(`${API_URL}/me/history`, {
                 headers: window.AuthUtils ? window.AuthUtils.getAuthHeaderObj() : {}

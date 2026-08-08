@@ -12,8 +12,8 @@ const EXPLORE_CONFIG = {
     HERO_ROTATE_MS: 10000
 };
 
-// API Configuration
-const API_URL = `${window.OFFSZN_CONFIG?.API_BASE_URL || 'https://offszn.lat'}/api`;
+// API Configuration - always use same origin to avoid cross-origin 308 redirects
+const API_URL = `${window.location.origin}/api`;
 
 // State
 let allProducts = [];
