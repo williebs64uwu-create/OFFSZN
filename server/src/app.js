@@ -52,7 +52,9 @@ const AGENT_ACCESS_KEY = process.env.AGENT_ACCESS_KEY || 'OFFSZN_MASTER_2026';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootPath = path.join(__dirname, '../../');
+// On Vercel, ESM→CJS compilation can break import.meta.url path resolution.
+// process.cwd() always returns /var/task/ (the project root) in Vercel Lambda.
+const rootPath = process.env.VERCEL ? process.cwd() : path.join(__dirname, '../../');
 
 // --- 0. SECURITY HEADERS (MANDATORY FOR FFMPEG WASM) ---
 app.use((req, res, next) => {
@@ -373,12 +375,14 @@ app.use((req, res, next) => {
 });
 
 // C1. Serve Static Files from Server Public (Prioritize this for moved assets)
-const publicPath = path.join(__dirname, '../../public');
-const serverPublicPath = path.join(__dirname, '../public'); // New server public path
+// Use rootPath-relative paths so they work on both local and Vercel
+const publicPath = path.join(rootPath, 'public');
+const serverPublicPath = path.join(rootPath, 'server/public');
 app.use(express.static(publicPath));
 app.use(express.static(serverPublicPath));
 
-app.use(express.static(rootPath));
+// Serve everything from rootPath — CSS, JS, images, HTML files, etc.
+app.use(express.static(rootPath, { dotfiles: 'deny' }));
 
 // --- 3.3.5 SERVER-SIDE ID OBFUSCATOR (Sync with script/id-obfuscator.js) ---
 const OBF_CHARS = 'qL8zF1Gk7XwNjR4yvB5tM6dncb9sPp2hQr3JmKW0ZTDVagHflSx_';
