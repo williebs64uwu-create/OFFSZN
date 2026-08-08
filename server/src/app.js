@@ -159,7 +159,6 @@ app.use(helmet({
                 "https://api.paypal.com", "https://www.paypal.com", "https://www.sandbox.paypal.com",
                 "https://api-m.paypal.com", "https://api-m.sandbox.paypal.com",
                 "https://cdn.jsdelivr.net", "https://unpkg.com", "https://cdnjs.cloudflare.com", "https://offszn.lat", "https://*.offszn.lat",
-                "https://offszn-oc7c.onrender.com", "https://*.onrender.com",
                 "http://localhost:*",
                 "https://*.googleapis.com", "https://accounts.google.com", "https://apis.google.com",
                 "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com",
