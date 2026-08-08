@@ -1,8 +1,9 @@
 /**
- * YouTube Uploader Module for OFFSZN (v2 — Server-Side Render)
- * Uses server-side FFmpeg for video generation (fast, ~3-5 sec).
+ * YouTube Uploader Module for OFFSZN (v2 — Client-Side WASM Render)
+ * Uses FFmpeg.wasm (single-threaded, no COOP/COEP required) for client-side video generation.
  * Handles Google OAuth and YouTube Data API uploads client-side.
  */
+
 
 const YouTubeUploader = (function () {
     // Configuration
@@ -193,34 +194,85 @@ const YouTubeUploader = (function () {
                 const statusText = document.getElementById('yt-status-text');
 
                 try {
-                    // SERVER-SIDE RENDER (fast!)
-                    if (statusText) statusText.innerText = 'Creando video...';
+                    // ─── CLIENT-SIDE WASM RENDER (no server timeout) ───
+                    if (statusText) statusText.innerText = '⏳ Cargando FFmpeg...';
 
-                    const formData = new FormData();
-                    formData.append('cover', data.coverBlob, 'cover.jpg');
-                    formData.append('audio', data.audioBlob, 'audio.mp3');
-
-                    const session = await window.supabaseClient.auth.getSession();
-                    const token = session.data.session?.access_token;
-                    if (!token) throw new Error('Sesión expirada. Recarga la página.');
-
-                    const apiBase = window.OFFSZN_CONFIG?.API_BASE_URL || '';
-
-                    const response = await fetch(`${apiBase}/api/youtube/render-video`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${token}` },
-                        body: formData
-                    });
-
-                    if (!response.ok) {
-                        const errData = await response.json().catch(() => ({}));
-                        throw new Error(errData.error || `Error ${response.status}`);
+                    // Load FFmpeg.wasm lazily on first use
+                    if (!window._ffmpegWasmLoaded) {
+                        await new Promise((resolve, reject) => {
+                            const s = document.createElement('script');
+                            s.src = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js';
+                            s.onload = resolve;
+                            s.onerror = () => reject(new Error('No se pudo cargar FFmpeg.wasm'));
+                            document.head.appendChild(s);
+                        });
+                        window._ffmpegWasmLoaded = true;
                     }
 
-                    if (statusText) statusText.innerText = 'Procesando video...';
+                    const { createFFmpeg, fetchFile } = FFmpeg;
+                    const ffmpeg = createFFmpeg({
+                        log: false,
+                        corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js'
+                    });
 
-                    const videoArrayBuffer = await response.arrayBuffer();
-                    renderedVideoBlob = new Blob([videoArrayBuffer], { type: 'video/mp4' });
+                    // Progress callback
+                    ffmpeg.setLogger(({ type, message }) => {
+                        if (type === 'fferr' && message.includes('time=')) {
+                            const match = message.match(/time=(\d+:\d+:\d+)/);
+                            if (match && statusText) {
+                                statusText.innerText = `🎬 Renderizando... ${match[1]}`;
+                            }
+                        }
+                    });
+
+                    if (statusText) statusText.innerText = '⏳ Iniciando FFmpeg (primera vez ~20s)...';
+                    await ffmpeg.load();
+
+                    // Write files to WASM virtual filesystem
+                    if (statusText) statusText.innerText = '📁 Preparando archivos...';
+                    ffmpeg.FS('writeFile', 'cover.jpg', await fetchFile(data.coverBlob));
+
+                    const isWav = data.audioBlob?.type?.includes('wav');
+                    const audioFile = isWav ? 'audio.wav' : 'audio.mp3';
+                    ffmpeg.FS('writeFile', audioFile, await fetchFile(data.audioBlob));
+
+                    if (statusText) statusText.innerText = '🎬 Generando video (1-2 min)...';
+
+                    const audioCodecArgs = isWav
+                        ? ['-c:a', 'aac', '-b:a', '192k']
+                        : ['-c:a', 'copy'];
+
+                    await ffmpeg.run(
+                        '-loop', '1', '-r', '1',
+                        '-i', 'cover.jpg',
+                        '-i', audioFile,
+                        '-threads', '1',
+                        '-filter_complex', '[0:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=black,format=yuv420p[v]',
+                        '-map', '[v]', '-map', '1:a',
+                        '-c:v', 'libx264',
+                        '-preset', 'ultrafast',
+                        '-tune', 'stillimage',
+                        '-crf', '28',
+                        '-max_muxing_queue_size', '1024',
+                        '-g', '2',
+                        ...audioCodecArgs,
+                        '-r', '1',
+                        '-pix_fmt', 'yuv420p',
+                        '-shortest',
+                        '-movflags', '+faststart',
+                        '-y', 'output.mp4'
+                    );
+
+                    // Read output and create blob
+                    const outData = ffmpeg.FS('readFile', 'output.mp4');
+                    renderedVideoBlob = new Blob([outData.buffer], { type: 'video/mp4' });
+
+                    // Cleanup WASM filesystem
+                    try {
+                        ffmpeg.FS('unlink', 'cover.jpg');
+                        ffmpeg.FS('unlink', audioFile);
+                        ffmpeg.FS('unlink', 'output.mp4');
+                    } catch (_) {}
 
                     btnRender.innerText = 'Video Listo ✅';
                     btnRender.style.background = '#10b981';
@@ -230,7 +282,7 @@ const YouTubeUploader = (function () {
                         publishBtn.disabled = false;
                         publishBtn.style.opacity = '1';
                         publishBtn.style.cursor = 'pointer';
-                        publishBtn.title = "";
+                        publishBtn.title = '';
                     }
 
                 } catch (e) {
