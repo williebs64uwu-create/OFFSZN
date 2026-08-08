@@ -2052,29 +2052,16 @@ window.handlePublish = async function () {
                     throw new Error('Faltan archivos para generar el video (Portada/MP3)');
                 }
 
-                // 3c. Render Video (Server-side)
-                if (overlayText) overlayText.innerText = 'Renderizando en el servidor (3-5 seg)...';
-                // Use the token for render API too if needed (optional if Supabase handles it, but good for context)
-                const session = await window.supabaseClient.auth.getSession();
-                const supabaseToken = session.data.session?.access_token;
+                // 3c. Render Video (Client-side WASM in browser)
+                if (overlayText) overlayText.innerText = 'Renderizando video en tu PC (WASM)...';
                 
-                const formData = new FormData();
-                formData.append('cover', coverBlob, 'cover.jpg');
-                formData.append('audio', audioBlob, 'audio.mp3');
-
-                const response = await fetch('/api/youtube/render-video', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${supabaseToken}` },
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.error || `Error de render: ${response.status}`);
-                }
-
-                const videoArrayBuffer = await response.arrayBuffer();
-                const renderedVideoBlob = new Blob([videoArrayBuffer], { type: 'video/mp4' });
+                const renderedVideoBlob = await window.YouTubeUploader.renderVideoWasm(
+                    coverBlob,
+                    audioBlob,
+                    (msg) => {
+                        if (overlayText) overlayText.innerText = msg;
+                    }
+                );
                 
                 updatePremiumProgress(50, 0.5);
                 updatePremiumProgress(80, 5, 'none'); // Lentamente subir a 80 mientras YouTube carga
