@@ -1382,8 +1382,10 @@ function renderTrackRowMobile(p) {
     tags.push(type);
     if (p.key_name || p.key) tags.push(p.key_name || p.key);
 
+    const seoLink = window.createSeoLink ? window.createSeoLink(p) : `/producto.html?id=${p.id}`;
+
     return `
-        <div class="offszn-m-track-v2" data-product-id="${p.id}" onclick="window.location.href='/product.html?id=${p.id}'">
+        <div class="offszn-m-track-v2" data-product-id="${p.id}" onclick="window.location.href='${seoLink}'">
             <div class="m-v2-main-row">
                 <div class="m-v2-thumb" onclick="event.stopPropagation(); window.handleTrackPlay(event, '${p.id}')">
                     <img ${imgAttr} data-r2-version="${storageVer}" data-product-id="${p.id}" alt="${escapeHTML(title)}">
@@ -1407,7 +1409,7 @@ function renderTrackRowMobile(p) {
                         <i class="bi ${isLiked ? 'bi-heart-fill liked' : 'bi-heart'}"></i>
                     </button>
                     <div class="m-v2-price-btn ${displayPrice === 'GRATIS' ? 'free' : ''}" 
-                         onclick="event.stopPropagation(); window.location.href='/product.html?id=${p.id}'">
+                         onclick="event.stopPropagation(); window.location.href='${seoLink}'">
                         ${displayPrice === 'GRATIS' ? '<i class="bi bi-download"></i>' : escapeHTML(displayPrice)}
                     </div>
                 </div>

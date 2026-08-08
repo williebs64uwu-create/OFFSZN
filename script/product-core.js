@@ -2706,7 +2706,7 @@ function renderRelatedGrid(products, container) {
 
         const producer = p.producer || {};
         const producerName = producer.nickname || 'Unknown';
-        const seoLink = window.createSeoLink ? window.createSeoLink(p) : `/product.html?id=${p.id}`;
+        const seoLink = window.createSeoLink ? window.createSeoLink(p) : `/producto.html?id=${p.id}`;
         const plays = p.plays_count || 0;
 
         // Construct JSON for artist hover card
