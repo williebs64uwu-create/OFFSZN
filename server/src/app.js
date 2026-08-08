@@ -893,7 +893,9 @@ app.get(['/@:username/:slug', '/:username/:slug'], async (req, res, next) => {
     if (!fs.existsSync(playlistPagePath)) return next();
 
     // 1. Reserved Words Exclusion (same as profile)
-    const reserved = ['api', 'auth', 'dashboard', 'login', 'register', 'admin', 'pages', 'legal', 'studio', 'comunidad', 'cursos'];
+    const reserved = ['api', 'auth', 'dashboard', 'login', 'register', 'admin', 'pages', 'legal', 'studio', 'comunidad', 'cursos',
+        'plugins', 'css', 'script', 'scripts', 'libs', 'images', 'components', 'recursos', 'public', 'style', 'fonts',
+        'videos', 'ayuda', 'build', 'cuenta', 'store-builder', 'offszn_flow', 'upload', 'previews'];
     if (reserved.includes(username)) return next();
 
     try {
@@ -973,12 +975,14 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
     // 1. Reserved Words / Known Routes Exclusion
     const reserved = [
         'api', 'auth', 'dashboard', 'login', 'register', 'admin',
-        'css', 'script', 'images', 'favicon.ico', '404', 'robots.txt',
+        'css', 'script', 'scripts', 'images', 'favicon.ico', '404', 'robots.txt',
         'pages', 'welcome', 'home', 'index', 'health', 'status', 'components',
         'explorar', 'productores', 'feeds', 'reels', 'carrito', 'checkout',
         'transacciones', 'ajustes', 'subir-kit', 'mis-compras', 'notificaciones',
         'preferencias', 'favoritos', 'historial', 'mensajes', 'perfilpro',
-        'siguiendo', 'search', 'comunidad', 'cursos', 'legal', 'recursos', 'planes', 'cuenta'
+        'siguiendo', 'search', 'comunidad', 'cursos', 'legal', 'recursos', 'planes', 'cuenta',
+        'plugins', 'libs', 'style', 'fonts', 'videos', 'ayuda', 'build', 'public',
+        'store-builder', 'upload', 'previews', 'offszn_flow', 'studio'
     ];
     if (reserved.includes(username)) return next();
 
