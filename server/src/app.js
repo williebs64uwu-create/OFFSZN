@@ -331,6 +331,20 @@ app.use((req, res, next) => {
     next();
 });
 
+// --- 301 LEGACY REDIRECTS (from _redirects - Vercel ignores that file) ---
+// Fix Google Search Console 404s for old /product.html URLs
+app.get('/product.html', (req, res) => {
+    const qs = req.url.includes('?') ? '?' + req.url.split('?')[1] : '';
+    res.redirect(301, `/producto.html${qs}`);
+});
+app.get('/product', (req, res) => {
+    const qs = req.url.includes('?') ? '?' + req.url.split('?')[1] : '';
+    res.redirect(301, `/producto.html${qs}`);
+});
+app.get('/recursos/x-flow-analyzer', (req, res) => {
+    res.redirect(301, '/plugins/x-flow-analyzer.html');
+});
+
 // B. Clean URLs (Force Redirects & Internal Rewrites)
 app.use((req, res, next) => {
     // Skip API routes and FFmpeg/Debug folders to avoid loops or blocking
