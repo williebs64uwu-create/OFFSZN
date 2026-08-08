@@ -400,7 +400,154 @@ function serverDecodeId(str) {
     return Math.floor((n - OBF_SALT) / OBF_MULT);
 }
 
-// --- 3.3.5 OG IMAGE PROXY (Lightweight redirect for social media bots) ---
+function serverEncodeId(num) {
+    if (num === null || num === undefined || isNaN(num)) return '';
+    let n = Number(num) * OBF_MULT + OBF_SALT;
+    if (n === 0) return OBF_CHARS[0];
+    let res = '';
+    while (n > 0) {
+        res = OBF_CHARS[n % OBF_BASE] + res;
+        n = Math.floor(n / OBF_BASE);
+    }
+    return res;
+}
+
+// --- 3.3.6 301 REDIRECTS FOR LEGACY /product.html TO FIX GSC 404s ---
+app.get(['/product.html', '/product'], (req, res) => {
+    const id = req.query.id || req.query.p;
+    if (id) {
+        return res.redirect(301, `/producto.html?id=${encodeURIComponent(id)}`);
+    }
+    return res.redirect(301, '/producto.html');
+});
+
+// --- 3.3.7 DYNAMIC SITEMAP.XML GENERATOR (Includes All Producers & Products) ---
+let sitemapCache = null;
+let sitemapCacheTime = 0;
+const SITEMAP_CACHE_DURATION = 3600 * 1000; // 1 hora de cache en memoria
+
+app.get('/sitemap.xml', async (req, res) => {
+    try {
+        const now = Date.now();
+        if (sitemapCache && (now - sitemapCacheTime < SITEMAP_CACHE_DURATION)) {
+            res.setHeader('Content-Type', 'application/xml');
+            return res.send(sitemapCache);
+        }
+
+        const { supabase: db } = await import('./infrastructure/database/connection.js');
+        const today = new Date().toISOString().split('T')[0];
+
+        // 1. Static Core Pages
+        const staticPages = [
+            { loc: 'https://offszn.lat/', priority: '1.0', changefreq: 'daily' },
+            { loc: 'https://offszn.lat/explorar.html', priority: '0.9', changefreq: 'daily' },
+            { loc: 'https://offszn.lat/search.html', priority: '0.9', changefreq: 'daily' },
+            { loc: 'https://offszn.lat/comunidad/productores.html', priority: '0.8', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/cursos/inicio.html', priority: '0.8', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/recursos/drum-kits.html', priority: '0.8', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/recursos/presets.html', priority: '0.8', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/recursos/one-shots.html', priority: '0.7', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/recursos/samples-loops.html', priority: '0.8', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/recursos/recursos-gratis.html', priority: '0.8', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/recursos/plugins.html', priority: '0.7', changefreq: 'monthly' },
+            { loc: 'https://offszn.lat/plugins/all.html', priority: '0.8', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/plugins/easy-mix.html', priority: '0.9', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/plugins/easy-master.html', priority: '0.9', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/plugins/inka-kola.html', priority: '0.9', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/plugins/offszn-recorder.html', priority: '0.8', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/plugins/x-flow-analyzer.html', priority: '0.8', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/legal/ayuda-y-contacto.html', priority: '0.5', changefreq: 'monthly' }
+        ];
+
+        // 2. Fetch Public Producers from DB
+        const { data: producers } = await db
+            .from('users')
+            .select('nickname, updated_at')
+            .not('nickname', 'is', null)
+            .limit(1000);
+
+        // 3. Fetch Active Products from DB
+        const { data: products } = await db
+            .from('products')
+            .select('id, public_slug, product_type, updated_at')
+            .neq('status', 'deleted')
+            .limit(2000);
+
+        let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+
+        // Add Static Pages
+        for (const page of staticPages) {
+            xml += '  <url>\n';
+            xml += `    <loc>${page.loc}</loc>\n`;
+            xml += `    <lastmod>${today}</lastmod>\n`;
+            xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
+            xml += `    <priority>${page.priority}</priority>\n`;
+            xml += '  </url>\n';
+        }
+
+        // Add Producers (@username)
+        if (producers && producers.length > 0) {
+            for (const prod of producers) {
+                if (!prod.nickname || prod.nickname.includes('/') || prod.nickname.includes(' ')) continue;
+                const lastmod = prod.updated_at ? prod.updated_at.split('T')[0] : today;
+                xml += '  <url>\n';
+                xml += `    <loc>https://offszn.lat/@${encodeURIComponent(prod.nickname)}</loc>\n`;
+                xml += `    <lastmod>${lastmod}</lastmod>\n`;
+                xml += '    <changefreq>daily</changefreq>\n';
+                xml += '    <priority>0.8</priority>\n';
+                xml += '  </url>\n';
+            }
+        }
+
+        // Add Products (/p/code or /beat/slug)
+        if (products && products.length > 0) {
+            for (const item of products) {
+                const code = serverEncodeId(item.id);
+                let loc = `https://offszn.lat/p/${code}`;
+                if (item.public_slug) {
+                    const type = (item.product_type || 'beat').toLowerCase();
+                    let prefix = 'beat';
+                    if (type.includes('drumkit')) prefix = 'drumkit';
+                    else if (type.includes('loopkit')) prefix = 'loopkit';
+                    else if (type.includes('kit')) prefix = 'kit';
+                    else if (type.includes('preset') || type.includes('voces')) prefix = 'preset';
+                    else if (type.includes('sample')) prefix = 'sample';
+                    else if (type.includes('instrumento')) prefix = 'instrumento';
+                    else if (type.includes('plugin')) prefix = 'plugin';
+                    else if (type.includes('plantilla')) prefix = 'plantilla';
+                    loc = `https://offszn.lat/${prefix}/${item.public_slug}`;
+                }
+                const lastmod = item.updated_at ? item.updated_at.split('T')[0] : today;
+                xml += '  <url>\n';
+                xml += `    <loc>${loc}</loc>\n`;
+                xml += `    <lastmod>${lastmod}</lastmod>\n`;
+                xml += '    <changefreq>weekly</changefreq>\n';
+                xml += '    <priority>0.8</priority>\n';
+                xml += '  </url>\n';
+            }
+        }
+
+        xml += '</urlset>';
+
+        sitemapCache = xml;
+        sitemapCacheTime = now;
+
+        res.setHeader('Content-Type', 'application/xml');
+        return res.send(xml);
+    } catch (err) {
+        console.error('[Sitemap Generator] Error:', err.message);
+        // Fallback to static sitemap if DB error
+        const staticSitemap = path.join(rootPath, 'sitemap.xml');
+        if (fs.existsSync(staticSitemap)) {
+            res.setHeader('Content-Type', 'application/xml');
+            return res.sendFile(staticSitemap);
+        }
+        res.status(500).send('Error generating sitemap');
+    }
+});
+
+// --- 3.3.8 OG IMAGE PROXY (Lightweight redirect for social media bots) ---
 app.get('/api/og-image/:productId', async (req, res) => {
     try {
         const { supabase: db } = await import('./infrastructure/database/connection.js');
@@ -446,7 +593,7 @@ app.get('/api/og-image/:productId', async (req, res) => {
     }
 });
 
-// --- 3.4 PRODUCT SHORTCUT ROUTES (SEO Friendly with Dynamic OG Tags) ---
+// --- 3.4 PRODUCT SHORTCUT ROUTES (SEO Friendly with Dynamic OG Tags & Clean Canonicals) ---
 app.get([
     '/beat/:slug', '/kit/:slug', '/drumkit/:slug', '/loopkit/:slug',
     '/preset/:slug', '/plantilla/:slug', '/sample/:slug',
@@ -482,51 +629,49 @@ app.get([
 
         const { data: product } = await query.maybeSingle();
 
+        // 3. Return real 404 if product does not exist (Prevents Soft 404s in GSC)
+        if (!product) {
+            return res.status(404).sendFile(path.join(rootPath, '404.html'));
+        }
+
         let html = fs.readFileSync(productPagePath, 'utf8');
 
-        if (product) {
-            const producerName = product.users?.nickname || 'Productor';
-            const title = `${product.name} - ${producerName} | OFFSZN`;
-            const price = product.is_free ? 'GRATIS' : `$${product.price_basic || '0.00'}`;
-            const description = product.description 
-                ? product.description.substring(0, 300) + '...'
-                : `Descarga "${product.name}" por ${producerName}. ${price} en OFFSZN.lat`;
-            
-            // Image Logic - Use DIRECT public URLs for maximum social media compatibility
-            // The Supabase 'products' bucket is PUBLIC, so all covers stored there are directly accessible.
-            // For R2 stored products, covers are also mirrored to Supabase OR we can use the proxy.
-            const SUPABASE_PUBLIC_STORAGE = 'https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products';
-            let image = product.image_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
-            const version = product.storage_version || 'v2';
-            
-            if (image.startsWith('http')) {
-                // Full URL — if it's a private R2 URL, extract key and try Supabase public
-                // Note: v2 thumbnails are usually in R2, so route to r2-public if version is v2.
-                if (image.includes('r2.cloudflarestorage.com')) {
-                    try {
-                        const urlObj = new URL(image);
-                        let key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
-                        if (version === 'v2') {
-                            image = `https://offszn.lat/api/r2-public/${key}`;
-                        } else {
-                            image = `${SUPABASE_PUBLIC_STORAGE}/${key}`;
-                        }
-                    } catch (e) {
-                        image = `https://offszn.lat/api/r2-public/${image}`;
+        const producerName = product.users?.nickname || 'Productor';
+        const title = `${product.name} - ${producerName} | OFFSZN`;
+        const price = product.is_free ? 'GRATIS' : `$${product.price_basic || '0.00'}`;
+        const description = product.description 
+            ? product.description.substring(0, 300) + '...'
+            : `Descarga "${product.name}" por ${producerName}. ${price} en OFFSZN.lat`;
+        
+        const SUPABASE_PUBLIC_STORAGE = 'https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products';
+        let image = product.image_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
+        const version = product.storage_version || 'v2';
+        
+        if (image.startsWith('http')) {
+            if (image.includes('r2.cloudflarestorage.com')) {
+                try {
+                    const urlObj = new URL(image);
+                    let key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
+                    if (version === 'v2') {
+                        image = `https://offszn.lat/api/r2-public/${key}`;
+                    } else {
+                        image = `${SUPABASE_PUBLIC_STORAGE}/${key}`;
                     }
-                }
-            } else {
-                // Relative path
-                if (version === 'v2') {
+                } catch (e) {
                     image = `https://offszn.lat/api/r2-public/${image}`;
-                } else {
-                    image = `${SUPABASE_PUBLIC_STORAGE}/${image}`;
                 }
             }
+        } else {
+            if (version === 'v2') {
+                image = `https://offszn.lat/api/r2-public/${image}`;
+            } else {
+                image = `${SUPABASE_PUBLIC_STORAGE}/${image}`;
+            }
+        }
 
-            const url = `https://offszn.lat${req.originalUrl}`;
+        const url = `https://offszn.lat${req.originalUrl.split('?')[0]}`;
 
-            const ogTags = `
+        const ogTags = `
     <!-- Dynamic Product OG Tags -->
     <meta property="og:title" content="${title}">
     <meta property="og:description" content="${description}">
@@ -542,35 +687,42 @@ app.get([
     <meta name="twitter:title" content="${title}">
     <meta name="twitter:description" content="${description}">
     <meta name="twitter:image" content="${image}">
-            `;
+        `;
 
-            const productSchema = {
-                "@context": "https://schema.org",
-                "@type": "Product",
-                "name": product.name,
-                "image": image,
-                "description": product.description || description,
-                "sku": product.id,
-                "brand": { "@type": "Brand", "name": "OFFSZN" },
-                "offers": {
-                    "@type": "Offer",
-                    "url": url,
-                    "priceCurrency": "USD",
-                    "price": product.price_basic || 0,
-                    "availability": "https://schema.org/InStock"
-                }
-            };
-            const schemaTag = `<script type="application/ld+json">${JSON.stringify(productSchema)}</script>`;
+        const productSchema = {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": product.name,
+            "image": image,
+            "description": product.description || description,
+            "sku": product.id,
+            "brand": { "@type": "Brand", "name": "OFFSZN" },
+            "offers": {
+                "@type": "Offer",
+                "url": url,
+                "priceCurrency": "USD",
+                "price": product.price_basic || 0,
+                "availability": "https://schema.org/InStock"
+            }
+        };
+        const schemaTag = `<script type="application/ld+json">${JSON.stringify(productSchema)}</script>`;
 
-            html = html.replace('<head>', `<head>\n${ogTags}\n    ${schemaTag}`);
-            html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
+        // CRITICAL: Replace static canonical with the product-specific canonical URL
+        const canonicalTag = `<link rel="canonical" href="${url}">`;
+        if (html.includes('<link rel="canonical"')) {
+            html = html.replace(/<link\s+rel=["']canonical["'][^>]*>/i, canonicalTag);
+        } else {
+            html = html.replace('<head>', `<head>\n    ${canonicalTag}`);
         }
+
+        html = html.replace('<head>', `<head>\n${ogTags}\n    ${schemaTag}`);
+        html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
 
         res.send(html);
 
     } catch (err) {
         console.error("Error serving dynamic product page:", err);
-        res.sendFile(productPagePath);
+        res.status(404).sendFile(path.join(rootPath, '404.html'));
     }
 });
 
@@ -625,6 +777,13 @@ app.get('/servicio/:slug', async (req, res, next) => {
     <meta name="twitter:description" content="${description}">
     <meta name="twitter:image" content="${image}">
                 `;
+
+                const canonicalTag = `<link rel="canonical" href="${url}">`;
+                if (html.includes('<link rel="canonical"')) {
+                    html = html.replace(/<link\s+rel=["']canonical["'][^>]*>/i, canonicalTag);
+                } else {
+                    html = html.replace('<head>', `<head>\n    ${canonicalTag}`);
+                }
 
                 html = html.replace('<head>', `<head>\n${ogTags}`);
                 html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
@@ -681,8 +840,6 @@ app.get([
                 image = `https://offszn.lat/api/r2-public/${image}`;
             }
 
-
-
             const url = `https://offszn.lat/b/${user.nickname}`;
 
             const ogTags = `
@@ -701,6 +858,13 @@ app.get([
     <meta name="twitter:description" content="${description}">
     <meta name="twitter:image" content="${image}">
             `;
+
+            const canonicalTag = `<link rel="canonical" href="${url}">`;
+            if (html.includes('<link rel="canonical"')) {
+                html = html.replace(/<link\s+rel=["']canonical["'][^>]*>/i, canonicalTag);
+            } else {
+                html = html.replace('<head>', `<head>\n    ${canonicalTag}`);
+            }
 
             // Insert tags right after <head>
             html = html.replace('<head>', `<head>\n${ogTags}`);
@@ -769,6 +933,13 @@ app.get(['/@:username/:slug', '/:username/:slug'], async (req, res, next) => {
     <meta name="twitter:image" content="${image}">
                 `;
 
+                const canonicalTag = `<link rel="canonical" href="${url}">`;
+                if (html.includes('<link rel="canonical"')) {
+                    html = html.replace(/<link\s+rel=["']canonical["'][^>]*>/i, canonicalTag);
+                } else {
+                    html = html.replace('<head>', `<head>\n    ${canonicalTag}`);
+                }
+
                 html = html.replace('<head>', `<head>\n${ogTags}`);
                 html = html.replace(/<title>.*?<\/title>/, `<title>${title}</title>`);
             }
@@ -822,7 +993,9 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
             .eq('nickname', username)
             .single();
 
-        if (!user) return next();
+        if (!user) {
+            return res.status(404).sendFile(path.join(rootPath, '404.html'));
+        }
 
         // --- TEMPLATE SELECTION ---
         let templateFile = 'perfil-publico.html';
@@ -890,6 +1063,14 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
         };
         const schemaTag = `<script type="application/ld+json">${JSON.stringify(personSchema)}</script>`;
 
+        // CRITICAL: Replace static canonical with the creator's specific canonical URL
+        const canonicalTag = `<link rel="canonical" href="${url}">`;
+        if (html.includes('<link rel="canonical"')) {
+            html = html.replace(/<link\s+rel=["']canonical["'][^>]*>/i, canonicalTag);
+        } else {
+            html = html.replace('<head>', `<head>\n    ${canonicalTag}`);
+        }
+
         // Specific Premium Template Placeholders
         if (user.template === 'premium') {
             html = html.replace('</head>', `
@@ -956,20 +1137,17 @@ app.use((err, req, res, next) => {
 });
 
 // Chequeo de BD
-checkConnection()
+// Export Express app for Vercel Serverless Function & local servers
+export default app;
 
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor corriendo en el puerto ${PORT}`)
-    console.log(`🌐 Accede a tu web en: http://localhost:${PORT}`)
-    console.log(`TIME: ${new Date().toISOString()}`)
+if (!process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
+        console.log(`🌐 Accede a tu web en: http://localhost:${PORT}`);
+        console.log(`TIME: ${new Date().toISOString()}`);
 
-    // --- START AUTOMATED TASKS ---
-    // Run scavenger on startup to clean any missed expirations
-    runSubscriptionScavenger();
-    
-    // Schedule to run every 12 hours
-    setInterval(runSubscriptionScavenger, 12 * 60 * 60 * 1000);
-
-    // Run Content Calendar Brevo Reminder Scanner (Deshabilitado temporalmente a petición del usuario)
-    // setInterval(checkAndSendRemindersInternal, 10 * 60 * 1000);
-});
+        // --- START AUTOMATED TASKS ---
+        runSubscriptionScavenger();
+        setInterval(runSubscriptionScavenger, 12 * 60 * 60 * 1000);
+    });
+}
