@@ -486,3 +486,79 @@ export const adminDeleteLicense = async (req, res) => {
         res.status(500).json({ error: 'Error interno.' });
     }
 };
+
+// ─── GET /api/plugin/admin/ab-stats ──────────────────────────────────────────
+// Admin-only: Returns real-time A/B Testing sales & revenue stats ($5 vs $10)
+export const adminGetABStats = async (req, res) => {
+    try {
+        const adminKey = req.query.admin_key || req.headers['x-admin-key'];
+        const expectedKey = process.env.PLUGIN_ADMIN_KEY || 'offszn-admin-2026';
+        if (adminKey !== expectedKey) return res.status(403).json({ error: 'Unauthorized' });
+
+        const { data: orderItems, error: itemsErr } = await supabase
+            .from('order_items')
+            .select(`
+                id,
+                price_at_purchase,
+                created_at,
+                order_id,
+                orders ( id, total_price, status, created_at, guest_email, user_id ),
+                products ( id, name )
+            `)
+            .in('product_id', [899, 900, 902])
+            .order('created_at', { ascending: false });
+
+        if (itemsErr) throw itemsErr;
+
+        const stats = {
+            easy_mix: { name: 'Easy Mix', count_5: 0, rev_5: 0, count_10: 0, rev_10: 0, total_sales: 0, total_rev: 0 },
+            easy_master: { name: 'Easy Master', count_5: 0, rev_5: 0, count_10: 0, rev_10: 0, total_sales: 0, total_rev: 0 },
+            inka_kola: { name: 'Inka Kola', count_5: 0, rev_5: 0, count_10: 0, rev_10: 0, total_sales: 0, total_rev: 0 },
+            global: { count_5: 0, rev_5: 0, count_10: 0, rev_10: 0, total_sales: 0, total_rev: 0 }
+        };
+
+        const recentPurchases = [];
+
+        (orderItems || []).forEach(item => {
+            const prodName = item.products?.name || (item.product_id === 902 ? 'Inka Kola' : (item.product_id === 900 ? 'Easy Master' : 'Easy Mix'));
+            let key = 'easy_mix';
+            if (prodName.toLowerCase().includes('master')) key = 'easy_master';
+            if (prodName.toLowerCase().includes('inka')) key = 'inka_kola';
+
+            const price = parseFloat(item.price_at_purchase || item.orders?.total_price || 0);
+
+            if (price === 5) {
+                stats[key].count_5++;
+                stats[key].rev_5 += 5;
+                stats.global.count_5++;
+                stats.global.rev_5 += 5;
+            } else if (price === 10) {
+                stats[key].count_10++;
+                stats[key].rev_10 += 10;
+                stats.global.count_10++;
+                stats.global.rev_10 += 10;
+            }
+
+            stats[key].total_sales++;
+            stats[key].total_rev += price;
+            stats.global.total_sales++;
+            stats.global.total_rev += price;
+
+            recentPurchases.push({
+                date: item.created_at || item.orders?.created_at,
+                plugin: stats[key].name,
+                price: price,
+                buyer: item.orders?.guest_email || 'Registrado'
+            });
+        });
+
+        return res.json({
+            success: true,
+            summary: stats,
+            recent: recentPurchases.slice(0, 15)
+        });
+    } catch (error) {
+        console.error('💥 [Admin AB Stats] Error:', error);
+        res.status(500).json({ error: 'Error al consultar métricas A/B.' });
+    }
+};

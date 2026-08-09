@@ -103,10 +103,15 @@ class PluginDirectCheckout {
                         headers['Authorization'] = `Bearer ${token}`;
                     }
 
+                    const createPayload = { directProductId: this.productId };
+                    if (window.CURRENT_PROMO_PRICE) {
+                        createPayload.customPrice = window.CURRENT_PROMO_PRICE;
+                    }
+
                     const response = await fetch('/api/orders/paypal/create', {
                         method: 'POST',
                         headers: headers,
-                        body: JSON.stringify({ directProductId: this.productId })
+                        body: JSON.stringify(createPayload)
                     });
 
                     if (!response.ok) {
@@ -136,13 +141,18 @@ class PluginDirectCheckout {
                         headers['Authorization'] = `Bearer ${token}`;
                     }
 
+                    const capturePayload = { 
+                        orderID: data.orderID,
+                        directProductId: this.productId 
+                    };
+                    if (window.CURRENT_PROMO_PRICE) {
+                        capturePayload.customPrice = window.CURRENT_PROMO_PRICE;
+                    }
+
                     const response = await fetch('/api/orders/paypal/capture', {
                         method: 'POST',
                         headers: headers,
-                        body: JSON.stringify({ 
-                            orderID: data.orderID,
-                            directProductId: this.productId 
-                        })
+                        body: JSON.stringify(capturePayload)
                     });
 
                     if (!response.ok) {

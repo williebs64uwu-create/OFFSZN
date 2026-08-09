@@ -1037,7 +1037,7 @@
                         <p style="color: #888; font-size: 0.85rem; margin-bottom: 18px;">Pago único. Sin suscripciones. Para siempre.</p>
                         <div style="display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-bottom: 24px;">
                             <span style="font-size: 1.3rem; text-decoration: line-through; color: rgba(255,255,255,0.3); font-weight: 500;">$25</span>
-                            <span style="font-size: 3rem; font-weight: 800; color: #fff;">$5</span>
+                            <span id="inka-kola-price-val" style="font-size: 3rem; font-weight: 800; color: #fff;">$5</span>
                             <span style="font-size: 1rem; color: #888;">único</span>
                         </div>
                         <ul style="list-style: none; padding: 0; margin: 0 0 28px 0; text-align: left; color: #aaa; flex-grow: 1;">
@@ -1436,10 +1436,47 @@
         }
     </script>
 
-    <!-- Direct Checkout Configuration and Loader -->
+    <!-- Direct Checkout Configuration and Loader with A/B Testing -->
     <script>
-        window.PLUGIN_ID = 902;
-        window.PLUGIN_NAME = 'INKA KOLA';
+        // ── A/B TESTING ENGINE (50/50 SPLIT: $5.00 USD vs $10.00 USD) ──
+        (function initABTesting() {
+            const STORAGE_KEY = 'offszn_ab_inka_kola_price';
+            const urlParams = new URLSearchParams(window.location.search);
+            const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
+
+            let assignedPrice;
+            if (forcedPrice === '5' || forcedPrice === '10') {
+                assignedPrice = parseInt(forcedPrice, 10);
+                localStorage.setItem(STORAGE_KEY, assignedPrice);
+            } else {
+                let saved = localStorage.getItem(STORAGE_KEY);
+                if (saved === '5' || saved === '10') {
+                    assignedPrice = parseInt(saved, 10);
+                } else {
+                    assignedPrice = Math.random() < 0.5 ? 5 : 10;
+                    localStorage.setItem(STORAGE_KEY, assignedPrice);
+                }
+            }
+
+            window.CURRENT_PROMO_PRICE = assignedPrice;
+            window.PLUGIN_ID = 902;
+            window.PLUGIN_NAME = 'INKA KOLA';
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const priceEl = document.getElementById('inka-kola-price-val');
+                if (priceEl) priceEl.innerText = `$${assignedPrice}`;
+
+                const waLinks = document.querySelectorAll('a[href*="wa.me"]');
+                waLinks.forEach(link => {
+                    let currentHref = link.getAttribute('href');
+                    if (currentHref.includes('text=')) {
+                        let parts = currentHref.split('text=');
+                        let baseText = decodeURIComponent(parts[1]).replace(/por\s+\$?\d+(\s*USD)?/gi, '').trim();
+                        link.setAttribute('href', `${parts[0]}text=${encodeURIComponent(baseText + ' por $' + assignedPrice + ' USD')}`);
+                    }
+                });
+            });
+        })();
     </script>
     <script src="/script/plugin-checkout.js?v=2"></script>
 </body>

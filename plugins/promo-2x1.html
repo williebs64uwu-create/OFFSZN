@@ -474,7 +474,7 @@
         
         <div class="price-section">
             <span class="original-price">$35 USD</span>
-            <span class="promo-price">$5.00 <span>USD</span></span>
+            <span class="promo-price">$10.00 <span>USD</span></span>
         </div>
 
         <!-- PayPal Button Container -->
@@ -530,9 +530,49 @@
     <!-- Direct Checkout Configuration and Loader -->
     <script src="/env.js"></script>
     <script>
-        // Configura el ID del producto que se compra (Easy Mix - $5 USD)
-        // El backend generará automáticamente Easy Mix + Easy Master (2x1) de por vida.
-        window.PLUGIN_ID = 899;
+        // ── A/B TESTING ENGINE (50/50 SPLIT: $5.00 USD vs $10.00 USD) ──
+        (function initABTesting() {
+            const STORAGE_KEY = 'offszn_ab_promo_2x1_price';
+            const urlParams = new URLSearchParams(window.location.search);
+            const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
+
+            let assignedPrice;
+            if (forcedPrice === '5' || forcedPrice === '10') {
+                assignedPrice = parseInt(forcedPrice, 10);
+                localStorage.setItem(STORAGE_KEY, assignedPrice);
+            } else {
+                let saved = localStorage.getItem(STORAGE_KEY);
+                if (saved === '5' || saved === '10') {
+                    assignedPrice = parseInt(saved, 10);
+                } else {
+                    // Random 50/50 distribution
+                    assignedPrice = Math.random() < 0.5 ? 5 : 10;
+                    localStorage.setItem(STORAGE_KEY, assignedPrice);
+                }
+            }
+
+            window.CURRENT_PROMO_PRICE = assignedPrice;
+            window.PLUGIN_ID = 899;
+
+            // Render initial price
+            document.addEventListener('DOMContentLoaded', () => {
+                const priceEl = document.querySelector('.promo-price');
+                if (priceEl) {
+                    priceEl.innerHTML = `$${assignedPrice}.00 <span>USD</span>`;
+                }
+
+                // Update WhatsApp and Payment links with assigned price
+                const waLinks = document.querySelectorAll('a[href*="wa.me"]');
+                waLinks.forEach(link => {
+                    let currentHref = link.getAttribute('href');
+                    if (currentHref.includes('text=')) {
+                        let parts = currentHref.split('text=');
+                        let baseText = decodeURIComponent(parts[1]).replace(/por\s+\$?\d+(\s*USD)?/gi, '').trim();
+                        link.setAttribute('href', `${parts[0]}text=${encodeURIComponent(baseText + ' por $' + assignedPrice + ' USD')}`);
+                    }
+                });
+            });
+        })();
 
         // COUNTDOWN TIMER (Contador local 24h con reinicio automático continuo)
         (function () {

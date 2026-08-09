@@ -204,17 +204,23 @@ export const createPayPalOrder = async (req, res) => {
                     productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
                 } else if (String(directProductId) === '900') {
                     productObj = { id: 900, name: 'Easy Master', price_basic: 5, producer_id: null };
-                } else if (String(directProductId) === '901') {
-                    productObj = { id: 901, name: 'Easy Mix', price_basic: 5, producer_id: null };
+                } else if (String(directProductId) === '899' || String(directProductId) === '901') {
+                    productObj = { id: 899, name: 'Easy Mix', price_basic: 10, producer_id: null };
                 } else {
                     return res.status(404).json({ error: 'Producto no encontrado' });
                 }
             }
 
+            let variantPrice = productObj.price_basic || 10;
+            const requestedCustomPrice = parseFloat(req.body.customPrice || req.body.abPrice);
+            if (requestedCustomPrice && (requestedCustomPrice === 5 || requestedCustomPrice === 10)) {
+                variantPrice = requestedCustomPrice;
+            }
+
             cartItems = [{
                 product: productObj,
                 license_name: 'lifetime',
-                variant_price: productObj.price_basic || 5
+                variant_price: variantPrice
             }];
         } else if (isNegotiation && negotiateToken) {
             // NEGOTIATION FLOW
@@ -650,18 +656,24 @@ export const capturePayPalOrder = async (req, res) => {
                         productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
                     } else if (String(directProductId) === '900') {
                         productObj = { id: 900, name: 'Easy Master', price_basic: 5, producer_id: null };
-                    } else if (String(directProductId) === '901') {
-                        productObj = { id: 901, name: 'Easy Mix', price_basic: 5, producer_id: null };
+                    } else if (String(directProductId) === '899' || String(directProductId) === '901') {
+                        productObj = { id: 899, name: 'Easy Mix', price_basic: 10, producer_id: null };
                     }
                 }
 
                 if (!productObj) {
                     console.error("[PayPalCapture] Product not found during direct checkout:", directProductId);
                 } else {
+                    let variantPrice = productObj.price_basic || 10;
+                    const requestedCustomPrice = parseFloat(req.body.customPrice || req.body.abPrice);
+                    if (requestedCustomPrice && (requestedCustomPrice === 5 || requestedCustomPrice === 10)) {
+                        variantPrice = requestedCustomPrice;
+                    }
+
                     cartItems = [{
                         product: productObj,
                         license_name: 'lifetime',
-                        variant_price: productObj.price_basic || 5
+                        variant_price: variantPrice
                     }];
                 }
             } else if (isNegotiation && negotiateToken) {

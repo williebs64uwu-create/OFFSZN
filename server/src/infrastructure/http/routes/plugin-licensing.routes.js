@@ -1,5 +1,5 @@
 import express from 'express';
-import { requestTrial, activateSerial, generateWebLicense, generateTrialWebLicense, adminResetLicense, adminDeleteLicense } from '../controllers/PluginLicensingController.js';
+import { requestTrial, activateSerial, generateWebLicense, generateTrialWebLicense, adminResetLicense, adminDeleteLicense, adminGetABStats } from '../controllers/PluginLicensingController.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 
 const router = express.Router();
@@ -16,5 +16,7 @@ router.post('/generate-trial-web', authenticateTokenMiddleware, generateTrialWeb
 router.post('/admin/reset-license', adminResetLicense);
 // Admin: Solo borrar licencia (sin crear reemplazo)
 router.post('/admin/delete-license', adminDeleteLicense);
+// Admin: Métricas en vivo de A/B Testing ($5 vs $10 USD)
+router.get('/admin/ab-stats', adminGetABStats);
 
 export default router;
