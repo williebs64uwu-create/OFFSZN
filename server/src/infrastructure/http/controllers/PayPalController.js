@@ -1105,7 +1105,8 @@ export const capturePayPalOrder = async (req, res) => {
                         const prodName = item.product?.name || '';
                         const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix');
                         const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster');
-                        const isPlugin = isEasyMix || isEasyMaster;
+                        const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola');
+                        const isPlugin = isEasyMix || isEasyMaster || isInkaKola;
 
                         // A. Notify Client (Receipt) — includes serial key for plugin purchases
                         const serialKeySection = (isPlugin && generatedLicenseKey) ? `
@@ -1117,13 +1118,16 @@ export const capturePayPalOrder = async (req, res) => {
                         ` : '';
 
                         const downloadLinks = isPlugin ? (
-                            isEasyMaster ? {
+                            isInkaKola ? {
+                                win: '/installer_output/INKA_KOLA_Setup.exe',
+                                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+                            } : (isEasyMaster ? {
                                 win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
                                 mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
                             } : {
                                 win: 'https://drive.google.com/file/d/12UsLyKVAmk7AdVCvXDQJL-COWXqeGUbe/view?usp=sharing',
                                 mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
-                            }
+                            })
                         ) : null;
 
                         const downloadSection = (isPlugin && downloadLinks) ? `
