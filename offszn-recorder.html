@@ -16,7 +16,7 @@
     <meta name="theme-color" content="#0a0a0a">
     <!-- Open Graph -->
     <meta property="og:title" content="SAMPLE v1.0 | Plugin Gratuito de Grabación Retro - OFFSZN">
-    <meta property="og:description" content="Graba audio en tiempo real en tu DAW con estética Game Boy. Eliminación de silencios, explorador de tomas y drag & drop directo para Windows.">
+    <meta property="og:description" content="Graba cualquier audio de tu pc, y arrastra a tus proyectos para usarlo. Eliminación de silencios, explorador de tomas y drag & drop directo para Windows.">
     <meta property="og:image" content="https://offszn.lat/plugins/offszn-recorder.png">
     <meta property="og:url" content="https://offszn.lat/plugins/offszn-recorder">
     <meta property="og:type" content="product">
@@ -115,6 +115,7 @@
             margin-bottom: 50px;
         }
 
+        /* Botón sin glow como pidió el usuario */
         .btn-free-download {
             display: inline-flex;
             align-items: center;
@@ -126,15 +127,17 @@
             padding: 16px 36px;
             border-radius: 14px;
             text-decoration: none;
-            box-shadow: 0 0 35px rgba(181, 196, 144, 0.35);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.25s ease;
         }
 
         .btn-free-download:hover {
-            transform: translateY(-3px) scale(1.02);
-            background: #b5c490;
-            box-shadow: 0 0 45px rgba(181, 196, 144, 0.6);
+            transform: translateY(-2px);
+            background: #e6e6e6;
             color: #000;
+            box-shadow: none;
         }
 
         .btn-status-badge {
@@ -183,27 +186,15 @@
 
         /* ==================== FEATURES ==================== */
         .feature-section {
-            padding: 80px 0;
+            padding: 90px 0;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .alt-bg {
-            background: rgba(255, 255, 255, 0.015);
         }
 
         .content-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1.1fr 1fr;
             gap: 60px;
             align-items: center;
-        }
-
-        .content-grid.reverse {
-            direction: rtl;
-        }
-
-        .content-grid.reverse > * {
-            direction: ltr;
         }
 
         .feature-tag {
@@ -226,7 +217,7 @@
             color: #a0a0a0;
             font-size: 1.05rem;
             line-height: 1.7;
-            margin-bottom: 24px;
+            margin-bottom: 26px;
         }
 
         .feature-list {
@@ -235,20 +226,23 @@
             margin: 0;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 16px;
         }
 
         .feature-list li {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
             color: #ccc;
-            font-size: 0.98rem;
+            font-size: 1rem;
+            line-height: 1.5;
         }
 
         .feature-list li i {
             color: #b5c490;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            margin-top: 2px;
+            flex-shrink: 0;
         }
 
         .feature-img {
@@ -260,7 +254,7 @@
 
         /* ==================== DONATIONS (PAYPAL) ==================== */
         .donation-section {
-            padding: 80px 0;
+            padding: 90px 0;
             background: linear-gradient(180deg, rgba(139, 150, 109, 0.05) 0%, rgba(0, 0, 0, 0.5) 100%);
             text-align: center;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -298,8 +292,8 @@
 
         .donation-subtitle {
             color: #aaa;
-            font-size: 1rem;
-            max-width: 600px;
+            font-size: 1.05rem;
+            max-width: 620px;
             margin: 0 auto 30px;
             line-height: 1.6;
         }
@@ -396,13 +390,171 @@
             line-height: 1.6;
         }
 
+        /* ==================== PRE-DOWNLOAD DONATION MODAL ==================== */
+        .predownload-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        .predownload-overlay.active {
+            display: flex;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .predownload-modal {
+            background: #121214;
+            border: 1px solid rgba(139, 150, 109, 0.35);
+            border-radius: 20px;
+            max-width: 580px;
+            width: 100%;
+            padding: 34px 28px;
+            position: relative;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-close-icon {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .modal-close-icon:hover {
+            color: #fff;
+        }
+
+        .predownload-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(139, 150, 109, 0.15);
+            color: #b5c490;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .predownload-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .predownload-desc {
+            font-size: 0.95rem;
+            color: #aaa;
+            margin-bottom: 22px;
+            line-height: 1.5;
+        }
+
+        .predownload-perk {
+            background: rgba(139, 150, 109, 0.08);
+            border: 1px solid rgba(139, 150, 109, 0.2);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            color: #b5c490;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .predownload-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .predownload-btn-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            padding: 12px 8px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.05rem;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .predownload-btn-option span {
+            font-size: 0.7rem;
+            color: #888;
+        }
+
+        .predownload-btn-option:hover {
+            background: #b5c490;
+            border-color: #b5c490;
+            color: #000;
+        }
+
+        .predownload-btn-option:hover span {
+            color: #222;
+        }
+
+        .predownload-footer-links {
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-skip-download {
+            color: #b5c490;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-skip-download:hover {
+            background: rgba(181, 196, 144, 0.12);
+            color: #fff;
+        }
+
         @media (max-width: 768px) {
             .content-grid {
                 grid-template-columns: 1fr;
                 gap: 40px;
             }
-            .content-grid.reverse {
-                direction: ltr;
+            .predownload-options {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -423,13 +575,14 @@
                 </div>
                 <h1 class="hero-title">SAMPLE v1.0</h1>
                 <p class="hero-subtitle">
-                    Graba vocales, ideas, instrumentos y muestras de audio al instante en tu DAW con una auténtica interfaz retro Game Boy y soporte de arrastre directo a tus proyectos.
+                    Graba cualquier audio de tu pc, y arrastra a tus proyectos para usarlo
                 </p>
 
                 <div class="hero-cta-wrapper">
-                    <a href="https://drive.google.com/file/d/1EKABVXe1csuBs2_DFICCs6mhVXDnoARw/view?usp=sharing" target="_blank" rel="noopener" class="btn-free-download">
+                    <!-- Botón sin glow que abre el modal de apoyo/descarga -->
+                    <button class="btn-free-download" id="btn-open-download-modal">
                         <i class="bi bi-download"></i> DESCARGAR SAMPLE GRATIS (VST3)
-                    </a>
+                    </button>
                     <div class="btn-status-badge">
                         <i class="bi bi-windows"></i> Disponible para Windows (FL Studio / Ableton / DAWs VST3 64-bit)
                     </div>
@@ -441,43 +594,20 @@
             </div>
         </section>
 
-        <!-- FEATURE 1: RETRO LCD & RECIENTES -->
-        <section class="feature-section alt-bg">
+        <!-- FEATURE: SILENCE TRIM & DRAG AND DROP -->
+        <section class="feature-section">
             <div class="container">
                 <div class="content-grid">
                     <div class="text-content">
-                        <div class="feature-tag">DISEÑO & ORGANIZACIÓN</div>
-                        <h2>Pantalla LCD Retro y Explorador de Grabaciones Recientes</h2>
-                        <p>
-                            Inspirado en consolas clásicas retro, SAMPLE cuenta con un contador digital en tiempo real, indicador visualizador de entrada y un historial de grabaciones integradas para que nunca pierdas ninguna idea.
-                        </p>
-                        <ul class="feature-list">
-                            <li><i class="bi bi-check-circle-fill"></i> <strong>Visualizador de onda en vivo:</strong> Monitorea el nivel exacto de señal al grabar.</li>
-                            <li><i class="bi bi-check-circle-fill"></i> <strong>Historial interactivo:</strong> Reproduce, pausa y renombra tomas en segundos.</li>
-                            <li><i class="bi bi-check-circle-fill"></i> <strong>Borrado en tiempo real:</strong> Elimina audios directamente de la lista sin reiniciar el plugin.</li>
-                        </ul>
-                    </div>
-                    <div class="image-content">
-                        <img src="/plugins/offszn-recorder.png" class="feature-img" alt="SAMPLE v1.0 Pantalla LCD">
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- FEATURE 2: SILENCE TRIM & DRAG AND DROP -->
-        <section class="feature-section">
-            <div class="container">
-                <div class="content-grid reverse">
-                    <div class="text-content">
                         <div class="feature-tag">FLUJO DE TRABAJO RÁPIDO</div>
-                        <h2>Quitar Silencios y Drag & Drop Directo a tu DAW</h2>
+                        <h2>GRABA, QUITA SILENCIOS Y ARRASTRA PARA USARLO.</h2>
                         <p>
-                            Diseñado para acelerar tu proceso creativo en FL Studio y otros DAWs. Limpia silencios innecesarios con un solo clic y arrastra el audio directamente hacia tus canales o arreglo musical.
+                            Diseñado para acelerar tu proceso creativo en FL Studio y otros DAWs en Windows. Captura ideas al vuelo, limpia silencios innecesarios con un solo clic y arrastra el audio directamente hacia tus canales o arreglo musical.
                         </p>
                         <ul class="feature-list">
-                            <li><i class="bi bi-check-circle-fill"></i> <strong>Quitar Silencios (Trim Silence):</strong> Recorta silencios de entrada, salida y huecos intermedios automáticamente.</li>
-                            <li><i class="bi bi-check-circle-fill"></i> <strong>Arrastrar y Soltar (Drag & Drop):</strong> Haz clic en cualquier toma y suéltala en el Playlist de FL Studio.</li>
-                            <li><i class="bi bi-check-circle-fill"></i> <strong>Carpeta Personalizable:</strong> Elige en qué directorio de tu computadora guardar todos tus audios.</li>
+                            <li><i class="bi bi-check-circle-fill"></i> <span><strong>QUITA SILENCIOS RÁPIDO:</strong> Recorta silencios de entrada, salida y huecos intermedios automáticamente.</span></li>
+                            <li><i class="bi bi-check-circle-fill"></i> <span><strong>ARRASTRA Y SUELTA A TU DAW:</strong> Haz clic en la forma de onda o lista y suéltala en el Playlist de FL Studio.</span></li>
+                            <li><i class="bi bi-check-circle-fill"></i> <span><strong>PULSA MENU PARA VER LA RUTA DE GRABACIONES:</strong> Personaliza tu carpeta de guardado y cambia los colores y skins del plugin.</span></li>
                         </ul>
                     </div>
                     <div class="image-content">
@@ -496,7 +626,7 @@
                     </div>
                     <h2 class="donation-title">PUEDES DONAR PARA SEGUIR MANTENIENDO VIVO EL PLUGIN</h2>
                     <p class="donation-subtitle">
-                        SAMPLE es y seguirá siendo 100% gratuito sin requerir licencia ni clave de activación. Tu donación voluntaria por PayPal ayuda a financiar servidores, desarrollo de nuevos plugins y futuras actualizaciones.
+                        tu donación ayuda a mantener vivo los servidores y futuros plugins gratis &lt;3
                     </p>
 
                     <div class="donation-options-grid">
@@ -526,6 +656,10 @@
                 <h2 style="text-align: center; font-size: 2.2rem; margin-bottom: 40px; font-weight: 800;">Preguntas Frecuentes</h2>
                 <div class="faq-grid">
                     <div class="faq-item">
+                        <div class="faq-question">¿Si dono qué recibo?</div>
+                        <div class="faq-answer">Recibes skins exclusivas para personalizar el plugin: Morado, Azul, Verde, Amarillo, Negro, Blanco y el selector de colores UI completo dentro del menú de configuración.</div>
+                    </div>
+                    <div class="faq-item">
                         <div class="faq-question">¿El plugin requiere clave de activación o serial?</div>
                         <div class="faq-answer">No. SAMPLE es 100% gratuito. Solo descargas el instalador, ejecutas el asistente y el plugin estará inmediatamente listo para usar en tu DAW.</div>
                     </div>
@@ -542,12 +676,88 @@
         </section>
     </main>
 
+    <!-- PRE-DOWNLOAD SUPPORT MODAL -->
+    <div class="predownload-overlay" id="predownload-modal">
+        <div class="predownload-modal">
+            <button class="modal-close-icon" id="btn-close-predownload">&times;</button>
+            <div class="predownload-badge">
+                <i class="bi bi-heart-fill"></i> APOYA EL PROYECTO
+            </div>
+            <h3 class="predownload-title">PUEDES DONAR PARA SEGUIR MANTENIENDO VIVO EL PLUGIN</h3>
+            <p class="predownload-desc">
+                tu donación ayuda a mantener vivo los servidores y futuros plugins gratis &lt;3
+            </p>
+
+            <div class="predownload-perk">
+                <i class="bi bi-palette-fill"></i> <span>¡Desbloquea skins y selector de colores en el plugin!</span>
+            </div>
+
+            <div class="predownload-options">
+                <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=3&currency_code=USD" target="_blank" rel="noopener" class="predownload-btn-option">
+                    $3 USD <span>Aporte Rápido</span>
+                </a>
+                <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=5&currency_code=USD" target="_blank" rel="noopener" class="predownload-btn-option">
+                    $5 USD <span>Aporte Estándar</span>
+                </a>
+                <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=10&currency_code=USD" target="_blank" rel="noopener" class="predownload-btn-option">
+                    $10 USD <span>Aporte Productor</span>
+                </a>
+            </div>
+
+            <div style="margin-bottom: 10px;">
+                <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&currency_code=USD" target="_blank" rel="noopener" class="btn-paypal-custom" style="padding: 10px 20px; font-size: 0.88rem;">
+                    <i class="fab fa-paypal"></i> Donar Monto Personalizado
+                </a>
+            </div>
+
+            <div class="predownload-footer-links">
+                <a href="https://drive.google.com/file/d/1EKABVXe1csuBs2_DFICCs6mhVXDnoARw/view?usp=sharing" target="_blank" rel="noopener" class="btn-skip-download" id="btn-direct-download">
+                    <i class="bi bi-arrow-right-circle"></i> Continuar a la descarga gratuita de SAMPLE (VST3)
+                </a>
+            </div>
+        </div>
+    </div>
+
     <!-- FOOTER INJECTION -->
     <div id="footer-placeholder"></div>
 
     <!-- Scripts -->
     <script src="/script/navbar.js"></script>
     <script src="/script/footer.js"></script>
+    <script>
+        var btnOpenModal = document.getElementById('btn-open-download-modal');
+        var predownloadModal = document.getElementById('predownload-modal');
+        var btnCloseModal = document.getElementById('btn-close-predownload');
+        var btnDirectDownload = document.getElementById('btn-direct-download');
+
+        if(btnOpenModal && predownloadModal){
+            btnOpenModal.addEventListener('click', function(){
+                predownloadModal.classList.add('active');
+            });
+        }
+
+        if(btnCloseModal && predownloadModal){
+            btnCloseModal.addEventListener('click', function(){
+                predownloadModal.classList.remove('active');
+            });
+        }
+
+        if(predownloadModal){
+            predownloadModal.addEventListener('click', function(e){
+                if(e.target === predownloadModal){
+                    predownloadModal.classList.remove('active');
+                }
+            });
+        }
+
+        if(btnDirectDownload && predownloadModal){
+            btnDirectDownload.addEventListener('click', function(){
+                setTimeout(function(){
+                    predownloadModal.classList.remove('active');
+                }, 500);
+            });
+        }
+    </script>
 </body>
 
 </html>
