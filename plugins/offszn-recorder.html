@@ -115,7 +115,7 @@
             margin-bottom: 50px;
         }
 
-        /* Botón sin glow como pidió el usuario */
+        /* Botón sin glow */
         .btn-free-download {
             display: inline-flex;
             align-items: center;
@@ -390,18 +390,18 @@
             line-height: 1.6;
         }
 
-        /* ==================== PRE-DOWNLOAD DONATION MODAL ==================== */
+        /* ==================== SPLIT-SCREEN DOWNLOAD & DONATION MODAL ==================== */
         .predownload-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(10px);
             z-index: 9999;
             display: none;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            animation: modalFadeIn 0.3s ease;
+            animation: modalFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .predownload-overlay.active {
@@ -414,15 +414,14 @@
         }
 
         .predownload-modal {
-            background: #121214;
+            background: #111114;
             border: 1px solid rgba(139, 150, 109, 0.35);
-            border-radius: 20px;
-            max-width: 580px;
+            border-radius: 24px;
+            max-width: 860px;
             width: 100%;
-            padding: 34px 28px;
+            padding: 36px 32px;
             position: relative;
-            text-align: center;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95);
         }
 
         .modal-close-icon {
@@ -431,14 +430,112 @@
             right: 18px;
             background: transparent;
             border: none;
-            color: #888;
-            font-size: 1.5rem;
+            color: #777;
+            font-size: 1.6rem;
             cursor: pointer;
             transition: color 0.2s;
+            line-height: 1;
         }
 
         .modal-close-icon:hover {
             color: #fff;
+        }
+
+        /* Modal Split Grid */
+        .modal-split-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 32px;
+            align-items: stretch;
+        }
+
+        .modal-col-download {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 18px;
+            padding: 26px 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-align: center;
+        }
+
+        .col-download-head {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .download-icon-wrap {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: rgba(139, 150, 109, 0.15);
+            border: 1px solid rgba(139, 150, 109, 0.3);
+            color: #b5c490;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 6px;
+        }
+
+        .modal-col-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .modal-col-desc {
+            font-size: 0.88rem;
+            color: #999;
+            line-height: 1.5;
+        }
+
+        .btn-modal-direct-download {
+            background: #ffffff;
+            color: #000;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-modal-direct-download:hover {
+            background: #b5c490;
+            color: #000;
+            transform: translateY(-2px);
+        }
+
+        .download-feedback-status {
+            font-size: 0.8rem;
+            color: #b5c490;
+            margin-top: 10px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .download-feedback-status.active {
+            display: flex;
+        }
+
+        /* Modal Right Column (Donation) */
+        .modal-col-donate {
+            display: flex;
+            flex-direction: column;
+            text-align: center;
         }
 
         .predownload-badge {
@@ -449,56 +546,58 @@
             color: #b5c490;
             padding: 4px 12px;
             border-radius: 100px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 700;
             text-transform: uppercase;
-            margin-bottom: 12px;
+            margin: 0 auto 10px;
         }
 
         .predownload-title {
-            font-size: 1.6rem;
+            font-size: 1.25rem;
             font-weight: 800;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #fff;
+            line-height: 1.3;
         }
 
         .predownload-desc {
-            font-size: 0.95rem;
+            font-size: 0.88rem;
             color: #aaa;
-            margin-bottom: 22px;
-            line-height: 1.5;
+            margin-bottom: 14px;
+            line-height: 1.4;
         }
 
         .predownload-perk {
             background: rgba(139, 150, 109, 0.08);
             border: 1px solid rgba(139, 150, 109, 0.2);
             border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 0.85rem;
+            padding: 8px 12px;
+            font-size: 0.78rem;
             color: #b5c490;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
+            text-align: left;
         }
 
         .predownload-options {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 8px;
+            margin-bottom: 12px;
         }
 
         .predownload-btn-option {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.12);
             color: #fff;
-            padding: 12px 8px;
+            padding: 10px 6px;
             border-radius: 10px;
             text-decoration: none;
             font-weight: 700;
-            font-size: 1.05rem;
+            font-size: 0.95rem;
             transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
@@ -506,7 +605,7 @@
         }
 
         .predownload-btn-option span {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: #888;
         }
 
@@ -520,31 +619,23 @@
             color: #222;
         }
 
-        .predownload-footer-links {
-            margin-top: 24px;
-            padding-top: 18px;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .btn-skip-download {
-            color: #b5c490;
-            text-decoration: none;
-            font-size: 0.95rem;
-            font-weight: 700;
+        .btn-modal-custom-paypal {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
-            padding: 8px 16px;
-            border-radius: 8px;
+            background: #0070ba;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 0.88rem;
             transition: all 0.2s ease;
         }
 
-        .btn-skip-download:hover {
-            background: rgba(181, 196, 144, 0.12);
+        .btn-modal-custom-paypal:hover {
+            background: #005ea6;
             color: #fff;
         }
 
@@ -553,8 +644,14 @@
                 grid-template-columns: 1fr;
                 gap: 40px;
             }
-            .predownload-options {
+            .modal-split-grid {
                 grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            .predownload-modal {
+                padding: 28px 20px;
+                max-height: 90vh;
+                overflow-y: auto;
             }
         }
     </style>
@@ -579,7 +676,7 @@
                 </p>
 
                 <div class="hero-cta-wrapper">
-                    <!-- Botón sin glow que abre el modal de apoyo/descarga -->
+                    <!-- Botón sin glow que abre el modal dividido de descarga y apoyo -->
                     <button class="btn-free-download" id="btn-open-download-modal">
                         <i class="bi bi-download"></i> DESCARGAR SAMPLE GRATIS (VST3)
                     </button>
@@ -626,23 +723,23 @@
                     </div>
                     <h2 class="donation-title">PUEDES DONAR PARA SEGUIR MANTENIENDO VIVO EL PLUGIN</h2>
                     <p class="donation-subtitle">
-                        tu donación ayuda a mantener vivo los servidores y futuros plugins gratis &lt;3
+                        tu donación ayuda a mantener vivo los servidores &lt;3
                     </p>
 
                     <div class="donation-options-grid">
-                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=3&currency_code=USD" target="_blank" rel="noopener" class="btn-donate-option">
+                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=3&currency_code=USD" target="_blank" rel="noopener" class="btn-donate-option track-donate" data-amount="3">
                             $3 USD <span>Aporte Rápido</span>
                         </a>
-                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=5&currency_code=USD" target="_blank" rel="noopener" class="btn-donate-option">
+                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=5&currency_code=USD" target="_blank" rel="noopener" class="btn-donate-option track-donate" data-amount="5">
                             $5 USD <span>Aporte Estándar</span>
                         </a>
-                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=10&currency_code=USD" target="_blank" rel="noopener" class="btn-donate-option">
+                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=10&currency_code=USD" target="_blank" rel="noopener" class="btn-donate-option track-donate" data-amount="10">
                             $10 USD <span>Aporte Productor</span>
                         </a>
                     </div>
 
                     <div style="margin-top: 20px;">
-                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&currency_code=USD" target="_blank" rel="noopener" class="btn-paypal-custom">
+                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&currency_code=USD" target="_blank" rel="noopener" class="btn-paypal-custom track-donate" data-amount="custom">
                             <i class="fab fa-paypal"></i> Donar Monto Personalizado por PayPal
                         </a>
                     </div>
@@ -676,44 +773,67 @@
         </section>
     </main>
 
-    <!-- PRE-DOWNLOAD SUPPORT MODAL -->
+    <!-- PRE-DOWNLOAD SPLIT MODAL (DOWNLOAD + DONATION) -->
     <div class="predownload-overlay" id="predownload-modal">
         <div class="predownload-modal">
             <button class="modal-close-icon" id="btn-close-predownload">&times;</button>
-            <div class="predownload-badge">
-                <i class="bi bi-heart-fill"></i> APOYA EL PROYECTO
-            </div>
-            <h3 class="predownload-title">PUEDES DONAR PARA SEGUIR MANTENIENDO VIVO EL PLUGIN</h3>
-            <p class="predownload-desc">
-                tu donación ayuda a mantener vivo los servidores y futuros plugins gratis &lt;3
-            </p>
+            
+            <div class="modal-split-grid">
+                <!-- Columna 1: Descarga Inmediata -->
+                <div class="modal-col-download">
+                    <div class="col-download-head">
+                        <div class="download-icon-wrap">
+                            <i class="bi bi-cloud-arrow-down-fill"></i>
+                        </div>
+                        <h3 class="modal-col-title">DESCARGAR SAMPLE</h3>
+                        <p class="modal-col-desc">
+                            Instalador oficial VST3 (64-bit) para Windows.<br>100% gratuito y sin serial.
+                        </p>
+                    </div>
 
-            <div class="predownload-perk">
-                <i class="bi bi-palette-fill"></i> <span>¡Desbloquea skins y selector de colores en el plugin!</span>
-            </div>
+                    <div>
+                        <a href="https://drive.google.com/file/d/1EKABVXe1csuBs2_DFICCs6mhVXDnoARw/view?usp=sharing" target="_blank" rel="noopener" class="btn-modal-direct-download" id="btn-direct-download">
+                            <i class="bi bi-download"></i> DESCARGAR AHORA
+                        </a>
+                        <div class="download-feedback-status" id="download-feedback">
+                            <i class="bi bi-check-circle-fill"></i> ¡Descarga iniciada! Disfruta SAMPLE 🎉
+                        </div>
+                    </div>
+                </div>
 
-            <div class="predownload-options">
-                <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=3&currency_code=USD" target="_blank" rel="noopener" class="predownload-btn-option">
-                    $3 USD <span>Aporte Rápido</span>
-                </a>
-                <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=5&currency_code=USD" target="_blank" rel="noopener" class="predownload-btn-option">
-                    $5 USD <span>Aporte Estándar</span>
-                </a>
-                <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=10&currency_code=USD" target="_blank" rel="noopener" class="predownload-btn-option">
-                    $10 USD <span>Aporte Productor</span>
-                </a>
-            </div>
+                <!-- Columna 2: Apoyo & Skins -->
+                <div class="modal-col-donate">
+                    <div class="predownload-badge">
+                        <i class="bi bi-heart-fill"></i> APOYA EL PROYECTO
+                    </div>
+                    <h3 class="predownload-title">PUEDES DONAR PARA SEGUIR MANTENIENDO VIVO EL PLUGIN</h3>
+                    <p class="predownload-desc">
+                        tu donación ayuda a mantener vivo los servidores &lt;3
+                    </p>
 
-            <div style="margin-bottom: 10px;">
-                <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&currency_code=USD" target="_blank" rel="noopener" class="btn-paypal-custom" style="padding: 10px 20px; font-size: 0.88rem;">
-                    <i class="fab fa-paypal"></i> Donar Monto Personalizado
-                </a>
-            </div>
+                    <div class="predownload-perk">
+                        <i class="bi bi-palette-fill" style="font-size: 1.1rem; flex-shrink: 0;"></i>
+                        <span>¡Desbloquea skins exclusivas (Morado, Azul, Oro, etc.) y selector de colores UI!</span>
+                    </div>
 
-            <div class="predownload-footer-links">
-                <a href="https://drive.google.com/file/d/1EKABVXe1csuBs2_DFICCs6mhVXDnoARw/view?usp=sharing" target="_blank" rel="noopener" class="btn-skip-download" id="btn-direct-download">
-                    <i class="bi bi-arrow-right-circle"></i> Continuar a la descarga gratuita de SAMPLE (VST3)
-                </a>
+                    <div class="predownload-options">
+                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=3&currency_code=USD" target="_blank" rel="noopener" class="predownload-btn-option track-donate" data-amount="3">
+                            $3 USD <span>Aporte Rápido</span>
+                        </a>
+                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=5&currency_code=USD" target="_blank" rel="noopener" class="predownload-btn-option track-donate" data-amount="5">
+                            $5 USD <span>Aporte Estándar</span>
+                        </a>
+                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&amount=10&currency_code=USD" target="_blank" rel="noopener" class="predownload-btn-option track-donate" data-amount="10">
+                            $10 USD <span>Aporte Productor</span>
+                        </a>
+                    </div>
+
+                    <div>
+                        <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=willie2008garay@gmail.com&item_name=Donacion+SAMPLE&currency_code=USD" target="_blank" rel="noopener" class="btn-modal-custom-paypal track-donate" data-amount="custom">
+                            <i class="fab fa-paypal"></i> Donar Monto Personalizado
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -724,39 +844,88 @@
     <!-- Scripts -->
     <script src="/script/navbar.js"></script>
     <script src="/script/footer.js"></script>
+
+    <!-- Analytics & Dynamic Conversion Tracker -->
     <script>
-        var btnOpenModal = document.getElementById('btn-open-download-modal');
-        var predownloadModal = document.getElementById('predownload-modal');
-        var btnCloseModal = document.getElementById('btn-close-predownload');
-        var btnDirectDownload = document.getElementById('btn-direct-download');
+        (function initSampleAnalytics() {
+            // Analytics Tracker Helper
+            window.trackSampleEvent = function(eventName, meta) {
+                console.log(`[SAMPLE Analytics] Event: ${eventName}`, meta || {});
+                
+                // 1. Local storage metrics counter
+                try {
+                    const stats = JSON.parse(localStorage.getItem('sample_analytics_stats') || '{}');
+                    stats[eventName] = (stats[eventName] || 0) + 1;
+                    stats.last_event_time = new Date().toISOString();
+                    localStorage.setItem('sample_analytics_stats', JSON.stringify(stats));
+                } catch(e){}
 
-        if(btnOpenModal && predownloadModal){
-            btnOpenModal.addEventListener('click', function(){
-                predownloadModal.classList.add('active');
-            });
-        }
-
-        if(btnCloseModal && predownloadModal){
-            btnCloseModal.addEventListener('click', function(){
-                predownloadModal.classList.remove('active');
-            });
-        }
-
-        if(predownloadModal){
-            predownloadModal.addEventListener('click', function(e){
-                if(e.target === predownloadModal){
-                    predownloadModal.classList.remove('active');
+                // 2. Supabase marketing_stats log if available
+                if (window.supabaseClient) {
+                    try {
+                        window.supabaseClient
+                            .from('marketing_stats')
+                            .insert([{
+                                session_id: 'sample_' + Date.now(),
+                                variant: 'split_modal_v1',
+                                event_type: eventName,
+                                product_slug: 'sample-vst3',
+                                page_url: window.location.href,
+                                user_id: localStorage.getItem('userId') || null,
+                                is_guest: !localStorage.getItem('userId')
+                            }]).then(() => {}).catch(() => {});
+                    } catch(e){}
                 }
-            });
-        }
+            };
 
-        if(btnDirectDownload && predownloadModal){
-            btnDirectDownload.addEventListener('click', function(){
-                setTimeout(function(){
+            // Track initial page view
+            window.trackSampleEvent('sample_landing_view');
+
+            // Modal elements
+            var btnOpenModal = document.getElementById('btn-open-download-modal');
+            var predownloadModal = document.getElementById('predownload-modal');
+            var btnCloseModal = document.getElementById('btn-close-predownload');
+            var btnDirectDownload = document.getElementById('btn-direct-download');
+            var downloadFeedback = document.getElementById('download-feedback');
+
+            if(btnOpenModal && predownloadModal){
+                btnOpenModal.addEventListener('click', function(){
+                    predownloadModal.classList.add('active');
+                    window.trackSampleEvent('sample_open_modal_click');
+                });
+            }
+
+            if(btnCloseModal && predownloadModal){
+                btnCloseModal.addEventListener('click', function(){
                     predownloadModal.classList.remove('active');
-                }, 500);
+                });
+            }
+
+            if(predownloadModal){
+                predownloadModal.addEventListener('click', function(e){
+                    if(e.target === predownloadModal){
+                        predownloadModal.classList.remove('active');
+                    }
+                });
+            }
+
+            if(btnDirectDownload){
+                btnDirectDownload.addEventListener('click', function(){
+                    window.trackSampleEvent('sample_download_success');
+                    if(downloadFeedback){
+                        downloadFeedback.classList.add('active');
+                    }
+                });
+            }
+
+            // Track donation buttons
+            document.querySelectorAll('.track-donate').forEach(function(btn){
+                btn.addEventListener('click', function(){
+                    var amt = btn.getAttribute('data-amount') || 'custom';
+                    window.trackSampleEvent('sample_donate_click_' + amt, { amount: amt });
+                });
             });
-        }
+        })();
     </script>
 </body>
 
