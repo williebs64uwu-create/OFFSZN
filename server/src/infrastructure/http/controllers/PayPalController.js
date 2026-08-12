@@ -1269,68 +1269,9 @@ export const getSecureDownloadUrl = async (req, res) => {
 
         console.log(`[SecureDownload] Lookup result: found=${!!item}, method=${isNumericId ? 'numeric_id' : 'transaction_id'}`);
 
-        // --- MANEJO DE SIMULACIÓN Y CRASH RECOVERY ---
+        // --- VERIFICACIÓN DE EXISTENCIA DE ORDEN Y PRODUCTO ---
         if (itemError || !item) {
-            if (orderId && (orderId.startsWith('SIMULATED_TEST') || orderId.startsWith('AUDIT_'))) {
-                console.log('[SecureDownload] RUNNING AUDIT/SIMULATION for product:', productId);
-
-                // Si es simulación, buscamos el producto directamente para que la descarga funcione
-                const { data: product } = await supabase
-                    .from('products')
-                    .select('producer_id, product_type, kit_url, mp3_url, wav_url, stems_url, audio_url, download_url_mp3, download_url_wav, storage_version, r2_version')
-                    .eq('id', productId)
-                    .single();
-
-                if (product) {
-                    // Si es simulación, permitimos pasar el licenseName por query para probar restricciones
-                    const mockLicenseName = req.query.testLicense || req.query.licenseName || 'Basic Lease';
-                    const licKey = mapLicenseToKey(mockLicenseName);
-                    
-                    // Obtener configuración del productor (usamos una por defecto si el mock no tiene)
-                    const { data: producer } = await supabase
-                        .from('users')
-                        .select('license_settings')
-                        .eq('id', product.producer_id)
-                        .single();
-
-                    const settings = producer?.license_settings?.[licKey];
-                    
-                    if (settings && settings.files) {
-                        const canDownload = (fileType === 'mp3' && settings.files.mp3) ||
-                                          (fileType === 'wav' && settings.files.wav) ||
-                                          (fileType === 'stems' && settings.files.stems);
-                        
-                        if (!canDownload) {
-                            console.warn(`[SecureDownload] SIMULATION BLOCK: License ${mockLicenseName} does not include ${fileType}`);
-                            return res.status(403).json({ 
-                                error: `Tu licencia (${mockLicenseName}) no incluye el archivo ${fileType.toUpperCase()}`,
-                                licenseName: mockLicenseName,
-                                allowedFiles: settings.files
-                            });
-                        }
-                    }
-
-                    const mockPath = getBestProductPath(product, fileType);
-                    if (mockPath) {
-                        try {
-                            const storageType = product.storage_version || product.r2_version || 'v2';
-                            const signedUrl = await getPresignedDownloadUrl(mockPath, 3600, storageType);
-                            return res.status(200).json({
-                                url: signedUrl,
-                                signedUrl: signedUrl,
-                                isSimulated: true,
-                                tempBypass: true,
-                                licenseName: mockLicenseName,
-                                debug_cleaned_path: mockPath,
-                                debug_is_r2: storageType !== 'supabase'
-                            });
-                        } catch (signErr) {
-                            console.error('[SecureDownload] Sign error in bypass:', signErr);
-                        }
-                    }
-                }
-            }
-            console.error('[SecureDownload] Error or not found:', itemError);
+            console.warn('[SecureDownload] Order item not found:', { orderId, productId, error: itemError?.message });
             return res.status(404).json({ error: 'Pedido o producto no encontrado' });
         }
 

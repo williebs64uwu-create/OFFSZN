@@ -204,6 +204,12 @@ export const respondNegotiation = async (req, res) => {
             return res.status(404).json({ error: 'Propuesta no encontrada' });
         }
 
+        // Security check: Only the producer who owns the proposal can respond/accept
+        const userId = req.user?.id || req.user?.userId;
+        if (!userId || proposal.producer_id !== userId) {
+            return res.status(403).json({ error: 'No tienes permiso para responder a esta propuesta.' });
+        }
+
         // 1.5. Fetch Producer Details
         const { data: producer, error: prodError } = await supabase
             .from('users')

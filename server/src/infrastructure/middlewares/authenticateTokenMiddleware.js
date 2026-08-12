@@ -6,18 +6,7 @@ export const authenticateTokenMiddleware = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
-    // Bypass para rutas de descarga R2, links de orden, simulación y calendario
-    const bypassRoutes = [
-        '/r2/download-url',
-        '/api/orders/download-link',
-        '/api/test/simulate-purchase-email',
-        '/api/content-calendar'
-    ];
-    
-    if (bypassRoutes.some(route => req.originalUrl.includes(route))) {
-        return next();
-    }
-
+    // Ensure token is present
     if (!token || token === 'undefined' || token === 'null') {
         return res.status(401).json({ error: 'Acceso denegado: No se proporcionó token válido' });
     }

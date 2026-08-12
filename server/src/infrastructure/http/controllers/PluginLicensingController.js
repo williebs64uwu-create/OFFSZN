@@ -64,14 +64,15 @@ async function sendActivationEmail({ to, serialKey, licenseType, expiresAt }) {
     }
 }
 
-// ─── GET /api/plugin/generate-web ─────────────────────────────────────────────
+// ─── POST /api/plugin/generate-web ─────────────────────────────────────────────
 export const generateWebLicense = async (req, res) => {
     try {
         const { plugin_name } = req.body;
-        const user_id = req.user?.id;
+        const user_id = req.user?.id || req.user?.userId;
         if (!user_id) return res.status(401).json({ error: 'No autorizado' });
         if (!plugin_name) return res.status(400).json({ error: 'Falta plugin_name' });
 
+        // 1. Check if user already owns an active lifetime license
         const { data: existingLic } = await supabase
             .from('plugin_licenses').select('*')
             .eq('user_id', user_id).eq('plugin_name', plugin_name).eq('license_type', 'lifetime').maybeSingle();
@@ -80,8 +81,34 @@ export const generateWebLicense = async (req, res) => {
             return res.json({ success: true, serial_key: existingLic.serial_key, expires_at: existingLic.expires_at, license_type: 'lifetime' });
         }
 
+        // 2. Map plugin name to product IDs
         const isInkaPlugin = (plugin_name === 'INKA KOLA' || plugin_name === 'Inka Kola');
         const isMasterPlugin = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
+        const isMixPlugin = (plugin_name === 'Easy Mix' || plugin_name === 'EASY MIX');
+        
+        let validProductIds = [];
+        if (isInkaPlugin) validProductIds = [902];
+        else if (isMasterPlugin) validProductIds = [900];
+        else if (isMixPlugin) validProductIds = [899, 901];
+
+        // 3. Verify that user has an actual paid order for this plugin
+        const { data: orderItem, error: orderCheckErr } = await supabase
+            .from('order_items')
+            .select('id, order_id, product_id, orders!inner(user_id, status)')
+            .eq('orders.user_id', user_id)
+            .eq('orders.status', 'completed')
+            .in('product_id', validProductIds)
+            .maybeSingle();
+
+        if (orderCheckErr) {
+            console.error('[PluginLicense] Error checking order history:', orderCheckErr);
+        }
+
+        if (!orderItem) {
+            return res.status(403).json({ error: 'No se encontró una orden de compra válida para este producto.' });
+        }
+
+        // 4. Generate the new lifetime license
         const basePrefix = isInkaPlugin ? 'INKA' : (isMasterPlugin ? 'MASTER' : 'EASY');
         const serialKey = `${basePrefix}-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiresAt = null;
@@ -399,9 +426,9 @@ export const adminResetLicense = async (req, res) => {
     try {
         const { admin_key, serial_key, plugin_name } = req.body;
 
-        // Simple shared-secret auth — set PLUGIN_ADMIN_KEY in Render env vars
-        const expectedKey = process.env.PLUGIN_ADMIN_KEY || 'offszn-admin-2026';
-        if (admin_key !== expectedKey) {
+        // Shared-secret auth — must be configured in environment
+        const expectedKey = process.env.PLUGIN_ADMIN_KEY;
+        if (!expectedKey || admin_key !== expectedKey) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -470,8 +497,8 @@ export const adminResetLicense = async (req, res) => {
 export const adminDeleteLicense = async (req, res) => {
     try {
         const { admin_key, serial_key } = req.body;
-        const expectedKey = process.env.PLUGIN_ADMIN_KEY || 'offszn-admin-2026';
-        if (admin_key !== expectedKey) return res.status(403).json({ error: 'Unauthorized' });
+        const expectedKey = process.env.PLUGIN_ADMIN_KEY;
+        if (!expectedKey || admin_key !== expectedKey) return res.status(403).json({ error: 'Unauthorized' });
         if (!serial_key) return res.status(400).json({ error: 'Falta serial_key' });
 
         const { data: lic } = await supabase.from('plugin_licenses').select('id').eq('serial_key', serial_key).single();
@@ -492,8 +519,8 @@ export const adminDeleteLicense = async (req, res) => {
 export const adminGetABStats = async (req, res) => {
     try {
         const adminKey = req.query.admin_key || req.headers['x-admin-key'];
-        const expectedKey = process.env.PLUGIN_ADMIN_KEY || 'offszn-admin-2026';
-        if (adminKey !== expectedKey) return res.status(403).json({ error: 'Unauthorized' });
+        const expectedKey = process.env.PLUGIN_ADMIN_KEY;
+        if (!expectedKey || adminKey !== expectedKey) return res.status(403).json({ error: 'Unauthorized' });
 
         const { data: orderItems, error: itemsErr } = await supabase
             .from('order_items')

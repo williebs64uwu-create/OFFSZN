@@ -21,17 +21,18 @@ const nvidiaAi = process.env.NVIDIA_API_KEY ? new OpenAI({
     baseURL: 'https://integrate.api.nvidia.com/v1'
 }) : null;
 export const generateSample = async (req, res) => {
-    const { prompt, userId, cost: requestedCost } = req.body;
-    const modelCost = parseInt(requestedCost) || 5;
+    const { prompt } = req.body;
+    const userId = req.user?.id || req.user?.userId;
+    const modelCost = 5; // Fixed immutable server cost
 
     if (!prompt || !userId) {
-        return res.status(400).json({ error: 'Prompt y userId son requeridos' });
+        return res.status(400).json({ error: 'Prompt y usuario autenticado son requeridos' });
     }
 
     try {
         console.log(`[AI Studio] Generando Pseudo-AI para usuario ${userId}: "${prompt}"`);
 
-        // 1. Verificar créditos (5 créditos - BETA)
+        // 1. Verificar créditos (5 créditos fijos)
         const { data: user, error: userError } = await supabase
             .from('users')
             .select('reward_balance')
@@ -42,7 +43,7 @@ export const generateSample = async (req, res) => {
             throw new Error('Usuario no encontrado');
         }
 
-        if (user.reward_balance < modelCost) {
+        if ((user.reward_balance || 0) < modelCost) {
             return res.status(403).json({ error: `Créditos insuficientes (necesitas ${modelCost})` });
         }
 
@@ -92,8 +93,8 @@ export const generateSample = async (req, res) => {
         // 4. Simulamos el tiempo de "Generación" de IA (Mago de Oz - 3 segundos)
         await new Promise(resolve => setTimeout(resolve, 3000));
 
-        // 5. Cobrar los créditos
-        const newBalance = user.reward_balance - modelCost;
+        // 5. Cobrar los créditos de forma segura
+        const newBalance = Math.max(0, (user.reward_balance || 0) - modelCost);
         
         const { error: updateError } = await supabase
             .from('users')
@@ -143,7 +144,8 @@ export const generateSample = async (req, res) => {
  * Chat interactivo con IA (NVIDIA NIM)
  */
 export const chatWithIA = async (req, res) => {
-    const { message, userId, hasReference } = req.body;
+    const { message, hasReference } = req.body;
+    const userId = req.user?.id || req.user?.userId;
     
     if (!message) {
         return res.status(400).json({ error: 'Message es requerido' });
@@ -162,7 +164,7 @@ export const chatWithIA = async (req, res) => {
             
             // Verificar créditos
             const { data: user } = await supabase.from('users').select('reward_balance').eq('id', userId).single();
-            if (!user || user.reward_balance < 5) {
+            if (!user || (user.reward_balance || 0) < 5) {
                 return res.status(200).json({ 
                     success: true, 
                     chatReply: "Lo siento bro, te quedaste sin créditos para generar este sonido. ¡Pásate por el store para recargar!",
@@ -371,6 +373,45 @@ export const downloadWithMetadata = async (req, res) => {
 
     if (!url) {
         return res.status(400).json({ error: 'URL del audio es requerida' });
+    }
+
+    // SSRF Guard: Validate URL protocol and hostname
+    try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+            return res.status(400).json({ error: 'Protocolo de URL inválido.' });
+        }
+
+        const hostname = parsedUrl.hostname.toLowerCase();
+        // Block localhost and private IP addresses
+        if (
+            hostname === 'localhost' ||
+            hostname === '127.0.0.1' ||
+            hostname === '0.0.0.0' ||
+            hostname === '::1' ||
+            hostname === '169.254.169.254' ||
+            hostname.startsWith('10.') ||
+            hostname.startsWith('192.168.') ||
+            /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(hostname)
+        ) {
+            return res.status(403).json({ error: 'Acceso a host no permitido.' });
+        }
+
+        // Whitelist allowed storage domains
+        const isAllowedDomain = 
+            hostname.endsWith('.supabase.co') ||
+            hostname.endsWith('.r2.dev') ||
+            hostname.endsWith('.cloudflarestorage.com') ||
+            hostname.endsWith('.imagekit.io') ||
+            hostname.endsWith('offszn.lat') ||
+            hostname.endsWith('.cloudinary.com') ||
+            hostname === 'storage.googleapis.com';
+
+        if (!isAllowedDomain) {
+            return res.status(403).json({ error: 'Dominio no autorizado para descarga directa.' });
+        }
+    } catch (e) {
+        return res.status(400).json({ error: 'URL inválida.' });
     }
 
     try {

@@ -7,10 +7,13 @@ import {
     sendReminderNow,
     checkAndSendReminders
 } from '../controllers/CalendarController.js';
+import { isAdminMiddleware } from '../../middlewares/isAdmin.middleware.js';
 
 const router = express.Router();
 
-// Content Calendar API Endpoints
+// Content Calendar API Endpoints (Admin Only)
+router.use('/content-calendar', isAdminMiddleware);
+
 router.get('/content-calendar', getEvents);
 router.post('/content-calendar', createEvent);
 router.put('/content-calendar/:id', updateEvent);

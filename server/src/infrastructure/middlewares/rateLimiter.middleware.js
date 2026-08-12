@@ -9,10 +9,6 @@ export const globalLimiter = rateLimit({
     legacyHeaders: false, // Deshabilita headers X-RateLimit
     message: {
         error: "Demasiadas peticiones desde esta IP. Por favor, intenta de nuevo más tarde."
-    },
-    skip: (req) => {
-        const ua = req.get('User-Agent') || '';
-        return /Discordbot|Twitterbot|facebookexternalhit|LinkedInBot|slackbot|Googlebot|TelegramBot|WhatsApp|cron-job\.org/i.test(ua);
     }
 });
 

@@ -16,8 +16,9 @@ router.post('/orders/paypal-webhook', handlePayPalWebhook);
 router.get('/auth/paypal/connect', authenticateTokenMiddleware, connectPayPal);
 router.get('/auth/paypal/callback', callbackPayPal); // PayPal redirects here
 
-// --- Simulation/Test Tools ---
+// --- Admin Simulation/Test Tools ---
 import { simulatePurchaseEmail } from '../controllers/PayPalController.js';
-router.post('/test/simulate-purchase-email', simulatePurchaseEmail);
+import { isAdminMiddleware } from '../../middlewares/isAdmin.middleware.js';
+router.post('/test/simulate-purchase-email', isAdminMiddleware, simulatePurchaseEmail);
 
 export default router;

@@ -48,7 +48,7 @@ app.disable('x-powered-by'); // Deshabilita el header que delata el uso de Expre
 app.set('trust proxy', 1); // Confiar en el proxy de Render para express-rate-limit
 
 // --- AGENT HUB OBFUSCATION KEY ---
-const AGENT_ACCESS_KEY = process.env.AGENT_ACCESS_KEY || 'OFFSZN_MASTER_2026';
+const AGENT_ACCESS_KEY = process.env.AGENT_ACCESS_KEY;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -217,7 +217,7 @@ app.use(cookieParser());
 // --- 2.2.1 AGENT HUB STEALTH GATE (High Priority) ---
 app.get('/system/v2/config/dump', (req, res, next) => {
     const accessKey = req.headers['x-offszn-agent-access'] || req.cookies['offszn_agent_access'];
-    if (accessKey !== AGENT_ACCESS_KEY) return next();
+    if (!AGENT_ACCESS_KEY || accessKey !== AGENT_ACCESS_KEY) return res.status(404).send('Not found');
     
     const agentHubPath = path.join(__dirname, '../public/system-logs.html');
     if (fs.existsSync(agentHubPath)) return res.sendFile(agentHubPath);
@@ -225,10 +225,7 @@ app.get('/system/v2/config/dump', (req, res, next) => {
 });
 
 app.get('/api/health', (req, res) => {
-    const secret = req.headers['x-offszn-secret'];
-    const expectedSecret = 'offszn_keep_alive_2026_safe';
-    if (secret !== expectedSecret) return res.status(403).json({ error: 'Unauthorized' });
-    res.status(200).send('OK');
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // --- 2.3 GLOBAL RATE LIMITING ---
@@ -241,7 +238,7 @@ app.use('/api', globalLimiter);
 // app.use('/api/reels', reelsRoutes);
 app.post('/api/orders/mercadopago-webhook', handleMercadoPagoWebhook);
 app.post('/api/negotiate', submitNegotiation);
-app.post('/api/negotiate/respond', respondNegotiation);
+app.post('/api/negotiate/respond', authenticateTokenMiddleware, respondNegotiation);
 app.post('/api/negotiate/purchase-token', authenticateTokenMiddleware, generatePurchaseToken);
 app.get('/api/negotiate/validate-token', validatePurchaseToken);
 app.post('/api/negotiate/report', authenticateTokenMiddleware, reportIssue);
@@ -321,12 +318,46 @@ app.use('/api/admin', adminRoutes);
 
 // --- 3. CLEAN URLS & STATIC FILES (MIDDLEWARE) ---
 
-// A. Security Block (Prevent access to backend source & secrets)
+// A. Security Block (Prevent access to backend source, internal tools & data leaks)
 app.use((req, res, next) => {
-    const sensitiveStart = ['/server', '/.env', '/.git', '/render.yaml', '/node_modules', '/backend', '/.vscode'];
-    if (sensitiveStart.some(s => req.path.startsWith(s))) {
+    const sensitiveStart = [
+        '/server',
+        '/.env',
+        '/.git',
+        '/render.yaml',
+        '/node_modules',
+        '/backend',
+        '/.vscode',
+        '/.agents',
+        '/.gemini',
+        '/owner',
+        '/database'
+    ];
+
+    const sensitiveExtensions = ['.csv', '.sql', '.yaml', '.yml', '.env', '.log', '.sh', '.bat', '.ps1'];
+    const pathLower = req.path.toLowerCase();
+
+    // 1. Check blocked directory prefixes
+    if (sensitiveStart.some(s => pathLower.startsWith(s))) {
         return res.status(403).send('Forbidden');
     }
+
+    // 2. Block sensitive file extensions
+    if (sensitiveExtensions.some(ext => pathLower.endsWith(ext))) {
+        return res.status(403).send('Forbidden');
+    }
+
+    // 3. Block specific sensitive root scripts/files
+    if (
+        pathLower.includes('package.json') ||
+        pathLower.includes('package-lock.json') ||
+        pathLower.includes('schema.json') ||
+        pathLower.startsWith('/n8n_') ||
+        pathLower.endsWith('.config.js')
+    ) {
+        return res.status(403).send('Forbidden');
+    }
+
     next();
 });
 

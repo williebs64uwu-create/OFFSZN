@@ -320,16 +320,47 @@ router.post('/r2/bulk-sign', async (req, res) => {
 router.post('/r2/delete-files', authenticateTokenMiddleware, async (req, res) => {
     try {
         const { keys, version } = req.body;
+        const userId = req.user.id || req.user.userId;
 
         if (!keys || !Array.isArray(keys) || keys.length === 0) {
             return res.status(400).json({ error: 'Se requiere un array de claves (keys).' });
         }
 
-        console.log(`[R2 Endpoint] Removal request for ${keys.length} files by user ${req.user.userId} (Version: ${version || 'v1'})`);
+        // Security check: Only allow deleting files containing the user's ID
+        // or files associated with products owned by this user
+        const sanitizedKeys = [];
+        for (const rawKey of keys) {
+            if (typeof rawKey !== 'string') continue;
+            const key = rawKey.trim();
+            // 1. Direct path check (contains userId)
+            if (key.includes(`_${userId}`) || key.includes(`/${userId}/`) || key.startsWith(`${userId}/`)) {
+                sanitizedKeys.push(key);
+            } else {
+                // 2. Check if key belongs to one of user's products
+                const { data: ownedProduct } = await supabase
+                    .from('products')
+                    .select('id')
+                    .eq('producer_id', userId)
+                    .or(`image_url.ilike.%${key}%,mp3_url.ilike.%${key}%,wav_url.ilike.%${key}%,stems_url.ilike.%${key}%,kit_url.ilike.%${key}%`)
+                    .maybeSingle();
 
-        await deleteFromR2(keys, version || null);
+                if (ownedProduct) {
+                    sanitizedKeys.push(key);
+                } else {
+                    console.warn(`[R2 Endpoint] Blocked deletion attempt by user ${userId} for unowned key: ${key}`);
+                }
+            }
+        }
 
-        res.json({ message: 'Archivos eliminados correctamente (o procesados silent).' });
+        if (sanitizedKeys.length === 0) {
+            return res.status(403).json({ error: 'No tienes autorización para eliminar estos archivos.' });
+        }
+
+        console.log(`[R2 Endpoint] Removal request for ${sanitizedKeys.length} files authorized for user ${userId} (Version: ${version || 'v1'})`);
+
+        await deleteFromR2(sanitizedKeys, version || null);
+
+        res.json({ message: 'Archivos eliminados correctamente.', deleted_count: sanitizedKeys.length });
 
     } catch (error) {
         console.error('Error en endpoint remove R2:', error);
