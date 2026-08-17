@@ -423,7 +423,7 @@ window.AuthUtils = {
 
         if (!pathOrUrl) return null;
 
-        const storageVersion = version || 'v3';
+        const storageVersion = version || 'v4';
         const cacheKey = `${pathOrUrl}|${storageVersion}`;
 
         // --- CACHE CHECK ---

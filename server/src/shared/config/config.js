@@ -64,6 +64,13 @@ export const R2_ACCESS_KEY_ID_V3 = cleanConfigValue(process.env.R2_ACCESS_KEY_ID
 export const R2_SECRET_ACCESS_KEY_V3 = cleanConfigValue(process.env.R2_SECRET_ACCESS_KEY_V3);
 export const R2_BUCKET_NAME_V3 = cleanConfigValue(process.env.R2_BUCKET_NAME_V3);
 
+// CLOUDFLARE R2 V4 (Scale Account - bucket2026)
+export const R2_ENDPOINT_V4 = cleanConfigValue(process.env.R2_ENDPOINT_V4);
+export const R2_ACCESS_KEY_ID_V4 = cleanConfigValue(process.env.R2_ACCESS_KEY_ID_V4);
+export const R2_SECRET_ACCESS_KEY_V4 = cleanConfigValue(process.env.R2_SECRET_ACCESS_KEY_V4);
+export const R2_BUCKET_NAME_V4 = cleanConfigValue(process.env.R2_BUCKET_NAME_V4) || 'bucket2026';
+export const R2_TOKEN_V4 = cleanConfigValue(process.env.R2_TOKEN_V4);
+
 // Email Octopus
 export const EMAILOCTOPUS_API_KEY = process.env.EMAILOCTOPUS_API_KEY;
 export const EMAILOCTOPUS_LIST_ID = process.env.EMAILOCTOPUS_LIST_ID;
@@ -74,4 +81,4 @@ export const IMAGEKIT_PRIVATE_KEY = cleanConfigValue(process.env.IMAGEKIT_PRIVAT
 export const IMAGEKIT_URL_ENDPOINT = cleanConfigValue(process.env.IMAGEKIT_URL_ENDPOINT);
 
 // Storage Strategy
-export const R2_CURRENT_VERSION = 'v3';
+export const R2_CURRENT_VERSION = 'v4';

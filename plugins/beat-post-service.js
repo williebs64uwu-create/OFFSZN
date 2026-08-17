@@ -80,7 +80,7 @@ async function uploadToR2(file, folder, token, apiBase, onProgress) {
             fileType: file.type || 'application/octet-stream',
             folder: folder,
             fileSize: file.size,
-            version: 'v3' // Always use Account 3 Scale
+            version: 'v4' // Always use Account 4 (bucket2026)
         })
     });
 
@@ -291,8 +291,8 @@ async function uploadBeatProduct(supabaseClient, session, metadata, files, isYou
         wav_url: wav_url,
         youtube_id: youtubeVideoId,
         youtube_url: youtubeVideoId ? `https://youtube.com/watch?v=${youtubeVideoId}` : null,
-        r2_version: 'v3',
-        storage_version: 'v3',
+        r2_version: 'v4',
+        storage_version: 'v4',
         price_basic: finalLicenses.offszn_basic.enabled ? finalLicenses.offszn_basic.price : null,
         price_premium: finalLicenses.offszn_premium.enabled ? finalLicenses.offszn_premium.price : null,
         price_stems: finalLicenses.offszn_unlimited.enabled ? finalLicenses.offszn_unlimited.price : null,

@@ -6,6 +6,7 @@ import {
     R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME,
     R2_ENDPOINT_V2, R2_ACCESS_KEY_ID_V2, R2_SECRET_ACCESS_KEY_V2, R2_BUCKET_NAME_V2,
     R2_ENDPOINT_V3, R2_ACCESS_KEY_ID_V3, R2_SECRET_ACCESS_KEY_V3, R2_BUCKET_NAME_V3,
+    R2_ENDPOINT_V4, R2_ACCESS_KEY_ID_V4, R2_SECRET_ACCESS_KEY_V4, R2_BUCKET_NAME_V4,
     R2_CURRENT_VERSION
 } from '../../shared/config/config.js';
 
@@ -41,7 +42,7 @@ export const checkKeyExists = async (key, version = R2_CURRENT_VERSION) => {
  * Levels: 
  * 1. Guess direct
  * 2. Flat-UUID (Stripping middle folders to match R2 migration)
- * 3. Multi-Version (Checks V2 then V1 as backup)
+ * 3. Multi-Version (Checks V4, V3, V2, V1 as backup)
  */
 export const resolveScavengerKey = async (initialKey, version = R2_CURRENT_VERSION) => {
     if (!initialKey) return null;
@@ -104,8 +105,8 @@ export const resolveScavengerKey = async (initialKey, version = R2_CURRENT_VERSI
         variations.add(`products/${filename}`);
     }
 
-    // --- PROBING PHASE (V2 then V1) ---
-    const versionsToTry = ['v3', 'v2', 'v1'].filter(v => v !== version);
+    // --- PROBING PHASE (V4 -> V3 -> V2 -> V1) ---
+    const versionsToTry = ['v4', 'v3', 'v2', 'v1'].filter(v => v !== version);
     versionsToTry.unshift(version); 
 
     console.log(`[R2-Scavenger] 🧭 Probing ${variations.size} variations for: ${uuid || 'unknown'}`);
@@ -213,7 +214,7 @@ const s3ClientV2 = new S3Client({
     }
 });
 
-// V3 Client (Future Account / Scale)
+// V3 Client (Account 3 - bucket3lat)
 const s3ClientV3 = (R2_ENDPOINT_V3 && R2_ACCESS_KEY_ID_V3) ? new S3Client({
     region: "auto",
     endpoint: R2_ENDPOINT_V3,
@@ -224,12 +225,28 @@ const s3ClientV3 = (R2_ENDPOINT_V3 && R2_ACCESS_KEY_ID_V3) ? new S3Client({
     }
 }) : null;
 
+// V4 Client (Scale Account - bucket2026)
+const s3ClientV4 = (R2_ENDPOINT_V4 && R2_ACCESS_KEY_ID_V4) ? new S3Client({
+    region: "auto",
+    endpoint: R2_ENDPOINT_V4,
+    forcePathStyle: false,
+    credentials: {
+        accessKeyId: R2_ACCESS_KEY_ID_V4,
+        secretAccessKey: R2_SECRET_ACCESS_KEY_V4,
+    }
+}) : null;
+
 /**
  * Helper to get the correct client and bucket based on version.
  */
 export const getClientAndBucket = (version = R2_CURRENT_VERSION) => {
-    // If V1 is requested but credentials are missing, fallback to V2
-    // console.log(`[R2-DEBUG] getClientAndBucket called with version: ${version}`);
+    if (version === 'v4') {
+        if (!s3ClientV4) console.warn('[R2 Storage] WARNING: s3ClientV4 is NULL');
+        return { 
+            client: s3ClientV4 || s3ClientV3 || s3ClientV2, 
+            bucket: R2_BUCKET_NAME_V4 || 'bucket2026' 
+        };
+    }
     if (version === 'v3') {
         if (!s3ClientV3) console.warn('[R2 Storage] WARNING: s3ClientV3 is NULL');
         return { 
@@ -243,7 +260,7 @@ export const getClientAndBucket = (version = R2_CURRENT_VERSION) => {
     if (version === 'v1') {
         return { client: s3ClientV1, bucket: R2_BUCKET_NAME || 'offszn-storage' };
     }
-    return { client: s3ClientV2, bucket: R2_BUCKET_NAME_V2 || 'offsznlatbucket' };
+    return { client: s3ClientV4 || s3ClientV3 || s3ClientV2, bucket: R2_BUCKET_NAME_V4 || 'bucket2026' };
 };
 
 /**
@@ -422,6 +439,7 @@ export const getPublicUrl = (key, version = R2_CURRENT_VERSION) => {
     const { bucket } = getClientAndBucket(version);
     let endpoint;
     if (version === 'v1') endpoint = R2_ENDPOINT;
+    else if (version === 'v4') endpoint = R2_ENDPOINT_V4;
     else if (version === 'v3') endpoint = R2_ENDPOINT_V3;
     else endpoint = R2_ENDPOINT_V2;
 
@@ -436,21 +454,23 @@ export const deleteFromR2 = async (keys, explicitVersion = null) => {
     if (!keys || keys.length === 0) return;
 
     // Group keys by their correct version
-    const versionGroups = { v1: [], v2: [], v3: [] };
+    const versionGroups = { v1: [], v2: [], v3: [], v4: [] };
 
     for (const k of keys) {
         let cleanKey = k.startsWith('/') ? k.substring(1) : k;
         if (explicitVersion) {
+            if (!versionGroups[explicitVersion]) versionGroups[explicitVersion] = [];
             versionGroups[explicitVersion].push(cleanKey);
         } else {
             // Probe to find which bucket this key actually lives in
             const { key: resolvedKey, version: foundVersion } = await resolveScavengerKey(cleanKey, R2_CURRENT_VERSION);
+            if (!versionGroups[foundVersion]) versionGroups[foundVersion] = [];
             versionGroups[foundVersion].push(resolvedKey);
         }
     }
 
     // Delete from each group
-    for (const v of ['v1', 'v2', 'v3']) {
+    for (const v of ['v1', 'v2', 'v3', 'v4']) {
         if (versionGroups[v].length === 0) continue;
 
         const { client, bucket } = getClientAndBucket(v);

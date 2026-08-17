@@ -639,7 +639,7 @@ function createListItemHtml(item, index, type) {
     // 🔥 ENHANCED R2 DETECTION: Use storage_version as primary signal, fallback to path analysis
     const isR2 = (storageVer !== 'supabase') && window.AuthUtils &&
         ((typeof window.AuthUtils.isR2Url === 'function' && window.AuthUtils.isR2Url(rawImg)) ||
-            storageVer === 'v2' || storageVer === 'v1' || storageVer === 'v3' || storageVer === 'r2');
+            storageVer === 'v2' || storageVer === 'v1' || storageVer === 'v3' || storageVer === 'v4' || storageVer === 'r2');
     const imgPlaceholder = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
     let initialSrc = rawImg;

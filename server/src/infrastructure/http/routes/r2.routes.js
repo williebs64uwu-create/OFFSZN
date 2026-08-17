@@ -102,8 +102,8 @@ router.post('/r2/upload-url', authenticateTokenMiddleware, async (req, res) => {
 
         // Siempre usar el bucket principal
         const bucket = R2_BUCKET_NAME;
-        // 🔥 Default to current version (v3) for new uploads
-        const version = req.body.version || 'v3';
+        // 🔥 Default to current version (v4) for new uploads
+        const version = req.body.version || 'v4';
 
         const uploadUrl = await getPresignedUploadUrl(finalKey, finalFileType, version);
 
@@ -413,14 +413,16 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         }
 
         // 2. Determinar orden de búsqueda (Prioridad segun ?v=)
-        // V3 Added in preparation for future scale
-        let versionsToTry = ['v2', 'v1', 'v3'];
-        if (req.query.v === 'v1') versionsToTry = ['v1', 'v2', 'v3'];
-        if (req.query.v === 'v3') versionsToTry = ['v3', 'v2', 'v1'];
+        // V4 Default with full backward compatibility to V3, V2, V1
+        let versionsToTry = ['v4', 'v3', 'v2', 'v1'];
+        if (req.query.v === 'v1') versionsToTry = ['v1', 'v4', 'v3', 'v2'];
+        if (req.query.v === 'v2') versionsToTry = ['v2', 'v4', 'v3', 'v1'];
+        if (req.query.v === 'v3') versionsToTry = ['v3', 'v4', 'v2', 'v1'];
+        if (req.query.v === 'v4') versionsToTry = ['v4', 'v3', 'v2', 'v1'];
 
         // 2. Limpieza agresiva del Key (Quitar buckets si vienen en el path)
         let cleanKey = key;
-        const knownBuckets = ['offsznlatbucket', 'offszn-storage', 'offszn-storage/'];
+        const knownBuckets = ['bucket2026', 'bucket3lat', 'offsznlatbucket', 'offszn-storage', 'offszn-storage/'];
         for (const bucket of knownBuckets) {
             if (cleanKey.toLowerCase().startsWith(`${bucket}/`)) {
                 cleanKey = cleanKey.substring(bucket.length + 1);
