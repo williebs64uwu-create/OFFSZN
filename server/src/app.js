@@ -375,10 +375,29 @@ app.get('/recursos/x-flow-analyzer', (req, res) => {
     res.redirect(301, '/plugins/x-flow-analyzer.html');
 });
 
+// --- 3.0 WILLIE INSPIRED DEDICATED DIRECT ROUTES (Clean URLs without redirects) ---
+app.get(['/willieinspired', '/@willieinspired'], (req, res) => {
+    const willieLandingPath = path.join(rootPath, 'willieinspired/index.html');
+    if (fs.existsSync(willieLandingPath)) {
+        return res.sendFile(willieLandingPath);
+    }
+    return res.redirect(301, '/perfilpro.html?user=willieinspired');
+});
+
+app.get(['/willieinspired/:slug', '/@willieinspired/:slug'], (req, res, next) => {
+    const { slug } = req.params;
+    const cleanSlug = slug.replace(/\.html$/, '');
+    const customProductPath = path.join(rootPath, 'willieinspired', `${cleanSlug}.html`);
+    if (fs.existsSync(customProductPath)) {
+        return res.sendFile(customProductPath);
+    }
+    next();
+});
+
 // B. Clean URLs (Force Redirects & Internal Rewrites)
 app.use((req, res, next) => {
-    // Skip API routes and FFmpeg/Debug folders to avoid loops or blocking
-    const skipPaths = ['/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js', '/components'];
+    // Skip API routes, willieinspired, and FFmpeg/Debug folders to avoid loops or blocking
+    const skipPaths = ['/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js', '/components', '/willieinspired', '/@willieinspired'];
     if (skipPaths.some(p => req.path.startsWith(p))) return next();
 
     // 1. Force Redirect: Remove .html from browser address bar
@@ -427,7 +446,7 @@ app.use(express.static(publicPath));
 app.use(express.static(serverPublicPath));
 
 // Serve everything from rootPath — CSS, JS, images, HTML files, etc.
-app.use(express.static(rootPath, { dotfiles: 'deny' }));
+app.use(express.static(rootPath, { dotfiles: 'deny', redirect: false }));
 
 // --- 3.3.5 SERVER-SIDE ID OBFUSCATOR (Sync with script/id-obfuscator.js) ---
 const OBF_CHARS = 'qL8zF1Gk7XwNjR4yvB5tM6dncb9sPp2hQr3JmKW0ZTDVagHflSx_';
@@ -930,9 +949,18 @@ app.get([
     }
 });
 
-// --- 3.5.5 PLAYLIST SHORTCUT ROUTE (/@:username/:slug) ---
+// --- 3.5.5 PLAYLIST & CUSTOM USER SUB-ROUTES (/@:username/:slug) ---
 app.get(['/@:username/:slug', '/:username/:slug'], async (req, res, next) => {
     const { username, slug } = req.params;
+
+    // Custom product landings for willieinspired
+    if (username === 'willieinspired') {
+        const customProductPath = path.join(rootPath, 'willieinspired', `${slug}.html`);
+        if (fs.existsSync(customProductPath)) {
+            return res.sendFile(customProductPath);
+        }
+    }
+
     const playlistPagePath = path.join(rootPath, 'playlist.html');
     if (!fs.existsSync(playlistPagePath)) return next();
 
@@ -1048,6 +1076,14 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
 
         if (!user) {
             return res.status(404).sendFile(path.join(rootPath, '404.html'));
+        }
+
+        // --- SPECIAL: WILLIE INSPIRED CUSTOM LANDING ---
+        if (username === 'willieinspired') {
+            const willieLandingPath = path.join(rootPath, 'willieinspired/index.html');
+            if (fs.existsSync(willieLandingPath)) {
+                return res.sendFile(willieLandingPath);
+            }
         }
 
         // --- TEMPLATE SELECTION ---

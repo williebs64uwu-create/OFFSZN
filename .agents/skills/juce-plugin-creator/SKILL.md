@@ -1,131 +1,235 @@
 ---
 name: juce-plugin-creator
-description: Standard instructions and best practices for creating, securing, compiling, and packaging OFFSZN JUCE VST3 audio plugins (Easy Mix, Easy Master, Inka Kola, etc.).
+description: Standard instructions, end-to-end development workflow, security architecture, DAW stability standards, and installer/packaging standards for creating, compiling, and distributing OFFSZN JUCE VST3/AU audio plugins (Easy Mix, Easy Master, Inka Kola, Sample, etc.).
 ---
 
-# OFFSZN JUCE VST3 Plugin Creator & Licensing Architecture
+# OFFSZN JUCE VST3/AU Plugin Creator & Licensing Architecture
 
-This skill defines the mandatory technical standards for all OFFSZN VST3 audio plugins.
+This skill defines the mandatory technical standards, anti-abuse security patterns, DAW stability rules, and development lifecycle for all OFFSZN VST3 and AudioUnit (AU) audio plugins across Windows and macOS.
 
 ---
 
-## 1. Local GUI Architecture (Fixing Error 11 & Error 13)
+## 🧭 End-to-End Plugin Lifecycle Workflow
 
-To prevent WebView2 network disconnections (Error 11) and DNS resolution failures (Error 13), all plugins load their HTML/CSS/JS interface from local disk:
+When creating a new OFFSZN plugin or upgrading an existing one, always follow this structured 5-phase workflow:
 
-### `PluginEditor.cpp` URL Loading Logic
-```cpp
-juce::File guiDir = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-                        .getChildFile ("OFFSZN")
-                        .getChildFile ("<PluginGuiFolder>"); // e.g. EasyMixGui, EasyMasterGui
-juce::File guiFile = guiDir.getChildFile ("mockup.html");
-
-// Auto-copy on first run from binary directory
-if (!guiFile.existsAsFile())
-{
-    guiDir.createDirectory();
-    juce::File exeDir = juce::File::getSpecialLocation (juce::File::currentExecutableFile)
-                            .getParentDirectory();
-    juce::File src = exeDir.getChildFile ("mockup.html");
-    if (src.existsAsFile())
-        src.copyFileTo (guiFile);
-}
-
-const juce::String url = guiFile.existsAsFile()
-    ? "file:///" + guiFile.getFullPathName().replaceCharacter ('\\', '/')
-    : "https://offszn.lat/plugins/<plugin-slug>?v=5"; // Remote fallback
-
-webComponent->goToURL (url);
+```mermaid
+graph TD
+    A[Phase 1: Brainstorming & DSP Architecture] --> B[Phase 2: GUI Mockup Prototyping]
+    B --> C[Phase 3: JUCE 8 DSP & DAW Stability Engine]
+    C --> D[Phase 4: Multi-Layer Anti-Abuse Licensing]
+    D --> E[Phase 5: Automated Packaging & CI/CD Pipelines]
 ```
 
 ---
 
-## 2. Server-Side Authoritative C++ Security (Anti-Piracy)
+## 🎨 Phase 1: Brainstorming & DSP Architecture Planning
 
-**NEVER trust JS `setLicenseStatus(true)` calls!** Local HTML files can be edited by users.
+Before writing C++ or HTML code, establish a clear technical design document:
+1. **Target Audio Use-Case & Identity:**
+   - Define plugin purpose (e.g., Vocal Chain, Mastering Limiter, Dynamic Analog Saturator, Multi-gap Audio Recorder).
+   - Brand name, product code (`4 chars` unique, e.g., `Esym`, `Esma`), manufacturer code (`Ofsz`).
+2. **DSP Parameter Blueprint:**
+   - List all automatable parameters, default values, skew curves, and units (`dB`, `Hz`, `ms`, `%`).
+3. **Licensing Tier:**
+   - `Free / Gift Edition` (No serial required, full offline GUI customization).
+   - `Commercial / Trial Edition` (Online activation + offline tamper-resistant `.settings` timestamps).
 
-### Native Function Bridge (`setLicenseStatus`)
-```cpp
-if (audioProcessor.isLicenseValid.load())
-{
-    complete (juce::var());
-    return; // Already restored from disk
-}
+---
 
-juce::String serial = args.size() > 1 ? args[1].toString().trim() : "";
-if (serial.isEmpty()) { audioProcessor.isLicenseValid.store (false); return; }
+## 🖥️ Phase 2: Local GUI Architecture & Offline-First Design (`mockup.html`)
 
-// Launch C++ background HTTP POST to server
-juce::Thread::launch ([this, serial] ()
-{
-    juce::String hwid = juce::SystemStats::getComputerName() + "_" + juce::SystemStats::getUniqueDeviceID();
-    juce::URL verifyUrl ("https://offszn.lat/api/plugin/activate");
-    juce::String jsonBody = "{\"serial_key\":\"" + serial + "\",\"hwid\":\"" + hwid + "\",\"plugin_name\":\"<PluginName>\"}";
-    verifyUrl = verifyUrl.withPOSTData (jsonBody);
+To guarantee zero latency on plugin launch and eliminate network dependency / WebView2 errors (Error 11 & Error 13):
 
-    auto httpOptions = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
-                           .withExtraHeaders ("Content-Type: application/json\n")
-                           .withConnectionTimeoutMs (8000);
+1. **Local-First HTML Loading:** The plugin interface must always load from disk (`AppData/Roaming/OFFSZN/<PluginGuiFolder>/mockup.html` on Windows, or `Application Support/OFFSZN/<PluginGuiFolder>/mockup.html` on macOS).
+2. **Trial Launch Protocol (DO NOT SPAM SERVER):**
+   - **NEVER** call `fetch /api/plugin/activate` on every single plugin launch for trial users.
+   - **The Golden Rule:** When the plugin opens, `callNative("getLicenseState")` asks C++ for the local validation status. If C++ reports `isValid == true`, the trial is active offline. Trust the C++ engine, calculate remaining days locally from the timestamp, and display the trial badge.
+   - **Only trigger online fetch** during initial serial registration or when C++ explicitly flags `isValid == false`.
 
-    std::unique_ptr<juce::InputStream> stream (verifyUrl.createInputStream (httpOptions));
-    bool serverConfirmed = false;
-    juce::String licenseType = "lifetime";
-    juce::String expiresAtStr = "never";
+```javascript
+// ✅ Correct Offline-First Startup Flow in mockup.html
+callNative("getLicenseState").then(function (state) {
+  var isValid = state && state.isValid;
+  var serial = (state && state.serial || "").trim();
 
-    if (stream != nullptr)
-    {
-        auto responseJson = juce::JSON::parse (stream->readEntireStreamAsString());
-        if (responseJson.isObject() && (bool) responseJson.getProperty ("success", false))
-        {
-            serverConfirmed = true;
-            licenseType     = responseJson.getProperty ("license_type", "lifetime").toString();
-            expiresAtStr    = responseJson.getProperty ("expires_at", "never").toString();
+  if (serial) {
+    var isTrial = serial.toUpperCase().indexOf("TRIAL-") !== -1;
+    if (isTrial) {
+      if (isValid) {
+        // Active trial: trust C++ local timestamp validation completely
+        var tokens = serial.split('|');
+        var expiresUnix = tokens.length > 1 ? parseInt(tokens[1], 10) : 0;
+        if (expiresUnix > 0) {
+          var secondsLeft = expiresUnix - Math.floor(Date.now() / 1000);
+          var daysLeft = Math.ceil(secondsLeft / 86400);
+          showTrialBadge(daysLeft);
         }
+      } else {
+        // Expired or clock tamper detected locally by C++
+        triggerLicenseExpired("Prueba Expirada", "Tu periodo de prueba ha expirado. Adquiere una licencia FULL en offszn.lat.");
+      }
+    } else {
+      // FULL Key: 100% offline forever
+      if (!isValid) openActivationModal(false);
     }
-
-    juce::MessageManager::callAsync ([this, serial, serverConfirmed, licenseType, expiresAtStr] ()
-    {
-        if (serverConfirmed)
-        {
-            juce::String diskData = serial;
-            if (licenseType == "trial" && expiresAtStr != "never" && expiresAtStr.isNotEmpty())
-            {
-                juce::Time expTime  = juce::Time::fromISO8601 (expiresAtStr);
-                int64_t expiresUnix = expTime.toMilliseconds() / 1000;
-                int64_t nowUnix     = juce::Time::currentTimeMillis() / 1000;
-                diskData            = serial + "|" + juce::String (expiresUnix) + "|" + juce::String (nowUnix);
-            }
-
-            juce::File appData = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-                                     .getChildFile ("OFFSZN").getChildFile ("<PluginSettingsFile>.settings");
-            appData.getParentDirectory().createDirectory();
-            appData.replaceWithText (diskData);
-            audioProcessor.isLicenseValid.store (true);
-        }
-        else
-        {
-            audioProcessor.isLicenseValid.store (false);
-        }
-    });
+  } else {
+    // No serial: ask for activation
+    openActivationModal(false);
+  }
 });
 ```
 
 ---
 
-## 3. Offline License Verification & Anti-Tamper (`PluginProcessor.cpp`)
+## ⚡ Phase 3: JUCE 8 C++ DSP & DAW Crash-Prevention Standards
 
+### 🛡️ Mandatory DAW Stability & Anti-Crash Rules (Windows & macOS)
+
+| Problem Area | Root Cause in DAWs | Mandatory Code Implementation |
+|---|---|---|
+| **1. COM Threading in DAWs** | Ableton Live, Cubase, and Reaper open VST3 GUIs on non-COM threads. WebView2 throws unhandled memory exceptions and **closes the DAW immediately**. | Call `CoInitializeEx (nullptr, COINIT_APARTMENTTHREADED);` inside `#if JUCE_WINDOWS` at the top of the Editor constructor. |
+| **2. Multi-Instance File Locking** | Multiple plugin instances sharing a single WebView2 cache directory collide on Chromium SQLite `.lock` files. | Pre-create a dedicated isolated directory: `AppData/Roaming/OFFSZN/<PluginName>WV2`. |
+| **3. Use-After-Free Window Closes** | If a user opens and closes a plugin window rapidly while background threads or async calls are pending, accessing `this` crashes the DAW. | **Always** wrap `juce::MessageManager::callAsync` with `juce::Component::SafePointer<MyEditor> safeThis(this);` and check `if (safeThis == nullptr) return;`. |
+| **4. Destructor Timer Execution** | 30Hz RMS timers firing during object destruction crash by emitting events to null WebViews. | Explicitly call `stopTimer(); webComponent = nullptr;` in the Editor destructor. |
+| **5. Mono Track Bus Crash** | Rejecting Mono configurations in `isBusesLayoutSupported` crashes or prevents loading on mono vocal tracks in Cubase, Logic Pro, and Reaper. | Allow both `mono` and `stereo` if `mainOutput == mainInput`. |
+| **6. Denormal Floats in DSP** | Infinite floating-point fractions in IIR filters or reverbs spike CPU to 100%. | Add `juce::ScopedNoDenormals noDenormals;` at the very beginning of `processBlock`. |
+
+#### 1. Bulletproof `PluginEditor.cpp` Boilerplate
+```cpp
+#include "PluginProcessor.h"
+#include "PluginEditor.h"
+
+#if JUCE_WINDOWS
+ #include <objbase.h>
+#endif
+
+MyAudioProcessorEditor::MyAudioProcessorEditor (MyAudioProcessor& p)
+    : AudioProcessorEditor (&p), audioProcessor (p)
+{
+#if JUCE_WINDOWS
+    // 1. Mandatory COM Initialization for Ableton Live / Cubase
+    CoInitializeEx (nullptr, COINIT_APARTMENTTHREADED);
+
+    // 2. Dedicated isolated WebView2 user data folder
+    juce::File wv2Folder = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+                               .getChildFile ("OFFSZN")
+                               .getChildFile ("<PluginName>WV2");
+    wv2Folder.createDirectory();
+
+    auto options = juce::WebBrowserComponent::Options{}
+        .withBackend (juce::WebBrowserComponent::Options::Backend::webview2)
+        .withNativeIntegrationEnabled()
+        .withWinWebView2Options (
+            juce::WebBrowserComponent::Options::WinWebView2{}
+                .withUserDataFolder (wv2Folder)
+                .withStatusBarDisabled()
+                .withBuiltInErrorPageDisabled())
+#else
+    // macOS: WebKit / WKWebView is automatically the native default in JUCE 8
+    auto options = juce::WebBrowserComponent::Options{}
+        .withNativeIntegrationEnabled()
+#endif
+        .withNativeFunction ("setParam", [this] (const juce::Array<juce::var>& args, auto complete)
+        {
+            if (args.size() >= 2)
+            {
+                juce::String id = args[0].toString();
+                float val = (float) args[1];
+
+                // 3. SafePointer protection against Use-After-Free
+                juce::Component::SafePointer<MyAudioProcessorEditor> safeThis (this);
+                juce::MessageManager::callAsync ([safeThis, id, val]
+                {
+                    if (safeThis == nullptr) return;
+                    safeThis->audioProcessor.setParamFromUI (id, val);
+                });
+            }
+            complete (juce::var());
+        });
+
+    webComponent = std::make_unique<MyWebBrowser> (options);
+
+    // Load Local GUI
+    juce::File guiDir = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+                            .getChildFile ("OFFSZN").getChildFile ("<PluginName>Gui");
+    juce::File guiFile = guiDir.getChildFile ("mockup.html");
+
+    const juce::String url = guiFile.existsAsFile()
+        ? "file:///" + guiFile.getFullPathName().replaceCharacter ('\\', '/')
+        : "https://offszn.lat/plugins/<slug>?v=1";
+
+    webComponent->goToURL (url);
+    addAndMakeVisible (*webComponent);
+    setSize (1000, 530);
+    startTimerHz (30);
+}
+
+// 4. Clean Destructor
+MyAudioProcessorEditor::~MyAudioProcessorEditor()
+{
+    stopTimer();
+    webComponent = nullptr;
+}
+```
+
+#### 2. Universal Bus Layout (`PluginProcessor.cpp`)
+```cpp
+#ifndef JucePlugin_PreferredChannelConfigurations
+bool MyAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+{
+    // Allow Mono and Stereo tracks seamlessly
+    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
+     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+        return false;
+
+    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
+        return false;
+
+    return true;
+}
+#endif
+```
+
+---
+
+## 🔒 Phase 4: Multi-Layer Anti-Abuse Licensing Architecture
+
+**Security Philosophy:** Never trust client-side JavaScript. The C++ audio engine is the authoritative enforcement gate.
+
+```mermaid
+sequenceDiagram
+    participant JS as Frontend (mockup.html)
+    participant CPP as C++ Native Engine
+    participant SVR as OFFSZN Server (Supabase)
+
+    Note over JS,CPP: Case 1: Startup (Offline-First)
+    CPP->>CPP: Read .settings (Check timestamps & clock tampering)
+    JS->>CPP: callNative("getLicenseState")
+    CPP-->>JS: { isValid: true/false, serial: "..." }
+    
+    Note over JS,SVR: Case 2: New Key Activation
+    JS->>SVR: POST /api/plugin/activate (serial, hwid)
+    SVR-->>JS: { success: true, license_type, expires_at }
+    JS->>CPP: callNative("setLicenseStatus", true, serial)
+    CPP->>SVR: Authoritative C++ HTTP Verification
+    SVR-->>CPP: Confirmation + Signed Expiry Timestamp
+    CPP->>CPP: Write encrypted/timestamped .settings on disk
+    CPP->>CPP: isLicenseValid.store(true)
+```
+
+### 1. Offline Anti-Tamper & Clock Rewind Verification (`PluginProcessor.cpp`)
 ```cpp
 if (settingsFile.existsAsFile())
 {
     juce::String content = settingsFile.loadFileAsString().trim();
-    if (content.startsWith ("<SERIAL_PREFIX_FULL>-")) // e.g. EASY-FULL-, EASY-MASTER-FULL-
+    if (content.startsWith ("<PREFIX>-FULL-"))
     {
-        // FULL License: 100% offline forever, no clock or timestamp checks
-        isLicenseValid.store (true);
+        isLicenseValid.store (true); // Lifetime license: permanent offline access
     }
-    else if (content.startsWith ("<SERIAL_PREFIX_TRIAL>-")) // e.g. EASY-TRIAL-
+    else if (content.startsWith ("<PREFIX>-TRIAL-"))
     {
-        auto tokens       = juce::StringArray::fromTokens (content, "|", "");
+        auto tokens         = juce::StringArray::fromTokens (content, "|", "");
         juce::String serial = tokens.size() > 0 ? tokens[0] : content;
         int64_t expiresAt   = tokens.size() > 1 ? tokens[1].getLargeIntValue() : 0;
         int64_t lastCheck   = tokens.size() > 2 ? tokens[2].getLargeIntValue() : 0;
@@ -133,15 +237,16 @@ if (settingsFile.existsAsFile())
 
         if (expiresAt > 0 && now >= expiresAt)
         {
-            isLicenseValid.store (false); // Expired trial
+            isLicenseValid.store (false); // Expired trial: bypass/lock
         }
         else if (lastCheck > 0 && now < (lastCheck - 3600))
         {
-            isLicenseValid.store (false); // Clock rewind detected
+            // Clock tampering detected (user rolled back PC system clock)
+            isLicenseValid.store (false);
         }
         else
         {
-            isLicenseValid.store (true);
+            isLicenseValid.store (true); // Valid trial: update last-seen timestamp
             if (expiresAt > 0)
                 settingsFile.replaceWithText (serial + "|" + juce::String (expiresAt) + "|" + juce::String (now));
         }
@@ -149,103 +254,102 @@ if (settingsFile.existsAsFile())
 }
 ```
 
----
-
----
-
-## 4. Ableton Live 11 & DAW Compatibility Standards (JUCE 8 + WebView2)
-
-To prevent immediate host crashes in Ableton Live 11 and other DAWs when opening the VST3 editor:
-
-### A. Windows COM Thread Apartment Initialization
-Ableton Live 11 instantiates VST3 editor windows on threads where COM is not initialized. Before instantiating `juce::WebBrowserComponent` in `PluginEditor.cpp`, call:
+### 2. Audio Processing Bypass Enforcement
 ```cpp
-#if JUCE_WINDOWS
-  #include <objbase.h>
-  // In Editor Constructor:
-  CoInitializeEx (nullptr, COINIT_APARTMENTTHREADED);
-#endif
-```
+void MyAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
+{
+    juce::ScopedNoDenormals noDenormals;
 
-### B. Isolated WebView2 Cache Folder per Plugin
-Never share the same `WebView2Cache` folder across different plugins or plugin instances to prevent file locking conflicts (`ERROR_SHARING_VIOLATION`):
-```cpp
-juce::File wv2Folder = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-                           .getChildFile ("OFFSZN")
-                           .getChildFile ("<PluginName>WV2"); // e.g. InkaKolaWV2, EasyMixWV2
-wv2Folder.createDirectory();
+    // Clear extra output channels
+    for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
+        buffer.clear (i, 0, buffer.getNumSamples());
 
-auto options = juce::WebBrowserComponent::Options{}
-    .withWinWebView2Options (juce::WebBrowserComponent::Options::WinWebView2{}.withUserDataFolder (wv2Folder));
-```
+    // If license is invalid, cleanly bypass audio without processing
+    if (!isLicenseValid.load())
+        return;
 
-### C. Avoid Duplicate Function Listener Registration
-**NEVER** register the same function name in both `.withEventListener("funcName", ...)` and `.withNativeFunction("funcName", ...)`. Having duplicate keys causes JUCE's internal options map to abort during `WebBrowserComponent` construction. Use `.withNativeFunction` exclusively for two-way JS ↔ C++ bridges.
-
-### D. SafePointer Protection for Asynchronous Callbacks
-Always wrap `this` pointers in `juce::Component::SafePointer` when scheduling async tasks to prevent crashes if the DAW closes the plugin window prematurely:
-```cpp
-juce::Component::SafePointer<MyAudioProcessorEditor> safeThis (this);
-juce::MessageManager::callAsync ([safeThis, id, val] {
-    if (safeThis != nullptr)
-        safeThis->audioProcessor.setParamFromUI (id, val);
-});
+    // ... Real-time DSP Processing ...
+}
 ```
 
 ---
 
-## 5. Inno Setup Installer Standard (`.iss`) & Silent WebView2 Auto-Installation
+## 📦 Phase 5: Packaging, Inno Setup & macOS CI/CD Standards
 
-### Licensing Security Guarantee
-Installing Microsoft Edge WebView2 Runtime **has ZERO impact on plugin licensing or anti-piracy security**. 
-- Licensing is 100% server-verified and enforced in compiled C++ native code (`PluginProcessor.cpp` / `validateKey` / `getHWID`).
-- WebView2 Runtime is strictly an HTML/CSS/JS UI renderer.
-
-### Inno Setup (`.iss`) Script with Background Silent WebView2 Installer
-All OFFSZN plugin installers must automatically check for Microsoft Edge WebView2 Runtime in the Windows Registry and silently install it if missing:
+### 🪟 Windows Installer Standard (`<PLUGIN>.iss`)
+- **Flags:** Use `replacesameversion uninsneveruninstall` for `mockup.html` to guarantee GUI updates on reinstall without erasing user settings.
+- **Dependency Checks:** Auto-detect and silently install **Microsoft Visual C++ 2015-2022 x64** and **Microsoft Edge WebView2 Runtime**.
+- **Anti-Nesting Cleanup:** Purge legacy nested folders (`PLUGIN.vst3\PLUGIN.vst3`) during install step to eliminate duplicate `PLUGIN_2` DAW entries.
 
 ```ini
 [Setup]
+AppId={{UNIQUE-GUID-HERE}}
 AppName=OFFSZN <PLUGIN_NAME> VST3
-AppVersion=1.0.0
-DefaultDirName={autopf}\OFFSZN\<PLUGIN_NAME>
+AppVersion=2.0.1
+AppPublisher=OFFSZN
+AppPublisherURL=https://offszn.lat
+DefaultDirName={commoncf}\VST3
 DefaultGroupName=OFFSZN
-OutputDir=.\installer_output
-OutputBaseFilename=<PLUGIN_NAME>_Setup
-Compression=lzma2/max
+DisableProgramGroupPage=yes
+OutputBaseFilename=OFFSZN_<PLUGIN_NAME>_Setup
+OutputDir=.\Output
+Compression=lzma2/ultra64
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64compatible
 ArchitecturesAllowed=x64compatible
 PrivilegesRequired=admin
+WizardStyle=modern
 
 [Files]
-Source: "build\<PLUGIN_NAME>_artefacts\Release\VST3\<PLUGIN_NAME>.vst3\*"; DestDir: "{commoncf64}\VST3\<PLUGIN_NAME>.vst3"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "build\<TARGET>_artefacts\Release\VST3\<PLUGIN_NAME>.vst3\*"; DestDir: "{commoncf}\VST3\<PLUGIN_NAME>.vst3"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "mockup.html"; DestDir: "{userappdata}\OFFSZN\<PluginGuiFolder>"; DestName: "mockup.html"; Flags: replacesameversion uninsneveruninstall
 
 [Code]
 function IsWebView2Installed(): Boolean;
-var
-  verStr: String;
+var verStr: String;
 begin
   Result := RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3C4FA00-2870-474C-B5E0-F91685E92E76}', 'pv', verStr) or
             RegQueryStringValue(HKCU, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3C4FA00-2870-474C-B5E0-F91685E92E76}', 'pv', verStr) or
             RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3C4FA00-2870-474C-B5E0-F91685E92E76}', 'pv', verStr);
-  if verStr = '0.0.0.0' then
-    Result := False;
+  if (verStr = '0.0.0.0') or (verStr = '') then Result := False;
+end;
+
+function IsVCRedistInstalled(): Boolean;
+var installed: Cardinal;
+begin
+  Result := False;
+  if RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Installed', installed) then
+    Result := (installed = 1)
+  else if RegQueryDWordValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Installed', installed) then
+    Result := (installed = 1);
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
-var
-  resCode: Integer;
-  psCmd: String;
+var resCode: Integer; psCmd: String;
 begin
-  if CurStep = ssPostInstall then
+  if CurStep = ssInstall then
+  begin
+    DelTree(ExpandConstant('{commoncf}\VST3\<PLUGIN_NAME>.vst3\<PLUGIN_NAME>.vst3'), True, True, True);
+  end
+  else if CurStep = ssPostInstall then
   begin
     if not IsWebView2Installed() then
     begin
-      // Silent download and background install of WebView2 Runtime (invisible to user)
-      psCmd := '-NoProfile -ExecutionPolicy Bypass -Command "$webClient = New-Object System.Net.WebClient; $webClient.DownloadFile(''https://go.microsoft.com/fwlink/p/?LinkId=2124703'', ''$env:TEMP\wv2setup.exe''); Start-Process ''$env:TEMP\wv2setup.exe'' -ArgumentList ''/silent /install'' -Wait"';
+      psCmd := '-NoProfile -ExecutionPolicy Bypass -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile(''https://go.microsoft.com/fwlink/p/?LinkId=2124703'', ''$env:TEMP\wv2setup.exe''); Start-Process ''$env:TEMP\wv2setup.exe'' -ArgumentList ''/silent /install'' -Wait"';
+      Exec('powershell.exe', psCmd, '', SW_HIDE, ewWaitUntilTerminated, resCode);
+    end;
+    if not IsVCRedistInstalled() then
+    begin
+      psCmd := '-NoProfile -ExecutionPolicy Bypass -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile(''https://aka.ms/vs/17/release/vc_redist.x64.exe'', ''$env:TEMP\vc_redist.x64.exe''); Start-Process ''$env:TEMP\vc_redist.x64.exe'' -ArgumentList ''/quiet /norestart'' -Wait"';
       Exec('powershell.exe', psCmd, '', SW_HIDE, ewWaitUntilTerminated, resCode);
     end;
   end;
 end;
 ```
+
+---
+
+### 🍏 macOS GitHub Actions Automated CI/CD (`build_mac.yml`)
+- **Generator:** Always use `-G "Xcode"` with `-DCMAKE_OSX_DEPLOYMENT_TARGET="11.0"` on `macos-14` (Apple Silicon).
+- **Formats:** Compile both **VST3** and **AU (.component)** formats.
+- **Packaging:** Combine into an Apple installer `.pkg` via `pkgbuild` and `productbuild` with universal support (`arm64` + `x86_64`).

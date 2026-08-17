@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// --- Upload Preferences (Radio Buttons) ---
+// --- Upload Preferences (Radio Buttons & Switches) ---
 async function loadPreferences() {
     try {
         const { data: { user } } = await supabaseClient.auth.getUser();
@@ -41,18 +41,24 @@ async function loadPreferences() {
 
         const { data, error } = await supabaseClient
             .from('profiles')
-            .select('upload_defaults_preference')
+            .select('upload_defaults_preference, auto_delist_exclusive')
             .eq('id', user.id)
             .single();
 
         if (error) throw error;
 
+        // 1. Upload defaults preference
         const pref = data?.upload_defaults_preference || 'last_used';
         const radio = document.querySelector(`input[name="uploadDefaults"][value="${pref}"]`);
         if (radio) radio.checked = true;
 
+        // 2. Auto-delist exclusive preference (default: false)
+        const autoDelist = data?.auto_delist_exclusive === true;
+        const autoDelistToggle = document.getElementById('autoDelistExclusiveToggle');
+        if (autoDelistToggle) autoDelistToggle.checked = autoDelist;
+
     } catch (error) {
-        // console.error('Error loading preferences:', error);
+        console.error('Error loading preferences:', error);
     }
 }
 
@@ -61,12 +67,45 @@ window.saveUploadPreference = async function (value) {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if (!user) return;
 
-        await supabaseClient
-            .from('profiles')
-            .update({ upload_defaults_preference: value })
-            .eq('id', user.id);
+        await Promise.all([
+            supabaseClient
+                .from('profiles')
+                .update({ upload_defaults_preference: value })
+                .eq('id', user.id),
+            supabaseClient
+                .from('users')
+                .update({ upload_defaults_preference: value })
+                .eq('id', user.id)
+        ]);
     } catch (error) {
-        // console.error('Error saving preference:', error);
+        console.error('Error saving upload preference:', error);
+    }
+}
+
+window.saveAutoDelistPreference = async function (isChecked) {
+    try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return;
+
+        await Promise.all([
+            supabaseClient
+                .from('profiles')
+                .update({ auto_delist_exclusive: isChecked })
+                .eq('id', user.id),
+            supabaseClient
+                .from('users')
+                .update({ auto_delist_exclusive: isChecked })
+                .eq('id', user.id)
+        ]);
+
+        if (window.toast) {
+            window.toast.success('Preferencia guardada correctamente');
+        }
+    } catch (error) {
+        console.error('Error saving auto delist preference:', error);
+        if (window.toast) {
+            window.toast.error('Error al guardar preferencia');
+        }
     }
 }
 

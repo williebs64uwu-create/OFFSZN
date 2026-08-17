@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VOCAL PRESET · OFFSZN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-chassis: #0b0c10;
+      --bg-window: #111217;
+      --card-bg: #16171e;
+      --card-inner: #0c0d12;
+      --border-card: rgba(255, 255, 255, 0.07);
+      --border-card-hover: rgba(255, 255, 255, 0.22);
+      --border-subtle: rgba(255, 255, 255, 0.04);
+      --text-white: #ffffff;
+      --text-dim: #717384;
+      --text-label: #8e90a2;
+      --accent-white: #ffffff;
+      --accent-glow: rgba(255, 255, 255, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #060709;
+      color: var(--text-white);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .plugin-window {
+      width: 100vw;
+      height: 100vh;
+      background: var(--bg-chassis);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ════════════ TOP HEADER BAR ════════════ */
+    .top-header {
+      height: 52px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+      background: linear-gradient(180deg, #15161f 0%, #0f1015 100%);
+      flex-shrink: 0;
+      z-index: 30;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 2.2px;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .brand-badge {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    /* Primary Mode Switcher (MODO TALK vs MODO EDITAR) */
+    .mode-switch-container {
+      display: flex;
+      background: #08090c;
+      border: 1px solid var(--border-card);
+      border-radius: 8px;
+      padding: 3px;
+      gap: 3px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+    }
+
+    .mode-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-dim);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .mode-tab-btn:hover {
+      color: #fff;
+    }
+
+    .mode-tab-btn.active {
+      background: var(--card-bg);
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    .mode-tab-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 6px #fff;
+    }
+
+    /* Right Header Preset & Magnitude */
+    .header-right-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .preset-pill-bar {
+      display: flex;
+      align-items: center;
+      background: #090a0d;
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      padding: 3px 8px;
+      gap: 8px;
+    }
+
+    .preset-arrow-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      font-size: 10px;
+      cursor: pointer;
+      padding: 2px 4px;
+    }
+
+    .preset-arrow-btn:hover { color: #fff; }
+
+    .preset-name-display {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: #fff;
+      min-width: 140px;
+      text-align: center;
+    }
+
+    /* ════════════ AI VOICE INTERACTION STRIP (OLED CONSOLE) ════════════ */
+    .ai-voice-strip {
+      background: #090a0e;
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 8px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .talk-trigger-btn {
+      background: #181a23;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      padding: 7px 18px;
+      border-radius: 24px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    .talk-trigger-btn:hover {
+      background: #232634;
+      border-color: #fff;
+      box-shadow: 0 0 14px rgba(255,255,255,0.25);
+    }
+
+    .talk-trigger-btn.listening {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+      box-shadow: 0 0 20px rgba(255,255,255,0.8);
+      animation: micPulse 1.2s infinite;
+    }
+
+    @keyframes micPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    .talk-led-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 6px #fff;
+    }
+
+    .talk-trigger-btn.listening .talk-led-dot {
+      background: #000;
+      box-shadow: 0 0 6px #000;
+    }
+
+    .oled-matrix-screen {
+      flex: 1;
+      background: #050608;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      height: 36px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+    }
+
+    .oled-main-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+      color: #ffffff;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .oled-status-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    /* ════════════ MAIN VIEWPORT CONTENT ════════════ */
+    .viewport-container {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 14px 24px;
+    }
+
+    /* ════════════ VIEW 1: MODO EDITAR (MORPHO 4 GRAND CARDS) ════════════ */
+    .cards-grand-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .grand-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+      gap: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+    }
+
+    .grand-card:hover {
+      border-color: var(--border-card-hover);
+    }
+
+    .grand-card.pulsing-glow {
+      animation: cardPulseGlow 1.2s ease;
+    }
+
+    @keyframes cardPulseGlow {
+      0% { border-color: #fff; box-shadow: 0 0 25px rgba(255,255,255,0.4); }
+      100% { border-color: var(--border-card); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    }
+
+    .grand-card.bypassed {
+      opacity: 0.35;
+      filter: grayscale(1);
+    }
+
+    .card-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 22px;
+    }
+
+    .card-power-toggle {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 8px rgba(255,255,255,0.8);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .card-power-toggle.off {
+      background: #2b2e3c;
+      box-shadow: none;
+    }
+
+    .card-module-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-menu-btn {
+      color: var(--text-dim);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* 3D Visualizer Screens */
+    .card-visualizer-screen {
+      height: 98px;
+      background: var(--card-inner);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 3px 10px rgba(0,0,0,0.7);
+    }
+
+    canvas.screen-canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Key / Scale Quick Buttons */
+    .keys-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 3px;
+    }
+
+    .key-btn-pill {
+      background: #101117;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 4px 0;
+      text-align: center;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .key-btn-pill:hover {
+      color: #fff;
+      border-color: rgba(255,255,255,0.25);
+    }
+
+    .key-btn-pill.active {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+      box-shadow: 0 0 10px rgba(255,255,255,0.6);
+    }
+
+    .scale-mini-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+
+    .scale-btn-pill {
+      background: #101117;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-dim);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 4px;
+      text-align: center;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .scale-btn-pill.active {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: #fff;
+      color: #fff;
+    }
+
+    /* ════════════ MORPHO 1:1 PERFECT ARC KNOBS ════════════ */
+    .card-knobs-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      gap: 6px;
+    }
+
+    .sub-section-title {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #ffffff;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    .knobs-row-layout {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      width: 100%;
+    }
+
+    /* Morpho Knob Unit (Clean Arc without text jamming inside) */
+    .morpho-knob-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: ns-resize;
+    }
+
+    .morpho-knob-disc {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: #0e0f14;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.8), 0 3px 8px rgba(0,0,0,0.6);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s;
+    }
+
+    .morpho-knob-disc:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .morpho-svg-arc {
+      position: absolute;
+      inset: -4px;
+      width: 50px;
+      height: 50px;
+      pointer-events: none;
+      transform: rotate(-90deg);
+    }
+
+    .arc-bg-track {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 2.5;
+    }
+
+    .arc-active-stroke {
+      fill: none;
+      stroke: #ffffff;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.05s ease-out;
+      filter: drop-shadow(0 0 3px rgba(255,255,255,0.6));
+    }
+
+    .morpho-knob-needle {
+      position: absolute;
+      width: 2px;
+      height: 8px;
+      background: #ffffff;
+      border-radius: 2px;
+      top: 3px;
+      transform-origin: 50% 18px;
+      box-shadow: 0 0 6px rgba(255,255,255,0.9);
+      transition: transform 0.05s ease-out;
+    }
+
+    .morpho-knob-label {
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-label);
+      text-align: center;
+    }
+
+    .morpho-knob-val-tooltip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 700;
+      color: var(--text-dim);
+    }
+
+    .morpho-dropdown-pill {
+      background: #111217;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      margin: 0 auto;
+    }
+
+    .morpho-dropdown-pill:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Sub Slider Bar at Bottom of Card */
+    .card-resample-slider {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      width: 100%;
+      margin-top: 2px;
+    }
+
+    .resample-slider-header {
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .morpho-linear-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      background: #20222c;
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .morpho-linear-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(255,255,255,0.8);
+    }
+
+    /* ════════════ VIEW 2: MODO TALK (GLOBAL VOICE DASHBOARD) ════════════ */
+    .talk-mode-dashboard {
+      display: none;
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border-card);
+      border-radius: 14px;
+      padding: 24px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .talk-mode-dashboard.active {
+      display: flex;
+    }
+
+    .talk-central-visualizer {
+      width: 100%;
+      height: 180px;
+      background: var(--card-inner);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .macro-knobs-row {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      max-width: 800px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    /* ════════════ BOTTOM FOOTER ════════════ */
+    .bottom-footer {
+      height: 30px;
+      padding: 0 24px;
+      border-top: 1px solid var(--border-subtle);
+      background: #090a0d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    .engine-telemetry {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="plugin-window">
+
+    <!-- ════════════ TOP HEADER BAR ════════════ -->
+    <header class="top-header">
+      <div class="brand-group">
+        <div class="brand-title">VOCAL PRESET</div>
+        <div class="brand-badge">PRO VST3</div>
+      </div>
+
+      <!-- Mode Switcher: MODO TALK vs MODO EDITAR -->
+      <div class="mode-switch-container">
+        <button class="mode-tab-btn" id="tab-talk-mode" onclick="switchPrimaryMode('talk')">
+          <span class="mode-tab-dot"></span>
+          MODO TALK
+        </button>
+        <button class="mode-tab-btn active" id="tab-edit-mode" onclick="switchPrimaryMode('edit')">
+          MODO EDITAR
+        </button>
+      </div>
+
+      <!-- Preset & Magnitude -->
+      <div class="header-right-controls">
+        <div class="preset-pill-bar">
+          <button class="preset-arrow-btn" onclick="prevPreset()">◀</button>
+          <div class="preset-name-display" id="activePresetDisplay">A MINOR VOCAL SUITE</div>
+          <button class="preset-arrow-btn" onclick="nextPreset()">▶</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ════════════ AI VOICE INTERACTION STRIP ════════════ -->
+    <section class="ai-voice-strip">
+      <button class="talk-trigger-btn" id="talkBtn" onclick="toggleVoiceCapture()">
+        <span class="talk-led-dot"></span>
+        <span id="talkBtnLabel">TALK / REC</span>
+      </button>
+
+      <!-- OLED Matrix Readout -->
+      <div class="oled-matrix-screen">
+        <div class="oled-main-text" id="oledTranscript">
+          DAME UN PRESET EN A MENOR QUIERO QUE TENGA BASTANTE AIRE Y QUE EN LA DINÁMICA PUEDES PONERLE UN RITZIO DE 8 A 1 UN PUNCH DE 100% Y SATURACIÓN AL MÁXIMO
+        </div>
+        <div class="oled-status-tag" id="oledStatus">APPLIED</div>
+      </div>
+    </section>
+
+    <!-- ════════════ MAIN VIEWPORT ════════════ -->
+    <main class="viewport-container">
+
+      <!-- ════════════ 1. MODO EDITAR (MORPHO 4 GRAND CARDS) ════════════ -->
+      <div class="cards-grand-grid" id="viewEditMode">
+
+        <!-- ── CARD 1: PITCH / TUNE ── -->
+        <div class="grand-card" id="card-pitch">
+          <div class="card-top-bar">
+            <div class="card-power-toggle" id="pwr-pitch" onclick="toggleModule('pitch')"></div>
+            <div class="card-module-title">PITCH / TUNE ▾</div>
+            <div class="card-menu-btn">⋮</div>
+          </div>
+
+          <!-- 3D Liquid Floating Spheres Visualizer -->
+          <div class="card-visualizer-screen">
+            <canvas class="screen-canvas" id="canvas-pitch"></canvas>
+          </div>
+
+          <!-- 12 Key Grid -->
+          <div class="keys-mini-grid">
+            <div class="key-btn-pill" onclick="setKey('C')">C</div>
+            <div class="key-btn-pill" onclick="setKey('C#')">C#</div>
+            <div class="key-btn-pill" onclick="setKey('D')">D</div>
+            <div class="key-btn-pill" onclick="setKey('D#')">D#</div>
+            <div class="key-btn-pill" onclick="setKey('E')">E</div>
+            <div class="key-btn-pill" onclick="setKey('F')">F</div>
+            <div class="key-btn-pill" onclick="setKey('F#')">F#</div>
+            <div class="key-btn-pill" onclick="setKey('G')">G</div>
+            <div class="key-btn-pill" onclick="setKey('G#')">G#</div>
+            <div class="key-btn-pill active" onclick="setKey('A')">A</div>
+            <div class="key-btn-pill" onclick="setKey('A#')">A#</div>
+            <div class="key-btn-pill" onclick="setKey('B')">B</div>
+          </div>
+
+          <!-- Scale Row -->
+          <div class="scale-mini-row">
+            <div class="scale-btn-pill" id="scale-maj" onclick="setScale('Major')">MAJOR</div>
+            <div class="scale-btn-pill active" id="scale-min" onclick="setScale('Minor')">MINOR</div>
+          </div>
+
+          <!-- Morpho Knobs -->
+          <div class="card-knobs-section">
+            <div class="knobs-row-layout">
+              <div class="morpho-knob-unit" onclick="adjustKnob('speed')">
+                <div class="morpho-knob-disc">
+                  <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                    <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                    <circle class="arc-active-stroke" id="arc-speed" cx="25" cy="25" r="20" stroke-dasharray="90 126" />
+                  </svg>
+                  <div class="morpho-knob-needle" id="needle-speed" style="transform: rotate(80deg)"></div>
+                </div>
+                <span class="morpho-knob-label">SPEED</span>
+                <span class="morpho-knob-val-tooltip" id="val-speed">0ms</span>
+              </div>
+
+              <div class="morpho-knob-unit" onclick="adjustKnob('formant')">
+                <div class="morpho-knob-disc">
+                  <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                    <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                    <circle class="arc-active-stroke" id="arc-formant" cx="25" cy="25" r="20" stroke-dasharray="50 126" />
+                  </svg>
+                  <div class="morpho-knob-needle" id="needle-formant" style="transform: rotate(0deg)"></div>
+                </div>
+                <span class="morpho-knob-label">FORMANT</span>
+                <span class="morpho-knob-val-tooltip" id="val-formant">0st</span>
+              </div>
+            </div>
+
+            <div class="morpho-dropdown-pill">HARD TUNE SNAP ▾</div>
+          </div>
+        </div>
+
+        <!-- ── CARD 2: CLEAN & AIR ── -->
+        <div class="grand-card" id="card-clean">
+          <div class="card-top-bar">
+            <div class="card-power-toggle" id="pwr-clean" onclick="toggleModule('clean')"></div>
+            <div class="card-module-title">CLEAN & AIR ▾</div>
+            <div class="card-menu-btn">⋮</div>
+          </div>
+
+          <!-- Concentric Sonic Waves Visualizer -->
+          <div class="card-visualizer-screen">
+            <canvas class="screen-canvas" id="canvas-clean"></canvas>
+          </div>
+
+          <div class="card-knobs-section">
+            <div class="sub-section-title">DE-BOX</div>
+
+            <div class="knobs-row-layout">
+              <div class="morpho-knob-unit">
+                <div class="morpho-knob-disc">
+                  <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                    <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                    <circle class="arc-active-stroke" id="arc-debox" cx="25" cy="25" r="20" stroke-dasharray="65 126" />
+                  </svg>
+                  <div class="morpho-knob-needle" id="needle-debox" style="transform: rotate(-30deg)"></div>
+                </div>
+                <span class="morpho-knob-label">CUT</span>
+                <span class="morpho-knob-val-tooltip" id="val-debox">-4.5dB</span>
+              </div>
+
+              <div class="morpho-knob-unit">
+                <div class="morpho-knob-disc">
+                  <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                    <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                    <circle class="arc-active-stroke" cx="25" cy="25" r="20" stroke-dasharray="40 126" />
+                  </svg>
+                  <div class="morpho-knob-needle" style="transform: rotate(10deg)"></div>
+                </div>
+                <span class="morpho-knob-label">Q-WIDTH</span>
+                <span class="morpho-knob-val-tooltip">1.8</span>
+              </div>
+
+              <div class="morpho-knob-unit">
+                <div class="morpho-knob-disc">
+                  <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                    <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                    <circle class="arc-active-stroke" id="arc-air" cx="25" cy="25" r="20" stroke-dasharray="88 126" />
+                  </svg>
+                  <div class="morpho-knob-needle" id="needle-air" style="transform: rotate(85deg)"></div>
+                </div>
+                <span class="morpho-knob-label">AIR BOOST</span>
+                <span class="morpho-knob-val-tooltip" id="val-air">+8.0dB</span>
+              </div>
+            </div>
+
+            <div class="morpho-dropdown-pill">SILK AIR 14KHZ ▾</div>
+
+            <div class="card-resample-slider">
+              <div class="resample-slider-header">
+                <span>SURGICAL DE-ESSER</span>
+                <span id="val-deess">-6.0 dB</span>
+              </div>
+              <input type="range" class="morpho-linear-slider" min="0" max="100" value="70">
+            </div>
+          </div>
+        </div>
+
+        <!-- ── CARD 3: DYNAMICS & TAPE ── -->
+        <div class="grand-card" id="card-dynamics">
+          <div class="card-top-bar">
+            <div class="card-power-toggle" id="pwr-dynamics" onclick="toggleModule('dynamics')"></div>
+            <div class="card-module-title">DYNAMICS & TAPE ▾</div>
+            <div class="card-menu-btn">⋮</div>
+          </div>
+
+          <!-- Dynamic Split Halftime Visualizer -->
+          <div class="card-visualizer-screen">
+            <canvas class="screen-canvas" id="canvas-dynamics"></canvas>
+          </div>
+
+          <div class="card-knobs-section">
+            <div class="sub-section-title">COMPRESSOR</div>
+
+            <div class="knobs-row-layout">
+              <div class="morpho-knob-unit">
+                <div class="morpho-knob-disc">
+                  <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                    <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                    <circle class="arc-active-stroke" id="arc-ratio" cx="25" cy="25" r="20" stroke-dasharray="80 126" />
+                  </svg>
+                  <div class="morpho-knob-needle" id="needle-ratio" style="transform: rotate(70deg)"></div>
+                </div>
+                <span class="morpho-knob-label">RATIO</span>
+                <span class="morpho-knob-val-tooltip" id="val-ratio">8:1</span>
+              </div>
+
+              <div class="morpho-knob-unit">
+                <div class="morpho-knob-disc">
+                  <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                    <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                    <circle class="arc-active-stroke" id="arc-punch" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                  </svg>
+                  <div class="morpho-knob-needle" id="needle-punch" style="transform: rotate(115deg)"></div>
+                </div>
+                <span class="morpho-knob-label">PUNCH</span>
+                <span class="morpho-knob-val-tooltip" id="val-punch">100%</span>
+              </div>
+
+              <div class="morpho-knob-unit">
+                <div class="morpho-knob-disc">
+                  <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                    <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                    <circle class="arc-active-stroke" id="arc-drive" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                  </svg>
+                  <div class="morpho-knob-needle" id="needle-drive" style="transform: rotate(115deg)"></div>
+                </div>
+                <span class="morpho-knob-label">SATURATION</span>
+                <span class="morpho-knob-val-tooltip" id="val-drive">100%</span>
+              </div>
+            </div>
+
+            <div class="morpho-dropdown-pill">HOT TUBE DRIVE ▾</div>
+
+            <div class="card-resample-slider">
+              <div class="resample-slider-header">
+                <span>TAPE HARMONICS</span>
+                <span id="val-harmonics">+6.0 dB</span>
+              </div>
+              <input type="range" class="morpho-linear-slider" min="0" max="100" value="85">
+            </div>
+          </div>
+        </div>
+
+        <!-- ── CARD 4: SPACE & MOD ── -->
+        <div class="grand-card" id="card-space">
+          <div class="card-top-bar">
+            <div class="card-power-toggle" id="pwr-space" onclick="toggleModule('space')"></div>
+            <div class="card-module-title">SPACE & MOD ▾</div>
+            <div class="card-menu-btn">⋮</div>
+          </div>
+
+          <!-- Iridescent 3D Refractive Prism Visualizer -->
+          <div class="card-visualizer-screen">
+            <canvas class="screen-canvas" id="canvas-space"></canvas>
+          </div>
+
+          <div class="card-knobs-section">
+            <div class="sub-section-title">TEMPO DELAY</div>
+
+            <div class="knobs-row-layout">
+              <div class="morpho-knob-unit">
+                <div class="morpho-knob-disc">
+                  <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                    <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                    <circle class="arc-active-stroke" id="arc-delay-time" cx="25" cy="25" r="20" stroke-dasharray="50 126" />
+                  </svg>
+                  <div class="morpho-knob-needle" id="needle-delay-time" style="transform: rotate(0deg)"></div>
+                </div>
+                <span class="morpho-knob-label">TIME</span>
+                <span class="morpho-knob-val-tooltip" id="val-delay-time">1/4</span>
+              </div>
+
+              <div class="morpho-knob-unit">
+                <div class="morpho-knob-disc">
+                  <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                    <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                    <circle class="arc-active-stroke" id="arc-delay-send" cx="25" cy="25" r="20" stroke-dasharray="30 126" />
+                  </svg>
+                  <div class="morpho-knob-needle" id="needle-delay-send" style="transform: rotate(-20deg)"></div>
+                </div>
+                <span class="morpho-knob-label">SEND</span>
+                <span class="morpho-knob-val-tooltip" id="val-delay-send">20%</span>
+              </div>
+
+              <div class="morpho-knob-unit">
+                <div class="morpho-knob-disc">
+                  <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                    <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                    <circle class="arc-active-stroke" id="arc-reverb-mix" cx="25" cy="25" r="20" stroke-dasharray="45 126" />
+                  </svg>
+                  <div class="morpho-knob-needle" id="needle-reverb-mix" style="transform: rotate(15deg)"></div>
+                </div>
+                <span class="morpho-knob-label">REVERB</span>
+                <span class="morpho-knob-val-tooltip" id="val-reverb-mix">35%</span>
+              </div>
+            </div>
+
+            <div class="morpho-dropdown-pill">PING PONG STEREO ▾</div>
+
+            <div class="card-resample-slider">
+              <div class="resample-slider-header">
+                <span>STEREO WIDTH</span>
+                <span>140%</span>
+              </div>
+              <input type="range" class="morpho-linear-slider" min="0" max="100" value="75">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ════════════ 2. MODO TALK (GLOBAL VOICE DASHBOARD) ════════════ -->
+      <div class="talk-mode-dashboard" id="viewTalkMode">
+        <div style="font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--text-dim);">
+          VOICE INTELLIGENCE STUDIO · MODO TALK
+        </div>
+
+        <div class="talk-central-visualizer">
+          <canvas class="screen-canvas" id="canvas-talk-master"></canvas>
+        </div>
+
+        <!-- 4 Grand Master Macro Knobs -->
+        <div class="macro-knobs-row">
+          <div class="morpho-knob-unit" style="transform: scale(1.25);">
+            <div class="morpho-knob-disc">
+              <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                <circle class="arc-active-stroke" cx="25" cy="25" r="20" stroke-dasharray="90 126" />
+              </svg>
+              <div class="morpho-knob-needle" style="transform: rotate(90deg)"></div>
+            </div>
+            <span class="morpho-knob-label" style="margin-top:4px;">TUNE SNAP</span>
+            <span class="morpho-knob-val-tooltip">A MINOR</span>
+          </div>
+
+          <div class="morpho-knob-unit" style="transform: scale(1.25);">
+            <div class="morpho-knob-disc">
+              <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                <circle class="arc-active-stroke" cx="25" cy="25" r="20" stroke-dasharray="85 126" />
+              </svg>
+              <div class="morpho-knob-needle" style="transform: rotate(80deg)"></div>
+            </div>
+            <span class="morpho-knob-label" style="margin-top:4px;">AIR PRESENCE</span>
+            <span class="morpho-knob-val-tooltip">+8.0 dB</span>
+          </div>
+
+          <div class="morpho-knob-unit" style="transform: scale(1.25);">
+            <div class="morpho-knob-disc">
+              <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                <circle class="arc-active-stroke" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+              </svg>
+              <div class="morpho-knob-needle" style="transform: rotate(115deg)"></div>
+            </div>
+            <span class="morpho-knob-label" style="margin-top:4px;">DRIVE & PUNCH</span>
+            <span class="morpho-knob-val-tooltip">100% MAX</span>
+          </div>
+
+          <div class="morpho-knob-unit" style="transform: scale(1.25);">
+            <div class="morpho-knob-disc">
+              <svg class="morpho-svg-arc" viewBox="0 0 50 50">
+                <circle class="arc-bg-track" cx="25" cy="25" r="20" stroke-dasharray="100 126" />
+                <circle class="arc-active-stroke" cx="25" cy="25" r="20" stroke-dasharray="50 126" />
+              </svg>
+              <div class="morpho-knob-needle" style="transform: rotate(10deg)"></div>
+            </div>
+            <span class="morpho-knob-label" style="margin-top:4px;">SPACE FX</span>
+            <span class="morpho-knob-val-tooltip">1/4 SEND</span>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ════════════ BOTTOM FOOTER ════════════ -->
+    <footer class="bottom-footer">
+      <div>Hover over any parameter to learn what it does</div>
+      <div class="engine-telemetry">
+        <span>DSP: <strong style="color:#fff;">ONLINE</strong></span>
+        <span>|</span>
+        <span>48.0 kHz · 64 SAMPLES</span>
+        <span>|</span>
+        <span>OFFSZN VOCAL PRESET V1.0</span>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // State
+    const state = {
+      isListening: false,
+      activeMode: 'edit',
+      pitch: { on: true, key: 'A', scale: 'Minor', speed: 0, formant: 0 },
+      clean: { on: true, debox: -4.5, air: 8.0 },
+      dynamics: { on: true, ratio: '8:1', punch: 100, drive: 100 },
+      space: { on: true, delayTime: '1/4', delaySend: 20, reverbMix: 35 }
+    };
+
+    // Mode Switcher (MODO TALK vs MODO EDITAR)
+    function switchPrimaryMode(modeName) {
+      state.activeMode = modeName;
+      document.getElementById('tab-talk-mode').classList.toggle('active', modeName === 'talk');
+      document.getElementById('tab-edit-mode').classList.toggle('active', modeName === 'edit');
+      document.getElementById('viewEditMode').style.display = modeName === 'edit' ? 'grid' : 'none';
+      document.getElementById('viewTalkMode').classList.toggle('active', modeName === 'talk');
+    }
+
+    // Toggle Module Power
+    function toggleModule(modKey) {
+      if (state[modKey] !== undefined) {
+        state[modKey].on = !state[modKey].on;
+        const isOn = state[modKey].on;
+        const card = document.getElementById(`card-${modKey}`);
+        const pwr = document.getElementById(`pwr-${modKey}`);
+        if (card) card.classList.toggle('bypassed', !isOn);
+        if (pwr) pwr.classList.toggle('off', !isOn);
+      }
+    }
+
+    // Key & Scale
+    function setKey(k) {
+      state.pitch.key = k;
+      document.querySelectorAll('.key-btn-pill').forEach(b => b.classList.toggle('active', b.textContent.trim() === k));
+      triggerCardPulse(['pitch']);
+    }
+
+    function setScale(s) {
+      state.pitch.scale = s;
+      document.getElementById('scale-maj').classList.toggle('active', s === 'Major');
+      document.getElementById('scale-min').classList.toggle('active', s === 'Minor');
+      triggerCardPulse(['pitch']);
+    }
+
+    // ── SUPER ROBUST NLP ENGINE (EXTRACTS ALL DETAILED PARAMS) ──
+    function executeComplexNLP(promptText) {
+      if (!promptText || promptText.trim() === '') return;
+      const lower = promptText.toLowerCase();
+      const pulsed = [];
+
+      // 1. Root Key
+      let k = null;
+      if (lower.includes('a menor') || lower.includes('a minor') || lower.includes('en a') || lower.includes('la menor') || lower.includes('la minor')) k = 'A';
+      else if (lower.includes('f menor') || lower.includes('f minor') || lower.includes('en f') || lower.includes('fa menor')) k = 'F';
+      else if (lower.includes('e menor') || lower.includes('e minor') || lower.includes('en e') || lower.includes('mi menor')) k = 'E';
+      else if (lower.includes('c mayor') || lower.includes('do mayor') || lower.includes('en c')) k = 'C';
+      else if (lower.includes('d menor') || lower.includes('re menor') || lower.includes('en d')) k = 'D';
+      else if (lower.includes('g menor') || lower.includes('sol menor') || lower.includes('en g')) k = 'G';
+      else if (lower.includes('b menor') || lower.includes('si menor') || lower.includes('en b')) k = 'B';
+      else if (lower.includes('f#') || lower.includes('fa sostenido')) k = 'F#';
+      else if (lower.includes('c#') || lower.includes('do sostenido')) k = 'C#';
+
+      if (k) {
+        state.pitch.key = k;
+        document.querySelectorAll('.key-btn-pill').forEach(b => b.classList.toggle('active', b.textContent.trim() === k));
+        pulsed.push('pitch');
+      }
+
+      // Scale
+      if (lower.includes('menor') || lower.includes('minor')) {
+        state.pitch.scale = 'Minor';
+        document.getElementById('scale-maj').classList.remove('active');
+        document.getElementById('scale-min').classList.add('active');
+        pulsed.push('pitch');
+      } else if (lower.includes('mayor') || lower.includes('major')) {
+        state.pitch.scale = 'Major';
+        document.getElementById('scale-maj').classList.add('active');
+        document.getElementById('scale-min').classList.remove('active');
+        pulsed.push('pitch');
+      }
+
+      // 2. Air Boost (Aire)
+      if (lower.includes('bastante aire') || lower.includes('mucho aire') || lower.includes('aire al maximo') || lower.includes('mucho brillo')) {
+        state.clean.air = 8.0;
+        document.getElementById('val-air').textContent = '+8.0dB';
+        document.getElementById('needle-air').style.transform = 'rotate(85deg)';
+        document.getElementById('arc-air').setAttribute('stroke-dasharray', '88 126');
+        pulsed.push('clean');
+      } else if (lower.includes('aire') || lower.includes('brillo')) {
+        state.clean.air = 5.5;
+        document.getElementById('val-air').textContent = '+5.5dB';
+        document.getElementById('needle-air').style.transform = 'rotate(50deg)';
+        document.getElementById('arc-air').setAttribute('stroke-dasharray', '60 126');
+        pulsed.push('clean');
+      }
+
+      // 3. Ratio ("ritzio de 8 a 1", "ratio de 8:1", etc.)
+      if (lower.includes('8 a 1') || lower.includes('8:1') || lower.includes('8 1') || lower.includes('ocho a uno')) {
+        state.dynamics.ratio = '8:1';
+        document.getElementById('val-ratio').textContent = '8:1';
+        document.getElementById('needle-ratio').style.transform = 'rotate(70deg)';
+        document.getElementById('arc-ratio').setAttribute('stroke-dasharray', '80 126');
+        pulsed.push('dynamics');
+      } else if (lower.includes('4 a 1') || lower.includes('4:1')) {
+        state.dynamics.ratio = '4:1';
+        document.getElementById('val-ratio').textContent = '4:1';
+        document.getElementById('needle-ratio').style.transform = 'rotate(35deg)';
+        document.getElementById('arc-ratio').setAttribute('stroke-dasharray', '45 126');
+        pulsed.push('dynamics');
+      } else if (lower.includes('12 a 1') || lower.includes('12:1')) {
+        state.dynamics.ratio = '12:1';
+        document.getElementById('val-ratio').textContent = '12:1';
+        document.getElementById('needle-ratio').style.transform = 'rotate(95deg)';
+        document.getElementById('arc-ratio').setAttribute('stroke-dasharray', '95 126');
+        pulsed.push('dynamics');
+      }
+
+      // 4. Punch ("punch de 100%", "punch al maximo", "patch de 100%")
+      if (lower.includes('punch') || lower.includes('patch') || lower.includes('pegada')) {
+        if (lower.includes('100') || lower.includes('maximo') || lower.includes('máximo') || lower.includes('bastante')) {
+          state.dynamics.punch = 100;
+          document.getElementById('val-punch').textContent = '100%';
+          document.getElementById('needle-punch').style.transform = 'rotate(115deg)';
+          document.getElementById('arc-punch').setAttribute('stroke-dasharray', '100 126');
+        } else {
+          state.dynamics.punch = 75;
+          document.getElementById('val-punch').textContent = '75%';
+          document.getElementById('needle-punch').style.transform = 'rotate(65deg)';
+          document.getElementById('arc-punch').setAttribute('stroke-dasharray', '75 126');
+        }
+        pulsed.push('dynamics');
+      }
+
+      // 5. Saturation ("saturación al máximo", "saturacion al maximo", "distorsion al 100")
+      if (lower.includes('saturacion') || lower.includes('saturación') || lower.includes('distorsion') || lower.includes('distorsión') || lower.includes('drive')) {
+        if (lower.includes('maximo') || lower.includes('máximo') || lower.includes('100') || lower.includes('bastante') || lower.includes('mucha')) {
+          state.dynamics.drive = 100;
+          document.getElementById('val-drive').textContent = '100%';
+          document.getElementById('needle-drive').style.transform = 'rotate(115deg)';
+          document.getElementById('arc-drive').setAttribute('stroke-dasharray', '100 126');
+        } else {
+          state.dynamics.drive = 45;
+          document.getElementById('val-drive').textContent = '45%';
+          document.getElementById('needle-drive').style.transform = 'rotate(45deg)';
+          document.getElementById('arc-drive').setAttribute('stroke-dasharray', '45 126');
+        }
+        pulsed.push('dynamics');
+      }
+
+      // 6. Delay ("un poquito de delay en un cuarto")
+      if (lower.includes('delay') || lower.includes('eco')) {
+        if (lower.includes('un cuarto') || lower.includes('1/4') || lower.includes('cuarto')) {
+          state.space.delayTime = '1/4';
+          document.getElementById('val-delay-time').textContent = '1/4';
+          document.getElementById('needle-delay-time').style.transform = 'rotate(0deg)';
+        }
+        if (lower.includes('poquito') || lower.includes('poco') || lower.includes('sutil')) {
+          state.space.delaySend = 20;
+          document.getElementById('val-delay-send').textContent = '20%';
+          document.getElementById('needle-delay-send').style.transform = 'rotate(-20deg)';
+          document.getElementById('arc-delay-send').setAttribute('stroke-dasharray', '30 126');
+        }
+        pulsed.push('space');
+      }
+
+      document.getElementById('activePresetDisplay').textContent = `${state.pitch.key} ${state.pitch.scale.toUpperCase()} VOCAL SUITE`;
+      triggerCardPulse(pulsed.length > 0 ? pulsed : ['pitch', 'clean', 'dynamics', 'space']);
+    }
+
+    function triggerCardPulse(keys) {
+      keys.forEach(k => {
+        const card = document.getElementById(`card-${k}`);
+        if (card) {
+          card.classList.remove('pulsing-glow');
+          void card.offsetWidth;
+          card.classList.add('pulsing-glow');
+        }
+      });
+    }
+
+    // Voice Capture (Web Speech API)
+    let speechEngine = null;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const RecClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+      speechEngine = new RecClass();
+      speechEngine.continuous = false;
+      speechEngine.interimResults = true;
+      speechEngine.lang = 'es-ES';
+
+      speechEngine.onstart = () => {
+        state.isListening = true;
+        updateTalkButtonUI();
+        document.getElementById('oledStatus').textContent = 'RECORDING...';
+        document.getElementById('oledTranscript').textContent = 'ESCUCHANDO TU ORDEN POR MICRÓFONO...';
+      };
+
+      speechEngine.onresult = (e) => {
+        let t = '';
+        for (let i = e.resultIndex; i < e.results.length; ++i) {
+          t += e.results[i][0].transcript;
+        }
+        document.getElementById('oledTranscript').textContent = t.toUpperCase();
+      };
+
+      speechEngine.onend = () => {
+        state.isListening = false;
+        updateTalkButtonUI();
+        document.getElementById('oledStatus').textContent = 'APPLIED';
+        executeComplexNLP(document.getElementById('oledTranscript').textContent);
+      };
+    }
+
+    function toggleVoiceCapture() {
+      if (state.isListening) {
+        if (speechEngine) speechEngine.stop();
+        state.isListening = false;
+        updateTalkButtonUI();
+      } else {
+        if (speechEngine) {
+          try { speechEngine.start(); } catch (err) { console.warn(err); }
+        } else {
+          // Simulation fallback
+          simulateUserPrompt();
+        }
+      }
+    }
+
+    function updateTalkButtonUI() {
+      const btn = document.getElementById('talkBtn');
+      const label = document.getElementById('talkBtnLabel');
+      if (state.isListening) {
+        btn.classList.add('listening');
+        label.textContent = 'LISTENING';
+      } else {
+        btn.classList.remove('listening');
+        label.textContent = 'TALK / REC';
+      }
+    }
+
+    function simulateUserPrompt() {
+      state.isListening = true;
+      updateTalkButtonUI();
+      document.getElementById('oledStatus').textContent = 'RECORDING...';
+      document.getElementById('oledTranscript').textContent = 'CAPTANDO SEÑAL DE VOZ...';
+
+      setTimeout(() => {
+        const text = "DAME UN PRESET EN A MENOR QUIERO QUE TENGA BASTANTE AIRE Y QUE EN LA DINÁMICA PUEDES PONERLE UN RITZIO DE 8 A 1 UN PUNCH DE 100% Y SATURACIÓN AL MÁXIMO";
+        document.getElementById('oledTranscript').textContent = text;
+        state.isListening = false;
+        updateTalkButtonUI();
+        document.getElementById('oledStatus').textContent = 'APPLIED';
+        executeComplexNLP(text);
+      }, 2000);
+    }
+
+    function prevPreset() { executeComplexNLP('preset en f menor con aire suave'); }
+    function nextPreset() { executeComplexNLP('preset en a menor con bastante aire ratio 8 a 1 punch 100 saturacion al maximo'); }
+
+    // ════════════ 3D MORPHO CANVAS VISUALIZERS ════════════
+    function init3DVisualizers() {
+      const cPitch = document.getElementById('canvas-pitch');
+      const ctxPitch = cPitch.getContext('2d');
+      const cClean = document.getElementById('canvas-clean');
+      const ctxClean = cClean.getContext('2d');
+      const cDyn = document.getElementById('canvas-dynamics');
+      const ctxDyn = cDyn.getContext('2d');
+      const cSpace = document.getElementById('canvas-space');
+      const ctxSpace = cSpace.getContext('2d');
+      const cTalk = document.getElementById('canvas-talk-master');
+      const ctxTalk = cTalk.getContext('2d');
+
+      function resizeAll() {
+        [cPitch, cClean, cDyn, cSpace, cTalk].forEach(c => {
+          if (c && c.parentElement) {
+            c.width = c.parentElement.clientWidth;
+            c.height = c.parentElement.clientHeight;
+          }
+        });
+      }
+      window.addEventListener('resize', resizeAll);
+      resizeAll();
+
+      let t = 0;
+      function renderLoop() {
+        // --- 1. Pitch Liquid Chrome Spheres ---
+        ctxPitch.clearRect(0, 0, cPitch.width, cPitch.height);
+        const w1 = cPitch.width, h1 = cPitch.height;
+        for (let i = 0; i < 4; i++) {
+          const x = (w1 / 5) * (i + 1) + Math.sin(t * 0.04 + i) * 6;
+          const y = h1 / 2 + Math.cos(t * 0.05 + i * 1.5) * 8;
+          const r = 9 + Math.sin(t * 0.06 + i) * 3;
+
+          const grad = ctxPitch.createRadialGradient(x - r*0.3, y - r*0.3, r*0.1, x, y, r);
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(0.3, '#c0c2d0');
+          grad.addColorStop(0.7, '#2a2b38');
+          grad.addColorStop(1, '#0b0c10');
+
+          ctxPitch.fillStyle = grad;
+          ctxPitch.beginPath();
+          ctxPitch.arc(x, y, r, 0, Math.PI * 2);
+          ctxPitch.fill();
+          ctxPitch.strokeStyle = 'rgba(255,255,255,0.4)';
+          ctxPitch.lineWidth = 1;
+          ctxPitch.stroke();
+        }
+
+        // --- 2. Clean Acoustic Pulse Rings (Morpho LOFI style) ---
+        ctxClean.clearRect(0, 0, cClean.width, cClean.height);
+        const w2 = cClean.width, h2 = cClean.height;
+        for (let i = 1; i <= 5; i++) {
+          const radius = (i * 8) + Math.sin(t * 0.05 - i * 0.6) * 3.5;
+          ctxClean.beginPath();
+          ctxClean.arc(w2 / 2, h2 / 2, Math.max(2, radius), 0, Math.PI * 2);
+          ctxClean.strokeStyle = `rgba(255, 255, 255, ${0.15 + (i * 0.14)})`;
+          ctxClean.lineWidth = 1.5;
+          ctxClean.stroke();
+        }
+
+        // --- 3. Dynamics Split Halftime Vectors ---
+        ctxDyn.clearRect(0, 0, cDyn.width, cDyn.height);
+        const w3 = cDyn.width, h3 = cDyn.height;
+        ctxDyn.save();
+        ctxDyn.translate(w3 / 2, h3 / 2);
+        ctxDyn.rotate(-0.35 + Math.sin(t * 0.03) * 0.08);
+        ctxDyn.fillStyle = '#ffffff';
+        ctxDyn.fillRect(-30, -3, 26, 6);
+        ctxDyn.fillStyle = 'rgba(255,255,255,0.4)';
+        ctxDyn.fillRect(4, -3, 26, 6);
+        const dotY = Math.sin(t * 0.06) * 10;
+        ctxDyn.beginPath();
+        ctxDyn.arc(-12, -14 + dotY, 3.5, 0, Math.PI * 2);
+        ctxDyn.fillStyle = '#ffffff';
+        ctxDyn.fill();
+        ctxDyn.restore();
+
+        // --- 4. Space 3D Prismatic Geometry ---
+        ctxSpace.clearRect(0, 0, cSpace.width, cSpace.height);
+        const w4 = cSpace.width, h4 = cSpace.height;
+        ctxSpace.save();
+        ctxSpace.translate(w4 / 2, h4 / 2);
+        ctxSpace.rotate(t * 0.015);
+        for (let i = 0; i < 3; i++) {
+          ctxSpace.save();
+          ctxSpace.rotate((i * Math.PI) / 3);
+          const pGrad = ctxSpace.createLinearGradient(-22, -18, 22, 18);
+          pGrad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+          pGrad.addColorStop(0.5, 'rgba(180, 185, 210, 0.3)');
+          pGrad.addColorStop(1, 'rgba(40, 42, 55, 0.1)');
+          ctxSpace.fillStyle = pGrad;
+          ctxSpace.beginPath();
+          ctxSpace.moveTo(0, -22);
+          ctxSpace.lineTo(20, 15);
+          ctxSpace.lineTo(-20, 15);
+          ctxSpace.closePath();
+          ctxSpace.fill();
+          ctxSpace.strokeStyle = 'rgba(255,255,255,0.5)';
+          ctxSpace.lineWidth = 1;
+          ctxSpace.stroke();
+          ctxSpace.restore();
+        }
+        ctxSpace.restore();
+
+        // --- 5. Talk Master Visualizer ---
+        if (cTalk && cTalk.parentElement && state.activeMode === 'talk') {
+          ctxTalk.clearRect(0, 0, cTalk.width, cTalk.height);
+          const wt = cTalk.width, ht = cTalk.height;
+          ctxTalk.save();
+          ctxTalk.translate(wt / 2, ht / 2);
+          for (let i = 0; i < 36; i++) {
+            const angle = (i / 36) * Math.PI * 2;
+            const len = 35 + Math.sin(t * 0.06 + i * 0.3) * 18;
+            ctxTalk.strokeStyle = `rgba(255, 255, 255, ${0.3 + Math.sin(t*0.05 + i)*0.5})`;
+            ctxTalk.lineWidth = 2;
+            ctxTalk.beginPath();
+            ctxTalk.moveTo(Math.cos(angle) * 30, Math.sin(angle) * 30);
+            ctxTalk.lineTo(Math.cos(angle) * (30 + len), Math.sin(angle) * (30 + len));
+            ctxTalk.stroke();
+          }
+          ctxTalk.restore();
+        }
+
+        t++;
+        requestAnimationFrame(renderLoop);
+      }
+      renderLoop();
+    }
+
+    window.onload = () => {
+      init3DVisualizers();
+      // Execute the user's initial screenshot test automatically
+      executeComplexNLP("DAME UN PRESET EN A MENOR QUIERO QUE TENGA BASTANTE AIRE Y QUE EN LA DINÁMICA PUEDES PONERLE UN RITZIO DE 8 A 1 UN PUNCH DE 100% Y SATURACIÓN AL MÁXIMO");
+    };
+  </script>
+</body>
+</html>

@@ -1738,15 +1738,26 @@ async function renderBeatSpecifics(product) {
                 purchaseBtn.style.alignItems = 'center';
                 purchaseBtn.style.gap = '10px';
 
-                // Text remains "AÑADIR AL CARRITO" for PC, but "COMPRAR" for MOBILE
-                purchaseBtn.innerHTML = `<i class="bi bi-cart-plus" style="font-size: 1.3rem;"></i> ${isMobile ? 'COMPRAR' : 'AÑADIR AL CARRITO'}`;
+                if (product.status === 'sold_exclusive') {
+                    purchaseBtn.disabled = true;
+                    purchaseBtn.style.opacity = '0.6';
+                    purchaseBtn.style.cursor = 'not-allowed';
+                    purchaseBtn.style.background = '#1a1a1a';
+                    purchaseBtn.style.color = '#ccc';
+                    purchaseBtn.style.border = '1px solid rgba(168, 85, 247, 0.3)';
+                    purchaseBtn.innerHTML = `<i class="bi bi-lock-fill" style="font-size: 1.2rem; color: #a855f7;"></i> VENDIDO (EXCLUSIVO)`;
+                    purchaseBtn.onclick = null;
+                } else {
+                    // Text remains "AÑADIR AL CARRITO" for PC, but "COMPRAR" for MOBILE
+                    purchaseBtn.innerHTML = `<i class="bi bi-cart-plus" style="font-size: 1.3rem;"></i> ${isMobile ? 'COMPRAR' : 'AÑADIR AL CARRITO'}`;
 
-                purchaseBtn.onclick = () => {
-                    const currentSelectedId = localStorage.getItem(`offszn_lic_select_${product.id}`) || enabledLicenses[0].id;
-                    if (window.addToCart) {
-                        window.addToCart(product.id, currentSelectedId);
-                    }
-                };
+                    purchaseBtn.onclick = () => {
+                        const currentSelectedId = localStorage.getItem(`offszn_lic_select_${product.id}`) || enabledLicenses[0].id;
+                        if (window.addToCart) {
+                            window.addToCart(product.id, currentSelectedId);
+                        }
+                    };
+                }
                 container.appendChild(purchaseBtn);
 
                 if (product.is_free) {

@@ -2671,9 +2671,9 @@
                         .select('*', { count: 'exact', head: true })
                         .eq(t.col, userId);
 
-                    // ?? EXCLUDE DELETED PRODUCTS FROM LIMIT 
+                    // EXCLUDE DELETED AND SOLD EXCLUSIVE PRODUCTS FROM LIMIT 
                     if (t.name === 'products') {
-                        q = q.neq('status', 'deleted');
+                        q = q.neq('status', 'deleted').neq('status', 'sold_exclusive');
                     }
 
                     return q;
@@ -2927,11 +2927,11 @@
 
                 // Manual signing loop removed; handled by r2-loader.js
 
-                // FILTER SOFT-DELETED ITEMS
+                // FILTER SOFT-DELETED AND EXCLUSIVE SOLD ITEMS
                 allItems = allItems.filter(item => {
                     const tags = item.tags || [];
                     // Check tag OR status
-                    if (item.status === 'deleted') return false;
+                    if (item.status === 'deleted' || item.status === 'sold_exclusive') return false;
                     if (tags.includes('__DELETED__')) return false;
                     return true;
                 });

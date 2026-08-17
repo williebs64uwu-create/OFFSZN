@@ -21,7 +21,7 @@ async function main() {
             license_type: 'lifetime',
             status: 'active',
             expires_at: null,
-            max_devices: 5
+            max_devices: 2
         })
         .select('*').single();
     
@@ -32,7 +32,7 @@ async function main() {
         console.log("🔑 NUEVA LICENCIA FULL (LIFETIME) EASY MIX:");
         console.log("   Serial Key: " + serialKey);
         console.log("   Tipo:       LIFETIME (De por vida)");
-        console.log("   Dispositivos max: 5");
+        console.log("   Dispositivos max: " + newLic.max_devices);
         console.log("==========================================");
     }
 }

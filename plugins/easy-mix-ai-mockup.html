@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OFFSZN EASY MIX AI · Vocal Studio & Autotune</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #08080a;
+      --panel-bg: #0f1015;
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --accent: #ff453a;
+      --accent-glow: rgba(255, 69, 58, 0.35);
+      --cyan: #00f2fe;
+      --cyan-glow: rgba(0, 242, 254, 0.35);
+      --purple: #8a2be2;
+      --gold: #ffd60a;
+      --green: #30d158;
+      --text-main: #ffffff;
+      --text-muted: #868691;
+      --node-bg: #14151c;
+      --node-active-border: #00f2fe;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 242, 254, 0.06), transparent 50%),
+        radial-gradient(circle at 80% 100%, rgba(255, 69, 58, 0.05), transparent 40%);
+    }
+
+    /* ── HEADER ── */
+    header {
+      height: 52px;
+      background: rgba(15, 16, 21, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      font-weight: 800;
+      font-size: 16px;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .brand-logo span.highlight {
+      color: var(--accent);
+      text-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .badge-ai {
+      background: linear-gradient(135deg, #00f2fe, #4facfe);
+      color: #000;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    .license-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(48, 209, 88, 0.1);
+      border: 1px solid rgba(48, 209, 88, 0.3);
+      color: var(--green);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 30px;
+    }
+
+    .license-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-clean {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--panel-border);
+      color: var(--text-main);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-clean:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* ── MAIN WORKSPACE ── */
+    .workspace {
+      flex: 1;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      padding: 16px 20px;
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    /* ── AI VOICE COMMAND BAR ── */
+    .voice-command-section {
+      background: linear-gradient(180deg, rgba(20, 22, 30, 0.95), rgba(15, 16, 21, 0.95));
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .voice-command-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), var(--accent), transparent);
+      opacity: 0.8;
+    }
+
+    .voice-bar-top {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Mic Button & Wave Pulse */
+    .mic-button-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mic-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff453a, #ff2a6d);
+      border: none;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 0 20px var(--accent-glow);
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 2;
+    }
+
+    .mic-btn:hover {
+      transform: scale(1.06);
+    }
+
+    .mic-btn.recording {
+      background: linear-gradient(135deg, #00f2fe, #4facfe);
+      box-shadow: 0 0 25px var(--cyan-glow);
+      animation: pulseRecord 1.2s infinite;
+    }
+
+    @keyframes pulseRecord {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .mic-pulse-ring {
+      position: absolute;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      border: 1px solid var(--accent);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+
+    .mic-btn.recording ~ .mic-pulse-ring {
+      animation: ringSpread 1.6s infinite ease-out;
+      border-color: var(--cyan);
+    }
+
+    @keyframes ringSpread {
+      0% { transform: scale(0.8); opacity: 0.8; }
+      100% { transform: scale(1.6); opacity: 0; }
+    }
+
+    /* Input and Live Speech Display */
+    .speech-input-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: rgba(8, 9, 12, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 8px 14px;
+      position: relative;
+    }
+
+    .speech-status-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 2px;
+    }
+
+    .speech-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      display: inline-block;
+    }
+
+    .speech-text-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      width: 100%;
+    }
+
+    .speech-text-input::placeholder {
+      color: #555761;
+      font-style: italic;
+    }
+
+    .action-prompt-btn {
+      background: linear-gradient(135deg, #00f2fe, #0099ff);
+      color: #000;
+      border: none;
+      font-weight: 700;
+      font-size: 11px;
+      padding: 0 16px;
+      height: 40px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+    }
+
+    .action-prompt-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+    }
+
+    /* Quick Suggestion Chips */
+    .quick-chips-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .chip-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: #b0b0bb;
+      font-size: 11px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+
+    .chip:hover {
+      background: rgba(0, 242, 254, 0.12);
+      border-color: rgba(0, 242, 254, 0.3);
+      color: var(--cyan);
+    }
+
+    /* ── BOTTOM WORKSPACE GRID (NODE MAP & MODULE DETAIL) ── */
+    .modules-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* ── LEFT: NODE FLOW & INTERACTIVE MINI-MAP ── */
+    .node-map-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #e1e1e6;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .safe-phase-badge {
+      font-size: 9px;
+      font-weight: 700;
+      background: rgba(0, 242, 254, 0.1);
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      color: var(--cyan);
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+
+    /* Node Graph Canvas Area */
+    .node-graph-container {
+      flex: 1;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+      position: relative;
+      background: radial-gradient(circle at center, rgba(20, 22, 30, 0.6), transparent);
+    }
+
+    .nodes-flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      padding: 10px 0;
+    }
+
+    /* Connecting signal cable line */
+    .signal-cable {
+      position: absolute;
+      top: 50%;
+      left: 20px;
+      right: 20px;
+      height: 3px;
+      background: #1f212a;
+      transform: translateY(-50%);
+      z-index: 1;
+    }
+
+    .signal-cable-glow {
+      position: absolute;
+      top: 50%;
+      left: 20px;
+      width: 0%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--cyan), var(--accent));
+      transform: translateY(-50%);
+      z-index: 1;
+      box-shadow: 0 0 10px var(--cyan);
+      transition: width 0.6s ease;
+    }
+
+    /* Individual Node Box */
+    .node-box {
+      position: relative;
+      z-index: 2;
+      background: var(--node-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      width: 100px;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .node-box:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .node-box.selected {
+      border-color: var(--cyan);
+      box-shadow: 0 0 18px var(--cyan-glow);
+    }
+
+    .node-box.pulsing {
+      animation: nodeModifiedPulse 1s ease;
+    }
+
+    @keyframes nodeModifiedPulse {
+      0% { box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.8); border-color: var(--cyan); }
+      70% { box-shadow: 0 0 25px 8px rgba(0, 242, 254, 0); border-color: var(--cyan); }
+      100% { box-shadow: 0 0 18px var(--cyan-glow); }
+    }
+
+    .node-box.bypassed {
+      opacity: 0.45;
+      filter: grayscale(0.8);
+    }
+
+    .node-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .node-tag {
+      font-size: 8px;
+      font-weight: 800;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .node-power-btn {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .node-power-btn.on {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    .node-icon {
+      font-size: 18px;
+      margin: 2px 0;
+    }
+
+    .node-name {
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      text-align: center;
+    }
+
+    .node-param-badge {
+      font-size: 8.5px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--cyan);
+      background: rgba(0, 242, 254, 0.08);
+      padding: 1px 5px;
+      border-radius: 4px;
+      text-align: center;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Node Quick Slider below */
+    .node-slider-wrap {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .node-range {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 3px;
+      background: #282a36;
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .node-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      cursor: pointer;
+    }
+
+    /* Real-Time Spectrum / Response Display */
+    .spectrum-panel {
+      height: 110px;
+      background: #0a0b0e;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas#spectrumCanvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── RIGHT: ACTIVE MODULE DETAIL (AUTOTUNE & FX) ── */
+    .module-detail-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .detail-body {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+    }
+
+    /* Autotune Key Grid */
+    .autotune-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .section-subtitle {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+
+    .key-selector-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 4px;
+    }
+
+    .key-btn {
+      background: #191b24;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: #b0b0bb;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+
+    .key-btn:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+
+    .key-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .scale-selector-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .scale-btn {
+      background: #191b24;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: #b0b0bb;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .scale-btn.active {
+      background: rgba(0, 242, 254, 0.15);
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    /* Knobs Row */
+    .knobs-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .knob-control {
+      background: #14161f;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .knob-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .knob-dial {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent) 0deg, var(--accent) 220deg, #242735 220deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+      cursor: pointer;
+    }
+
+    .knob-inner {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #0f1015;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* ── FOOTER STATUS ── */
+    footer {
+      height: 32px;
+      background: #090a0d;
+      border-top: 1px solid var(--panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .dsp-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .status-ok {
+      color: var(--green);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">OFFSZN EASY <span class="highlight">MIX</span></div>
+      <div class="badge-ai">AI VOCAL SUITE</div>
+      <div class="license-pill">
+        <span class="license-dot"></span> PRO V2.0 ACTIVATED
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-clean" onclick="resetVocalChain()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Reset Chain
+      </button>
+      <button class="btn-clean" style="border-color: var(--accent); color: var(--accent);" onclick="toggleAudioPreview()">
+        <span id="preview-icon">▶</span> <span id="preview-text">Escuchar Test</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="workspace">
+
+    <!-- 1. AI VOICE COMMAND & PROBLEM SOLVER BAR -->
+    <section class="voice-command-section">
+      <div class="voice-bar-top">
+        <!-- Mic Button -->
+        <div class="mic-button-wrapper">
+          <button class="mic-btn" id="micBtn" onclick="toggleVoiceRecording()" title="Presiona para hablar por tu micrófono">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+          </button>
+          <div class="mic-pulse-ring"></div>
+        </div>
+
+        <!-- Speech Display / Text Input -->
+        <div class="speech-input-box">
+          <div class="speech-status-label" id="speechStatus">
+            <span class="speech-status-dot"></span> ASISTENTE VOCAL ACTIVO · HABLA O ESCRIBE TU COMANDO
+          </div>
+          <input type="text" class="speech-text-input" id="speechTextInput" 
+                 placeholder="Ej: 'Siento mi voz encajonada, dame más aire y autotune rápido en E menor'..." 
+                 onkeydown="if(event.key==='Enter') applyVoicePrompt(this.value)">
+        </div>
+
+        <!-- Apply Button -->
+        <button class="action-prompt-btn" onclick="applyVoicePrompt(document.getElementById('speechTextInput').value)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          APLICAR
+        </button>
+      </div>
+
+      <!-- Quick Suggestion Chips -->
+      <div class="quick-chips-row">
+        <span class="chip-label">Sugerencias Rápidas:</span>
+        <button class="chip" onclick="executeChip('Quitar voz encajonada y agregar brillo con aire')">📦 Quitar voz encajonada + Aire</button>
+        <button class="chip" onclick="executeChip('Autotune duro en E menor con distorsión suave')">🎤 Autotune E Minor + Drive</button>
+        <button class="chip" onclick="executeChip('Cambiar tono a F# Mayor con chorus estéreo')">🎼 Cambiar a F# Major + Chorus</button>
+        <button class="chip" onclick="executeChip('Voz estilo Travis Scott oscura con reverb largo')">🪐 Travis Vibe Oscura</button>
+        <button class="chip" onclick="executeChip('Voz limpia pop acústica con de-esser suave')">✨ Pop Limpio y Presente</button>
+      </div>
+    </section>
+
+    <!-- 2. NODE MAP & MODULE DETAIL -->
+    <div class="modules-layout">
+
+      <!-- LEFT: INTERACTIVE NODE FLOW (MINI MAPA) -->
+      <div class="node-map-card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><path d="M12 9V5"/><path d="M12 15v4"/><path d="m14 10 3.5-3.5"/><path d="m6.5 17.5 3.5-3.5"/></svg>
+            Mini-Mapa de Flujo Vocal (Signal Chain)
+          </div>
+          <div class="safe-phase-badge">🛡️ Phase-Safe Linear Routing</div>
+        </div>
+
+        <div class="node-graph-container">
+          <!-- Connective Cable -->
+          <div class="signal-cable"></div>
+          <div class="signal-cable-glow" id="cableGlow" style="width: 100%;"></div>
+
+          <!-- Flow Nodes -->
+          <div class="nodes-flow" id="nodesContainer">
+
+            <!-- 1. PITCH / AUTOTUNE -->
+            <div class="node-box selected" id="node-pitch" onclick="selectNode('pitch')">
+              <div class="node-header">
+                <span class="node-tag">01</span>
+                <button class="node-power-btn on" onclick="event.stopPropagation(); toggleNodePower('pitch')"></button>
+              </div>
+              <div class="node-icon">🎯</div>
+              <div class="node-name">Autotune</div>
+              <div class="node-param-badge" id="badge-pitch">E Min · 8ms</div>
+              <div class="node-slider-wrap" onclick="event.stopPropagation()">
+                <input type="range" class="node-range" min="0" max="100" value="90" oninput="updateNodeAmount('pitch', this.value)">
+              </div>
+            </div>
+
+            <!-- 2. DE-BOX & CLEAN -->
+            <div class="node-box" id="node-debox" onclick="selectNode('debox')">
+              <div class="node-header">
+                <span class="node-tag">02</span>
+                <button class="node-power-btn on" onclick="event.stopPropagation(); toggleNodePower('debox')"></button>
+              </div>
+              <div class="node-icon">🧹</div>
+              <div class="node-name">De-Box / Clean</div>
+              <div class="node-param-badge" id="badge-debox">-3.8dB @ 450Hz</div>
+              <div class="node-slider-wrap" onclick="event.stopPropagation()">
+                <input type="range" class="node-range" min="0" max="100" value="65" oninput="updateNodeAmount('debox', this.value)">
+              </div>
+            </div>
+
+            <!-- 3. DYNAMICS / COMP -->
+            <div class="node-box" id="node-dynamics" onclick="selectNode('dynamics')">
+              <div class="node-header">
+                <span class="node-tag">03</span>
+                <button class="node-power-btn on" onclick="event.stopPropagation(); toggleNodePower('dynamics')"></button>
+              </div>
+              <div class="node-icon">⚡</div>
+              <div class="node-name">Compressor</div>
+              <div class="node-param-badge" id="badge-dynamics">Opto · 4:1</div>
+              <div class="node-slider-wrap" onclick="event.stopPropagation()">
+                <input type="range" class="node-range" min="0" max="100" value="70" oninput="updateNodeAmount('dynamics', this.value)">
+              </div>
+            </div>
+
+            <!-- 4. AIR & TONE -->
+            <div class="node-box" id="node-air" onclick="selectNode('air')">
+              <div class="node-header">
+                <span class="node-tag">04</span>
+                <button class="node-power-btn on" onclick="event.stopPropagation(); toggleNodePower('air')"></button>
+              </div>
+              <div class="node-icon">✨</div>
+              <div class="node-name">Air & Tone</div>
+              <div class="node-param-badge" id="badge-air">+4.0dB @ 14k</div>
+              <div class="node-slider-wrap" onclick="event.stopPropagation()">
+                <input type="range" class="node-range" min="0" max="100" value="80" oninput="updateNodeAmount('air', this.value)">
+              </div>
+            </div>
+
+            <!-- 5. DRIVE / SATURATION -->
+            <div class="node-box" id="node-drive" onclick="selectNode('drive')">
+              <div class="node-header">
+                <span class="node-tag">05</span>
+                <button class="node-power-btn on" onclick="event.stopPropagation(); toggleNodePower('drive')"></button>
+              </div>
+              <div class="node-icon">🔥</div>
+              <div class="node-name">Saturation</div>
+              <div class="node-param-badge" id="badge-drive">Tube · 25%</div>
+              <div class="node-slider-wrap" onclick="event.stopPropagation()">
+                <input type="range" class="node-range" min="0" max="100" value="30" oninput="updateNodeAmount('drive', this.value)">
+              </div>
+            </div>
+
+            <!-- 6. MODULATION (CHORUS/FLANGE) -->
+            <div class="node-box" id="node-mod" onclick="selectNode('mod')">
+              <div class="node-header">
+                <span class="node-tag">06</span>
+                <button class="node-power-btn on" onclick="event.stopPropagation(); toggleNodePower('mod')"></button>
+              </div>
+              <div class="node-icon">🌊</div>
+              <div class="node-name">Modulation</div>
+              <div class="node-param-badge" id="badge-mod">Stereo Chorus</div>
+              <div class="node-slider-wrap" onclick="event.stopPropagation()">
+                <input type="range" class="node-range" min="0" max="100" value="40" oninput="updateNodeAmount('mod', this.value)">
+              </div>
+            </div>
+
+            <!-- 7. SPACE (DELAY/REVERB) -->
+            <div class="node-box" id="node-space" onclick="selectNode('space')">
+              <div class="node-header">
+                <span class="node-tag">07</span>
+                <button class="node-power-btn on" onclick="event.stopPropagation(); toggleNodePower('space')"></button>
+              </div>
+              <div class="node-icon">🌌</div>
+              <div class="node-name">Space Send</div>
+              <div class="node-param-badge" id="badge-space">Plate · 2.4s</div>
+              <div class="node-slider-wrap" onclick="event.stopPropagation()">
+                <input type="range" class="node-range" min="0" max="100" value="35" oninput="updateNodeAmount('space', this.value)">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Spectrum Analyzer Panel -->
+        <div class="spectrum-panel">
+          <canvas id="spectrumCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- RIGHT: ACTIVE MODULE CONTROLS (AUTOTUNE & PARAMETERS) -->
+      <div class="module-detail-card">
+        <div class="card-header">
+          <div class="card-title" id="moduleDetailTitle">
+            🎯 AUTOTUNE & SCALE ENGINE
+          </div>
+          <span style="font-size: 10px; font-weight: 700; color: var(--accent);">MONO DSP</span>
+        </div>
+
+        <div class="detail-body" id="detailBody">
+          
+          <!-- Key & Scale Matrix -->
+          <div class="autotune-section">
+            <div class="section-subtitle">Tono Raíz (Root Key)</div>
+            <div class="key-selector-grid" id="keyGrid">
+              <button class="key-btn" onclick="setKey('C')">C</button>
+              <button class="key-btn" onclick="setKey('C#')">C#</button>
+              <button class="key-btn" onclick="setKey('D')">D</button>
+              <button class="key-btn" onclick="setKey('D#')">D#</button>
+              <button class="key-btn active" onclick="setKey('E')">E</button>
+              <button class="key-btn" onclick="setKey('F')">F</button>
+              <button class="key-btn" onclick="setKey('F#')">F#</button>
+              <button class="key-btn" onclick="setKey('G')">G</button>
+              <button class="key-btn" onclick="setKey('G#')">G#</button>
+              <button class="key-btn" onclick="setKey('A')">A</button>
+              <button class="key-btn" onclick="setKey('A#')">A#</button>
+              <button class="key-btn" onclick="setKey('B')">B</button>
+            </div>
+          </div>
+
+          <!-- Scale Selector -->
+          <div class="autotune-section">
+            <div class="section-subtitle">Tipo de Escala</div>
+            <div class="scale-selector-row">
+              <button class="scale-btn" id="scale-major" onclick="setScale('Major')">Mayor (Major)</button>
+              <button class="scale-btn active" id="scale-minor" onclick="setScale('Minor')">Menor (Minor)</button>
+              <button class="scale-btn" id="scale-harm" onclick="setScale('Harmonic Minor')">Menor Armónica</button>
+              <button class="scale-btn" id="scale-chrom" onclick="setScale('Chromatic')">Cromática</button>
+            </div>
+          </div>
+
+          <!-- DSP Tuning Knobs -->
+          <div class="autotune-section">
+            <div class="section-subtitle">Parámetros de Afinación</div>
+            <div class="knobs-grid">
+              <div class="knob-control">
+                <div class="knob-title">Retune Speed</div>
+                <div class="knob-dial" id="knob-retune">
+                  <div class="knob-inner" id="val-retune">8ms</div>
+                </div>
+              </div>
+              <div class="knob-control">
+                <div class="knob-title">Humanize</div>
+                <div class="knob-dial" id="knob-humanize" style="background: conic-gradient(var(--cyan) 0deg, var(--cyan) 90deg, #242735 90deg);">
+                  <div class="knob-inner" id="val-humanize">35%</div>
+                </div>
+              </div>
+              <div class="knob-control">
+                <div class="knob-title">Formant Shift</div>
+                <div class="knob-dial" id="knob-formant" style="background: conic-gradient(var(--purple) 0deg, var(--purple) 180deg, #242735 180deg);">
+                  <div class="knob-inner" id="val-formant">0st</div>
+                </div>
+              </div>
+              <div class="knob-control">
+                <div class="knob-title">Pitch Amount</div>
+                <div class="knob-dial" id="knob-amount" style="background: conic-gradient(var(--green) 0deg, var(--green) 260deg, #242735 260deg);">
+                  <div class="knob-inner" id="val-amount">90%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="dsp-status">
+      <span>DSP LATENCY: <strong class="status-ok">1.8 ms (80 samples)</strong></span>
+      <span>|</span>
+      <span>SAMPLE RATE: <strong>48.0 kHz</strong></span>
+      <span>|</span>
+      <span>PHASE COHERENCE: <strong class="status-ok">100% ALIGNED</strong></span>
+    </div>
+    <div>OFFSZN AUDIO ENGINE · 2026</div>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // State Architecture
+    const state = {
+      isRecording: false,
+      audioPlaying: false,
+      selectedNode: 'pitch',
+      nodes: {
+        pitch: { on: true, amount: 90, key: 'E', scale: 'Minor', speed: 8, humanize: 35, formant: 0 },
+        debox: { on: true, amount: 65, freq: 450, gain: -3.8 },
+        dynamics: { on: true, amount: 70, type: 'Opto', ratio: '4:1' },
+        air: { on: true, amount: 80, freq: 14000, gain: 4.0 },
+        drive: { on: true, amount: 30, type: 'Tube' },
+        mod: { on: true, amount: 40, type: 'Stereo Chorus' },
+        space: { on: true, amount: 35, type: 'Plate', time: 2.4 }
+      }
+    };
+
+    // Speech Recognition Setup (Web Speech API)
+    let recognition = null;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRec();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'es-ES';
+
+      recognition.onstart = () => {
+        state.isRecording = true;
+        updateMicUI();
+        document.getElementById('speechStatus').innerHTML = '<span class="speech-status-dot" style="background:#ff453a;"></span> ESCUCHANDO TU VOZ EN TIEMPO REAL...';
+      };
+
+      recognition.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          transcript += event.results[i][0].transcript;
+        }
+        document.getElementById('speechTextInput').value = transcript;
+      };
+
+      recognition.onerror = (event) => {
+        console.warn('Speech Error:', event.error);
+        stopVoiceRecording();
+      };
+
+      recognition.onend = () => {
+        stopVoiceRecording();
+        const text = document.getElementById('speechTextInput').value;
+        if (text.trim().length > 0) {
+          applyVoicePrompt(text);
+        }
+      };
+    }
+
+    function toggleVoiceRecording() {
+      if (state.isRecording) {
+        if (recognition) recognition.stop();
+        stopVoiceRecording();
+      } else {
+        if (recognition) {
+          try {
+            recognition.start();
+          } catch (e) {
+            console.error(e);
+          }
+        } else {
+          // Fallback simulation if browser doesn't have mic permission
+          simulateVoiceRecording();
+        }
+      }
+    }
+
+    function stopVoiceRecording() {
+      state.isRecording = false;
+      updateMicUI();
+      document.getElementById('speechStatus').innerHTML = '<span class="speech-status-dot"></span> ASISTENTE VOCAL ACTIVO · COMANDO PROCESADO';
+    }
+
+    function simulateVoiceRecording() {
+      state.isRecording = true;
+      updateMicUI();
+      document.getElementById('speechStatus').innerHTML = '<span class="speech-status-dot" style="background:#00f2fe;"></span> ESCUCHANDO (DEMO MOCK)...';
+      setTimeout(() => {
+        document.getElementById('speechTextInput').value = "Quitar voz encajonada, dame más aire y autotune en E menor";
+        stopVoiceRecording();
+        applyVoicePrompt(document.getElementById('speechTextInput').value);
+      }, 2200);
+    }
+
+    function updateMicUI() {
+      const btn = document.getElementById('micBtn');
+      if (state.isRecording) {
+        btn.classList.add('recording');
+      } else {
+        btn.classList.remove('recording');
+      }
+    }
+
+    function executeChip(promptText) {
+      document.getElementById('speechTextInput').value = promptText;
+      applyVoicePrompt(promptText);
+    }
+
+    // ── NLP & INTENT PARSER ENGINE ──
+    function applyVoicePrompt(prompt) {
+      if (!prompt || prompt.trim() === '') return;
+      const lower = prompt.toLowerCase();
+      const modifiedNodes = [];
+
+      // 1. Check De-Box / Encajonada
+      if (lower.includes('encajonada') || lower.includes('acartonada') || lower.includes('debox') || lower.includes('quitar caja') || lower.includes('caja')) {
+        state.nodes.debox.on = true;
+        state.nodes.debox.gain = -4.5;
+        state.nodes.debox.amount = 80;
+        document.getElementById('badge-debox').textContent = '-4.5dB @ 450Hz';
+        modifiedNodes.push('debox');
+      }
+
+      // 2. Check Air / Brillo
+      if (lower.includes('aire') || lower.includes('brillo') || lower.includes('bright') || lower.includes('abrir')) {
+        state.nodes.air.on = true;
+        state.nodes.air.gain = 5.0;
+        state.nodes.air.amount = 85;
+        document.getElementById('badge-air').textContent = '+5.0dB @ 14k';
+        modifiedNodes.push('air');
+      }
+
+      // 3. Check Autotune / Key / Scale
+      const keys = ['c#', 'd#', 'f#', 'g#', 'a#', 'c', 'd', 'e', 'f', 'g', 'a', 'b', 'do', 're', 'mi', 'fa', 'sol', 'la', 'si'];
+      let detectedKey = null;
+      
+      // Match key
+      if (lower.includes('e menor') || lower.includes('e minor') || lower.includes('mi menor')) detectedKey = 'E';
+      else if (lower.includes('f#') || lower.includes('fa sostenido')) detectedKey = 'F#';
+      else if (lower.includes('c mayor') || lower.includes('do mayor')) detectedKey = 'C';
+      else if (lower.includes('a menor') || lower.includes('la menor')) detectedKey = 'A';
+      else if (lower.includes('g menor') || lower.includes('sol menor')) detectedKey = 'G';
+      else if (lower.includes('d menor') || lower.includes('re menor')) detectedKey = 'D';
+
+      let detectedScale = null;
+      if (lower.includes('menor') || lower.includes('minor')) detectedScale = 'Minor';
+      if (lower.includes('mayor') || lower.includes('major')) detectedScale = 'Major';
+
+      if (detectedKey || detectedScale || lower.includes('autotune') || lower.includes('afina')) {
+        state.nodes.pitch.on = true;
+        if (detectedKey) setKey(detectedKey, false);
+        if (detectedScale) setScale(detectedScale, false);
+        if (lower.includes('rapido') || lower.includes('duro') || lower.includes('travis') || lower.includes('hard')) {
+          state.nodes.pitch.speed = 0;
+          document.getElementById('val-retune').textContent = '0ms';
+        }
+        document.getElementById('badge-pitch').textContent = `${state.nodes.pitch.key} ${state.nodes.pitch.scale.slice(0,3)} · ${state.nodes.pitch.speed}ms`;
+        modifiedNodes.push('pitch');
+      }
+
+      // 4. Check Drive / Saturation
+      if (lower.includes('distorsion') || lower.includes('saturacion') || lower.includes('calor') || lower.includes('tube') || lower.includes('fuzz') || lower.includes('drive')) {
+        state.nodes.drive.on = true;
+        state.nodes.drive.amount = lower.includes('suave') ? 25 : 55;
+        document.getElementById('badge-drive').textContent = `Tube · ${state.nodes.drive.amount}%`;
+        modifiedNodes.push('drive');
+      }
+
+      // 5. Check Modulation / Chorus
+      if (lower.includes('chorus') || lower.includes('espacial') || lower.includes('ancho') || lower.includes('flanger')) {
+        state.nodes.mod.on = true;
+        state.nodes.mod.amount = 50;
+        document.getElementById('badge-mod').textContent = 'Stereo Chorus';
+        modifiedNodes.push('mod');
+      }
+
+      // 6. Check Space / Reverb
+      if (lower.includes('reverb') || lower.includes('largo') || lower.includes('eco') || lower.includes('delay') || lower.includes('travis')) {
+        state.nodes.space.on = true;
+        state.nodes.space.amount = 60;
+        document.getElementById('badge-space').textContent = 'Space Verb 3.2s';
+        modifiedNodes.push('space');
+      }
+
+      // Animate modified nodes
+      triggerNodePulse(modifiedNodes.length > 0 ? modifiedNodes : ['pitch', 'debox', 'air']);
+    }
+
+    function triggerNodePulse(nodeIds) {
+      nodeIds.forEach(id => {
+        const el = document.getElementById(`node-${id}`);
+        if (el) {
+          el.classList.remove('pulsing');
+          void el.offsetWidth; // trigger reflow
+          el.classList.add('pulsing');
+          // turn power button on visually
+          const pwr = el.querySelector('.node-power-btn');
+          if (pwr) pwr.classList.add('on');
+          el.classList.remove('bypassed');
+        }
+      });
+    }
+
+    function selectNode(nodeId) {
+      state.selectedNode = nodeId;
+      document.querySelectorAll('.node-box').forEach(n => n.classList.remove('selected'));
+      const activeNode = document.getElementById(`node-${nodeId}`);
+      if (activeNode) activeNode.classList.add('selected');
+      
+      const titles = {
+        pitch: '🎯 AUTOTUNE & SCALE ENGINE',
+        debox: '🧹 DE-BOXING & SURGICAL EQ',
+        dynamics: '⚡ OPTO & VCA COMPRESSOR',
+        air: '✨ AIR SHELF & PRESENCE TONE',
+        drive: '🔥 TUBE & TAPE SATURATION',
+        mod: '🌊 STEREO CHORUS & DIMENSION',
+        space: '🌌 SPACE DELAY & PLATE REVERB'
+      };
+      document.getElementById('moduleDetailTitle').textContent = titles[nodeId] || 'MODULE DETAIL';
+    }
+
+    function toggleNodePower(nodeId) {
+      const node = state.nodes[nodeId];
+      if (!node) return;
+      node.on = !node.on;
+      const el = document.getElementById(`node-${nodeId}`);
+      const btn = el.querySelector('.node-power-btn');
+      if (node.on) {
+        btn.classList.add('on');
+        el.classList.remove('bypassed');
+      } else {
+        btn.classList.remove('on');
+        el.classList.add('bypassed');
+      }
+    }
+
+    function updateNodeAmount(nodeId, val) {
+      if (state.nodes[nodeId]) {
+        state.nodes[nodeId].amount = parseInt(val);
+      }
+    }
+
+    function setKey(key, triggerAnim = true) {
+      state.nodes.pitch.key = key;
+      document.querySelectorAll('.key-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === key);
+      });
+      document.getElementById('badge-pitch').textContent = `${key} ${state.nodes.pitch.scale.slice(0,3)} · ${state.nodes.pitch.speed}ms`;
+      if (triggerAnim) triggerNodePulse(['pitch']);
+    }
+
+    function setScale(scaleName, triggerAnim = true) {
+      state.nodes.pitch.scale = scaleName;
+      document.querySelectorAll('.scale-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.includes(scaleName));
+      });
+      document.getElementById('badge-pitch').textContent = `${state.nodes.pitch.key} ${scaleName.slice(0,3)} · ${state.nodes.pitch.speed}ms`;
+      if (triggerAnim) triggerNodePulse(['pitch']);
+    }
+
+    function resetVocalChain() {
+      setKey('E');
+      setScale('Minor');
+      document.getElementById('speechTextInput').value = '';
+      triggerNodePulse(['pitch', 'debox', 'dynamics', 'air', 'drive', 'mod', 'space']);
+    }
+
+    // Interactive Spectrum Canvas Simulation
+    const canvas = document.getElementById('spectrumCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let frame = 0;
+    function drawSpectrum() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const width = canvas.width;
+      const height = canvas.height;
+      const points = 60;
+      
+      ctx.beginPath();
+      ctx.moveTo(0, height);
+
+      for (let i = 0; i <= points; i++) {
+        const x = (i / points) * width;
+        const baseSin = Math.sin((i * 0.15) + (frame * 0.05)) * 15;
+        const wave = Math.cos((i * 0.08) - (frame * 0.03)) * 10;
+        
+        // Air boost hump at high end
+        const airHump = i > 45 ? 14 : 0;
+        // Debox dip around mid
+        const deboxDip = (i > 15 && i < 28) ? -12 : 0;
+        
+        const y = (height / 2) + baseSin + wave + deboxDip - airHump;
+        ctx.lineTo(x, y);
+      }
+
+      ctx.lineTo(width, height);
+      ctx.closePath();
+
+      const gradient = ctx.createLinearGradient(0, 0, width, 0);
+      gradient.addColorStop(0, 'rgba(0, 242, 254, 0.25)');
+      gradient.addColorStop(0.5, 'rgba(138, 43, 226, 0.2)');
+      gradient.addColorStop(1, 'rgba(255, 69, 58, 0.3)');
+
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      ctx.strokeStyle = '#00f2fe';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      frame++;
+      requestAnimationFrame(drawSpectrum);
+    }
+    drawSpectrum();
+
+    function toggleAudioPreview() {
+      state.audioPlaying = !state.audioPlaying;
+      const icon = document.getElementById('preview-icon');
+      const text = document.getElementById('preview-text');
+      if (state.audioPlaying) {
+        icon.textContent = '⏹';
+        text.textContent = 'Detener Test';
+      } else {
+        icon.textContent = '▶';
+        text.textContent = 'Escuchar Test';
+      }
+    }
+  </script>
+</body>
+</html>

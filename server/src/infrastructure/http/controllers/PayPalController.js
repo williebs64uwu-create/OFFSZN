@@ -1045,6 +1045,33 @@ export const capturePayPalOrder = async (req, res) => {
                 }
             }
 
+            // 4b. Auto-Delist Beat if Exclusive License was purchased and producer enabled auto_delist_exclusive
+            for (const item of cartItems) {
+                try {
+                    const licName = (item.license_name || '').toLowerCase();
+                    const isExclusive = licName.includes('exclusiv') || licName.includes('unlimited') || mapLicenseToKey(item.license_name) === 'exclusive';
+                    
+                    if (isExclusive && item.product?.id && item.product?.producer_id) {
+                        // Check producer preference
+                        const { data: producerData } = await supabase
+                            .from('profiles')
+                            .select('auto_delist_exclusive')
+                            .eq('id', item.product.producer_id)
+                            .maybeSingle();
+
+                        if (producerData?.auto_delist_exclusive) {
+                            console.log(`[PayPalCapture] 🛡️ Auto-Delist triggered for exclusive beat ${item.product.id} (${item.product.name})`);
+                            await supabase
+                                .from('products')
+                                .update({ status: 'sold_exclusive' })
+                                .eq('id', item.product.id);
+                        }
+                    }
+                } catch (delistErr) {
+                    console.error(`[PayPalCapture] Error handling auto-delist for product ${item.product?.id}:`, delistErr);
+                }
+            }
+
             // 5. Increment Coupon Usage
             if (appliedCouponId) {
                 try {
