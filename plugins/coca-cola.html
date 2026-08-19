@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- PayPal Preconnect for Ultra Fast Load -->
+    <link rel="preconnect" href="https://www.paypal.com" crossorigin>
+    <link rel="preconnect" href="https://www.paypalobjects.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.paypal.com">
+    <link rel="dns-prefetch" href="https://www.paypalobjects.com">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coca-Cola VST | El Channel Strip Definitivo para Voces - OFFSZN</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="description" content="Plugin VST de OFFSZN. El Channel Strip definitivo para voces. Limpieza, ecualización, De-Esser Waves, compresión balanceada, reverb inteligente con ducking dinámico y presencia frontal.">
+    <meta name="theme-color" content="#0a0a0a">
+    <!-- Open Graph -->
+    <meta property="og:title" content="Coca-Cola VST | Channel Strip & Reverb Ducking para Voces - OFFSZN">
+    <meta property="og:description" content="Preefectos, Moldea tu Voz, De-Esser, Compresor, Espuma y Armónicos en un solo plugin para FL Studio y DAWs.">
+    <meta property="og:image" content="https://offszn.lat/plugins/coca-cola.png">
+    <meta property="og:url" content="https://offszn.lat/plugins/coca-cola">
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="OFFSZN">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://offszn.lat/plugins/coca-cola.png">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Supabase & Config -->
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>window.supabaseClient = null;</script>
+    <script src="/script/config.js"></script>
+    <script src="/script/auth-utils.js?v=12"></script>
+
+    <style>
+        :root {
+            --accent: #e61b2b;
+            --accent-bright: #ff3b4b;
+            --accent-dark: #6e0811;
+        }
+
+        .plugin-landing {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Geist', sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ==================== HERO ==================== */
+        .hero-section {
+            padding: 60px 0 40px;
+            text-align: center;
+            animation: heroFadeIn 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes heroFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-top-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            width: 100%;
+        }
+
+        .area-1 {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .area-2 {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .hero-title {
+            font-size: clamp(2.2rem, 6vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff 0%, #ff3b4b 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: #888;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.5;
+        }
+
+        .hero-image-container {
+            position: relative;
+            max-width: 800px;
+            margin: 30px auto 0;
+            animation: heroFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes heroFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .hero-mockup {
+            width: 100%;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+
+        /* CTA Buttons (White Button for Download) */
+        .btn-free-download {
+            background: #fff;
+            color: #000;
+            padding: 12px 28px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #fff;
+            gap: 8px;
+        }
+
+        .btn-free-download:hover {
+            transform: translateY(-2px) scale(1.02);
+            background: #eee;
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-free-download.primary-large {
+            padding: 16px 48px;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+        }
+
+        .btn-serial {
+            background: transparent;
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            gap: 8px;
+            opacity: 0.7;
+            cursor: pointer;
+        }
+
+        .btn-serial:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.4);
+            opacity: 1;
+        }
+
+        /* ==================== CONTENT SECTIONS ==================== */
+        .feature-section {
+            border-top: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .alt-bg {
+            background: #080808;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            padding: 80px 0;
+        }
+
+        .content-grid.reverse {
+            direction: rtl;
+        }
+
+        .content-grid.reverse .text-content {
+            direction: ltr;
+        }
+
+        .feature-tag {
+            color: #ff3b4b;
+            font-weight: 800;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            opacity: 0.8;
+        }
+
+        .text-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 24px;
+            font-weight: 700;
+        }
+
+        .text-content p {
+            color: #aaa;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        /* ==================== SERIAL KEY SECTION ==================== */
+        .serial-section {
+            padding: 80px 0;
+            text-align: center;
+            background: #000;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            color: #888;
+            font-size: 1.05rem;
+            max-width: 500px;
+            margin: 0 auto 40px;
+        }
+
+        .serial-card {
+            background: #0a0a0a;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .auth-wall {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .auth-wall i {
+            font-size: 3rem;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .serial-display {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .serial-box {
+            background: #000;
+            border: 1px dashed rgba(230, 27, 43,0.4);
+            padding: 16px 24px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            border-radius: 8px;
+            width: 100%;
+            user-select: all;
+            cursor: pointer;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+            color: #ff3b4b;
+        }
+
+        .serial-box:hover {
+            border-color: rgba(230, 27, 43,0.8);
+        }
+
+        .btn-auth {
+            background: #fff;
+            color: #000;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-auth:hover {
+            transform: translateY(-2px);
+            background: #e5e5e5;
+        }
+
+        .btn-download {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-download:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* ==================== FAQ SECTION ==================== */
+        .faq-section {
+            padding: 100px 0;
+            background: #000;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .faq-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .faq-header .subtitle {
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .faq-header h2 {
+            font-size: clamp(3rem, 6vw, 4.5rem);
+            font-weight: 800;
+            letter-spacing: -2px;
+            color: #fff;
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .faq-item {
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .faq-question {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: left;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .faq-question i {
+            transition: transform 0.3s;
+            color: #666;
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            color: #888;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding-bottom: 24px;
+        }
+
+        /* ==================== TAGLINE (FINAL CTA) ==================== */
+        .tagline-section {
+            padding: 100px 20px;
+            text-align: center;
+            background: #000;
+        }
+
+        .tagline-section h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #666);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .content-grid.reverse {
+                direction: ltr;
+            }
+
+            .hero-top-actions {
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .tagline-section h2 {
+                font-size: 2rem;
+            }
+
+            .faq-section {
+                padding: 60px 0;
+            }
+
+            .faq-header {
+                margin-bottom: 30px;
+            }
+
+            .faq-header h2 {
+                font-size: 2.2rem;
+            }
+
+            .faq-question {
+                font-size: 1.05rem;
+                padding: 18px 0;
+            }
+
+            .faq-answer {
+                font-size: 0.95rem;
+                line-height: 1.5;
+            }
+        }
+        
+        /* ==================== STICKY BANNER ==================== */
+        .sticky-offer-banner {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(230, 27, 43, 0.3);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 12px 20px;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+            animation: slideUpBanner 0.5s ease-out forwards;
+            animation-delay: 1s;
+            transform: translateY(100%);
+        }
+
+        @keyframes slideUpBanner {
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .sticky-offer-text {
+            color: #ff3b4b;
+            font-weight: 800;
+            font-size: 1.05rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .sticky-offer-btn {
+            background: #ff3b4b;
+            color: #000;
+            padding: 8px 24px;
+            border-radius: 8px;
+            font-weight: 800;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .sticky-offer-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            background: #ff5c6a;
+            box-shadow: 0 5px 15px rgba(230, 27, 43, 0.3);
+        }
+
+        .sticky-offer-mobile-link {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 38px !important;
+            }
+            #navbar-placeholder > div {
+                top: 38px !important;
+            }
+            .sticky-offer-banner {
+                top: 0 !important;
+                bottom: auto !important;
+                border-top: none !important;
+                border-bottom: 1px solid rgba(230, 27, 43, 0.3) !important;
+                padding: 0 !important;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
+                animation: none !important;
+                transform: none !important;
+                height: 38px !important;
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+            }
+            .sticky-offer-text,
+            .sticky-offer-btn {
+                display: none !important;
+            }
+            .sticky-offer-mobile-link {
+                display: block !important;
+                color: #ff3b4b;
+                font-weight: 800;
+                font-size: 0.85rem;
+                text-decoration: none;
+                text-align: center;
+                width: 100%;
+                height: 38px;
+                line-height: 38px;
+            }
+        }
+
+        /* WhatsApp Floating Button */
+        .whatsapp-floating-btn {
+            position: fixed;
+            bottom: 90px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background-color: #25D366;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), 0 0 20px rgba(37, 211, 102, 0.4);
+            z-index: 10000;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: whatsappPulse 2s infinite;
+            text-decoration: none;
+        }
+
+        .whatsapp-floating-btn:hover {
+            transform: scale(1.1) translateY(-5px);
+            background-color: #20ba5a;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(37, 211, 102, 0.6);
+            color: #fff;
+        }
+
+        @keyframes whatsappPulse {
+            0% { box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), 0 0 0px rgba(37, 211, 102, 0.4); }
+            70% { box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), 0 0 15px rgba(37, 211, 102, 0.7); }
+            100% { box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), 0 0 0px rgba(37, 211, 102, 0.4); }
+        }
+
+        @media (max-width: 768px) {
+            .whatsapp-floating-btn {
+                bottom: 80px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ==================== DYNAMIC NAVBAR ==================== -->
+    <div id="navbar-placeholder">
+        <div style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;"></div>
+    </div>
+    <script src="/script/load-navbar.js?v=25"></script>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="plugin-landing">
+
+        <!-- HERO SECTION -->
+        <section class="hero-section">
+            <div class="container">
+                <!-- HERO TOP ACTIONS -->
+                <div class="hero-top-actions" style="justify-content: center; margin-bottom: 24px;">
+                    <div class="area-2">
+                        <a href="#serial-section" class="btn-free-download"><i class="bi bi-download"></i> DESCARGAR PLUGIN</a>
+                    </div>
+                </div>
+
+                <h1 class="hero-title">COCA-COLA PLUGIN</h1>
+                <p class="hero-subtitle">El Channel Strip definitivo para que tus voces suenen al frente</p>
+                
+                <div class="hero-image-container">
+                    <img src="/plugins/coca-cola.png" alt="Coca-Cola VST" class="hero-mockup">
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== VIDEO DEMO SECTION ==================== -->
+        <section id="video-demo"
+            style="padding: 80px 0; background: #050505; border-top: 1px solid rgba(255,255,255,0.04);">
+            <div class="container" style="max-width: 950px;">
+                <div
+                    style="display: flex; align-items: center; justify-content: center; gap: 40px; flex-wrap: wrap; text-align: left;">
+                    <!-- Left Column: Titles & Text -->
+                    <div style="flex: 1; min-width: 300px;">
+                        <div
+                            style="font-size: 0.75rem; letter-spacing: 3px; color: #ff3b4b; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">
+                            Demo en acción</div>
+                        <h2
+                            style="font-size: 2.5rem; font-weight: 800; margin-bottom: 16px; color: #fff; line-height: 1.2;">
+                            Mira cómo suena Coca-Cola</h2>
+                        <p style="color: #aaa; font-size: 1rem; margin-bottom: 0; line-height: 1.6;">Del canal sin
+                            procesar a una pegada profesional y presencia en segundos.</p>
+                    </div>
+
+                    <!-- Right Column: Video Demo -->
+                    <div style="flex: 0 0 320px; max-width: 340px; width: 100%; margin: 0 auto;">
+                        <div
+                            style="position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.8); border: 2.5px solid rgba(255,255,255,0.1); background: #111;">
+
+                            <!-- Click Interceptor (Prevents pausing, toggles mute) -->
+                            <div onclick="toggleVideoMute(event)"
+                                style="position: absolute; top: 0; left: 0; right: 0; bottom: 50px; z-index: 4; cursor: pointer;">
+                            </div>
+
+                            <!-- Unmute Overlay Badge -->
+                            <div id="video-sound-overlay"
+                                style="position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid #ff3b4b; padding: 8px 14px; border-radius: 30px; display: flex; align-items: center; gap: 8px; color: #ff3b4b; font-weight: 700; font-size: 0.8rem; box-shadow: 0 8px 20px rgba(0,0,0,0.6); z-index: 5; transition: opacity 0.3s; pointer-events: none;">
+                                <i class="bi bi-volume-mute-fill" id="sound-overlay-icon"
+                                    style="font-size: 1.05rem;"></i>
+                                <span id="sound-overlay-text">CLIC PARA SONIDO</span>
+                            </div>
+
+                            <video id="demo-video" src="/plugins/coca-cola.mp4" autoplay muted loop playsinline
+                                controls
+                                style="width: 100%; height: auto; display: block; object-fit: contain;"
+                                preload="auto">
+                                Tu navegador no soporta la reproducción de video.
+                            </video>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <script>
+            function toggleVideoMute(event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                const video = document.getElementById('demo-video');
+                const overlayText = document.getElementById('sound-overlay-text');
+                const overlayIcon = document.getElementById('sound-overlay-icon');
+                const overlay = document.getElementById('video-sound-overlay');
+
+                if (video) {
+                    if (video.muted) {
+                        video.muted = false;
+                        video.play().catch(e => console.log(e));
+                        overlayText.innerText = 'SONIDO ACTIVO';
+                        overlayIcon.className = 'bi bi-volume-up-fill';
+                        setTimeout(() => {
+                            overlay.style.opacity = '0';
+                        }, 1200);
+                    } else {
+                        video.muted = true;
+                        video.play().catch(e => console.log(e));
+                        overlay.style.opacity = '1';
+                        overlayText.innerText = 'CLIC PARA SONIDO';
+                        overlayIcon.className = 'bi bi-volume-mute-fill';
+                    }
+                }
+            }
+        </script>
+
+        <!-- ==================== COMPATIBILITY SECTION ==================== -->
+        <section style="padding: 60px 0; background: #000; border-top: 1px solid rgba(255,255,255,0.05);">
+            <div class="container" style="max-width: 800px; text-align: center;">
+                <h2 style="font-size: 1.8rem; font-weight: 800; margin-bottom: 24px; color: #fff; text-transform: uppercase; letter-spacing: 1px;">Disponible en:</h2>
+
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: center;">
+                    <!-- FL Studio -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 12px; transition: transform 0.2s;">
+                        <img src="/images/logo fl.png" alt="FL Studio" style="height: 30px; width: auto; object-fit: contain;">
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">FL Studio</span>
+                    </div>
+
+                    <!-- Ableton Live -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">🎹</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Ableton Live</span>
+                    </div>
+
+                    <!-- Logic Pro -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">🍏</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Logic Pro</span>
+                    </div>
+
+                    <!-- Pro Tools -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">🎚️</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Pro Tools</span>
+                    </div>
+
+                    <!-- Studio One -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">🎛️</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Studio One</span>
+                    </div>
+
+                    <!-- Reaper -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">💻</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Reaper</span>
+                    </div>
+
+                    <!-- Cubase -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">🎸</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Cubase</span>
+                    </div>
+                </div>
+                <p style="color: #888; font-size: 0.85rem; margin-top: 24px; margin-bottom: 0; display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                    <span><i class="fa-brands fa-windows" style="color: #0078d4; margin-right: 4px;"></i> Windows (VST3 de 64 bits)</span>
+                    <span style="color: rgba(255,255,255,0.15);">|</span>
+                    <span><i class="fa-brands fa-apple" style="color: #ffffff; margin-right: 4px;"></i> macOS (AU / VST3 / Standalone para Intel & Apple Silicon)</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- ==================== SYSTEM REQUIREMENTS ==================== -->
+        <section style="padding: 60px 0; background: #000; border-top: 1px solid rgba(255,255,255,0.05);">
+            <div class="container" style="max-width: 850px; text-align: center;">
+                <h2 class="section-title" style="font-size: 2rem; margin-bottom: 30px;">Requisitos del Sistema</h2>
+                <div style="display: flex; gap: 30px; flex-wrap: wrap; justify-content: center;">
+                    <!-- Windows -->
+                    <div style="flex: 1; min-width: 280px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); padding: 30px; border-radius: 16px; text-align: left;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#0078D4" viewBox="0 0 16 16"><path d="M6.555 1.375 0 2.237v5.45h6.555zM0 13.795l6.555.933V8.313H0zm7.278-5.4 .026 6.378L16 15.64V8.395zM16 .396 7.304 1.407v6.281H16z"/></svg>
+                            <span style="font-size: 1.1rem; font-weight: 700; color: #fff;">Windows</span>
+                        </div>
+                        <ul style="list-style: none; padding: 0; margin: 0; color: #aaa; font-size: 0.9rem; line-height: 2;">
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> Windows 10 o superior (64-bit)</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> Procesador Intel i5 / AMD Ryzen 5 o superior</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> 4 GB RAM mínimo</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> FL Studio 20.8+ / Ableton 11+ / Reaper / VST3</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> Conexión a internet (solo para activación)</li>
+                        </ul>
+                    </div>
+
+                    <!-- macOS -->
+                    <div style="flex: 1; min-width: 280px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); padding: 30px; border-radius: 16px; text-align: left;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="#ffffff" viewBox="0 0 16 16"><path d="M11.182.008C11.148-.03 9.992.206 9.28.975c-.716.77-1.07 1.816-.949 2.771.12.955.975 1.905 1.777 1.905.047 0 .094-.003.14-.01.716-.07 1.72-.756 2.378-1.517.659-.76.842-1.785.733-2.733-.949-.07-1.864.444-2.177.617zm2.93 6.942c-.22-.387-.559-.683-.996-.867-.438-.184-.96-.277-1.57-.277-.756 0-1.42.197-1.996.59-.575.394-.96.59-1.157.59-.16 0-.52-.164-1.079-.49-.56-.328-1.11-.493-1.65-.493-.725 0-1.396.177-2.015.53-.62.355-1.1.865-1.442 1.53-.342.665-.513 1.488-.513 2.472 0 1.018.23 1.99.69 2.916.46.926 1.07 1.72 1.832 2.38.76.66 1.51 1.026 2.25 1.096.346.035.688-.046 1.026-.246.338-.2.72-.3 1.147-.3.44 0 .83.1 1.173.3.342.2.68.28 1.01.246.736-.07 1.484-.436 2.245-1.096.76-.66 1.37-1.454 1.83-2.38.46-.926.69-1.898.69-2.916 0-.984-.17-1.807-.513-2.472z"/></svg>
+                            <span style="font-size: 1.1rem; font-weight: 700; color: #fff;">macOS</span>
+                        </div>
+                        <ul style="list-style: none; padding: 0; margin: 0; color: #aaa; font-size: 0.9rem; line-height: 2;">
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> macOS 10.15 Catalina o superior</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> Compatible con Intel & Apple Silicon (M1/M2/M3)</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> 4 GB RAM mínimo</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> FL Studio 20.8+ / Ableton 11+ / Logic Pro X / AU & VST3</li>
+                            <li><i class="bi bi-check-circle-fill" style="color: #30d158; margin-right: 8px;"></i> Conexión a internet (solo para activación)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TESTIMONIALS SECTION (TODOS LOS TESTIMONIOS) ==================== -->
+        <section id="testimonios"
+            style="padding: 80px 0; background: #050505; border-top: 1px solid rgba(255,255,255,0.04);">
+            <div class="container" style="max-width: 1100px; text-align: center;">
+                <div
+                    style="font-size: 0.75rem; letter-spacing: 3px; color: #ff3b4b; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">
+                    Testimonios</div>
+                <h2
+                    style="font-size: clamp(2rem, 5vw, 2.8rem); font-weight: 800; margin-bottom: 48px; color: #fff; line-height: 1.15;">
+                    Lo que dicen los artistas y productores.</h2>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px;">
+                    <!-- Testimonios Recientes (Nuevos) -->
+                    <div onclick="openLightbox('/images/plugins/testi-new-1.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-new-1.jpg" alt="Testimonio Coca-Cola 1"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/testi-new-2.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-new-2.jpg" alt="Testimonio Coca-Cola 2"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/testi-new-3.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-new-3.jpg" alt="Testimonio Coca-Cola 3"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/testi-new-4.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-new-4.jpg" alt="Testimonio Coca-Cola 4"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/testi-new-5.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-new-5.jpg" alt="Testimonio Coca-Cola 5"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/testi-new-6.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-new-6.jpg" alt="Testimonio Coca-Cola 6"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/testi-new-7.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-new-7.jpg" alt="Testimonio Coca-Cola 7"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/testi-new-8.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-new-8.jpg" alt="Testimonio Coca-Cola 8"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <!-- Testimonios Anteriores -->
+                    <div onclick="openLightbox('/images/plugins/testi-1.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-1.jpg" alt="Testimonio Easy Mix 1"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/testi-2.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-2.jpg" alt="Testimonio Easy Mix 2"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/testi-3.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-3.jpg" alt="Testimonio Easy Mix 3"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/plugin-testi.png')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/plugin-testi.png" alt="Testimonio Easy Mix 4"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/testi-4.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/testi-4.jpg" alt="Testimonio Easy Mix 5"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/REFERENCIA.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/REFERENCIA.jpg" alt="Testimonio Easy Mix 6"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/chrome_sRDhkGjPW8.png')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/chrome_sRDhkGjPW8.png" alt="Testimonio Easy Mix 7"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/REEFE3.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/REEFE3.jpg" alt="Testimonio Easy Mix 8"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/refes4.png')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/refes4.png" alt="Testimonio Easy Mix 9"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/R.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/R.jpg" alt="Testimonio Easy Mix 10"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/R2.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/R2.jpg" alt="Testimonio Easy Mix 11"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/esta.png')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/esta.png" alt="Testimonio Easy Mix 12"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/chrome_CrwswjOYxU.png')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/chrome_CrwswjOYxU.png" alt="Testimonio Easy Mix 13"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/chrome_wvvsGlZV7e.png')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/chrome_wvvsGlZV7e.png" alt="Testimonio Easy Mix 14"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/chrome_18pXdN4UU8.png')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/chrome_18pXdN4UU8.png" alt="Testimonio Easy Mix 15"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                    <div onclick="openLightbox('/images/plugins/1.jpg')"
+                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
+                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
+                        <img src="/images/plugins/1.jpg" alt="Testimonio Easy Mix 16"
+                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== SERIAL KEY SECTION ==================== -->
+        <section class="serial-section" id="serial-section">
+            <div class="container">
+                <h2 class="section-title">Descarga tu Plugin</h2>
+                <p class="section-subtitle">Inicia sesión para descargar el plugin y ver tus licencias.</p>
+
+                <div class="serial-card" style="max-width: 800px; margin-bottom: 60px;">
+                    
+                    <!-- ESTADO 1: NO LOGUEADO (AUTH WALL) -->
+                    <div class="auth-wall" id="ui-auth-wall">
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 10px;">Crea tu cuenta o inicia sesión para descargar.</p>
+                        <a href="/pages/login.html?redirect=/plugins/inka-kola" class="btn-auth" style="background: transparent; border: 1px solid #fff; color: #fff;">Iniciar Sesión</a>
+                    </div>
+
+                    <!-- ESTADO 2: LOGUEADO Y LISTO -->
+                    <div class="serial-display" id="ui-serial-ready" style="display: none; flex-direction: column; align-items: center; gap: 20px; padding: 30px 20px;">
+                        <!-- BOTÓN DE DESCARGA (Siempre visible cuando está logueado) -->
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%;">
+                            <a href="https://drive.google.com/file/d/1l7HyogeQ_Eq5QStPf3fClrtHVZaQvBRf/view?usp=sharing" class="btn-download" target="_blank" rel="noopener noreferrer" onclick="openDownloadModal()" style="display: inline-flex; align-items: center; gap: 8px;"><i class="fa-brands fa-windows" style="color: #0078d4; font-size: 1.2rem;"></i> Descargar para Windows (.exe)</a>
+                            <a href="https://drive.google.com/file/d/1M_X8ChInUvE8vsw0_4FsQzGYPZfmQhSQ/view?usp=sharing" class="btn-download" target="_blank" rel="noopener noreferrer" onclick="openDownloadModal()" style="display: inline-flex; align-items: center; gap: 8px;"><i class="fa-brands fa-apple" style="color: #ffffff; font-size: 1.2rem;"></i> Descargar para macOS</a>
+                        </div>
+
+                        <!-- PANEL DE LICENCIA (Se muestra si tiene licencia o al generarla de por sí) -->
+                        <div id="license-key-panel" style="display: none; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; margin-top: 10px;">
+                            <h3 style="margin:0 0 5px 0; font-size: 1.2rem;">Tu Licencia Actual</h3>
+                            <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 15px;">Pega esta clave dentro de Coca-Cola en tu DAW para validarlo.</p>
+                            <div class="serial-box" id="serial-key-text" title="Clic para copiar" onclick="copySerial()" style="border-color: #ff3b4b; color: #ff3b4b; max-width: 400px; margin: 0 auto;">Cargando...</div>
+                        </div>
+
+                        <!-- PANEL SIN LICENCIA -->
+                        <div id="no-license-panel" style="display: none; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; margin-top: 10px; text-align: center;">
+                            <p style="color: rgba(255,255,255,0.55); font-size: 0.9rem; margin-bottom: 18px;">Generando tu licencia de prueba gratuita...</p>
+                            <button id="btn-generate-trial" onclick="generateTrialWeb()" style="display: none; background: linear-gradient(135deg, #ff3b4b 0%, #b88800 100%); color: #000; border: none; font-weight: 800; font-size: 0.95rem; padding: 12px 28px; border-radius: 100px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; align-items: center; gap: 8px;">
+                                <i class="bi bi-gift-fill"></i> Obtener Prueba Gratuita (7 Días)
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- PRICING CARDS -->
+                <div id="pricing-section" style="scroll-margin-top: 100px;">
+                    <h3 style="font-size: 2rem; font-weight: 800; margin-bottom: 10px; color: #fff;">Licencia de por vida + actualizaciones</h3>
+                    <p style="color: #888; margin-bottom: 40px;">Si ya lo probaste y te encantó, adquiere la licencia de por vida.</p>
+                </div>
+
+                <!-- PRICING: SOLO LIFETIME -->
+                <div id="pricing-wall" style="display: flex; justify-content: center; max-width: 480px; margin: 0 auto;">
+
+                    <!-- Lifetime -->
+                    <div style="width: 100%; background: rgba(230, 27, 43,0.06); border: 1.5px solid rgba(230, 27, 43,0.4); padding: 36px 30px; border-radius: 20px; display: flex; flex-direction: column; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: 14px; right: 14px; background: #ff3b4b; color: #000; font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px;">MÁS POPULAR</div>
+                        <h3 style="font-size: 1.6rem; margin-bottom: 6px;">De Por Vida</h3>
+                        <p style="color: #888; font-size: 0.85rem; margin-bottom: 18px;">Pago único. Sin suscripciones. Para siempre.</p>
+                        <div style="display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-bottom: 24px;">
+                            <span style="font-size: 1.3rem; text-decoration: line-through; color: rgba(255,255,255,0.3); font-weight: 500;">$25</span>
+                            <span id="coca-cola-price-val" style="font-size: 3rem; font-weight: 800; color: #fff;">$5</span>
+                            <span style="font-size: 1rem; color: #888;">único</span>
+                        </div>
+                        <ul style="list-style: none; padding: 0; margin: 0 0 28px 0; text-align: left; color: #aaa; flex-grow: 1;">
+                            <li style="margin-bottom: 12px;"><i class="bi bi-check-circle-fill" style="color: #ff3b4b; margin-right: 8px;"></i> Pago único</li>
+                            <li style="margin-bottom: 12px;"><i class="bi bi-check-circle-fill" style="color: #ff3b4b; margin-right: 8px;"></i> Actualizaciones de por vida</li>
+                            <li style="margin-bottom: 0;"><i class="bi bi-check-circle-fill" style="color: #ff3b4b; margin-right: 8px;"></i> Serial Key se envía a tu correo</li>
+                        </ul>
+                        <!-- Direct PayPal Checkout -->
+                        <div id="plugin-paypal-button-container" style="margin-top: 0; min-height: 150px; width: 100%;"></div>
+                        <!-- Botón Mercado Pago -->
+                        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20comprar%20el%20plugin%20Coca-Cola%20por%20Mercado%20Pago" target="_blank" rel="noopener noreferrer"
+                            style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #009EE3; color: #ffffff; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-top: 12px; margin-bottom: 12px; text-decoration: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                            Pagar con Mercado Pago
+                        </a>
+                        <!-- Botón Yape -->
+                        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20comprar%20el%20plugin%20Coca-Cola%20por%20Yape" target="_blank" rel="noopener noreferrer"
+                            style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #742284; color: #ffffff; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-bottom: 12px; text-decoration: none;">
+                            <i class="bi bi-qr-code-scan" style="font-size: 1.2rem;"></i>
+                            Pagar con Yape
+                        </a>
+                        <!-- Botón Binance -->
+                        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20pagar%20con%20Binance%20el%20plugin%20Coca-Cola" target="_blank" rel="noopener noreferrer"
+                            style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #F0B90B; color: #000000; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-bottom: 12px; text-decoration: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4.5 9.5L7.33 12.33L12 7.66L16.67 12.33L19.5 9.5L12 2ZM4.5 14.5L2 12L4.5 9.5L7.33 12.33L4.5 14.5ZM19.5 14.5L16.67 12.33L19.5 9.5L22 12L19.5 14.5ZM12 22L4.5 14.5L7.33 11.67L12 16.34L16.67 11.67L19.5 14.5L12 22ZM12 13.5L9.17 10.67L12 7.84L14.83 10.67L12 13.5Z"/></svg>
+                            Pagar con Binance
+                        </a>
+                        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20el%20plugin%20Coca-Cola%20por%20$10%20USD"
+                            target="_blank" class="btn-auth"
+                            style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box; background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); font-weight: 600; font-size: 0.95rem; padding: 14px; margin-top: 12px; text-decoration: none;">
+                            <i class="bi bi-whatsapp" style="color: #25d366; font-size: 1.1rem;"></i> Otros Medios de Pago
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== FAQ SECTION ==================== -->
+        <section class="faq-section">
+            <div class="container">
+                <div class="faq-header">
+                    <div class="subtitle">SOPORTE</div>
+                    <h2>Preguntas</h2>
+                </div>
+                <div class="faq-container">
+                    
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Es compatible con mi DAW?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Sí. Coca-Cola VST se exporta en los formatos estándar de la industria (VST3 y AU). Esto lo hace compatible con casi todos los programas de producción modernos: FL Studio, Ableton Live, Logic Pro X, Studio One, Reaper, entre otros.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Cómo obtengo mi licencia?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Al comprar la versión de por vida o activar tu prueba, la licencia se vincula automáticamente a tu cuenta de OFFSZN. Podrás ver tu "Serial Key" aquí mismo y simplemente pegarla en el plugin la primera vez que lo abras.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Funciona en Mac y Windows?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Totalmente. Al descargar el instalador, tendrás acceso tanto a la versión ejecutable para Windows (.exe / VST3) como a la versión para macOS (.pkg / VST3 & AU). Ambas optimizadas para procesadores Intel y Apple Silicon (M1/M2/M3).
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Puedo usarlo en más de un dispositivo?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Sí. Tu Serial Key personal te permite activar el plugin en hasta 2 computadoras simultáneamente.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Qué métodos de pago soportan?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Aceptamos pagos seguros mediante PayPal, Mercado Pago, Yape, Binance y cualquier tarjeta de Crédito o Débito.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- TAGLINE -->
+        <section class="tagline-section">
+            <div class="container" style="padding: 0 24px;">
+                <h2>El Channel Strip definitivo para que tus voces suenen al frente</h2>
+                <div style="margin-top: 40px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                    <a href="#serial-section" class="btn-free-download primary-large"><i class="bi bi-download"></i> Descargar Ahora</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lightbox Overlay Component -->
+        <div id="lightbox-overlay" onclick="closeLightbox()"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 99999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; cursor: zoom-out;">
+            <img id="lightbox-img" src="" alt="Testimonio Zoom"
+                style="max-width: 90%; max-height: 85%; object-fit: contain; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 30px 70px rgba(0,0,0,0.9); transform: scale(0.92); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+            <button onclick="closeLightbox()"
+                style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 44px; height: 44px; color: #fff; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;"><i
+                    class="bi bi-x-lg"></i></button>
+        </div>
+
+    </main>
+
+    <!-- ==================== FOOTER ==================== -->
+    <div id="footer-placeholder"></div>
+
+    <!-- SCRIPTS -->
+    <script src="/script/id-obfuscator.js?v=1"></script>
+    <script src="/script/cart.js?v=21"></script>
+    <script src="/script/notifications.js?v=21"></script>
+    <script src="/script/footer.js?v=21"></script>
+    <script src="/script/navbar.js?v=21" type="module"></script>
+    
+    <!-- Lightbox Zoom Logic -->
+    <script>
+        function openLightbox(src) {
+            const overlay = document.getElementById('lightbox-overlay');
+            const img = document.getElementById('lightbox-img');
+            if (overlay && img) {
+                img.src = src;
+                overlay.style.display = 'flex';
+                overlay.offsetHeight;
+                overlay.style.opacity = '1';
+                img.style.transform = 'scale(1)';
+            }
+        }
+        function closeLightbox() {
+            const overlay = document.getElementById('lightbox-overlay');
+            const img = document.getElementById('lightbox-img');
+            if (overlay && img) {
+                overlay.style.opacity = '0';
+                img.style.transform = 'scale(0.92)';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                }, 300);
+            }
+        }
+    </script>
+
+    <!-- SERIAL KEY LOGIC -->
+    <script>
+        const UI_WALL = document.getElementById('ui-auth-wall');
+        const UI_READY = document.getElementById('ui-serial-ready');
+        const TEXT_SERIAL = document.getElementById('serial-key-text');
+
+        function copySerial() {
+            const text = TEXT_SERIAL.innerText;
+            if (text && text !== 'Cargando...' && text !== 'NO TIENES LICENCIA ACTIVA' && text !== 'GENERANDO...') {
+                navigator.clipboard.writeText(text);
+                const original = TEXT_SERIAL.innerText;
+                TEXT_SERIAL.innerText = '¡COPIADO!';
+                setTimeout(() => TEXT_SERIAL.innerText = original, 2000);
+            }
+        }
+
+        async function generateTrialWeb(isAuto = false) {
+            const btn = document.getElementById('btn-generate-trial');
+            const noLicenseText = document.querySelector('#no-license-panel p');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Generando...';
+            }
+            if (noLicenseText) {
+                noLicenseText.innerText = 'Generando tu licencia de prueba gratuita...';
+            }
+
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) {
+                    if (!isAuto) {
+                        alert('Por favor, inicia sesión para continuar.');
+                        window.location.href = '/pages/login.html?redirect=/plugins/inka-kola';
+                    }
+                    return;
+                }
+
+                const res = await fetch('/api/plugin/generate-trial-web', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({ plugin_name: 'COCA COLA' })
+                });
+                const responseData = await res.json();
+
+                if (responseData && responseData.success && responseData.serial_key) {
+                    document.getElementById('no-license-panel').style.display = 'none';
+                    document.getElementById('license-key-panel').style.display = 'block';
+                    TEXT_SERIAL.innerText = responseData.serial_key;
+                } else {
+                    document.getElementById('license-key-panel').style.display = 'none';
+                    document.getElementById('no-license-panel').style.display = 'block';
+                    if (!isAuto) {
+                        alert(responseData.error || 'Error al generar la prueba gratuita.');
+                    }
+                    if (noLicenseText) {
+                        noLicenseText.innerText = responseData.error || 'No se pudo generar la prueba de forma automática. Intenta de nuevo.';
+                    }
+                    if (btn) {
+                        btn.style.display = 'inline-flex';
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-gift-fill"></i> Obtener Prueba Gratuita (7 Días)';
+                    }
+                }
+            } catch (err) {
+                console.error('Error generating trial:', err);
+                document.getElementById('license-key-panel').style.display = 'none';
+                document.getElementById('no-license-panel').style.display = 'block';
+                if (!isAuto) {
+                    alert('Ocurrió un error al conectar con el servidor.');
+                }
+                if (noLicenseText) {
+                    noLicenseText.innerText = 'Error de conexión con el servidor. Intenta de nuevo.';
+                }
+                if (btn) {
+                    btn.style.display = 'inline-flex';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-gift-fill"></i> Obtener Prueba Gratuita (7 Días)';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            let retries = 0;
+            while (!window.supabaseClient && retries < 20) {
+                await new Promise(r => setTimeout(r, 200));
+                retries++;
+            }
+
+            if (!window.supabaseClient) {
+                console.warn('Supabase not loaded');
+                return;
+            }
+
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+
+            if (!session) {
+                UI_WALL.style.display = 'flex';
+                UI_READY.style.display = 'none';
+            } else {
+                UI_WALL.style.display = 'none';
+                UI_READY.style.display = 'flex';
+
+                const userId = session.user.id;
+
+                // Check for ANY license specifically matching COCA COLA or Coca-Cola
+                const { data, error } = await window.supabaseClient
+                    .from('plugin_licenses')
+                    .select('serial_key, status, license_type, expires_at, plugin_name')
+                    .eq('user_id', userId)
+                    .in('plugin_name', ['COCA COLA', 'Coca-Cola'])
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (data && data.serial_key) {
+                    document.getElementById('no-license-panel').style.display = 'none';
+                    document.getElementById('license-key-panel').style.display = 'block';
+                    TEXT_SERIAL.innerText = data.serial_key;
+                } else {
+                    document.getElementById('license-key-panel').style.display = 'none';
+                    document.getElementById('no-license-panel').style.display = 'block';
+                    const btn = document.getElementById('btn-generate-trial');
+                    if (btn) {
+                        btn.style.display = 'none';
+                    }
+                    generateTrialWeb(true);
+                }
+            }
+        });
+    </script>
+    <!-- FAQ LOGIC -->
+    <script>
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const faqItem = button.parentElement;
+                const wasActive = faqItem.classList.contains('active');
+                
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                if (!wasActive) {
+                    faqItem.classList.add('active');
+                }
+            });
+        });
+    </script>
+
+    <!-- ==================== WHATSAPP FLOATING BUTTON ==================== -->
+    <a href="https://wa.me/51993525005?text=Hola,%20quiero%20el%20plugin%20Coca-Cola%20por%20$10%20USD" target="_blank" rel="noopener noreferrer" class="whatsapp-floating-btn" aria-label="Contactar por WhatsApp">
+        <i class="bi bi-whatsapp"></i>
+    </a>
+
+    <div class="sticky-offer-banner">
+        <div class="sticky-offer-text">🚀 Obtener tu licencia de por vida</div>
+        <a href="#pricing-section" class="sticky-offer-btn">Lo quiero!</a>
+        <a href="#pricing-section" class="sticky-offer-mobile-link">Obtén tu licencia de por vida ➔</a>
+    </div>
+    <!-- MODAL DE LICENCIA AL DESCARGAR -->
+    <div id="download-license-modal" onclick="closeDownloadModal(event)"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div onclick="event.stopPropagation()"
+            style="background: #0d0d0d; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; padding: 35px 28px; max-width: 500px; width: 92%; text-align: center; color: #fff; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9); position: relative; transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+            
+            <button onclick="closeDownloadModal()"
+                style="position: absolute; top: 15px; right: 20px; font-size: 1.5rem; background: none; border: none; color: #888; cursor: pointer; transition: color 0.2s;"
+                onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">✕</button>
+
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px 20px;">
+                <h3 style="margin: 0 0 6px 0; font-size: 1.2rem; color: #ffffff; font-weight: 700;">Tu Licencia Actual</h3>
+                <p style="color: rgba(255,255,255,0.55); font-size: 0.85rem; margin-bottom: 16px; line-height: 1.4;">
+                    Pega esta clave dentro de Coca-Cola en tu DAW para validarlo.
+                </p>
+                <div class="serial-box" id="modal-serial-key-text" title="Clic para copiar" onclick="copyModalSerial()"
+                    style="border-color: #ff3b4b; color: #ff3b4b; max-width: 400px; margin: 0 auto; padding: 14px 18px; border: 2px dashed #ff3b4b; border-radius: 12px; font-family: monospace; font-size: 1.25rem; font-weight: 800; letter-spacing: 2px; cursor: pointer; background: rgba(230, 27, 43,0.05); user-select: all;">
+                    Cargando...
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; font-size: 0.85rem; text-align: center;">
+                <a href="https://wa.me/51993525005?text=Hola!%20Tengo%20problemas%20al%20instalar%20Coca-Cola%20VST" target="_blank" rel="noopener noreferrer"
+                    style="color: #ff3b4b; text-decoration: underline; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-whatsapp"></i> ¿Problemas de instalación? Contáctanos para ayudarte
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function openDownloadModal() {
+            const mainSerial = document.getElementById('serial-key-text');
+            const modalSerial = document.getElementById('modal-serial-key-text');
+            if (mainSerial && modalSerial) {
+                modalSerial.innerText = mainSerial.innerText;
+            }
+            const modal = document.getElementById('download-license-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.style.opacity = '1';
+                    const card = modal.querySelector('div');
+                    if (card) card.style.transform = 'scale(1)';
+                }, 10);
+            }
+        }
+
+        function closeDownloadModal(e) {
+            if (e && e.target && e.target.id !== 'download-license-modal' && e.target.tagName !== 'BUTTON') {
+                return;
+            }
+            const modal = document.getElementById('download-license-modal');
+            if (modal) {
+                modal.style.opacity = '0';
+                const card = modal.querySelector('div');
+                if (card) card.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
+            }
+        }
+
+        function copyModalSerial() {
+            const modalSerial = document.getElementById('modal-serial-key-text');
+            if (modalSerial) {
+                const text = modalSerial.innerText;
+                if (text && text !== 'Cargando...' && text !== 'NO TIENES LICENCIA ACTIVA' && text !== 'GENERANDO...') {
+                    navigator.clipboard.writeText(text);
+                    const original = text;
+                    modalSerial.innerText = '¡COPIADO!';
+                    setTimeout(() => modalSerial.innerText = original, 2000);
+                }
+            }
+        }
+    </script>
+
+    <!-- Direct Checkout Configuration and Loader with A/B Testing -->
+    <script>
+        // ── A/B TESTING ENGINE (50/50 SPLIT: $5.00 USD vs $10.00 USD) ──
+        (function initABTesting() {
+            const STORAGE_KEY = 'offszn_coca_cola_price';
+            const urlParams = new URLSearchParams(window.location.search);
+            const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
+
+            let assignedPrice = 10;
+            window.CURRENT_PROMO_PRICE = 10;
+            window.PLUGIN_ID = 903;
+            window.PLUGIN_NAME = 'Coca-Cola';
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const priceEl = document.getElementById('coca-cola-price-val');
+                if (priceEl) priceEl.innerText = `$${assignedPrice}`;
+
+                const waLinks = document.querySelectorAll('a[href*="wa.me"]');
+                waLinks.forEach(link => {
+                    let currentHref = link.getAttribute('href');
+                    if (currentHref.includes('text=')) {
+                        let parts = currentHref.split('text=');
+                        let baseText = decodeURIComponent(parts[1]).replace(/por\s+\$?\d+(\s*USD)?/gi, '').trim();
+                        link.setAttribute('href', `${parts[0]}text=${encodeURIComponent(baseText + ' por $' + assignedPrice + ' USD')}`);
+                    }
+                });
+            });
+        })();
+    </script>
+    <script src="/script/plugin-checkout.js?v=2"></script>
+</body>
+
+</html>

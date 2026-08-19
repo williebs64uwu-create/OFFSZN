@@ -11,10 +11,17 @@ class PluginDirectCheckout {
         this.paypalInitialized = false;
 
         // Download links based on product ID / name
+        const isCoke = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola' || window.PLUGIN_NAME === 'COCA COLA';
         const isMaster = this.productId === 900 || window.PLUGIN_NAME === 'Easy Master';
         const isInka = this.productId === 902 || window.PLUGIN_NAME === 'INKA KOLA' || window.PLUGIN_NAME === 'Inka Kola';
 
-        if (isInka) {
+        if (isCoke) {
+            this.downloads = {
+                name: 'Coca-Cola',
+                win: '/downloads/OFFSZN_COCA_COLA_Setup.exe',
+                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+            };
+        } else if (isInka) {
             this.downloads = {
                 name: 'Inka Kola',
                 win: '/installer_output/INKA_KOLA_Setup.exe',

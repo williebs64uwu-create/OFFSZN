@@ -200,7 +200,9 @@ export const createPayPalOrder = async (req, res) => {
 
             let productObj = product;
             if (!productObj) {
-                if (String(directProductId) === '902') {
+                if (String(directProductId) === '903') {
+                    productObj = { id: 903, name: 'Coca-Cola', price_basic: 10, producer_id: null };
+                } else if (String(directProductId) === '902') {
                     productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
                 } else if (String(directProductId) === '900') {
                     productObj = { id: 900, name: 'Easy Master', price_basic: 5, producer_id: null };
@@ -652,7 +654,9 @@ export const capturePayPalOrder = async (req, res) => {
 
                 let productObj = product;
                 if (!productObj) {
-                    if (String(directProductId) === '902') {
+                    if (String(directProductId) === '903') {
+                        productObj = { id: 903, name: 'Coca-Cola', price_basic: 10, producer_id: null };
+                    } else if (String(directProductId) === '902') {
                         productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
                     } else if (String(directProductId) === '900') {
                         productObj = { id: 900, name: 'Easy Master', price_basic: 5, producer_id: null };
@@ -975,13 +979,14 @@ export const capturePayPalOrder = async (req, res) => {
 
             for (const item of cartItems) {
                 const prodName = item.product?.name || '';
+                const isCoke = prodName.toLowerCase().includes('coca') || prodName.toLowerCase().includes('coke');
                 const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix');
                 const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster');
                 const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola');
                 
-                if (isEasyMix || isEasyMaster || isInkaKola) {
+                if (isCoke || isEasyMix || isEasyMaster || isInkaKola) {
                     try {
-                        const pluginName = isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix');
+                        const pluginName = isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix'));
                         const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
                                                (item.product?.product_type && item.product.product_type === 'subscription');
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';
@@ -1130,10 +1135,11 @@ export const capturePayPalOrder = async (req, res) => {
 
                     for (const item of cartItems) {
                         const prodName = item.product?.name || '';
+                        const isCoke = prodName.toLowerCase().includes('coca') || prodName.toLowerCase().includes('coke');
                         const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix');
                         const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster');
                         const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola');
-                        const isPlugin = isEasyMix || isEasyMaster || isInkaKola;
+                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola;
 
                         // A. Notify Client (Receipt) — includes serial key for plugin purchases
                         const serialKeySection = (isPlugin && generatedLicenseKey) ? `
@@ -1145,7 +1151,10 @@ export const capturePayPalOrder = async (req, res) => {
                         ` : '';
 
                         const downloadLinks = isPlugin ? (
-                            isInkaKola ? {
+                            isCoke ? {
+                                win: 'https://offszn.lat/downloads/OFFSZN_COCA_COLA_Setup.exe',
+                                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+                            } : (isInkaKola ? {
                                 win: '/installer_output/INKA_KOLA_Setup.exe',
                                 mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
                             } : (isEasyMaster ? {
@@ -1154,7 +1163,7 @@ export const capturePayPalOrder = async (req, res) => {
                             } : {
                                 win: 'https://drive.google.com/file/d/12UsLyKVAmk7AdVCvXDQJL-COWXqeGUbe/view?usp=sharing',
                                 mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
-                            })
+                            }))
                         ) : null;
 
                         const downloadSection = (isPlugin && downloadLinks) ? `

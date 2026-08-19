@@ -12,7 +12,7 @@
         const path = window.location.pathname.toLowerCase();
         
         // Match specific path patterns
-        if (path.includes('preset-de-remers') || path.includes('preset-definitivo') || path.includes('easy-mix') || path.includes('easy-master')) {
+        if (path.includes('preset-de-remers') || path.includes('preset-definitivo') || path.includes('easy-mix') || path.includes('easy-master') || path.includes('coca-cola') || path.includes('inka-kola')) {
             return true;
         }
 

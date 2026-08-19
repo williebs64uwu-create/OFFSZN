@@ -35,9 +35,10 @@ async function sendActivationEmail({ to, serialKey, licenseType, expiresAt }) {
 
         // Auto-detect plugin name from serial prefix
         const upperSerial = (serialKey || '').toUpperCase();
+        const isCoke   = upperSerial.startsWith('COKE');
         const isMaster = upperSerial.startsWith('MASTER');
         const isInka   = upperSerial.startsWith('INKA');
-        const pluginName = isInka ? 'Inka Kola' : (isMaster ? 'Easy Master' : 'Easy Mix');
+        const pluginName = isCoke ? 'Coca-Cola' : (isInka ? 'Inka Kola' : (isMaster ? 'Easy Master' : 'Easy Mix'));
 
         const html = `
         <div style="font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
@@ -82,12 +83,14 @@ export const generateWebLicense = async (req, res) => {
         }
 
         // 2. Map plugin name to product IDs
+        const isCokePlugin = (plugin_name === 'COCA COLA' || plugin_name === 'Coca-Cola' || plugin_name === 'COCA-COLA');
         const isInkaPlugin = (plugin_name === 'INKA KOLA' || plugin_name === 'Inka Kola');
         const isMasterPlugin = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
         const isMixPlugin = (plugin_name === 'Easy Mix' || plugin_name === 'EASY MIX');
         
         let validProductIds = [];
-        if (isInkaPlugin) validProductIds = [902];
+        if (isCokePlugin) validProductIds = [903];
+        else if (isInkaPlugin) validProductIds = [902];
         else if (isMasterPlugin) validProductIds = [900];
         else if (isMixPlugin) validProductIds = [899, 901];
 
@@ -109,7 +112,7 @@ export const generateWebLicense = async (req, res) => {
         }
 
         // 4. Generate the new lifetime license
-        const basePrefix = isInkaPlugin ? 'INKA' : (isMasterPlugin ? 'MASTER' : 'EASY');
+        const basePrefix = isCokePlugin ? 'COKE' : (isInkaPlugin ? 'INKA' : (isMasterPlugin ? 'MASTER' : 'EASY'));
         const serialKey = `${basePrefix}-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiresAt = null;
 
@@ -153,13 +156,14 @@ export const generateTrialWebLicense = async (req, res) => {
         }
 
         // Create new trial key
+        const isCoke   = (plugin_name === 'COCA COLA'   || plugin_name === 'Coca-Cola' || plugin_name === 'COCA-COLA');
         const isMaster = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
         const isInka   = (plugin_name === 'INKA KOLA'   || plugin_name === 'Inka Kola');
-        const basePrefix = isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY');
+        const basePrefix = isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY'));
         const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiryDate = new Date();
         const trialDays = isInka ? 7 : 3;
-        expiryDate.setDate(expiryDate.getDate() + trialDays); // 7 days for INKA KOLA, 3 days for Master & Mix
+        expiryDate.setDate(expiryDate.getDate() + trialDays); // 7 days for INKA KOLA, 3 days for Coca-Cola, Master & Mix
         const expiresAt = expiryDate.toISOString();
 
         const { data: newLic, error: licErr } = await supabase
@@ -224,12 +228,14 @@ export const requestTrial = async (req, res) => {
         }
 
         // ── 2. No previous trial → create one ────────────────────────────────
+        const isCoke = (activePluginName === 'COCA COLA' || activePluginName === 'Coca-Cola' || activePluginName === 'COCA-COLA');
         const isMaster = (activePluginName === 'EASY MASTER' || activePluginName === 'Easy Master');
-        const basePrefix = isMaster ? 'MASTER' : 'EASY';
+        const isInka = (activePluginName === 'INKA KOLA' || activePluginName === 'Inka Kola');
+        const basePrefix = isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY'));
         const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiryDate = new Date();
         const trialDays = 3;
-        expiryDate.setDate(expiryDate.getDate() + trialDays); // 3 days for Easy Master & Easy Mix
+        expiryDate.setDate(expiryDate.getDate() + trialDays); // 3 days for Coca-Cola, Easy Master & Easy Mix
         const expiresAt = expiryDate.toISOString();
 
         const { data: newLic, error: licErr } = await supabase
@@ -253,9 +259,10 @@ export const requestTrial = async (req, res) => {
 // ─── Helper: Generate plugin license after purchase ────────────────────────────
 // Called internally from PayPalController after a successful plugin purchase.
 export async function generatePluginLicense({ licenseType, userEmail, userId, pluginName = 'Easy Mix' }) {
+    const isCoke = (pluginName === 'COCA COLA' || pluginName === 'Coca-Cola' || pluginName === 'COCA-COLA');
     const isInka = (pluginName === 'INKA KOLA' || pluginName === 'Inka Kola');
     const isMaster = (pluginName === 'EASY MASTER' || pluginName === 'Easy Master');
-    let basePrefix = isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY');
+    let basePrefix = isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY'));
     const prefix = licenseType === 'subscription' ? `${basePrefix}-SUB` : `${basePrefix}-FULL`;
     const serialKey = `${prefix}-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
@@ -312,19 +319,24 @@ export const activateSerial = async (req, res) => {
         if (licErr || !license) return res.status(404).json({ error: 'Licencia no encontrada o inválida.' });
         if (license.status !== 'active') return res.status(403).json({ error: 'Esta licencia está inactiva o suspendida.' });
 
-        // ── Validation: Match Plugin product (Inka Kola vs Easy Master vs Easy Mix) ──
+        // ── Validation: Match Plugin product (Coca-Cola vs Inka Kola vs Easy Master vs Easy Mix) ──
         const upperSerial = (serial_key || '').toUpperCase();
         const requestedPlugin = (req.body.plugin_name || '').toLowerCase();
         const registeredPlugin = (license.plugin_name || '').toLowerCase();
 
+        const isCokeKey = upperSerial.startsWith('COKE') || registeredPlugin.includes('coca') || registeredPlugin.includes('coke');
         const isInkaKey = upperSerial.startsWith('INKA') || registeredPlugin.includes('inka');
         const isMasterKey = upperSerial.startsWith('MASTER') || registeredPlugin.includes('master');
         const isMixKey = (upperSerial.startsWith('EASY-') && !upperSerial.startsWith('EASY-MASTER')) || (registeredPlugin.includes('mix') && !registeredPlugin.includes('master'));
 
+        const isCokeReq = requestedPlugin.includes('coca') || requestedPlugin.includes('coke');
         const isInkaReq = requestedPlugin.includes('inka');
         const isMasterReq = requestedPlugin.includes('master');
-        const isMixReq = requestedPlugin.includes('mix') && !requestedPlugin.includes('master');
+        const isMixReq = requestedPlugin.includes('mix') && !requestedPlugin.includes('master') && !requestedPlugin.includes('coca') && !requestedPlugin.includes('coke');
 
+        if (isCokeReq && !isCokeKey) {
+            return res.status(403).json({ error: 'Esta licencia no pertenece a Coca-Cola Plugin.' });
+        }
         if (isInkaReq && !isInkaKey) {
             return res.status(403).json({ error: 'Esta licencia no pertenece a Inka Kola.' });
         }
@@ -333,6 +345,9 @@ export const activateSerial = async (req, res) => {
         }
         if (isMixReq && !isMixKey) {
             return res.status(403).json({ error: 'Esta licencia no pertenece a Easy Mix.' });
+        }
+        if (isCokeKey && !isCokeReq && requestedPlugin.length > 0) {
+            return res.status(403).json({ error: 'Esta licencia es exclusiva para Coca-Cola y no sirve para otros plugins.' });
         }
         if (isInkaKey && !isInkaReq && requestedPlugin.length > 0) {
             return res.status(403).json({ error: 'Esta licencia es exclusiva para Inka Kola y no sirve para otros plugins.' });
