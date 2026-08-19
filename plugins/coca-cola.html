@@ -1467,7 +1467,7 @@
 
             document.addEventListener('DOMContentLoaded', () => {
                 const priceEl = document.getElementById('coca-cola-price-val');
-                if (priceEl) priceEl.innerText = `${assignedPrice}`;
+                if (priceEl) priceEl.innerText = '$' + assignedPrice;
 
                 const strikeEl = document.querySelector('#pricing-wall span[style*="line-through"]');
                 if (strikeEl) strikeEl.innerText = assignedPrice === 10 ? '$25' : '$30';
@@ -1476,21 +1476,16 @@
                 const waLinks = document.querySelectorAll('a[href*="wa.me"]');
                 waLinks.forEach(link => {
                     let currentHref = link.getAttribute('href');
-                    if (currentHref.includes('text=')) {
+                    if (currentHref && currentHref.includes('text=')) {
                         let parts = currentHref.split('text=');
                         let baseText = decodeURIComponent(parts[1]).replace(/por\s+\$?\d+(\s*USD)?/gi, '').trim();
-                        link.setAttribute('href', `${parts[0]}text=${encodeURIComponent(baseText + ' por 
-    <script src="/script/plugin-checkout.js?v=2"></script>
-</body>
-
-</html>
- + assignedPrice + ' USD')}`);
+                        link.setAttribute('href', parts[0] + 'text=' + encodeURIComponent(baseText + ' por $' + assignedPrice + ' USD'));
                     }
                 });
             });
         })();
     </script>
-    <script src="/script/plugin-checkout.js?v=2"></script>
+    <script src="/script/plugin-checkout.js?v=25"></script>
 </body>
 
 </html>
