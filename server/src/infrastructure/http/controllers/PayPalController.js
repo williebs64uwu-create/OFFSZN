@@ -548,6 +548,28 @@ export const createPayPalOrder = async (req, res) => {
         const MAIN_MERCHANT_EMAIL = 'willie2008garay@gmail.com';
 
         verifiedCartItems.forEach(item => {
+            const prodName = (item.product?.name || '').toLowerCase();
+            const isCokePlugin = String(item.product?.id) === '903' || prodName.includes('coca') || prodName.includes('coke');
+
+            if (isCokePlugin) {
+                // Partner Revenue Share: 80% to suarez.azocarn@gmail.com, 20% to OFFSZN (MXV5F6X8JXG4S)
+                const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
+                const partnerAmount = itemNet * 0.80;
+                const platformAmount = itemNet * 0.20;
+
+                const PARTNER_EMAIL = 'suarez.azocarn@gmail.com';
+                const partnerGroup = payeeGroups.get(PARTNER_EMAIL) || { amount: 0, type: 'email', nickname: 'Suarez Azocar' };
+                partnerGroup.amount += partnerAmount;
+                payeeGroups.set(PARTNER_EMAIL, partnerGroup);
+
+                const platformGroup = payeeGroups.get(MAIN_MERCHANT_ID) || { amount: 0, type: 'id', nickname: 'OFFSZN' };
+                platformGroup.amount += platformAmount;
+                payeeGroups.set(MAIN_MERCHANT_ID, platformGroup);
+
+                console.log(`[PayPalOrder] Coca-Cola 80/20 Split: Total $${itemNet.toFixed(2)} → Partner: $${partnerAmount.toFixed(2)} | OFFSZN: $${platformAmount.toFixed(2)}`);
+                return;
+            }
+
             const producer = producerMap.get(item.product.producer_id);
             if (!producer?.email) return;
 
@@ -1152,8 +1174,8 @@ export const capturePayPalOrder = async (req, res) => {
 
                         const downloadLinks = isPlugin ? (
                             isCoke ? {
-                                win: 'https://offszn.lat/downloads/OFFSZN_COCA_COLA_Setup.exe',
-                                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+                                win: 'https://drive.google.com/file/d/1cFKYYabnqLkVLeJDQYtWLixh93KzPwbN/view?usp=sharing',
+                                mac: 'https://drive.google.com/file/d/1y3oiTglmfpAQpxOjUb0aeXwenfjWz0J2/view?usp=sharing'
                             } : (isInkaKola ? {
                                 win: '/installer_output/INKA_KOLA_Setup.exe',
                                 mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
