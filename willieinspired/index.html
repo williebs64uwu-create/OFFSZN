@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Willie Inspired | Herramientas de Producción Musical & Presets</title>
     <meta name="description" content="Recursos profesionales de producción musical, vocal presets, plantillas y plugins creados por Willie Inspired.">
     <link rel="icon" href="/images/LOGO%20OFFSZN.webp">
@@ -17,13 +17,13 @@
     <style>
         :root {
             --bg-texture: #f3f3f5;
-            --bg-card: rgba(255, 255, 255, 0.85);
+            --bg-card: #ffffff;
             --bg-card-hover: #ffffff;
             --stroke-light: rgba(0, 0, 0, 0.08);
             --stroke-light-hover: rgba(0, 0, 0, 0.18);
             
             /* Paleta Editorial Blanca Texturizada & Detalles Oscuros / Magenta */
-            --text-main: #0c0b0e;
+            --text-main: #000000;
             --text-muted: #5e5c64;
             --text-subtle: #8e8c95;
             --accent-magenta: #ec4899;
@@ -63,13 +63,14 @@
             top: 0;
             z-index: 1000;
             width: 100%;
-            background: rgba(243, 243, 245, 0.85);
+            background: rgba(255, 255, 255, 0.92);
             background-image: url('/willieimages/bg-noise.png');
             background-repeat: repeat;
             background-size: 280px;
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--stroke-light);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
         }
 
         .header-container {
@@ -80,25 +81,27 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: relative;
         }
 
         .mobile-hamburger-btn {
             display: none;
-            background: rgba(0, 0, 0, 0.04);
+            background: #ffffff;
             border: 1px solid var(--stroke-light);
-            border-radius: 10px;
-            width: 38px;
-            height: 38px;
+            border-radius: 12px;
+            width: 44px;
+            height: 44px;
             color: var(--text-main);
-            font-size: 1.3rem;
+            font-size: 1.35rem;
             cursor: pointer;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
             transition: all 0.2s ease;
         }
 
         .mobile-hamburger-btn:hover {
-            background: rgba(0, 0, 0, 0.08);
+            background: #f8f8fa;
             border-color: var(--stroke-light-hover);
         }
 
@@ -110,7 +113,7 @@
             font-size: 1.18rem;
             font-weight: 900;
             letter-spacing: -0.03em;
-            color: var(--text-main);
+            color: #000000;
             text-decoration: none;
             text-transform: uppercase;
             transition: opacity 0.2s ease;
@@ -127,7 +130,7 @@
             gap: 0.85rem;
         }
 
-        /* Segmented Pill Compacto con Gradiente Suave (Presets, Plantillas, Ofertas, Plugins) */
+        /* Segmented Pill Compacto (Presets, Plantillas, Ofertas, Plugins) */
         .nav-segmented-pill {
             display: none;
             align-items: center;
@@ -163,35 +166,35 @@
         }
 
         .nav-segment-item:hover {
-            color: var(--text-main);
+            color: #000000;
         }
 
         .nav-segment-item.active {
             background: #ffffff;
-            color: #0c0b0e !important;
+            color: #000000 !important;
             font-weight: 800;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.06);
         }
 
         .header-cart-btn {
             position: relative;
-            background: rgba(0, 0, 0, 0.03);
+            background: #ffffff;
             border: 1px solid var(--stroke-light);
             border-radius: 12px;
-            width: 38px;
-            height: 38px;
-            color: var(--text-main);
+            width: 44px;
+            height: 44px;
+            color: #000000;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             cursor: pointer;
-            text-decoration: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
             transition: all 0.2s ease;
         }
 
         .header-cart-btn:hover {
-            background: rgba(0, 0, 0, 0.08);
+            background: #f8f8fa;
             border-color: var(--stroke-light-hover);
             transform: translateY(-1px);
         }
@@ -204,12 +207,12 @@
             position: absolute;
             top: -4px;
             right: -4px;
-            background: #0c0b0e;
+            background: #000000;
             color: #ffffff;
             font-size: 0.65rem;
             font-weight: 800;
-            width: 17px;
-            height: 17px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -218,15 +221,17 @@
         }
 
         /* ==========================================================================
-           DRAWER DE NAVEGACIÓN MÓVIL
+           DRAWER DE NAVEGACIÓN MÓVIL (IZQUIERDA)
            ========================================================================== */
         .mobile-nav-backdrop {
             position: fixed;
             top: 0;
             left: 0;
+            right: 0;
+            bottom: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             z-index: 2000;
@@ -243,10 +248,12 @@
         .mobile-nav-drawer {
             position: fixed;
             top: 0;
+            bottom: 0;
             left: 0;
-            width: 82%;
+            width: 86%;
             max-width: 320px;
-            height: 100vh;
+            height: 100%;
+            min-height: 100dvh;
             background: #ffffff;
             background-image: url('/willieimages/bg-noise.png');
             background-repeat: repeat;
@@ -256,8 +263,11 @@
             transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
-            padding: 1.5rem;
-            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+            justify-content: space-between;
+            padding: 1.5rem 1.25rem;
+            box-shadow: 10px 0 35px rgba(0, 0, 0, 0.15);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .mobile-nav-drawer.is-open {
@@ -268,31 +278,36 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding-bottom: 1.25rem;
+            padding-bottom: 1.15rem;
             border-bottom: 1px solid var(--stroke-light);
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
         }
 
         .drawer-brand {
-            font-size: 1.1rem;
-            font-weight: 800;
-            color: var(--text-main);
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: #000000;
+            letter-spacing: -0.02em;
             text-transform: uppercase;
         }
 
         .drawer-close-btn {
-            background: transparent;
+            background: #f4f4f7;
             border: 1px solid var(--stroke-light);
-            width: 34px;
-            height: 34px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            color: var(--text-main);
+            color: #000000;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.2s ease;
+        }
+
+        .drawer-close-btn:active {
+            transform: scale(0.92);
         }
 
         .drawer-nav-list {
@@ -309,7 +324,7 @@
             gap: 0.85rem;
             padding: 12px 14px;
             border-radius: 12px;
-            color: var(--text-muted);
+            color: #3b3a40;
             text-decoration: none;
             font-size: 0.95rem;
             font-weight: 600;
@@ -318,13 +333,38 @@
 
         .drawer-nav-link:hover {
             background: rgba(0, 0, 0, 0.05);
-            color: var(--text-main);
+            color: #000000;
             transform: translateX(4px);
         }
 
         .drawer-footer {
-            padding-top: 1.25rem;
+            padding-top: 1.15rem;
             border-top: 1px solid var(--stroke-light);
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .drawer-whatsapp-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 12px;
+            background: #25d366;
+            color: #ffffff !important;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .drawer-whatsapp-btn:hover {
+            background: #20ba5a;
+            transform: translateY(-1px);
         }
 
         .drawer-discord-btn {
@@ -333,7 +373,7 @@
             justify-content: center;
             gap: 8px;
             padding: 11px;
-            border-radius: 10px;
+            border-radius: 12px;
             background: #5865F2;
             color: #ffffff;
             text-decoration: none;
@@ -342,12 +382,590 @@
         }
 
         /* ==========================================================================
-           SECCIÓN HERO 1: TRANSFORMA TUS VOCES (FONDO BLANCO TEXTURIZADO)
+           DRAWER DEL CARRITO DE COMPRAS (DERECHA A IZQUIERDA - REFERENCIAS 1, 2, 3, 4)
+           ========================================================================== */
+        .cart-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 2999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .cart-backdrop.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .cart-drawer-panel {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            width: 92%;
+            max-width: 440px;
+            height: 100%;
+            min-height: 100dvh;
+            background: #ffffff;
+            background-image: url('/willieimages/bg-noise.png');
+            background-repeat: repeat;
+            border-left: 1px solid var(--stroke-light);
+            z-index: 3000;
+            transform: translateX(100%);
+            transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .cart-drawer-panel.is-open {
+            transform: translateX(0);
+        }
+
+        .cart-drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--stroke-light);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .cart-header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.18rem;
+            font-weight: 900;
+            color: #000000;
+            letter-spacing: -0.02em;
+        }
+
+        .cart-count-bubble {
+            background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(236, 72, 153, 0.4);
+        }
+
+        .cart-drawer-close {
+            background: #f4f4f7;
+            border: 1px solid var(--stroke-light);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cart-drawer-close:hover {
+            background: #e9e9ee;
+            transform: scale(1.05);
+        }
+
+        .cart-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Items del Carrito */
+        .cart-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .cart-item-card {
+            display: flex;
+            gap: 12px;
+            background: #ffffff;
+            border: 1px solid var(--stroke-light);
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            position: relative;
+        }
+
+        .cart-item-thumb {
+            width: 68px;
+            height: 76px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #f0f0f3;
+            flex-shrink: 0;
+        }
+
+        .cart-item-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .cart-item-title {
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #000000;
+            line-height: 1.25;
+            margin-bottom: 2px;
+        }
+
+        .cart-item-meta {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .cart-item-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+
+        .cart-item-price {
+            font-size: 0.95rem;
+            font-weight: 900;
+            color: #000000;
+        }
+
+        .cart-item-strikethrough {
+            font-size: 0.78rem;
+            color: var(--text-subtle);
+            text-decoration: line-through;
+            margin-left: 4px;
+        }
+
+        .cart-item-remove-btn {
+            background: transparent;
+            border: none;
+            color: #999;
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s ease;
+        }
+
+        .cart-item-remove-btn:hover {
+            color: #ef4444;
+        }
+
+        /* Selector de Plataforma (macOS vs Windows) en Carrito (Imagen 1) */
+        .cart-os-pill-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .cart-os-btn {
+            background: #ffffff;
+            border: 1.5px solid var(--stroke-light);
+            border-radius: 12px;
+            padding: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #000000;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .cart-os-btn.active {
+            border-color: #ec4899;
+            background: #fff5f8;
+            color: #ec4899;
+            box-shadow: 0 2px 8px rgba(236, 72, 153, 0.15);
+        }
+
+        /* Estado Carrito Vacío */
+        .cart-empty-state {
+            text-align: center;
+            padding: 2rem 0 1rem 0;
+        }
+
+        .cart-empty-icon {
+            font-size: 3rem;
+            color: #c4c2cb;
+            margin-bottom: 0.75rem;
+        }
+
+        .cart-empty-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #000000;
+            margin-bottom: 4px;
+        }
+
+        .cart-empty-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Sección de Upsell 1: "Añade un preset y ahorra 10%" (Imagen 1) */
+        .cart-upsell-section {
+            background: rgba(0, 0, 0, 0.02);
+            border: 1px dashed rgba(236, 72, 153, 0.35);
+            border-radius: 18px;
+            padding: 14px;
+        }
+
+        .upsell-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .upsell-title {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #000000;
+        }
+
+        .upsell-badge-pill {
+            background: #fdf2f8;
+            color: #ec4899;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            border: 1px solid rgba(236, 72, 153, 0.3);
+        }
+
+        .upsell-sub {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            line-height: 1.35;
+        }
+
+        .cart-upsell-chips-scroll {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 6px;
+            scrollbar-width: thin;
+        }
+
+        .upsell-mini-card {
+            background: #ffffff;
+            border: 1px solid var(--stroke-light);
+            border-radius: 12px;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+
+        .upsell-mini-img {
+            width: 34px;
+            height: 38px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .upsell-mini-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #000000;
+            white-space: nowrap;
+        }
+
+        .upsell-mini-price {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .upsell-add-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .upsell-add-btn:hover {
+            background: #ec4899;
+            transform: scale(1.1);
+        }
+
+        /* Sección Level Up Your Sound (Imagen 2 & 3) */
+        .cart-level-up-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .level-up-header {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .level-up-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #000000;
+        }
+
+        .level-up-sub {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+        }
+
+        .level-up-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1px solid var(--stroke-light);
+            border-radius: 14px;
+            padding: 10px 12px;
+            gap: 10px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        }
+
+        .level-card-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .level-card-thumb {
+            width: 44px;
+            height: 48px;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #f0f0f3;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .level-card-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .level-card-info h5 {
+            font-size: 0.84rem;
+            font-weight: 800;
+            color: #000000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .level-card-info p {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .price-strikethrough {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .level-card-add-btn {
+            background: #ffffff;
+            border: 1.5px solid #000000;
+            border-radius: 9999px;
+            padding: 6px 14px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #000000;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .level-card-add-btn:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        /* Sección Cupón de Descuento (Imagen 4) */
+        .cart-discount-box {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .discount-input-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .discount-input {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--stroke-light);
+            background: #ffffff;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .discount-input:focus {
+            outline: none;
+            border-color: #000000;
+        }
+
+        .discount-apply-btn {
+            background: #f4f4f7;
+            border: 1px solid var(--stroke-light);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #000000;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .discount-apply-btn:hover {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .discount-message {
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+
+        /* Footer del Carrito & Botón Checkout */
+        .cart-drawer-footer {
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--stroke-light);
+            background: rgba(255, 255, 255, 0.98);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .cart-summary-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .cart-summary-line.total-line {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #000000;
+            padding-top: 4px;
+        }
+
+        .discount-val {
+            color: #16a34a;
+            font-weight: 700;
+        }
+
+        .cart-checkout-cta-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);
+            border: none;
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(236, 72, 153, 0.4);
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .cart-checkout-cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(236, 72, 153, 0.55);
+        }
+
+        .cart-checkout-cta-btn:active {
+            transform: scale(0.98);
+        }
+
+        .cart-guarantee-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            color: var(--text-subtle);
+            font-weight: 600;
+            text-align: center;
+        }
+
+        /* Ocultar el widget de WhatsApp cuando el drawer lateral o el carrito están abiertos */
+        body.drawer-is-open .whatsapp-widget-container,
+        body.cart-is-open .whatsapp-widget-container {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            visibility: hidden !important;
+            transform: translateY(20px);
+        }
+
+        /* ==========================================================================
+           SECCIÓN HERO 1: SUENA COMO [ARTISTA] + CARRUSEL DE PORTADAS
            ========================================================================== */
         .hero-section {
             position: relative;
             z-index: 1;
-            padding: 4.5rem 2rem 5rem 2rem;
+            padding: 4rem 2rem 4.5rem 2rem;
             width: 100%;
             max-width: 1420px;
             margin: 0 auto;
@@ -358,17 +976,17 @@
             grid-template-columns: 1fr;
             gap: 3.5rem;
             align-items: center;
-            margin-bottom: 3.5rem;
+            margin-bottom: 3rem;
         }
 
         @media (min-width: 1024px) {
             .hero-layout-grid {
-                grid-template-columns: 1.1fr 0.9fr;
-                gap: 4.5rem;
+                grid-template-columns: 1.15fr 0.85fr;
+                gap: 4rem;
             }
         }
 
-        /* Lado Izquierdo: Titular Transforma tus voces */
+        /* Lado Izquierdo: Titular Suena como [Artista] */
         .hero-content-col {
             display: flex;
             flex-direction: column;
@@ -380,7 +998,7 @@
             font-weight: 900;
             line-height: 0.95;
             letter-spacing: -0.04em;
-            color: var(--text-main);
+            color: #000000;
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
@@ -388,16 +1006,16 @@
             display: block;
             font-size: 2.85rem;
             font-weight: 800;
-            color: #3b3a40;
+            color: #000000;
             letter-spacing: -0.03em;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
 
         .hero-title-main .title-huge {
             display: block;
-            font-size: 5rem;
+            font-size: 4.8rem;
             font-weight: 900;
-            color: #0c0b0e;
+            color: #000000;
             letter-spacing: -0.05em;
             text-transform: uppercase;
         }
@@ -407,16 +1025,17 @@
                 font-size: 3.4rem;
             }
             .hero-title-main .title-huge {
-                font-size: 6.2rem;
+                font-size: 5.8rem;
             }
         }
 
-        /* Reproductor A/B con Botón Play y Toggle Cruda vs Con Preset */
+        /* Reproductor A/B con Botón Play y Toggle Cruda vs Con Preset + Botón Añadir */
         .hero-player-row {
             display: flex;
             align-items: center;
-            gap: 1.25rem;
-            margin-top: 1rem;
+            gap: 1rem;
+            margin-top: 0.85rem;
+            flex-wrap: wrap;
         }
 
         .hero-play-btn {
@@ -460,7 +1079,7 @@
         .ab-pill-btn {
             background: transparent;
             border: none;
-            padding: 8px 20px;
+            padding: 8px 18px;
             border-radius: 9999px;
             font-size: 0.885rem;
             font-weight: 700;
@@ -470,7 +1089,7 @@
         }
 
         .ab-pill-btn.active {
-            background: #0c0b0e;
+            background: #000000;
             color: #ffffff !important;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
         }
@@ -481,6 +1100,32 @@
             font-weight: 800;
         }
 
+        .hero-buy-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 9999px;
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            font-size: 0.885rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+        }
+
+        .hero-buy-cta-btn:hover {
+            background: #222;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+        }
+
+        .hero-buy-cta-btn:active {
+            transform: scale(0.96);
+        }
+
         .player-status-hint {
             font-size: 0.85rem;
             color: var(--text-muted);
@@ -488,7 +1133,7 @@
             font-weight: 500;
         }
 
-        /* Lado Derecho: Mockup 3D Box con Waveform y Controles */
+        /* Lado Derecho: Mockup 3D Box & Carrusel de Portadas */
         .hero-mockup-wrapper {
             position: relative;
             display: flex;
@@ -521,12 +1166,17 @@
             z-index: 2;
             width: 100%;
             max-width: 440px;
+            aspect-ratio: 1 / 1.15;
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.18), 0 0 35px rgba(236, 72, 153, 0.1);
             border: 1px solid rgba(0, 0, 0, 0.08);
             background: #ffffff;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
         }
 
         .hero-3d-box-container:hover {
@@ -536,9 +1186,54 @@
 
         .hero-3d-img {
             width: 100%;
-            height: auto;
+            height: 100%;
             display: block;
             object-fit: cover;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        .hero-3d-img.fade {
+            opacity: 0.3;
+            transform: scale(0.97);
+        }
+
+        .cover-product-badge {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(10px);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            z-index: 3;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cover-product-badge:hover {
+            background: #000000;
+            transform: translateY(-2px);
+            border-color: #ec4899;
+        }
+
+        .badge-add-pill {
+            background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);
+            color: #ffffff;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 800;
         }
 
         .mockup-browse-controls {
@@ -549,31 +1244,36 @@
             margin-top: 1.25rem;
             font-size: 0.82rem;
             font-weight: 800;
-            color: var(--text-muted);
+            color: #000000;
             letter-spacing: 0.1em;
             text-transform: uppercase;
             user-select: none;
         }
 
         .browse-arrow-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-main);
-            font-size: 1.15rem;
+            background: #ffffff;
+            border: 1px solid var(--stroke-light);
+            color: #000000;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            font-size: 1rem;
             cursor: pointer;
-            transition: color 0.2s ease, transform 0.2s ease;
+            transition: color 0.2s ease, transform 0.2s ease, background 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
         }
 
         .browse-arrow-btn:hover {
             color: #ec4899;
-            transform: scale(1.2);
+            border-color: #ec4899;
+            transform: scale(1.1);
         }
 
         /* ==========================================================================
-           SELECTOR DE ARTISTAS HORIZONTAL
+           SELECTOR DE ARTISTAS VISUAL (AVATARES FOTOGRÁFICOS)
            ========================================================================== */
         .artist-selector-section {
             display: flex;
@@ -592,73 +1292,84 @@
             gap: 6px;
         }
 
-        .artist-chips-row {
+        .artist-avatars-row {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 14px;
             overflow-x: auto;
-            padding: 4px 2px 14px 2px;
+            padding: 8px 4px 16px 4px;
             scrollbar-width: thin;
             scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
         }
 
-        .artist-chips-row::-webkit-scrollbar {
+        .artist-avatars-row::-webkit-scrollbar {
             height: 5px;
         }
 
-        .artist-chips-row::-webkit-scrollbar-thumb {
+        .artist-avatars-row::-webkit-scrollbar-thumb {
             background: rgba(0, 0, 0, 0.15);
             border-radius: 9999px;
         }
 
-        .artist-chip-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #ffffff;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            color: var(--text-main);
-            padding: 7px 16px 7px 8px;
-            border-radius: 9999px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s ease;
-            user-select: none;
-            flex-shrink: 0;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-        }
-
-        .artist-chip-avatar {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            background: #f0f0f3;
-            object-fit: cover;
-            border: 1px solid rgba(0, 0, 0, 0.1);
+        .artist-avatar-card {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
+            gap: 6px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+            user-select: none;
+            padding: 2px;
         }
 
-        .artist-chip-btn:hover {
-            border-color: rgba(0, 0, 0, 0.2);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        .artist-avatar-circle {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2.5px solid transparent;
+            background: #ffffff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+            transition: all 0.22s ease;
+            position: relative;
         }
 
-        .artist-chip-btn.active {
-            background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);
-            border-color: transparent;
-            color: #ffffff;
-            box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4);
+        .artist-avatar-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
-        .artist-chip-btn.active .artist-chip-avatar {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.3);
+        .artist-avatar-card:hover .artist-avatar-circle {
+            transform: scale(1.08);
+            border-color: rgba(236, 72, 153, 0.5);
+        }
+
+        .artist-avatar-card.active .artist-avatar-circle {
+            transform: scale(1.12);
+            border-color: #ec4899;
+            box-shadow: 0 6px 18px rgba(236, 72, 153, 0.45);
+        }
+
+        .artist-avatar-name {
+            font-size: 0.76rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 68px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color 0.2s ease;
+        }
+
+        .artist-avatar-card.active .artist-avatar-name {
+            color: #000000;
+            font-weight: 800;
         }
 
         /* Banner Flotante Inferior de Comparativas */
@@ -707,7 +1418,7 @@
         .banner-text-content h4 {
             font-size: 0.95rem;
             font-weight: 800;
-            color: var(--text-main);
+            color: #000000;
         }
 
         .banner-text-content p {
@@ -745,7 +1456,7 @@
             background: #ffffff;
             background-image: url('/willieimages/bg-noise.png');
             background-repeat: repeat;
-            color: var(--text-main);
+            color: #000000;
             margin-top: auto;
             padding: 4.5rem 2rem 3rem 2rem;
             width: 100%;
@@ -777,7 +1488,7 @@
             font-size: 1.35rem;
             font-weight: 900;
             letter-spacing: -0.03em;
-            color: var(--text-main);
+            color: #000000;
             margin-bottom: 0.75rem;
             display: inline-block;
             text-decoration: none;
@@ -801,7 +1512,7 @@
         .footer-col-title {
             font-size: 0.95rem;
             font-weight: 800;
-            color: var(--text-main);
+            color: #000000;
             letter-spacing: -0.01em;
             user-select: none;
         }
@@ -837,7 +1548,7 @@
         }
 
         .footer-link-item:hover {
-            color: var(--text-main);
+            color: #000000;
             transform: translateX(3px);
         }
 
@@ -856,7 +1567,7 @@
 
         .footer-link-item:hover .icon-morph {
             opacity: 1;
-            stroke: var(--text-main);
+            stroke: #000000;
         }
 
         .social-circle-row {
@@ -872,7 +1583,7 @@
             border-radius: 50%;
             border: 1px solid var(--stroke-light);
             background: #ffffff;
-            color: var(--text-main) !important;
+            color: #000000 !important;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -883,7 +1594,7 @@
 
         .social-circle-btn svg,
         .social-circle-btn i {
-            color: var(--text-main) !important;
+            color: #000000 !important;
             fill: currentColor;
         }
 
@@ -917,7 +1628,7 @@
         }
 
         .email-copy-pill:hover {
-            color: var(--text-main);
+            color: #000000;
             border-color: var(--stroke-light-hover);
         }
 
@@ -935,7 +1646,7 @@
             top: -30px;
             left: 50%;
             transform: translateX(-50%) translateY(4px);
-            background: #0c0b0e;
+            background: #000000;
             color: #ffffff;
             font-size: 0.72rem;
             font-weight: 700;
@@ -957,7 +1668,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: #0c0b0e;
+            background: #000000;
             color: #ffffff !important;
             padding: 5px 14px;
             border-radius: 9999px;
@@ -1001,7 +1712,7 @@
         }
 
         .legal-nav a:hover {
-            color: var(--text-main) !important;
+            color: #000000 !important;
         }
 
         .offszn-brand-row {
@@ -1024,12 +1735,6 @@
 
             .mobile-hamburger-btn {
                 display: flex;
-                width: 44px;
-                height: 44px;
-                border-radius: 12px;
-                background: #ffffff;
-                border: 1px solid rgba(0, 0, 0, 0.08);
-                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
             }
 
             /* Nombre Centrado Matemáticamente al 100% */
@@ -1043,15 +1748,6 @@
                 text-align: center;
                 white-space: nowrap;
                 color: #000000;
-            }
-
-            .header-cart-btn {
-                width: 44px;
-                height: 44px;
-                border-radius: 12px;
-                background: #ffffff;
-                border: 1px solid rgba(0, 0, 0, 0.08);
-                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
             }
 
             .hero-section {
@@ -1069,7 +1765,7 @@
             }
 
             .hero-title-main .title-huge {
-                font-size: 3.8rem;
+                font-size: 3.6rem;
                 color: #000000;
             }
 
@@ -1164,37 +1860,11 @@
                 justify-content: center;
                 margin-top: 0.5rem;
             }
-        }
 
-        /* Ocultar el widget de WhatsApp cuando el drawer lateral está abierto */
-        body.drawer-is-open .whatsapp-widget-container {
-            opacity: 0 !important;
-            pointer-events: none !important;
-            visibility: hidden !important;
-            transform: translateY(20px);
-        }
-
-        /* Botones de contacto en el Drawer */
-        .drawer-whatsapp-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px;
-            border-radius: 12px;
-            background: #25d366;
-            color: #ffffff !important;
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
-            transition: all 0.2s ease;
-        }
-
-        .drawer-whatsapp-btn:hover {
-            background: #20ba5a;
-            transform: translateY(-1px);
+            .cart-drawer-panel {
+                width: 100%;
+                max-width: 100%;
+            }
         }
 
         /* ==========================================================================
@@ -1310,7 +1980,7 @@
     <audio id="audioProcessed" preload="auto" src="/music-raw-to-defined/despues%20-%20yan%20block.wav"></audio>
 
     <!-- ==========================================================================
-         HEADER / NAVBAR CON SEGMENTED PILL A LA DERECHA (PRESETS, PLANTILLAS, OFERTAS, PLUGINS)
+         HEADER / NAVBAR CON SEGMENTED PILL A LA DERECHA
          ========================================================================== -->
     <header class="site-header">
         <div class="header-container">
@@ -1334,17 +2004,17 @@
                     <button type="button" class="nav-segment-item" onclick="switchNavSegment(this, 'plugins')">Plugins</button>
                 </nav>
 
-                <!-- Botón de Carrito -->
-                <a href="/checkout/carrito.html" class="header-cart-btn" title="Carrito de Compras" aria-label="Ver Carrito">
+                <!-- Botón de Carrito (Abre Drawer de Derecha a Izquierda) -->
+                <button type="button" class="header-cart-btn" onclick="toggleCartDrawer()" title="Ver Carrito de Compras" aria-label="Ver Carrito">
                     <i class="bi bi-bag"></i>
                     <span class="cart-badge-count" id="cartBadge">0</span>
-                </a>
+                </button>
             </div>
         </div>
     </header>
 
     <!-- ==========================================================================
-         DRAWER DE NAVEGACIÓN MÓVIL (100% EN ESPAÑOL & CON CONTACTO)
+         DRAWER DE NAVEGACIÓN MÓVIL (IZQUIERDA)
          ========================================================================== -->
     <div class="mobile-nav-backdrop" id="mobileNavBackdrop" onclick="toggleMobileNav()"></div>
     <aside class="mobile-nav-drawer" id="mobileNavDrawer">
@@ -1401,20 +2071,160 @@
     </aside>
 
     <!-- ==========================================================================
-         SECCIÓN 1: HERO PRINCIPAL (TRANSFORMA TUS VOCES - 100% ESPAÑOL)
+         DRAWER DEL CARRITO DE COMPRAS (DERECHA A IZQUIERDA - MARKETING & UPSELLS)
+         ========================================================================== -->
+    <div class="cart-backdrop" id="cartBackdrop" onclick="toggleCartDrawer()"></div>
+    <aside class="cart-drawer-panel" id="cartDrawerPanel">
+        
+        <!-- Header del Carrito -->
+        <div class="cart-drawer-header">
+            <div class="cart-header-title">
+                <i class="bi bi-bag-check" style="font-size: 1.25rem;"></i>
+                <span>Tu carrito</span>
+                <span class="cart-count-bubble" id="cartDrawerCount">0</span>
+            </div>
+            <button type="button" class="cart-drawer-close" onclick="toggleCartDrawer()" aria-label="Cerrar Carrito">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Contenido con Scroll -->
+        <div class="cart-drawer-body" id="cartDrawerBody">
+            
+            <!-- Lista de Productos en el Carrito (Dinámico) -->
+            <div class="cart-items-list" id="cartItemsList">
+                <!-- Inyectado dinámicamente -->
+            </div>
+
+            <!-- SECCIÓN DE MARKETING 1: BUNDLE UPSELL / AÑADE OTRO PRESET Y AHORRA 10% (IMAGEN 1) -->
+            <div class="cart-upsell-section" id="cartPresetUpsellSection">
+                <div class="cart-upsell-header">
+                    <div class="upsell-title-row">
+                        <span class="upsell-title">Añade otro preset, ahorra 10%</span>
+                        <span class="upsell-badge-pill">-10% aplicado</span>
+                    </div>
+                    <p class="upsell-sub">Combina cualquier otro vocal preset y obtén 10% de descuento en todo tu pedido.</p>
+                </div>
+                
+                <div class="cart-upsell-chips-scroll" id="cartUpsellChips">
+                    <!-- Mini tarjetas de presets inyectadas dinámicamente -->
+                </div>
+            </div>
+
+            <!-- SECCIÓN DE MARKETING 2: MEJORA TU SONIDO / LEVEL UP YOUR SOUND (IMAGEN 2 & 3) -->
+            <div class="cart-level-up-section">
+                <div class="level-up-header">
+                    <span class="level-up-title">Mejora tu sonido</span>
+                    <span class="level-up-sub">La mayoría de productores agregan esto también</span>
+                </div>
+
+                <!-- Card 1: Mega Bundle (Todos los Presets) -->
+                <div class="level-up-card">
+                    <div class="level-card-left">
+                        <div class="level-card-thumb">
+                            <img src="/willieimages/HERO.png" alt="Todos los Vocal Presets">
+                        </div>
+                        <div class="level-card-info">
+                            <h5>Todos los Vocal Presets (35 Packs)</h5>
+                            <p>Suena como todos tus artistas • <span class="price-strikethrough">$175.00</span></p>
+                        </div>
+                    </div>
+                    <button type="button" class="level-card-add-btn" onclick="addBundleToCart('all-presets', 'Mega Pack: 35 Vocal Presets', 49.00, '/willieimages/HERO.png')">
+                        + Añadir $49
+                    </button>
+                </div>
+
+                <!-- Card 2: Easy Mix AI Plugin -->
+                <div class="level-up-card">
+                    <div class="level-card-left">
+                        <div class="level-card-thumb">
+                            <img src="/images/LOGO%20OFFSZN.webp" alt="Easy Mix AI Plugin">
+                        </div>
+                        <div class="level-card-info">
+                            <h5>Easy Mix AI (Plugin VST3)</h5>
+                            <p>Mezcla voces con IA en segundos • <span class="price-strikethrough">$49.99</span></p>
+                        </div>
+                    </div>
+                    <button type="button" class="level-card-add-btn" onclick="addBundleToCart('easy-mix-ai', 'Easy Mix AI (VST3 Plugin)', 19.99, '/images/LOGO%20OFFSZN.webp')">
+                        + Añadir $19.99
+                    </button>
+                </div>
+
+                <!-- Card 3: Plantilla Pro de Grabación -->
+                <div class="level-up-card">
+                    <div class="level-card-left">
+                        <div class="level-card-thumb">
+                            <img src="/images/LOGO%20OFFSZN.webp" alt="Plantilla Pro">
+                        </div>
+                        <div class="level-card-info">
+                            <h5>Plantilla Pro de Grabación</h5>
+                            <p>La cadena de mezcla de estudio oficial</p>
+                        </div>
+                    </div>
+                    <button type="button" class="level-card-add-btn" onclick="addBundleToCart('plantilla-grabacion', 'Plantilla Pro de Grabación', 15.00, '/images/LOGO%20OFFSZN.webp')">
+                        + Añadir $15
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- SECCIÓN DE CÓDIGO DE DESCUENTO (IMAGEN 4) -->
+            <div class="cart-discount-box">
+                <div class="discount-input-row">
+                    <input type="text" id="discountInput" class="discount-input" placeholder="Código de descuento (ej: WILLIE10)">
+                    <button type="button" class="discount-apply-btn" onclick="applyDiscountCode()">Aplicar</button>
+                </div>
+                <p class="discount-message" id="discountMsg"></p>
+            </div>
+
+        </div>
+
+        <!-- Footer Fijo con Total y Botón Checkout -->
+        <div class="cart-drawer-footer">
+            <div class="cart-summary-line">
+                <span>Subtotal</span>
+                <span id="cartSubtotal">$0.00</span>
+            </div>
+            <div class="cart-summary-line discount-line" id="cartDiscountRow" style="display: none;">
+                <span>Descuento aplicado</span>
+                <span class="discount-val" id="cartDiscountVal">-$0.00</span>
+            </div>
+            <div class="cart-summary-line total-line">
+                <span>Total</span>
+                <span id="cartTotalVal">$0.00</span>
+            </div>
+
+            <button type="button" class="cart-checkout-cta-btn" id="cartCheckoutBtn" onclick="proceedToCheckoutFlow()">
+                <span>Proceder al Pago</span>
+                <i class="bi bi-arrow-right"></i>
+            </button>
+
+            <div class="cart-guarantee-row">
+                <span>⚡ Descarga Inmediata</span>
+                <span>•</span>
+                <span>🔒 Pago Seguro</span>
+                <span>•</span>
+                <span>30 Días Garantía</span>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- ==========================================================================
+         SECCIÓN 1: HERO PRINCIPAL (SUENA COMO [ARTISTA])
          ========================================================================== -->
     <main class="hero-section">
         <div class="hero-layout-grid">
             
-            <!-- LADO IZQUIERDO: TITULAR TRANSFORMA TUS VOCES & REPRODUCTOR REAL A/B -->
+            <!-- LADO IZQUIERDO: TITULAR SUENA COMO [ARTISTA] & REPRODUCTOR REAL A/B -->
             <div class="hero-content-col">
 
                 <h1 class="hero-title-main">
-                    <span class="title-sub">Transforma</span>
-                    <span class="title-huge" id="heroHugeTitle">tus voces</span>
+                    <span class="title-sub">Suena como</span>
+                    <span class="title-huge" id="heroHugeTitle">Bad Bunny</span>
                 </h1>
 
-                <!-- Fila de Reproductor A/B y Toggle Cruda vs Con Preset -->
+                <!-- Fila de Reproductor A/B y Toggle Cruda vs Con Preset + Botón de Compra Rápida -->
                 <div class="hero-player-row">
                     <button type="button" class="hero-play-btn" id="mainPlayBtn" onclick="toggleHeroPlay()" title="Reproducir / Pausar">
                         <i class="bi bi-play-fill" id="playIcon"></i>
@@ -1424,6 +2234,11 @@
                         <button type="button" class="ab-pill-btn active" id="pillRaw" onclick="switchAbPill('raw')">Cruda (Raw)</button>
                         <button type="button" class="ab-pill-btn active-magenta" id="pillMainstream" onclick="switchAbPill('mainstream')">Con Preset ✨</button>
                     </div>
+
+                    <button type="button" class="hero-buy-cta-btn" onclick="addCurrentArtistToCart()" title="Añadir preset actual al carrito">
+                        <i class="bi bi-bag-plus"></i>
+                        <span>Obtener Preset ($5)</span>
+                    </button>
                 </div>
 
                 <p class="player-status-hint" id="playerStatusHint">
@@ -1432,7 +2247,7 @@
 
             </div>
 
-            <!-- LADO DERECHO: 3D PRODUCT BOX MOCKUP CON WAVEFORM DE FONDO -->
+            <!-- LADO DERECHO: 3D PRODUCT BOX MOCKUP CON TODAS LAS PORTADAS REALES -->
             <div class="hero-mockup-wrapper">
                 <div class="hero-waveform-bg">
                     <svg class="waveform-svg" viewBox="0 0 500 50">
@@ -1440,8 +2255,16 @@
                     </svg>
                 </div>
 
-                <div class="hero-3d-box-container">
-                    <img src="/willieimages/HERO.png" alt="The Mainstream Vocal Pack - Willie Inspired" class="hero-3d-img" onerror="this.onerror=null; this.src='/images/LOGO%20OFFSZN.webp';">
+                <div class="hero-3d-box-container" id="heroBoxContainer" onclick="addCurrentArtistToCart()" title="Click para añadir este preset al carrito">
+                    <img id="heroProductImg" src="/willieimages/covers/bad-bunny.jpg" alt="Preset Oficial - Willie Inspired" class="hero-3d-img" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
+                    
+                    <button type="button" class="cover-product-badge" id="coverProductBadge" onclick="event.stopPropagation(); addCurrentArtistToCart();" title="Añadir preset al carrito">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span id="coverBadgeIcon">🔥</span>
+                            <span id="coverBadgeText">Bad Bunny Vocal Preset • $5.00</span>
+                        </div>
+                        <span class="badge-add-pill">+ Añadir</span>
+                    </button>
                 </div>
 
                 <div class="mockup-browse-controls">
@@ -1454,7 +2277,7 @@
         </div>
 
         <!-- ==========================================================================
-             SELECTOR DE ARTISTAS HORIZONTAL (100% EN ESPAÑOL)
+             SELECTOR DE ARTISTAS VISUAL (AVATARES FOTOGRÁFICOS)
              ========================================================================== -->
         <section class="artist-selector-section">
             <div class="artist-selector-label">
@@ -1462,43 +2285,8 @@
                 <span>Elige tu artista — la página se adapta al sonido</span>
             </div>
 
-            <div class="artist-chips-row" id="artistChipsRow">
-                <button type="button" class="artist-chip-btn active" onclick="selectArtistChip(this, 'Yan Block', 'tus voces')">
-                    <span class="artist-chip-avatar">🔥</span>
-                    <span>Yan Block</span>
-                </button>
-                <button type="button" class="artist-chip-btn" onclick="selectArtistChip(this, 'Mora', 'mora sound')">
-                    <span class="artist-chip-avatar">🎧</span>
-                    <span>Mora</span>
-                </button>
-                <button type="button" class="artist-chip-btn" onclick="selectArtistChip(this, 'Bad Bunny', 'bad bunny')">
-                    <span class="artist-chip-avatar">🐰</span>
-                    <span>Bad Bunny</span>
-                </button>
-                <button type="button" class="artist-chip-btn" onclick="selectArtistChip(this, 'Feid', 'ferxxo pro')">
-                    <span class="artist-chip-avatar">💚</span>
-                    <span>Feid</span>
-                </button>
-                <button type="button" class="artist-chip-btn" onclick="selectArtistChip(this, 'Rauw', 'rauw space')">
-                    <span class="artist-chip-avatar">⚡</span>
-                    <span>Rauw</span>
-                </button>
-                <button type="button" class="artist-chip-btn" onclick="selectArtistChip(this, 'Myke Towers', 'myke towers')">
-                    <span class="artist-chip-avatar">🎤</span>
-                    <span>Myke Towers</span>
-                </button>
-                <button type="button" class="artist-chip-btn" onclick="selectArtistChip(this, 'Quevedo', 'quevedo')">
-                    <span class="artist-chip-avatar">🌊</span>
-                    <span>Quevedo</span>
-                </button>
-                <button type="button" class="artist-chip-btn" onclick="selectArtistChip(this, 'Drake', 'drake ovo')">
-                    <span class="artist-chip-avatar">🦉</span>
-                    <span>Drake</span>
-                </button>
-                <button type="button" class="artist-chip-btn" onclick="selectArtistChip(this, 'Travis', 'travis scott')">
-                    <span class="artist-chip-avatar">🌵</span>
-                    <span>Travis</span>
-                </button>
+            <div class="artist-avatars-row" id="artistAvatarsRow">
+                <!-- Avatares inyectados dinámicamente -->
             </div>
 
             <!-- Banner Flotante Inferior de Comparativa Antes y Después -->
@@ -1671,7 +2459,7 @@
     </div>
 
     <!-- ==========================================================================
-         SCRIPTS: REPRODUCTOR REAL A/B SINCRONIZADO, NAVBAR & CHIPS
+         SCRIPTS: REPRODUCTOR REAL A/B, CARRUSEL DE 34 PORTADAS, Y MOTOR DE CARRITO CON UPSELLS
          ========================================================================== -->
     <script>
         // 1. Segmented Navbar Controller (Presets, Plantillas, Ofertas, Plugins)
@@ -1684,7 +2472,7 @@
         // 2. Reproductor Real de Audio Sincronizado A/B
         const audioRaw = document.getElementById('audioRaw');
         const audioProcessed = document.getElementById('audioProcessed');
-        let currentMode = 'raw'; // 'raw' o 'mainstream'
+        let currentMode = 'raw';
         let isPlaying = false;
 
         function toggleHeroPlay() {
@@ -1756,55 +2544,390 @@
             audioProcessed.addEventListener('ended', () => { isPlaying = false; updatePlayIcons(false); });
         }
 
-        // 3. Selector de Artistas
-        const artistsList = [
-            { name: "Yan Block", huge: "tus voces" },
-            { name: "Mora", huge: "mora sound" },
-            { name: "Bad Bunny", huge: "bad bunny" },
-            { name: "Feid", huge: "ferxxo pro" },
-            { name: "Rauw", huge: "rauw space" },
-            { name: "Myke Towers", huge: "myke towers" },
-            { name: "Quevedo", huge: "quevedo" },
-            { name: "Drake", huge: "drake ovo" },
-            { name: "Travis", huge: "travis scott" }
+        // 3. Catálogo Completo de Todos los Artistas Reales (35 Artistas)
+        const artistsCatalog = [
+            { id: "bad-bunny", name: "Bad Bunny", cover: "/willieimages/covers/bad-bunny.jpg", icon: "🐰", price: 5.00, badge: "Bad Bunny Vocal Preset • $5.00" },
+            { id: "feid", name: "Feid", cover: "/willieimages/covers/feid.png", icon: "💚", price: 5.00, badge: "Feid Ferxxo Vocal Chain • $5.00" },
+            { id: "duki", name: "Duki", cover: "/willieimages/covers/duki.jpg", icon: "😈", price: 5.00, badge: "Duki Trap Vocal Preset • $5.00" },
+            { id: "milo-j", name: "Milo J", cover: "/willieimages/covers/milo-j.jpg", icon: "🎙️", price: 5.00, badge: "Milo J Vocal Preset • $5.00" },
+            { id: "saiko", name: "Saiko", cover: "/willieimages/covers/saiko.jpg", icon: "⚡", price: 5.00, badge: "Saiko Space Vocal Chain • $5.00" },
+            { id: "yan-block", name: "Yan Block", cover: "/willieimages/covers/yan-block.png", icon: "🔥", price: 5.00, badge: "Yan Block Vocal Chain • $5.00" },
+            { id: "omar-courtz", name: "Omar Courtz", cover: "/willieimages/covers/omar-courtz.jpg", icon: "🕶️", price: 5.00, badge: "Omar Courtz Vocal Chain • $5.00" },
+            { id: "dei-v", name: "Dei V", cover: "/willieimages/covers/dei-v.jpg", icon: "💎", price: 5.00, badge: "Dei V Vocal Preset • $5.00" },
+            { id: "trueno", name: "Trueno", cover: "/willieimages/covers/trueno.jpg", icon: "⚡", price: 5.00, badge: "Trueno Rap/Trap Vocal Chain • $5.00" },
+            { id: "ysy-a", name: "YSY A", cover: "/willieimages/covers/ysy-a.jpg", icon: "💥", price: 5.00, badge: "YSY A Trap Vocal Preset • $5.00" },
+            { id: "jhayco", name: "Jhayco", cover: "/willieimages/covers/jhayco.jpg", icon: "🦇", price: 5.00, badge: "Jhayco Vocal Preset • $5.00" },
+            { id: "karol-g", name: "Karol G", cover: "/willieimages/covers/karol-g.jpg", icon: "🌸", price: 5.00, badge: "Karol G Vocal Chain • $5.00" },
+            { id: "khea", name: "Khea", cover: "/willieimages/covers/khea.jpg", icon: "🔥", price: 5.00, badge: "Khea Trap Vocal Preset • $5.00" },
+            { id: "kidd-voodoo", name: "Kidd Voodoo", cover: "/willieimages/covers/kidd-voodoo.jpg", icon: "🔮", price: 5.00, badge: "Kidd Voodoo Vocal Preset • $5.00" },
+            { id: "juice-wrld", name: "Juice WRLD", cover: "/willieimages/covers/juice-wrld.jpg", icon: "💔", price: 5.00, badge: "Juice WRLD Vocal Chain • $5.00" },
+            { id: "joji", name: "Joji", cover: "/willieimages/covers/joji.jpg", icon: "🌧️", price: 5.00, badge: "Joji Lo-Fi Vocal Preset • $5.00" },
+            { id: "bhavi", name: "Bhavi", cover: "/willieimages/covers/bhavi.jpg", icon: "🎨", price: 5.00, badge: "Bhavi Vocal Preset • $5.00" },
+            { id: "cro", name: "CRO", cover: "/willieimages/covers/cro.jpg", icon: "🌙", price: 5.00, badge: "CRO Vocal Preset • $5.00" },
+            { id: "alejo", name: "Alejo", cover: "/willieimages/covers/alejo.jpg", icon: "⭐", price: 5.00, badge: "Alejo Vocal Chain • $5.00" },
+            { id: "hades-66", name: "Hades 66", cover: "/willieimages/covers/hades-66.jpg", icon: "🔥", price: 5.00, badge: "Hades 66 Vocal Preset • $5.00" },
+            { id: "paco-amoroso", name: "Paco Amoroso", cover: "/willieimages/covers/paco-amoroso.jpg", icon: "🕶️", price: 5.00, badge: "Paco Amoroso Vocal Preset • $5.00" },
+            { id: "young-cister", name: "Young Cister", cover: "/willieimages/covers/young-cister.jpg", icon: "✨", price: 5.00, badge: "Young Cister Vocal Preset • $5.00" },
+            { id: "young-beef", name: "Yung Beef", cover: "/willieimages/covers/young-beef.png", icon: "👑", price: 5.00, badge: "Yung Beef Vocal Chain • $5.00" },
+            { id: "gonzalo-genek", name: "Gonzalo Genek", cover: "/willieimages/covers/gonzalo-genek.jpg", icon: "🎙️", price: 5.00, badge: "Gonzalo Genek Vocal Chain • $5.00" },
+            { id: "kuraimokha", name: "Kuraimokha", cover: "/willieimages/covers/kuraimokha.jpg", icon: "🌊", price: 5.00, badge: "Kuraimokha Vocal Preset • $5.00" },
+            { id: "roa", name: "Roa", cover: "/willieimages/covers/roa.jpg", icon: "⚡", price: 5.00, badge: "Roa Vocal Preset • $5.00" },
+            { id: "roju", name: "Roju", cover: "/willieimages/covers/roju.jpg", icon: "🚀", price: 5.00, badge: "Roju Vocal Chain • $5.00" },
+            { id: "enzocerobulto", name: "Enzo Cero Bulto", cover: "/willieimages/covers/enzocerobulto.jpg", icon: "🔥", price: 5.00, badge: "Enzo Vocal Chain • $5.00" },
+            { id: "frozouda", name: "Frozouda", cover: "/willieimages/covers/frozouda.jpg", icon: "❄️", price: 5.00, badge: "Frozouda Vocal Preset • $5.00" },
+            { id: "lil-naay", name: "Lil Naay", cover: "/willieimages/covers/lil-naay.jpg", icon: "🎙️", price: 5.00, badge: "Lil Naay Vocal Chain • $5.00" },
+            { id: "cosmic-kid", name: "Cosmic Kid", cover: "/willieimages/covers/cosmic-kid.jpg", icon: "🪐", price: 5.00, badge: "Cosmic Kid Vocal Preset • $5.00" },
+            { id: "blagh", name: "Blagh", cover: "/willieimages/covers/blagh.jpg", icon: "💀", price: 5.00, badge: "Blagh Vocal Preset • $5.00" },
+            { id: "oney-1", name: "Oney 1", cover: "/willieimages/covers/oney-1.jpg", icon: "🔥", price: 5.00, badge: "Oney 1 Vocal Chain • $5.00" },
+            { id: "yeyo", name: "Yeyo", cover: "/willieimages/covers/yeyo.png", icon: "⚡", price: 5.00, badge: "Yeyo Vocal Preset • $5.00" },
+            { id: "zell", name: "Zell", cover: "/willieimages/covers/zell.jpg", icon: "💎", price: 5.00, badge: "Zell Vocal Preset • $5.00" }
         ];
         let currentArtistIndex = 0;
 
-        function selectArtistChip(btn, artistName, hugeText) {
-            const chips = document.querySelectorAll('.artist-chip-btn');
-            chips.forEach(chip => chip.classList.remove('active'));
-            btn.classList.add('active');
+        // Renderizar avatares visuales de todos los artistas
+        function renderArtistAvatars() {
+            const container = document.getElementById('artistAvatarsRow');
+            if (!container) return;
 
+            container.innerHTML = artistsCatalog.map((artist, idx) => `
+                <button type="button" class="artist-avatar-card ${idx === 0 ? 'active' : ''}" onclick="selectArtistByIndex(${idx})" title="${artist.name}">
+                    <div class="artist-avatar-circle">
+                        <img src="${artist.cover}" alt="${artist.name}" loading="lazy" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
+                    </div>
+                    <span class="artist-avatar-name">${artist.name}</span>
+                </button>
+            `).join('');
+        }
+
+        function selectArtistByIndex(index) {
+            currentArtistIndex = index;
+            const artist = artistsCatalog[index];
+            if (!artist) return;
+
+            // Actualizar tarjetas activas
+            const cards = document.querySelectorAll('.artist-avatar-card');
+            cards.forEach((card, i) => {
+                card.classList.toggle('active', i === index);
+            });
+
+            // Actualizar titular principal (Suena como [Artista])
             const hugeTitle = document.getElementById('heroHugeTitle');
             if (hugeTitle) {
-                hugeTitle.textContent = hugeText;
+                hugeTitle.textContent = artist.name;
             }
 
+            // Actualizar portada 3D
+            const img = document.getElementById('heroProductImg');
+            if (img) {
+                img.classList.add('fade');
+                setTimeout(() => {
+                    img.src = artist.cover;
+                    img.classList.remove('fade');
+                }, 150);
+            }
+
+            // Actualizar badge del producto
+            const badgeIcon = document.getElementById('coverBadgeIcon');
+            const badgeText = document.getElementById('coverBadgeText');
+            if (badgeIcon) badgeIcon.textContent = artist.icon || "🔥";
+            if (badgeText) badgeText.textContent = `${artist.name} Vocal Preset • $5.00`;
+
+            // Actualizar hint
             const hint = document.getElementById('playerStatusHint');
             if (hint) {
-                hint.textContent = `Toca play • cadena vocal de ${artistName} activa`;
+                hint.textContent = `Toca play • cadena vocal de ${artist.name} lista para usar`;
             }
         }
 
         function prevArtist() {
-            currentArtistIndex = (currentArtistIndex - 1 + artistsList.length) % artistsList.length;
-            updateArtistFromIndex();
+            currentArtistIndex = (currentArtistIndex - 1 + artistsCatalog.length) % artistsCatalog.length;
+            selectArtistByIndex(currentArtistIndex);
+            scrollActiveAvatarIntoView();
         }
 
         function nextArtist() {
-            currentArtistIndex = (currentArtistIndex + 1) % artistsList.length;
-            updateArtistFromIndex();
+            currentArtistIndex = (currentArtistIndex + 1) % artistsCatalog.length;
+            selectArtistByIndex(currentArtistIndex);
+            scrollActiveAvatarIntoView();
         }
 
-        function updateArtistFromIndex() {
-            const chips = document.querySelectorAll('.artist-chip-btn');
-            if (chips[currentArtistIndex]) {
-                chips[currentArtistIndex].click();
-                chips[currentArtistIndex].scrollIntoView({ behavior: 'smooth', inline: 'center' });
+        function scrollActiveAvatarIntoView() {
+            const cards = document.querySelectorAll('.artist-avatar-card');
+            if (cards[currentArtistIndex]) {
+                cards[currentArtistIndex].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
             }
         }
 
-        // 4. Toggle Menú Lateral Móvil
+        // ==========================================================================
+        // 4. MOTOR DEL CARRITO (SLIDE-OUT DERECHA A IZQUIERDA + PERSISTENCIA LOCALSTORAGE)
+        // ==========================================================================
+        let cartItems = [];
+        let appliedDiscount = 0; // Porcentaje de descuento (0 a 1)
+
+        // Cargar Carrito desde localStorage
+        function loadCartFromStorage() {
+            try {
+                const saved = localStorage.getItem('offszn_cart');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed)) {
+                        cartItems = parsed.map(item => {
+                            if (item.product) {
+                                return {
+                                    id: item.product.id || item.product.name,
+                                    name: item.product.name,
+                                    price: parseFloat(item.product.price) || 5.00,
+                                    cover: item.product.image_url || '/willieimages/HERO.png',
+                                    os: item.os || 'both',
+                                    quantity: item.quantity || 1
+                                };
+                            }
+                            return item;
+                        });
+                    }
+                }
+            } catch (e) {
+                console.log("Error loading cart:", e);
+                cartItems = [];
+            }
+            updateCartUI();
+        }
+
+        function saveCartToStorage() {
+            try {
+                // Guardar en formato híbrido OFFSZN compatible
+                const formatted = cartItems.map(item => ({
+                    product: {
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        image_url: item.cover
+                    },
+                    quantity: item.quantity || 1,
+                    os: item.os || 'both'
+                }));
+                localStorage.setItem('offszn_cart', JSON.stringify(formatted));
+            } catch (e) {
+                console.log("Error saving cart:", e);
+            }
+        }
+
+        function toggleCartDrawer() {
+            const panel = document.getElementById('cartDrawerPanel');
+            const backdrop = document.getElementById('cartBackdrop');
+            if (panel && backdrop) {
+                const isOpen = panel.classList.toggle('is-open');
+                backdrop.classList.toggle('is-open');
+                document.body.classList.toggle('cart-is-open', isOpen);
+                document.body.style.overflow = isOpen ? 'hidden' : '';
+            }
+        }
+
+        function openCartDrawer() {
+            const panel = document.getElementById('cartDrawerPanel');
+            const backdrop = document.getElementById('cartBackdrop');
+            if (panel && backdrop) {
+                panel.classList.add('is-open');
+                backdrop.classList.add('is-open');
+                document.body.classList.add('cart-is-open');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        // Añadir el preset del artista activo en Hero
+        function addCurrentArtistToCart() {
+            const artist = artistsCatalog[currentArtistIndex];
+            if (!artist) return;
+
+            addItemToCart({
+                id: `preset-${artist.id}`,
+                name: `${artist.name} Vocal Preset`,
+                price: artist.price || 5.00,
+                cover: artist.cover,
+                os: 'both',
+                quantity: 1
+            });
+        }
+
+        // Añadir cualquier preset o bundle
+        function addItemToCart(item) {
+            const existingIndex = cartItems.findIndex(i => i.id === item.id);
+            if (existingIndex > -1) {
+                cartItems[existingIndex].quantity = (cartItems[existingIndex].quantity || 1) + 1;
+            } else {
+                cartItems.push(item);
+            }
+
+            // Aplicar 10% de descuento automático si hay 2 o más presets (Imagen 1 Marketing)
+            checkAutomaticDiscounts();
+
+            saveCartToStorage();
+            updateCartUI();
+            openCartDrawer();
+        }
+
+        function addBundleToCart(id, name, price, cover) {
+            addItemToCart({
+                id: `bundle-${id}`,
+                name: name,
+                price: price,
+                cover: cover,
+                os: 'both',
+                quantity: 1
+            });
+        }
+
+        function removeFromCart(id) {
+            cartItems = cartItems.filter(item => item.id !== id);
+            checkAutomaticDiscounts();
+            saveCartToStorage();
+            updateCartUI();
+        }
+
+        function setItemOs(id, os) {
+            const item = cartItems.find(i => i.id === id);
+            if (item) {
+                item.os = os;
+                saveCartToStorage();
+                updateCartUI();
+            }
+        }
+
+        function checkAutomaticDiscounts() {
+            // Si hay 2 o más items, aplica 10% automático
+            if (cartItems.length >= 2 && appliedDiscount < 0.10) {
+                appliedDiscount = 0.10;
+            }
+        }
+
+        // Renderizar la UI del Carrito
+        function updateCartUI() {
+            const totalCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+            
+            // Badges del Navbar y Header del Carrito
+            const navBadge = document.getElementById('cartBadge');
+            const drawerCount = document.getElementById('cartDrawerCount');
+            if (navBadge) navBadge.textContent = totalCount;
+            if (drawerCount) drawerCount.textContent = totalCount;
+
+            const container = document.getElementById('cartItemsList');
+            const subtotalEl = document.getElementById('cartSubtotal');
+            const discountRow = document.getElementById('cartDiscountRow');
+            const discountValEl = document.getElementById('cartDiscountVal');
+            const totalValEl = document.getElementById('cartTotalVal');
+
+            // Calcular Subtotal
+            const subtotal = cartItems.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
+            const discountAmount = subtotal * appliedDiscount;
+            const total = Math.max(0, subtotal - discountAmount);
+
+            if (subtotalEl) subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+            if (totalValEl) totalValEl.textContent = `$${total.toFixed(2)}`;
+
+            if (discountRow && discountValEl) {
+                if (appliedDiscount > 0) {
+                    discountRow.style.display = 'flex';
+                    discountValEl.textContent = `-$${discountAmount.toFixed(2)} (${(appliedDiscount * 100).toFixed(0)}%)`;
+                } else {
+                    discountRow.style.display = 'none';
+                }
+            }
+
+            if (!container) return;
+
+            // Carrito Vacío vs Lleno
+            if (cartItems.length === 0) {
+                container.innerHTML = `
+                    <div class="cart-empty-state">
+                        <i class="bi bi-bag-x cart-empty-icon"></i>
+                        <h4 class="cart-empty-title">Tu carrito está vacío</h4>
+                        <p class="cart-empty-sub">Selecciona un preset arriba o agrega una de las ofertas exclusivas abajo:</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = cartItems.map(item => `
+                    <div class="cart-item-card">
+                        <img src="${item.cover}" alt="${item.name}" class="cart-item-thumb" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
+                        <div class="cart-item-info">
+                            <div>
+                                <h4 class="cart-item-title">${item.name}</h4>
+                                <span class="cart-item-meta">FL Studio / Ableton / Logic / Pro Tools</span>
+                            </div>
+
+                            <div class="cart-os-pill-group">
+                                <button type="button" class="cart-os-btn ${item.os === 'mac' ? 'active' : ''}" onclick="setItemOs('${item.id}', 'mac')">macOS</button>
+                                <button type="button" class="cart-os-btn ${item.os === 'windows' || item.os === 'both' ? 'active' : ''}" onclick="setItemOs('${item.id}', 'windows')">Windows</button>
+                            </div>
+
+                            <div class="cart-item-bottom">
+                                <span class="cart-item-price">$${(item.price * (item.quantity || 1)).toFixed(2)} <span class="cart-item-strikethrough">$${((item.price * 2.5) * (item.quantity || 1)).toFixed(2)}</span></span>
+                                <button type="button" class="cart-item-remove-btn" onclick="removeFromCart('${item.id}')" title="Eliminar del carrito">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            renderUpsellChips();
+        }
+
+        // Renderizar mini chips de upsell en el carrito (Imagen 1)
+        function renderUpsellChips() {
+            const container = document.getElementById('cartUpsellChips');
+            if (!container) return;
+
+            // Mostrar 6 presets populares que no estén ya en el carrito
+            const available = artistsCatalog.filter(a => !cartItems.some(item => item.id === `preset-${a.id}`)).slice(0, 8);
+            
+            container.innerHTML = available.map(artist => `
+                <div class="upsell-mini-card">
+                    <img src="${artist.cover}" alt="${artist.name}" class="upsell-mini-img" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
+                    <div>
+                        <span class="upsell-mini-name">${artist.name}</span>
+                        <div class="upsell-mini-price">$4.50 <span style="text-decoration: line-through; color: #999;">$15</span></div>
+                    </div>
+                    <button type="button" class="upsell-add-btn" onclick="addItemToCart({id: 'preset-${artist.id}', name: '${artist.name} Vocal Preset', price: 4.50, cover: '${artist.cover}', os: 'both', quantity: 1})" title="Añadir con 10% OFF">+</button>
+                </div>
+            `).join('');
+        }
+
+        // Aplicar Código de Descuento
+        function applyDiscountCode() {
+            const input = document.getElementById('discountInput');
+            const msg = document.getElementById('discountMsg');
+            if (!input || !msg) return;
+
+            const code = input.value.trim().toUpperCase();
+            if (code === 'WILLIE10' || code === 'OFFSZN10') {
+                appliedDiscount = 0.10;
+                msg.style.color = '#16a34a';
+                msg.textContent = '✓ Código aplicado: 10% de descuento!';
+            } else if (code === 'OFFSZN' || code === 'VIP15') {
+                appliedDiscount = 0.15;
+                msg.style.color = '#16a34a';
+                msg.textContent = '✓ Código VIP aplicado: 15% de descuento!';
+            } else if (code === '') {
+                msg.textContent = '';
+            } else {
+                msg.style.color = '#ef4444';
+                msg.textContent = '✕ Código no válido o expirado.';
+            }
+            updateCartUI();
+        }
+
+        // Proceder al Checkout Oficial de OFFSZN
+        function proceedToCheckoutFlow() {
+            if (cartItems.length === 0) {
+                alert("Tu carrito está vacío. Elige al menos un preset para continuar.");
+                return;
+            }
+            saveCartToStorage();
+            window.location.href = '/cuenta/checkout.html';
+        }
+
+        // 5. Toggle Menú Lateral Móvil (Izquierda)
         function toggleMobileNav() {
             const drawer = document.getElementById('mobileNavDrawer');
             const backdrop = document.getElementById('mobileNavBackdrop');
@@ -1816,7 +2939,7 @@
             }
         }
 
-        // 5. Toggle Acordeón Footer en Móvil
+        // 6. Toggle Acordeón Footer en Móvil
         function toggleAccordion(id) {
             if (window.innerWidth < 768) {
                 const element = document.getElementById(id);
@@ -1826,7 +2949,7 @@
             }
         }
 
-        // 6. Copiar Correo
+        // 7. Copiar Correo
         function copyEmail() {
             const email = 'williebeatsyt@gmail.com';
             const toast = document.getElementById('emailToast');
@@ -1860,7 +2983,7 @@
             }
         }
 
-        // 7. Cerrar Globo de WhatsApp
+        // 8. Cerrar Globo de WhatsApp
         function closeWhatsAppBubble(event) {
             if (event) {
                 event.preventDefault();
@@ -1871,6 +2994,12 @@
                 bubble.classList.add('hidden');
             }
         }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            renderArtistAvatars();
+            loadCartFromStorage();
+        });
     </script>
 
 </body>
