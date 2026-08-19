@@ -201,7 +201,7 @@ export const createPayPalOrder = async (req, res) => {
             let productObj = product;
             if (!productObj) {
                 if (String(directProductId) === '903') {
-                    productObj = { id: 903, name: 'Coca-Cola', price_basic: 10, producer_id: null };
+                    productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: null };
                 } else if (String(directProductId) === '902') {
                     productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
                 } else if (String(directProductId) === '900') {
@@ -655,7 +655,7 @@ export const capturePayPalOrder = async (req, res) => {
                 let productObj = product;
                 if (!productObj) {
                     if (String(directProductId) === '903') {
-                        productObj = { id: 903, name: 'Coca-Cola', price_basic: 10, producer_id: null };
+                        productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: null };
                     } else if (String(directProductId) === '902') {
                         productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
                     } else if (String(directProductId) === '900') {
