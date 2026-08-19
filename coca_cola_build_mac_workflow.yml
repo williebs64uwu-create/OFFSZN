@@ -1,0 +1,33 @@
+name: Build macOS VST3, AU & Standalone (Coca-Cola Release v1.0.0)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14 # Apple Silicon (M1/M2) runner with Xcode 15 and CMake pre-installed
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Clone JUCE Framework
+        run: |
+          git clone --depth 1 --branch 8.0.13 https://github.com/juce-framework/JUCE.git JUCE
+
+      - name: Set Permissions & Run Build Script
+        env:
+          JUCE_DIR: ${{ github.workspace }}/JUCE
+        run: |
+          # Clean CRLF line endings just in case it was pushed from Windows
+          sed -i '' 's/\r$//' build_mac_installer.sh
+          chmod +x build_mac_installer.sh
+          ./build_mac_installer.sh
+
+      - name: Upload Mac Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: COCA_COLA_Mac_Installer
+          path: COCA_COLA_Mac_Installer_v1.0.0.pkg

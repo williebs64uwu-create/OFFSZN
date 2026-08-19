@@ -197,6 +197,27 @@ bool MyAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 
 **Security Philosophy:** Never trust client-side JavaScript. The C++ audio engine is the authoritative enforcement gate.
 
+### 🛡️ Core Rules for OFFSZN Plugin Licensing:
+1. **Mandatory First-Time Online Activation:**
+   - Entering any new key in the UI **MUST** verify with the official server (`https://offszn.lat/api/plugin/activate`) with `{ serial_key, hwid, plugin_name }`.
+   - If there is no internet during initial key entry, reject activation with `"Se requiere conexión a internet para la primera activación."`.
+   - **DO NOT** allow arbitrary offline activation of raw unverified strings.
+2. **Permanent Offline Execution Once Activated (FULL & TRIAL):**
+   - Once confirmed by the server, the cryptographically bound serial and timestamps are written to `%APPDATA%\OFFSZN\<Plugin>.settings`.
+   - On all subsequent launches, C++ reads and validates `.settings` locally without making any network requests.
+3. **Anti-Tamper & Clock Rewind Detection:**
+   - If user rolls back system clock by more than 1 hour (`now < lastCheck - 3600`), C++ immediately flags tampering and revokes the license.
+4. **Installer Non-Destructive Protection:**
+   - Inno Setup and macOS pkg installers **MUST NEVER** overwrite or delete existing `.settings` or trial records.
+5. **Authoritative DSP Audio Gate:**
+   - If `!isLicenseValid.load()`, the C++ engine executes `buffer.clear(); return;`, enforcing complete audio silence/bypass.
+6. **Universal Top-Right Badge & Modal Behavior:**
+   - Badge displays in top-right: `PRUEBA · X DÍAS` (amber pulse), `FULL · OFFSZN` (green dot), or `DEMO · ACTIVAR` (red dot).
+   - When an active license/trial is running, clicking the badge opens the activation modal with a visible **✕ (Close Button)** and Escape/backdrop click support.
+   - When unlicensed/expired, the modal is hard-locked without a close button until a valid key is activated.
+7. **HTML / WebView2 Zoom & Drag Lockdown:**
+   - All plugin HTML must have `user-select: none`, `-webkit-user-drag: none`, fixed width/height, and prevent Ctrl+wheel / gesture zooming.
+
 ```mermaid
 sequenceDiagram
     participant JS as Frontend (mockup.html)
