@@ -87,9 +87,18 @@ class PluginDirectCheckout {
 
         const script = document.createElement('script');
         script.id = 'paypal-sdk-plugin-direct';
-        // Single merchant: all plugin revenue goes directly to OFFSZN (MXV5F6X8JXG4S)
-        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=MXV5F6X8JXG4S`;
-        script.setAttribute('data-merchant-id', 'MXV5F6X8JXG4S');
+        const isCokeProduct = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola';
+
+        if (isCokeProduct) {
+            // Coca-Cola: multi-payee split — both parties must be listed
+            // Partner: suarez.azocarn@gmail.com (gets $10 or $7)
+            // OFFSZN: MXV5F6X8JXG4S / willie2008garay@gmail.com (gets $5 or $3)
+            script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=*`;
+            script.setAttribute('data-merchant-id', 'suarez.azocarn@gmail.com,MXV5F6X8JXG4S');
+        } else {
+            script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=MXV5F6X8JXG4S`;
+            script.setAttribute('data-merchant-id', 'MXV5F6X8JXG4S');
+        }
 
         script.onload = () => this.renderPayPalButtons();
         document.head.appendChild(script);
