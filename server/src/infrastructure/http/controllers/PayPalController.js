@@ -364,26 +364,24 @@ export const createPayPalOrder = async (req, res) => {
         cartItems.forEach(item => {
             const prodIdToFind = String(item.product?.id);
 
-            // PLUGIN OVERRIDE: IDs 899/900/901/902/903 are special plugins, NOT beats.
-            // Their price comes from item.variant_price (set by the dynamic pricing script),
-            // never from the DB product which may be a completely different product.
-            const PLUGIN_IDS = ['899', '900', '901', '902', '903'];
-            if (PLUGIN_IDS.includes(prodIdToFind)) {
+            // COCA-COLA OVERRIDE (ID 903 only):
+            // Customer pays exactly $15 or $10. That amount is split:
+            //   $15 → $5 OFFSZN (serviceFee) + $10 partner (variant_price)
+            //   $10 → $3 OFFSZN (serviceFee) + $7 partner (variant_price)
+            // Easy Mix/Master/Inka Kola (899/900/901/902) flow through normal logic — NOT touched here.
+            if (prodIdToFind === '903') {
                 const pluginPrice = parseFloat(item.variant_price) || 15;
-                // Clamp to valid plugin prices
-                const validPluginPrice = (pluginPrice === 10 || pluginPrice === 15 || pluginPrice === 5) ? pluginPrice : 15;
-                
-                let pluginCommission = 0;
-                const isCoke = prodIdToFind === '903';
-                if (isCoke) {
-                    pluginCommission = validPluginPrice >= 15 ? 5.00 : 3.00;
-                }
+                const validPluginPrice = (pluginPrice === 10 || pluginPrice === 15) ? pluginPrice : 15;
 
-                subtotal += validPluginPrice;
-                serviceFee += pluginCommission;
-                verifiedCartItems.push({ ...item, variant_price: validPluginPrice });
-                console.log(`[PayPalOrder] Plugin ${prodIdToFind}: price=$${validPluginPrice} | commission=$${pluginCommission.toFixed(2)}`);
-                return; // Skip the regular DB price verification
+                const offsznShare = validPluginPrice >= 15 ? 5.00 : 3.00;   // OFFSZN gets $5 or $3
+                const partnerShare = validPluginPrice - offsznShare;         // Partner gets $10 or $7
+
+                subtotal += partnerShare;        // Partner's portion goes as the item amount
+                serviceFee += offsznShare;       // OFFSZN's portion goes as platform fee
+
+                verifiedCartItems.push({ ...item, variant_price: partnerShare });
+                console.log(`[PayPalOrder] Coca-Cola: customer pays $${validPluginPrice} | OFFSZN=$${offsznShare} | partner=$${partnerShare}`);
+                return; // Skip regular DB price logic for this product
             }
 
             const dbProd = dbProducts.find(p => String(p.id) === prodIdToFind);
