@@ -192,24 +192,24 @@ export const createPayPalOrder = async (req, res) => {
         const directProductId = req.body.directProductId;
 
         if (directProductId) {
-            const { data: product, error: prodErr } = await supabase
-                .from('products')
-                .select('id, name, price_basic, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url, status')
-                .eq('id', directProductId)
-                .single();
-
-            let productObj = product;
-            if (!productObj) {
-                // COKE_PARTNER_ID = '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' (agustintitoo, paypal: suarez.azocarn@gmail.com)
-                if (String(directProductId) === '903') {
-                    productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' };
-                } else if (String(directProductId) === '902') {
-                    productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
-                } else if (String(directProductId) === '900') {
-                    productObj = { id: 900, name: 'Easy Master', price_basic: 5, producer_id: null };
-                } else if (String(directProductId) === '899' || String(directProductId) === '901') {
-                    productObj = { id: 899, name: 'Easy Mix', price_basic: 10, producer_id: null };
-                } else {
+            let productObj = null;
+            // Intercept special plugin IDs first
+            if (String(directProductId) === '903') {
+                productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' };
+            } else if (String(directProductId) === '902') {
+                productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
+            } else if (String(directProductId) === '900') {
+                productObj = { id: 900, name: 'Easy Master', price_basic: 5, producer_id: null };
+            } else if (String(directProductId) === '899' || String(directProductId) === '901') {
+                productObj = { id: 899, name: 'Easy Mix', price_basic: 10, producer_id: null };
+            } else {
+                const { data: product, error: prodErr } = await supabase
+                    .from('products')
+                    .select('id, name, price_basic, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url, status')
+                    .eq('id', directProductId)
+                    .single();
+                productObj = product;
+                if (!productObj) {
                     return res.status(404).json({ error: 'Producto no encontrado' });
                 }
             }
@@ -692,24 +692,23 @@ export const capturePayPalOrder = async (req, res) => {
             const directProductId = req.body.directProductId;
 
             if (directProductId) {
-                const { data: product, error: prodErr } = await supabase
-                    .from('products')
-                    .select('id, name, price_basic, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url, status')
-                    .eq('id', directProductId)
-                    .single();
-
-                let productObj = product;
-                if (!productObj) {
-                    // COKE_PARTNER_ID = '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' (agustintitoo, paypal: suarez.azocarn@gmail.com)
-                    if (String(directProductId) === '903') {
-                        productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' };
-                    } else if (String(directProductId) === '902') {
-                        productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
-                    } else if (String(directProductId) === '900') {
-                        productObj = { id: 900, name: 'Easy Master', price_basic: 5, producer_id: null };
-                    } else if (String(directProductId) === '899' || String(directProductId) === '901') {
-                        productObj = { id: 899, name: 'Easy Mix', price_basic: 10, producer_id: null };
-                    }
+                let productObj = null;
+                // Intercept special plugin IDs first
+                if (String(directProductId) === '903') {
+                    productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' };
+                } else if (String(directProductId) === '902') {
+                    productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
+                } else if (String(directProductId) === '900') {
+                    productObj = { id: 900, name: 'Easy Master', price_basic: 5, producer_id: null };
+                } else if (String(directProductId) === '899' || String(directProductId) === '901') {
+                    productObj = { id: 899, name: 'Easy Mix', price_basic: 10, producer_id: null };
+                } else {
+                    const { data: product, error: prodErr } = await supabase
+                        .from('products')
+                        .select('id, name, price_basic, producer_id, image_url, mp3_url, wav_url, stems_url, kit_url, status')
+                        .eq('id', directProductId)
+                        .single();
+                    productObj = product;
                 }
 
                 if (!productObj) {
@@ -1026,10 +1025,11 @@ export const capturePayPalOrder = async (req, res) => {
 
             for (const item of cartItems) {
                 const prodName = item.product?.name || '';
-                const isCoke = prodName.toLowerCase().includes('coca') || prodName.toLowerCase().includes('coke');
-                const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix');
-                const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster');
-                const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola');
+                const prodId = String(item.product?.id || '');
+                const isCoke = prodName.toLowerCase().includes('coca') || prodName.toLowerCase().includes('coke') || prodId === '903';
+                const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix') || prodId === '899' || prodId === '901';
+                const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster') || prodId === '900';
+                const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola') || prodId === '902';
                 
                 if (isCoke || isEasyMix || isEasyMaster || isInkaKola) {
                     try {
@@ -1182,10 +1182,11 @@ export const capturePayPalOrder = async (req, res) => {
 
                     for (const item of cartItems) {
                         const prodName = item.product?.name || '';
-                        const isCoke = prodName.toLowerCase().includes('coca') || prodName.toLowerCase().includes('coke');
-                        const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix');
-                        const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster');
-                        const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola');
+                        const prodId = String(item.product?.id || '');
+                        const isCoke = prodName.toLowerCase().includes('coca') || prodName.toLowerCase().includes('coke') || prodId === '903';
+                        const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix') || prodId === '899' || prodId === '901';
+                        const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster') || prodId === '900';
+                        const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola') || prodId === '902';
                         const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola;
 
                         // A. Notify Client (Receipt) — includes serial key for plugin purchases

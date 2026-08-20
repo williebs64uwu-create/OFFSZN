@@ -1,69 +1,62 @@
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+const SUPABASE_URL = 'https://qtjpvztpgfymjhhpoouq.supabase.co';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDc4MDkxNSwiZXhwIjoyMDc2MzU2OTE1fQ.H7W46uPe7yJkQIMJSzpEJmetFwWdnYFYjF8Hug0GJ9Q';
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-async function inspectEasyMixTrials() {
-    console.log("🔍 Consultando licencias de la base de datos...");
+async function checkTrials() {
+  const { data, error } = await supabase
+    .from('plugin_licenses')
+    .select('id, serial_key, plugin_name, license_type, expires_at, created_at, status')
+    .ilike('plugin_name', '%mix%')
+    .eq('license_type', 'trial')
+    .order('created_at', { ascending: false });
 
-    // 1. Fetch all Easy Mix licenses (to verify what plugin_names and types exist)
-    const { data: allEasyMix, error: err1 } = await supabase
-        .from('plugin_licenses')
-        .select('*, plugin_activations(*)')
-        .ilike('plugin_name', '%Easy Mix%');
+  if (error) {
+    console.error('Error fetching trials:', error);
+    return;
+  }
 
-    if (err1) {
-        console.error("❌ Error querying licenses:", err1);
-        return;
+  console.log('Total Easy Mix trials found:', data.length);
+  
+  const now = new Date();
+  console.log('Current time:', now.toISOString());
+
+  // Today is 2026-08-20.
+  // Yesterday was 2026-08-19.
+  // "menos los creados hoy y ayer" means created BEFORE 2026-08-19 00:00:00 (i.e. <= 2026-08-18 23:59:59).
+  
+  const yesterdayStart = new Date('2026-08-19T00:00:00.000Z'); // or local midnight
+  console.log('Threshold date (before yesterday start):', yesterdayStart.toISOString());
+
+  const eligible = data.filter(lic => {
+    const createdAt = new Date(lic.created_at);
+    return createdAt < yesterdayStart;
+  });
+
+  const excluded = data.filter(lic => {
+    const createdAt = new Date(lic.created_at);
+    return createdAt >= yesterdayStart;
+  });
+
+  console.log(`Eligible to extend (+2 days): ${eligible.length}`);
+  console.log(`Excluded (created today or yesterday): ${excluded.length}`);
+
+  console.log('\n--- Sample of Excluded (Today / Yesterday) ---');
+  excluded.slice(0, 5).forEach(lic => {
+    console.log(`${lic.serial_key} | created: ${lic.created_at} | expires: ${lic.expires_at}`);
+  });
+
+  console.log('\n--- Sample of Eligible (to extend +2 days) ---');
+  eligible.slice(0, 10).forEach(lic => {
+    const currentExp = lic.expires_at ? new Date(lic.expires_at) : null;
+    let newExp = null;
+    if (currentExp) {
+      newExp = new Date(currentExp.getTime() + 2 * 24 * 60 * 60 * 1000);
     }
-
-    console.log(`📌 Total licencias encontradas para 'Easy Mix' (de todo tipo): ${allEasyMix.length}`);
-
-    // Filter strictly for trial licenses
-    const trialLicenses = allEasyMix.filter(l => l.license_type === 'trial');
-    const fullLicenses = allEasyMix.filter(l => l.license_type !== 'trial');
-
-    console.log(`   - Licencias FULL/Lifetime/Sub (NO se tocarán): ${fullLicenses.length}`);
-    console.log(`   - Licencias TRIAL totales: ${trialLicenses.length}`);
-
-    // Cutoff date: August 6th, 2026 00:00:00 UTC (or local time)
-    const cutoffDate = new Date('2026-08-06T00:00:00.000Z');
-
-    // Matching: Created BEFORE Aug 6, 2026
-    const matchingTrials = trialLicenses.filter(l => new Date(l.created_at) < cutoffDate);
-    // Excluded: Created ON OR AFTER Aug 6, 2026
-    const excludedTrials = trialLicenses.filter(l => new Date(l.created_at) >= cutoffDate);
-
-    console.log(`\n🎯 TRIALs creadas ANTES del 6 de agosto (SERÁN ACTUALIZADAS A 5 DÍAS Y SE BORRARÁ HWID): ${matchingTrials.length}`);
-    console.log(`🚫 TRIALs creadas del 6 de agosto EN ADELANTE (EXCLUIDAS, NO SE TOCAN): ${excludedTrials.length}`);
-
-    let activationsCount = 0;
-    matchingTrials.forEach(l => {
-        if (l.plugin_activations && l.plugin_activations.length > 0) {
-            activationsCount += l.plugin_activations.length;
-        }
-    });
-
-    console.log(`\n📱 Total de activaciones/HWID asociadas a las ${matchingTrials.length} licencias a actualizar: ${activationsCount}`);
-
-    console.log("\n--- PRIMERAS 10 LICENCIAS A ACTUALIZAR (MUESTRA) ---");
-    matchingTrials.slice(0, 10).forEach((l, idx) => {
-        const actInfo = l.plugin_activations?.map(a => a.hwid).join(', ') || 'Sin HWID';
-        console.log(`[${idx + 1}] Key: ${l.serial_key} | Plugin: ${l.plugin_name} | Creada: ${l.created_at} | Expira: ${l.expires_at} | HWID: ${actInfo}`);
-    });
-
-    if (excludedTrials.length > 0) {
-        console.log("\n--- LICENCIAS EXCLUIDAS (CREADAS DEL 6 DE AGOSTO EN ADELANTE) ---");
-        excludedTrials.forEach((l, idx) => {
-            console.log(`[${idx + 1}] Key: ${l.serial_key} | Creada: ${l.created_at}`);
-        });
-    }
+    console.log(`${lic.serial_key} | created: ${lic.created_at} | current expires: ${lic.expires_at} -> new expires: ${newExp ? newExp.toISOString() : 'N/A'}`);
+  });
 }
 
-inspectEasyMixTrials();
+checkTrials();
