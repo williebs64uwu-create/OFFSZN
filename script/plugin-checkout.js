@@ -87,9 +87,9 @@ class PluginDirectCheckout {
 
         const script = document.createElement('script');
         script.id = 'paypal-sdk-plugin-direct';
-        // Support multi-payee / multi-merchant partner split transactions (80/20)
-        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=*`;
-        script.setAttribute('data-merchant-id', '*');
+        // Use merchant-id to match your PayPal account MXV5F6X8JXG4S
+        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=MXV5F6X8JXG4S`;
+        script.setAttribute('data-merchant-id', 'MXV5F6X8JXG4S');
 
         script.onload = () => this.renderPayPalButtons();
         document.head.appendChild(script);
