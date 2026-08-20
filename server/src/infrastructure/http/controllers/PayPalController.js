@@ -363,6 +363,29 @@ export const createPayPalOrder = async (req, res) => {
 
         cartItems.forEach(item => {
             const prodIdToFind = String(item.product?.id);
+
+            // PLUGIN OVERRIDE: IDs 899/900/901/902/903 are special plugins, NOT beats.
+            // Their price comes from item.variant_price (set by the dynamic pricing script),
+            // never from the DB product which may be a completely different product.
+            const PLUGIN_IDS = ['899', '900', '901', '902', '903'];
+            if (PLUGIN_IDS.includes(prodIdToFind)) {
+                const pluginPrice = parseFloat(item.variant_price) || 15;
+                // Clamp to valid plugin prices
+                const validPluginPrice = (pluginPrice === 10 || pluginPrice === 15 || pluginPrice === 5) ? pluginPrice : 15;
+                
+                let pluginCommission = 0;
+                const isCoke = prodIdToFind === '903';
+                if (isCoke) {
+                    pluginCommission = validPluginPrice >= 15 ? 5.00 : 3.00;
+                }
+
+                subtotal += validPluginPrice;
+                serviceFee += pluginCommission;
+                verifiedCartItems.push({ ...item, variant_price: validPluginPrice });
+                console.log(`[PayPalOrder] Plugin ${prodIdToFind}: price=$${validPluginPrice} | commission=$${pluginCommission.toFixed(2)}`);
+                return; // Skip the regular DB price verification
+            }
+
             const dbProd = dbProducts.find(p => String(p.id) === prodIdToFind);
 
             if (!dbProd) {
