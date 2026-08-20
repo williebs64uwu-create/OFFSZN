@@ -19,7 +19,7 @@ class PluginDirectCheckout {
             this.downloads = {
                 name: 'Coca-Cola',
                 win: '/downloads/OFFSZN_COCA_COLA_Setup.exe',
-                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+                mac: 'https://drive.google.com/file/d/1741Z3uG8amQ5boK1il5Ffj136sW2WHPY/view?usp=sharing'
             };
         } else if (isInka) {
             this.downloads = {

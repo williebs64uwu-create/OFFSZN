@@ -1201,7 +1201,7 @@ export const capturePayPalOrder = async (req, res) => {
                         const downloadLinks = isPlugin ? (
                             isCoke ? {
                                 win: 'https://drive.google.com/file/d/1cFKYYabnqLkVLeJDQYtWLixh93KzPwbN/view?usp=sharing',
-                                mac: 'https://drive.google.com/file/d/1y3oiTglmfpAQpxOjUb0aeXwenfjWz0J2/view?usp=sharing'
+                                mac: 'https://drive.google.com/file/d/1741Z3uG8amQ5boK1il5Ffj136sW2WHPY/view?usp=sharing'
                             } : (isInkaKola ? {
                                 win: '/installer_output/INKA_KOLA_Setup.exe',
                                 mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
