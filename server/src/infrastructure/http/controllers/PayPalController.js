@@ -200,8 +200,9 @@ export const createPayPalOrder = async (req, res) => {
 
             let productObj = product;
             if (!productObj) {
+                // COKE_PARTNER_ID = '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' (agustintitoo, paypal: suarez.azocarn@gmail.com)
                 if (String(directProductId) === '903') {
-                    productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: null };
+                    productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' };
                 } else if (String(directProductId) === '902') {
                     productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
                 } else if (String(directProductId) === '900') {
@@ -406,6 +407,12 @@ export const createPayPalOrder = async (req, res) => {
                 const rawRole = (producerObj?.role || '').toLowerCase();
                 const rawNick = (producerObj?.nickname || '').toLowerCase();
 
+                // COCA-COLA: Fixed 20% to OFFSZN, 80% to partner regardless of plan
+                const isCoke = String(dbProd.id) === '903' || (dbProd.name || '').toLowerCase().includes('coca');
+                if (isCoke) {
+                    commission = verifiedPrice * 0.20;
+                    console.log(`[PayPalOrder] Coca-Cola 80/20: price=$${verifiedPrice} | OFFSZN commission=$${commission.toFixed(2)} (20%) | partner=$${(verifiedPrice * 0.80).toFixed(2)} (80%)`);
+                } else {
                 // PRO Lifetime / PRO accounts / Admin / Willieinspired have 0 commission / 0 service fee
                 const isProAccount = rawPlan.includes('pro') || 
                                      rawPlan.includes('lifetime') || 
@@ -428,7 +435,7 @@ export const createPayPalOrder = async (req, res) => {
                         commission = verifiedPrice * 0.05;
                     }
                 }
-            }
+                }
 
             subtotal += verifiedPrice;
             serviceFee += commission;
@@ -548,31 +555,26 @@ export const createPayPalOrder = async (req, res) => {
         const MAIN_MERCHANT_EMAIL = 'willie2008garay@gmail.com';
 
         verifiedCartItems.forEach(item => {
-            const prodName = (item.product?.name || '').toLowerCase();
-            const isCokePlugin = String(item.product?.id) === '903' || prodName.includes('coca') || prodName.includes('coke');
-
-            if (isCokePlugin) {
-                // All Coca-Cola revenue collected to OFFSZN (MXV5F6X8JXG4S).
-                // 80% owed to suarez.azocarn@gmail.com is transferred manually.
-                const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
-                const platformGroup = payeeGroups.get(MAIN_MERCHANT_ID) || { amount: 0, type: 'id', nickname: 'OFFSZN' };
-                platformGroup.amount += itemNet;
-                payeeGroups.set(MAIN_MERCHANT_ID, platformGroup);
-                console.log(`[PayPalOrder] Coca-Cola: $${itemNet.toFixed(2)} → OFFSZN (MXV5F6X8JXG4S). Partner owed: $${(itemNet * 0.80).toFixed(2)}`);
-                return;
-            }
-
             const producer = producerMap.get(item.product.producer_id);
             if (!producer?.email) return;
 
             const isMainAccount = producer.email.toLowerCase().trim() === MAIN_MERCHANT_EMAIL.toLowerCase();
-            const payeeId = isMainAccount ? MAIN_MERCHANT_ID : producer.email.toLowerCase().trim();
-            const payeeType = isMainAccount ? 'id' : 'email';
-            const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
 
-            const current = payeeGroups.get(payeeId) || { amount: 0, type: payeeType, nickname: producer.nickname };
-            current.amount += itemNet;
-            payeeGroups.set(payeeId, current);
+            if (isMainAccount) {
+                // Producer IS OFFSZN — full amount to platform merchant ID
+                const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
+                const current = payeeGroups.get(MAIN_MERCHANT_ID) || { amount: 0, type: 'id', nickname: 'OFFSZN' };
+                current.amount += itemNet;
+                payeeGroups.set(MAIN_MERCHANT_ID, current);
+            } else {
+                // External producer — split: producer gets their amount, platform fee added separately
+                const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
+                const payeeId = producer.email.toLowerCase().trim();
+                const current = payeeGroups.get(payeeId) || { amount: 0, type: 'email', nickname: producer.nickname };
+                current.amount += itemNet;
+                payeeGroups.set(payeeId, current);
+                console.log(`[PayPalOrder] Split: $${itemNet.toFixed(2)} → ${payeeId} (producer) | fee tracked separately`);
+            }
         });
 
         // 2. Add Platform Fee — always use merchant_id to match SDK
@@ -668,8 +670,9 @@ export const capturePayPalOrder = async (req, res) => {
 
                 let productObj = product;
                 if (!productObj) {
+                    // COKE_PARTNER_ID = '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' (agustintitoo, paypal: suarez.azocarn@gmail.com)
                     if (String(directProductId) === '903') {
-                        productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: null };
+                        productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' };
                     } else if (String(directProductId) === '902') {
                         productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
                     } else if (String(directProductId) === '900') {
