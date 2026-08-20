@@ -1438,27 +1438,28 @@
         }
     </script>
 
-    <!-- Direct Checkout Configuration and Loader with Dynamic Pricing ($15 standard / $10 promo) -->
+    <!-- Direct Checkout Configuration and Loader with A/B Testing ($15 vs $10) -->
     <script>
+        // ── A/B TESTING ENGINE (50/50 SPLIT: $10.00 USD vs $15.00 USD) ──
         (function initDynamicPricing() {
-            const STORAGE_KEY = 'offszn_coke_price';
+            const STORAGE_KEY = 'offszn_ab_coke_price';
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
 
-            let assignedPrice = 15;
-            if (forcedPrice) {
-                const p = parseInt(forcedPrice, 10);
-                if (p === 10 || p === 15) {
-                    assignedPrice = p;
-                    try { localStorage.setItem(STORAGE_KEY, String(p)); } catch(e) {}
-                }
+            let assignedPrice;
+            if (forcedPrice === '10' || forcedPrice === '15') {
+                assignedPrice = parseInt(forcedPrice, 10);
+                try { localStorage.setItem(STORAGE_KEY, assignedPrice); } catch(e) {}
             } else {
-                try {
-                    const saved = localStorage.getItem(STORAGE_KEY);
-                    if (saved === '10' || saved === '15') {
-                        assignedPrice = parseInt(saved, 10);
-                    }
-                } catch(e) {}
+                let saved = null;
+                try { saved = localStorage.getItem(STORAGE_KEY); } catch(e) {}
+                if (saved === '10' || saved === '15') {
+                    assignedPrice = parseInt(saved, 10);
+                } else {
+                    // 50/50 A/B split: randomly assigns $10 or $15 for new users
+                    assignedPrice = Math.random() < 0.5 ? 10 : 15;
+                    try { localStorage.setItem(STORAGE_KEY, assignedPrice); } catch(e) {}
+                }
             }
 
             window.CURRENT_PROMO_PRICE = assignedPrice;
@@ -1466,26 +1467,43 @@
             window.PLUGIN_NAME = 'Coca-Cola';
 
             document.addEventListener('DOMContentLoaded', () => {
+                // Update displayed price
                 const priceEl = document.getElementById('coca-cola-price-val');
                 if (priceEl) priceEl.innerText = '$' + assignedPrice;
 
+                // Update strike-through comparison price
                 const strikeEl = document.querySelector('#pricing-wall span[style*="line-through"]');
                 if (strikeEl) strikeEl.innerText = assignedPrice === 10 ? '$25' : '$30';
 
-                // Update all WhatsApp and alternate payment links dynamically
-                const waLinks = document.querySelectorAll('a[href*="wa.me"]');
-                waLinks.forEach(link => {
-                    let currentHref = link.getAttribute('href');
-                    if (currentHref && currentHref.includes('text=')) {
-                        let parts = currentHref.split('text=');
-                        let baseText = decodeURIComponent(parts[1]).replace(/por\s+\$?\d+(\s*USD)?/gi, '').trim();
-                        link.setAttribute('href', parts[0] + 'text=' + encodeURIComponent(baseText + ' por $' + assignedPrice + ' USD'));
-                    }
-                });
+                // Update specific contact and payment links cleanly
+                const mpBtn = document.querySelector('a[href*="Mercado%20Pago"], a[href*="Mercado+Pago"]');
+                if (mpBtn) {
+                    mpBtn.setAttribute('href', `https://wa.me/51993525005?text=${encodeURIComponent('Hola, quiero comprar el plugin Coca-Cola por Mercado Pago ($' + assignedPrice + ' USD)')}`);
+                }
+
+                const yapeBtn = document.querySelector('a[href*="Yape"], a[href*="yape"]');
+                if (yapeBtn && !yapeBtn.getAttribute('href').includes('instal')) {
+                    yapeBtn.setAttribute('href', `https://wa.me/51993525005?text=${encodeURIComponent('Hola, quiero comprar el plugin Coca-Cola por Yape ($' + assignedPrice + ' USD)')}`);
+                }
+
+                const binanceBtn = document.querySelector('a[href*="Binance"], a[href*="binance"]');
+                if (binanceBtn) {
+                    binanceBtn.setAttribute('href', `https://wa.me/51993525005?text=${encodeURIComponent('Hola, quiero pagar con Binance el plugin Coca-Cola ($' + assignedPrice + ' USD)')}`);
+                }
+
+                const floatingWa = document.querySelector('.whatsapp-floating-btn');
+                if (floatingWa) {
+                    floatingWa.setAttribute('href', `https://wa.me/51993525005?text=${encodeURIComponent('Hola, quiero el plugin Coca-Cola por $' + assignedPrice + ' USD')}`);
+                }
+
+                const otrosBtn = document.querySelector('#pricing-wall a.btn-auth');
+                if (otrosBtn) {
+                    otrosBtn.setAttribute('href', `https://wa.me/51993525005?text=${encodeURIComponent('Hola, quiero el plugin Coca-Cola por $' + assignedPrice + ' USD')}`);
+                }
             });
         })();
     </script>
-    <script src="/script/plugin-checkout.js?v=29"></script>
+    <script src="/script/plugin-checkout.js?v=30"></script>
 </body>
 
 </html>
