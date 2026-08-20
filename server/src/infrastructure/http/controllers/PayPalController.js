@@ -1244,27 +1244,88 @@ export const capturePayPalOrder = async (req, res) => {
                             fromName: 'OFFSZN'
                         });
 
-                        // B. Notify Producer / Admin (Sale Notification)
-                        const { data: prodData } = await supabase.from('users').select('email, nickname').eq('id', item.product.producer_id).single();
-                        const adminNotifyEmail = prodData?.email || 'willie2008garay@gmail.com';
+                        // B. Calculate Actual Display Prices & Splits for Notifications
+                        let displayTotal = parseFloat(item.variant_price) || 15;
+                        let partnerAmount = displayTotal;
+                        let offsznCommission = 0;
 
-                        const adminHtml = `
-                            <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px;">
-                                <h2 style="color: #8B5CF6; margin-bottom:20px;">¡Nueva Venta! 💰 ${isPlugin ? '🎛️ Plugin' : ''}</h2>
-                                <p style="color:#ccc; line-height:1.6;">El usuario <b>${userNickname}</b> (<b>${userEmail}</b>) acaba de comprar <b style="color:#fff;">${item.product.name}</b>.</p>
-                                <div style="background:#111; border:1px solid #333; border-radius:10px; padding:20px; margin:20px 0;">
-                                    <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Monto:</b> $${item.variant_price} USD</p>
-                                    ${(isPlugin && generatedLicenseKey) ? `<p style="color:#888; margin:0;"><b style="color:#ff9f0a;">Serial Key generada:</b> <span style="font-family:monospace; color:#fff;">${generatedLicenseKey}</span></p>` : ''}
+                        if (isCoke) {
+                            // If variant_price was saved as the partner share ($10 or $7), compute total
+                            if (displayTotal === 10 || displayTotal === 12) {
+                                displayTotal = 15;
+                                offsznCommission = 5;
+                                partnerAmount = 10;
+                            } else if (displayTotal === 7 || displayTotal === 8) {
+                                displayTotal = 10;
+                                offsznCommission = 3;
+                                partnerAmount = 7;
+                            } else if (displayTotal === 15) {
+                                offsznCommission = 5;
+                                partnerAmount = 10;
+                            } else {
+                                offsznCommission = 3;
+                                partnerAmount = 7;
+                            }
+                        }
+
+                        // C. Notify Producer / Partner
+                        const { data: prodData } = await supabase.from('users').select('email, nickname').eq('id', item.product.producer_id).single();
+                        const producerEmail = prodData?.email;
+
+                        if (producerEmail) {
+                            const producerHtml = `
+                                <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px; border: 1px solid rgba(255,255,255,0.08);">
+                                    <h2 style="color: #10B981; margin-bottom:16px;">¡Nueva Venta! 💰 ${isPlugin ? '🎛️ Plugin' : '🎵 Beat'}</h2>
+                                    <p style="color:#ccc; line-height:1.6;">Hola <b>${prodData.nickname || 'Productor'}</b>, se acaba de vender una copia de <b style="color:#fff;">${item.product.name}</b>.</p>
+                                    <div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:20px; margin:20px 0;">
+                                        <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Tu Ganancia:</b> <span style="color:#10B981; font-size:1.15rem; font-weight:700;">$${partnerAmount.toFixed(2)} USD</span></p>
+                                        ${isCoke ? `<p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Total Venta:</b> $${displayTotal.toFixed(2)} USD</p>` : ''}
+                                        <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Comprador:</b> ${userNickname} (${userEmail})</p>
+                                        ${(isPlugin && generatedLicenseKey) ? `<p style="color:#888; margin:0;"><b style="color:#ff9f0a;">Serial Key Entregada:</b> <span style="font-family:monospace; color:#fff;">${generatedLicenseKey}</span></p>` : ''}
+                                    </div>
+                                    <a href="https://offszn.lat/transacciones" style="display:inline-block; background:#10B981; color:#000; padding:12px 26px; border-radius:8px; text-decoration:none; font-weight:700;">VER MI BALANCE</a>
                                 </div>
-                                <a href="https://offszn.lat/transacciones" style="display:inline-block; background:#8B5CF6; color:#fff; padding:14px 30px; border-radius:10px; text-decoration:none; font-weight:700; margin-top:10px;">VER TRANSACCIONES</a>
-                            </div>
-                        `;
-                        await sendOffsznEmail({
-                            to: adminNotifyEmail,
-                            subject: `💸 Venta: ${item.product.name} — $${item.variant_price} USD`,
-                            html: adminHtml,
-                            fromName: 'OFFSZN Notificaciones'
-                        });
+                            `;
+                            await sendOffsznEmail({
+                                to: producerEmail,
+                                subject: `💸 ¡Nueva Venta! ${item.product.name} — Ganancia: $${partnerAmount.toFixed(2)} USD`,
+                                html: producerHtml,
+                                fromName: 'OFFSZN Ventas'
+                            });
+                        }
+
+                        // D. Notify Platform Owner (Willie / OFFSZN Admin)
+                        const WILLIE_ADMIN_EMAIL = 'willie2008garay@gmail.com';
+                        const isWillieProducer = producerEmail && producerEmail.toLowerCase() === WILLIE_ADMIN_EMAIL.toLowerCase();
+
+                        // If Willie is NOT the direct producer, send him a copy with full commission breakdown
+                        if (!isWillieProducer) {
+                            const adminHtml = `
+                                <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px; border: 1px solid rgba(255,255,255,0.08);">
+                                    <h2 style="color: #8B5CF6; margin-bottom:16px;">¡Registro de Venta en OFFSZN! ⚡</h2>
+                                    <p style="color:#ccc; line-height:1.6;">El usuario <b>${userNickname}</b> (<b>${userEmail}</b>) compró <b style="color:#fff;">${item.product.name}</b>.</p>
+                                    <div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:20px; margin:20px 0;">
+                                        <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Total Cobrado:</b> <span style="color:#fff; font-weight:700;">$${displayTotal.toFixed(2)} USD</span></p>
+                                        ${isCoke ? `
+                                            <p style="color:#888; margin:0 0 8px;"><b style="color:#8B5CF6;">Comisión OFFSZN (20%):</b> <span style="color:#8B5CF6; font-weight:700;">$${offsznCommission.toFixed(2)} USD</span></p>
+                                            <p style="color:#888; margin:0 0 8px;"><b style="color:#10B981;">Pago Partner (80%):</b> <span style="color:#10B981; font-weight:700;">$${partnerAmount.toFixed(2)} USD</span> (${producerEmail || 'suarez.azocarn@gmail.com'})</p>
+                                        ` : `
+                                            <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Productor:</b> ${prodData?.nickname || 'Externo'} (${producerEmail || 'N/A'})</p>
+                                        `}
+                                        ${(isPlugin && generatedLicenseKey) ? `<p style="color:#888; margin:0;"><b style="color:#ff9f0a;">Serial Key:</b> <span style="font-family:monospace; color:#fff;">${generatedLicenseKey}</span></p>` : ''}
+                                    </div>
+                                    <a href="https://offszn.lat/admin" style="display:inline-block; background:#8B5CF6; color:#fff; padding:12px 26px; border-radius:8px; text-decoration:none; font-weight:700;">PANEL DE CONTROL</a>
+                                </div>
+                            `;
+                            await sendOffsznEmail({
+                                to: WILLIE_ADMIN_EMAIL,
+                                subject: isCoke 
+                                    ? `💰 Venta Coca-Cola: $${displayTotal.toFixed(2)} USD (OFFSZN: +$${offsznCommission.toFixed(2)})`
+                                    : `💸 Venta Tienda: ${item.product.name} — $${displayTotal.toFixed(2)} USD`,
+                                html: adminHtml,
+                                fromName: 'OFFSZN Admin'
+                            });
+                        }
                     }
                 } catch (emailErr) {
                     console.error("[EmailJS] Async flow error:", emailErr);
