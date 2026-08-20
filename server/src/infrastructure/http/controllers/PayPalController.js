@@ -552,21 +552,13 @@ export const createPayPalOrder = async (req, res) => {
             const isCokePlugin = String(item.product?.id) === '903' || prodName.includes('coca') || prodName.includes('coke');
 
             if (isCokePlugin) {
-                // Partner Revenue Share: 80% to suarez.azocarn@gmail.com, 20% to OFFSZN (MXV5F6X8JXG4S)
+                // All Coca-Cola revenue collected to OFFSZN (MXV5F6X8JXG4S).
+                // 80% owed to suarez.azocarn@gmail.com is transferred manually.
                 const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
-                const partnerAmount = itemNet * 0.80;
-                const platformAmount = itemNet * 0.20;
-
-                const PARTNER_MERCHANT_ID = 'KRQSQVQF2357U';
-                const partnerGroup = payeeGroups.get(PARTNER_MERCHANT_ID) || { amount: 0, type: 'id', nickname: 'Suarez Azocar' };
-                partnerGroup.amount += partnerAmount;
-                payeeGroups.set(PARTNER_MERCHANT_ID, partnerGroup);
-
                 const platformGroup = payeeGroups.get(MAIN_MERCHANT_ID) || { amount: 0, type: 'id', nickname: 'OFFSZN' };
-                platformGroup.amount += platformAmount;
+                platformGroup.amount += itemNet;
                 payeeGroups.set(MAIN_MERCHANT_ID, platformGroup);
-
-                console.log(`[PayPalOrder] Coca-Cola 80/20 Split: Total $${itemNet.toFixed(2)} → Partner (KRQSQVQF2357U): $${partnerAmount.toFixed(2)} | OFFSZN (MXV5F6X8JXG4S): $${platformAmount.toFixed(2)}`);
+                console.log(`[PayPalOrder] Coca-Cola: $${itemNet.toFixed(2)} → OFFSZN (MXV5F6X8JXG4S). Partner owed: $${(itemNet * 0.80).toFixed(2)}`);
                 return;
             }
 
