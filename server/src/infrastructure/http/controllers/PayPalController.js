@@ -557,16 +557,16 @@ export const createPayPalOrder = async (req, res) => {
                 const partnerAmount = itemNet * 0.80;
                 const platformAmount = itemNet * 0.20;
 
-                const PARTNER_EMAIL = 'suarez.azocarn@gmail.com';
-                const partnerGroup = payeeGroups.get(PARTNER_EMAIL) || { amount: 0, type: 'email', nickname: 'Suarez Azocar' };
+                const PARTNER_MERCHANT_ID = 'KRQSQVQF2357U';
+                const partnerGroup = payeeGroups.get(PARTNER_MERCHANT_ID) || { amount: 0, type: 'id', nickname: 'Suarez Azocar' };
                 partnerGroup.amount += partnerAmount;
-                payeeGroups.set(PARTNER_EMAIL, partnerGroup);
+                payeeGroups.set(PARTNER_MERCHANT_ID, partnerGroup);
 
                 const platformGroup = payeeGroups.get(MAIN_MERCHANT_ID) || { amount: 0, type: 'id', nickname: 'OFFSZN' };
                 platformGroup.amount += platformAmount;
                 payeeGroups.set(MAIN_MERCHANT_ID, platformGroup);
 
-                console.log(`[PayPalOrder] Coca-Cola 80/20 Split: Total $${itemNet.toFixed(2)} → Partner: $${partnerAmount.toFixed(2)} | OFFSZN: $${platformAmount.toFixed(2)}`);
+                console.log(`[PayPalOrder] Coca-Cola 80/20 Split: Total $${itemNet.toFixed(2)} → Partner (KRQSQVQF2357U): $${partnerAmount.toFixed(2)} | OFFSZN (MXV5F6X8JXG4S): $${platformAmount.toFixed(2)}`);
                 return;
             }
 

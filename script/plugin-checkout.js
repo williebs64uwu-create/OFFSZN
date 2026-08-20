@@ -87,9 +87,16 @@ class PluginDirectCheckout {
 
         const script = document.createElement('script');
         script.id = 'paypal-sdk-plugin-direct';
-        // Use merchant-id to match your PayPal account MXV5F6X8JXG4S
-        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=MXV5F6X8JXG4S`;
-        script.setAttribute('data-merchant-id', 'MXV5F6X8JXG4S');
+        const isCoke = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola' || window.PLUGIN_NAME === 'COCA COLA';
+
+        if (isCoke) {
+            // Multi-Payee Partner Split: Partner 80% (KRQSQVQF2357U) + OFFSZN 20% (MXV5F6X8JXG4S)
+            script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=*`;
+            script.setAttribute('data-merchant-id', 'KRQSQVQF2357U,MXV5F6X8JXG4S');
+        } else {
+            script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=MXV5F6X8JXG4S`;
+            script.setAttribute('data-merchant-id', 'MXV5F6X8JXG4S');
+        }
 
         script.onload = () => this.renderPayPalButtons();
         document.head.appendChild(script);
