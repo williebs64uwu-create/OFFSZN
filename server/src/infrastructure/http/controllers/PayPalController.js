@@ -407,11 +407,19 @@ export const createPayPalOrder = async (req, res) => {
                 const rawRole = (producerObj?.role || '').toLowerCase();
                 const rawNick = (producerObj?.nickname || '').toLowerCase();
 
-                // COCA-COLA: Fixed 20% to OFFSZN, 80% to partner regardless of plan
+                // COCA-COLA: Fixed split — $15 sale: $5 OFFSZN / $10 partner | $10 sale: $3 OFFSZN / $7 partner
                 const isCoke = String(dbProd.id) === '903' || (dbProd.name || '').toLowerCase().includes('coca');
                 if (isCoke) {
-                    commission = verifiedPrice * 0.20;
-                    console.log(`[PayPalOrder] Coca-Cola 80/20: price=$${verifiedPrice} | OFFSZN=$${commission.toFixed(2)} (20%) | partner=$${(verifiedPrice * 0.80).toFixed(2)} (80%)`);
+                    // Fixed amounts regardless of percentage
+                    if (verifiedPrice >= 15) {
+                        commission = 5.00; // OFFSZN gets $5, partner gets $10
+                    } else if (verifiedPrice >= 10) {
+                        commission = 3.00; // OFFSZN gets $3, partner gets $7
+                    } else {
+                        commission = Math.round(verifiedPrice * 0.33 * 100) / 100; // fallback ~33%
+                    }
+                    const partnerAmount = verifiedPrice - commission;
+                    console.log(`[PayPalOrder] Coca-Cola split: total=$${verifiedPrice} | OFFSZN=$${commission.toFixed(2)} | partner=$${partnerAmount.toFixed(2)}`);
                 } else {
                     // PRO Lifetime / PRO accounts / Admin / Willieinspired have 0 commission / 0 service fee
                     const isProAccount = rawPlan.includes('pro') ||
