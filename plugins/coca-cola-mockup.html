@@ -1,0 +1,1772 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>COCA-COLA by OFFSZN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --coca-red: #c41220;
+            --coca-red-bright: #e61b2b;
+            --coca-red-dark: #6e0811;
+            --bg: #060709;
+            --silkscreen: #ffffff;
+            --silkscreen-dim: rgba(255, 255, 255, 0.6);
+            --text-dim: #738096;
+            --text-white: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: var(--text-white);
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+
+        /* â”€â”€â”€ LOADING OVERLAY â”€â”€â”€ */
+        .loading-overlay {
+            position: absolute; inset: 0;
+            background: #060709;
+            z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.25s ease;
+        }
+        .loading-overlay.fade-out { opacity: 0; pointer-events: none; visibility: hidden; }
+        .loading-logo {
+            font-family: 'Great Vibes', cursive;
+            font-size: 52px;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(255,255,255,0.4);
+        }
+        .loading-sub {
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        /* â”€â”€â”€ CHASSIS WRAPPER (1024 x 506) â”€â”€â”€ */
+        .rack-wrapper {
+            position: relative;
+            width: 1024px;
+            height: 506px;
+            background-image: url('rack_bg.png');
+            background-size: 1024px 506px;
+            background-position: center;
+            background-repeat: no-repeat;
+            overflow: hidden;
+        }
+
+        /* â”€â”€â”€ TRIAL BADGE â”€â”€â”€ */
+        .trial-badge {
+            position: absolute;
+            top: 8px;
+            right: 48px;
+            background: rgba(230, 27, 43, 0.2);
+            border: 1px solid rgba(230, 27, 43, 0.6);
+            border-radius: 12px;
+            padding: 3px 10px;
+            font-size: 8px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            display: none;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            z-index: 50;
+            box-shadow: 0 0 10px rgba(230, 27, 43, 0.4);
+            transition: all 0.2s ease;
+        }
+        .trial-badge.visible { display: flex; }
+        .trial-badge:hover {
+            background: rgba(230, 27, 43, 0.4);
+            border-color: #ff3b4b;
+        }
+
+        /* â”€â”€â”€ SILKSCREEN TYPOGRAPHY â”€â”€â”€ */
+        .silkscreen-title {
+            font-size: 8.5px;
+            font-weight: 800;
+            letter-spacing: 1.6px;
+            color: var(--silkscreen);
+            text-transform: uppercase;
+            text-align: center;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+            line-height: 1.2;
+        }
+
+        .silkscreen-sub {
+            font-size: 7.5px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            text-align: center;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+        }
+
+        .knob-label {
+            font-size: 7.5px;
+            font-weight: 800;
+            letter-spacing: 1.1px;
+            color: var(--silkscreen);
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 3px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+        }
+
+        .knob-val {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 8.5px;
+            font-weight: 700;
+            color: #e2e8f0;
+            text-align: center;
+            margin-top: 3px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.95);
+        }
+
+        /* â”€â”€â”€ HARDWARE SECTIONS (PERMANENT BAKED COORDINATES) â”€â”€â”€ */
+        .bay {
+            position: absolute;
+            top: 32px;
+            height: 440px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        /* â”€â”€â”€ BAY 1: ESPUMA (BOTTLE) â”€â”€â”€ */
+        .bay-1 {
+            left: 76px;
+            width: 134px;
+            justify-content: space-between;
+            padding: 16px 0 16px 0;
+        }
+
+        #title_espuma {
+            transform: translate(1px, 19px);
+        }
+
+        .bottle-chamber {
+            position: relative;
+            width: 86px;
+            height: 295px;
+            cursor: ns-resize;
+            margin-top: 4px;
+        }
+
+        .bottle-layer {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .bottle-empty { opacity: 0.95; z-index: 1; }
+        .bottle-full {
+            z-index: 2;
+            clip-path: inset(100% 0 0 0);
+            pointer-events: none;
+        }
+
+        #foamInfo {
+            transform: translate(1px, -15px);
+        }
+
+        .foam-indicator-val {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0 0 12px rgba(230, 27, 43, 0.8), 0 2px 4px rgba(0,0,0,0.9);
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+        .foam-sub-label {
+            font-size: 7.5px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-align: center;
+            margin-top: 1px;
+        }
+
+        /* â”€â”€â”€ BAY 2: PRE EFECTOS & MOLDEA TU VOZ â”€â”€â”€ */
+        .bay-2 {
+            left: 226px;
+            width: 242px;
+            padding: 14px 14px 14px 14px;
+            justify-content: space-between;
+            transform: translate(3px, 3px);
+        }
+
+        .preamp-top {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: translate(0px, 25px);
+        }
+
+        .coke-script-logo {
+            font-family: 'Great Vibes', cursive;
+            font-size: 32px;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.9);
+            line-height: 1;
+            margin-bottom: 3px;
+            transform: translate(2px, -12px);
+        }
+
+        .preamp-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            width: 100%;
+            padding: 0 14px;
+            margin-top: 8px;
+            transform: translate(0px, 3px);
+        }
+
+        #divider1 {
+            transform: translate(1px, 6px);
+        }
+
+        .eq-bottom {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: translate(-2px, -22px);
+        }
+
+        #title_moldea {
+            transform: translate(2px, -9px);
+        }
+
+        .eq-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-gap: 16px 24px;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        #knob_cutLows {
+            transform: translate(0px, 4px);
+        }
+
+        /* â”€â”€â”€ BAY 3: QUITAR RUIDO, DE-ESSER, BALANCEAR VOZ â”€â”€â”€ */
+        .bay-3 {
+            left: 486px;
+            width: 178px;
+            padding: 16px 10px 14px 10px;
+            justify-content: space-between;
+            transform: translate(0px, -1px);
+        }
+
+        .sub-module {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #mod_ruido {
+            transform: translate(0px, 15px);
+        }
+
+        #knob_noiseThresh {
+            transform: translate(1px, 0px);
+        }
+
+        #mod_desser {
+            transform: translate(0px, 2px);
+        }
+
+        #title_desser {
+            transform: translate(1px, -24px);
+        }
+
+        #row_desser {
+            transform: translate(0px, -4px);
+        }
+
+        #mod_comp {
+            transform: translate(0px, -20px);
+        }
+
+        .module-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 6px;
+        }
+
+        .divider-line {
+            width: 85%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            margin: 4px 0;
+        }
+
+        /* â”€â”€â”€ BAY 4: VOZ AL FRENTE (RVOX FADER) â”€â”€â”€ */
+        .bay-4 {
+            left: 678px;
+            width: 88px;
+            padding: 16px 0 14px 0;
+            justify-content: space-between;
+        }
+
+        #title_vozfrente {
+            transform: translate(5px, 6px);
+        }
+
+        .rvox-container {
+            position: relative;
+            width: 60px;
+            height: 335px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translate(3px, 2px);
+        }
+
+        #label_nivel {
+            transform: translate(5px, -7px);
+        }
+
+        .rvox-scale {
+            position: absolute;
+            left: 4px;
+            height: 295px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 7px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.45);
+            pointer-events: none;
+            text-align: right;
+            width: 14px;
+        }
+
+        .rvox-track {
+            position: absolute;
+            right: 12px;
+            width: 22px;
+            height: 295px;
+            background: #090a0d;
+            border-radius: 11px;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.1);
+            border: 1px solid #1a1c23;
+            cursor: ns-resize;
+            overflow: hidden;
+        }
+
+        .rvox-fill-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, #ff2b3c, #c41220 50%, #4a060c);
+            box-shadow: 0 0 12px rgba(230, 27, 43, 0.7);
+            border-radius: 0 0 11px 11px;
+            pointer-events: none;
+        }
+
+        .rvox-thumb {
+            position: absolute;
+            left: 1px;
+            right: 1px;
+            height: 12px;
+            bottom: calc(50% - 6px);
+            background: linear-gradient(180deg, #f0f3f8, #94a3b8);
+            border-radius: 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 6px rgba(255,255,255,0.5);
+            border: 1px solid #ffffff;
+            pointer-events: none;
+        }
+
+        /* â”€â”€â”€ BAY 5: ESPECTRO & ARMÓNICOS â”€â”€â”€ */
+        .bay-5 {
+            left: 784px;
+            width: 162px;
+            padding: 16px 8px 14px 8px;
+            justify-content: space-between;
+        }
+
+        .bay-5-top {
+            width: 100%;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        #title_espectro {
+            transform: translate(0px, -5px);
+        }
+
+        .span-chamber {
+            position: relative;
+            width: 144px;
+            height: 114px;
+            background: #08090c;
+            border-radius: 4px;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            overflow: hidden;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translate(1px, -4px);
+        }
+
+        #spanCanvas {
+            width: 144px;
+            height: 114px;
+            display: block;
+        }
+
+        .bay-5-bottom {
+            width: 100%;
+            height: 245px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            padding-top: 4px;
+        }
+
+        /* â”€â”€â”€ HARDWARE KNOB COMPONENT WITH ILLUMINATED RING â”€â”€â”€ */
+        .knob-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: ns-resize;
+        }
+
+        .knob-outer {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .knob-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-225deg);
+            pointer-events: none;
+        }
+
+        .knob-track {
+            fill: none;
+            stroke: #1b1d24;
+            stroke-width: 3;
+            stroke-dasharray: 84.8 113.1;
+            stroke-linecap: round;
+        }
+
+        .knob-progress {
+            fill: none;
+            stroke: #e61b2b;
+            stroke-width: 3.2;
+            stroke-dasharray: 0 113.1;
+            stroke-linecap: round;
+            filter: drop-shadow(0 0 3px rgba(230, 27, 43, 0.8));
+            transition: stroke-dasharray 0.02s linear;
+        }
+
+        .knob-disc {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #e61b2b, #8a0c16 65%, #3d050a 100%);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.9), 0 1px 2px rgba(255,255,255,0.2), inset 0 1px 2px rgba(255,255,255,0.4);
+            border: 1px solid #1a0406;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .knob-disc::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            width: 2px;
+            height: 7px;
+            background: #ffffff;
+            border-radius: 1px;
+            box-shadow: 0 0 3px rgba(255,255,255,0.9);
+            transform-origin: center 13px;
+            transform: rotate(0deg);
+        }
+
+        /* â”€â”€â”€ TOGGLE SWITCH (BOOST) â”€â”€â”€ */
+        .switch-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .switch-body {
+            position: relative;
+            width: 16px;
+            height: 28px;
+            background: #090a0d;
+            border-radius: 8px;
+            border: 1px solid #2d3748;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+            margin: 4px 0;
+        }
+
+        .switch-lever {
+            position: absolute;
+            left: 2px;
+            bottom: 2px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #cbd5e1, #64748b);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .switch-unit.active .switch-lever {
+            transform: translateY(-12px);
+            background: radial-gradient(circle at 30% 30%, #ff4d5a, #c41220);
+            box-shadow: 0 0 6px rgba(230, 27, 43, 0.8);
+        }
+
+        .switch-led {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #2d0508;
+            transition: background 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .switch-unit.active .switch-led {
+            background: #ff1f30;
+            box-shadow: 0 0 6px #ff1f30;
+        }
+
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        /* ðŸ”’ OFFSZN LICENSING MODALS & BADGES (SKILL STANDARD) */
+        /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+        
+
+        
+
+    
+        /* ═══ TRIAL BADGE — IDENTICAL TO EASY MASTER & INKA KOLA ═══ */
+        .trial-badge {
+            position: absolute;
+            top: 8px;
+            right: 48px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+            background: rgba(230, 27, 43, 0.15);
+            border: 1px solid rgba(230, 27, 43, 0.4);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            cursor: pointer;
+            z-index: 100;
+        }
+        .trial-badge.visible { display: flex; }
+        .trial-badge:hover { background: rgba(230, 27, 43, 0.28); }
+        .trial-dot {
+            width: 6px; height: 6px;
+            background: #ff453a;
+            border-radius: 50%;
+            animation: trialDotPulse 2s ease-in-out infinite;
+        }
+        @keyframes trialDotPulse {
+            0%, 100% { opacity: 0.4; transform: scale(0.8); }
+            50%       { opacity: 1;   transform: scale(1.2); }
+        }
+
+        /* ═══ ACTIVATION OVERLAY — IDENTICAL TO EASY MIX & EASY MASTER ═══ */
+        .activation-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 2000;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .activation-overlay.active {
+            opacity: 1; pointer-events: auto; display: flex !important;
+        }
+        .act-container {
+            width: 300px;
+            background: rgba(22, 22, 25, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            position: relative;
+            text-align: center;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .act-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 6px;
+            padding: 10px;
+            color: #fff;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 11px;
+            text-align: center;
+            letter-spacing: 1px;
+            outline: none;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        .act-input:focus { border-color: #ff453a; }
+        .act-btn {
+            width: 100%; padding: 10px; border-radius: 6px;
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            cursor: pointer; border: none; margin-bottom: 8px;
+            font-family: 'Outfit', sans-serif; letter-spacing: 0.5px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        .act-btn-primary {
+            background: linear-gradient(180deg, #e61b2b, #940c16);
+            color: #fff;
+        }
+        .act-btn-primary:hover { background: linear-gradient(180deg, #ff2a3b, #b30f1b); }
+        .act-btn-primary.loading { opacity: 0.7; pointer-events: none; }
+        .act-btn-secondary {
+            background: transparent; color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            margin-bottom: 0;
+        }
+        .act-btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+        .act-btn-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #8e8e93;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            line-height: 1;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+        .act-btn-close:hover {
+            color: #ffffff;
+            background: rgba(230, 27, 43, 0.8);
+            border-color: #e61b2b;
+            transform: scale(1.1);
+        }
+
+    
+        /* ─── SIDECHAIN BUTTON ─── */
+        .sidechain-btn {
+            background: #10131a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 3px 8px;
+            font-size: 8px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #8e8e93;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s ease;
+            margin-top: 4px;
+            text-transform: uppercase;
+            font-family: 'Space Grotesk', sans-serif;
+            outline: none;
+        }
+        .sidechain-btn:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            color: #fff;
+        }
+        .sidechain-btn.active {
+            background: rgba(230, 27, 43, 0.22);
+            border-color: rgba(230, 27, 43, 0.7);
+            color: #ffffff;
+            box-shadow: 0 0 8px rgba(230, 27, 43, 0.35);
+        }
+        .sc-led {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #444;
+            transition: all 0.2s ease;
+        }
+        .sidechain-btn.active .sc-led {
+            background: #ff2a3b;
+            box-shadow: 0 0 6px #ff2a3b;
+        }
+    
+    </style>
+</head>
+<body>
+
+    <!-- LOADING OVERLAY -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-logo">Coca-Cola</div>
+        <div class="loading-sub">COCA COLA · BY OFFSZN</div>
+    </div>
+
+    <!-- 19" RACK CHASSIS (1024 x 506) -->
+    <div class="rack-wrapper" id="rackChassis">
+<!-- TRIAL BADGE — IDENTICAL TO EASY MASTER -->
+        <div id="trial-badge" class="trial-badge" onclick="openActivationForUpgrade()" title="Haz clic para ingresar Serial Key Full">
+            <span class="trial-dot"></span>
+            PRUEBA · <span id="trial-days">3 DÍAS</span>
+        </div>
+
+        
+
+        <!-- BAY 1: ESPUMA (WITH SIDECHAIN BUTTON) -->
+        <div class="bay bay-1" id="bay1">
+            <button class="sidechain-btn active" id="btnSidechain" title="Activar/Desactivar Sidechain Reverb Ducking">
+                <span class="sc-led"></span>
+                SIDECHAIN
+            </button>
+            <div class="bottle-chamber" id="bottleChamber" title="Arrastra para ajustar Espuma (Envío Reverb)">
+                <img src="BOTTLE-EMPTY.png" class="bottle-layer bottle-empty" alt="Botella Vacía">
+                <img src="BOTTLE-FULL.png" class="bottle-layer bottle-full" id="bottleFull" alt="Botella Llena">
+            </div>
+            <div id="foamInfo">
+                <div class="foam-indicator-val" id="foamVal">0%</div>
+                <div class="foam-sub-label">ESPUMA</div>
+            </div>
+        </div>
+
+        <!-- BAY 2: PRE EFECTOS & MOLDEA TU VOZ -->
+        <div class="bay bay-2" id="bay2">
+            <!-- TOP: PRE EFECTOS -->
+            <div class="preamp-top" id="preampTop">
+                <div class="coke-script-logo" id="cokeLogo">Coca-Cola</div>
+                <div class="silkscreen-title" id="title_preefectos">PRE EFECTOS</div>
+                <div class="preamp-controls" id="preampControls">
+                    <div class="knob-unit" id="knob_gainIn">
+                        <div class="knob-label">GAIN</div>
+                        <div class="knob-outer">
+                            <svg class="knob-svg" viewBox="0 0 44 44">
+                                <circle class="knob-track" cx="22" cy="22" r="18" />
+                                <circle class="knob-progress" id="ring_gainIn" cx="22" cy="22" r="18" />
+                            </svg>
+                            <div class="knob-disc" id="disc_gainIn"></div>
+                        </div>
+                        <div class="knob-val" id="val_gainIn">0 dB</div>
+                    </div>
+                    <div class="switch-unit" id="switch_cokeBoost">
+                        <div class="knob-label">BOOST</div>
+                        <div class="switch-body">
+                            <div class="switch-lever"></div>
+                        </div>
+                        <div class="switch-led"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider-line" id="divider1"></div>
+
+            <!-- BOTTOM: MOLDEA TU VOZ -->
+            <div class="eq-bottom" id="eqBottom">
+                <div class="silkscreen-title" id="title_moldea" style="margin-bottom: 2px;">MOLDEA TU VOZ</div>
+                <div class="eq-grid" id="eqGrid">
+                    <div class="knob-unit" id="knob_cutLows">
+                        <div class="knob-label">GRAVES</div>
+                        <div class="knob-outer">
+                            <svg class="knob-svg" viewBox="0 0 44 44">
+                                <circle class="knob-track" cx="22" cy="22" r="18" />
+                                <circle class="knob-progress" id="ring_cutLows" cx="22" cy="22" r="18" />
+                            </svg>
+                            <div class="knob-disc" id="disc_cutLows"></div>
+                        </div>
+                        <div class="knob-val" id="val_cutLows">30 Hz</div>
+                    </div>
+                    <div class="knob-unit" id="knob_cutBoxy">
+                        <div class="knob-label">CUERPO</div>
+                        <div class="knob-outer">
+                            <svg class="knob-svg" viewBox="0 0 44 44">
+                                <circle class="knob-track" cx="22" cy="22" r="18" />
+                                <circle class="knob-progress" id="ring_cutBoxy" cx="22" cy="22" r="18" />
+                            </svg>
+                            <div class="knob-disc" id="disc_cutBoxy"></div>
+                        </div>
+                        <div class="knob-val" id="val_cutBoxy">0 dB</div>
+                    </div>
+                    <div class="knob-unit" id="knob_presMid">
+                        <div class="knob-label">MEDIOS</div>
+                        <div class="knob-outer">
+                            <svg class="knob-svg" viewBox="0 0 44 44">
+                                <circle class="knob-track" cx="22" cy="22" r="18" />
+                                <circle class="knob-progress" id="ring_presMid" cx="22" cy="22" r="18" />
+                            </svg>
+                            <div class="knob-disc" id="disc_presMid"></div>
+                        </div>
+                        <div class="knob-val" id="val_presMid">+0 dB</div>
+                    </div>
+                    <div class="knob-unit" id="knob_presHigh">
+                        <div class="knob-label">AGUDOS</div>
+                        <div class="knob-outer">
+                            <svg class="knob-svg" viewBox="0 0 44 44">
+                                <circle class="knob-track" cx="22" cy="22" r="18" />
+                                <circle class="knob-progress" id="ring_presHigh" cx="22" cy="22" r="18" />
+                            </svg>
+                            <div class="knob-disc" id="disc_presHigh"></div>
+                        </div>
+                        <div class="knob-val" id="val_presHigh">+0 dB</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BAY 3: QUITAR RUIDO, DE-ESSER, BALANCEAR VOZ -->
+        <div class="bay bay-3" id="bay3">
+            <!-- QUITAR RUIDO -->
+            <div class="sub-module" id="mod_ruido">
+                <div class="silkscreen-title" id="title_ruido">QUITAR RUIDO</div>
+                <div class="module-row" id="row_ruido">
+                    <div class="knob-unit" id="knob_noiseThresh">
+                        <div class="knob-label">SENSIBILIDAD</div>
+                        <div class="knob-outer">
+                            <svg class="knob-svg" viewBox="0 0 44 44">
+                                <circle class="knob-track" cx="22" cy="22" r="18" />
+                                <circle class="knob-progress" id="ring_noiseThresh" cx="22" cy="22" r="18" />
+                            </svg>
+                            <div class="knob-disc" id="disc_noiseThresh"></div>
+                        </div>
+                        <div class="knob-val" id="val_noiseThresh">20%</div>
+                    </div>
+                    <div class="knob-unit" id="knob_noiseAmount">
+                        <div class="knob-label">REDUCCIÓN</div>
+                        <div class="knob-outer">
+                            <svg class="knob-svg" viewBox="0 0 44 44">
+                                <circle class="knob-track" cx="22" cy="22" r="18" />
+                                <circle class="knob-progress" id="ring_noiseAmount" cx="22" cy="22" r="18" />
+                            </svg>
+                            <div class="knob-disc" id="disc_noiseAmount"></div>
+                        </div>
+                        <div class="knob-val" id="val_noiseAmount">100%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider-line" id="divider2"></div>
+
+            <!-- DE-ESSER -->
+            <div class="sub-module" id="mod_desser">
+                <div class="silkscreen-title" id="title_desser">DE-ESSER</div>
+                <div class="module-row" id="row_desser">
+                    <div class="knob-unit" id="knob_desser">
+                        <div class="knob-label">QUITAR S</div>
+                        <div class="knob-outer">
+                            <svg class="knob-svg" viewBox="0 0 44 44">
+                                <circle class="knob-track" cx="22" cy="22" r="18" />
+                                <circle class="knob-progress" id="ring_desser" cx="22" cy="22" r="18" />
+                            </svg>
+                            <div class="knob-disc" id="disc_desser"></div>
+                        </div>
+                        <div class="knob-val" id="val_desser">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider-line" id="divider3"></div>
+
+            <!-- BALANCEAR VOZ -->
+            <div class="sub-module" id="mod_comp">
+                <div class="silkscreen-title" id="title_comp">BALANCEAR VOZ</div>
+                <div class="module-row" id="row_comp">
+                    <div class="knob-unit" id="knob_compAmount">
+                        <div class="knob-label">CANTIDAD</div>
+                        <div class="knob-outer">
+                            <svg class="knob-svg" viewBox="0 0 44 44">
+                                <circle class="knob-track" cx="22" cy="22" r="18" />
+                                <circle class="knob-progress" id="ring_compAmount" cx="22" cy="22" r="18" />
+                            </svg>
+                            <div class="knob-disc" id="disc_compAmount"></div>
+                        </div>
+                        <div class="knob-val" id="val_compAmount">0%</div>
+                    </div>
+                    <div class="knob-unit" id="knob_compRatio">
+                        <div class="knob-label">RATIO</div>
+                        <div class="knob-outer">
+                            <svg class="knob-svg" viewBox="0 0 44 44">
+                                <circle class="knob-track" cx="22" cy="22" r="18" />
+                                <circle class="knob-progress" id="ring_compRatio" cx="22" cy="22" r="18" />
+                            </svg>
+                            <div class="knob-disc" id="disc_compRatio"></div>
+                        </div>
+                        <div class="knob-val" id="val_compRatio">4:1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BAY 4: VOZ AL FRENTE (RVOX FADER) -->
+        <div class="bay bay-4" id="bay4">
+            <div class="silkscreen-title" id="title_vozfrente">VOZ<br>AL FRENTE</div>
+            <div class="rvox-container" id="rvoxContainer">
+                <div class="rvox-scale">
+                    <span>+6</span>
+                    <span>+3</span>
+                    <span>0</span>
+                    <span>-3</span>
+                    <span>-6</span>
+                    <span>-12</span>
+                    <span>-24</span>
+                    <span>-INF</span>
+                </div>
+                <div class="rvox-track" id="rvoxTrack" title="Arrastra para ajustar Nivel de Voz">
+                    <div class="rvox-fill-bar" id="rvoxFill"></div>
+                    <div class="rvox-thumb" id="rvoxThumb"></div>
+                </div>
+            </div>
+            <div class="silkscreen-sub" id="label_nivel">NIVEL</div>
+        </div>
+
+        <!-- BAY 5: ESPECTRO & ARMÓNICOS -->
+        <div class="bay bay-5" id="bay5">
+            <!-- TOP: ESPECTRO -->
+            <div class="bay-5-top" id="bay5Top">
+                <div class="silkscreen-title" id="title_espectro">ESPECTRO</div>
+                <div class="span-chamber" id="spanChamber">
+                    <canvas id="spanCanvas" width="144" height="114"></canvas>
+                </div>
+            </div>
+
+            <!-- BOTTOM: ARMÓNICOS -->
+            <div class="bay-5-bottom" id="bay5Bottom">
+                <div class="silkscreen-title" id="title_armonicos">ARMÓNICOS</div>
+                <div class="knob-unit" id="knob_satTape">
+                    <div class="knob-label">STEREO</div>
+                    <div class="knob-outer">
+                        <svg class="knob-svg" viewBox="0 0 44 44">
+                            <circle class="knob-track" cx="22" cy="22" r="18" />
+                            <circle class="knob-progress" id="ring_satTape" cx="22" cy="22" r="18" />
+                        </svg>
+                        <div class="knob-disc" id="disc_satTape"></div>
+                    </div>
+                    <div class="knob-val" id="val_satTape">0%</div>
+                </div>
+                <div class="knob-unit" id="knob_airBand">
+                    <div class="knob-label">AIRE</div>
+                    <div class="knob-outer">
+                        <svg class="knob-svg" viewBox="0 0 44 44">
+                            <circle class="knob-track" cx="22" cy="22" r="18" />
+                            <circle class="knob-progress" id="ring_airBand" cx="22" cy="22" r="18" />
+                        </svg>
+                        <div class="knob-disc" id="disc_airBand"></div>
+                    </div>
+                    <div class="knob-val" id="val_airBand">+0.0 dB</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    
+
+    
+    <!-- ═══ ACTIVATION OVERLAY (BLOQUEANTE — SIN BOTÓN CERRAR) — IGUAL A EASY MASTER ═══ -->
+    <div class="activation-overlay" id="activation-overlay">
+        <div class="act-container">
+            <!-- Close button: hidden by default, shown only when upgrading from trial -->
+            <button class="act-btn-close" id="btn-close-activation" onclick="closeActivationModal()" title="Cerrar ventana">✕</button>
+            <div id="activation-content" style="width:100%;">
+                <h3 style="color:#fff; text-align:center; margin-bottom:5px; font-size:14px; font-weight:800; letter-spacing:1px;">Ingresa tu Serial Key</h3>
+                <p style="color:#888; font-size:10px; text-align:center; margin-bottom:15px;">Activa tu plugin para siempre. Consigue tu licencia en OFFSZN.</p>
+                <input type="text" id="serial-input" class="act-input"
+                       placeholder="COKE-XXXX-XXXX-XXXX-XXXX"
+                       autocomplete="off" spellcheck="false"
+                       oninput="this.value=this.value.toUpperCase()">
+                <button class="act-btn act-btn-primary" id="btn-activate">Activar Plugin</button>
+                <button class="act-btn act-btn-secondary" id="btn-buy"
+                        onclick="callNative('openURLNative', 'https://offszn.lat/plugins/coca-cola');">
+                    CONSIGUE TU LICENCIA
+                </button>
+                <div id="act-error" style="color:#ff453a; font-size:10px; margin-top:8px; display:none; line-height:1.4;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ HARD-LOCK EXPIRED OVERLAY (sin cierre) — IGUAL A EASY MASTER ═══ -->
+    <div id="license-expired-overlay" class="activation-overlay" style="z-index:10000;">
+        <div class="act-container" style="width:320px;">
+            <div style="font-size:32px; margin-bottom:8px;">🔒</div>
+            <div id="exp-title" style="font-size:15px;font-weight:800;color:#ff453a;letter-spacing:1px;text-transform:uppercase; margin-bottom:6px;">Prueba Expirada</div>
+            <div id="exp-subtitle" style="font-size:11px;color:#8e8e93;text-align:center;line-height:1.5; margin-bottom:14px;">Tu periodo de prueba ha terminado. Puedes adquirir una licencia en offszn.lat para seguir usando Coca-Cola Plugin.</div>
+            <input id="exp-serial-input" class="act-input" type="text"
+                   placeholder="COKE-XXXX-XXXX-XXXX-XXXX"
+                   spellcheck="false" autocomplete="off"
+                   oninput="this.value=this.value.toUpperCase()">
+            <button id="exp-submit-btn" class="act-btn act-btn-primary" style="margin-bottom:8px;">Activar Nueva Licencia</button>
+            <button id="exp-link-btn" class="act-btn act-btn-secondary" onclick="callNative('openURLNative', 'https://offszn.lat/plugins/coca-cola');">Consigue tu licencia &rarr;</button>
+            <div id="exp-error" style="color:#ff453a; font-size:10px; margin-top:8px; display:none; line-height:1.4; text-align:center;"></div>
+        </div>
+    </div>
+
+    <script>
+        // ─── ANTI-INSPECT & ANTI-ZOOM / RESIZE SECURITY ───
+        window.addEventListener('contextmenu', e => e.preventDefault());
+        window.addEventListener('keydown', e => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
+            }
+            // Prevent browser zoom shortcuts (Ctrl + / Ctrl - / Ctrl 0)
+            if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
+                e.preventDefault();
+            }
+        });
+        // Prevent Ctrl + Mouse Wheel zoom
+        window.addEventListener('wheel', e => {
+            if (e.ctrlKey || e.metaKey) e.preventDefault();
+        }, { passive: false });
+        // Prevent touch gesture zoom
+        document.addEventListener('gesturestart', e => e.preventDefault());
+
+        // ─── NATIVE JUCE BRIDGE ───
+        function hasJuceBridge() {
+            if (window.__JUCE__ && window.__JUCE__.backend) return true;
+            if (window.chrome && window.chrome.webview) return true;
+            return false;
+        }
+
+        var jucePromises = new Map();
+        if (window.__JUCE__ && window.__JUCE__.backend) {
+            window.__JUCE__.backend.addEventListener('__juce__complete', function(ev) {
+                var pid = ev.promiseId;
+                if (jucePromises.has(pid)) {
+                    jucePromises.get(pid).resolve(ev.result);
+                    jucePromises.delete(pid);
+                }
+            });
+        }
+
+        function callNative(funcName) {
+            var args = [];
+            for (var i = 1; i < arguments.length; i++) {
+                args.push(arguments[i]);
+            }
+            try {
+                if (window.__JUCE__ && window.__JUCE__.backend) {
+                    var promiseId = Math.floor(Math.random() * 1000000000);
+                    var p = new Promise(function(resolve) {
+                        jucePromises.set(promiseId, { resolve: resolve });
+                    });
+                    window.__JUCE__.backend.emitEvent('__juce__invoke', {
+                        name: funcName,
+                        params: args,
+                        resultId: promiseId
+                    });
+                    return p;
+                } else if (window.chrome && window.chrome.webview) {
+                    return window.chrome.webview.hostObjects.nativeBridge[funcName](...args);
+                }
+            } catch (e) {
+                console.warn("Bridge invoke error:", e);
+            }
+            return Promise.resolve(null);
+        }
+
+        // ─── STATE MODEL ───
+        const S = {
+            espuma: 0,
+            espumaSidechain: true,
+            gainIn: 0,
+            cokeBoost: false,
+            noiseThresh: 20,
+            noiseAmount: 100,
+            cutLows: 30,
+            cutBoxy: 0,
+            presMid: 0,
+            presHigh: 0,
+            desser: 0,
+            compAmount: 0,
+            compRatio: 4,
+            satTape: 0,
+            airBand: 0,
+            globalOut: 50
+        };
+
+        const PARAMS = {
+            gainIn:      { min: -12, max: 12, step: 1, unit: ' dB', format: v => (v > 0 ? '+' : '') + v + ' dB' },
+            cutLows:     { min: 30, max: 180, step: 1, unit: ' Hz', format: v => v + ' Hz' },
+            cutBoxy:     { min: -12, max: 6, step: 0.5, unit: ' dB', format: v => (v > 0 ? '+' : '') + v + ' dB' },
+            presMid:     { min: 0, max: 8, step: 0.5, unit: ' dB', format: v => '+' + v + ' dB' },
+            presHigh:    { min: 0, max: 8, step: 0.5, unit: ' dB', format: v => '+' + v + ' dB' },
+            noiseThresh: { min: 0, max: 100, step: 1, unit: '%', format: v => v <= 0 ? 'OFF' : v + '%' },
+            noiseAmount: { min: 0, max: 100, step: 1, unit: '%', format: v => v + '%' },
+            desser:      { min: 0, max: 100, step: 1, unit: '%', format: v => v + '%' },
+            compAmount:  { min: 0, max: 100, step: 1, unit: '%', format: v => v + '%' },
+            compRatio:   { min: 2, max: 8, step: 2, unit: ':1', format: v => v + ':1' },
+            satTape:     { min: 0, max: 100, step: 1, unit: '%', format: v => v + '%' },
+            airBand:     { min: 0, max: 14.0, step: 0.1, unit: ' dB', format: v => '+' + v.toFixed(1) + ' dB' },
+            globalOut:   { min: 0, max: 100, step: 1, unit: '%', format: v => v + '%' }
+        };
+
+        const MAX_ARC_LENGTH = 84.8;
+        const TOTAL_CIRCUMFERENCE = 113.1;
+
+        function saveLocalState() {
+            try {
+                localStorage.setItem('coke_plugin_state', JSON.stringify(S));
+            } catch (e) {}
+        }
+
+        function loadLocalState() {
+            try {
+                const saved = localStorage.getItem('coke_plugin_state');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && typeof parsed === 'object') {
+                        Object.keys(parsed).forEach(k => {
+                            if (S[k] !== undefined) S[k] = parsed[k];
+                        });
+                    }
+                }
+            } catch (e) {}
+        }
+
+        function updateKnobVisual(id, val) {
+            const cfg = PARAMS[id];
+            if (!cfg) return;
+
+            const norm = (val - cfg.min) / (cfg.max - cfg.min);
+            const deg = -135 + norm * 270;
+
+            const discEl = document.getElementById('disc_' + id);
+            if (discEl) discEl.style.transform = `rotate(${deg}deg)`;
+
+            const ringEl = document.getElementById('ring_' + id);
+            if (ringEl) {
+                const filled = norm * MAX_ARC_LENGTH;
+                ringEl.style.strokeDasharray = `${filled} ${TOTAL_CIRCUMFERENCE}`;
+            }
+
+            const valEl = document.getElementById('val_' + id);
+            if (valEl) valEl.textContent = cfg.format(val);
+        }
+
+        function setParamValue(id, val) {
+            S[id] = val;
+            updateKnobVisual(id, val);
+            saveLocalState();
+            callNative("setParam", id, val);
+        }
+
+        // ─── ATTACH MOUSE DRAG TO ALL KNOBS ───
+        Object.keys(PARAMS).forEach(id => {
+            const knobEl = document.getElementById('knob_' + id);
+            if (!knobEl) return;
+
+            let startY = 0;
+            let startVal = 0;
+
+            knobEl.addEventListener('mousedown', e => {
+                e.preventDefault();
+                startY = e.clientY;
+                startVal = S[id];
+
+                function onMouseMove(ev) {
+                    const dy = startY - ev.clientY;
+                    const cfg = PARAMS[id];
+                    const range = cfg.max - cfg.min;
+                    const delta = (dy / 140) * range;
+                    let newVal = startVal + delta;
+                    newVal = Math.max(cfg.min, Math.min(cfg.max, newVal));
+                    if (cfg.step) newVal = Math.round(newVal / cfg.step) * cfg.step;
+                    setParamValue(id, newVal);
+                }
+
+                function onMouseUp() {
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                }
+
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            });
+        });
+
+        // ─── BOTTLE / ESPUMA CONTROLLER ───
+        const bottleChamber = document.getElementById('bottleChamber');
+        const bottleFull = document.getElementById('bottleFull');
+        const foamValEl = document.getElementById('foamVal');
+
+        function updateEspumaVisual(val) {
+            S.espuma = Math.max(0, Math.min(100, Math.round(val)));
+            if (bottleFull) {
+                const clip = 100 - S.espuma;
+                bottleFull.style.clipPath = `inset(${clip}% 0 0 0)`;
+            }
+            if (foamValEl) {
+                foamValEl.textContent = `${S.espuma}%`;
+            }
+        }
+
+        function updateEspuma(val) {
+            updateEspumaVisual(val);
+            saveLocalState();
+            callNative("setParam", "espuma", S.espuma);
+        }
+
+        if (bottleChamber) {
+            let bStartY = 0;
+            let bStartVal = 0;
+            bottleChamber.addEventListener('mousedown', e => {
+                e.preventDefault();
+                bStartY = e.clientY;
+                bStartVal = S.espuma;
+
+                function onMouseMove(ev) {
+                    const dy = bStartY - ev.clientY;
+                    const newVal = bStartVal + (dy / 180) * 100;
+                    updateEspuma(newVal);
+                }
+
+                function onMouseUp() {
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                }
+
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
+        // ─── SIDECHAIN BUTTON ───
+        const btnSidechain = document.getElementById('btnSidechain');
+        if (btnSidechain) {
+            btnSidechain.addEventListener('click', () => {
+                S.espumaSidechain = !S.espumaSidechain;
+                btnSidechain.classList.toggle('active', S.espumaSidechain);
+                saveLocalState();
+                callNative('setParam', 'espumaSidechain', S.espumaSidechain ? 1 : 0);
+            });
+        }
+
+        // ─── BOOST SWITCH ───
+        const switchBoost = document.getElementById('switch_cokeBoost');
+        if (switchBoost) {
+            switchBoost.addEventListener('click', () => {
+                S.cokeBoost = !S.cokeBoost;
+                switchBoost.classList.toggle('active', S.cokeBoost);
+                saveLocalState();
+                callNative("setParam", "cokeBoost", S.cokeBoost ? 1 : 0);
+            });
+        }
+
+        // ─── VOZ AL FRENTE (RVOX FADER) ───
+        const rvoxTrack = document.getElementById('rvoxTrack');
+        const rvoxFill = document.getElementById('rvoxFill');
+        const rvoxThumb = document.getElementById('rvoxThumb');
+
+        function updateRvoxFaderVisual(percent) {
+            S.globalOut = Math.max(0, Math.min(100, Math.round(percent)));
+            if (rvoxFill) rvoxFill.style.height = `${S.globalOut}%`;
+            if (rvoxThumb) rvoxThumb.style.bottom = `calc(${S.globalOut}% - 6px)`;
+        }
+
+        function updateRvoxFader(percent) {
+            updateRvoxFaderVisual(percent);
+            saveLocalState();
+            callNative("setParam", "globalOut", S.globalOut);
+        }
+
+        if (rvoxTrack) {
+            let fStartY = 0;
+            let fStartVal = 0;
+            rvoxTrack.addEventListener('mousedown', e => {
+                e.preventDefault();
+                fStartY = e.clientY;
+                fStartVal = S.globalOut;
+
+                function onMouseMove(ev) {
+                    const dy = fStartY - ev.clientY;
+                    const newVal = fStartVal + (dy / 220) * 100;
+                    updateRvoxFader(newVal);
+                }
+
+                function onMouseUp() {
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                }
+
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            });
+        }
+
+        // ─── MASTER RESTORATION FUNCTION ───
+        function applyAllVisuals() {
+            Object.keys(PARAMS).forEach(id => {
+                updateKnobVisual(id, S[id]);
+            });
+            updateEspumaVisual(S.espuma);
+            updateRvoxFaderVisual(S.globalOut);
+
+            if (switchBoost) {
+                switchBoost.classList.toggle('active', !!S.cokeBoost);
+            }
+            if (btnSidechain) {
+                btnSidechain.classList.toggle('active', !!S.espumaSidechain);
+            }
+        }
+
+        function restoreParamsFromObject(obj) {
+            if (!obj || typeof obj !== 'object') return;
+            const keys = Object.keys(obj);
+            keys.forEach(k => {
+                if (k === 'cokeBoost') {
+                    S.cokeBoost = (parseFloat(obj[k]) > 0.5) || (obj[k] === true);
+                } else if (k === 'espumaSidechain') {
+                    S.espumaSidechain = (parseFloat(obj[k]) > 0.5) || (obj[k] === true);
+                } else if (S[k] !== undefined) {
+                    S[k] = parseFloat(obj[k]);
+                }
+            });
+            saveLocalState();
+            applyAllVisuals();
+        }
+
+        // ─── STATE SYNCHRONIZATION BRIDGE (init-params) ───
+        if (window.__JUCE__ && window.__JUCE__.backend) {
+            window.__JUCE__.backend.addEventListener('init-params', function(ev) {
+                const params = (ev && typeof ev === 'object' && ev.params) ? ev.params : ((ev && ev.detail) ? ev.detail : ev);
+                restoreParamsFromObject(params);
+            });
+        }
+
+        // ─── REAL LIVE AUDIO FFT SPECTRUM ANALYZER (60FPS FLUID) ───
+        const canvas = document.getElementById('spanCanvas');
+        const ctx = canvas ? canvas.getContext('2d') : null;
+        let liveBins = new Array(32).fill(0);
+        let renderBins = new Array(32).fill(0);
+
+        function drawSpectrum() {
+            if (!ctx) return;
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Subtle Grid
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, h * 0.33); ctx.lineTo(w, h * 0.33);
+            ctx.moveTo(0, h * 0.66); ctx.lineTo(w, h * 0.66);
+            ctx.moveTo(w * 0.33, 0); ctx.lineTo(w * 0.33, h);
+            ctx.moveTo(w * 0.66, 0); ctx.lineTo(w * 0.66, h);
+            ctx.stroke();
+
+            // Smooth interpolation towards liveBins for silky 60fps motion
+            const num = liveBins.length;
+            for (let i = 0; i < num; ++i) {
+                renderBins[i] += (liveBins[i] - renderBins[i]) * 0.40;
+                if (renderBins[i] < 0.001) renderBins[i] = 0;
+            }
+
+            // Frequency Labels
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.30)';
+            ctx.font = '600 7px "Space Grotesk", sans-serif';
+            ctx.fillText('100', 6, h - 3);
+            ctx.fillText('1k', w * 0.47, h - 3);
+            ctx.fillText('16k', w - 18, h - 3);
+
+            // FFT Real Curve
+            ctx.beginPath();
+            ctx.moveTo(0, h);
+
+            for (let i = 0; i < num; ++i) {
+                const x = (i / (num - 1)) * w;
+                const level = Math.max(0, Math.min(1, renderBins[i]));
+                const y = h - (level * (h - 14)) - 4;
+                if (i === 0) ctx.lineTo(x, y);
+                else {
+                    const prevX = ((i - 1) / (num - 1)) * w;
+                    const prevLevel = Math.max(0, Math.min(1, renderBins[i - 1]));
+                    const prevY = h - (prevLevel * (h - 14)) - 4;
+                    const cx = (prevX + x) / 2;
+                    const cy = (prevY + y) / 2;
+                    ctx.quadraticCurveTo(prevX, prevY, cx, cy);
+                }
+            }
+            ctx.lineTo(w, h);
+            ctx.closePath();
+
+            const grad = ctx.createLinearGradient(0, 0, 0, h);
+            grad.addColorStop(0, 'rgba(230, 27, 43, 0.70)');
+            grad.addColorStop(0.5, 'rgba(196, 18, 32, 0.25)');
+            grad.addColorStop(1, 'rgba(110, 8, 17, 0.0)');
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            ctx.strokeStyle = '#ff3344';
+            ctx.lineWidth = 1.5;
+            ctx.shadowColor = 'rgba(255, 51, 68, 0.6)';
+            ctx.shadowBlur = 4;
+            ctx.stroke();
+            ctx.shadowBlur = 0; // reset shadow
+
+            requestAnimationFrame(drawSpectrum);
+        }
+
+        // Fast polling for audio spectrum
+        setInterval(() => {
+            callNative("getSpectrum").then(bins => {
+                if (Array.isArray(bins) && bins.length > 0) {
+                    liveBins = bins;
+                }
+            }).catch(() => {});
+        }, 25);
+
+        // ════════════════════════════════════════════════════════════
+        // 🔒 OFFSZN OFFLINE-FIRST LICENSING PROTOCOL (SKILL COMPLIANT)
+        // ════════════════════════════════════════════════════════════
+        let isPluginLicensed = false;
+        let currentSerialKey = '';
+
+        const actOverlay      = document.getElementById('activation-overlay');
+        const expOverlay      = document.getElementById('license-expired-overlay');
+        const closeActBtn     = document.getElementById('btn-close-activation');
+        const serialInput     = document.getElementById('serial-input');
+        const btnActivate     = document.getElementById('btn-activate');
+        const actErrorEl      = document.getElementById('act-error');
+        const badgeEl         = document.getElementById('trial-badge');
+        const expSerialInput  = document.getElementById('exp-serial-input');
+        const btnExpSubmit    = document.getElementById('exp-submit-btn');
+        const expErrorEl      = document.getElementById('exp-error');
+
+        function closeActivationModal() {
+            // Only allow closing if already licensed or in an active trial
+            if (isPluginLicensed && actOverlay) {
+                actOverlay.classList.remove('active');
+                if (actErrorEl) {
+                    actErrorEl.style.display = 'none';
+                    actErrorEl.textContent = '';
+                }
+            }
+        }
+
+        function openActivationForUpgrade() {
+            if (actOverlay) {
+                actOverlay.classList.add('active');
+                if (closeActBtn) {
+                    closeActBtn.style.display = isPluginLicensed ? 'flex' : 'none';
+                }
+                if (serialInput) {
+                    serialInput.value = '';
+                    setTimeout(() => serialInput.focus(), 150);
+                }
+                if (actErrorEl) {
+                    actErrorEl.style.display = 'none';
+                    actErrorEl.textContent = '';
+                }
+            }
+        }
+
+        // Close on clicking backdrop (if licensed)
+        if (actOverlay) {
+            actOverlay.addEventListener('click', (e) => {
+                if (e.target === actOverlay && isPluginLicensed) {
+                    closeActivationModal();
+                }
+            });
+        }
+
+        // Close on Escape key
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isPluginLicensed) {
+                closeActivationModal();
+            }
+        });
+
+        function updateBadge(isValid, serial) {
+            isPluginLicensed = isValid;
+            currentSerialKey = serial || '';
+
+            if (!badgeEl) return;
+
+            if (isValid) {
+                if (closeActBtn) closeActBtn.style.display = 'flex';
+
+                if (serial && (serial.includes('-FULL-') || serial.startsWith('COKE-FULL'))) {
+                    // Full License: Hide badge for a 100% clean, professional studio hardware look!
+                    badgeEl.style.display = 'none';
+                } else if (serial && (serial.includes('-TRIAL-') || serial.startsWith('COKE-TRIAL'))) {
+                    // Trial Mode: Show elegant amber badge with remaining days
+                    badgeEl.style.display = 'flex';
+                    badgeEl.className = 'trial-badge trial-mode';
+                    let daysText = '3 DÍAS';
+                    const tokens = serial.split('|');
+                    if (tokens.length > 1) {
+                        const expiresAt = parseInt(tokens[1], 10);
+                        if (!isNaN(expiresAt) && expiresAt > 0) {
+                            const nowSec = Math.floor(Date.now() / 1000);
+                            const secLeft = expiresAt - nowSec;
+                            const daysLeft = Math.max(1, Math.ceil(secLeft / 86400));
+                            daysText = daysLeft + (daysLeft === 1 ? ' DÍA' : ' DÍAS');
+                        }
+                    }
+                    badgeEl.innerHTML = '<span class="trial-dot"></span>PRUEBA · <span id="trial-days">' + daysText + '</span>';
+                    badgeEl.title = 'Versión de Prueba (' + daysText + ' restantes) — Haz clic para activar Licencia Full';
+                } else {
+                    badgeEl.style.display = 'none';
+                }
+            } else {
+                // Expired / Demo: Show red alert badge
+                badgeEl.style.display = 'flex';
+                if (closeActBtn) closeActBtn.style.display = 'none';
+                badgeEl.className = 'trial-badge exp-mode';
+                badgeEl.innerHTML = '<span class="trial-dot exp-dot"></span>DEMO · ACTIVAR';
+                badgeEl.title = 'Modo Demo (Audio Bypassed) — Haz clic para activar tu licencia';
+            }
+        }
+
+        async function checkLicenseState() {
+            try {
+                const res = await callNative("getLicenseState");
+                if (res && typeof res === 'object') {
+                    if (res.isValid) {
+                        if (actOverlay) actOverlay.classList.remove('active');
+                        if (expOverlay) expOverlay.classList.remove('active');
+                        updateBadge(true, res.serial);
+                        return;
+                    } else if (res.serial && res.serial.includes('-TRIAL-')) {
+                        // Trial expired -> show expired modal (audio is bypassed in DSP)
+                        localStorage.removeItem('coca_cola_license');
+                        if (expOverlay) expOverlay.classList.add('active');
+                        updateBadge(false, res.serial);
+                        return;
+                    } else {
+                        localStorage.removeItem('coca_cola_license');
+                    }
+                }
+            } catch (e) {}
+
+            try {
+                const local = localStorage.getItem('coca_cola_license');
+                if (local) {
+                    const parsed = JSON.parse(local);
+                    if (parsed && parsed.isValid) {
+                        if (actOverlay) actOverlay.classList.remove('active');
+                        if (expOverlay) expOverlay.classList.remove('active');
+                        updateBadge(true, parsed.serial);
+                        return;
+                    }
+                }
+            } catch (e) {}
+
+            // Unlicensed / first run -> show activation overlay
+            if (actOverlay) actOverlay.classList.add('active');
+            updateBadge(false, '');
+        }
+
+        async function handleActivation(inputEl, btnEl, errEl) {
+            if (!inputEl || !btnEl) return;
+            const serial = inputEl.value.trim().toUpperCase();
+            if (!serial) {
+                if (errEl) {
+                    errEl.textContent = 'Por favor ingresa un Serial Key válido.';
+                    errEl.style.display = 'block';
+                }
+                inputEl.style.borderColor = '#ff453a';
+                setTimeout(() => { inputEl.style.borderColor = ''; }, 2000);
+                return;
+            }
+
+            btnEl.disabled = true;
+            const originalText = btnEl.textContent;
+            btnEl.textContent = 'Verificando...';
+            if (errEl) {
+                errEl.style.display = 'none';
+                errEl.textContent = '';
+            }
+
+            try {
+                const hwid = await callNative("getHardwareId") || "coke-hwid-default";
+                let serverSuccess = false;
+                let serverError = '';
+                let isNetworkError = false;
+
+                try {
+                    const resp = await fetch('https://offszn.lat/api/plugin/activate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            serial_key: serial,
+                            hwid: hwid,
+                            plugin_name: 'Coca-Cola'
+                        })
+                    });
+                    const data = await resp.json();
+                    if (data && data.success) {
+                        serverSuccess = true;
+                    } else {
+                        serverError = (data && (data.error || data.message)) ? (data.error || data.message) : 'Licencia no válida o no encontrada.';
+                    }
+                } catch (netErr) {
+                    isNetworkError = true;
+                    console.warn("Activation online fetch failed:", netErr);
+                }
+
+                // 1. Server confirmed activation (Online Verification Passed)
+                if (serverSuccess) {
+                    localStorage.setItem('coca_cola_license', JSON.stringify({
+                        isValid: true,
+                        serial: serial,
+                        activatedAt: Date.now()
+                    }));
+                    await callNative("saveLicense", serial);
+                    await callNative("setLicenseStatus", true, serial);
+
+                    if (actOverlay) actOverlay.classList.remove('active');
+                    if (expOverlay) expOverlay.classList.remove('active');
+                    updateBadge(true, serial);
+                    return;
+                }
+
+                // 2. Network Error
+                if (isNetworkError) {
+                    if (errEl) {
+                        errEl.textContent = 'Se requiere conexión a internet para la primera activación.';
+                        errEl.style.display = 'block';
+                    }
+                    inputEl.style.borderColor = '#ff453a';
+                    setTimeout(() => { inputEl.style.borderColor = ''; }, 2500);
+                    return;
+                }
+
+                // 3. Server rejected key with specific error message (e.g. Trial abuse)
+                if (errEl) {
+                    errEl.textContent = serverError || 'Licencia no válida. Verifica tu Serial Key en OFFSZN.';
+                    errEl.style.display = 'block';
+                }
+                inputEl.style.borderColor = '#ff453a';
+                setTimeout(() => { inputEl.style.borderColor = ''; }, 2500);
+            } catch (e) {
+                if (errEl) {
+                    errEl.textContent = 'Error al procesar la activación. Intenta nuevamente.';
+                    errEl.style.display = 'block';
+                }
+            } finally {
+                btnEl.disabled = false;
+                btnEl.textContent = originalText;
+            }
+        }
+
+        if (btnActivate && serialInput) {
+            btnActivate.addEventListener('click', () => handleActivation(serialInput, btnActivate, actErrorEl));
+            serialInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleActivation(serialInput, btnActivate, actErrorEl);
+            });
+        }
+        if (btnExpSubmit && expSerialInput) {
+            btnExpSubmit.addEventListener('click', () => handleActivation(expSerialInput, btnExpSubmit, expErrorEl));
+            expSerialInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleActivation(expSerialInput, btnExpSubmit, expErrorEl);
+            });
+        }
+
+        // ─── INITIALIZE UI & DISMISS LOADING OVERLAY ───
+        function initUI() {
+            // 1. Instant local restore (prevents 0-glitch on window open)
+            loadLocalState();
+            applyAllVisuals();
+
+            // 2. Start real-time spectrum drawing
+            if (canvas) drawSpectrum();
+
+            // 3. Request authoritative C++ processor parameters
+            callNative('setParam', 'ui-ready', 1);
+
+            // 4. Verify license status
+            checkLicenseState();
+
+            // 5. Dismiss loading overlay smoothly
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.style.display = 'none'; }, 400);
+            }
+        }
+
+        // Dismiss splash fallback timer
+        setTimeout(() => {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay && overlay.style.display !== 'none') {
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.style.display = 'none'; }, 400);
+            }
+        }, 1200);
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initUI);
+        } else {
+            initUI();
+        }
+</script>
+</body>
+</html>
+
