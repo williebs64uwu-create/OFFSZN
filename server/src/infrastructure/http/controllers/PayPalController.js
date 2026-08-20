@@ -411,36 +411,37 @@ export const createPayPalOrder = async (req, res) => {
                 const isCoke = String(dbProd.id) === '903' || (dbProd.name || '').toLowerCase().includes('coca');
                 if (isCoke) {
                     commission = verifiedPrice * 0.20;
-                    console.log(`[PayPalOrder] Coca-Cola 80/20: price=$${verifiedPrice} | OFFSZN commission=$${commission.toFixed(2)} (20%) | partner=$${(verifiedPrice * 0.80).toFixed(2)} (80%)`);
+                    console.log(`[PayPalOrder] Coca-Cola 80/20: price=$${verifiedPrice} | OFFSZN=$${commission.toFixed(2)} (20%) | partner=$${(verifiedPrice * 0.80).toFixed(2)} (80%)`);
                 } else {
-                // PRO Lifetime / PRO accounts / Admin / Willieinspired have 0 commission / 0 service fee
-                const isProAccount = rawPlan.includes('pro') || 
-                                     rawPlan.includes('lifetime') || 
-                                     rawRole === 'admin' || 
-                                     rawNick.includes('willie') || 
-                                     dbProd.producer_id === '00000000-0000-0000-0000-000000000001';
+                    // PRO Lifetime / PRO accounts / Admin / Willieinspired have 0 commission / 0 service fee
+                    const isProAccount = rawPlan.includes('pro') ||
+                                         rawPlan.includes('lifetime') ||
+                                         rawRole === 'admin' ||
+                                         rawNick.includes('willie') ||
+                                         dbProd.producer_id === '00000000-0000-0000-0000-000000000001';
 
-                if (isProAccount) {
-                    commission = 0;
-                } else if (rawPlan === 'starter') {
-                    if (verifiedPrice < 20) {
-                        commission = 0.50;
+                    if (isProAccount) {
+                        commission = 0;
+                    } else if (rawPlan === 'starter') {
+                        if (verifiedPrice < 20) {
+                            commission = 0.50;
+                        } else {
+                            commission = verifiedPrice * 0.03;
+                        }
                     } else {
-                        commission = verifiedPrice * 0.03;
-                    }
-                } else {
-                    if (verifiedPrice < 20) {
-                        commission = 1.00;
-                    } else {
-                        commission = verifiedPrice * 0.05;
+                        if (verifiedPrice < 20) {
+                            commission = 1.00;
+                        } else {
+                            commission = verifiedPrice * 0.05;
+                        }
                     }
                 }
-                }
+            }
 
             subtotal += verifiedPrice;
             serviceFee += commission;
 
-            console.log(`[PayPalOrder] Item: ${dbProd.name} | Plan: ${producer?.plan || 'free'} | Price: ${verifiedPrice} | Fee: ${commission.toFixed(2)}`);
+            console.log(`[PayPalOrder] Item: ${dbProd.name} | Plan: ${producerMap.get(dbProd.producer_id)?.plan || 'free'} | Price: ${verifiedPrice} | Fee: ${commission.toFixed(2)}`);
 
             verifiedCartItems.push({
                 ...item,
