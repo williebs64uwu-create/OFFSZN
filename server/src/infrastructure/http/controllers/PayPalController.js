@@ -300,8 +300,14 @@ export const createPayPalOrder = async (req, res) => {
         console.log('[PayPalOrder] Producer Map entries:', Array.from(producerMap.entries()).map(([id, p]) => ({ id, email: p.email, nickname: p.nickname })));
 
         // --- NEW: Identify Producers without PayPal ---
+        // Plugin IDs 899-903 are OFFSZN-owned plugins (Easy Mix, Easy Master, Inka Kola, Coca-Cola).
+        // They have producer_id = null or are owned by OFFSZN and are handled by the plugin override
+        // logic below — they don't require a third-party producer PayPal email.
+        const OFFSZN_PLUGIN_IDS = new Set(['899', '900', '901', '902', '903']);
         const missingPaymentProducers = [];
         cartItems.forEach(item => {
+            const prodId = String(item.product?.id || '');
+            if (OFFSZN_PLUGIN_IDS.has(prodId)) return; // Skip OFFSZN plugins — handled internally
             const p = producerMap.get(item.product.producer_id);
             if (!p || !p.email || !p.email.includes('@')) {
                 missingPaymentProducers.push({
