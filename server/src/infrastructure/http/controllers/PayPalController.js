@@ -603,6 +603,21 @@ export const createPayPalOrder = async (req, res) => {
         const MAIN_MERCHANT_EMAIL = 'willie2008garay@gmail.com';
 
         verifiedCartItems.forEach(item => {
+            const prodIdStr = String(item.product?.id || '');
+            const OFFSZN_PLUGIN_IDS_SET = new Set(['899', '900', '901', '902', '903']);
+
+            // OFFSZN Plugins (899-903): producer_id is null — assign directly to OFFSZN merchant ID.
+            // Coca-Cola (903) split was already resolved above (subtotal=partnerShare, serviceFee=offsznShare).
+            // For 899/900/901/902 the full variant_price goes to OFFSZN.
+            if (OFFSZN_PLUGIN_IDS_SET.has(prodIdStr)) {
+                const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
+                const current = payeeGroups.get(MAIN_MERCHANT_ID) || { amount: 0, type: 'id', nickname: 'OFFSZN' };
+                current.amount += itemNet;
+                payeeGroups.set(MAIN_MERCHANT_ID, current);
+                console.log(`[PayPalOrder] Plugin ${prodIdStr}: $${itemNet.toFixed(2)} → OFFSZN (${MAIN_MERCHANT_ID})`);
+                return;
+            }
+
             const producer = producerMap.get(item.product.producer_id);
             if (!producer?.email) return;
 
