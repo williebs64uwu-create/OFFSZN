@@ -374,7 +374,6 @@ export const createPayPalOrder = async (req, res) => {
             // Customer pays exactly $15 or $10. That amount is split:
             //   $15 → $5 OFFSZN (serviceFee) + $10 partner (variant_price)
             //   $10 → $3 OFFSZN (serviceFee) + $7 partner (variant_price)
-            // Easy Mix/Master/Inka Kola (899/900/901/902) flow through normal logic — NOT touched here.
             if (prodIdToFind === '903') {
                 const pluginPrice = parseFloat(item.variant_price) || 15;
                 const validPluginPrice = (pluginPrice === 10 || pluginPrice === 15) ? pluginPrice : 15;
@@ -388,6 +387,19 @@ export const createPayPalOrder = async (req, res) => {
                 verifiedCartItems.push({ ...item, variant_price: partnerShare });
                 console.log(`[PayPalOrder] Coca-Cola: customer pays $${validPluginPrice} | OFFSZN=$${offsznShare} | partner=$${partnerShare}`);
                 return; // Skip regular DB price logic for this product
+            }
+
+            // EASY MIX / EASY MASTER / INKA KOLA OVERRIDE (IDs 899/900/901/902):
+            // 100% goes to OFFSZN — no split, no partner. Price comes from A/B test (variant_price).
+            // Do NOT use DB price_basic — it may be wrong or outdated.
+            if (['899', '900', '901', '902'].includes(prodIdToFind)) {
+                const pluginPrice = parseFloat(item.variant_price) || 5;
+                const validPluginPrice = [5, 10, 15].includes(pluginPrice) ? pluginPrice : 5;
+
+                subtotal += validPluginPrice;    // 100% to OFFSZN
+                verifiedCartItems.push({ ...item, variant_price: validPluginPrice });
+                console.log(`[PayPalOrder] Plugin ${prodIdToFind}: customer pays $${validPluginPrice} | 100% OFFSZN`);
+                return; // Skip DB price lookup entirely
             }
 
             const dbProd = dbProducts.find(p => String(p.id) === prodIdToFind);
