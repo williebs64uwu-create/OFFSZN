@@ -234,24 +234,6 @@ export const captureCokeOrder = async (req, res) => {
                 });
                 console.log(`[CokeCheckout] Admin notification sent`);
 
-                // C. Notify partner about their earnings
-                await sendOffsznEmail({
-                    to: PARTNER_EMAIL,
-                    subject: `🎉 Ganaste $${partnerShare.toFixed(2)} USD por venta de Coca-Cola`,
-                    html: `
-                        <div style="font-family:system-ui; max-width:600px; margin:0 auto; background:#0a0a0a; color:#fff; padding:30px; border-radius:16px;">
-                            <h2 style="color:#e61b2b;">¡Nueva venta de Coca-Cola!</h2>
-                            <p style="color:#aaa;">Se vendió una licencia de Coca-Cola VST.</p>
-                            <div style="background:#111; border-radius:12px; padding:20px; margin:15px 0;">
-                                <p style="color:#fff; font-size:1.5rem; font-weight:800; margin:0;">$${partnerShare.toFixed(2)} USD</p>
-                                <p style="color:#888; font-size:0.8rem; margin:5px 0 0;">Tu parte de esta venta</p>
-                            </div>
-                            <p style="color:#666; font-size:0.8rem;">El pago será transferido a tu PayPal (${PARTNER_EMAIL}) por OFFSZN.</p>
-                        </div>
-                    `
-                });
-                console.log(`[CokeCheckout] Partner notification sent to ${PARTNER_EMAIL}`);
-
             } catch (emailErr) {
                 console.error('[CokeCheckout] Email error (non-critical):', emailErr.message);
             }
