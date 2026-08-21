@@ -63,7 +63,7 @@ export const createCokeOrder = async (req, res) => {
             }
         });
 
-        const order = await paypalClient.execute(request);
+        const order = await paypalClient.client().execute(request);
 
         console.log(`[CokeCheckout] Order created: ${order.result.id} | Price: $${validPrice} | User: ${userId || 'guest'}`);
 
@@ -104,7 +104,7 @@ export const captureCokeOrder = async (req, res) => {
         const request = new paypal.orders.OrdersCaptureRequest(orderID);
         request.requestBody({});
 
-        const response = await paypalClient.execute(request);
+        const response = await paypalClient.client().execute(request);
         const captureStatus = response.result.status;
         
         if (captureStatus !== 'COMPLETED') {
