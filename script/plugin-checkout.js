@@ -87,18 +87,10 @@ class PluginDirectCheckout {
 
         const script = document.createElement('script');
         script.id = 'paypal-sdk-plugin-direct';
-        const isCokeProduct = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola';
-
-        if (isCokeProduct) {
-            // Coca-Cola: multi-payee split — both parties must be listed
-            // Partner: suarez.azocarn@gmail.com (gets $10 or $7)
-            // OFFSZN: MXV5F6X8JXG4S / willie2008garay@gmail.com (gets $5 or $3)
-            script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=*`;
-            script.setAttribute('data-merchant-id', 'suarez.azocarn@gmail.com,MXV5F6X8JXG4S');
-        } else {
-            script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=MXV5F6X8JXG4S`;
-            script.setAttribute('data-merchant-id', 'MXV5F6X8JXG4S');
-        }
+        // All plugins (including Coca-Cola) use single merchant ID — no multi-payee SDK issues.
+        // Coca-Cola split is handled server-side in the isolated /api/orders/coke/* endpoint.
+        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=MXV5F6X8JXG4S`;
+        script.setAttribute('data-merchant-id', 'MXV5F6X8JXG4S');
 
         script.onload = () => this.renderPayPalButtons();
         document.head.appendChild(script);
@@ -124,7 +116,11 @@ class PluginDirectCheckout {
                         createPayload.customPrice = window.CURRENT_PROMO_PRICE;
                     }
 
-                    const response = await fetch('/api/orders/paypal/create', {
+                    // Coca-Cola uses isolated endpoint, all others use the general PayPal flow
+                    const isCoke = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola';
+                    const createUrl = isCoke ? '/api/orders/coke/create' : '/api/orders/paypal/create';
+
+                    const response = await fetch(createUrl, {
                         method: 'POST',
                         headers: headers,
                         body: JSON.stringify(createPayload)
@@ -165,7 +161,11 @@ class PluginDirectCheckout {
                         capturePayload.customPrice = window.CURRENT_PROMO_PRICE;
                     }
 
-                    const response = await fetch('/api/orders/paypal/capture', {
+                    // Coca-Cola uses isolated endpoint
+                    const isCoke = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola';
+                    const captureUrl = isCoke ? '/api/orders/coke/capture' : '/api/orders/paypal/capture';
+
+                    const response = await fetch(captureUrl, {
                         method: 'POST',
                         headers: headers,
                         body: JSON.stringify(capturePayload)
