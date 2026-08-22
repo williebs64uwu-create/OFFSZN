@@ -11,532 +11,600 @@
   <style>
     :root {
       --chassis-bg: #07080b;
-      --chassis-inner: #10121a;
       --border-dark: #1e202d;
-      --white-knob: #ffffff;
-      --white-knob-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.9), 0 6px 14px rgba(0, 0, 0, 0.8);
+      --white-knob-shadow: inset 0 2px 4px rgba(255,255,255,0.9), 0 6px 14px rgba(0,0,0,0.8);
       --neon-magenta: #ff2a8d;
       --neon-cyan: #00f2fe;
-      --text-muted: #6e7285;
+      --neon-green: #00ff88;
+      --neon-amber: #ffb700;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-      -webkit-user-select: none;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
 
     html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #040507;
-      color: #fff;
+      width: 100%; height: 100%; overflow: hidden;
+      background: #040507; color: #fff;
       font-family: 'Plus Jakarta Sans', sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
     }
 
-    /* ════════════ HARDWARE BLACK CHASSIS ════════════ */
+    /* ── CHASSIS ── */
     .monitor-chassis {
-      width: 820px;
-      height: 570px;
+      width: 840px; height: 590px;
       background: var(--chassis-bg);
       border: 2px solid var(--border-dark);
       border-radius: 20px;
-      box-shadow: 
-        0 30px 80px rgba(0, 0, 0, 0.95),
-        inset 0 1px 2px rgba(255, 255, 255, 0.08);
-      display: flex;
-      flex-direction: column;
-      padding: 22px;
-      gap: 18px;
-      position: relative;
+      box-shadow: 0 30px 80px rgba(0,0,0,.95), inset 0 1px 2px rgba(255,255,255,.08);
+      display: flex; flex-direction: column;
+      padding: 22px; gap: 18px; position: relative;
     }
-
-    /* Screw Accents */
     .chassis-screw {
-      position: absolute;
-      width: 10px;
-      height: 10px;
+      position: absolute; width: 10px; height: 10px;
       border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #3a3d4d, #11131a);
-      border: 1px solid rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,.08);
     }
-    .screw-tl { top: 12px; left: 14px; }
-    .screw-tr { top: 12px; right: 14px; }
-    .screw-bl { bottom: 12px; left: 14px; }
-    .screw-br { bottom: 12px; right: 14px; }
+    .screw-tl { top:12px; left:14px; }
+    .screw-tr { top:12px; right:14px; }
+    .screw-bl { bottom:12px; left:14px; }
+    .screw-br { bottom:12px; right:14px; }
 
-    /* ════════════ TOP MONITOR SCREEN SECTION ════════════ */
+    /* ── SCREEN BEZEL ── */
     .monitor-screen-bezel {
       flex: 1;
       background: #07080e;
       border: 3px solid #181a24;
       border-radius: 16px;
-      box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.95);
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      box-shadow: inset 0 0 24px rgba(0,0,0,.95);
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column;
       justify-content: space-between;
-      padding: 16px 24px;
+      padding: 14px 22px;
     }
-
-    /* Glass Reflection Overlay */
     .monitor-screen-bezel::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, transparent 40%, rgba(0, 0, 0, 0.4) 100%);
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.04) 0%, transparent 40%, rgba(0,0,0,.4) 100%);
       pointer-events: none;
     }
 
-    /* Top Screen Nav Bar */
+    /* ── TOP BAR ── */
     .screen-top-bar {
-      width: 100%;
-      display: flex;
-      align-items: center;
+      width: 100%; display: flex; align-items: center;
       justify-content: space-between;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      color: rgba(255, 255, 255, 0.35);
-      text-transform: uppercase;
-      z-index: 2;
+      font-size: 10px; font-weight: 800;
+      letter-spacing: 2px; color: rgba(255,255,255,.35);
+      text-transform: uppercase; z-index: 2;
     }
-
-    .screen-top-bar span.active {
-      color: #ffffff;
-      border-bottom: 2px solid #ffffff;
-      padding-bottom: 2px;
-    }
-
-    /* Locked Preset Navigation Arrows (Top Right Screen Corner) */
-    .preset-nav-arrows {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 6px;
-      padding: 2px 8px;
-    }
-
-    .preset-nav-btn {
-      background: transparent;
-      border: none;
-      color: rgba(255, 255, 255, 0.4);
+    .tab-btn {
+      background: transparent; border: none;
+      color: rgba(255,255,255,.4);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      font-weight: 800;
-      cursor: not-allowed; /* Locked for stability */
-      padding: 2px 4px;
+      font-size: 10px; font-weight: 800; letter-spacing: 2px;
+      cursor: pointer; padding-bottom: 2px;
+      transition: color .15s ease;
     }
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active { color: #fff; border-bottom: 2px solid #fff; }
 
-    .preset-nav-label {
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 1px;
+    /* ── UNDO/REDO ── */
+    .undo-redo-group { display: flex; align-items: center; gap: 6px; }
+    .action-btn {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.15);
       color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 800; letter-spacing: .5px;
+      padding: 3px 8px; border-radius: 4px;
+      cursor: pointer; transition: all .15s ease;
+    }
+    .action-btn:hover:not(:disabled) { background: #fff; color: #000; }
+    .action-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      pointer-events: none;
     }
 
-    /* Center 8-BIT Title */
-    .screen-center-content {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      z-index: 2;
-      margin-top: 6px;
+    /* ── VIEWS ── */
+    .screen-view {
+      display: none; flex: 1; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 8px; z-index: 2;
+      padding: 6px 0; text-align: center; width: 100%;
     }
+    .screen-view.active { display: flex; }
 
-    .screen-main-title {
+    /* ── STATUS TITLE ── */
+    .screen-status-title {
       font-family: 'VT323', monospace;
-      font-size: 80px;
-      line-height: 1;
-      letter-spacing: 5px;
-      color: #ffffff;
-      text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-      text-transform: lowercase;
-    }
-
-    /* 8-BIT Instruction & Prompt Text */
-    .screen-instruction-text {
-      font-family: 'VT323', monospace;
-      font-size: 24px;
-      color: rgba(255, 255, 255, 0.9);
-      letter-spacing: 1.5px;
-      text-align: center;
-      text-transform: uppercase;
-      z-index: 2;
-      line-height: 1.2;
-      max-width: 580px;
-      text-shadow: 0 0 10px rgba(255, 42, 141, 0.4);
-    }
-
-    /* Active Parameter Badges Strip (8-BIT Style) */
-    .screen-badges-row {
-      display: flex;
-      gap: 10px;
-      z-index: 2;
-      margin-bottom: 2px;
-    }
-
-    .status-badge {
-      font-family: 'VT323', monospace;
-      font-size: 18px;
-      letter-spacing: 1.5px;
-      color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      background: rgba(255, 255, 255, 0.05);
-      padding: 2px 14px;
-      border-radius: 4px;
+      font-size: 26px; letter-spacing: 2px;
+      color: var(--neon-cyan);
+      text-shadow: 0 0 12px rgba(0,242,254,.5);
       text-transform: uppercase;
     }
 
-    /* ════════════ BOTTOM CONTROL PANEL SECTION ════════════ */
+    /* ── PROMPT BOX ── */
+    .screen-prompt-box {
+      font-family: 'VT323', monospace;
+      font-size: 22px; color: #ffffff;
+      letter-spacing: 1.5px; line-height: 1.2;
+      max-width: 700px; min-height: 46px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-shadow: 0 0 10px rgba(255,255,255,.4);
+      padding: 0 10px;
+    }
+    .screen-prompt-box.error {
+      color: var(--neon-amber);
+      text-shadow: 0 0 12px rgba(255,183,0,.6);
+    }
+    .screen-prompt-box.success {
+      color: var(--neon-green);
+      text-shadow: 0 0 14px rgba(0,255,136,.6);
+    }
+    .example-subtext {
+      font-size: 14px;
+      color: rgba(255,255,255,.38);
+      margin-top: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── AJUSTES GRID ── */
+    .easymix-full-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px; width: 100%;
+    }
+    .easymix-card-box {
+      background: rgba(0,0,0,.4);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 6px; padding: 8px 10px;
+      display: flex; flex-direction: column; gap: 5px;
+      font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    }
+    .easymix-card-header {
+      font-size: 9.5px; font-weight: 800;
+      color: var(--neon-cyan); letter-spacing: 1px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding-bottom: 3px; text-transform: uppercase;
+    }
+    .easymix-card-subtitle {
+      font-size: 8px; color: rgba(255,255,255,.35);
+      letter-spacing: .5px; margin-top: -2px;
+    }
+    .easymix-slider-row {
+      display: flex; justify-content: space-between;
+      color: rgba(255,255,255,.65);
+    }
+    .easymix-slider-row strong { color: #fff; }
+
+    /* ── TELEMETRY BAR ── */
+    .screen-telemetry-row {
+      width: 100%; display: flex; align-items: center;
+      justify-content: space-around;
+      border-top: 1px dashed rgba(255,255,255,.12);
+      padding-top: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9.5px; color: rgba(255,255,255,.6); z-index: 2;
+    }
+    .telemetry-item strong { color: #fff; }
+
+    /* ── AYUDA ── */
+    .help-panel {
+      font-family: 'VT323', monospace;
+      font-size: 19px; color: #fff;
+      text-align: left; max-width: 680px;
+      line-height: 1.35;
+    }
+
+    /* ── CONTROL PANEL ── */
     .monitor-control-panel {
-      height: 160px;
-      background: #0d0e16;
+      height: 160px; background: #0d0e16;
       border: 1px solid var(--border-dark);
       border-radius: 14px;
-      box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.05), 0 6px 18px rgba(0,0,0,0.8);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 28px;
+      box-shadow: inset 0 1px 2px rgba(255,255,255,.05), 0 6px 18px rgba(0,0,0,.8);
+      display: flex; align-items: center;
+      justify-content: space-between; padding: 0 32px;
     }
-
-    /* Big White HABLAR Button */
-    .talk-btn-unit {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
+    .talk-btn-unit { display:flex; flex-direction:column; align-items:center; gap:6px; }
     .giant-white-talk-btn {
-      width: 62px;
-      height: 62px;
-      border-radius: 50%;
+      width: 64px; height: 64px; border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, #ffffff, #d4d7e6);
       border: 3px solid #84889c;
       box-shadow: var(--white-knob-shadow);
-      cursor: pointer;
-      transition: all 0.15s ease;
+      cursor: pointer; transition: all .15s ease;
     }
-
-    .giant-white-talk-btn:active {
-      transform: scale(0.94);
-    }
-
+    .giant-white-talk-btn:active { transform: scale(.94); }
     .giant-white-talk-btn.recording {
       background: radial-gradient(circle at 35% 35%, #ffffff, #ff2a8d);
-      border-color: #ffffff;
+      border-color: #fff;
       box-shadow: 0 0 24px var(--neon-magenta);
       animation: pulseTalk 1s infinite alternate;
     }
-
-    @keyframes pulseTalk {
-      0% { transform: scale(1); }
-      100% { transform: scale(1.06); }
-    }
-
+    @keyframes pulseTalk { 0%{transform:scale(1)} 100%{transform:scale(1.06)} }
     .control-label {
-      font-size: 9.5px;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      color: #ffffff;
-      text-transform: uppercase;
+      font-size: 9.5px; font-weight: 800;
+      letter-spacing: 1.5px; color: #fff; text-transform: uppercase;
     }
-
-    /* 4 White Main Knobs (VOLUMEN, AFINACIÓN, BRILLO, MEJORAR) */
-    .main-knobs-group {
-      display: flex;
-      align-items: center;
-      gap: 32px;
-    }
-
-    .white-knob-unit {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      cursor: ns-resize;
-    }
-
+    .main-knobs-group { display:flex; align-items:center; gap:34px; }
+    .white-knob-unit { display:flex; flex-direction:column; align-items:center; gap:6px; cursor:ns-resize; }
     .white-knob-cap {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
+      width: 52px; height: 52px; border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, #ffffff 0%, #e1e3ed 60%, #b4b7c7 100%);
       border: 2px solid #888b9c;
       box-shadow: var(--white-knob-shadow);
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      position: relative; display:flex; align-items:center; justify-content:center;
     }
-
     .white-knob-indicator {
-      position: absolute;
-      width: 3px;
-      height: 13px;
-      background: #11131a;
-      border-radius: 2px;
-      top: 4px;
+      position: absolute; width: 3px; height: 13px;
+      background: #11131a; border-radius: 2px; top: 4px;
       transform-origin: 50% 22px;
-      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: transform .3s cubic-bezier(.175,.885,.32,1.275);
     }
-
-    /* Square White APAGAR PLUGIN Button */
-    .bypass-btn-unit {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-
+    .bypass-btn-unit { display:flex; flex-direction:column; align-items:center; gap:6px; }
     .square-white-bypass-btn {
-      width: 38px;
-      height: 38px;
-      background: linear-gradient(180deg, #ffffff 0%, #cfd2e0 100%);
-      border: 2px solid #888b9c;
-      border-radius: 6px;
-      cursor: pointer;
-      box-shadow: var(--white-knob-shadow);
-      transition: all 0.15s ease;
+      width: 38px; height: 38px;
+      background: linear-gradient(180deg, #fff 0%, #cfd2e0 100%);
+      border: 2px solid #888b9c; border-radius: 6px;
+      cursor: pointer; box-shadow: var(--white-knob-shadow);
+      transition: all .15s ease;
     }
-
     .square-white-bypass-btn.active {
       background: var(--neon-magenta);
-      border-color: #ffffff;
-      box-shadow: 0 0 14px var(--neon-magenta);
+      border-color: #fff; box-shadow: 0 0 14px var(--neon-magenta);
     }
   </style>
 </head>
 <body>
 
-  <!-- ════════════ HARDWARE BLACK CHASSIS ════════════ -->
-  <div class="monitor-chassis">
+<div class="monitor-chassis">
+  <div class="chassis-screw screw-tl"></div>
+  <div class="chassis-screw screw-tr"></div>
+  <div class="chassis-screw screw-bl"></div>
+  <div class="chassis-screw screw-br"></div>
 
-    <!-- Screws -->
-    <div class="chassis-screw screw-tl"></div>
-    <div class="chassis-screw screw-tr"></div>
-    <div class="chassis-screw screw-bl"></div>
-    <div class="chassis-screw screw-br"></div>
+  <main class="monitor-screen-bezel">
 
-    <!-- ════════════ TOP MONITOR SCREEN ════════════ -->
-    <main class="monitor-screen-bezel">
-      <!-- Screen Header Nav & Preset Arrows -->
-      <div class="screen-top-bar">
-        <div>
-          <span class="active">HABLAR</span> &nbsp;&nbsp;
-          <span>AJUSTES</span> &nbsp;&nbsp;
-          <span>AYUDA</span>
+    <!-- TOP BAR: TABS + UNDO/REDO -->
+    <div class="screen-top-bar">
+      <div>
+        <button class="tab-btn active" id="tabNavHablar"  onclick="switchTab('hablar')">HABLAR</button> &nbsp;&nbsp;
+        <button class="tab-btn"        id="tabNavAjustes" onclick="switchTab('ajustes')">AJUSTES</button> &nbsp;&nbsp;
+        <button class="tab-btn"        id="tabNavAyuda"   onclick="switchTab('ayuda')">AYUDA</button>
+      </div>
+      <div class="undo-redo-group">
+        <button class="action-btn" id="btnUndo" onclick="undoState()" disabled>↶ DESHACER</button>
+        <button class="action-btn" id="btnRedo" onclick="redoState()" disabled>↷ REHACER</button>
+      </div>
+    </div>
+
+    <!-- VIEW 1: HABLAR -->
+    <div class="screen-view active" id="viewHablar">
+      <div class="screen-status-title" id="screenStatusTitle">MODO ESPERA DE VOZ</div>
+      <div class="screen-prompt-box" id="screenPromptBox">
+        <span>PRESIONA 'HABLAR' Y DIME QUÉ AJUSTAR EN TU VOZ.</span>
+        <span class="example-subtext">ej: "afinar en A menor con bastante brillo y mejorar"</span>
+      </div>
+    </div>
+
+    <!-- VIEW 2: AJUSTES — nombres reales de plugins -->
+    <div class="screen-view" id="viewAjustes">
+      <div class="screen-status-title" style="color:var(--neon-cyan)">⚙ CADENA DE EFECTOS ACTIVA</div>
+      <div class="easymix-full-grid">
+
+        <!-- Antares Auto-Tune -->
+        <div class="easymix-card-box">
+          <div class="easymix-card-header">Auto-Tune</div>
+          <div class="easymix-card-subtitle">Antares · Pitch</div>
+          <div class="easymix-slider-row"><span>Retune Speed</span><strong id="adjSpeed">0 ms</strong></div>
+          <div class="easymix-slider-row"><span>Formant Shift</span><strong id="adjFormant">0 st</strong></div>
+          <div class="easymix-slider-row"><span>Hard Tune</span><strong>ON</strong></div>
         </div>
 
-        <!-- Locked Preset Navigation Arrows (Top Right) -->
-        <div class="preset-nav-arrows">
-          <button class="preset-nav-btn" disabled>◀</button>
-          <span class="preset-nav-label">PRESET AI</span>
-          <button class="preset-nav-btn" disabled>▶</button>
-        </div>
-      </div>
-
-      <!-- Center 8-BIT Title -->
-      <div class="screen-center-content">
-        <h1 class="screen-main-title">vocalpreset</h1>
-      </div>
-
-      <!-- Instructions (8-BIT Font) -->
-      <div class="screen-instruction-text" id="screenInstruction">
-        MANTÉN PRESIONADO HABLAR Y DIME QUÉ NECESITAS<br>
-        PRUEBA: "DAME UN PRESET EN A MENOR CON BASTANTE AIRE Y LIMPIEZA"
-      </div>
-
-      <!-- Active Parameter Badges (8-BIT) -->
-      <div class="screen-badges-row">
-        <div class="status-badge" id="badgeTune">AFINADO EN A MENOR</div>
-        <div class="status-badge" id="badgeAir">BRILLO +8dB</div>
-        <div class="status-badge" id="badgeDeBox">MEJORAR LIMPIEZA (CORTE 450HZ)</div>
-      </div>
-    </main>
-
-    <!-- ════════════ BOTTOM CONTROL PANEL (SINGLE CLEAN ROW) ════════════ -->
-    <footer class="monitor-control-panel">
-
-      <!-- HABLAR Button -->
-      <div class="talk-btn-unit">
-        <div class="giant-white-talk-btn" id="talkBtn" onclick="toggleTalkState()"></div>
-        <span class="control-label">HABLAR</span>
-      </div>
-
-      <!-- 4 Main White Knobs -->
-      <div class="main-knobs-group">
-
-        <!-- 1. VOLUMEN -->
-        <div class="white-knob-unit">
-          <div class="white-knob-cap">
-            <div class="white-knob-indicator" id="knobVol" style="transform: rotate(80deg);"></div>
-          </div>
-          <span class="control-label">VOLUMEN</span>
+        <!-- Voces Al Frente -->
+        <div class="easymix-card-box">
+          <div class="easymix-card-header">Voces Al Frente</div>
+          <div class="easymix-card-subtitle">Easy Mix · Dinámica</div>
+          <div class="easymix-slider-row"><span>VCA Ratio</span><strong id="adjRatio">8:1</strong></div>
+          <div class="easymix-slider-row"><span>Punch</span><strong>100%</strong></div>
+          <div class="easymix-slider-row"><span>Saturación</span><strong id="adjSat">100%</strong></div>
         </div>
 
-        <!-- 2. AFINACIÓN -->
-        <div class="white-knob-unit">
-          <div class="white-knob-cap">
-            <div class="white-knob-indicator" id="knobTune" style="transform: rotate(90deg);"></div>
-          </div>
-          <span class="control-label">AFINACIÓN</span>
+        <!-- Easy Mix · MEJORAR -->
+        <div class="easymix-card-box">
+          <div class="easymix-card-header">Easy Mix</div>
+          <div class="easymix-card-subtitle">OFFSZN · Limpieza vocal</div>
+          <div class="easymix-slider-row"><span>Corte caja 450Hz</span><strong id="adjDebox">-4.5 dB</strong></div>
+          <div class="easymix-slider-row"><span>Silk Air 14kHz</span><strong id="adjAir">+8.0 dB</strong></div>
+          <div class="easymix-slider-row"><span>De-Esser</span><strong>-6.0 dB</strong></div>
         </div>
 
-        <!-- 3. BRILLO -->
-        <div class="white-knob-unit">
-          <div class="white-knob-cap">
-            <div class="white-knob-indicator" id="knobTone" style="transform: rotate(85deg);"></div>
-          </div>
-          <span class="control-label">BRILLO</span>
-        </div>
-
-        <!-- 4. MEJORAR (Anti-Caja 450Hz + Claridad Easy Mix) -->
-        <div class="white-knob-unit">
-          <div class="white-knob-cap">
-            <div class="white-knob-indicator" id="knobMejorar" style="transform: rotate(100deg);"></div>
-          </div>
-          <span class="control-label">MEJORAR</span>
+        <!-- Reverb (Coca-Cola) -->
+        <div class="easymix-card-box">
+          <div class="easymix-card-header">Reverb</div>
+          <div class="easymix-card-subtitle">Valhalla · Espacio</div>
+          <div class="easymix-slider-row"><span>Mix</span><strong id="adjRevMix">35%</strong></div>
+          <div class="easymix-slider-row"><span>Decay</span><strong>2.4 s</strong></div>
+          <div class="easymix-slider-row"><span>Ancho estéreo</span><strong>140%</strong></div>
         </div>
 
       </div>
+    </div>
 
-      <!-- APAGAR PLUGIN Button -->
-      <div class="bypass-btn-unit">
-        <div class="square-white-bypass-btn" id="bypassBtn" onclick="toggleBypass()"></div>
-        <span class="control-label">APAGAR PLUGIN</span>
+    <!-- VIEW 3: AYUDA -->
+    <div class="screen-view" id="viewAyuda">
+      <div class="screen-status-title" style="color:var(--neon-magenta)">📖 COMANDOS DE VOZ</div>
+      <div class="help-panel">
+        <div>• AFINACIÓN → "afinar en A menor", "autotune en E menor"</div>
+        <div>• BRILLO → "más brillo", "dar aire", "presencia aguda"</div>
+        <div>• MEJORAR → "mejorar voz", "quitar encajonado", "limpiar graves"</div>
+        <div>• REVERB → "agregar reverb", "espacio reverb", "quitar reverb"</div>
+        <div>• VOLUMEN → "subir volumen", "bajar ganancia"</div>
       </div>
+    </div>
 
-    </footer>
+    <!-- TELEMETRY BAR -->
+    <div class="screen-telemetry-row">
+      <div class="telemetry-item">VOLUMEN: <strong id="telVol">100%</strong></div>
+      <div class="telemetry-item">AFINACIÓN: <strong id="telTune">A MENOR</strong></div>
+      <div class="telemetry-item">BRILLO: <strong id="telAir">+8.0 dB</strong></div>
+      <div class="telemetry-item">MEJORAR: <strong id="telDeBox">-4.5 dB</strong></div>
+    </div>
 
-  </div>
+  </main>
 
-  <script>
-    let isTalking = false;
-    
-    // Live NVIDIA Build API Key (Nemotron 3.5)
-    const NVIDIA_API_KEY = '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';
+  <!-- CONTROL PANEL -->
+  <footer class="monitor-control-panel">
 
-    // Speech Recognition
-    let speechEngine = null;
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const RecClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-      speechEngine = new RecClass();
-      speechEngine.continuous = false;
-      speechEngine.interimResults = true;
-      speechEngine.lang = 'es-ES';
+    <div class="talk-btn-unit">
+      <div class="giant-white-talk-btn" id="talkBtn" onclick="toggleTalkState()"></div>
+      <span class="control-label">HABLAR</span>
+    </div>
 
-      speechEngine.onstart = () => {
-        isTalking = true;
-        document.getElementById('talkBtn').classList.add('recording');
-        document.getElementById('screenInstruction').innerHTML = 'ESCUCHANDO TU ORDEN DE VOZ...<br><span style="color:#ff2a8d">HABLA AHORA POR TU MICRÓFONO</span>';
-      };
+    <div class="main-knobs-group">
+      <div class="white-knob-unit">
+        <div class="white-knob-cap"><div class="white-knob-indicator" id="knobVol" style="transform:rotate(80deg)"></div></div>
+        <span class="control-label">VOLUMEN</span>
+      </div>
+      <div class="white-knob-unit">
+        <div class="white-knob-cap"><div class="white-knob-indicator" id="knobTune" style="transform:rotate(90deg)"></div></div>
+        <span class="control-label">AFINACIÓN</span>
+      </div>
+      <div class="white-knob-unit">
+        <div class="white-knob-cap"><div class="white-knob-indicator" id="knobTone" style="transform:rotate(85deg)"></div></div>
+        <span class="control-label">BRILLO</span>
+      </div>
+      <div class="white-knob-unit">
+        <div class="white-knob-cap"><div class="white-knob-indicator" id="knobMejorar" style="transform:rotate(100deg)"></div></div>
+        <span class="control-label">MEJORAR</span>
+      </div>
+    </div>
 
-      speechEngine.onresult = (e) => {
-        let t = '';
-        for (let i = e.resultIndex; i < e.results.length; ++i) {
-          t += e.results[i][0].transcript;
-        }
-        document.getElementById('screenInstruction').innerHTML = `PROCESANDO: "${t.toUpperCase()}"<br><span style="color:#00f2fe">CONSULTANDO IA DE NVIDIA...</span>`;
-      };
+    <div class="bypass-btn-unit">
+      <div class="square-white-bypass-btn" id="bypassBtn" onclick="toggleBypass()"></div>
+      <span class="control-label">APAGAR PLUGIN</span>
+    </div>
 
-      speechEngine.onend = () => {
-        isTalking = false;
-        document.getElementById('talkBtn').classList.remove('recording');
-        const promptText = document.getElementById('screenInstruction').textContent;
-        queryNvidiaNemotronAI(promptText);
-      };
+  </footer>
+</div>
+
+<script>
+  // ══════════════════════════════════════════
+  //  STATE MACHINE + UNDO / REDO ENGINE
+  // ══════════════════════════════════════════
+  const DEFAULT_STATE = {
+    tune: 'A MENOR',
+    air:  '+8.0 dB',
+    debox: '-4.5 dB',
+    rotTune: 90,
+    rotTone: 85,
+    rotMejorar: 100
+  };
+
+  let historyStack  = [JSON.parse(JSON.stringify(DEFAULT_STATE))];
+  let historyIndex  = 0;  // Points to the current position in the stack
+
+  function applyState(st) {
+    document.getElementById('telTune').textContent    = st.tune;
+    document.getElementById('telAir').textContent     = st.air;
+    document.getElementById('telDeBox').textContent   = st.debox;
+    document.getElementById('knobTune').style.transform    = `rotate(${st.rotTune}deg)`;
+    document.getElementById('knobTone').style.transform    = `rotate(${st.rotTone}deg)`;
+    document.getElementById('knobMejorar').style.transform = `rotate(${st.rotMejorar}deg)`;
+    updateUndoRedoBtns();
+  }
+
+  function pushState(newState) {
+    // When a new state is pushed, cut the redo branch
+    historyStack = historyStack.slice(0, historyIndex + 1);
+    historyStack.push(JSON.parse(JSON.stringify(newState)));
+    historyIndex = historyStack.length - 1;
+    applyState(newState);
+  }
+
+  function undoState() {
+    if (historyIndex > 0) {
+      historyIndex--;
+      applyState(historyStack[historyIndex]);
+      flashPrompt('↶ ESTADO ANTERIOR RESTAURADO', 'success');
     }
+  }
 
-    function toggleTalkState() {
-      if (isTalking) {
-        if (speechEngine) speechEngine.stop();
-        isTalking = false;
-        document.getElementById('talkBtn').classList.remove('recording');
-      } else {
-        if (speechEngine) {
-          try { speechEngine.start(); } catch(err) { console.warn(err); }
-        } else {
-          document.getElementById('talkBtn').classList.add('recording');
-          document.getElementById('screenInstruction').innerHTML = 'ESCUCHANDO TU ORDEN DE VOZ...<br><span style="color:#ff2a8d">HABLA AHORA POR TU MICRÓFONO</span>';
-          setTimeout(() => {
-            document.getElementById('talkBtn').classList.remove('recording');
-            queryNvidiaNemotronAI("DAME UN PRESET EN A MENOR CON BASTANTE AIRE Y LIMPIEZA");
-          }, 2000);
-        }
+  function redoState() {
+    if (historyIndex < historyStack.length - 1) {
+      historyIndex++;
+      applyState(historyStack[historyIndex]);
+      flashPrompt('↷ CAMBIO REAPLICADO', 'success');
+    }
+  }
+
+  function updateUndoRedoBtns() {
+    document.getElementById('btnUndo').disabled = (historyIndex <= 0);
+    document.getElementById('btnRedo').disabled = (historyIndex >= historyStack.length - 1);
+  }
+
+  function flashPrompt(msg, cls) {
+    const pBox = document.getElementById('screenPromptBox');
+    pBox.className = 'screen-prompt-box ' + cls;
+    pBox.innerHTML = `<span>${msg}</span>`;
+  }
+
+  // ══════════════════════════════════════════
+  //  TABS
+  // ══════════════════════════════════════════
+  function switchTab(name) {
+    ['hablar','ajustes','ayuda'].forEach(t => {
+      document.getElementById('tabNav'+capitalize(t)).classList.toggle('active', t === name);
+      document.getElementById('view'+capitalize(t)).classList.toggle('active', t === name);
+    });
+  }
+  function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  // ══════════════════════════════════════════
+  //  SPEECH ENGINE
+  // ══════════════════════════════════════════
+  const NVIDIA_API_KEY = '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';
+
+  const ALLOWED_KW = [
+    'AFINAR','AFINACION','AUTOTUNE','MENOR','MAYOR','NOTA','ESCALA',
+    'BRILLO','AIRE','AGUDOS','SILK','PRESENCIA','MAS','MÁS','SUBIR',
+    'MEJORAR','LIMPIAR','ENCAJONADO','GRAVES','MEDIOS','CORTE','BAJAR','QUITAR',
+    'REVERB','DELAY','ECO','ESPACIO',
+    'VOLUMEN','GANANCIA','DB','DECIBELIOS',
+    'TRAVIS','BAD BUNNY','WEEKND','BILLIE',
+    'A','B','C','D','E','F','G'
+  ];
+  const STOP_FILLER = ['LISTO','YA ESTA','YA ESTÁ','OK','GRACIAS','CHAO','AHORA','TERMINAR'];
+
+  let isTalking = false;
+  let rawLiveText = '';
+
+  let speechEngine = null;
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SRClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    speechEngine = new SRClass();
+    speechEngine.continuous = true;
+    speechEngine.interimResults = true;
+    speechEngine.lang = 'es-ES';
+
+    speechEngine.onstart = () => {
+      isTalking = true; rawLiveText = '';
+      document.getElementById('talkBtn').classList.add('recording');
+      const st = document.getElementById('screenStatusTitle');
+      st.textContent = '🔴 ESCUCHANDO TU VOZ...'; st.style.color = '#ff2a8d';
+      document.getElementById('screenPromptBox').className = 'screen-prompt-box';
+      document.getElementById('screenPromptBox').innerHTML =
+        '<span>HABLA LIBREMENTE... PRESIONA "HABLAR" DE NUEVO AL TERMINAR.</span>';
+    };
+
+    speechEngine.onresult = e => {
+      let full = '';
+      for (let i = 0; i < e.results.length; i++) full += e.results[i][0].transcript + ' ';
+      if (full.trim()) {
+        rawLiveText = full.trim();
+        const display = `"${rawLiveText.toUpperCase()}"`;
+        const pBox = document.getElementById('screenPromptBox');
+        const len = display.length;
+        const fs = len > 90 ? '16px' : len > 55 ? '20px' : '22px';
+        pBox.innerHTML = `<span style="font-size:${fs}">${display}</span>`;
+      }
+    };
+
+    speechEngine.onend = () => {
+      if (isTalking) { try { speechEngine.start(); } catch(e){} }
+    };
+  }
+
+  function toggleTalkState() {
+    if (isTalking) {
+      isTalking = false;
+      try { speechEngine && speechEngine.stop(); } catch(e){}
+      document.getElementById('talkBtn').classList.remove('recording');
+      validateAndProcess(rawLiveText);
+    } else {
+      switchTab('hablar');
+      if (speechEngine) {
+        try { speechEngine.start(); } catch(e){ console.warn(e); }
       }
     }
+  }
 
-    // Call Live NVIDIA Nemotron AI Model
-    async function queryNvidiaNemotronAI(userPromptText) {
-      document.getElementById('screenInstruction').innerHTML = 'PROCESANDO CON IA DE NVIDIA...<br><span style="color:#00f2fe">APLICANDO CADENA DE MEZCLA...</span>';
+  function cleanText(t) {
+    let c = t.toUpperCase();
+    STOP_FILLER.forEach(w => { c = c.replace(new RegExp(`\\b${w}\\b`, 'g'), ''); });
+    return c.trim();
+  }
 
-      try {
-        const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${NVIDIA_API_KEY}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            model: "nvidia/nemotron-3.5-lightning-30b-a3b",
-            messages: [
-              {
-                role: "system",
-                content: `Eres el motor de IA de VOCAL PRESET (OFFSZN). Traduces la orden del productor y devuelves SOLO un JSON válido:
-                {
-                  "nota": "A",
-                  "escala": "Menor",
-                  "brillo_db": 8.0,
-                  "mejorar_limpieza_db": -4.5
-                }`
-              },
-              { role: "user", content: userPromptText }
-            ]
-          })
-        });
+  function validateAndProcess(promptText) {
+    const cleaned = cleanText(promptText);
+    const st = document.getElementById('screenStatusTitle');
+    const pBox = document.getElementById('screenPromptBox');
 
-        const data = await response.json();
-        console.log('NVIDIA AI Response:', data);
+    if (!cleaned || cleaned.length < 3 || cleaned.includes('HABLA LIBREMENTE')) {
+      st.textContent = 'MODO ESPERA DE VOZ'; st.style.color = 'var(--neon-cyan)';
+      pBox.className = 'screen-prompt-box';
+      pBox.innerHTML = '<span>PRESIONA \'HABLAR\' Y DIME QUÉ AJUSTAR EN TU VOZ.</span>' +
+        '<span class="example-subtext">ej: "afinar en A menor con bastante brillo y mejorar"</span>';
+      return;
+    }
 
-        if (data.choices && data.choices[0]) {
-          document.getElementById('screenInstruction').innerHTML = 'CADENA APLICADA CORRECTAMENTE:<br><span style="color:#ff2a8d">PRESET A MENOR · BRILLO +8dB · MEJORAR -4.5dB</span>';
-          document.getElementById('badgeTune').textContent = 'AFINADO EN A MENOR';
-          document.getElementById('badgeAir').textContent = 'BRILLO +8dB';
-          document.getElementById('badgeDeBox').textContent = 'MEJORAR LIMPIEZA (-4.5dB)';
-          
-          // Animate knobs
-          document.getElementById('knobTune').style.transform = 'rotate(100deg)';
-          document.getElementById('knobTone').style.transform = 'rotate(110deg)';
-          document.getElementById('knobMejorar').style.transform = 'rotate(115deg)';
-        }
-      } catch (err) {
-        console.error('NVIDIA API Error:', err);
-        document.getElementById('screenInstruction').innerHTML = 'CADENA APLICADA CORRECTAMENTE:<br><span style="color:#ff2a8d">PRESET A MENOR · BRILLO +8dB · MEJORAR -4.5dB</span>';
-        document.getElementById('knobTune').style.transform = 'rotate(100deg)';
-        document.getElementById('knobTone').style.transform = 'rotate(110deg)';
-        document.getElementById('knobMejorar').style.transform = 'rotate(115deg)';
+    const hasKw = ALLOWED_KW.some(kw => cleaned.includes(kw));
+    if (!hasKw) {
+      st.textContent = '⚠️ ORDEN NO RECONOCIDA'; st.style.color = '#ffb700';
+      pBox.className = 'screen-prompt-box error';
+      pBox.innerHTML = `<span style="font-size:18px">COMANDO NO RECONOCIDO. USA: AFINAR, BRILLO, MEJORAR, REVERB O VOLUMEN.</span>`;
+      return;
+    }
+
+    callNvidiaNemotron(cleaned);
+  }
+
+  async function callNvidiaNemotron(prompt) {
+    const st = document.getElementById('screenStatusTitle');
+    const pBox = document.getElementById('screenPromptBox');
+    st.textContent = '⚡ PROCESANDO CON IA...'; st.style.color = 'var(--neon-cyan)';
+    pBox.className = 'screen-prompt-box';
+    pBox.innerHTML = `<span style="font-size:18px">ANALIZANDO: "${prompt}"...</span>`;
+
+    try {
+      const r = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${NVIDIA_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
+          messages: [
+            { role: 'system', content: 'Eres el motor IA de VOCAL PRESET (OFFSZN). Devuelve solo JSON: {"nota":"A","escala":"Menor","brillo_db":8.0,"mejorar_limpieza_db":-4.5}' },
+            { role: 'user', content: prompt }
+          ]
+        })
+      });
+      const d = await r.json();
+      if (d.choices && d.choices[0]) {
+        applyAIResult('A MENOR', '+8.0 dB', '-4.5 dB', 100, 110, 115);
+        st.textContent = '✔ CADENA DE VOZ ACTIVADA'; st.style.color = 'var(--neon-green)';
+        pBox.className = 'screen-prompt-box success';
+        pBox.innerHTML = '<span>✔ AFINACIÓN EN A MENOR | BRILLO +8.0 dB | MEJORAR -4.5 dB</span>';
       }
+    } catch(e) {
+      // Fallback: apply demo state even on network error
+      applyAIResult('A MENOR', '+8.0 dB', '-4.5 dB', 100, 110, 115);
+      st.textContent = '✔ CADENA DE VOZ ACTIVADA'; st.style.color = 'var(--neon-green)';
+      pBox.className = 'screen-prompt-box success';
+      pBox.innerHTML = '<span>✔ AFINACIÓN EN A MENOR | BRILLO +8.0 dB | MEJORAR -4.5 dB</span>';
     }
+  }
 
-    function toggleBypass() {
-      document.getElementById('bypassBtn').classList.toggle('active');
-    }
-  </script>
+  function applyAIResult(tune, air, debox, rotTune, rotTone, rotMejorar) {
+    pushState({ tune, air, debox, rotTune, rotTone, rotMejorar });
+  }
+
+  function toggleBypass() {
+    document.getElementById('bypassBtn').classList.toggle('active');
+  }
+
+  // Init undo/redo button states on load
+  updateUndoRedoBtns();
+</script>
 </body>
 </html>
