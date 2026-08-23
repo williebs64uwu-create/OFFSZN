@@ -6,6 +6,7 @@ import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { v4 as uuidv4 } from 'uuid';
 import { getPresignedDownloadUrl } from '../../services/r2-storage.service.js';
 import { generatePluginLicense } from './PluginLicensingController.js';
+import MetaCapiService from '../../services/MetaCapiService.js';
 
 // --- PayPal OAuth Config ---
 const PAYPAL_OAUTH_URL = PAYPAL_ENVIRONMENT === 'live'
@@ -692,6 +693,43 @@ export const createPayPalOrder = async (req, res) => {
         });
 
         const response = await paypalClient.client().execute(request);
+
+        // --- META CAPI: INITIATE CHECKOUT ---
+        const clientIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress;
+        const clientUserAgent = req.headers['user-agent'];
+        const fbp = req.body.fbp || req.cookies?._fbp;
+        const fbc = req.body.fbc || req.cookies?._fbc;
+        const eventSourceUrl = req.headers.referer || req.headers.origin || 'https://offszn.lat';
+
+        const contentIds = verifiedCartItems.map(item => {
+            const idStr = String(item.product?.id || '');
+            if (['899', '901'].includes(idStr) || (item.product?.name || '').toLowerCase().includes('easy mix')) return 'easy_mix';
+            if (idStr === '900' || (item.product?.name || '').toLowerCase().includes('easy master')) return 'easy_master';
+            if (idStr === '902' || (item.product?.name || '').toLowerCase().includes('inka kola')) return 'inka_kola';
+            if (idStr === '903' || (item.product?.name || '').toLowerCase().includes('coca')) return 'coca_cola';
+            return `product_${idStr}`;
+        });
+
+        MetaCapiService.sendEvent({
+            eventName: 'InitiateCheckout',
+            eventId: `initiate_checkout_${response.result.id}`,
+            eventSourceUrl,
+            userData: {
+                clientIp,
+                clientUserAgent,
+                fbp,
+                fbc,
+                externalId: userId
+            },
+            customData: {
+                currency: 'USD',
+                value: grandTotalCalculated,
+                content_ids: contentIds,
+                content_type: 'product',
+                num_items: verifiedCartItems.length
+            }
+        }).catch(e => console.error('[MetaCapi] InitiateCheckout error:', e));
+
         res.status(200).json({ id: response.result.id });
 
     } catch (err) {
@@ -1363,6 +1401,58 @@ export const capturePayPalOrder = async (req, res) => {
                     }
                 } catch (emailErr) {
                     console.error("[EmailJS] Async flow error:", emailErr);
+                }
+            })();
+
+            // --- META CAPI: PURCHASE (DEDUPLICATED WITH BROWSER PIXEL) ---
+            (async () => {
+                try {
+                    const clientIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress;
+                    const clientUserAgent = req.headers['user-agent'];
+                    const fbp = req.body.fbp || req.cookies?._fbp;
+                    const fbc = req.body.fbc || req.cookies?._fbc;
+                    const eventSourceUrl = req.headers.referer || req.headers.origin || 'https://offszn.lat/pages/purchase-success.html';
+
+                    const purchaseContentIds = cartItems.map(item => {
+                        const idStr = String(item.product?.id || '');
+                        if (['899', '901'].includes(idStr) || (item.product?.name || '').toLowerCase().includes('easy mix')) return 'easy_mix';
+                        if (idStr === '900' || (item.product?.name || '').toLowerCase().includes('easy master')) return 'easy_master';
+                        if (idStr === '902' || (item.product?.name || '').toLowerCase().includes('inka kola')) return 'inka_kola';
+                        if (idStr === '903' || (item.product?.name || '').toLowerCase().includes('coca')) return 'coca_cola';
+                        return `product_${idStr}`;
+                    });
+
+                    const purchaseContents = cartItems.map((item, idx) => ({
+                        id: purchaseContentIds[idx] || 'easy_mix',
+                        quantity: 1,
+                        item_price: parseFloat(item.variant_price) || (totalPaid / (cartItems.length || 1))
+                    }));
+
+                    await MetaCapiService.sendEvent({
+                        eventName: 'Purchase',
+                        eventId: `purchase_${orderID}`,
+                        eventSourceUrl,
+                        userData: {
+                            email: payerEmail,
+                            clientIp,
+                            clientUserAgent,
+                            fbp,
+                            fbc,
+                            externalId: userId
+                        },
+                        customData: {
+                            currency: 'USD',
+                            value: totalPaid,
+                            content_ids: purchaseContentIds,
+                            contents: purchaseContents,
+                            content_type: 'product',
+                            content_name: cartItems[0]?.product?.name || 'Easy Mix',
+                            order_id: orderID,
+                            num_items: cartItems.length
+                        }
+                    });
+                } catch (capiErr) {
+                    console.error("[MetaCapi] Purchase background error:", capiErr);
                 }
             })();
 

@@ -111,13 +111,22 @@ class PluginDirectCheckout {
                         headers['Authorization'] = `Bearer ${token}`;
                     }
 
-                    const createPayload = { directProductId: this.productId };
+                    const attribution = (window.MetaPixel && typeof window.MetaPixel.getAttributionData === 'function')
+                        ? window.MetaPixel.getAttributionData()
+                        : {};
+
+                    const createPayload = { 
+                        directProductId: this.productId,
+                        ...attribution
+                    };
                     if (window.CURRENT_PROMO_PRICE) {
                         createPayload.customPrice = window.CURRENT_PROMO_PRICE;
                     }
 
                     // Coca-Cola uses isolated endpoint, all others use the general PayPal flow
                     const isCoke = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola';
+                    const isInka = this.productId === 902 || window.PLUGIN_NAME === 'INKA KOLA' || window.PLUGIN_NAME === 'Inka Kola';
+                    const isMaster = this.productId === 900 || window.PLUGIN_NAME === 'Easy Master';
                     const createUrl = isCoke ? '/api/orders/coke/create' : '/api/orders/paypal/create';
 
                     const response = await fetch(createUrl, {
@@ -132,6 +141,20 @@ class PluginDirectCheckout {
                     }
 
                     const data = await response.json();
+
+                    // --- META PIXEL: INITIATE CHECKOUT ---
+                    if (window.MetaPixel) {
+                        const pluginCode = isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : 'easy_mix'));
+                        window.MetaPixel.trackInitiateCheckout({
+                            content_ids: [pluginCode],
+                            content_name: this.downloads.name,
+                            content_type: 'product',
+                            value: window.CURRENT_PROMO_PRICE || 10,
+                            currency: 'USD',
+                            event_id: `initiate_checkout_${data.id}`
+                        });
+                    }
+
                     return data.id;
                 } catch (err) {
                     console.error('[PluginCheckout] Create Order Error:', err);
@@ -153,9 +176,14 @@ class PluginDirectCheckout {
                         headers['Authorization'] = `Bearer ${token}`;
                     }
 
+                    const attribution = (window.MetaPixel && typeof window.MetaPixel.getAttributionData === 'function')
+                        ? window.MetaPixel.getAttributionData()
+                        : {};
+
                     const capturePayload = { 
                         orderID: data.orderID,
-                        directProductId: this.productId 
+                        directProductId: this.productId,
+                        ...attribution
                     };
                     if (window.CURRENT_PROMO_PRICE) {
                         capturePayload.customPrice = window.CURRENT_PROMO_PRICE;
@@ -163,6 +191,8 @@ class PluginDirectCheckout {
 
                     // Coca-Cola uses isolated endpoint
                     const isCoke = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola';
+                    const isInka = this.productId === 902 || window.PLUGIN_NAME === 'INKA KOLA' || window.PLUGIN_NAME === 'Inka Kola';
+                    const isMaster = this.productId === 900 || window.PLUGIN_NAME === 'Easy Master';
                     const captureUrl = isCoke ? '/api/orders/coke/capture' : '/api/orders/paypal/capture';
 
                     const response = await fetch(captureUrl, {
@@ -179,6 +209,21 @@ class PluginDirectCheckout {
                     const result = await response.json();
 
                     if (result.status === 'COMPLETED' || result.status === 'APPROVED' || result.id) {
+                        // --- META PIXEL: PURCHASE (DEDUPLICATED WITH SERVER CAPI) ---
+                        if (window.MetaPixel) {
+                            const pluginCode = isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : 'easy_mix'));
+                            const paidAmount = result.total_price || result.amount || window.CURRENT_PROMO_PRICE || 10;
+                            window.MetaPixel.trackPurchase({
+                                content_ids: [pluginCode],
+                                content_name: this.downloads.name,
+                                content_type: 'product',
+                                value: paidAmount,
+                                currency: 'USD',
+                                order_id: data.orderID,
+                                event_id: `purchase_${data.orderID}`
+                            });
+                        }
+
                         // Display the premium success modal with the generated key!
                         const key = result.generatedLicenseKey || 'EASY-FULL-XXXX-XXXX';
                         this.showSuccessModal(key);

@@ -20,6 +20,7 @@ import paypalClient from '../paypalClient.js';
 import { supabase } from '../../database/connection.js';
 import { generatePluginLicense } from './PluginLicensingController.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
+import MetaCapiService from '../../services/MetaCapiService.js';
 
 const COKE_PRODUCT = {
     id: 903,
@@ -66,6 +67,34 @@ export const createCokeOrder = async (req, res) => {
         const order = await paypalClient.client().execute(request);
 
         console.log(`[CokeCheckout] Order created: ${order.result.id} | Price: $${validPrice} | User: ${userId || 'guest'}`);
+
+        // --- META CAPI: INITIATE CHECKOUT ---
+        const clientIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress;
+        const clientUserAgent = req.headers['user-agent'];
+        const fbp = req.body.fbp || req.cookies?._fbp;
+        const fbc = req.body.fbc || req.cookies?._fbc;
+        const eventSourceUrl = req.headers.referer || req.headers.origin || 'https://offszn.lat/plugins/coca-cola';
+
+        MetaCapiService.sendEvent({
+            eventName: 'InitiateCheckout',
+            eventId: `initiate_checkout_${order.result.id}`,
+            eventSourceUrl,
+            userData: {
+                clientIp,
+                clientUserAgent,
+                fbp,
+                fbc,
+                externalId: userId
+            },
+            customData: {
+                currency: 'USD',
+                value: validPrice,
+                content_ids: ['coca_cola'],
+                content_name: 'Coca-Cola',
+                content_type: 'product',
+                num_items: 1
+            }
+        }).catch(e => console.error('[MetaCapi] Coke InitiateCheckout error:', e));
 
         // Track A/B price
         try {
@@ -236,6 +265,47 @@ export const captureCokeOrder = async (req, res) => {
 
             } catch (emailErr) {
                 console.error('[CokeCheckout] Email error (non-critical):', emailErr.message);
+            }
+        })();
+
+        // --- META CAPI: PURCHASE (DEDUPLICATED WITH BROWSER PIXEL) ---
+        (async () => {
+            try {
+                const clientIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress;
+                const clientUserAgent = req.headers['user-agent'];
+                const fbp = req.body.fbp || req.cookies?._fbp;
+                const fbc = req.body.fbc || req.cookies?._fbc;
+                const eventSourceUrl = req.headers.referer || req.headers.origin || 'https://offszn.lat/plugins/coca-cola';
+
+                await MetaCapiService.sendEvent({
+                    eventName: 'Purchase',
+                    eventId: `purchase_${orderID}`,
+                    eventSourceUrl,
+                    userData: {
+                        email: payerEmail,
+                        clientIp,
+                        clientUserAgent,
+                        fbp,
+                        fbc,
+                        externalId: userId
+                    },
+                    customData: {
+                        currency: 'USD',
+                        value: capturedAmount,
+                        content_ids: ['coca_cola'],
+                        contents: [{
+                            id: 'coca_cola',
+                            quantity: 1,
+                            item_price: capturedAmount
+                        }],
+                        content_type: 'product',
+                        content_name: 'Coca-Cola',
+                        order_id: orderID,
+                        num_items: 1
+                    }
+                });
+            } catch (capiErr) {
+                console.error('[MetaCapi] Coke Purchase error:', capiErr);
             }
         })();
 

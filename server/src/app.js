@@ -133,7 +133,9 @@ app.use(helmet({
                 // PayPal
                 "https://www.paypal.com", "https://www.sandbox.paypal.com",
                 // EmailOctopus
-                "https://eomail5.com", "https://*.eomail5.com"
+                "https://eomail5.com", "https://*.eomail5.com",
+                // Meta Pixel
+                "https://connect.facebook.net"
             ],
             scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://cdn.tailwindcss.com", "https://eomail5.com", "https://*.eomail5.com", "https://gallery.eo.page"],
@@ -148,7 +150,9 @@ app.use(helmet({
                 "https://ui-avatars.com",
                 // PayPal
                 "https://www.paypalobjects.com", "https://*.paypal.com",
-                "https://offszn.lat", "https://*.offszn.lat", "http://localhost:*"
+                "https://offszn.lat", "https://*.offszn.lat", "http://localhost:*",
+                // Meta Pixel Beacon
+                "https://www.facebook.com"
             ],
             mediaSrc: ["'self'", "data:", "blob:", "https://*.supabase.co", "https://*.r2.dev", "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://res.cloudinary.com", "https://offszn.lat", "https://*.offszn.lat", "http://localhost:*"],
             connectSrc: ["'self'", "blob:",
@@ -164,7 +168,9 @@ app.use(helmet({
                 "https://*.googleapis.com", "https://accounts.google.com", "https://apis.google.com",
                 "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com",
                 "https://get.geojs.io", "https://*.geojs.io", "https://ipapi.co",
-                "https://api.ipify.org", "https://ipinfo.io"
+                "https://api.ipify.org", "https://ipinfo.io",
+                // Meta Pixel / Graph API
+                "https://connect.facebook.net", "https://www.facebook.com", "https://graph.facebook.com"
             ],
             frameSrc: ["'self'",
                 "https://www.youtube.com", "https://www.youtube-nocookie.com",
@@ -173,7 +179,9 @@ app.use(helmet({
                 "https://www.paypal.com", "https://www.sandbox.paypal.com",
                 "https://accounts.google.com", "https://*.googleapis.com", "https://apis.google.com",
                 // EmailOctopus (for hidden iframe form response)
-                "https://eomail5.com", "https://*.eomail5.com"
+                "https://eomail5.com", "https://*.eomail5.com",
+                // Meta
+                "https://www.facebook.com"
             ],
             formAction: ["'self'", "https://eomail5.com", "https://*.eomail5.com"],
             objectSrc: ["'none'"],
@@ -198,7 +206,7 @@ app.use(cors(corsOptions));
 // --- 2.1 PARSEO DE JSON & COOKIES ---
 import cookieParser from 'cookie-parser'
 import jwt from 'jsonwebtoken'
-import { JWT_SECRET, SUPABASE_URL, SUPABASE_ANON_KEY, EMAILJS_PUBLIC_KEY, EMAILOCTOPUS_API_KEY, EMAILOCTOPUS_LIST_ID } from '../src/shared/config/config.js'
+import { JWT_SECRET, SUPABASE_URL, SUPABASE_ANON_KEY, EMAILJS_PUBLIC_KEY, EMAILOCTOPUS_API_KEY, EMAILOCTOPUS_LIST_ID, META_PIXEL_ID } from '../src/shared/config/config.js'
 
 // --- PUBLIC ENVIRONMENT VARIABLES ---
 app.get('/env.js', (req, res) => {
@@ -209,6 +217,7 @@ app.get('/env.js', (req, res) => {
         window.EMAILJS_PUBLIC_KEY = "${EMAILJS_PUBLIC_KEY || 'If_WAVcuXiGSPp2SB'}";
         window.PAYPAL_CLIENT_ID = "${process.env.PAYPAL_CLIENT_ID || ''}";
         window.IMAGEKIT_URL_ENDPOINT = "${process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/offszn/'}";
+        window.META_PIXEL_ID = "${META_PIXEL_ID || ''}";
     `);
 });
 
@@ -377,7 +386,16 @@ app.get('/recursos/x-flow-analyzer', (req, res) => {
     res.redirect(301, '/plugins/x-flow-analyzer.html');
 });
 
-// --- 3.0 WILLIE INSPIRED DEDICATED DIRECT ROUTES (Clean URLs without redirects) ---
+// --- 3.0 PLUGIN DIRECT LANDINGS ---
+app.get(['/plugin/easy-mix', '/plugin/easy-mix.html'], (req, res) => {
+    const pluginLandingPath = path.join(rootPath, 'plugin/easy-mix.html');
+    if (fs.existsSync(pluginLandingPath)) {
+        return res.sendFile(pluginLandingPath);
+    }
+    return res.sendFile(path.join(rootPath, 'plugins/easy-mix.html'));
+});
+
+// --- 3.0.1 WILLIE INSPIRED DEDICATED DIRECT ROUTES (Clean URLs without redirects) ---
 app.get(['/willieinspired', '/@willieinspired'], (req, res) => {
     const willieLandingPath = path.join(rootPath, 'willieinspired/index.html');
     if (fs.existsSync(willieLandingPath)) {
