@@ -183,7 +183,7 @@ app.use(helmet({
                 // Meta
                 "https://www.facebook.com"
             ],
-            formAction: ["'self'", "https://eomail5.com", "https://*.eomail5.com"],
+            formAction: ["'self'", "https://eomail5.com", "https://*.eomail5.com", "https://*.paypal.com", "https://www.paypal.com", "https://*.facebook.com"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: null,
         },
