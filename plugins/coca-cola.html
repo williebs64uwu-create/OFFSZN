@@ -570,47 +570,136 @@
             }
         }
 
-        /* WhatsApp Floating Button */
-        .whatsapp-floating-btn {
+        /* WhatsApp Floating Widget */
+        .whatsapp-widget-container {
             position: fixed;
             bottom: 90px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
+            right: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10000;
+            text-decoration: none;
+            pointer-events: none;
+        }
+
+        .whatsapp-bubble-card {
+            position: relative;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 10px 28px 10px 16px;
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            line-height: 1.3;
+            display: flex;
+            align-items: center;
+            pointer-events: auto;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: whatsappBubbleIn 0.5s ease;
+            white-space: nowrap;
+        }
+
+        .whatsapp-bubble-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+            color: #0f172a;
+        }
+
+        .whatsapp-bubble-close {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 2px 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        .whatsapp-bubble-close:hover {
+            color: #0f172a;
+            background: #f1f5f9;
+        }
+
+        .whatsapp-floating-btn {
+            pointer-events: auto;
+            width: 58px;
+            height: 58px;
             background-color: #25D366;
-            color: #fff;
+            color: #fff !important;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 32px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), 0 0 20px rgba(37, 211, 102, 0.4);
-            z-index: 10000;
+            font-size: 30px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 20px rgba(37, 211, 102, 0.4);
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             animation: whatsappPulse 2s infinite;
             text-decoration: none;
+            flex-shrink: 0;
         }
 
         .whatsapp-floating-btn:hover {
-            transform: scale(1.1) translateY(-5px);
+            transform: scale(1.08) translateY(-3px);
             background-color: #20ba5a;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4), 0 0 30px rgba(37, 211, 102, 0.6);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35), 0 0 30px rgba(37, 211, 102, 0.6);
             color: #fff;
         }
 
+        @keyframes whatsappBubbleIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
         @keyframes whatsappPulse {
-            0% { box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), 0 0 0px rgba(37, 211, 102, 0.4); }
-            70% { box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), 0 0 15px rgba(37, 211, 102, 0.7); }
-            100% { box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3), 0 0 0px rgba(37, 211, 102, 0.4); }
+            0% {
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 0px rgba(37, 211, 102, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 18px rgba(37, 211, 102, 0.7);
+            }
+
+            100% {
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 0px rgba(37, 211, 102, 0.4);
+            }
         }
 
         @media (max-width: 768px) {
-            .whatsapp-floating-btn {
+            .whatsapp-widget-container {
                 bottom: 80px;
-                right: 20px;
-                width: 50px;
-                height: 50px;
-                font-size: 26px;
+                right: 16px;
+                gap: 8px;
+            }
+
+            .whatsapp-bubble-card {
+                font-size: 0.78rem;
+                padding: 8px 24px 8px 12px;
+                border-radius: 14px;
+            }
+
+            .whatsapp-floating-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 24px;
             }
         }
     </style>
@@ -1374,10 +1463,18 @@
         });
     </script>
 
-    <!-- ==================== WHATSAPP FLOATING BUTTON ==================== -->
-    <a href="https://wa.me/51993525005?text=Hola,%20quiero%20el%20plugin%20Coca-Cola%20por%20$15%20USD" target="_blank" rel="noopener noreferrer" class="whatsapp-floating-btn" aria-label="Contactar por WhatsApp">
-        <i class="bi bi-whatsapp"></i>
-    </a>
+    <!-- ==================== WHATSAPP FLOATING WIDGET ==================== -->
+    <div class="whatsapp-widget-container" id="whatsapp-widget">
+        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20el%20plugin%20Coca-Cola%20por%20$15%20USD"
+            target="_blank" rel="noopener noreferrer" class="whatsapp-bubble-card" id="whatsapp-bubble-link" aria-label="Envíanos un mensaje de WhatsApp">
+            <span>Envíanos un mensaje de<br>WhatsApp</span>
+            <button type="button" class="whatsapp-bubble-close" onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('whatsapp-bubble-link').style.display='none';" aria-label="Cerrar mensaje">&times;</button>
+        </a>
+        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20el%20plugin%20Coca-Cola%20por%20$15%20USD"
+            target="_blank" rel="noopener noreferrer" class="whatsapp-floating-btn" id="whatsapp-floating-btn" aria-label="Contactar por WhatsApp">
+            <i class="bi bi-whatsapp"></i>
+        </a>
+    </div>
 
     <div class="sticky-offer-banner" style="border-top: 1px solid rgba(255, 255, 255, 0.2) !important; background: rgba(10, 10, 10, 0.96) !important;">
         <div class="sticky-offer-text" style="color: #ffffff !important; font-weight: 800; font-size: 0.95rem; letter-spacing: 0.5px; text-transform: uppercase;">🚀 OBTENER TU LICENCIA DE POR VIDA</div>
