@@ -217,7 +217,7 @@ export const createPayPalOrder = async (req, res) => {
 
             let variantPrice = productObj.price_basic || 10;
             const requestedCustomPrice = parseFloat(req.body.customPrice || req.body.abPrice);
-            if (requestedCustomPrice && (requestedCustomPrice === 5 || requestedCustomPrice === 10 || requestedCustomPrice === 15)) {
+            if (requestedCustomPrice && [5, 10, 15, 20].includes(requestedCustomPrice)) {
                 variantPrice = requestedCustomPrice;
             }
 
@@ -787,7 +787,7 @@ export const capturePayPalOrder = async (req, res) => {
                 } else {
                     let variantPrice = productObj.price_basic || 10;
                     const requestedCustomPrice = parseFloat(req.body.customPrice || req.body.abPrice);
-                    if (requestedCustomPrice && (requestedCustomPrice === 5 || requestedCustomPrice === 10 || requestedCustomPrice === 15)) {
+                    if (requestedCustomPrice && [5, 10, 15, 20].includes(requestedCustomPrice)) {
                         variantPrice = requestedCustomPrice;
                     }
 

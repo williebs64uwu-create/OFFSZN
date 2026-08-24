@@ -1028,8 +1028,8 @@
         </div>
     </div>
 
-    <!-- Direct Checkout Configuration and Loader -->
     <script src="/env.js"></script>
+    <script src="/script/meta-pixel.js"></script>
     <script>
         // ── TOGGLE DROPDOWN FOR OTHER PAYMENT METHODS ──
         function togglePaymentDropdown() {
@@ -1043,29 +1043,34 @@
             }
         }
 
-        // ── A/B TESTING ENGINE (3-WAY SPLIT: $5.00 USD vs $10.00 USD vs $15.00 USD) ──
+        // ── A/B TESTING ENGINE (4 TIERS: $5, $10, $15, $20 USD - Preferencia $10 USD) ──
         (function initABTesting() {
-            const STORAGE_KEY = 'offszn_ab_promo_2x1_price';
+            const STORAGE_KEY = 'offszn_ab_promo_2x1_price_v5';
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
+            const validTiers = [5, 10, 15, 20];
 
             let assignedPrice;
-            if (forcedPrice === '5' || forcedPrice === '10' || forcedPrice === '15') {
-                assignedPrice = parseInt(forcedPrice, 10);
+            const parsedForced = parseInt(forcedPrice, 10);
+            if (forcedPrice && validTiers.includes(parsedForced)) {
+                assignedPrice = parsedForced;
                 localStorage.setItem(STORAGE_KEY, assignedPrice);
             } else {
                 let saved = localStorage.getItem(STORAGE_KEY);
-                if (saved === '5' || saved === '10' || saved === '15') {
-                    assignedPrice = parseInt(saved, 10);
+                let parsedSaved = parseInt(saved, 10);
+                if (validTiers.includes(parsedSaved)) {
+                    assignedPrice = parsedSaved;
                 } else {
-                    // Random 33% / 33% / 33% distribution across $5, $10, $15
+                    // Ponderación: 50% de probabilidad para $10, 15% para $5, 20% para $15, 15% para $20
                     const rand = Math.random();
-                    if (rand < 0.3333) {
-                        assignedPrice = 5;
-                    } else if (rand < 0.6666) {
-                        assignedPrice = 10;
+                    if (rand < 0.15) {
+                        assignedPrice = 5;   // 15%
+                    } else if (rand < 0.65) {
+                        assignedPrice = 10;  // 50% (La gran mayoría de veces)
+                    } else if (rand < 0.85) {
+                        assignedPrice = 15;  // 20%
                     } else {
-                        assignedPrice = 15;
+                        assignedPrice = 20;  // 15%
                     }
                     localStorage.setItem(STORAGE_KEY, assignedPrice);
                 }
@@ -1073,6 +1078,26 @@
 
             window.CURRENT_PROMO_PRICE = assignedPrice;
             window.PLUGIN_ID = 899;
+            window.PLUGIN_NAME = 'Promo 2x1 (Easy Mix + Easy Master)';
+
+            // --- META PIXEL: VIEW CONTENT (DYNAMIC PROMO 2X1 PRICE) ---
+            function dispatchViewContent() {
+                if (window.MetaPixel && typeof window.MetaPixel.trackViewContent === 'function') {
+                    window.MetaPixel.trackViewContent({
+                        content_ids: ['promo_2x1'],
+                        content_name: 'Promo 2x1 (Easy Mix + Easy Master)',
+                        content_type: 'product',
+                        value: assignedPrice,
+                        currency: 'USD'
+                    });
+                }
+            }
+
+            if (window.MetaPixel) {
+                dispatchViewContent();
+            } else {
+                window.addEventListener('DOMContentLoaded', dispatchViewContent);
+            }
 
             // Render initial price
             document.addEventListener('DOMContentLoaded', () => {

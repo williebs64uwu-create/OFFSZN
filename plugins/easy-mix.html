@@ -1937,22 +1937,35 @@
     <script src="/env.js"></script>
     <script src="/script/meta-pixel.js"></script>
     <script>
-        // ── A/B TESTING ENGINE (50/50 SPLIT: $5.00 USD vs $10.00 USD) ──
+        // ── A/B TESTING ENGINE (4 TIERS: $5, $10, $15, $20 USD - Preferencia $10 USD) ──
         (function initABTesting() {
-            const STORAGE_KEY = 'offszn_ab_easy_mix_price';
+            const STORAGE_KEY = 'offszn_ab_easy_mix_price_v4';
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
+            const validTiers = [5, 10, 15, 20];
 
             let assignedPrice;
-            if (forcedPrice === '5' || forcedPrice === '10') {
-                assignedPrice = parseInt(forcedPrice, 10);
+            const parsedForced = parseInt(forcedPrice, 10);
+            if (forcedPrice && validTiers.includes(parsedForced)) {
+                assignedPrice = parsedForced;
                 localStorage.setItem(STORAGE_KEY, assignedPrice);
             } else {
                 let saved = localStorage.getItem(STORAGE_KEY);
-                if (saved === '5' || saved === '10') {
-                    assignedPrice = parseInt(saved, 10);
+                let parsedSaved = parseInt(saved, 10);
+                if (validTiers.includes(parsedSaved)) {
+                    assignedPrice = parsedSaved;
                 } else {
-                    assignedPrice = Math.random() < 0.5 ? 5 : 10;
+                    // Ponderación: 50% de probabilidad para $10, 25% para $5, 15% para $15, 10% para $20
+                    const rand = Math.random();
+                    if (rand < 0.25) {
+                        assignedPrice = 5;   // 25%
+                    } else if (rand < 0.75) {
+                        assignedPrice = 10;  // 50% (La mayoría de veces)
+                    } else if (rand < 0.90) {
+                        assignedPrice = 15;  // 15%
+                    } else {
+                        assignedPrice = 20;  // 10%
+                    }
                     localStorage.setItem(STORAGE_KEY, assignedPrice);
                 }
             }

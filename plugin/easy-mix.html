@@ -1204,12 +1204,12 @@
     <script src="/script/meta-pixel.js"></script>
     <script>
         (function initDynamicPricing() {
-            const STORAGE_KEY = 'offszn_ab_plugin_easymix_price_v3';
+            const STORAGE_KEY = 'offszn_ab_plugin_easymix_price_v4';
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPriceParam = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
 
             let assignedPrice;
-            const validTiers = [5, 10, 15];
+            const validTiers = [5, 10, 15, 20];
 
             if (forcedPriceParam && validTiers.includes(parseInt(forcedPriceParam, 10))) {
                 assignedPrice = parseInt(forcedPriceParam, 10);
@@ -1220,8 +1220,17 @@
                 if (validTiers.includes(parsedSaved)) {
                     assignedPrice = parsedSaved;
                 } else {
-                    // Randomly assign one of 5, 10, or 15 USD
-                    assignedPrice = validTiers[Math.floor(Math.random() * validTiers.length)];
+                    // Ponderación: 50% de probabilidad para $10, 25% para $5, 15% para $15, 10% para $20
+                    const rand = Math.random();
+                    if (rand < 0.25) {
+                        assignedPrice = 5;   // 25%
+                    } else if (rand < 0.75) {
+                        assignedPrice = 10;  // 50% (La mayoría de veces)
+                    } else if (rand < 0.90) {
+                        assignedPrice = 15;  // 15%
+                    } else {
+                        assignedPrice = 20;  // 10%
+                    }
                     localStorage.setItem(STORAGE_KEY, assignedPrice);
                 }
             }
