@@ -326,44 +326,11 @@ Source: "build\<TARGET>_artefacts\Release\VST3\<PLUGIN_NAME>.vst3\*"; DestDir: "
 Source: "mockup.html"; DestDir: "{userappdata}\OFFSZN\<PluginGuiFolder>"; DestName: "mockup.html"; Flags: replacesameversion uninsneveruninstall
 
 [Code]
-function IsWebView2Installed(): Boolean;
-var verStr: String;
-begin
-  Result := RegQueryStringValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3C4FA00-2870-474C-B5E0-F91685E92E76}', 'pv', verStr) or
-            RegQueryStringValue(HKCU, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3C4FA00-2870-474C-B5E0-F91685E92E76}', 'pv', verStr) or
-            RegQueryStringValue(HKLM, 'SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3C4FA00-2870-474C-B5E0-F91685E92E76}', 'pv', verStr);
-  if (verStr = '0.0.0.0') or (verStr = '') then Result := False;
-end;
-
-function IsVCRedistInstalled(): Boolean;
-var installed: Cardinal;
-begin
-  Result := False;
-  if RegQueryDWordValue(HKLM, 'SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Installed', installed) then
-    Result := (installed = 1)
-  else if RegQueryDWordValue(HKLM, 'SOFTWARE\WOW6432Node\Microsoft\VisualStudio\14.0\VC\Runtimes\x64', 'Installed', installed) then
-    Result := (installed = 1);
-end;
-
 procedure CurStepChanged(CurStep: TSetupStep);
-var resCode: Integer; psCmd: String;
 begin
   if CurStep = ssInstall then
   begin
     DelTree(ExpandConstant('{commoncf}\VST3\<PLUGIN_NAME>.vst3\<PLUGIN_NAME>.vst3'), True, True, True);
-  end
-  else if CurStep = ssPostInstall then
-  begin
-    if not IsWebView2Installed() then
-    begin
-      psCmd := '-NoProfile -ExecutionPolicy Bypass -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile(''https://go.microsoft.com/fwlink/p/?LinkId=2124703'', ''$env:TEMP\wv2setup.exe''); Start-Process ''$env:TEMP\wv2setup.exe'' -ArgumentList ''/silent /install'' -Wait"';
-      Exec('powershell.exe', psCmd, '', SW_HIDE, ewWaitUntilTerminated, resCode);
-    end;
-    if not IsVCRedistInstalled() then
-    begin
-      psCmd := '-NoProfile -ExecutionPolicy Bypass -Command "$wc = New-Object System.Net.WebClient; $wc.DownloadFile(''https://aka.ms/vs/17/release/vc_redist.x64.exe'', ''$env:TEMP\vc_redist.x64.exe''); Start-Process ''$env:TEMP\vc_redist.x64.exe'' -ArgumentList ''/quiet /norestart'' -Wait"';
-      Exec('powershell.exe', psCmd, '', SW_HIDE, ewWaitUntilTerminated, resCode);
-    end;
   end;
 end;
 ```
