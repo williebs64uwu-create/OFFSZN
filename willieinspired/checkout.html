@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Checkout • Willie Inspired</title>
+    <link rel="icon" type="image/png" href="/willieimages/HERO.png">
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --bg-texture: #fbfbfb;
+            --surface: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --text-subtle: #9ca3af;
+            --stroke-light: rgba(0, 0, 0, 0.08);
+            --stroke-focus: #000000;
+            --accent-pink: #ec4899;
+            --accent-purple: #742284;
+            --accent-paypal: #ffc439;
+            --accent-mp: #009ee3;
+            --accent-whatsapp: #25d366;
+            --radius-card: 14px;
+            --radius-input: 10px;
+        }
+
+        html {
+            scrollbar-gutter: stable;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-texture);
+            background-image: url('/willieimages/bg-noise.png');
+            background-repeat: repeat;
+            background-size: 280px;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ==========================================================================
+           HEADER MINIMALISTA CON WAVEFORM Y BADGE DE CARRITO
+           ========================================================================== */
+        .checkout-header {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            background-image: url('/willieimages/bg-noise.png');
+            background-repeat: repeat;
+            background-size: 280px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--stroke-light);
+            padding: 1.15rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .checkout-header-inner {
+            max-width: 1140px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .header-back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        .header-back-link:hover {
+            color: #000000;
+            transform: translateX(-3px);
+        }
+
+        .checkout-brand-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #000000;
+        }
+
+        .waveform-icon {
+            display: flex;
+            align-items: center;
+            gap: 2.5px;
+            height: 22px;
+        }
+
+        .waveform-bar {
+            width: 3px;
+            background: #000000;
+            border-radius: 999px;
+        }
+
+        .waveform-bar:nth-child(1) { height: 8px; }
+        .waveform-bar:nth-child(2) { height: 16px; }
+        .waveform-bar:nth-child(3) { height: 22px; }
+        .waveform-bar:nth-child(4) { height: 14px; }
+        .waveform-bar:nth-child(5) { height: 7px; }
+
+        .checkout-brand-title {
+            font-size: 1.15rem;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            text-transform: uppercase;
+        }
+
+        .header-cart-icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            color: var(--accent-pink);
+            font-size: 1.4rem;
+            text-decoration: none;
+            transition: transform 0.2s ease;
+        }
+
+        .header-cart-icon-btn:hover {
+            transform: scale(1.08);
+        }
+
+        .header-cart-count-badge {
+            position: absolute;
+            top: -4px;
+            right: -8px;
+            background: #000000;
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 800;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+        }
+
+        /* Mobile Order Summary Dropdown Bar */
+        .mobile-summary-toggle {
+            display: none;
+            width: 100%;
+            background: #f4f4f6;
+            border-bottom: 1px solid var(--stroke-light);
+            padding: 0.9rem 1.25rem;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .mobile-summary-toggle-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #000000;
+        }
+
+        .mobile-summary-toggle-right {
+            font-size: 1.05rem;
+            font-weight: 900;
+            color: #000000;
+        }
+
+        /* ==========================================================================
+           MAIN CHECKOUT CONTAINER (2 COLUMNAS)
+           ========================================================================== */
+        .checkout-main-container {
+            max-width: 1140px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem 1.5rem;
+            display: grid;
+            grid-template-columns: 1.18fr 0.82fr;
+            gap: 3.5rem;
+            align-items: start;
+        }
+
+        /* ==========================================================================
+           COLUMNA IZQUIERDA: FORMULARIO DE CHECKOUT
+           ========================================================================== */
+        .checkout-form-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.75rem;
+        }
+
+        /* Express Checkout */
+        .express-checkout-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .express-header-text {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .express-buttons-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .express-btn {
+            height: 48px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            padding: 0 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        }
+
+        .express-btn:hover {
+            transform: translateY(-1.5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .express-btn-paypal {
+            background: var(--accent-paypal);
+            color: #003087;
+        }
+
+        .express-btn-paypal svg {
+            height: 22px;
+        }
+
+        .express-btn-mp {
+            background: var(--accent-mp);
+            color: #ffffff;
+            font-size: 0.88rem;
+            gap: 6px;
+        }
+
+        .express-btn-mp svg {
+            height: 20px;
+            fill: #ffffff;
+        }
+
+        .express-btn-yape {
+            background: var(--accent-purple);
+            color: #ffffff;
+            font-size: 0.95rem;
+            gap: 6px;
+            font-weight: 900;
+        }
+
+        /* Divisor "O" */
+        .divider-or-row {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+
+        .divider-or-row::before,
+        .divider-or-row::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--stroke-light);
+        }
+
+        .divider-or-text {
+            padding: 0 14px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Secciones de Formulario */
+        .checkout-section-card {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .section-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .section-title {
+            font-size: 1.18rem;
+            font-weight: 800;
+            color: #000000;
+            letter-spacing: -0.02em;
+        }
+
+        .section-right-link {
+            font-size: 0.82rem;
+            color: #000000;
+            font-weight: 700;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .section-subtitle {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin-top: -6px;
+        }
+
+        /* Inputs Limpios */
+        .form-group {
+            position: relative;
+            width: 100%;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 48px;
+            padding: 0 14px;
+            border-radius: var(--radius-input);
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: #000000;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .form-input:focus {
+            border-color: #000000;
+            box-shadow: 0 0 0 1.5px #000000;
+        }
+
+        .form-input-help-icon {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-subtle);
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        /* Checkbox Custom */
+        .custom-checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            user-select: none;
+            margin-top: 4px;
+        }
+
+        .custom-checkbox-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            accent-color: var(--accent-pink);
+            cursor: pointer;
+        }
+
+        .custom-checkbox-label {
+            font-size: 0.84rem;
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        /* ==========================================================================
+           CONTENEDOR DE PAGO SEGMENTADO (TARJETAS / PAYPAL / MERCADO PAGO / YAPE)
+           ========================================================================== */
+        .payment-options-container {
+            border: 1.5px solid var(--stroke-light);
+            border-radius: 12px;
+            background: #ffffff;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .payment-option-item {
+            border-bottom: 1px solid var(--stroke-light);
+        }
+
+        .payment-option-item:last-child {
+            border-bottom: none;
+        }
+
+        .payment-option-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s ease;
+            background: #ffffff;
+        }
+
+        .payment-option-header:hover {
+            background: #f9f9fb;
+        }
+
+        .payment-option-item.active .payment-option-header {
+            background: #fafafa;
+        }
+
+        .payment-radio-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .custom-radio-circle {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1.5px solid #d1d5db;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .payment-option-item.active .custom-radio-circle {
+            border-color: var(--accent-pink);
+            background: #ffffff;
+        }
+
+        .custom-radio-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: transparent;
+            transition: background 0.2s ease;
+        }
+
+        .payment-option-item.active .custom-radio-dot {
+            background: var(--accent-pink);
+        }
+
+        .payment-option-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .payment-badges-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-badge-pill {
+            height: 22px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #ffffff;
+            font-size: 0.68rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge-visa { color: #1a1f71; font-style: italic; }
+        .badge-mastercard { color: #eb001b; }
+        .badge-amex { color: #006fcf; }
+        .badge-count { background: #f3f4f6; color: var(--text-muted); font-size: 0.65rem; }
+
+        /* Contenido Desplegable */
+        .payment-option-body {
+            display: none;
+            padding: 16px;
+            background: #f8f9fa;
+            border-top: 1px solid var(--stroke-light);
+        }
+
+        .payment-option-item.active .payment-option-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card-fields-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .payment-desc-text {
+            font-size: 0.84rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        /* Yape Box */
+        .yape-box-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: #ffffff;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid var(--stroke-light);
+        }
+
+        .yape-qr-thumb {
+            width: 72px;
+            height: 72px;
+            border-radius: 8px;
+            background: #742284;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        .yape-info-text h6 {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #000000;
+            margin-bottom: 2px;
+        }
+
+        .yape-info-text p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .yape-number-badge {
+            display: inline-block;
+            background: #f3e8ff;
+            color: #742284;
+            font-weight: 800;
+            font-size: 0.85rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-top: 4px;
+        }
+
+        /* ==========================================================================
+           BANNER DE "OTROS MEDIOS DE PAGO" (WHATSAPP CHECKOUT DIRECTO)
+           ========================================================================== */
+        .whatsapp-checkout-card {
+            background: #f0fdf4;
+            border: 1.5px dashed #86efac;
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .whatsapp-checkout-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .whatsapp-checkout-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--accent-whatsapp);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+        }
+
+        .whatsapp-checkout-info h5 {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #14532d;
+            margin-bottom: 2px;
+        }
+
+        .whatsapp-checkout-info p {
+            font-size: 0.78rem;
+            color: #166534;
+            font-weight: 600;
+        }
+
+        .whatsapp-checkout-btn {
+            background: var(--accent-whatsapp);
+            color: #ffffff !important;
+            border: none;
+            border-radius: 9999px;
+            padding: 8px 16px;
+            font-size: 0.82rem;
+            font-weight: 800;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+        }
+
+        .whatsapp-checkout-btn:hover {
+            background: #20ba5a;
+            transform: translateY(-1px);
+        }
+
+        /* Dirección de Facturación */
+        .billing-options-box {
+            border: 1px solid var(--stroke-light);
+            border-radius: 12px;
+            background: #ffffff;
+            overflow: hidden;
+        }
+
+        .billing-option-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--stroke-light);
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .billing-option-row:last-child {
+            border-bottom: none;
+        }
+
+        /* Botón Principal Pagar Ahora */
+        .main-checkout-submit-btn {
+            width: 100%;
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            padding: 16px 20px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+        }
+
+        .main-checkout-submit-btn:hover {
+            background: #222222;
+            transform: translateY(-1.5px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .main-checkout-submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        .checkout-guarantee-strip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* ==========================================================================
+           COLUMNA DERECHA: RESUMEN DEL PEDIDO (STICKY)
+           ========================================================================== */
+        .checkout-summary-col {
+            position: sticky;
+            top: 90px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background: #ffffff;
+            padding: 1.75rem;
+            border-radius: 16px;
+            border: 1px solid var(--stroke-light);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+
+        .summary-items-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .summary-item-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .summary-item-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+
+        .summary-item-thumb-wrapper {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            flex-shrink: 0;
+        }
+
+        .summary-item-thumb {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #f4f4f6;
+        }
+
+        .summary-item-qty-badge {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .summary-item-info {
+            min-width: 0;
+        }
+
+        .summary-item-name {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #000000;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 180px;
+        }
+
+        .summary-item-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .summary-item-price {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #000000;
+            white-space: nowrap;
+        }
+
+        /* Cupón / Código de Descuento */
+        .coupon-input-row {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .coupon-input {
+            flex: 1;
+            height: 44px;
+            padding: 0 14px;
+            border-radius: var(--radius-input);
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            font-size: 0.88rem;
+            font-weight: 600;
+            outline: none;
+            text-transform: uppercase;
+        }
+
+        .coupon-input:focus {
+            border-color: #000000;
+        }
+
+        .coupon-apply-btn {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: var(--radius-input);
+            padding: 0 16px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .coupon-apply-btn:hover {
+            background: #000000;
+            color: #ffffff;
+            border-color: #000000;
+        }
+
+        .coupon-active-tag {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            background: #dcfce7;
+            color: #15803d;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .coupon-remove-btn {
+            background: none;
+            border: none;
+            color: #15803d;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        /* Desglose de Totales */
+        .summary-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 1rem;
+            border-top: 1px solid var(--stroke-light);
+        }
+
+        .summary-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .summary-line.total-row {
+            padding-top: 10px;
+            border-top: 1px solid var(--stroke-light);
+            color: #000000;
+            font-size: 1.15rem;
+            font-weight: 900;
+        }
+
+        .total-currency-tag {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-right: 4px;
+        }
+
+        /* Empty State */
+        .checkout-empty-state {
+            display: none;
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .checkout-empty-state h4 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .checkout-empty-state p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .checkout-empty-return-btn {
+            display: inline-block;
+            background: #000000;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 9999px;
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+
+        /* ==========================================================================
+           RESPONSIVE MOBILE (< 768px)
+           ========================================================================== */
+        @media (max-width: 768px) {
+            .mobile-summary-toggle {
+                display: flex;
+            }
+
+            .checkout-header {
+                padding: 0.85rem 1.25rem;
+            }
+
+            .checkout-brand-title {
+                font-size: 1.05rem;
+            }
+
+            .checkout-main-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                padding: 1.25rem 1rem 3rem 1rem;
+            }
+
+            .checkout-summary-col {
+                position: static;
+                order: -1;
+                display: none; /* Controlado por mobile-summary-toggle */
+                padding: 1.25rem;
+            }
+
+            .checkout-summary-col.is-open {
+                display: flex;
+            }
+
+            .express-buttons-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .whatsapp-checkout-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .whatsapp-checkout-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .card-fields-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Minimalista -->
+    <header class="checkout-header">
+        <div class="checkout-header-inner">
+            <a href="/willieinspired/" class="header-back-link" title="Volver a la tienda">
+                <i class="bi bi-chevron-left"></i> Tienda
+            </a>
+
+            <a href="/willieinspired/" class="checkout-brand-center">
+                <div class="waveform-icon">
+                    <span class="waveform-bar"></span>
+                    <span class="waveform-bar"></span>
+                    <span class="waveform-bar"></span>
+                    <span class="waveform-bar"></span>
+                    <span class="waveform-bar"></span>
+                </div>
+                <span class="checkout-brand-title">WILLIE INSPIRED</span>
+            </a>
+
+            <a href="/willieinspired/" class="header-cart-icon-btn" title="Ver carrito">
+                <i class="bi bi-bag"></i>
+                <span class="header-cart-count-badge" id="headerCartCount">0</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Mobile Summary Dropdown Bar -->
+    <div class="mobile-summary-toggle" id="mobileSummaryToggle" onclick="toggleMobileSummary()">
+        <div class="mobile-summary-toggle-left">
+            <i class="bi bi-cart3"></i>
+            <span>Mostrar resumen del pedido</span>
+            <i class="bi bi-chevron-down" id="mobileSummaryChevron"></i>
+        </div>
+        <div class="mobile-summary-toggle-right" id="mobileSummaryTotal">$0.00</div>
+    </div>
+
+    <!-- Main Checkout Container -->
+    <main class="checkout-main-container">
+
+        <!-- COLUMNA IZQUIERDA: FORMULARIO Y MÉTODOS DE PAGO -->
+        <section class="checkout-form-col">
+
+            <!-- Express Checkout -->
+            <div class="express-checkout-box">
+                <span class="express-header-text">Express checkout</span>
+                <div class="express-buttons-grid">
+                    <button type="button" class="express-btn express-btn-paypal" onclick="selectPaymentMethod('paypal'); executePayment();" title="Pagar rápido con PayPal">
+                        <svg viewBox="0 0 100 24" fill="currentColor">
+                            <path d="M12.5 3h6.3c3.8 0 6.2 1.8 5.6 5.5-.5 3.3-2.9 5.5-6.4 5.5h-2.8l-1.5 8h-4.3l3.1-19zm4.8 7.5c1.4 0 2.4-.8 2.6-2.2.2-1.3-.6-2.1-2-2.1h-2.1l-.8 4.3h2.3z" fill="#003087"/>
+                            <path d="M28.5 3h6.3c3.8 0 6.2 1.8 5.6 5.5-.5 3.3-2.9 5.5-6.4 5.5h-2.8l-1.5 8h-4.3l3.1-19zm4.8 7.5c1.4 0 2.4-.8 2.6-2.2.2-1.3-.6-2.1-2-2.1h-2.1l-.8 4.3h2.3z" fill="#0079C1"/>
+                        </svg>
+                    </button>
+
+                    <button type="button" class="express-btn express-btn-mp" onclick="selectPaymentMethod('mercadopago'); executePayment();" title="Pagar con Mercado Pago">
+                        <i class="bi bi-wallet2"></i> Mercado Pago
+                    </button>
+
+                    <button type="button" class="express-btn express-btn-yape" onclick="selectPaymentMethod('yape');" title="Pagar con Yape">
+                        <i class="bi bi-qr-code"></i> Yape
+                    </button>
+                </div>
+            </div>
+
+            <div class="divider-or-row">
+                <span class="divider-or-text">O</span>
+            </div>
+
+            <!-- Sección Contacto -->
+            <div class="checkout-section-card">
+                <div class="section-header-row">
+                    <h3 class="section-title">Contacto</h3>
+                    <a href="/cuenta/login.html" class="section-right-link">Iniciar sesión</a>
+                </div>
+
+                <div class="form-group">
+                    <input type="text" id="contactEmail" class="form-input" placeholder="Correo electrónico o número de celular" required autocomplete="email">
+                    <i class="bi bi-question-circle form-input-help-icon" title="Enviaremos tus enlaces de descarga y comprobante a este correo"></i>
+                </div>
+
+                <label class="custom-checkbox-row">
+                    <input type="checkbox" id="newsletterConsent" checked>
+                    <span class="custom-checkbox-label">Enviarme novedades, ofertas exclusivas y tutoriales</span>
+                </label>
+            </div>
+
+            <!-- Sección Pago -->
+            <div class="checkout-section-card">
+                <div class="section-header-row">
+                    <h3 class="section-title">Pago</h3>
+                </div>
+                <p class="section-subtitle">Todas las transacciones son seguras y están encriptadas.</p>
+
+                <!-- Acordeón de Métodos de Pago -->
+                <div class="payment-options-container">
+
+                    <!-- Opción 1: Tarjeta de Crédito / Débito -->
+                    <div class="payment-option-item active" id="option-card" onclick="selectPaymentMethod('card')">
+                        <div class="payment-option-header">
+                            <div class="payment-radio-left">
+                                <div class="custom-radio-circle">
+                                    <div class="custom-radio-dot"></div>
+                                </div>
+                                <span class="payment-option-title">Tarjeta de crédito / débito</span>
+                            </div>
+                            <div class="payment-badges-row">
+                                <span class="card-badge-pill badge-visa">VISA</span>
+                                <span class="card-badge-pill badge-mastercard">MC</span>
+                                <span class="card-badge-pill badge-amex">AMEX</span>
+                                <span class="card-badge-pill badge-count">+3</span>
+                            </div>
+                        </div>
+
+                        <div class="payment-option-body">
+                            <div class="form-group">
+                                <input type="text" class="form-input" id="cardNumber" placeholder="Número de tarjeta" maxlength="19">
+                                <i class="bi bi-lock-fill form-input-help-icon"></i>
+                            </div>
+
+                            <div class="card-fields-grid">
+                                <input type="text" class="form-input" id="cardExpiry" placeholder="Fecha de vencimiento (MM / AA)" maxlength="5">
+                                <div class="form-group">
+                                    <input type="text" class="form-input" id="cardCvc" placeholder="Código de seguridad (CVV)" maxlength="4">
+                                    <i class="bi bi-question-circle form-input-help-icon" title="Código de 3 o 4 dígitos al reverso de tu tarjeta"></i>
+                                </div>
+                            </div>
+
+                            <input type="text" class="form-input" id="cardName" placeholder="Nombre en la tarjeta">
+                        </div>
+                    </div>
+
+                    <!-- Opción 2: PayPal -->
+                    <div class="payment-option-item" id="option-paypal" onclick="selectPaymentMethod('paypal')">
+                        <div class="payment-option-header">
+                            <div class="payment-radio-left">
+                                <div class="custom-radio-circle">
+                                    <div class="custom-radio-dot"></div>
+                                </div>
+                                <span class="payment-option-title">PayPal</span>
+                            </div>
+                            <div class="payment-badges-row">
+                                <span style="font-weight: 800; color: #003087; font-size: 0.95rem;">Pay<span style="color: #0079C1;">Pal</span></span>
+                            </div>
+                        </div>
+
+                        <div class="payment-option-body">
+                            <p class="payment-desc-text">Al hacer clic en "Pagar Ahora", serás redirigido a PayPal para completar tu compra de forma segura con tu saldo o tarjetas internacionales.</p>
+                        </div>
+                    </div>
+
+                    <!-- Opción 3: Mercado Pago -->
+                    <div class="payment-option-item" id="option-mercadopago" onclick="selectPaymentMethod('mercadopago')">
+                        <div class="payment-option-header">
+                            <div class="payment-radio-left">
+                                <div class="custom-radio-circle">
+                                    <div class="custom-radio-dot"></div>
+                                </div>
+                                <span class="payment-option-title">Mercado Pago</span>
+                            </div>
+                            <div class="payment-badges-row">
+                                <span style="font-weight: 800; color: #009ee3; font-size: 0.85rem;"><i class="bi bi-wallet2"></i> Mercado Pago</span>
+                            </div>
+                        </div>
+
+                        <div class="payment-option-body">
+                            <p class="payment-desc-text">Paga en tu moneda local en toda Latinoamérica (Perú, México, Colombia, Argentina, Chile) mediante tarjetas locales, OXXO, PagoFácil o transferencias bancarias.</p>
+                        </div>
+                    </div>
+
+                    <!-- Opción 4: Yape / Plin (Perú) -->
+                    <div class="payment-option-item" id="option-yape" onclick="selectPaymentMethod('yape')">
+                        <div class="payment-option-header">
+                            <div class="payment-radio-left">
+                                <div class="custom-radio-circle">
+                                    <div class="custom-radio-dot"></div>
+                                </div>
+                                <span class="payment-option-title">Yape / Plin (Perú)</span>
+                            </div>
+                            <div class="payment-badges-row">
+                                <span class="card-badge-pill" style="background: #742284; color: #fff; font-weight: 900;">YAPE</span>
+                                <span class="card-badge-pill" style="background: #00c3de; color: #fff; font-weight: 900;">PLIN</span>
+                            </div>
+                        </div>
+
+                        <div class="payment-option-body">
+                            <div class="yape-box-container">
+                                <div class="yape-qr-thumb">
+                                    <i class="bi bi-qr-code"></i>
+                                </div>
+                                <div class="yape-info-text">
+                                    <h6>Yape Directo OFFSZN</h6>
+                                    <p>Titular: <strong>Willie / OFFSZN</strong></p>
+                                    <span class="yape-number-badge">📱 921 839 257</span>
+                                </div>
+                            </div>
+                            <p class="payment-desc-text">Yapea el monto equivalente en Soles (Tipo de cambio ref. S/ 3.80). Al completar, enviaremos tus archivos inmediatamente.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Banner "Otros Medios de Pago" (WhatsApp Direct Checkout) -->
+            <div class="whatsapp-checkout-card">
+                <div class="whatsapp-checkout-left">
+                    <div class="whatsapp-checkout-icon">
+                        <i class="bi bi-whatsapp"></i>
+                    </div>
+                    <div class="whatsapp-checkout-info">
+                        <h5>¿Prefieres pagar por otro medio?</h5>
+                        <p>Transferencia Bancaria, Binance USDT, Western Union, etc.</p>
+                    </div>
+                </div>
+                <button type="button" class="whatsapp-checkout-btn" onclick="openWhatsAppCheckout()">
+                    Pagar por WhatsApp <i class="bi bi-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Dirección de Facturación -->
+            <div class="checkout-section-card">
+                <h3 class="section-title">Dirección de facturación</h3>
+                <div class="billing-options-box">
+                    <label class="billing-option-row">
+                        <input type="radio" name="billingAddress" value="same" checked style="accent-color: #000;">
+                        <span>Misma dirección que el contacto (predeterminado)</span>
+                    </label>
+                    <label class="billing-option-row">
+                        <input type="radio" name="billingAddress" value="diff" style="accent-color: #000;">
+                        <span>Usar una dirección de facturación diferente</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Botón Principal Pagar Ahora -->
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 0.5rem;">
+                <button type="button" class="main-checkout-submit-btn" id="payNowBtn" onclick="executePayment()">
+                    <span>Pagar Ahora</span> • <span id="btnTotalPrice">$0.00 USD</span>
+                </button>
+
+                <div class="checkout-guarantee-strip">
+                    <span>⚡ Descarga Inmediata</span> • 
+                    <span>🔒 Pago 100% Seguro</span> • 
+                    <span>🛡️ Garantía OFFSZN</span>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- COLUMNA DERECHA: RESUMEN DEL PEDIDO EN TIEMPO REAL -->
+        <aside class="checkout-summary-col" id="orderSummaryCol">
+
+            <!-- Items del Pedido -->
+            <div class="summary-items-list" id="summaryItemsList">
+                <!-- Se inyecta dinámicamente con JS -->
+            </div>
+
+            <!-- Empty State si no hay productos -->
+            <div class="checkout-empty-state" id="checkoutEmptyState">
+                <h4>Tu carrito está vacío</h4>
+                <p>No tienes productos en tu orden de compra.</p>
+                <a href="/willieinspired/" class="checkout-empty-return-btn">Ir a la tienda</a>
+            </div>
+
+            <!-- Input Código de Descuento -->
+            <div id="couponSection">
+                <div class="coupon-input-row">
+                    <input type="text" id="couponCodeInput" class="coupon-input" placeholder="Código de descuento">
+                    <button type="button" class="coupon-apply-btn" onclick="applyCouponCode()">Aplicar</button>
+                </div>
+                <div class="coupon-active-tag" id="couponActiveTag">
+                    <span id="couponActiveLabel">🏷️ DESCUENTO APLICADO</span>
+                    <button type="button" class="coupon-remove-btn" onclick="removeCouponCode()">✕</button>
+                </div>
+            </div>
+
+            <!-- Desglose de Totales -->
+            <div class="summary-breakdown" id="summaryBreakdown">
+                <div class="summary-line">
+                    <span id="summarySubtotalLabel">Subtotal</span>
+                    <span id="summarySubtotalVal">$0.00</span>
+                </div>
+
+                <div class="summary-line" id="summaryDiscountRow" style="display: none; color: #15803d;">
+                    <span>Descuento</span>
+                    <span id="summaryDiscountVal">-$0.00</span>
+                </div>
+
+                <div class="summary-line total-row">
+                    <span>Total</span>
+                    <div>
+                        <span class="total-currency-tag">USD</span>
+                        <span id="summaryTotalVal">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+    </main>
+
+    <!-- JavaScript para Manejo en Tiempo Real y Métodos de Pago -->
+    <script>
+        // ==========================================================================
+        // ESTADO DE CHECKOUT
+        // ==========================================================================
+        let cartItems = [];
+        let appliedDiscountPercent = 0;
+        let appliedDiscountAmount = 0;
+        let currentPaymentMethod = 'card';
+
+        // Cupones activos soportados
+        const VALID_COUPONS = {
+            'WILLIE10': { type: 'percent', value: 10, label: 'WILLIE10 (10% OFF)' },
+            'OFFSZN': { type: 'amount', value: 5, label: 'OFFSZN ($5 USD OFF)' },
+            'SPECIAL': { type: 'percent', value: 15, label: 'SPECIAL (15% OFF)' }
+        };
+
+        // ==========================================================================
+        // INICIALIZACIÓN
+        // ==========================================================================
+        window.addEventListener('DOMContentLoaded', () => {
+            loadCartFromStorage();
+        });
+
+        function loadCartFromStorage() {
+            try {
+                const saved = localStorage.getItem('offszn_cart');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed)) {
+                        cartItems = parsed.map(item => {
+                            if (item.product) {
+                                const isPlugin = item.product.type === 'plugin' || 
+                                                 (item.product.name && item.product.name.toLowerCase().includes('plugin')) ||
+                                                 (item.product.id && item.product.id.toString().includes('easy-mix'));
+                                return {
+                                    id: item.product.id || item.product.name,
+                                    name: item.product.name,
+                                    price: parseFloat(item.product.price) || 10,
+                                    cover: item.product.image_url || '/willieimages/HERO.png',
+                                    type: isPlugin ? 'plugin' : (item.product.type || 'preset'),
+                                    os: item.product.os || (isPlugin ? 'win' : undefined),
+                                    quantity: item.quantity || 1
+                                };
+                            }
+                            return item;
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("Error loading cart for checkout:", e);
+                cartItems = [];
+            }
+
+            renderCheckoutUI();
+        }
+
+        // ==========================================================================
+        // RENDERIZAR INTERFAZ EN TIEMPO REAL
+        // ==========================================================================
+        function renderCheckoutUI() {
+            const totalCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+            
+            // Badges de Carrito
+            const headerBadge = document.getElementById('headerCartCount');
+            if (headerBadge) headerBadge.textContent = totalCount;
+
+            const itemsContainer = document.getElementById('summaryItemsList');
+            const emptyState = document.getElementById('checkoutEmptyState');
+            const couponSection = document.getElementById('couponSection');
+            const breakdownSection = document.getElementById('summaryBreakdown');
+
+            if (cartItems.length === 0) {
+                if (itemsContainer) itemsContainer.style.display = 'none';
+                if (emptyState) emptyState.style.display = 'block';
+                if (couponSection) couponSection.style.display = 'none';
+                if (breakdownSection) breakdownSection.style.display = 'none';
+                updateTotals(0);
+                return;
+            }
+
+            if (itemsContainer) itemsContainer.style.display = 'flex';
+            if (emptyState) emptyState.style.display = 'none';
+            if (couponSection) couponSection.style.display = 'block';
+            if (breakdownSection) breakdownSection.style.display = 'flex';
+
+            // Inyectar Items
+            itemsContainer.innerHTML = cartItems.map(item => {
+                const isPlugin = item.type === 'plugin' || (item.name && item.name.toLowerCase().includes('plugin'));
+                const osBadge = isPlugin ? (item.os ? item.os.toUpperCase() : 'WIN') : 'Solo FL Studio';
+
+                return `
+                <div class="summary-item-card">
+                    <div class="summary-item-left">
+                        <div class="summary-item-thumb-wrapper">
+                            <img src="${item.cover}" alt="${item.name}" class="summary-item-thumb" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
+                            <span class="summary-item-qty-badge">${item.quantity || 1}</span>
+                        </div>
+                        <div class="summary-item-info">
+                            <h4 class="summary-item-name">${item.name}</h4>
+                            <p class="summary-item-meta">${osBadge}</p>
+                        </div>
+                    </div>
+                    <span class="summary-item-price">$${(item.price * (item.quantity || 1)).toFixed(2)}</span>
+                </div>
+                `;
+            }).join('');
+
+            // Calcular Subtotal y Total
+            const rawSubtotal = cartItems.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
+            updateTotals(rawSubtotal);
+        }
+
+        function updateTotals(rawSubtotal) {
+            let discountAmount = 0;
+            if (appliedDiscountPercent > 0) {
+                discountAmount = (rawSubtotal * appliedDiscountPercent) / 100;
+            } else if (appliedDiscountAmount > 0) {
+                discountAmount = Math.min(rawSubtotal, appliedDiscountAmount);
+            }
+
+            const finalTotal = Math.max(0, rawSubtotal - discountAmount);
+
+            // Actualizar Labels
+            const totalCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+            const subtotalLabel = document.getElementById('summarySubtotalLabel');
+            const subtotalVal = document.getElementById('summarySubtotalVal');
+            const discountRow = document.getElementById('summaryDiscountRow');
+            const discountVal = document.getElementById('summaryDiscountVal');
+            const totalVal = document.getElementById('summaryTotalVal');
+            const btnTotalPrice = document.getElementById('btnTotalPrice');
+            const mobileSummaryTotal = document.getElementById('mobileSummaryTotal');
+
+            if (subtotalLabel) subtotalLabel.textContent = `Subtotal • ${totalCount} ${totalCount === 1 ? 'producto' : 'productos'}`;
+            if (subtotalVal) subtotalVal.textContent = `$${rawSubtotal.toFixed(2)}`;
+
+            if (discountRow && discountVal) {
+                if (discountAmount > 0) {
+                    discountRow.style.display = 'flex';
+                    discountVal.textContent = `-$${discountAmount.toFixed(2)}`;
+                } else {
+                    discountRow.style.display = 'none';
+                }
+            }
+
+            if (totalVal) totalVal.textContent = `$${finalTotal.toFixed(2)}`;
+            if (btnTotalPrice) btnTotalPrice.textContent = `$${finalTotal.toFixed(2)} USD`;
+            if (mobileSummaryTotal) mobileSummaryTotal.textContent = `$${finalTotal.toFixed(2)}`;
+        }
+
+        // ==========================================================================
+        // CUPONES DE DESCUENTO
+        // ==========================================================================
+        function applyCouponCode() {
+            const input = document.getElementById('couponCodeInput');
+            if (!input) return;
+            const code = input.value.trim().toUpperCase();
+
+            if (!code) return;
+
+            if (VALID_COUPONS[code]) {
+                const coupon = VALID_COUPONS[code];
+                if (coupon.type === 'percent') {
+                    appliedDiscountPercent = coupon.value;
+                    appliedDiscountAmount = 0;
+                } else {
+                    appliedDiscountAmount = coupon.value;
+                    appliedDiscountPercent = 0;
+                }
+
+                const activeTag = document.getElementById('couponActiveTag');
+                const activeLabel = document.getElementById('couponActiveLabel');
+                if (activeTag && activeLabel) {
+                    activeLabel.textContent = `🏷️ ${coupon.label}`;
+                    activeTag.style.display = 'flex';
+                }
+                input.value = '';
+                renderCheckoutUI();
+            } else {
+                alert(`El cupón "${code}" no es válido o ha expirado.`);
+            }
+        }
+
+        function removeCouponCode() {
+            appliedDiscountPercent = 0;
+            appliedDiscountAmount = 0;
+            const activeTag = document.getElementById('couponActiveTag');
+            if (activeTag) activeTag.style.display = 'none';
+            renderCheckoutUI();
+        }
+
+        // ==========================================================================
+        // SELECTOR DE MÉTODOS DE PAGO
+        // ==========================================================================
+        function selectPaymentMethod(method) {
+            currentPaymentMethod = method;
+            const methods = ['card', 'paypal', 'mercadopago', 'yape'];
+
+            methods.forEach(m => {
+                const el = document.getElementById(`option-${m}`);
+                if (el) {
+                    if (m === method) {
+                        el.classList.add('active');
+                    } else {
+                        el.classList.remove('active');
+                    }
+                }
+            });
+        }
+
+        // ==========================================================================
+        // OTROS MEDIOS DE PAGO (WHATSAPP DIRECT CHECKOUT)
+        // ==========================================================================
+        function openWhatsAppCheckout() {
+            if (cartItems.length === 0) {
+                alert("Tu carrito está vacío.");
+                return;
+            }
+
+            const rawSubtotal = cartItems.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
+            let discountAmount = (rawSubtotal * appliedDiscountPercent) / 100 + appliedDiscountAmount;
+            const total = Math.max(0, rawSubtotal - discountAmount);
+
+            // Generar lista de productos
+            const itemsListText = cartItems.map(item => {
+                const isPlugin = item.type === 'plugin' || (item.name && item.name.toLowerCase().includes('plugin'));
+                const sysText = isPlugin ? ` [${(item.os || 'WIN').toUpperCase()}]` : ' [Solo FL Studio]';
+                return `• ${item.name}${sysText} x${item.quantity || 1} - $${(item.price * (item.quantity || 1)).toFixed(2)}`;
+            }).join('\n');
+
+            const emailInput = document.getElementById('contactEmail');
+            const customerEmail = emailInput ? emailInput.value.trim() : '';
+
+            let msg = `¡Hola Willie! 👋 Quiero realizar una compra en tu tienda oficial:\n\n`;
+            msg += `🛒 *PEDIDO:*\n${itemsListText}\n\n`;
+            msg += `💰 *TOTAL A PAGAR:* $${total.toFixed(2)} USD\n`;
+            if (customerEmail) msg += `📧 *Mi correo:* ${customerEmail}\n`;
+            msg += `\n¿Cuáles son los datos de pago para realizar la transferencia / Binance USDT / Western Union? Quedo atento. 🚀`;
+
+            const encodedMsg = encodeURIComponent(msg);
+            const whatsappUrl = `https://wa.me/51921839257?text=${encodedMsg}`;
+
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // ==========================================================================
+        // EJECUTAR PAGO
+        // ==========================================================================
+        function executePayment() {
+            if (cartItems.length === 0) {
+                alert("Tu carrito está vacío. Agrega al menos un preset o plugin.");
+                return;
+            }
+
+            const emailInput = document.getElementById('contactEmail');
+            const email = emailInput ? emailInput.value.trim() : '';
+
+            if (!email) {
+                alert("Por favor ingresa tu correo electrónico o número de celular en el campo de Contacto.");
+                if (emailInput) emailInput.focus();
+                return;
+            }
+
+            if (currentPaymentMethod === 'yape') {
+                openWhatsAppCheckout();
+                return;
+            }
+
+            if (currentPaymentMethod === 'paypal') {
+                // Redirigir al flujo de PayPal seguro
+                alert(`Conectando con PayPal de forma segura para completar tu orden por $${document.getElementById('summaryTotalVal').textContent}...`);
+                window.location.href = `/api/paypal/create-order?email=${encodeURIComponent(email)}`;
+                return;
+            }
+
+            if (currentPaymentMethod === 'mercadopago') {
+                alert(`Redirigiendo a Mercado Pago para procesar tu pago local de forma segura...`);
+                window.location.href = `/api/mercadopago/checkout?email=${encodeURIComponent(email)}`;
+                return;
+            }
+
+            // Tarjetas de Crédito / Débito
+            const cardNum = document.getElementById('cardNumber')?.value.trim();
+            if (!cardNum || cardNum.length < 15) {
+                alert("Por favor ingresa un número de tarjeta válido.");
+                return;
+            }
+
+            alert("Procesando tu pago de forma segura con encriptación SSL de 256 bits...");
+        }
+
+        // ==========================================================================
+        // TOGGLE RESUMEN EN MÓVIL
+        // ==========================================================================
+        function toggleMobileSummary() {
+            const col = document.getElementById('orderSummaryCol');
+            const chevron = document.getElementById('mobileSummaryChevron');
+            if (col && chevron) {
+                const isOpen = col.classList.toggle('is-open');
+                chevron.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+            }
+        }
+    </script>
+
+</body>
+</html>
