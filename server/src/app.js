@@ -33,6 +33,7 @@ import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
 import pluginLicensingRoutes from './infrastructure/http/routes/plugin-licensing.routes.js';
 import cokeCheckoutRoutes from './infrastructure/http/routes/coke-checkout.routes.js';
 import calendarRoutes from './infrastructure/http/routes/calendar.routes.js';
+import walletRoutes from './infrastructure/http/routes/wallet.routes.js';
 import { checkAndSendRemindersInternal } from './infrastructure/http/controllers/CalendarController.js';
 import { runSubscriptionScavenger } from './infrastructure/services/subscription-scavenger.js';
 
@@ -298,6 +299,7 @@ app.post('/api/newsletter/subscribe', async (req, res) => {
 // Groups routers by their authentication strategy to avoid intercepting public paths.
 
 // A. PUBLIC & HYBRID ROUTERS (Handle their own auth internally or are fully public)
+app.use('/api/wallet', walletRoutes);
 app.use('/api', publicRoutes);
 app.use('/api', productRoutes);
 app.use('/api', orderRoutes);

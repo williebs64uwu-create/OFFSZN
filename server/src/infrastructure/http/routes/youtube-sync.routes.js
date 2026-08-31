@@ -5,7 +5,7 @@ import { scanChannel, linkBeat, getQuota } from '../controllers/YouTubeSyncContr
 const router = Router();
 
 // Todas las rutas de sincronización están protegidas
-router.use(authenticateTokenMiddleware);
+router.use('/youtube-sync', authenticateTokenMiddleware);
 
 // Rutas dedicadas para YouTube Pro Sync (Beta) - Separadas de youtube.routes.js
 router.get('/youtube-sync/quota', getQuota);

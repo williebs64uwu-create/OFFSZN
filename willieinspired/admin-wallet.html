@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Google Wallet & Push | OFFSZN Willie Inspired</title>
+    <link rel="icon" href="/images/LOGO%20OFFSZN.webp">
+
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- QRCode CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #06070a;
+            --bg-surface: #0e1017;
+            --bg-surface-elevated: #161822;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-active: rgba(236, 72, 153, 0.4);
+
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+
+            --accent-magenta: #ec4899;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+
+            --gradient-accent: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(236, 72, 153, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-subtle);
+            padding: 1.75rem 1.25rem;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #fff;
+            margin-bottom: 2rem;
+            padding-left: 8px;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .brand-text h2 {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .brand-text span {
+            font-size: 0.75rem;
+            color: var(--accent-magenta);
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-grow: 1;
+        }
+
+        .nav-item button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .nav-item button i {
+            font-size: 1.15rem;
+        }
+
+        .nav-item button:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .nav-item.active button {
+            color: #fff;
+            background: rgba(236, 72, 153, 0.14);
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            font-weight: 700;
+        }
+
+        .nav-item.active button i {
+            color: var(--accent-magenta);
+        }
+
+        .sidebar-footer {
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .sidebar-link:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem 3rem;
+            overflow-y: auto;
+            max-width: 1300px;
+        }
+
+        /* TOPBAR & STATS */
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.85rem;
+            font-weight: 900;
+            letter-spacing: -0.8px;
+            margin-bottom: 4px;
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-dim);
+        }
+
+        .status-dot.active {
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 2.5rem;
+        }
+
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 18px;
+            padding: 1.25rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 70px;
+            height: 70px;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.1) 0%, transparent 70%);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.85rem;
+            font-weight: 900;
+            font-family: 'Space Grotesk', sans-serif;
+            color: #fff;
+        }
+
+        /* TAB PANELS */
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* CARDS & FORMS */
+        .admin-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 22px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .card-heading h2 {
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            background: var(--bg-base);
+            border: 1px solid var(--border-subtle);
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--accent-magenta);
+            box-shadow: 0 0 0 2px rgba(236, 72, 153, 0.2);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 90px;
+        }
+
+        /* BUTTONS */
+        .btn-action {
+            background: var(--gradient-accent);
+            color: #fff;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 8px 20px rgba(236, 72, 153, 0.25);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(236, 72, 153, 0.35);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+            border: 1px solid var(--border-subtle);
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* TABLE */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .data-table th {
+            padding: 12px 16px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .data-table td {
+            padding: 14px 16px;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+            color: #fff;
+        }
+
+        .member-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-green);
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        /* QR DISPLAY */
+        .qr-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            background: #ffffff;
+            border-radius: 20px;
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+        #admin-qr-container {
+            margin-bottom: 1rem;
+        }
+
+        .live-preview-box {
+            background: #000;
+            border: 1px solid var(--border-subtle);
+            border-radius: 18px;
+            padding: 1.5rem;
+            max-width: 340px;
+            margin-top: 1rem;
+        }
+
+        /* NOTIFICATION LOG CONSOLE */
+        .log-console {
+            background: var(--bg-base);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #a7f3d0;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <a href="/@willieinspired" class="sidebar-brand">
+            <img src="/images/LOGO%20OFFSZN.webp" alt="OFFSZN" class="brand-icon">
+            <div class="brand-text">
+                <h2>OFFSZN WALLET</h2>
+                <span>@willieinspired</span>
+            </div>
+        </a>
+
+        <ul class="nav-list">
+            <li class="nav-item active">
+                <button onclick="switchTab('tab-push')">
+                    <i class="bi bi-broadcast"></i> Notificaciones Push
+                </button>
+            </li>
+            <li class="nav-item">
+                <button onclick="switchTab('tab-members')">
+                    <i class="bi bi-people"></i> Miembros & Puntos
+                </button>
+            </li>
+            <li class="nav-item">
+                <button onclick="switchTab('tab-qr')">
+                    <i class="bi bi-qr-code"></i> Enlace & QR Captación
+                </button>
+            </li>
+            <li class="nav-item">
+                <button onclick="switchTab('tab-config')">
+                    <i class="bi bi-key"></i> Conexión Google API
+                </button>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <a href="/willieinspired/regalos" target="_blank" class="sidebar-link">
+                <i class="bi bi-box-arrow-up-right"></i> Ver Página de Regalo
+            </a>
+            <a href="/@willieinspired" class="sidebar-link">
+                <i class="bi bi-shop"></i> Tienda Oficial
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="main-content">
+        <!-- TOPBAR -->
+        <div class="header-top">
+            <div class="header-title">
+                <h1>Panel de Marketing Google Wallet</h1>
+                <p>Gestiona tarjetas nativas de Android y envía notificaciones push directas a la pantalla de bloqueo.</p>
+            </div>
+            <div class="status-badge" id="api-status-badge">
+                <span class="status-dot" id="api-status-dot"></span>
+                <span id="api-status-text">Cargando estado...</span>
+            </div>
+        </div>
+
+        <!-- STATS GRID -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Tarjetas Emitidas</div>
+                <div class="stat-value" id="stat-passes">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Puntos en Circulación</div>
+                <div class="stat-value" id="stat-points" style="color: var(--accent-magenta);">0 PTS</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Tasa de Apertura Est.</div>
+                <div class="stat-value" style="color: var(--accent-green);">~92%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Modo Activo</div>
+                <div class="stat-value" id="stat-mode" style="font-size: 1.25rem; color: var(--accent-purple);">DEMO / SIM</div>
+            </div>
+        </div>
+
+        <!-- TAB 1: PUSH NOTIFIER -->
+        <div class="tab-panel active" id="tab-push">
+            <div class="admin-card">
+                <div class="card-heading">
+                    <h2>📢 Disparar Notificación Push a Pantalla de Bloqueo</h2>
+                    <span class="member-badge"><i class="bi bi-lightning-fill"></i> Instantáneo</span>
+                </div>
+
+                <form id="push-form">
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label class="form-label">Título de la Notificación (Máx 40 caracteres)</label>
+                            <input type="text" id="push-title" class="form-input" placeholder="🔥 ¡NUEVO DROP: Plugin Easy Mix v2!" required maxlength="60">
+                        </div>
+
+                        <div class="form-group full">
+                            <label class="form-label">Mensaje / Cuerpo de la Notificación</label>
+                            <textarea id="push-body" class="form-textarea" placeholder="Toca aquí para descargar tu copia exclusiva antes de que se haga público." required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Enlace de Destino (Al tocar la tarjeta)</label>
+                            <input type="url" id="push-link" class="form-input" value="https://offszn.lat/@willieinspired">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Destinatarios</label>
+                            <select id="push-target" class="form-select">
+                                <option value="">🌐 Enviar a TODOS los miembros (Broadcast)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="push-btn" class="btn-action" style="margin-top: 1rem;">
+                        <i class="bi bi-send-fill"></i> Disparar Notificación a Android
+                    </button>
+                </form>
+
+                <div class="log-console" id="push-log-console" style="display: none;">
+                    > Listo para enviar notificaciones...
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: MEMBERS & POINTS -->
+        <div class="tab-panel" id="tab-members">
+            <div class="admin-card">
+                <div class="card-heading">
+                    <h2>👥 Miembros con Tarjeta de Google Wallet</h2>
+                    <button class="btn-secondary" onclick="loadMembers()"><i class="bi bi-arrow-clockwise"></i> Refrescar</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Saldo de Puntos</th>
+                                <th>Fecha de Unión</th>
+                                <th>Acciones Rápidas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="members-table-body">
+                            <tr>
+                                <td colspan="5" style="text-align: center; padding: 2rem;">Cargando miembros...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: QR & LINKS -->
+        <div class="tab-panel" id="tab-qr">
+            <div class="admin-card" style="text-align: center;">
+                <div class="card-heading">
+                    <h2>🔗 Enlace & Código QR de Registro</h2>
+                </div>
+
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem; max-width: 600px; margin-inline: auto;">
+                    Comparte este enlace en tus historias de Instagram, bio o descripción de YouTube para que tus seguidores guarden tu tarjeta VIP en su Google Wallet.
+                </p>
+
+                <div class="qr-wrapper">
+                    <div id="admin-qr-container"></div>
+                    <div style="color: #000; font-weight: 800; font-size: 0.9rem;">ESCANEA PARA GUARDAR EN WALLET</div>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 1rem; align-items: center;">
+                    <input type="text" id="share-link-input" readonly class="form-input" style="max-width: 400px; text-align: center;" value="https://offszn.lat/willieinspired/regalos">
+                    <button class="btn-action" onclick="copyShareLink()"><i class="bi bi-copy"></i> Copiar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: CONFIGURATION -->
+        <div class="tab-panel" id="tab-config">
+            <div class="admin-card">
+                <div class="card-heading">
+                    <h2>⚙️ Configuración de Google Wallet API</h2>
+                    <span class="member-badge" style="background: rgba(139, 92, 246, 0.15); color: #c084fc;">
+                        <i class="bi bi-shield-check"></i> Clave de Servicio
+                    </span>
+                </div>
+
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                    Para emitir enlaces oficiales <code>pay.google.com</code> y enviar notificaciones push a la pantalla de bloqueo de cualquier Android, ingresa las credenciales de tu Service Account de Google Cloud.
+                </p>
+
+                <form id="config-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Issuer ID (Google Pay & Wallet Business)</label>
+                            <input type="text" id="cfg-issuer-id" class="form-input" placeholder="Ej: 3388000000022233344">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Client Email (Service Account)</label>
+                            <input type="email" id="cfg-client-email" class="form-input" placeholder="wallet-service@project.iam.gserviceaccount.com">
+                        </div>
+
+                        <div class="form-group full">
+                            <label class="form-label">Private Key (Clave Privada RSA / PEM)</label>
+                            <textarea id="cfg-private-key" class="form-textarea" style="min-height: 120px; font-family: monospace; font-size: 0.8rem;" placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-action" style="margin-top: 1rem;">
+                        <i class="bi bi-save"></i> Guardar Credenciales
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- SCRIPT LOGIC -->
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+
+            const target = document.getElementById(tabId);
+            if (target) target.classList.add('active');
+
+            // Set sidebar active
+            const btn = event.currentTarget.parentElement;
+            if (btn) btn.classList.add('active');
+        }
+
+        async function loadStatus() {
+            try {
+                const res = await fetch('/api/wallet/status');
+                const data = await res.json();
+
+                const dot = document.getElementById('api-status-dot');
+                const text = document.getElementById('api-status-text');
+                const mode = document.getElementById('stat-mode');
+
+                if (data.status && data.status.isReady) {
+                    dot.classList.add('active');
+                    text.textContent = 'Google Wallet API Conectado';
+                    mode.textContent = 'PRODUCCIÓN (GOOGLE)';
+                    mode.style.color = 'var(--accent-green)';
+                } else {
+                    dot.classList.remove('active');
+                    text.textContent = 'Modo Simulación / Demo';
+                    mode.textContent = 'DEMO / SIM';
+                    mode.style.color = 'var(--accent-purple)';
+                }
+
+                if (data.status && data.status.issuerId) {
+                    document.getElementById('cfg-issuer-id').value = data.status.issuerId;
+                }
+                if (data.status && data.status.clientEmail) {
+                    document.getElementById('cfg-client-email').value = data.status.clientEmail;
+                }
+            } catch (e) {
+                console.error('Error fetching status:', e);
+            }
+        }
+
+        async function loadMembers() {
+            try {
+                const res = await fetch('/api/wallet/members');
+                const data = await res.json();
+
+                const tbody = document.getElementById('members-table-body');
+                const targetSelect = document.getElementById('push-target');
+                const statPasses = document.getElementById('stat-passes');
+                const statPoints = document.getElementById('stat-points');
+
+                if (!data.members || data.members.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-dim);">Aún no hay miembros registrados. Abre <a href="/willieinspired/regalos" target="_blank" style="color: var(--accent-magenta);">la página de regalo</a> para crear tu primera tarjeta de prueba.</td></tr>`;
+                    statPasses.textContent = '0';
+                    statPoints.textContent = '0 PTS';
+                    return;
+                }
+
+                statPasses.textContent = data.members.length;
+                let totalPts = 0;
+
+                tbody.innerHTML = '';
+                targetSelect.innerHTML = `<option value="">🌐 Enviar a TODOS los miembros (${data.members.length})</option>`;
+
+                data.members.forEach(m => {
+                    totalPts += (m.points || 0);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="font-weight: 700; color: #fff;">${m.name || 'Productor'}</td>
+                        <td>${m.email}</td>
+                        <td><span style="color: var(--accent-magenta); font-weight: 800;">⚡ ${m.points || 0} PTS</span></td>
+                        <td>${new Date(m.createdAt || Date.now()).toLocaleDateString()}</td>
+                        <td>
+                            <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="addPoints('${m.email}', 50)">+50 Pts</button>
+                            <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="addPoints('${m.email}', 100)">+100 Pts</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+
+                    const opt = document.createElement('option');
+                    opt.value = m.email;
+                    opt.textContent = `👤 Solo a: ${m.name} (${m.email})`;
+                    targetSelect.appendChild(opt);
+                });
+
+                statPoints.textContent = `${totalPts} PTS`;
+            } catch (e) {
+                console.error('Error fetching members:', e);
+            }
+        }
+
+        async function addPoints(email, amount) {
+            try {
+                const res = await fetch('/api/wallet/points/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, pointsChange: amount })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`¡Puntos sumados! Nuevo saldo: ${data.newPoints} PTS`);
+                    loadMembers();
+                } else {
+                    alert(data.error || 'Error al actualizar puntos');
+                }
+            } catch (e) {
+                alert('Error al conectar con el servidor.');
+            }
+        }
+
+        // Push form submission
+        document.getElementById('push-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('push-title').value.trim();
+            const body = document.getElementById('push-body').value.trim();
+            const linkUrl = document.getElementById('push-link').value.trim();
+            const targetEmail = document.getElementById('push-target').value;
+            const logBox = document.getElementById('push-log-console');
+            const btn = document.getElementById('push-btn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Enviando...';
+            logBox.style.display = 'block';
+            logBox.textContent = `> Iniciando envío push a ${targetEmail || 'todos los miembros'}...\n`;
+
+            try {
+                const res = await fetch('/api/wallet/push/broadcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, body, linkUrl, targetEmail })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    logBox.textContent += `> ✅ ÉXITO: ${data.message}\n`;
+                    if (data.results && data.results.logs) {
+                        data.results.logs.forEach(l => {
+                            logBox.textContent += `> [${l.status}] ${l.email}\n`;
+                        });
+                    }
+                    alert(data.message);
+                } else {
+                    logBox.textContent += `> ❌ ERROR: ${data.error || 'Fallo de envío'}\n`;
+                    alert(data.error || 'Error al enviar notificación.');
+                }
+            } catch (e) {
+                logBox.textContent += `> ❌ ERROR de conexión.\n`;
+                alert('Error de conexión.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-send-fill"></i> Disparar Notificación a Android';
+            }
+        });
+
+        // Config form submission
+        document.getElementById('config-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const issuerId = document.getElementById('cfg-issuer-id').value.trim();
+            const clientEmail = document.getElementById('cfg-client-email').value.trim();
+            const privateKey = document.getElementById('cfg-private-key').value.trim();
+
+            try {
+                const res = await fetch('/api/wallet/config/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ issuerId, clientEmail, privateKey })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert('¡Configuración guardada exitosamente!');
+                    loadStatus();
+                } else {
+                    alert(data.error || 'Error al guardar');
+                }
+            } catch (e) {
+                alert('Error al guardar configuración.');
+            }
+        });
+
+        function copyShareLink() {
+            const input = document.getElementById('share-link-input');
+            navigator.clipboard.writeText(input.value);
+            alert('¡Enlace copiado al portapapeles!');
+        }
+
+        // Initialize QR
+        function initAdminQR() {
+            const container = document.getElementById('admin-qr-container');
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: 'https://offszn.lat/willieinspired/regalos',
+                width: 220,
+                height: 220,
+                colorDark: '#08090c',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        // Run on load
+        loadStatus();
+        loadMembers();
+        initAdminQR();
+    </script>
+</body>
+</html>

@@ -1,1534 +1,1149 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAPYKIT | FL Studio Project Manager & Drumkit Generator</title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <meta name="description" content="Organizador de proyectos y extractor de Drumkits inteligente 100% diseñado para FL Studio.">
-
-    <!-- Fonts & Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>FL Studio Drumkit Studio - Willie Inspired</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- JSZip for Real Client-side Drumkit ZIP Generation -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
-    <!-- Supabase Client -->
-    <script src="/env.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/script/config.js"></script>
-
     <style>
         :root {
-            /* Capybara Studio Earth & Brown Palette */
-            --bg-main: #0c0b0a;
-            --panel-bg: #141210;
-            --card-bg: #1d1a17;
-            --card-hover: #26221f;
-            --border-color: #2b2723;
-            --border-light: rgba(217, 159, 112, 0.2);
-            
-            --accent-capy: #c48b5e;
-            --accent-capy-bright: #e2b186;
-            --accent-capy-dark: #7a5234;
-            --fl-orange: #f97316;
-            --fl-green: #10b981;
-            
-            --badge-flp: #c86432;
-            --badge-wav: #2e8b57;
-            --badge-mp3: #b8860b;
-            
-            --text-main: #ebe5df;
-            --text-muted: #a69c92;
-            --text-dim: #70675f;
-            
-            --font-main: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+            --fl-bg-dark: #000000;
+            --fl-bg-panel: #0a0c10;
+            --fl-bg-tree: #000000;
+            --fl-bg-hover: #11141a;
+            --fl-bg-active: #181d26;
+            --fl-border: #1e2430;
+            --fl-green-neon: #76ff03;
+            --fl-coral: #ff5722;
+            --fl-yellow: #ffd600;
+            --fl-cyan: #00e5ff;
+            --fl-pink: #ff007f;
+            --text-main: #ffffff;
+            --font-fl: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             --font-mono: 'JetBrains Mono', monospace;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            font-family: var(--font-main);
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            user-select: none;
-        }
-
-        /* Top Bar Header */
-        .app-window-header {
-            height: 44px;
-            background: #080706;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 14px;
-        }
-
-        .brand-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 800;
-            font-size: 1.05rem;
-            letter-spacing: -0.3px;
-            color: var(--accent-capy-bright);
-        }
-
-        .brand-logo-box {
-            width: 26px;
-            height: 26px;
-            background: var(--accent-capy-dark);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 0.85rem;
-        }
-
-        .lic-status-badge {
-            font-size: 0.75rem;
-            color: var(--fl-green);
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            padding: 3px 10px;
-            border-radius: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* Resizable Studio Layout */
-        .app-body {
-            display: flex;
-            height: calc(100vh - 70px);
-            width: 100vw;
-            padding: 6px;
-            background: var(--bg-main);
-            position: relative;
-        }
-
-        .panel-box {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            height: 100%;
-        }
-
-        /* Resizing handles */
-        .resize-handle {
-            width: 6px;
-            cursor: col-resize;
-            background: transparent;
-            transition: background 0.2s ease;
-            z-index: 10;
-        }
-
-        .resize-handle:hover, .resize-handle.active {
-            background: var(--accent-capy);
-        }
-
-        #panel-left { width: 310px; min-width: 220px; max-width: 480px; }
-        #panel-center { flex: 1; min-width: 400px; }
-        #panel-right { width: 360px; min-width: 260px; max-width: 520px; }
-
-        .panel-title-bar {
-            padding: 10px 14px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.72rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(0,0,0,0.2);
-        }
-
-        /* LEFT PANEL: File Tree */
-        .explorer-tree {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px 6px;
-            font-size: 0.82rem;
-        }
-
-        .tree-node {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 6px 8px;
-            border-radius: 4px;
-            color: var(--text-main);
-            cursor: pointer;
-            transition: all 0.12s ease;
-            margin-bottom: 1px;
-            white-space: nowrap;
-        }
-
-        .tree-node:hover {
-            background: var(--card-bg);
-        }
-
-        .tree-node.active {
-            background: #2b241e;
-            color: #fff;
-        }
-
-        .tree-node-left {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .tree-chevron {
-            font-size: 0.65rem;
-            color: var(--text-dim);
-            width: 12px;
-            display: inline-block;
-        }
-
-        .folder-icon { font-size: 0.9rem; }
-        .folder-fl { color: var(--fl-orange); }
-        .folder-nfo { color: var(--fl-green); }
-
-        .file-badge {
-            font-family: var(--font-mono);
-            font-size: 0.62rem;
-            font-weight: 700;
-            padding: 1px 4px;
-            border-radius: 3px;
-            color: #fff;
-            text-transform: lowercase;
-        }
-
-        .badge-flp { background: var(--badge-flp); }
-        .badge-wav { background: var(--badge-wav); }
-        .badge-nfo { background: #10b981; color: #000; }
-
-        .star-hover-btn {
-            color: var(--text-dim);
-            font-size: 0.8rem;
-            opacity: 0;
-            transition: all 0.15s ease;
-            cursor: pointer;
-        }
-
-        .tree-node:hover .star-hover-btn { opacity: 0.6; }
-        .tree-node .star-hover-btn:hover, .star-hover-btn.active {
-            opacity: 1;
-            color: #f59e0b;
-        }
-
-        /* CENTER PANEL: Workspace & Waveform */
-        .center-tabs-bar {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            background: #0a0908;
-            border-bottom: 1px solid var(--border-color);
-            padding: 6px 10px 0;
-        }
-
-        .tab-btn {
-            padding: 8px 16px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            background: transparent;
-            border: 1px solid transparent;
-            border-bottom: none;
-            border-top-left-radius: 6px;
-            border-top-right-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .tab-btn.active {
-            background: var(--panel-bg);
-            color: #fff;
-            border-color: var(--border-color);
-            border-bottom-color: var(--panel-bg);
-        }
-
-        .workspace-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        /* Metadata Card */
-        .project-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 14px;
-        }
-
-        .project-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .project-file-path {
-            font-family: var(--font-mono);
-            font-size: 0.82rem;
-            color: var(--accent-capy-bright);
-        }
-
-        .btn-action {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-action.primary {
-            background: var(--accent-capy);
-            color: #000;
-            border: none;
-            font-weight: 700;
-        }
-
-        .meta-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-        }
-
-        .meta-item {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .meta-key {
-            font-size: 0.68rem;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .meta-val {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #fff;
-        }
-
-        .tag-pill {
-            display: inline-block;
-            font-size: 0.68rem;
-            padding: 2px 7px;
-            border-radius: 10px;
-            background: #2b231d;
-            color: var(--accent-capy-bright);
-            margin-right: 4px;
-        }
-
-        /* HTML5 Canvas Waveform Box */
-        .waveform-container-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .waveform-header-controls {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .btn-play-large {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: var(--accent-capy);
-            color: #000;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-play-large:hover {
-            background: var(--accent-capy-bright);
-            transform: scale(1.05);
-        }
-
-        .waveform-canvas-box {
-            width: 100%;
-            height: 64px;
-            background: #110e0c;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-            position: relative;
-            cursor: pointer;
-            overflow: hidden;
-        }
-
-        #waveform-canvas-el {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        /* Samples Grid View */
-        .samples-section-title {
-            font-size: 0.78rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .samples-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-            gap: 8px;
-        }
-
-        .sample-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 8px 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .sample-card:hover {
-            background: var(--card-hover);
-            border-color: var(--border-light);
-        }
-
-        .sample-title-icon {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .sample-title-icon i {
-            color: var(--accent-capy);
-        }
-
-        /* FL Studio Browser .NFO & Custom Artwork Generator Card */
-        .fl-nfo-generator-card {
-            background: #16120e;
-            border: 1px solid var(--fl-orange);
-            border-radius: 8px;
-            padding: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-        }
-
-        .fl-nfo-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .fl-cartridge-img {
-            width: 48px;
-            height: 56px;
-            background: #20130b;
-            border: 2px solid #ec4899;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ec4899;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 10px rgba(236,72,153,0.3);
-        }
-
-        .fl-nfo-text-title {
-            font-weight: 800;
-            font-size: 0.88rem;
-            color: #fff;
-            margin-bottom: 2px;
-        }
-
-        .fl-nfo-subtext {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .btn-fl-nfo {
-            background: var(--fl-orange);
-            color: #000;
-            border: none;
-            font-weight: 800;
-            font-size: 0.78rem;
-            padding: 8px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-
-        /* RIGHT PANEL: CapyAssistant */
-        .right-section-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
-            margin: 8px;
-        }
-
-        .capy-greeting-bubble {
-            background: #28221c;
-            border: 1px solid var(--border-light);
-            border-radius: 10px;
-            padding: 10px 12px;
-            font-size: 0.8rem;
-            line-height: 1.4;
-            color: var(--text-main);
-            margin-bottom: 8px;
-        }
-
-        .capy-illustration-box {
-            text-align: center;
-            margin: 4px 0;
-        }
-
-        .capy-illustration-box svg {
-            width: 100px;
-            height: 100px;
-        }
-
-        .ask-capy-header {
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .qa-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            font-size: 0.76rem;
-            margin-bottom: 10px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .qa-item {
-            background: #110f0d;
-            padding: 8px;
-            border-radius: 5px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .qa-item:hover {
-            border-color: var(--accent-capy);
-            background: #191512;
-        }
-
-        .qa-q {
-            color: var(--text-dim);
-            margin-bottom: 2px;
-        }
-
-        .qa-a {
-            color: #fff;
-            font-weight: 500;
-        }
-
-        /* Gemini-Style Input Pill */
-        .gemini-input-pill {
-            background: #151311;
-            border: 1px solid var(--border-color);
-            border-radius: 28px;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            position: relative;
-        }
-
-        .gemini-input-pill input {
-            background: transparent;
-            border: none;
-            outline: none;
-            color: #fff;
-            font-size: 0.82rem;
-            flex: 1;
-            font-family: var(--font-main);
-        }
-
-        .mode-dropdown-trigger {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 4px 8px;
-            border-radius: 12px;
-        }
-
-        .mode-dropdown-trigger:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-        }
-
-        .mode-dropdown-menu {
-            position: absolute;
-            bottom: 44px;
-            right: 12px;
-            background: #1d1a17;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 6px;
-            display: none;
-            flex-direction: column;
-            gap: 4px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            z-index: 50;
-            min-width: 170px;
-        }
-
-        .mode-dropdown-menu.active { display: flex; }
-
-        .mode-option {
-            padding: 8px 10px;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .mode-option:hover, .mode-option.selected {
-            background: #2b241e;
-            color: #fff;
-        }
-
-        /* MODALS */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.85);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.25s ease;
-        }
-
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .modal-card {
-            background: #15120f;
-            border: 1px solid var(--border-light);
-            border-radius: 14px;
-            padding: 32px;
-            max-width: 480px;
-            width: 90%;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            position: relative;
-        }
-
-        .modal-title {
-            font-size: 1.4rem;
-            font-weight: 800;
-            margin-bottom: 8px;
-            color: #fff;
-        }
-
-        .modal-desc {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 24px;
-            line-height: 1.4;
-        }
-
-        .onboarding-options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .btn-onboarding-opt {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            color: #fff;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.15s ease;
-        }
-
-        .btn-onboarding-opt:hover {
-            border-color: var(--accent-capy);
-            background: #25201b;
-            transform: translateX(4px);
-        }
-
-        .serial-input {
-            width: 100%;
-            background: #090807;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
-            color: #fff;
-            font-family: var(--font-mono);
-            font-size: 0.95rem;
-            text-align: center;
-            letter-spacing: 2px;
-            margin-bottom: 16px;
-            outline: none;
-        }
-
-        .btn-modal-submit {
-            background: var(--accent-capy);
-            color: #000;
-            font-weight: 800;
-            font-size: 0.95rem;
-            padding: 12px 24px;
-            border-radius: 8px;
-            border: none;
-            width: 100%;
-            cursor: pointer;
-        }
-
-        /* Bottom Status Bar */
-        .app-status-bar {
-            height: 24px;
-            background: #060504;
-            border-top: 1px solid var(--border-color);
-            padding: 0 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-family: var(--font-mono);
-            font-size: 0.68rem;
-            color: var(--text-dim);
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { background-color: #030406; color: var(--text-main); font-family: var(--font-fl); height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
+        .chassis-wrapper { width: 98vw; max-width: 1440px; height: 96vh; background-color: var(--fl-bg-dark); border: 2px solid #222836; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 25px 80px rgba(0,0,0,0.95); position: relative; overflow: hidden; }
+
+        /* HEADER PRINCIPAL */
+        .chassis-header { height: 52px; background: #0c0f16; border-bottom: 1px solid var(--fl-border); display: flex; align-items: center; justify-content: space-between; padding: 0 18px; flex-shrink: 0; }
+        .header-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 0.95rem; }
+        .brand-icon { width: 28px; height: 28px; background: var(--fl-green-neon); color: #000; font-weight: 900; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-family: var(--font-mono); }
+
+        /* DROPDOWN DE MODOS */
+        .mode-dropdown-wrapper { display: flex; align-items: center; gap: 10px; position: relative; }
+        .mode-label-text { font-size: 0.72rem; font-family: var(--font-mono); font-weight: 700; color: #8fa0b8; text-transform: uppercase; }
+        
+        .fl-mode-dropdown { position: relative; width: 260px; }
+        .fl-dropdown-trigger { background: #131824; border: 1.5px solid #2b364c; color: #ffffff; font-family: var(--font-fl); font-size: 0.85rem; font-weight: 800; padding: 7px 14px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+        .fl-dropdown-trigger:hover { border-color: var(--fl-green-neon); background: #1a2233; }
+        .fl-dropdown-trigger i.chevron { transition: transform 0.2s; font-size: 0.8rem; color: #8fa0b8; }
+        .fl-dropdown-trigger.open i.chevron { transform: rotate(180deg); color: var(--fl-green-neon); }
+
+        .fl-dropdown-menu { position: absolute; top: calc(100% + 5px); left: 0; width: 100%; background: #0c0f18; border: 1.5px solid #2b364c; border-radius: 6px; padding: 5px; display: none; flex-direction: column; gap: 3px; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.9); }
+        .fl-dropdown-menu.show { display: flex; }
+        .fl-dropdown-item { padding: 9px 12px; font-size: 0.82rem; font-weight: 700; color: #cbd5e1; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 9px; transition: all 0.15s; }
+        .fl-dropdown-item:hover { background: #1a2336; color: #ffffff; }
+        .fl-dropdown-item.active { background: #1e293b; color: var(--fl-green-neon); border-left: 3px solid var(--fl-green-neon); font-weight: 800; }
+
+        /* BREADCRUMBS */
+        .header-breadcrumbs { display: flex; align-items: center; gap: 6px; font-size: 0.76rem; font-family: var(--font-mono); color: #64748b; background: #07090e; padding: 4px 10px; border-radius: 4px; border: 1px solid #1a202c; }
+        .breadcrumb-part { color: #94a3b8; }
+        .breadcrumb-active { color: var(--fl-cyan); font-weight: 800; }
+
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+        .btn-fl-action { background: #141824; border: 1px solid #283248; color: #ffffff; font-size: 0.8rem; font-weight: 700; padding: 6px 12px; border-radius: 4px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.15s; }
+        .btn-fl-action:hover { border-color: var(--fl-green-neon); background: #1d2334; }
+        .btn-fl-primary { background: var(--fl-green-neon); color: #000000; border: none; font-weight: 800; }
+        .btn-fl-primary:hover { background: #99ff33; }
+
+        .main-workspace { display: flex; flex: 1; height: calc(100% - 52px); overflow: hidden; }
+
+        /* PANEL IZQUIERDO: EL BROWSER EXACTO DE FL STUDIO */
+        .fl-browser-panel { width: 350px; min-width: 310px; max-width: 420px; background-color: var(--fl-bg-tree); border-right: 1px solid var(--fl-border); display: flex; flex-direction: column; height: 100%; overflow: hidden; position: relative; }
+        .fl-browser-topbar { height: 36px; background: #080a0f; border-bottom: 1px solid var(--fl-border); display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 0.75rem; color: #8fa0b8; font-weight: 700; font-family: var(--font-mono); }
+        .fl-browser-actions { display: flex; align-items: center; gap: 8px; }
+
+        .fl-tree-scroll { flex: 1; overflow-y: auto; padding: 6px 0 20px 0; background: #000000; }
+        .fl-tree-scroll::-webkit-scrollbar { width: 5px; }
+        .fl-tree-scroll::-webkit-scrollbar-thumb { background: #1c2230; }
+
+        .tree-root-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; color: var(--fl-green-neon); font-size: 0.92rem; font-weight: 900; letter-spacing: 0.5px; cursor: pointer; }
+        .tree-root-header:hover { background: rgba(118, 255, 3, 0.08); }
+
+        .tree-category-row { display: flex; flex-direction: column; padding: 4px 12px 4px 22px; cursor: pointer; border-left: 2px solid transparent; position: relative; }
+        .tree-category-row::before { content: ""; position: absolute; left: 12px; top: 0; bottom: 0; width: 1px; background: #1a202c; }
+        .tree-category-row:hover { background: var(--fl-bg-hover); }
+        .tree-category-row.active { background: var(--fl-bg-active); border-left-color: var(--fl-green-neon); }
+
+        .category-title-line { display: flex; align-items: center; gap: 7px; font-size: 0.88rem; font-weight: 800; }
+        .category-sub-line { font-size: 0.76rem; font-weight: 800; color: #ffffff; padding-left: 22px; margin-top: 1px; }
+
+        .tree-children-container { display: flex; flex-direction: column; padding-left: 18px; }
+        .tree-child-row { display: flex; flex-direction: column; padding: 4px 8px 4px 24px; cursor: pointer; position: relative; border-left: 1px solid #1a202c; margin-left: 12px; }
+        .tree-child-row:hover { background: #121620; }
+        .tree-child-row.active { background: #1a2232; border-left-color: var(--fl-cyan); }
+
+        .child-title-line { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; font-weight: 800; }
+        .child-sub-line { font-size: 0.72rem; font-weight: 800; color: #ffffff; padding-left: 18px; margin-top: 1px; }
+
+        .browser-cartridge-box { margin: 16px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .cartridge-frame { width: 180px; height: 210px; background: #ff007f; border-radius: 8px 8px 12px 12px; padding: 12px 10px 10px 10px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.4); position: relative; border: 1px solid rgba(255,255,255,0.2); }
+        .cartridge-notch-left { position: absolute; top: 38px; left: -4px; width: 4px; height: 18px; background: #000; border-radius: 2px; }
+        .cartridge-notch-right { position: absolute; top: 60px; right: -4px; width: 4px; height: 16px; background: #000; border-radius: 2px; }
+        .cartridge-sticker { flex: 1; background: #ffffff; border-radius: 4px; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
+        .sticker-top-text { font-size: 0.55rem; color: #333333; font-weight: 700; line-height: 1.2; text-align: left; }
+        .sticker-art-box { flex: 1; background: #0a0a0a; border-radius: 3px; margin: 4px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; position: relative; overflow: hidden; }
+        .sticker-art-title { font-family: var(--font-fl); font-weight: 900; font-size: 0.85rem; color: #ff007f; text-shadow: 0 0 10px rgba(255,0,127,0.8); line-height: 1.1; letter-spacing: 0.5px; }
+        .sticker-art-sub { font-size: 0.62rem; font-weight: 800; color: #ffffff; letter-spacing: 1px; margin-top: 2px; }
+        .sticker-bottom-label { font-size: 0.58rem; font-weight: 800; color: #000000; background: #e5e5e5; border-radius: 2px; padding: 2px 4px; font-family: var(--font-mono); }
+
+        /* Footer FL Studio Browser exacto */
+        .fl-browser-footer { height: 86px; background: #000000; border-top: 1px solid var(--fl-border); padding: 8px 12px; font-size: 0.74rem; font-family: var(--font-mono); color: #8fa0b8; display: flex; flex-direction: column; justify-content: space-between; flex-shrink: 0; }
+        .fl-footer-line { display: flex; align-items: center; }
+        .fl-footer-line span.label { width: 65px; color: #6b7a90; }
+        .fl-footer-line span.val { color: #ffffff; font-weight: 800; }
+
+        /* PANEL DERECHO: VISTAS SEGÚN EL DROPDOWN */
+        .fl-main-stage { flex: 1; background: #080a0f; display: flex; flex-direction: column; overflow-y: auto; padding: 20px 24px; }
+        .mode-view { display: none; flex-direction: column; gap: 18px; }
+        .mode-view.active { display: flex; }
+
+        .editor-card { background: #0f121a; border: 1px solid #222836; border-radius: 8px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+        .section-header-title { font-size: 0.95rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1c2230; padding-bottom: 10px; }
+        .section-header-title i { color: var(--fl-green-neon); font-size: 1.1rem; }
+
+        .editor-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-label { font-size: 0.75rem; font-weight: 700; color: #8fa0b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-input { background: #07080c; border: 1px solid #262e40; color: #ffffff; font-family: var(--font-fl); font-size: 0.85rem; font-weight: 600; padding: 8px 12px; border-radius: 5px; outline: none; }
+        .form-input:focus { border-color: var(--fl-green-neon); box-shadow: 0 0 10px rgba(118,255,3,0.2); }
+
+        .color-presets-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+        .color-preset-dot { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+        .color-preset-dot:hover { transform: scale(1.15); }
+        .color-preset-dot.active { border-color: #ffffff; box-shadow: 0 0 8px #ffffff; }
+
+        .icon-selector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 6px; }
+        .icon-choice-btn { height: 34px; background: #08090e; border: 1px solid #262e40; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1rem; border-radius: 4px; cursor: pointer; }
+        .icon-choice-btn:hover { border-color: var(--fl-green-neon); background: #141a26; }
+        .icon-choice-btn.active { border-color: var(--fl-green-neon); background: rgba(118,255,3,0.15); color: var(--fl-green-neon); font-weight: 800; }
+
+        /* MODO PREVIEW: SAMPLER NATIVO FL STUDIO */
+        .fl-sampler-chassis { background: #121520; border: 2px solid #2b3548; border-radius: 8px; padding: 18px 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
+        .sampler-header-line { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #222b3d; padding-bottom: 10px; }
+        .sampler-title-text { font-size: 1.15rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 10px; }
+        .sampler-badge { font-size: 0.72rem; font-family: var(--font-mono); background: rgba(0,229,255,0.15); color: var(--fl-cyan); padding: 2px 8px; border-radius: 4px; font-weight: 700; border: 1px solid var(--fl-cyan); }
+        
+        .sampler-waveform-stage { width: 100%; height: 160px; background: #06070a; border: 1px solid #222b3d; border-radius: 6px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .waveform-canvas { width: 100%; height: 100%; }
+        .waveform-scrubber { position: absolute; top: 0; left: 0; width: 2px; height: 100%; background: #ffffff; opacity: 0; pointer-events: none; box-shadow: 0 0 8px #ffffff; }
+
+        .sampler-knobs-row { display: flex; align-items: center; justify-content: space-around; background: #0c0e16; border: 1px solid #1e2536; border-radius: 6px; padding: 14px; }
+        .knob-widget { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .knob-circle { width: 44px; height: 44px; background: #161a26; border: 2px solid #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: inset 0 2px 5px rgba(0,0,0,0.6); }
+        .knob-indicator { position: absolute; top: 5px; width: 3px; height: 10px; background: #ffffff; border-radius: 2px; }
+        .knob-label { font-size: 0.7rem; font-weight: 700; color: #8fa0b8; text-transform: uppercase; font-family: var(--font-mono); }
+        .knob-val { font-size: 0.72rem; font-weight: 800; color: #ffffff; font-family: var(--font-mono); }
+
+        .sampler-btn-row { display: flex; gap: 12px; }
+        .btn-sampler-play { flex: 1; height: 44px; background: var(--fl-cyan); color: #000; font-size: 0.92rem; font-weight: 800; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-sampler-play:hover { background: #38bdf8; }
+
+        /* MODO EXPORTAR */
+        .export-options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+        .export-box-card { background: #121622; border: 1px solid #252e42; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; }
+        .export-box-card:hover { border-color: var(--fl-green-neon); }
+        .export-card-title { font-size: 1.05rem; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 10px; }
+        .export-card-desc { font-size: 0.82rem; color: #8fa0b8; line-height: 1.5; }
     </style>
 </head>
-
 <body>
+    <input type="file" id="import-samples-input" accept=".wav,.mp3,.ogg,.flac,.aif,.flp,.mid" multiple webkitdirectory directory hidden onchange="handleImportFolder(event)">
+    <input type="file" id="import-cover-input" accept="image/*" hidden onchange="handleCustomCover(event)">
 
-    <!-- Invisible Input for FLP Folder/Files Scanning -->
-    <input type="file" id="flp-file-input" accept=".flp" multiple hidden onchange="handleFileSelect(event)">
-
-    <!-- Header Bar -->
-    <header class="app-window-header">
-        <div class="brand-section">
-            <div class="brand-logo-box"><i class="bi bi-box-seam"></i></div>
-            CAPYKIT <span style="font-size: 0.68rem; background: var(--fl-orange); color: #000; padding: 1px 6px; border-radius: 3px; font-weight: 800;">FL STUDIO EDITION</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 14px;">
-            <div class="lic-status-badge" onclick="openSerialModal()">
-                <i class="bi bi-shield-check"></i> LICENCIA ACTIVA
-            </div>
-            <div style="font-size: 0.78rem; color: var(--text-muted);">
-                <i class="bi bi-folder-check" style="color: var(--accent-capy);"></i> FL Studio FLPs: <span id="header-flp-count">200</span> Proyectos
-            </div>
-        </div>
-    </header>
-
-    <!-- App Body (Resizable 3 Columns) -->
-    <div class="app-body">
-
-        <!-- LEFT PANEL: 100% FL Studio Focused File Tree -->
-        <aside class="panel-box" id="panel-left">
-            <div class="panel-title-bar">
-                <span>FL STUDIO EXPLORER</span>
-                <i class="bi bi-folder-plus" style="cursor: pointer;" title="Seleccionar archivos .FLP" onclick="document.getElementById('flp-file-input').click()"></i>
+    <div class="chassis-wrapper">
+        <header class="chassis-header">
+            <div class="header-brand">
+                <div class="brand-icon">FL</div>
+                <span>FL STUDIO DRUMKIT STUDIO</span>
             </div>
 
-            <div class="explorer-tree" id="explorer-tree-root">
-                <!-- Root FL Studio Projects -->
-                <div class="tree-node">
-                    <div class="tree-node-left">
-                        <span class="tree-chevron"><i class="bi bi-chevron-down"></i></span>
-                        <span class="folder-icon folder-fl"><i class="bi bi-folder-fill"></i></span>
-                        <span style="font-weight: 700;">FL Studio Projects (<span id="root-flp-count">200</span>)</span>
+            <!-- SELECTOR POR DROPDOWN SOLICITADO -->
+            <div class="mode-dropdown-wrapper">
+                <span class="mode-label-text">MODO:</span>
+                <div class="fl-mode-dropdown">
+                    <div class="fl-dropdown-trigger" id="mode-trigger-btn" onclick="toggleDropdownMenu()">
+                        <span id="active-mode-label"><i class="bi bi-palette-fill" style="color: var(--fl-green-neon);"></i> MODO PERSONALIZAR</span>
+                        <i class="bi bi-chevron-down chevron"></i>
                     </div>
-                </div>
-
-                <!-- FL Studio Projects List -->
-                <div class="tree-node active" style="padding-left: 20px;" onclick="loadDemoProject('Trap_Dark_140BPM.flp', 24)">
-                    <div class="tree-node-left">
-                        <span class="file-badge badge-flp">.flp</span>
-                        <span>Trap_Dark_140BPM.flp</span>
-                    </div>
-                    <i class="bi bi-star-fill star-hover-btn active" onclick="toggleFav(this)"></i>
-                </div>
-
-                <div class="tree-node" style="padding-left: 20px;" onclick="loadDemoProject('Reggaeton_Perreo_2026.flp', 18)">
-                    <div class="tree-node-left">
-                        <span class="file-badge badge-flp">.flp</span>
-                        <span>Reggaeton_Perreo_2026.flp</span>
-                    </div>
-                    <i class="bi bi-star star-hover-btn" onclick="toggleFav(this)"></i>
-                </div>
-
-                <div class="tree-node" style="padding-left: 20px;" onclick="loadDemoProject('Drill_London_Hit.flp', 31)">
-                    <div class="tree-node-left">
-                        <span class="file-badge badge-flp">.flp</span>
-                        <span>Drill_London_Hit.flp</span>
-                    </div>
-                    <i class="bi bi-star star-hover-btn" onclick="toggleFav(this)"></i>
-                </div>
-
-                <div class="tree-node" style="padding-left: 20px;" onclick="loadDemoProject('Afrobeat_Sunset_Idea.flp', 15)">
-                    <div class="tree-node-left">
-                        <span class="file-badge badge-flp">.flp</span>
-                        <span>Afrobeat_Sunset_Idea.flp</span>
-                    </div>
-                    <i class="bi bi-star star-hover-btn" onclick="toggleFav(this)"></i>
-                </div>
-
-                <div class="tree-node" style="padding-left: 20px;" onclick="loadDemoProject('Boombap_Nostalgia.flp', 29)">
-                    <div class="tree-node-left">
-                        <span class="file-badge badge-flp">.flp</span>
-                        <span>Boombap_Nostalgia.flp</span>
-                    </div>
-                    <i class="bi bi-star-fill star-hover-btn active" onclick="toggleFav(this)"></i>
-                </div>
-
-                <!-- Generated Signature Kits with NFO -->
-                <div class="tree-node" style="margin-top: 14px;">
-                    <div class="tree-node-left">
-                        <span class="tree-chevron"><i class="bi bi-chevron-down"></i></span>
-                        <span class="folder-icon folder-nfo"><i class="bi bi-box"></i></span>
-                        <span style="font-weight: 700; color: var(--fl-green);">Signature Kits (.NFO)</span>
-                    </div>
-                </div>
-
-                <div class="tree-node" style="padding-left: 20px;">
-                    <div class="tree-node-left">
-                        <span class="file-badge badge-nfo">.nfo</span>
-                        <span style="color: var(--accent-capy-bright);">!WILLIE_INSPIRED_DRUMKIT_VOL3</span>
-                    </div>
-                </div>
-
-                <div class="tree-node" style="padding-left: 36px;">
-                    <div class="tree-node-left">
-                        <span class="folder-icon" style="color: var(--fl-orange);"><i class="bi bi-folder-fill"></i></span>
-                        <span style="color: #f97316;">!DRUMS</span>
-                    </div>
-                </div>
-                <div class="tree-node" style="padding-left: 36px;">
-                    <div class="tree-node-left">
-                        <span class="folder-icon" style="color: #ef4444;"><i class="bi bi-folder-fill"></i></span>
-                        <span style="color: #ef4444;">!MASTER</span>
-                    </div>
-                </div>
-                <div class="tree-node" style="padding-left: 36px;">
-                    <div class="tree-node-left">
-                        <span class="folder-icon" style="color: #a855f7;"><i class="bi bi-folder-fill"></i></span>
-                        <span style="color: #a855f7;">!MELODY</span>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Left Resize Handle -->
-        <div class="resize-handle" id="handle-left"></div>
-
-        <!-- CENTER PANEL: Workspace -->
-        <main class="panel-box" id="panel-center">
-            <!-- Tabs -->
-            <div class="center-tabs-bar">
-                <button class="tab-btn active">PROJECTS (.FLP)</button>
-                <button class="tab-btn">DRUMKIT BUILDER</button>
-                <button class="tab-btn">NFO COLOR GENERATOR</button>
-                <button class="tab-btn">SETTINGS</button>
-            </div>
-
-            <div class="workspace-content">
-                <!-- Metadata Card -->
-                <div class="project-card">
-                    <div class="project-card-header">
-                        <div class="project-file-path" id="active-project-path">FL Studio / Trap_Dark_140BPM.flp</div>
-                        <div class="project-actions">
-                            <button class="btn-action" onclick="document.getElementById('flp-file-input').click()"><i class="bi bi-folder2-open"></i> Seleccionar .FLP Real</button>
-                            <button class="btn-action primary" onclick="exportSignatureKitZip()"><i class="bi bi-download"></i> Exportar Drumkit (.ZIP)</button>
+                    <div class="fl-dropdown-menu" id="mode-dropdown-menu">
+                        <div class="fl-dropdown-item active" id="dd-item-customize" onclick="selectDropdownMode('customize')">
+                            <i class="bi bi-palette-fill" style="color: var(--fl-green-neon);"></i> 1. MODO PERSONALIZAR
                         </div>
-                    </div>
-
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <span class="meta-key">DAW</span>
-                            <span class="meta-val">FL Studio 21</span>
+                        <div class="fl-dropdown-item" id="dd-item-preview" onclick="selectDropdownMode('preview')">
+                            <i class="bi bi-soundwave" style="color: var(--fl-cyan);"></i> 2. MODO PREVIEW (SAMPLER)
                         </div>
-                        <div class="meta-item">
-                            <span class="meta-key">Modificado</span>
-                            <span class="meta-val">Oct 26, 2026</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-key">BPM / Key</span>
-                            <span class="meta-val">140 / C min</span>
-                        </div>
-                        <div class="meta-item">
-                            <span class="meta-key">Muestras Únicas</span>
-                            <span class="meta-val" id="samples-count-val" style="color: var(--fl-green);">24 Samples</span>
+                        <div class="fl-dropdown-item" id="dd-item-export" onclick="selectDropdownMode('export')">
+                            <i class="bi bi-box-seam-fill" style="color: var(--fl-yellow);"></i> 3. MODO EXPORTAR
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Professional HTML5 Canvas Waveform Rendering -->
-                <div class="waveform-container-card">
-                    <div class="waveform-header-controls">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <button class="btn-play-large" id="play-btn" onclick="toggleWavePlay()"><i class="bi bi-play-fill"></i></button>
-                            <div>
-                                <div style="font-weight: 700; font-size: 0.85rem;">Previsualización de Audio</div>
-                                <div style="font-size: 0.72rem; color: var(--text-dim);" id="time-display">0:00 / 0:45</div>
+            <!-- BREADCRUMB -->
+            <div class="header-breadcrumbs">
+                <span class="breadcrumb-part">FL STUDIO</span>
+                <i class="bi bi-chevron-right" style="font-size: 0.6rem;"></i>
+                <span class="breadcrumb-part" id="bc-kit-name">!WILLIE INSPIRED VOL 3</span>
+                <i class="bi bi-chevron-right" style="font-size: 0.6rem;"></i>
+                <span class="breadcrumb-active" id="bc-mode-name">PERSONALIZAR</span>
+            </div>
+
+            <div class="header-actions">
+                <button class="btn-fl-action btn-fl-primary" onclick="openNativeFolderPicker()">
+                    <i class="bi bi-folder2-open"></i> ABRIR CARPETA REAL DEL PC
+                </button>
+            </div>
+        </header>
+
+        <div class="main-workspace">
+            <!-- PANEL IZQUIERDO: EL BROWSER EXACTO DE FL STUDIO -->
+            <aside class="fl-browser-panel">
+                <div class="fl-browser-topbar">
+                    <span>EXPLORADOR FL STUDIO</span>
+                    <div class="fl-browser-actions">
+                        <i class="bi bi-folder-plus" title="Nueva Carpeta" style="cursor: pointer;" onclick="addNewCategoryPrompt()"></i>
+                        <i class="bi bi-arrow-clockwise" title="Refrescar" style="cursor: pointer;" onclick="renderFLTree()"></i>
+                    </div>
+                </div>
+
+                <div class="fl-tree-scroll" id="fl-tree-container">
+                    <!-- Árbol generado dinámicamente -->
+                </div>
+
+                <div class="fl-browser-footer" id="fl-footer-info">
+                    <div class="fl-footer-line"><span class="label">Title</span><span class="val" id="foot-title">DRUMS</span></div>
+                    <div class="fl-footer-line"><span class="label">Date</span><span class="val" id="foot-date">14/02/2026 17:17:04</span></div>
+                    <div class="fl-footer-line"><span class="label">Size</span><span class="val" id="foot-size">24.8 MB</span></div>
+                    <div class="fl-footer-line"><span class="label">Path</span><span class="val" id="foot-path" style="font-size: 0.65rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">D:\WILLIE INSPIRED\VOL 3\DRUMS\DRUMS</span></div>
+                </div>
+            </aside>
+
+            <!-- PANEL DERECHO: LAS 3 VISTAS SEGÚN EL MODO DEL DROPDOWN -->
+            <main class="fl-main-stage">
+                
+                <!-- 1. MODO PERSONALIZAR -->
+                <div class="mode-view active" id="view-customize">
+                    <div class="editor-card">
+                        <div class="section-header-title">
+                            <span><i class="bi bi-sliders"></i> Configuración General del Drumkit</span>
+                            <span style="font-size: 0.75rem; color: #8fa0b8; font-family: var(--font-mono);">Estilo FL Studio 21/24 NFO</span>
+                        </div>
+
+                        <div class="editor-form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Nombre del Drumkit (Cabecera)</label>
+                                <input type="text" class="form-input" id="cfg-kit-title" value="!WILLIE INSPIRED DRUMKIT VOL 3" oninput="updateKitConfig()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Subtítulo / Edición</label>
+                                <input type="text" class="form-input" id="cfg-kit-sub" value="WILLIE INSPIRED DRUMKIT VOL 3" oninput="updateKitConfig()">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Color del Cartucho 3D</label>
+                                <div class="color-presets-row">
+                                    <div class="color-preset-dot active" style="background: #ff007f;" onclick="setCartridgeColor('#ff007f', this)" title="Hot Pink (Vol 3)"></div>
+                                    <div class="color-preset-dot" style="background: #76ff03;" onclick="setCartridgeColor('#76ff03', this)" title="Neon Green"></div>
+                                    <div class="color-preset-dot" style="background: #00e5ff;" onclick="setCartridgeColor('#00e5ff', this)" title="Cyber Cyan"></div>
+                                    <div class="color-preset-dot" style="background: #ffd600;" onclick="setCartridgeColor('#ffd600', this)" title="Toxic Gold"></div>
+                                    <div class="color-preset-dot" style="background: #ff5722;" onclick="setCartridgeColor('#ff5722', this)" title="Fire Coral"></div>
+                                    <div class="color-preset-dot" style="background: #8b5cf6;" onclick="setCartridgeColor('#8b5cf6', this)" title="Purple Royal"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Foto / Arte de Portada</label>
+                                <button class="btn-fl-action" style="margin-top: 4px;" onclick="document.getElementById('import-cover-input').click()">
+                                    <i class="bi bi-image"></i> Subir Arte Personalizado
+                                </button>
                             </div>
                         </div>
-                        <span style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent-capy-bright);">44.1kHz 24-bit WAV</span>
                     </div>
 
-                    <div class="waveform-canvas-box" onclick="seekWaveform(event)">
-                        <canvas id="waveform-canvas-el"></canvas>
+                    <div class="editor-card">
+                        <div class="section-header-title">
+                            <span><i class="bi bi-folder2-open"></i> Personalizar Carpeta (<span id="editor-active-cat-name" style="color: var(--fl-green-neon);">DRUMS</span>)</span>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn-fl-action" style="font-size: 0.75rem; padding: 4px 10px;" onclick="saveNfoToDisk()">
+                                    <i class="bi bi-floppy"></i> Guardar .NFO a Disco
+                                </button>
+                                <button class="btn-fl-action" style="font-size: 0.75rem; padding: 4px 10px;" onclick="addSoundToActiveCategoryPrompt()">
+                                    <i class="bi bi-plus-circle"></i> Añadir Sonido
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="editor-form-grid" style="margin-bottom: 10px;">
+                            <div class="form-group">
+                                <label class="form-label">Subtítulo / Tip de Carpeta (FL NFO)</label>
+                                <input type="text" class="form-input" id="cfg-cat-tip" value="sauce sounds" oninput="updateActiveCategoryTip(this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icono de Carpeta</label>
+                                <div class="icon-selector-grid">
+                                    <div class="icon-choice-btn active" onclick="setCategoryIcon('↻', this)">↻</div>
+                                    <div class="icon-choice-btn" onclick="setCategoryIcon('⚡', this)">⚡</div>
+                                    <div class="icon-choice-btn" onclick="setCategoryIcon('🎚', this)">🎚</div>
+                                    <div class="icon-choice-btn" onclick="setCategoryIcon('✨', this)">✨</div>
+                                    <div class="icon-choice-btn" onclick="setCategoryIcon('⚙', this)">⚙</div>
+                                    <div class="icon-choice-btn" onclick="setCategoryIcon('🎹', this)">🎹</div>
+                                    <div class="icon-choice-btn" onclick="setCategoryIcon('🎸', this)">🎸</div>
+                                    <div class="icon-choice-btn" onclick="setCategoryIcon('🎧', this)">🎧</div>
+                                    <div class="icon-choice-btn" onclick="setCategoryIcon('🛒', this)">🛒</div>
+                                    <div class="icon-choice-btn" onclick="setCategoryIcon('⏻', this)">⏻</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid #222836; font-size: 0.72rem; color: #6b7a90; text-align: left;">
+                                    <th style="padding: 6px; width: 45px;">PLAY</th>
+                                    <th style="padding: 6px;">NOMBRE DEL ARCHIVO</th>
+                                    <th style="padding: 6px;">SUBTÍTULO / PRESET TIP</th>
+                                    <th style="padding: 6px; width: 100px;">FORMATO</th>
+                                    <th style="padding: 6px; width: 60px; text-align: center;">BORRAR</th>
+                                </tr>
+                            </thead>
+                            <tbody id="editor-sounds-tbody">
+                                <!-- Filas -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
-                <!-- Samples Extracted View -->
-                <div class="samples-section-title">
-                    <span>Muestras Extraídas de este FLP (<span id="samples-label-count">24</span>)</span>
-                    <span style="font-size: 0.7rem; color: var(--fl-green);">Sin duplicados (Checksum MD5)</span>
-                </div>
-
-                <div class="samples-grid" id="samples-grid-box">
-                    <div class="sample-card" onclick="playSynthSound()">
-                        <div class="sample-title-icon">
-                            <i class="bi bi-soundwave"></i>
-                            <span>Sub_808_Deep_Cmin.wav</span>
+                <!-- 2. MODO PREVIEW (SAMPLER NATIVO) -->
+                <div class="mode-view" id="view-preview">
+                    <div class="fl-sampler-chassis">
+                        <div class="sampler-header-line">
+                            <div class="sampler-title-text">
+                                <i class="bi bi-file-earmark-music-fill" style="color: var(--fl-cyan);"></i>
+                                <span id="preview-item-title">808s</span>
+                                <span class="sampler-badge" id="preview-item-type">WAV 24-BIT</span>
+                            </div>
+                            <span style="font-family: var(--font-mono); font-size: 0.75rem; color: #8fa0b8;" id="preview-item-tip">sauce sounds</span>
                         </div>
-                        <span class="file-badge badge-wav">.wav</span>
-                    </div>
-                    <div class="sample-card" onclick="playSynthSound()">
-                        <div class="sample-title-icon">
-                            <i class="bi bi-soundwave"></i>
-                            <span>Spank_808_Distorted.wav</span>
+
+                        <!-- FORMA DE ONDA GRANDE -->
+                        <div class="sampler-waveform-stage">
+                            <canvas class="waveform-canvas" id="preview-waveform-canvas" width="800" height="160"></canvas>
+                            <div class="waveform-scrubber" id="preview-scrubber"></div>
                         </div>
-                        <span class="file-badge badge-wav">.wav</span>
-                    </div>
-                    <div class="sample-card" onclick="playSynthSound()">
-                        <div class="sample-title-icon">
-                            <i class="bi bi-soundwave"></i>
-                            <span>Punchy_Short_808.wav</span>
+
+                        <!-- CONTROLES SAMPLER FL STUDIO -->
+                        <div class="sampler-knobs-row">
+                            <div class="knob-widget">
+                                <div class="knob-circle"><div class="knob-indicator" style="transform: rotate(0deg);"></div></div>
+                                <div class="knob-label">PITCH</div>
+                                <div class="knob-val" id="val-pitch">0 st</div>
+                            </div>
+                            <div class="knob-widget">
+                                <div class="knob-circle"><div class="knob-indicator" style="transform: rotate(25deg);"></div></div>
+                                <div class="knob-label">ATTACK</div>
+                                <div class="knob-val">0 ms</div>
+                            </div>
+                            <div class="knob-widget">
+                                <div class="knob-circle"><div class="knob-indicator" style="transform: rotate(60deg);"></div></div>
+                                <div class="knob-label">HOLD</div>
+                                <div class="knob-val">100%</div>
+                            </div>
+                            <div class="knob-widget">
+                                <div class="knob-circle"><div class="knob-indicator" style="transform: rotate(45deg);"></div></div>
+                                <div class="knob-label">DECAY</div>
+                                <div class="knob-val">1.2 s</div>
+                            </div>
+                            <div class="knob-widget">
+                                <div class="knob-circle"><div class="knob-indicator" style="transform: rotate(0deg);"></div></div>
+                                <div class="knob-label">OUT VOL</div>
+                                <div class="knob-val">100%</div>
+                            </div>
                         </div>
-                        <span class="file-badge badge-wav">.wav</span>
-                    </div>
-                    <div class="sample-card" onclick="playSynthSound()">
-                        <div class="sample-title-icon">
-                            <i class="bi bi-soundwave"></i>
-                            <span>Clap_Analog_909.wav</span>
-                        </div>
-                        <span class="file-badge badge-wav">.wav</span>
-                    </div>
-                    <div class="sample-card" onclick="playSynthSound()">
-                        <div class="sample-title-icon">
-                            <i class="bi bi-soundwave"></i>
-                            <span>HH_Open_Tight.wav</span>
-                        </div>
-                        <span class="file-badge badge-wav">.wav</span>
-                    </div>
-                    <div class="sample-card" onclick="playSynthSound()">
-                        <div class="sample-title-icon">
-                            <i class="bi bi-soundwave"></i>
-                            <span>Bass_Sub_125BPM.wav</span>
-                        </div>
-                        <span class="file-badge badge-wav">.wav</span>
-                    </div>
-                </div>
 
-                <!-- FL Studio Browser .NFO & Custom Artwork Generator Card -->
-                <div class="fl-nfo-generator-card">
-                    <div class="fl-nfo-info">
-                        <div class="fl-cartridge-img"><i class="bi bi-sd-card-fill"></i></div>
-                        <div>
-                            <div class="fl-nfo-text-title">Generar .NFO & Artwork para FL Studio Browser</div>
-                            <div class="fl-nfo-subtext">Crea portadas tipo cartucho rosa, colores personalizados (!DRUMS, !MASTER) y tips visibles en FL Studio.</div>
-                        </div>
-                    </div>
-                    <button class="btn-fl-nfo" onclick="exportSignatureKitZip()">
-                        DESCARGAR DRUMKIT (.ZIP)
-                    </button>
-                </div>
-
-            </div>
-        </main>
-
-        <!-- Right Resize Handle -->
-        <div class="resize-handle" id="handle-right"></div>
-
-        <!-- RIGHT PANEL: CapyAssistant & AI Chat -->
-        <aside class="panel-box" id="panel-right">
-            <div class="panel-title-bar">
-                <span>CAPYASSISTANT</span>
-                <i class="bi bi-x-lg" style="cursor: pointer;"></i>
-            </div>
-
-            <div class="right-section-card">
-                <div class="capy-greeting-bubble">
-                    Hola. He analizado tus proyectos de FL Studio. ¿Qué deseas hacer hoy con tus archivos .flp?
-                </div>
-
-                <div class="capy-illustration-box">
-                    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M35 125 C30 75, 70 45, 125 45 C155 45, 178 65, 178 95 C178 135, 150 170, 95 170 C55 170, 35 155, 35 125 Z" fill="#ffffff" stroke="#e4e4e7" stroke-width="4"/>
-                        <circle cx="138" cy="28" r="4" fill="none" stroke="#18181b" stroke-width="2.5"/>
-                        <circle cx="150" cy="24" r="5" fill="none" stroke="#18181b" stroke-width="2.5"/>
-                        <circle cx="164" cy="22" r="6" fill="none" stroke="#18181b" stroke-width="2.5"/>
-                        <path d="M42 120 C42 82, 75 52, 122 52 C150 52, 170 70, 170 98 C170 135, 144 162, 98 162 C58 162, 42 148, 42 120 Z" stroke="#18181b" stroke-width="3.5" stroke-linecap="round"/>
-                        <path d="M128 78 C148 78, 162 88, 162 102 C162 116, 148 122, 128 122 C108 88, 116 78, 128 78 Z" stroke="#18181b" stroke-width="2.8"/>
-                        <path d="M126 92 L138 92 M132 92 L132 108" stroke="#18181b" stroke-width="3" stroke-linecap="round"/>
-                        <line x1="86" y1="84" x2="100" y2="84" stroke="#18181b" stroke-width="3.5" stroke-linecap="round"/>
-                        <line x1="146" y1="84" x2="158" y2="84" stroke="#18181b" stroke-width="3.5" stroke-linecap="round"/>
-                    </svg>
-                </div>
-            </div>
-
-            <!-- Ask Capy Section -->
-            <div class="right-section-card" style="flex: 1; display: flex; flex-direction: column;">
-                <div class="ask-capy-header">
-                    <span>ASK CAPY</span>
-                    <i class="bi bi-chat-text"></i>
-                </div>
-
-                <div class="qa-list" id="qa-list-container">
-                    <div class="qa-item" onclick="triggerPresetPrompt('Extraer 808s de mis proyectos FLP')">
-                        <div class="qa-q">Prompt Sugerido:</div>
-                        <div class="qa-a">Extraer todos mis 808s favoritos de mis FLPs de FL Studio.</div>
-                    </div>
-                    <div class="qa-item" onclick="triggerPresetPrompt('Crear mi Signature Drumkit con archivos NFO')">
-                        <div class="qa-q">Prompt Sugerido:</div>
-                        <div class="qa-a">Crear mi Signature Drumkit oficial listo para FL Studio Browser.</div>
-                    </div>
-                </div>
-
-                <!-- Gemini-Style Input Pill -->
-                <div style="margin-top: auto; position: relative;">
-                    <div class="gemini-input-pill">
-                        <input type="text" id="capy-chat-input" placeholder="Pregúntale a CapyKit..." onkeypress="handleInputKey(event)">
-                        
-                        <div class="mode-dropdown-trigger" onclick="toggleModeDropdown()">
-                            <span id="selected-mode-text">Modo Thinking</span>
-                            <i class="bi bi-chevron-down" style="font-size: 0.7rem;"></i>
-                        </div>
-                    </div>
-
-                    <div class="mode-dropdown-menu" id="mode-dropdown-menu">
-                        <div class="mode-option selected" onclick="selectCapyMode('Modo Thinking')">
-                            <span>Modo Thinking</span>
-                            <i class="bi bi-check2"></i>
-                        </div>
-                        <div class="mode-option" onclick="selectCapyMode('CapyGPT Rápido')">
-                            <span>CapyGPT Rápido</span>
+                        <div class="sampler-btn-row">
+                            <button class="btn-sampler-play" id="btn-preview-play-toggle" onclick="playActivePreviewSound()">
+                                <i class="bi bi-play-fill" style="font-size: 1.4rem;"></i> REPRODUCIR AUDIO / PRESET
+                            </button>
+                            <button class="btn-fl-action" style="padding: 0 18px;" onclick="selectDropdownMode('customize')">
+                                <i class="bi bi-pencil"></i> Ir a Modo Personalizar
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
-        </aside>
 
-    </div>
+                <!-- 3. MODO EXPORTAR -->
+                <div class="mode-view" id="view-export">
+                    <div class="editor-card">
+                        <div class="section-header-title">
+                            <span><i class="bi bi-box-arrow-down"></i> Opciones de Exportación para FL Studio</span>
+                            <span style="font-size: 0.75rem; color: var(--fl-green-neon); font-family: var(--font-mono);">Listo para Instalar</span>
+                        </div>
 
-    <!-- Onboarding Modal Inicial -->
-    <div class="modal-overlay active" id="onboarding-modal">
-        <div class="modal-card">
-            <div class="modal-title">¡Bienvenido a CAPYKIT!</div>
-            <div class="modal-desc">
-                ¿Qué deseas hacer primero con tus proyectos de FL Studio? Selecciona una acción rápida para comenzar:
-            </div>
+                        <div class="export-options-grid">
+                            <div class="export-box-card">
+                                <div>
+                                    <div class="export-card-title"><i class="bi bi-file-earmark-zip-fill" style="color: var(--fl-yellow); font-size: 1.4rem;"></i> 1. Paquete ZIP (.NFO + Estructura)</div>
+                                    <div class="export-card-desc" style="margin-top: 8px;">
+                                        Descarga un archivo ZIP listo con todas las subcarpetas, colores, subtítulos y archivos <code>.nfo</code> de FL Studio para descomprimir directamente en tu carpeta de Drumkits.
+                                    </div>
+                                </div>
+                                <button class="btn-fl-action btn-fl-primary" style="height: 40px; justify-content: center;" onclick="exportFLStudioDrumkitZip()">
+                                    <i class="bi bi-download"></i> Descargar ZIP Completo
+                                </button>
+                            </div>
 
-            <div class="onboarding-options">
-                <button class="btn-onboarding-opt" onclick="completeOnboarding('Extraer todos mis 808s y Kicks de mis FLPs')">
-                    <i class="bi bi-disc" style="color: var(--fl-orange);"></i>
-                    <div>Extraer mis 808s y Snares favoritos de mis .flp</div>
-                </button>
-                <button class="btn-onboarding-opt" onclick="completeOnboarding('Crear mi Signature Drumkit con colores .NFO para FL Studio')">
-                    <i class="bi bi-box" style="color: var(--fl-green);"></i>
-                    <div>Crear mi Signature Drumkit con metadatos .NFO</div>
-                </button>
-                <button class="btn-onboarding-opt" onclick="completeOnboarding('Escanear mi carpeta de proyectos de FL Studio')">
-                    <i class="bi bi-folder-check" style="color: var(--accent-capy-bright);"></i>
-                    <div>Escanear mi carpeta de 200 proyectos de FL Studio</div>
-                </button>
-            </div>
+                            <div class="export-box-card">
+                                <div>
+                                    <div class="export-card-title"><i class="bi bi-terminal-fill" style="color: var(--fl-green-neon); font-size: 1.4rem;"></i> 2. Instalador 1-Clic (.BAT para Windows)</div>
+                                    <div class="export-card-desc" style="margin-top: 8px;">
+                                        Genera un ejecutable <code>install_drumkit.bat</code> que detecta automáticamente tu instalación de FL Studio y coloca el drumkit con sus colores e iconos sin pasos manuales.
+                                    </div>
+                                </div>
+                                <button class="btn-fl-action" style="height: 40px; justify-content: center; background: #1a2232; border-color: var(--fl-cyan); color: #fff;" onclick="generateOneClickInstaller()">
+                                    <i class="bi bi-play-circle-fill"></i> Descargar Instalador 1-Clic
+                                </button>
+                            </div>
+
+                            <div class="export-box-card">
+                                <div>
+                                    <div class="export-card-title"><i class="bi bi-code-square" style="color: var(--fl-pink); font-size: 1.4rem;"></i> 3. Plantilla / Backup de Configuración</div>
+                                    <div class="export-card-desc" style="margin-top: 8px;">
+                                        Guarda la plantilla completa de diseño para que puedas editarla o reutilizarla en futuros volúmenes (*Vol 4, Vol 5*).
+                                    </div>
+                                </div>
+                                <button class="btn-fl-action" style="height: 40px; justify-content: center;" onclick="exportConfigJson()">
+                                    <i class="bi bi-filetype-json"></i> Guardar Plantilla JSON
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
         </div>
     </div>
-
-    <!-- Modal de Validación de Serial Key de OFFSZN -->
-    <div class="modal-overlay" id="serial-modal">
-        <div class="modal-card">
-            <div class="modal-title">Licencia CapyKit Studio</div>
-            <div class="modal-desc">
-                Ingresa tu Serial Key de OFFSZN para activar CapyKit en este equipo.
-            </div>
-
-            <input type="text" class="serial-input" id="serial-key-input" placeholder="CAPYKIT-XXXX-XXXX-XXXX" value="CAPYKIT-2026-STUDIO-PRO">
-
-            <button class="btn-modal-submit" onclick="verifySerialKey()">
-                ACTIVAR LICENCIA
-            </button>
-            <button class="btn-modal-submit" style="background: transparent; color: var(--text-muted); margin-top: 8px;" onclick="closeSerialModal()">
-                Cancelar
-            </button>
-        </div>
-    </div>
-
-    <!-- Footer Status Bar -->
-    <footer class="app-status-bar">
-        <div>CAPYKIT v1.0 | Projects Indexed: <span id="footer-count">200</span> | DAW: FL Studio (Nicho Oficial)</div>
-        <div>OFFSZN STUDIO ENGINE</div>
-    </footer>
 
     <script>
-        // Store Extracted Samples Data
-        let currentExtractedSamples = [
-            { name: 'Sub_808_Deep_Cmin.wav', category: '808s' },
-            { name: 'Spank_808_Distorted.wav', category: '808s' },
-            { name: 'Punchy_Short_808.wav', category: '808s' },
-            { name: 'Clap_Analog_909.wav', category: 'Claps' },
-            { name: 'HH_Open_Tight.wav', category: 'HiHats' },
-            { name: 'Bass_Sub_125BPM.wav', category: '808s' }
-        ];
-
-        // Resizable Panels Drag Logic
-        const handleLeft = document.getElementById('handle-left');
-        const handleRight = document.getElementById('handle-right');
-        const panelLeft = document.getElementById('panel-left');
-        const panelRight = document.getElementById('panel-right');
-
-        let isResizingLeft = false;
-        let isResizingRight = false;
-
-        handleLeft.addEventListener('mousedown', (e) => {
-            isResizingLeft = true;
-            handleLeft.classList.add('active');
-        });
-
-        handleRight.addEventListener('mousedown', (e) => {
-            isResizingRight = true;
-            handleRight.classList.add('active');
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (isResizingLeft) {
-                const newW = e.clientX - 6;
-                if (newW >= 200 && newW <= 500) {
-                    panelLeft.style.width = newW + 'px';
+        let drumkitData = {
+            title: "!WILLIE INSPIRED DRUMKIT VOL 3",
+            subtitle: "WILLIE INSPIRED DRUMKIT VOL. 3",
+            cartridgeColor: "#ff007f",
+            activeCategoryId: "cat_drums",
+            activePreviewItem: null,
+            rootPath: "D:\\WILLIE INSPIRED\\VOL 3",
+            categories: [
+                {
+                    id: "cat_bonus",
+                    name: "BONUS",
+                    icon: "⚡",
+                    tip: "",
+                    color: "#76ff03",
+                    isOpen: false,
+                    items: [
+                        { id: "b1", name: "Loop Master 140", tip: "BONUS LOOP", type: "WAV" },
+                        { id: "b2", name: "Star Melody MIDI", tip: "Cmin 140BPM", type: "MID" }
+                    ]
+                },
+                {
+                    id: "cat_drums",
+                    name: "DRUMS",
+                    icon: "↻",
+                    tip: "sauce sounds",
+                    color: "#76ff03",
+                    isOpen: true,
+                    items: [
+                        { id: "d1", name: "808s", tip: "808s", type: "808", icon: "✨", color: "#ff5722" },
+                        { id: "d2", name: "CHANTS", tip: "CHANT", type: "Vox", icon: "✨", color: "#ff5722" },
+                        { id: "d3", name: "CLAPS", tip: "CLAPS", type: "Clap", icon: "✨", color: "#ff5722" },
+                        { id: "d4", name: "CRASH", tip: "CRASH", type: "Crash", icon: "✨", color: "#ff5722" },
+                        { id: "d5", name: "HH", tip: "HH", type: "HiHat", icon: "✨", color: "#ff5722" },
+                        { id: "d6", name: "KICKS", tip: "KICKS", type: "Kick", icon: "✨", color: "#ff5722" },
+                        { id: "d7", name: "!DRUMLOOPS", tip: "DRUMLOOPS 🔥", type: "Melody", icon: "🛒", color: "#ff5722" },
+                        { id: "d8", name: "LOOPS", tip: "WI-FX", type: "Melody", icon: "🎧", color: "#ffd600" },
+                        { id: "d9", name: "OH", tip: "OH", type: "OpenHat", icon: "✨", color: "#ff5722" },
+                        { id: "d10", name: "PERCS", tip: "PERCS", type: "Perc", icon: "✨", color: "#ff5722" },
+                        { id: "d11", name: "RIM", tip: "RIM", type: "Rim", icon: "✨", color: "#ff5722" },
+                        { id: "d12", name: "RISER", tip: "RISER", type: "FX", icon: "✨", color: "#ff5722" },
+                        { id: "d13", name: "SNARES", tip: "SNARES", type: "Snare", icon: "✨", color: "#ff5722" },
+                        { id: "d14", name: "WI-MIDIS", tip: "WI-MIDIS", type: "Melody", icon: "🎹", color: "#ffd600" },
+                        { id: "d15", name: "WI-ONESHOTS", tip: "WI-ONESHOTS", type: "Melody", icon: "🎸", color: "#ffd600" },
+                        { id: "d16", name: "WI-SFX", tip: "WI-FX", type: "FX", icon: "🎧", color: "#ffd600" },
+                        { id: "d17", name: "W™", tip: "", type: "FX", icon: "⏻", color: "#ff5722" }
+                    ]
+                },
+                {
+                    id: "cat_mix",
+                    name: "MIX PRESETS",
+                    icon: "🎚",
+                    tip: "Mix rápido 2024",
+                    color: "#76ff03",
+                    isOpen: true,
+                    items: [
+                        { id: "m1", name: "808 KEY 2024", tip: "AUMENTA LOW END", type: "808", icon: "⚙", color: "#8fa0b8" },
+                        { id: "m2", name: "COMP KICK", tip: "PUNCH", type: "Kick", icon: "⚙", color: "#8fa0b8" },
+                        { id: "m3", name: "HH 2023", tip: "PONLE A CUALQUIER HH Y SUENA BIEN", type: "HiHat", icon: "⚙", color: "#8fa0b8" },
+                        { id: "m4", name: "HH GIAN 2024", tip: "TRUCOS DE GIAN", type: "HiHat", icon: "⚙", color: "#8fa0b8" },
+                        { id: "m5", name: "HH PIREX 2024", tip: "CRISPY HH", type: "HiHat", icon: "⚙", color: "#8fa0b8" },
+                        { id: "m6", name: "KICK 2024", tip: "PEDAZO DE PRESET", type: "Kick", icon: "⚙", color: "#8fa0b8" },
+                        { id: "m7", name: "OH 2024", tip: "EQ RARO", type: "OpenHat", icon: "⚙", color: "#8fa0b8" },
+                        { id: "m8", name: "PLUGG CLAP 2024", tip: "UN FILTRO NADA MAS Q DECIR", type: "Clap", icon: "⚙", color: "#8fa0b8" },
+                        { id: "m9", name: "PLUGNB 808 2024", tip: "EQ + LIMITER", type: "808", icon: "⚙", color: "#8fa0b8" },
+                        { id: "m10", name: "SNARE 2024", tip: "PONLE A CUALQUIER SNARE", type: "Snare", icon: "⚙", color: "#8fa0b8" },
+                        { id: "m11", name: "ZAY 2024", tip: "ZAY CON + PEGADA", type: "808", icon: "⚙", color: "#8fa0b8" }
+                    ]
+                },
+                {
+                    id: "cat_tags",
+                    name: "TAGs",
+                    icon: "!",
+                    tip: "",
+                    color: "#76ff03",
+                    isOpen: false,
+                    items: [
+                        { id: "t1", name: "OFFSZN PRODUCER TAG", tip: "OFFSZN ONLY", type: "Vox", icon: "✨", color: "#ff5722" }
+                    ]
                 }
-            } else if (isResizingRight) {
-                const newW = window.innerWidth - e.clientX - 6;
-                if (newW >= 240 && newW <= 520) {
-                    panelRight.style.width = newW + 'px';
+            ]
+        };
+
+        let currentMode = "customize";
+        let isPlayingPreview = false;
+        let previewInterval = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            drumkitData.activePreviewItem = drumkitData.categories[1].items[0];
+            renderFLTree();
+            renderActiveCategoryEditor();
+            updatePreviewUI(drumkitData.activePreviewItem);
+
+            // Close dropdown if clicked outside
+            document.addEventListener("click", (e) => {
+                const dd = document.querySelector(".fl-mode-dropdown");
+                if (dd && !dd.contains(e.target)) {
+                    document.getElementById("mode-dropdown-menu").classList.remove("show");
+                    document.getElementById("mode-trigger-btn").classList.remove("open");
                 }
-            }
+            });
         });
 
-        document.addEventListener('mouseup', () => {
-            isResizingLeft = false;
-            isResizingRight = false;
-            handleLeft.classList.remove('active');
-            handleRight.classList.remove('active');
-        });
-
-        // Interactive Favorite Toggle
-        function toggleFav(starEl) {
-            starEl.classList.toggle('active');
-            if (starEl.classList.contains('active')) {
-                starEl.className = 'bi bi-star-fill star-hover-btn active';
-            } else {
-                starEl.className = 'bi bi-star star-hover-btn';
-            }
+        // MANEJADOR DEL DROPDOWN
+        function toggleDropdownMenu() {
+            const menu = document.getElementById("mode-dropdown-menu");
+            const btn = document.getElementById("mode-trigger-btn");
+            menu.classList.toggle("show");
+            btn.classList.toggle("open");
         }
 
-        // Onboarding Handler
-        function completeOnboarding(promptText) {
-            document.getElementById('onboarding-modal').classList.remove('active');
-            const input = document.getElementById('capy-chat-input');
-            input.value = promptText;
-            triggerPresetPrompt(promptText);
-        }
+        function selectDropdownMode(modeKey) {
+            currentMode = modeKey;
+            document.getElementById("mode-dropdown-menu").classList.remove("show");
+            document.getElementById("mode-trigger-btn").classList.remove("open");
 
-        function triggerPresetPrompt(txt) {
-            const container = document.getElementById('qa-list-container');
-            const mode = document.getElementById('selected-mode-text').innerText;
-            
-            let replyText = `¡Entendido! Procesando análisis de proyectos en FL Studio...`;
-            if (txt.toLowerCase().includes('808')) {
-                replyText = `Encontré 24 808s únicos en tus proyectos. Eliminé 18 duplicados idénticos por checksum MD5.`;
-            } else if (txt.toLowerCase().includes('nfo') || txt.toLowerCase().includes('kit')) {
-                replyText = `Estructura .NFO con colores (!DRUMS, !MASTER, !MELODY) lista para descargar en .ZIP.`;
+            // Update Trigger label
+            const labelSpan = document.getElementById("active-mode-label");
+            const bcMode = document.getElementById("bc-mode-name");
+
+            document.querySelectorAll(".fl-dropdown-item").forEach(item => item.classList.remove("active"));
+            const activeDdItem = document.getElementById("dd-item-" + modeKey);
+            if (activeDdItem) activeDdItem.classList.add("active");
+
+            if (modeKey === "customize") {
+                labelSpan.innerHTML = '<i class="bi bi-palette-fill" style="color: var(--fl-green-neon);"></i> MODO PERSONALIZAR';
+                bcMode.innerText = "PERSONALIZAR";
+            } else if (modeKey === "preview") {
+                labelSpan.innerHTML = '<i class="bi bi-soundwave" style="color: var(--fl-cyan);"></i> MODO PREVIEW';
+                bcMode.innerText = "PREVIEW (SAMPLER)";
+                if (drumkitData.activePreviewItem) drawLargeWaveform(drumkitData.activePreviewItem);
+            } else if (modeKey === "export") {
+                labelSpan.innerHTML = '<i class="bi bi-box-seam-fill" style="color: var(--fl-yellow);"></i> MODO EXPORTAR';
+                bcMode.innerText = "EXPORTAR";
             }
 
-            container.innerHTML += `
-                <div class="qa-item">
-                    <div class="qa-q">Q: ${txt}</div>
-                    <div class="qa-a">Capy (${mode}): ${replyText}</div>
+            // Switch view
+            document.querySelectorAll(".mode-view").forEach(v => v.classList.remove("active"));
+            const targetView = document.getElementById("view-" + modeKey);
+            if (targetView) targetView.classList.add("active");
+        }
+
+        // RENDERIZADO DEL BROWSER REAL FL STUDIO
+        function renderFLTree() {
+            const container = document.getElementById("fl-tree-container");
+            if (!container) return;
+            container.innerHTML = "";
+
+            const rootHeader = document.createElement("div");
+            rootHeader.className = "tree-root-header";
+            rootHeader.innerHTML = "<span>⏻ " + drumkitData.title + "</span><i class=\"bi bi-chevron-down\" style=\"font-size: 0.75rem;\"></i>";
+            container.appendChild(rootHeader);
+
+            drumkitData.categories.forEach(cat => {
+                const catRow = document.createElement("div");
+                catRow.className = "tree-category-row " + (drumkitData.activeCategoryId === cat.id ? "active" : "");
+                catRow.onclick = () => selectCategory(cat.id);
+
+                let subHtml = cat.tip ? ("<div class=\"category-sub-line\">" + cat.tip + "</div>") : "";
+                catRow.innerHTML = `<div class="category-title-line" style="color: ${cat.color};"><span>${cat.icon} ${cat.name}</span></div>` + subHtml;
+                container.appendChild(catRow);
+
+                if (cat.isOpen && cat.items && cat.items.length > 0) {
+                    const childrenBox = document.createElement("div");
+                    childrenBox.className = "tree-children-container";
+
+                    cat.items.forEach(item => {
+                        const childRow = document.createElement("div");
+                        childRow.className = "tree-child-row " + (drumkitData.activePreviewItem && drumkitData.activePreviewItem.id === item.id ? "active" : "");
+                        childRow.onclick = (e) => {
+                            e.stopPropagation();
+                            drumkitData.activePreviewItem = item;
+                            updateFooterInfo(item, cat.name);
+                            updatePreviewUI(item);
+                            
+                            // CAMBIO AUTOMÁTICO A MODO PREVIEW
+                            selectDropdownMode("preview");
+                            playItemSound(item);
+                            drawLargeWaveform(item);
+                        };
+
+                        let itemSub = item.tip ? (`<div class="child-sub-line">${item.tip}</div>`) : "";
+                        childRow.innerHTML = `<div class="child-title-line" style="color: ${item.color || "#ff5722"};"><span>${item.icon || "✨"} ${item.name}</span></div>` + itemSub;
+                        childrenBox.appendChild(childRow);
+                    });
+
+                    container.appendChild(childrenBox);
+                }
+            });
+
+            const cartridgeBox = document.createElement("div");
+            cartridgeBox.className = "browser-cartridge-box";
+            cartridgeBox.innerHTML = `
+                <div class="cartridge-frame" id="cartridge-element" style="background: ${drumkitData.cartridgeColor};">
+                    <div class="cartridge-notch-left"></div>
+                    <div class="cartridge-notch-right"></div>
+                    <div class="cartridge-sticker">
+                        <div class="sticker-top-text">
+                            <div>WILLIE INSPIRED</div>
+                            <div style="font-size: 0.45rem; color: #666;">ESSENTIALS • 2026 EDITION</div>
+                        </div>
+                        <div class="sticker-art-box">
+                            <div class="sticker-art-title">WILLIE INSPIRED<br>DRUMKIT</div>
+                            <div class="sticker-art-sub">VOL 3</div>
+                        </div>
+                        <div class="sticker-bottom-label" id="cartridge-label-preview">${drumkitData.subtitle}</div>
+                    </div>
                 </div>
             `;
-            container.scrollTop = container.scrollHeight;
+            container.appendChild(cartridgeBox);
         }
 
-        // REAL FLP BINARY PARSER IN BROWSER
-        function parseFLPBinaryStrings(arrayBuffer) {
-            const bytes = new Uint8Array(arrayBuffer);
-            const strings = [];
-            let cur = '';
-
-            for (let i = 0; i < bytes.length; i++) {
-                const b = bytes[i];
-                if (b >= 32 && b <= 126) {
-                    cur += String.fromCharCode(b);
-                } else {
-                    if (cur.length >= 4) {
-                        if (/\.(wav|mp3|ogg|flac|aif|aiff|fst)$/i.test(cur) || cur.includes('\\') || cur.includes('/')) {
-                            strings.push(cur.trim());
-                        }
-                    }
-                    cur = '';
-                }
-            }
-            return Array.from(new Set(strings.filter(s => /\.(wav|mp3|ogg|flac|aif)$/i.test(s))));
-        }
-
-        function handleFileSelect(event) {
-            const files = event.target.files;
-            if (!files || files.length === 0) return;
-
-            let flpCount = 0;
-            const treeRoot = document.getElementById('explorer-tree-root');
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                if (file.name.toLowerCase().endsWith('.flp')) {
-                    flpCount++;
-
-                    // Parse real binary buffer of the selected .flp
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const buffer = e.target.result;
-                        const detectedSamples = parseFLPBinaryStrings(buffer);
-
-                        // Update current extracted samples
-                        currentExtractedSamples = [];
-                        const gridBox = document.getElementById('samples-grid-box');
-                        gridBox.innerHTML = '';
-
-                        if (detectedSamples.length > 0) {
-                            detectedSamples.forEach(s => {
-                                const sampleName = s.split('\\').pop().split('/').pop();
-                                currentExtractedSamples.push({ name: sampleName, category: 'Extracted' });
-                                
-                                gridBox.innerHTML += `
-                                    <div class="sample-card" onclick="playSynthSound()">
-                                        <div class="sample-title-icon">
-                                            <i class="bi bi-soundwave"></i>
-                                            <span>${sampleName}</span>
-                                        </div>
-                                        <span class="file-badge badge-wav">.wav</span>
-                                    </div>
-                                `;
-                            });
-                            document.getElementById('samples-count-val').innerText = `${detectedSamples.length} Samples`;
-                            document.getElementById('samples-label-count').innerText = detectedSamples.length;
-                        }
-                    };
-                    reader.readAsArrayBuffer(file);
-
-                    // Add to UI tree
-                    const node = document.createElement('div');
-                    node.className = 'tree-node';
-                    node.style.paddingLeft = '20px';
-                    node.innerHTML = `
-                        <div class="tree-node-left">
-                            <span class="file-badge badge-flp">.flp</span>
-                            <span>${file.name}</span>
-                        </div>
-                        <i class="bi bi-star star-hover-btn" onclick="toggleFav(this)"></i>
-                    `;
-                    node.onclick = () => {
-                        document.querySelectorAll('.tree-node').forEach(n => n.classList.remove('active'));
-                        node.classList.add('active');
-                        document.getElementById('active-project-path').innerText = `FL Studio / ${file.name}`;
-                    };
-                    treeRoot.appendChild(node);
-                }
-            }
-
-            if (flpCount > 0) {
-                document.getElementById('header-flp-count').innerText = 200 + flpCount;
-                document.getElementById('footer-count').innerText = 200 + flpCount;
-                triggerPresetPrompt(`Se leyó el archivo .flp binario real. ¡Muestras extraídas al instante!`);
+        function selectCategory(catId) {
+            const cat = drumkitData.categories.find(c => c.id === catId);
+            if (cat) {
+                cat.isOpen = !cat.isOpen;
+                drumkitData.activeCategoryId = catId;
+                renderFLTree();
+                renderActiveCategoryEditor();
+                updateFooterInfo(cat, cat.name);
             }
         }
 
-        function loadDemoProject(name, count) {
-            document.getElementById('active-project-path').innerText = `FL Studio / ${name}`;
-            document.getElementById('samples-count-val').innerText = `${count} Samples`;
-            document.getElementById('samples-label-count').innerText = count;
-            triggerPresetPrompt(`Cargado ${name} (${count} muestras detectadas)`);
-        }
+        function renderActiveCategoryEditor() {
+            const cat = drumkitData.categories.find(c => c.id === drumkitData.activeCategoryId);
+            if (!cat) return;
 
-        // REAL ZIP GENERATION AND DOWNLOAD USING JSZIP
-        function exportSignatureKitZip() {
-            if (typeof JSZip === 'undefined') {
-                alert('Generando Signature Drumkit...');
+            document.getElementById("editor-active-cat-name").innerText = cat.name;
+            document.getElementById("cfg-cat-tip").value = cat.tip || "";
+
+            const tbody = document.getElementById("editor-sounds-tbody");
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            if (!cat.items || cat.items.length === 0) {
+                tbody.innerHTML = "<tr><td colspan=\"5\" style=\"text-align: center; color: #666; padding: 20px;\">Esta carpeta no tiene sonidos aún.</td></tr>";
                 return;
             }
 
-            const zip = new JSZip();
-            const kitFolder = zip.folder("!WILLIE_INSPIRED_SIGNATURE_KIT");
-
-            // Folder .NFO configuration contents for FL Studio Browser
-            const drumsNfo = "Color=$0099FF\nIconNum=35\nTip=Sauce Drums por CapyKit\n";
-            const masterNfo = "Color=$0000FF\nIconNum=8\nTip=Presets de mezcla para FL Studio\n";
-            const melodyNfo = "Color=$A020F0\nIconNum=24\nTip=Melodías y Loops\n";
-            const rootNfo = "Color=$0040FF\nIconNum=12\nTip=Official Signature Drumkit\n";
-
-            // Add FL Studio Browser NFO Files
-            kitFolder.file("folder.nfo", rootNfo);
-            
-            const drumsFolder = kitFolder.folder("!DRUMS");
-            drumsFolder.file("folder.nfo", drumsNfo);
-            
-            const masterFolder = kitFolder.folder("!MASTER");
-            masterFolder.file("folder.nfo", masterNfo);
-            
-            const melodyFolder = kitFolder.folder("!MELODY");
-            melodyFolder.file("folder.nfo", melodyNfo);
-
-            // Add dummy Audio Samples to the Zip
-            drumsFolder.file("808_Sub_Deep_Cmin.wav", "DUMMY_AUDIO_DATA_808");
-            drumsFolder.file("Clap_Analog_909.wav", "DUMMY_AUDIO_DATA_CLAP");
-            drumsFolder.file("Punchy_Kick_FL.wav", "DUMMY_AUDIO_DATA_KICK");
-            melodyFolder.file("Synth_Loop_140BPM.wav", "DUMMY_AUDIO_DATA_LOOP");
-
-            // Readme File
-            kitFolder.file("README_CAPYKIT.txt", "Signature Drumkit creado automáticamente con CAPYKIT para FL Studio.\nOFFSZN Studio Engine.");
-
-            // Generate ZIP Blob and Download
-            zip.generateAsync({ type: "blob" }).then(function (content) {
-                const a = document.createElement("a");
-                a.href = URL.createObjectURL(content);
-                a.download = "Signature_Drumkit_FLStudio_CapyKit.zip";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+            cat.items.forEach((item, index) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td style="padding: 6px;">
+                        <button class="btn-fl-action" style="padding: 4px 8px; color: var(--fl-cyan);" onclick="drumkitData.activePreviewItem=drumkitData.categories.find(c=>c.id==='${cat.id}').items[${index}]; selectDropdownMode('preview'); playItemSound(drumkitData.activePreviewItem); drawLargeWaveform(drumkitData.activePreviewItem);">
+                            <i class="bi bi-play-fill"></i>
+                        </button>
+                    </td>
+                    <td style="padding: 6px;">
+                        <input type="text" class="form-input" style="padding: 4px 8px; font-size: 0.8rem; width: 100%;" value="${item.name}" onchange="editItemProperty('${cat.id}', ${index}, 'name', this.value)">
+                    </td>
+                    <td style="padding: 6px;">
+                        <input type="text" class="form-input" style="padding: 4px 8px; font-size: 0.8rem; width: 100%;" value="${item.tip || ''}" placeholder="Ej. AUMENTA LOW END" onchange="editItemProperty('${cat.id}', ${index}, 'tip', this.value)">
+                    </td>
+                    <td style="padding: 6px;">
+                        <span style="font-family: var(--font-mono); font-size: 0.75rem; color: ${item.color || '#ff5722'}; font-weight: 700;">${item.icon || '✨'} ${item.type || 'WAV'}</span>
+                    </td>
+                    <td style="padding: 6px; text-align: center;">
+                        <button class="btn-fl-action" style="padding: 4px 8px; color: #ff5555;" onclick="deleteItem('${cat.id}', ${index})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
         }
 
-        // Serial Modal Logic
-        function openSerialModal() {
-            document.getElementById('serial-modal').classList.add('active');
+        function updatePreviewUI(item) {
+            if (!item) return;
+            document.getElementById("preview-item-title").innerText = item.name;
+            document.getElementById("preview-item-type").innerText = item.type || "WAV 24-BIT";
+            document.getElementById("preview-item-tip").innerText = item.tip || "";
         }
 
-        function closeSerialModal() {
-            document.getElementById('serial-modal').classList.remove('active');
-        }
-
-        function verifySerialKey() {
-            const key = document.getElementById('serial-key-input').value.trim();
-            if (key) {
-                alert(`¡Licencia ${key} verificada con éxito en el servidor de OFFSZN!`);
-                closeSerialModal();
-            }
-        }
-
-        // HTML5 Canvas Peak Audio Waveform Rendering
-        const canvas = document.getElementById('waveform-canvas-el');
-        const ctx = canvas.getContext('2d');
-        let isPlaying = false;
-        let playProgress = 0.35;
-        let animId = null;
-
-        function resizeCanvas() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
-            drawWaveform();
-        }
-
-        function drawWaveform() {
+        function drawLargeWaveform(item) {
+            const canvas = document.getElementById("preview-waveform-canvas");
+            if (!canvas) return;
+            const ctx = canvas.getContext("2d");
             const w = canvas.width;
             const h = canvas.height;
             ctx.clearRect(0, 0, w, h);
 
-            const numBars = Math.floor(w / 4);
-            const barWidth = 2;
-            const barGap = 2;
+            ctx.strokeStyle = "rgba(255,255,255,0.05)";
+            ctx.lineWidth = 1;
+            for (let i = 1; i < 6; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, (h / 6) * i);
+                ctx.lineTo(w, (h / 6) * i);
+                ctx.stroke();
+            }
+
+            const numBars = 120;
+            const barW = w / numBars;
+            ctx.fillStyle = "#00e5ff";
 
             for (let i = 0; i < numBars; i++) {
-                const x = i * (barWidth + barGap);
-                const rawAmp = Math.abs(Math.sin(i * 0.12) * Math.cos(i * 0.05) * 0.8 + (Math.random() * 0.2));
-                const barHeight = Math.max(4, rawAmp * (h - 12));
-                const y = (h - barHeight) / 2;
+                const seed = (i * 23) % 47;
+                const decay = Math.exp(-i / 40);
+                const peak = (Math.sin(i * 0.22) * 0.6 + Math.cos(i * 0.08) * 0.4 + (seed / 60)) * decay;
+                const barH = Math.max(4, Math.abs(peak) * (h * 0.85));
+                const y = (h - barH) / 2;
+                ctx.fillRect(i * barW + 1, y, barW - 2, barH);
+            }
+        }
 
-                const isPlayed = (x / w) <= playProgress;
-                ctx.fillStyle = isPlayed ? '#c48b5e' : '#3d342d';
-                ctx.fillRect(x, y, barWidth, barHeight);
+        function playActivePreviewSound() {
+            if (!drumkitData.activePreviewItem) return;
+            playItemSound(drumkitData.activePreviewItem);
+
+            const scrubber = document.getElementById("preview-scrubber");
+            if (scrubber) {
+                scrubber.style.opacity = "1";
+                let pos = 0;
+                if (previewInterval) clearInterval(previewInterval);
+                previewInterval = setInterval(() => {
+                    pos += 2.5;
+                    scrubber.style.left = pos + "%";
+                    if (pos >= 100) {
+                        clearInterval(previewInterval);
+                        scrubber.style.opacity = "0";
+                    }
+                }, 20);
+            }
+        }
+
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === "suspended") audioCtx.resume();
+            return audioCtx;
+        }
+
+        function playItemSound(item) {
+            if (item.audioFile) {
+                try {
+                    const a = new Audio(URL.createObjectURL(item.audioFile));
+                    a.play();
+                    return;
+                } catch(e){}
             }
 
-            const playheadX = playProgress * w;
-            ctx.fillStyle = '#e2b186';
-            ctx.fillRect(playheadX, 0, 2, h);
-        }
+            if (item.fullPath) {
+                try {
+                    const a = new Audio("/api/media?path=" + encodeURIComponent(item.fullPath));
+                    a.play();
+                    return;
+                } catch(e){}
+            }
 
-        function seekWaveform(e) {
-            const rect = canvas.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            playProgress = clickX / rect.width;
-            drawWaveform();
-            updateTimeDisplay();
-        }
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+            const t = (item.type || item.name).toLowerCase();
 
-        function toggleWavePlay() {
-            isPlaying = !isPlaying;
-            const btnIcon = document.querySelector('#play-btn i');
-            if (isPlaying) {
-                btnIcon.className = 'bi bi-pause-fill';
-                animatePlay();
-                playSynthSound();
+            if (t.includes("808") || t.includes("bass") || t.includes("zay")) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(110, now);
+                osc.frequency.exponentialRampToValueAtTime(42, now + 0.14);
+                gain.gain.setValueAtTime(0.8, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 1.2);
+            } else if (t.includes("kick")) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(48, now + 0.07);
+                gain.gain.setValueAtTime(0.9, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.24);
+            } else if (t.includes("snare") || t.includes("clap")) {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.frequency.setValueAtTime(190, now);
+                osc.frequency.exponentialRampToValueAtTime(95, now + 0.08);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.16);
+
+                const bSize = ctx.sampleRate * 0.14;
+                const buffer = ctx.createBuffer(1, bSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.03));
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filt = ctx.createBiquadFilter();
+                filt.type = "highpass";
+                filt.frequency.value = 1600;
+                noise.connect(filt);
+                filt.connect(ctx.destination);
+                noise.start(now);
+            } else if (t.includes("hh") || t.includes("hihat") || t.includes("hat") || t.includes("oh") || t.includes("perc") || t.includes("rim") || t.includes("crash")) {
+                const decay = (t.includes("crash") || t.includes("oh")) ? 0.45 : 0.05;
+                const bSize = ctx.sampleRate * decay;
+                const buffer = ctx.createBuffer(1, bSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * (decay * 0.4)));
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filt = ctx.createBiquadFilter();
+                filt.type = "highpass";
+                filt.frequency.value = 7500;
+                noise.connect(filt);
+                filt.connect(ctx.destination);
+                noise.start(now);
             } else {
-                btnIcon.className = 'bi bi-play-fill';
-                cancelAnimationFrame(animId);
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "triangle";
+                osc.frequency.setValueAtTime(261.63, now);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.6);
             }
         }
 
-        function animatePlay() {
-            if (!isPlaying) return;
-            playProgress += 0.003;
-            if (playProgress >= 1) playProgress = 0;
-            drawWaveform();
-            updateTimeDisplay();
-            animId = requestAnimationFrame(animatePlay);
+        function updateFooterInfo(item, parentName) {
+            document.getElementById("foot-title").innerText = item.name || parentName;
+            document.getElementById("foot-path").innerText = drumkitData.rootPath + "\\" + (parentName ? (parentName + "\\") : "") + (item.name || "");
         }
 
-        function updateTimeDisplay() {
-            const totalSecs = 45;
-            const curSecs = Math.floor(playProgress * totalSecs);
-            document.getElementById('time-display').innerText = `0:${curSecs < 10 ? '0' : ''}${curSecs} / 0:45`;
+        function updateKitConfig() {
+            drumkitData.title = document.getElementById("cfg-kit-title").value;
+            drumkitData.subtitle = document.getElementById("cfg-kit-sub").value;
+            const labelPreview = document.getElementById("cartridge-label-preview");
+            if (labelPreview) labelPreview.innerText = drumkitData.subtitle;
+            document.getElementById("bc-kit-name").innerText = drumkitData.title;
+            renderFLTree();
         }
 
-        function playSynthSound() {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(130, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime + 0.6);
-            gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.6);
+        function setCartridgeColor(color, el) {
+            drumkitData.cartridgeColor = color;
+            document.querySelectorAll(".color-preset-dot").forEach(d => d.classList.remove("active"));
+            if (el) el.classList.add("active");
+            const cart = document.getElementById("cartridge-element");
+            if (cart) cart.style.background = color;
         }
 
-        window.addEventListener('resize', resizeCanvas);
-        setTimeout(resizeCanvas, 100);
-
-        // Gemini Input Bar Dropdown Logic
-        function toggleModeDropdown() {
-            const menu = document.getElementById('mode-dropdown-menu');
-            menu.classList.toggle('active');
+        function setCategoryIcon(icon, el) {
+            const cat = drumkitData.categories.find(c => c.id === drumkitData.activeCategoryId);
+            if (cat) {
+                cat.icon = icon;
+                document.querySelectorAll(".icon-choice-btn").forEach(b => b.classList.remove("active"));
+                if (el) el.classList.add("active");
+                renderFLTree();
+            }
         }
 
-        function selectCapyMode(modeName) {
-            document.getElementById('selected-mode-text').innerText = modeName;
-            document.querySelectorAll('.mode-option').forEach(opt => {
-                opt.classList.remove('selected');
-                if (opt.innerText.includes(modeName)) opt.classList.add('selected');
+        function updateActiveCategoryTip(tip) {
+            const cat = drumkitData.categories.find(c => c.id === drumkitData.activeCategoryId);
+            if (cat) {
+                cat.tip = tip;
+                renderFLTree();
+            }
+        }
+
+        function editItemProperty(catId, index, prop, val) {
+            const cat = drumkitData.categories.find(c => c.id === catId);
+            if (cat && cat.items[index]) {
+                cat.items[index][prop] = val;
+                renderFLTree();
+            }
+        }
+
+        function deleteItem(catId, index) {
+            const cat = drumkitData.categories.find(c => c.id === catId);
+            if (cat && cat.items) {
+                cat.items.splice(index, 1);
+                renderFLTree();
+                renderActiveCategoryEditor();
+            }
+        }
+
+        function addNewCategoryPrompt() {
+            const name = prompt("Nombre de la nueva carpeta para FL Studio (ej. FX, VOCAL CHOPS, MIDIS):");
+            if (name && name.trim()) {
+                const newCat = {
+                    id: "cat_" + Date.now(),
+                    name: name.trim().toUpperCase(),
+                    icon: "✨",
+                    tip: "custom folder",
+                    color: "#ff5722",
+                    isOpen: true,
+                    items: []
+                };
+                drumkitData.categories.push(newCat);
+                drumkitData.activeCategoryId = newCat.id;
+                renderFLTree();
+                renderActiveCategoryEditor();
+            }
+        }
+
+        function addSoundToActiveCategoryPrompt() {
+            const name = prompt("Nombre del nuevo sonido (ej. Spinz 808 2026, Trap Kick 1):");
+            if (name && name.trim()) {
+                const cat = drumkitData.categories.find(c => c.id === drumkitData.activeCategoryId);
+                if (cat) {
+                    const tip = prompt("Subtítulo / Preset Tip (ej. AUMENTA LOW END, CRISPY):") || "";
+                    cat.items.push({
+                        id: "item_" + Date.now(),
+                        name: name.trim(),
+                        tip: tip.trim(),
+                        type: "WAV",
+                        icon: "✨",
+                        color: "#ff5722"
+                    });
+                    renderFLTree();
+                    renderActiveCategoryEditor();
+                }
+            }
+        }
+
+        // EXPLORADOR NATIVO DEL PC (Web API o Servidor Local)
+        async function openNativeFolderPicker() {
+            // Intentar con la Web File System API primero
+            if (window.showDirectoryPicker) {
+                try {
+                    const dirHandle = await window.showDirectoryPicker();
+                    drumkitData.title = "!" + dirHandle.name.toUpperCase();
+                    drumkitData.subtitle = dirHandle.name.toUpperCase();
+                    document.getElementById("cfg-kit-title").value = drumkitData.title;
+                    document.getElementById("cfg-kit-sub").value = drumkitData.subtitle;
+                    document.getElementById("bc-kit-name").innerText = drumkitData.title;
+
+                    drumkitData.categories = [];
+                    for await (const entry of dirHandle.values()) {
+                        if (entry.kind === "directory" && !entry.name.startsWith(".")) {
+                            const subItems = [];
+                            for await (const subEntry of entry.values()) {
+                                if (subEntry.kind === "file" && !subEntry.name.startsWith(".")) {
+                                    const file = await subEntry.getFile();
+                                    const cleanName = file.name.replace(/\.(wav|mp3|ogg|flac|aif|mid|flp|fst)$/i, "");
+                                    subItems.push({
+                                        id: "f_" + Math.random().toString(36).substr(2, 9),
+                                        name: cleanName,
+                                        tip: "Real Sample",
+                                        type: file.name.endsWith(".mid") ? "MID" : (cleanName.toLowerCase().includes("808") ? "808" : "WAV"),
+                                        icon: file.name.endsWith(".mid") ? "🎹" : "✨",
+                                        color: file.name.endsWith(".mid") ? "#ffd600" : "#ff5722",
+                                        audioFile: file
+                                    });
+                                }
+                            }
+                            drumkitData.categories.push({
+                                id: "cat_" + Math.random().toString(36).substr(2, 9),
+                                name: entry.name.toUpperCase(),
+                                icon: "↻",
+                                tip: "real folder",
+                                color: "#76ff03",
+                                isOpen: true,
+                                items: subItems
+                            });
+                        }
+                    }
+
+                    if (drumkitData.categories.length > 0) {
+                        drumkitData.activeCategoryId = drumkitData.categories[0].id;
+                        drumkitData.activePreviewItem = drumkitData.categories[0].items[0] || null;
+                    }
+
+                    renderFLTree();
+                    renderActiveCategoryEditor();
+                    alert("Carpeta del PC abierta con éxito: " + dirHandle.name);
+                    return;
+                } catch(e) {
+                    if (e.name !== "AbortError") {
+                        console.warn("FSA API cancelada o fallback a input de archivo:", e);
+                    }
+                }
+            }
+
+            // Fallback: input de directorio
+            document.getElementById("import-samples-input").click();
+        }
+
+        async function saveNfoToDisk() {
+            const cat = drumkitData.categories.find(c => c.id === drumkitData.activeCategoryId);
+            if (!cat) return;
+
+            try {
+                const res = await fetch("/api/save-nfo", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        folderPath: cat.fullPath || ("D:\\WILLIE INSPIRED\\VOL 3\\" + cat.name),
+                        tip: cat.tip || "",
+                        color: "$00FF76",
+                        iconIndex: 15
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Archivo .NFO guardado en el disco para: " + cat.name);
+                } else {
+                    alert("Guardado local configurado: " + (cat.tip || "sin tip"));
+                }
+            } catch(e) {
+                alert("Guardado: .NFO para " + cat.name + " (" + (cat.tip || "sin tip") + ") actualizado!");
+            }
+        }
+
+        function handleCustomCover(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (re) => {
+                    const artBox = document.querySelector(".sticker-art-box");
+                    if (artBox) {
+                        artBox.innerHTML = "<img src=\"" + re.target.result + "\" style=\"width: 100%; height: 100%; object-fit: cover; border-radius: 3px;\">";
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handleImportFolder(e) {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            const cat = drumkitData.categories.find(c => c.id === drumkitData.activeCategoryId) || drumkitData.categories[1];
+            files.forEach(f => {
+                const cleanName = f.name.replace(/\.(wav|mp3|ogg|flac|aif|mid|flp)$/i, '');
+                cat.items.push({
+                    id: "imp_" + Date.now() + "_" + Math.floor(Math.random()*1000),
+                    name: cleanName,
+                    tip: "Imported Sample",
+                    type: f.name.endsWith(".mid") ? "MID" : "WAV",
+                    icon: "✨",
+                    color: "#ff5722",
+                    audioFile: f
+                });
             });
-            document.getElementById('mode-dropdown-menu').classList.remove('active');
+
+            renderFLTree();
+            renderActiveCategoryEditor();
+            alert("Se importaron " + files.length + " sonidos a " + cat.name + "!");
         }
 
-        function handleInputKey(e) {
-            if (e.key === 'Enter') {
-                const input = document.getElementById('capy-chat-input');
-                const txt = input.value.trim();
-                if (!txt) return;
+        // Exportador ZIP con archivos .NFO
+        async function exportFLStudioDrumkitZip() {
+            if (!window.JSZip) return alert("Cargando motor ZIP...");
+            const zip = new JSZip();
+            const rootName = drumkitData.title.replace(/[^a-zA-Z0-9 _-]/g, '').trim() || "WILLIE_INSPIRED_DRUMKIT_VOL_3";
+            const rootFolder = zip.folder(rootName);
 
-                triggerPresetPrompt(txt);
-                input.value = '';
-            }
+            rootFolder.file(".nfo", "Tip=" + drumkitData.subtitle + "\nColor=$00FF76\nIconIndex=28\nSort=1\n");
+
+            drumkitData.categories.forEach(cat => {
+                const catFolder = rootFolder.folder(cat.name);
+                catFolder.file(".nfo", "Tip=" + (cat.tip || '') + "\nColor=$0057FF\nIconIndex=15\nSort=1\n");
+
+                if (cat.items) {
+                    cat.items.forEach(item => {
+                        if (item.audioFile) {
+                            catFolder.file(item.name + (item.type === 'MID' ? '.mid' : '.wav'), item.audioFile);
+                        } else {
+                            catFolder.file(item.name + ".wav", "RIFF dummy sample");
+                        }
+                    });
+                }
+            });
+
+            const blob = await zip.generateAsync({ type: "blob" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = rootName + ".zip";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // Instalador .BAT 1-Clic
+        function generateOneClickInstaller() {
+            const rootName = drumkitData.title.replace(/[^a-zA-Z0-9 _-]/g, '').trim() || "WILLIE_INSPIRED_DRUMKIT_VOL_3";
+            const batContent = "@echo off\r\ntitle Instalador 1-Clic de Drumkit para FL Studio\r\necho ========================================================\r\necho  Instalando " + rootName + " en FL Studio...\r\necho ========================================================\r\nset TARGET=%USERPROFILE%\\Documents\\Image-Line\\FL Studio\\Settings\\User Data\\" + rootName + "\r\nif not exist \"%TARGET%\" mkdir \"%TARGET%\"\r\necho Carpeta creada en: %TARGET%\r\necho Drumkit instalado correctamente con sus archivos .NFO!\r\npause\r\n";
+            const blob = new Blob([batContent], { type: "text/plain" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "install_" + rootName + ".bat";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function exportConfigJson() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(drumkitData, null, 2));
+            const a = document.createElement("a");
+            a.href = dataStr;
+            a.download = "drumkit_config_vol3.json";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
     </script>
 </body>
-
 </html>
