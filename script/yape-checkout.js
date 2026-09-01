@@ -9,7 +9,7 @@
     class YapePluginCheckout {
         constructor() {
             this.exchangeRate = 3.30;
-            this.publicKey = 'TEST-70d4423f-6d23-4bb3-807a-0b9565693d83';
+            this.publicKey = 'APP_USR-ca918f8a-784b-4413-aebb-d3fc5a6ae79c';
             this.mpInstance = null;
             this.modalElement = null;
             this.productId = window.PLUGIN_ID || 899;
