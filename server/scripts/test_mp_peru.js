@@ -1,10 +1,10 @@
 import fetch from 'node-fetch';
 
-const accessToken = 'TEST-7258489459925708-083117-67a477b27fbe0bd1603989db1a1c529b-2606270328';
+const accessToken = 'TEST-3149823083942106-083118-c0b263a2bf20a381441ef931aba2b3d2-3653881661';
 
 async function testMP() {
     try {
-        console.log('Testing Mercado Pago API with Peru credentials...');
+        console.log('Testing New Mercado Pago API Credentials...');
         
         // 1. Get Payment Methods
         const resMethods = await fetch('https://api.mercadopago.com/v1/payment_methods', {

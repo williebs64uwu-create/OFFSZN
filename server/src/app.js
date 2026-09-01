@@ -34,6 +34,7 @@ import pluginLicensingRoutes from './infrastructure/http/routes/plugin-licensing
 import cokeCheckoutRoutes from './infrastructure/http/routes/coke-checkout.routes.js';
 import calendarRoutes from './infrastructure/http/routes/calendar.routes.js';
 import walletRoutes from './infrastructure/http/routes/wallet.routes.js';
+import yapeRoutes from './infrastructure/http/routes/yape.routes.js';
 import { checkAndSendRemindersInternal } from './infrastructure/http/controllers/CalendarController.js';
 import { runSubscriptionScavenger } from './infrastructure/services/subscription-scavenger.js';
 
@@ -313,6 +314,7 @@ app.use('/api/plugin', pluginLicensingRoutes);
 app.use('/api', r2Routes);
 app.use('/api/imagekit', imagekitRoutes);
 app.use('/api', paypalRoutes);
+app.use('/api/orders/yape', yapeRoutes);
 app.use('/api', cokeCheckoutRoutes);  // Isolated Coca-Cola checkout (no multi-payee)
 app.use('/api', youtubeRoutes);
 app.use('/api', youtubeSyncRoutes);
