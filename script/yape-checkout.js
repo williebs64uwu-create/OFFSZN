@@ -781,12 +781,15 @@
                 }
 
                 try {
+                    const pricePEN = parseFloat(this.getPricePEN());
                     const yape = this.mpInstance.yape({
                         otp: otp,
-                        phoneNumber: phone
+                        phoneNumber: phone,
+                        amount: pricePEN
                     });
                     const tokenObj = await yape.create();
                     yapeToken = (typeof tokenObj === 'string') ? tokenObj : (tokenObj?.id || tokenObj?.token || tokenObj);
+                    console.log('[YapeCheckout] Token created for S/.', pricePEN, '→', typeof yapeToken);
                 } catch (sdkErr) {
                     console.error('[YapeCheckout] SDK token error:', sdkErr);
                     let errorMsg = 'El código de aprobación es incorrecto o ha expirado. Revisa tu app de Yape.';
