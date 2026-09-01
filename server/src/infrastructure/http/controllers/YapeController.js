@@ -170,9 +170,8 @@ export const chargeYape = async (req, res) => {
 
         console.log(`✅ [YapeCharge] Payment APPROVED! MP Payment ID: ${mpData.id}`);
 
-        // 2. Generate Primary Lifetime License
+        // 2. Generate Primary Lifetime License (generatePluginLicense already sends the activation email)
         let serialKey = null;
-        let bonusKey = null;
 
         try {
             const licResult = await generatePluginLicense({
@@ -184,28 +183,10 @@ export const chargeYape = async (req, res) => {
             serialKey = licResult?.serialKey;
             console.log(`[YapeCharge] Generated Lifetime License for ${pluginName}: ${serialKey}`);
         } catch (licErr) {
-            console.error('[YapeCharge] Error generating main license:', licErr);
+            console.error('[YapeCharge] Error generating license:', licErr);
         }
 
-        // 3. Trigger 2x1 Promo for Easy Mix -> Easy Master bonus
-        const isEasyMix = (pluginName === 'Easy Mix' || strProdId === '899' || strProdId === '901');
-        if (isEasyMix) {
-            try {
-                console.log(`[YapeCharge] 2x1 Promo triggered! Generating free Easy Master for ${email}`);
-                const bonusResult = await generatePluginLicense({
-                    licenseType: 'lifetime',
-                    userEmail: email,
-                    userId: null,
-                    pluginName: 'Easy Master'
-                });
-                bonusKey = bonusResult?.serialKey;
-                console.log(`[YapeCharge] Generated Bonus License (Easy Master): ${bonusKey}`);
-            } catch (bonusErr) {
-                console.error('[YapeCharge] Error generating bonus license:', bonusErr);
-            }
-        }
-
-        // 4. Record Order in Supabase
+        // 3. Record Order in Supabase
         let orderId = null;
         try {
             const { data: orderData, error: orderErr } = await supabase.from('orders').insert({
@@ -215,7 +196,6 @@ export const chargeYape = async (req, res) => {
                 status: 'completed',
                 guest_email: email,
                 product_id: parseInt(productId, 10),
-                payment_method: 'mercadopago_yape',
                 transaction_id: `MP-YAPE-${mpData.id}`
             }).select('id').single();
 
@@ -228,7 +208,7 @@ export const chargeYape = async (req, res) => {
             console.error('[YapeCharge] DB insert exception:', dbErr);
         }
 
-        // 5. Track Meta Conversions API (CAPI)
+        // 4. Track Meta Conversions API (CAPI)
         try {
             await MetaCapiService.sendEvent({
                 eventName: 'Purchase',
@@ -254,55 +234,7 @@ export const chargeYape = async (req, res) => {
             console.warn('[YapeCharge] Meta CAPI tracking warning:', capiErr?.message);
         }
 
-        // 6. Send Rich Email with Licenses and Download Links
-        (async () => {
-            try {
-                const keysHtml = `
-                    <div style="background:#13111C; border:1px solid #742284; border-radius:12px; padding:20px; margin:20px 0; text-align:center;">
-                        <p style="color:#a855f7; font-size:0.8rem; text-transform:uppercase; letter-spacing:2px; margin:0 0 8px; font-weight:700;">🔑 Licencia Vitalicia ${pluginName}</p>
-                        <p style="font-family:monospace; font-size:1.35rem; font-weight:800; color:#ffffff; letter-spacing:2px; margin:0; word-break:break-all;">${serialKey || 'Activo en tu cuenta'}</p>
-                        ${bonusKey ? `
-                            <div style="margin-top:16px; padding-top:16px; border-top:1px dashed rgba(255,255,255,0.15);">
-                                <p style="color:#ec4899; font-size:0.8rem; text-transform:uppercase; letter-spacing:2px; margin:0 0 8px; font-weight:700;">🎁 REGALO 2X1: Licencia Vitalicia Easy Master</p>
-                                <p style="font-family:monospace; font-size:1.35rem; font-weight:800; color:#ffffff; letter-spacing:2px; margin:0; word-break:break-all;">${bonusKey}</p>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-
-                await sendOffsznEmail({
-                    to: email,
-                    subject: `🎉 ¡Tu compra de ${pluginName} con Yape está confirmada!`,
-                    html: `
-                        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; max-width:600px; margin:0 auto; background:#0a0a0a; color:#fff; padding:32px; border-radius:16px; border:1px solid #222;">
-                            <div style="text-align:center; margin-bottom:24px;">
-                                <h1 style="color:#fff; font-size:1.6rem; margin:0 0 6px; font-weight:800;">¡Pago con Yape Confirmado! 🇵🇪</h1>
-                                <p style="color:#a1a1aa; font-size:0.95rem; margin:0;">Gracias por tu compra en OFFSZN.</p>
-                            </div>
-                            
-                            ${keysHtml}
-
-                            <div style="background:#18181b; border-radius:12px; padding:20px; margin:24px 0;">
-                                <p style="color:#fff; font-size:0.9rem; font-weight:700; margin:0 0 12px;">📥 Descarga tus instaladores:</p>
-                                <div style="display:flex; gap:10px;">
-                                    <a href="${prodInfo.downloads.win}" style="display:inline-block; background:#742284; color:#fff; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:700; font-size:0.9rem; margin-right:8px;">Descargar para Windows</a>
-                                    <a href="${prodInfo.downloads.mac}" style="display:inline-block; background:#27272a; color:#fff; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:700; font-size:0.9rem;">Descargar para Mac</a>
-                                </div>
-                            </div>
-
-                            <p style="color:#71717a; font-size:0.78rem; text-align:center; margin:24px 0 0;">
-                                OFFSZN • Soporte directo vía Instagram @offszn.lat o WhatsApp
-                            </p>
-                        </div>
-                    `
-                });
-                console.log(`[YapeCharge] Confirmation email sent successfully to ${email}`);
-            } catch (emailErr) {
-                console.error('[YapeCharge] Error sending confirmation email:', emailErr);
-            }
-        })();
-
-        // 7. Response to Frontend
+        // 5. Response to Frontend
         return res.json({
             success: true,
             status: 'approved',
@@ -311,7 +243,6 @@ export const chargeYape = async (req, res) => {
             pluginName: pluginName,
             amountPEN: amountPEN,
             serialKey: serialKey,
-            bonusKey: bonusKey,
             downloads: prodInfo.downloads
         });
 

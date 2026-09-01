@@ -1,7 +1,7 @@
 /**
  * OFFSZN - Yape Checkout Integration (Mercado Pago Perú)
  * ======================================================
- * Renders an ultra-sleek, responsive modal for instant Yape payments in Peru (PEN).
+ * Renders a clean, ultra-premium modal for instant Yape payments in Peru (PEN).
  * Handles OTP (código de aprobación), phone number, automatic tokenization,
  * and displays lifetime activation serial keys and download links immediately upon approval.
  */
@@ -79,42 +79,32 @@
             const style = document.createElement('style');
             style.id = 'yape-checkout-styles';
             style.innerHTML = `
-                /* Yape Trigger Button */
-                .btn-yape-trigger {
-                    display: inline-flex;
-                    align-items: center;
-                    justify-content: center;
-                    gap: 10px;
-                    width: 100%;
-                    padding: 15px 24px;
-                    background: linear-gradient(135deg, #742284 0%, #8e2a9b 50%, #ec4899 100%);
-                    color: #ffffff;
-                    border: 1px solid rgba(236, 72, 153, 0.4);
-                    border-radius: 12px;
-                    font-family: 'Geist', 'Plus Jakarta Sans', sans-serif;
-                    font-size: 1.02rem;
-                    font-weight: 800;
-                    cursor: pointer;
-                    box-shadow: 0 8px 24px rgba(116, 34, 132, 0.35);
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    margin-top: 10px;
-                    text-decoration: none;
+                /* Yape Trigger Button on Landing Page */
+                .btn-yape-white {
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    gap: 10px !important;
+                    width: 100% !important;
+                    padding: 14px 24px !important;
+                    background: #ffffff !important;
+                    color: #000000 !important;
+                    border: 1px solid #ffffff !important;
+                    border-radius: 10px !important;
+                    font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+                    font-size: 1.02rem !important;
+                    font-weight: 800 !important;
+                    cursor: pointer !important;
+                    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15) !important;
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                    margin-bottom: 12px !important;
+                    text-decoration: none !important;
                 }
 
-                .btn-yape-trigger:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 12px 30px rgba(116, 34, 132, 0.55);
-                    border-color: rgba(236, 72, 153, 0.8);
-                }
-
-                .btn-yape-trigger .yape-badge-icon {
-                    background: #ffffff;
-                    color: #742284;
-                    font-size: 0.72rem;
-                    font-weight: 900;
-                    padding: 2px 7px;
-                    border-radius: 6px;
-                    letter-spacing: 0.5px;
+                .btn-yape-white:hover {
+                    transform: translateY(-2px) !important;
+                    background: #f4f4f5 !important;
+                    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.25) !important;
                 }
 
                 /* Modal Overlay */
@@ -124,16 +114,16 @@
                     left: 0;
                     width: 100vw;
                     height: 100vh;
-                    background: rgba(0, 0, 0, 0.82);
-                    backdrop-filter: blur(12px);
-                    -webkit-backdrop-filter: blur(12px);
+                    background: rgba(0, 0, 0, 0.85);
+                    backdrop-filter: blur(14px);
+                    -webkit-backdrop-filter: blur(14px);
                     display: none;
                     align-items: center;
                     justify-content: center;
                     z-index: 99999;
                     padding: 16px;
                     opacity: 0;
-                    transition: opacity 0.3s ease;
+                    transition: opacity 0.25s ease;
                 }
 
                 .yape-modal-overlay.active {
@@ -143,11 +133,10 @@
 
                 /* Modal Card */
                 .yape-modal-card {
-                    background: #0d0d12;
-                    background-image: radial-gradient(circle at top right, rgba(116, 34, 132, 0.15), transparent 70%),
-                                      radial-gradient(circle at bottom left, rgba(236, 72, 153, 0.08), transparent 60%);
+                    background: #0f0f14;
+                    background-image: radial-gradient(circle at top right, rgba(116, 34, 132, 0.18), transparent 60%);
                     border: 1px solid rgba(255, 255, 255, 0.12);
-                    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(116, 34, 132, 0.2);
+                    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.9), 0 0 30px rgba(116, 34, 132, 0.2);
                     border-radius: 20px;
                     width: 100%;
                     max-width: 440px;
@@ -156,7 +145,7 @@
                     overflow: hidden;
                     position: relative;
                     transform: scale(0.95);
-                    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
                 }
 
                 .yape-modal-overlay.active .yape-modal-card {
@@ -164,7 +153,7 @@
                 }
 
                 .yape-modal-header {
-                    padding: 22px 24px 18px;
+                    padding: 20px 24px 16px;
                     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
                     display: flex;
                     align-items: center;
@@ -174,20 +163,17 @@
                 .yape-brand-group {
                     display: flex;
                     align-items: center;
-                    gap: 10px;
+                    gap: 12px;
                 }
 
                 .yape-brand-circle {
                     width: 38px;
                     height: 38px;
-                    background: linear-gradient(135deg, #742284, #ec4899);
+                    background: #742284;
                     border-radius: 10px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-weight: 900;
-                    font-size: 1.1rem;
-                    color: #fff;
                     box-shadow: 0 4px 12px rgba(116, 34, 132, 0.4);
                 }
 
@@ -200,7 +186,7 @@
                 }
 
                 .yape-modal-sub {
-                    font-size: 0.8rem;
+                    font-size: 0.78rem;
                     color: #a1a1aa;
                     margin: 2px 0 0;
                 }
@@ -227,8 +213,8 @@
 
                 /* Price summary bar */
                 .yape-price-badge-bar {
-                    background: rgba(116, 34, 132, 0.12);
-                    border-bottom: 1px solid rgba(116, 34, 132, 0.25);
+                    background: rgba(255, 255, 255, 0.03);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
                     padding: 12px 24px;
                     display: flex;
                     align-items: center;
@@ -237,14 +223,14 @@
 
                 .yape-price-label {
                     font-size: 0.85rem;
-                    color: #d4d4d8;
+                    color: #a1a1aa;
                     font-weight: 600;
                 }
 
                 .yape-price-highlight {
                     font-size: 1.25rem;
-                    font-weight: 900;
-                    color: #4ade80;
+                    font-weight: 800;
+                    color: #ffffff;
                     letter-spacing: -0.5px;
                 }
 
@@ -260,7 +246,7 @@
                     display: block;
                     font-size: 0.82rem;
                     font-weight: 700;
-                    color: #e4e4e7;
+                    color: #d4d4d8;
                     margin-bottom: 7px;
                 }
 
@@ -275,35 +261,50 @@
                     left: 14px;
                     color: #71717a;
                     font-size: 1rem;
+                    pointer-events: none;
                 }
 
+                /* Clean, consistent dark inputs with no white flash on autofill */
                 .yape-input {
-                    width: 100%;
-                    padding: 13px 14px 13px 40px;
-                    background: rgba(255, 255, 255, 0.04);
-                    border: 1px solid rgba(255, 255, 255, 0.12);
-                    border-radius: 10px;
-                    color: #fff;
-                    font-family: inherit;
-                    font-size: 0.95rem;
-                    transition: all 0.2s ease;
-                    outline: none;
+                    width: 100% !important;
+                    padding: 13px 14px 13px 42px !important;
+                    background: #14141c !important;
+                    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+                    border-radius: 10px !important;
+                    color: #ffffff !important;
+                    font-family: inherit !important;
+                    font-size: 0.95rem !important;
+                    transition: all 0.2s ease !important;
+                    outline: none !important;
+                    box-sizing: border-box !important;
                 }
 
                 .yape-input:focus {
-                    background: rgba(255, 255, 255, 0.07);
-                    border-color: #a855f7;
-                    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+                    background: #181824 !important;
+                    border-color: #a855f7 !important;
+                    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2) !important;
+                    color: #ffffff !important;
                 }
 
                 .yape-input::placeholder {
-                    color: #52525b;
+                    color: #52525b !important;
                 }
 
-                /* OTP helper callout */
+                /* Neutralize browser autofill white background */
+                .yape-input:-webkit-autofill,
+                .yape-input:-webkit-autofill:hover, 
+                .yape-input:-webkit-autofill:focus,
+                .yape-input:-webkit-autofill:active {
+                    -webkit-text-fill-color: #ffffff !important;
+                    -webkit-box-shadow: 0 0 0px 1000px #14141c inset !important;
+                    box-shadow: 0 0 0px 1000px #14141c inset !important;
+                    transition: background-color 5000s ease-in-out 0s !important;
+                }
+
+                /* OTP helper guide */
                 .yape-otp-guide {
-                    background: rgba(116, 34, 132, 0.15);
-                    border: 1px dashed rgba(236, 72, 153, 0.4);
+                    background: rgba(116, 34, 132, 0.12);
+                    border: 1px dashed rgba(236, 72, 153, 0.35);
                     border-radius: 10px;
                     padding: 10px 14px;
                     margin-top: 8px;
@@ -321,11 +322,12 @@
                     margin-top: 2px;
                 }
 
+                /* Submit Button (White, bold, high contrast) */
                 .yape-btn-submit {
                     width: 100%;
                     padding: 15px;
-                    background: linear-gradient(135deg, #742284 0%, #8e2a9b 50%, #ec4899 100%);
-                    color: #ffffff;
+                    background: #ffffff;
+                    color: #000000;
                     border: none;
                     border-radius: 12px;
                     font-family: inherit;
@@ -336,14 +338,15 @@
                     align-items: center;
                     justify-content: center;
                     gap: 8px;
-                    margin-top: 24px;
-                    box-shadow: 0 8px 24px rgba(116, 34, 132, 0.4);
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    margin-top: 22px;
+                    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.15);
+                    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
                 .yape-btn-submit:hover:not(:disabled) {
                     transform: translateY(-2px);
-                    box-shadow: 0 12px 30px rgba(116, 34, 132, 0.6);
+                    background: #f4f4f5;
+                    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.25);
                 }
 
                 .yape-btn-submit:disabled {
@@ -364,12 +367,12 @@
                     line-height: 1.4;
                 }
 
-                /* Loading Spinner inside submit button */
+                /* Loading Spinner */
                 .yape-spinner {
                     width: 18px;
                     height: 18px;
-                    border: 2px solid rgba(255, 255, 255, 0.3);
-                    border-top-color: #fff;
+                    border: 2px solid rgba(0, 0, 0, 0.2);
+                    border-top-color: #000000;
                     border-radius: 50%;
                     animation: yapeSpin 0.8s linear infinite;
                     display: inline-block;
@@ -382,23 +385,23 @@
                 /* Success View */
                 .yape-success-view {
                     text-align: center;
-                    padding: 28px 24px;
+                    padding: 24px 20px;
                     display: none;
                 }
 
                 .yape-success-icon-wrap {
-                    width: 68px;
-                    height: 68px;
+                    width: 60px;
+                    height: 60px;
                     background: rgba(34, 197, 94, 0.15);
                     border: 2px solid #22c55e;
                     border-radius: 50%;
                     display: inline-flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 2rem;
+                    font-size: 1.8rem;
                     color: #22c55e;
-                    margin-bottom: 16px;
-                    animation: yapePop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                    margin-bottom: 14px;
+                    animation: yapePop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 }
 
                 @keyframes yapePop {
@@ -407,28 +410,28 @@
                 }
 
                 .yape-license-card {
-                    background: #15141e;
-                    border: 1px dashed #742284;
+                    background: #14141c;
+                    border: 1px solid rgba(255, 255, 255, 0.12);
                     border-radius: 12px;
-                    padding: 18px;
-                    margin: 20px 0;
+                    padding: 16px;
+                    margin: 18px 0;
                     text-align: center;
                 }
 
                 .yape-key-text {
                     font-family: monospace;
-                    font-size: 1.25rem;
+                    font-size: 1.15rem;
                     font-weight: 800;
-                    color: #4ade80;
-                    letter-spacing: 1.5px;
+                    color: #ffffff;
+                    letter-spacing: 1px;
                     margin: 8px 0;
                     word-break: break-all;
                 }
 
                 .yape-btn-copy {
-                    background: rgba(255, 255, 255, 0.08);
-                    border: 1px solid rgba(255, 255, 255, 0.15);
-                    color: #fff;
+                    background: #ffffff;
+                    border: none;
+                    color: #000000;
                     padding: 8px 16px;
                     border-radius: 8px;
                     font-size: 0.82rem;
@@ -439,14 +442,14 @@
                 }
 
                 .yape-btn-copy:hover {
-                    background: rgba(255, 255, 255, 0.18);
+                    background: #e4e4e7;
                 }
 
                 .yape-download-actions {
                     display: grid;
                     grid-template-columns: 1fr 1fr;
                     gap: 10px;
-                    margin-top: 20px;
+                    margin-top: 18px;
                 }
 
                 .yape-download-btn {
@@ -462,13 +465,13 @@
                 }
 
                 .yape-download-win {
-                    background: #742284;
-                    color: #fff;
+                    background: #ffffff;
+                    color: #000000;
                 }
 
                 .yape-download-mac {
                     background: #27272a;
-                    color: #fff;
+                    color: #ffffff;
                 }
             `;
             document.head.appendChild(style);
@@ -483,7 +486,9 @@
                         <!-- Header -->
                         <div class="yape-modal-header">
                             <div class="yape-brand-group">
-                                <div class="yape-brand-circle">Y</div>
+                                <div class="yape-brand-circle">
+                                    <img src="/images/payments/yape.png" alt="Yape" style="width:24px; height:24px; object-fit:contain; border-radius:4px;">
+                                </div>
                                 <div>
                                     <h3 class="yape-modal-title">Pagar con Yape</h3>
                                     <p class="yape-modal-sub">Débito directo e instantáneo (Perú 🇵🇪)</p>
@@ -494,7 +499,7 @@
 
                         <!-- Price Banner -->
                         <div class="yape-price-badge-bar">
-                            <span class="yape-price-label">Monto total a transferir:</span>
+                            <span class="yape-price-label">Monto total:</span>
                             <span id="yape-modal-price" class="yape-price-highlight">S/. 16.50</span>
                         </div>
 
@@ -526,7 +531,7 @@
                                     </div>
                                     <div class="yape-otp-guide">
                                         <i class="bi bi-info-circle-fill"></i>
-                                        <span><strong>¿Dónde encontrarlo?</strong> Abre tu app Yape &gt; Toca el menú lateral de las 3 rayitas &gt; <strong>Código de aprobación</strong>.</span>
+                                        <span><strong>¿Dónde encontrarlo?</strong> Abre tu app Yape &gt; Menú lateral (3 rayitas) &gt; <strong>Código de aprobación</strong>.</span>
                                     </div>
                                 </div>
 
@@ -543,20 +548,15 @@
                             <div class="yape-success-icon-wrap">
                                 <i class="bi bi-check-lg"></i>
                             </div>
-                            <h2 style="font-size:1.4rem; font-weight:800; margin:0 0 6px;">¡Pago con Yape Exitoso!</h2>
-                            <p style="color:#a1a1aa; font-size:0.88rem; margin:0 0 16px;">Tu compra ha sido verificada y tu licencia está lista.</p>
+                            <h2 style="font-size:1.35rem; font-weight:800; margin:0 0 6px;">¡Pago con Yape Exitoso!</h2>
+                            <p style="color:#a1a1aa; font-size:0.85rem; margin:0 0 16px;">Tu compra ha sido verificada y tu licencia está lista.</p>
 
                             <div class="yape-license-card">
-                                <span style="font-size:0.75rem; color:#a855f7; text-transform:uppercase; letter-spacing:1px; font-weight:700;">🔑 Tu Clave de Activación</span>
+                                <span style="font-size:0.75rem; color:#a1a1aa; text-transform:uppercase; letter-spacing:1px; font-weight:700;">🔑 Tu Clave de Activación</span>
                                 <div id="yape-success-serial" class="yape-key-text">CARGANDO...</div>
                                 <button type="button" id="yape-copy-serial-btn" class="yape-btn-copy">
                                     <i class="bi bi-clipboard"></i> Copiar Clave
                                 </button>
-
-                                <div id="yape-bonus-card" style="display:none; margin-top:14px; padding-top:14px; border-top:1px dashed rgba(255,255,255,0.15);">
-                                    <span style="font-size:0.75rem; color:#ec4899; text-transform:uppercase; letter-spacing:1px; font-weight:700;">🎁 REGALO 2X1: Easy Master</span>
-                                    <div id="yape-bonus-serial" class="yape-key-text" style="color:#ec4899;">...</div>
-                                </div>
                             </div>
 
                             <p style="font-size:0.82rem; color:#e4e4e7; margin:0 0 10px; font-weight:600;">📥 Descarga tu plugin ahora:</p>
@@ -749,12 +749,6 @@
 
             document.getElementById('yape-success-serial').innerText = data.serialKey || 'Activo en tu cuenta';
 
-            if (data.bonusKey) {
-                const bonusCard = document.getElementById('yape-bonus-card');
-                bonusCard.style.display = 'block';
-                document.getElementById('yape-bonus-serial').innerText = data.bonusKey;
-            }
-
             if (data.downloads) {
                 if (data.downloads.win) document.getElementById('yape-download-win').href = data.downloads.win;
                 if (data.downloads.mac) document.getElementById('yape-download-mac').href = data.downloads.mac;
@@ -776,7 +770,7 @@
         attachButtonTriggers() {
             // Find existing Yape buttons or inject a dedicated button in the checkout section
             document.addEventListener('click', (e) => {
-                const target = e.target.closest('[data-action="open-yape-checkout"], #btn-yape-checkout, .btn-yape-trigger');
+                const target = e.target.closest('[data-action="open-yape-checkout"], #btn-yape-checkout, .btn-yape-trigger, .btn-yape-white');
                 if (target) {
                     e.preventDefault();
                     this.openModal();
