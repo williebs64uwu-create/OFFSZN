@@ -166,8 +166,9 @@ app.use(helmet({
                 "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://*.r2.dev",
                 "https://api.emailjs.com",
                 "https://eomail5.com", "https://*.eomail5.com",
-                // Mercado Pago Perú
+                // Mercado Pago & Mercado Libre Perú
                 "https://api.mercadopago.com", "https://*.mercadopago.com", "https://*.mercadopago.com.pe", "https://events.mercadopago.com",
+                "https://api.mercadolibre.com", "https://*.mercadolibre.com", "https://*.mercadolibre.com.pe",
                 // PayPal
                 "https://api.paypal.com", "https://www.paypal.com", "https://www.sandbox.paypal.com",
                 "https://api-m.paypal.com", "https://api-m.sandbox.paypal.com",

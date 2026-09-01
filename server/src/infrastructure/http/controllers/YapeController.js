@@ -108,6 +108,7 @@ export const chargeYape = async (req, res) => {
         const mpPayload = {
             token,
             transaction_amount: amountPEN,
+            installments: 1,
             description: `OFFSZN - ${pluginName} VST (Licencia Vitalicia)`,
             payment_method_id: 'yape',
             payer: {
