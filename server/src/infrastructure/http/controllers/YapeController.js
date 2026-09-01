@@ -96,7 +96,7 @@ export const chargeYape = async (req, res) => {
 
         const exchangeRate = parseFloat(process.env.YAPE_EXCHANGE_RATE_PEN) || 3.30;
         const validUsdPrice = parseFloat(customPrice) || 10;
-        const amountPEN = Number((validUsdPrice * exchangeRate).toFixed(2));
+        const amountPEN = req.body.customPricePEN ? Number(parseFloat(req.body.customPricePEN).toFixed(2)) : Number((validUsdPrice * exchangeRate).toFixed(2));
 
         const strProdId = String(productId);
         const prodInfo = PLUGIN_INFO_MAP[strProdId] || PLUGIN_INFO_MAP['899'];

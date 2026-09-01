@@ -70,6 +70,9 @@
         }
 
         getPricePEN() {
+            if (window.YAPE_FIXED_PRICE_PEN) {
+                return Number(window.YAPE_FIXED_PRICE_PEN).toFixed(2);
+            }
             const usd = this.getPriceUSD();
             return (usd * this.exchangeRate).toFixed(2);
         }
@@ -796,17 +799,23 @@
                     ? window.MetaPixel.getAttributionData()
                     : {};
 
+                const bodyPayload = {
+                    token: yapeToken,
+                    email: email,
+                    phoneNumber: phone,
+                    productId: this.productId,
+                    customPrice: this.getPriceUSD(),
+                    attribution: attribution
+                };
+
+                if (window.YAPE_FIXED_PRICE_PEN) {
+                    bodyPayload.customPricePEN = Number(window.YAPE_FIXED_PRICE_PEN);
+                }
+
                 const response = await fetch('/api/orders/yape/charge', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        token: yapeToken,
-                        email: email,
-                        phoneNumber: phone,
-                        productId: this.productId,
-                        customPrice: this.getPriceUSD(),
-                        attribution: attribution
-                    })
+                    body: JSON.stringify(bodyPayload)
                 });
 
                 const result = await response.json();
