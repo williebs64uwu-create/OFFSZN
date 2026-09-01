@@ -1192,13 +1192,13 @@
             z-index: 2;
             width: 100%;
             max-width: 440px;
-            aspect-ratio: 1 / 1.15;
-            border-radius: 20px;
+            aspect-ratio: 1 / 1;
+            border-radius: 24px;
             overflow: hidden;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.18), 0 0 35px rgba(236, 72, 153, 0.1);
             border: 1px solid rgba(0, 0, 0, 0.08);
-            background: #ffffff;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: #111111;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1206,8 +1206,17 @@
         }
 
         .hero-3d-box-container:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.22);
+            transform: translateY(-5px);
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.22), 0 0 45px rgba(236, 72, 153, 0.2);
+        }
+
+        .hero-images-stack {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 24px;
+            background: #111111;
         }
 
         .hero-3d-img {
@@ -1215,87 +1224,217 @@
             height: 100%;
             display: block;
             object-fit: cover;
-            transition: opacity 0.25s ease, transform 0.25s ease;
+            border-radius: 24px;
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .hero-3d-img.fade {
-            opacity: 0.3;
-            transform: scale(0.97);
+            opacity: 0.5;
         }
 
-        .cover-product-badge {
+        .hero-3d-img-hover {
             position: absolute;
-            bottom: 12px;
-            left: 12px;
-            right: 12px;
-            background: rgba(0, 0, 0, 0.88);
-            backdrop-filter: blur(10px);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 24px;
+            opacity: 0;
+            display: none;
+            pointer-events: none;
+            transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2;
+        }
+
+        .hero-3d-box-container.has-variant:hover .hero-3d-img-hover {
+            opacity: 1;
+            display: block;
+            transform: scale(1.02);
+        }
+
+        .hero-3d-box-container.has-variant:hover .hero-3d-img:not(.hero-3d-img-hover) {
+            opacity: 0;
+            transform: scale(0.98);
+        }
+
+        .hero-3d-box-container:not(.has-variant) .hero-3d-img-hover {
+            display: none !important;
+            opacity: 0 !important;
+        }
+
+        /* Glass Crumb Superior en la Esquina de la Foto */
+        .glass-corner-badge {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             color: #ffffff;
-            padding: 8px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            padding: 6px 14px;
             border-radius: 9999px;
-            font-size: 0.82rem;
-            font-weight: 800;
-            letter-spacing: 0.01em;
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 4;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+            pointer-events: none;
+            transition: all 0.25s ease;
+        }
+
+        .hero-3d-box-container:hover .glass-corner-badge {
+            background: rgba(0, 0, 0, 0.9);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* Contenedor con Flechas Laterales de Navegación */
+        .hero-3d-box-flanked-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 560px;
+            gap: 16px;
+        }
+
+        .side-nav-arrow-btn {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.09);
+            color: #000000;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .side-nav-arrow-btn:hover {
+            background: #000000;
+            color: #ffffff;
+            border-color: #000000;
+            transform: scale(1.1);
+            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+        }
+
+        .side-nav-arrow-btn:active {
+            transform: scale(0.92);
+        }
+
+        @media (max-width: 640px) {
+            .side-nav-arrow-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 1.05rem;
+            }
+            .hero-3d-box-flanked-wrapper {
+                gap: 8px;
+            }
+        }
+
+        /* Barra de Producto Elegante Debajo de la Portada */
+        .hero-product-action-bar {
+            width: 100%;
+            max-width: 440px;
+            margin-top: 14px;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 18px;
+            padding: 10px 16px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 6px;
-            z-index: 3;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            cursor: pointer;
-            transition: all 0.2s ease;
+            gap: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            transition: all 0.25s ease;
         }
 
-        .cover-product-badge:hover {
-            background: #000000;
-            transform: translateY(-2px);
-            border-color: #ec4899;
+        .hero-product-action-bar:hover {
+            border-color: rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
         }
 
-        .badge-add-pill {
-            background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);
-            color: #ffffff;
-            padding: 3px 10px;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 800;
+        .product-bar-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
         }
 
-        .mockup-browse-controls {
+        .product-bar-icon {
+            font-size: 1.35rem;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 1.25rem;
-            margin-top: 1.25rem;
-            font-size: 0.82rem;
-            font-weight: 800;
-            color: #000000;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            user-select: none;
-        }
-
-        .browse-arrow-btn {
-            background: #ffffff;
-            border: 1px solid var(--stroke-light);
-            color: #000000;
             width: 38px;
             height: 38px;
-            border-radius: 50%;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: color 0.2s ease, transform 0.2s ease, background 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.04);
         }
 
-        .browse-arrow-btn:hover {
-            color: #ec4899;
-            border-color: #ec4899;
-            transform: scale(1.1);
+        .product-bar-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .product-bar-title {
+            font-size: 0.88rem;
+            font-weight: 800;
+            color: #000000;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .product-bar-tag {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .product-bar-add-btn {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            border-radius: 9999px;
+            padding: 9px 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 800;
+            font-size: 0.84rem;
+            flex-shrink: 0;
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-bar-add-btn:hover {
+            background: #ec4899;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(236, 72, 153, 0.38);
+        }
+
+        .product-bar-add-btn:active {
+            transform: scale(0.95);
         }
 
         /* ==========================================================================
@@ -1368,6 +1507,17 @@
             height: 100%;
             object-fit: cover;
             display: block;
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .artist-avatar-circle .avatar-img-hover {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
         }
 
         .artist-avatar-card:hover .artist-avatar-circle {
@@ -1375,10 +1525,42 @@
             border-color: rgba(236, 72, 153, 0.5);
         }
 
+        .artist-avatar-card.has-variant:hover .avatar-img-hover {
+            opacity: 1;
+            transform: scale(1.06);
+        }
+
+        .artist-avatar-card.has-variant:hover .avatar-img-main {
+            opacity: 0;
+        }
+
         .artist-avatar-card.active .artist-avatar-circle {
             transform: scale(1.12);
             border-color: #ec4899;
             box-shadow: 0 6px 18px rgba(236, 72, 153, 0.45);
+        }
+
+        .avatar-variant-badge {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            border: 2px solid #ffffff;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .avatar-variant-badge svg {
+            width: 7px;
+            height: 7px;
+            fill: #ffffff;
         }
 
         .artist-avatar-name {
@@ -2467,25 +2649,20 @@
                     <span class="title-huge" id="heroHugeTitle">Bad Bunny</span>
                 </h1>
 
-                <!-- Fila de Reproductor A/B y Toggle Cruda vs Con Preset + Botón de Compra Rápida ($10) -->
+                <!-- Fila de Reproductor A/B y Toggle Voz cruda vs Voz con preset -->
                 <div class="hero-player-row">
                     <button type="button" class="hero-play-btn" id="mainPlayBtn" onclick="toggleHeroPlay()" title="Reproducir / Pausar">
                         <i class="bi bi-play-fill" id="playIcon"></i>
                     </button>
 
                     <div class="ab-pill-switcher">
-                        <button type="button" class="ab-pill-btn active" id="pillRaw" onclick="switchAbPill('raw')">Cruda (Raw)</button>
-                        <button type="button" class="ab-pill-btn active-magenta" id="pillMainstream" onclick="switchAbPill('mainstream')">Con Preset ✨</button>
+                        <button type="button" class="ab-pill-btn active" id="pillRaw" onclick="switchAbPill('raw')">Voz cruda</button>
+                        <button type="button" class="ab-pill-btn active-magenta" id="pillMainstream" onclick="switchAbPill('mainstream')">Voz con preset</button>
                     </div>
-
-                    <button type="button" class="hero-buy-cta-btn" onclick="addCurrentArtistToCart()" title="Añadir preset actual al carrito">
-                        <i class="bi bi-bag-plus"></i>
-                        <span>Obtener Preset ($10)</span>
-                    </button>
                 </div>
 
                 <p class="player-status-hint" id="playerStatusHint">
-                    Toca play • voz original cruda (antes - yan block)
+                    Toca play • voz cruda (Bad Bunny)
                 </p>
 
             </div>
@@ -2498,22 +2675,41 @@
                     </svg>
                 </div>
 
-                <div class="hero-3d-box-container" id="heroBoxContainer" onclick="addCurrentArtistToCart()" title="Click para añadir este preset al carrito">
-                    <img id="heroProductImg" src="/willieimages/covers/bad-bunny.jpg" alt="Preset Oficial - Willie Inspired" class="hero-3d-img" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
-                    
-                    <button type="button" class="cover-product-badge" id="coverProductBadge" onclick="event.stopPropagation(); addCurrentArtistToCart();" title="Añadir preset al carrito">
-                        <div style="display: flex; align-items: center; gap: 6px;">
-                            <span id="coverBadgeIcon"><i class="bi bi-fire" style="color: #f59e0b;"></i></span>
-                            <span id="coverBadgeText">Bad Bunny Vocal Preset • $10.00</span>
+                <div class="hero-3d-box-flanked-wrapper">
+                    <button type="button" class="side-nav-arrow-btn" onclick="prevArtist()" aria-label="Artista anterior" title="Preset anterior">
+                        <i class="bi bi-chevron-left"></i>
+                    </button>
+
+                    <div class="hero-3d-box-container has-variant" id="heroBoxContainer" onclick="addCurrentArtistToCart()" title="Click para añadir este preset al carrito">
+                        <div class="glass-corner-badge" id="glassCornerBadge">
+                            <i class="bi bi-box-seam" style="color: #ec4899;"></i>
+                            <span>Plugins para instalar incluidos</span>
                         </div>
-                        <span class="badge-add-pill">+ Añadir</span>
+
+                        <div class="hero-images-stack" id="heroImagesStack">
+                            <img id="heroProductImg" src="/willieimages/covers/bad-bunny-v2.png" alt="Preset Oficial - Willie Inspired" class="hero-3d-img" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
+                            <img id="heroProductImgHover" src="/willieimages/covers/bad-bunny.jpg" alt="Preset Variante - Willie Inspired" class="hero-3d-img hero-3d-img-hover" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
+                        </div>
+                    </div>
+
+                    <button type="button" class="side-nav-arrow-btn" onclick="nextArtist()" aria-label="Siguiente artista" title="Siguiente preset">
+                        <i class="bi bi-chevron-right"></i>
                     </button>
                 </div>
 
-                <div class="mockup-browse-controls">
-                    <button type="button" class="browse-arrow-btn" onclick="prevArtist()" aria-label="Anterior">&lt;</button>
-                    <span>EXPLORAR</span>
-                    <button type="button" class="browse-arrow-btn" onclick="nextArtist()" aria-label="Siguiente">&gt;</button>
+                <!-- Barra de Producto Debajo de la Portada (Sin tapar la imagen) -->
+                <div class="hero-product-action-bar">
+                    <div class="product-bar-info">
+                        <span class="product-bar-icon" id="productBarIcon">🐰</span>
+                        <div class="product-bar-text">
+                            <span class="product-bar-title" id="productBarTitle">Bad Bunny Vocal Preset</span>
+                            <span class="product-bar-tag">Funciona en todas las versiones de FL Studio</span>
+                        </div>
+                    </div>
+                    <button type="button" class="product-bar-add-btn" onclick="addCurrentArtistToCart()" title="Obtener este preset">
+                        <span>Obtenerlo</span>
+                        <i class="bi bi-arrow-right-short" style="font-size: 1.15rem;"></i>
+                    </button>
                 </div>
             </div>
 
@@ -2541,7 +2737,7 @@
                         <div class="mini-stack-thumb">✨</div>
                     </div>
                     <div class="banner-text-content">
-                        <h4>Escucha las 28 comparativas de antes y después</h4>
+                        <h4>Escucha las 40 comparativas de antes y después</h4>
                         <p>Toca cualquier voz para escuchar la transformación en tiempo real</p>
                     </div>
                 </div>
@@ -2747,11 +2943,12 @@
             const pillRaw = document.getElementById('pillRaw');
             const pillMainstream = document.getElementById('pillMainstream');
             const hint = document.getElementById('playerStatusHint');
+            const artist = artistsCatalog[currentArtistIndex] || { name: 'Bad Bunny' };
 
             if (mode === 'raw') {
                 pillRaw.className = 'ab-pill-btn active';
                 pillMainstream.className = 'ab-pill-btn active-magenta';
-                if (hint) hint.textContent = "Toca play • voz original cruda (antes - yan block)";
+                if (hint) hint.textContent = `Toca play • voz cruda (${artist.name})`;
 
                 if (isPlaying) {
                     const time = audioProcessed.currentTime;
@@ -2763,7 +2960,7 @@
             } else {
                 pillRaw.className = 'ab-pill-btn';
                 pillMainstream.className = 'ab-pill-btn active';
-                if (hint) hint.textContent = "Escuchando • voz transformada en estudio (después - yan block) ✨";
+                if (hint) hint.textContent = `Escuchando • voz con preset (${artist.name}) ✨`;
 
                 if (isPlaying) {
                     const time = audioRaw.currentTime;
@@ -2791,13 +2988,21 @@
         const PRESET_PRICE = 10.00;
 
         const artistsCatalog = [
-            { id: "bad-bunny", name: "Bad Bunny", cover: "/willieimages/covers/bad-bunny.jpg", icon: "🐰", price: PRESET_PRICE, badge: "Bad Bunny Vocal Preset • $10.00" },
+            { id: "bad-bunny", name: "Bad Bunny", cover: "/willieimages/covers/bad-bunny-v2.png", coverHover: "/willieimages/covers/bad-bunny.jpg", icon: "🐰", price: PRESET_PRICE, badge: "Bad Bunny Vocal Preset • $10.00" },
+            { id: "cris-mj", name: "Cris Mj", cover: "/willieimages/covers/cris-mj.png", icon: "🦅", price: PRESET_PRICE, badge: "Cris Mj Vocal Chain • $10.00" },
+            { id: "yan-block", name: "Yan Block", cover: "/willieimages/covers/yan-block-v2.png", coverHover: "/willieimages/covers/yan-block.png", icon: "🔥", price: PRESET_PRICE, badge: "Yan Block Vocal Chain • $10.00" },
+            { id: "roa", name: "Roa", cover: "/willieimages/covers/roa-v2.png", coverHover: "/willieimages/covers/roa.jpg", icon: "⚡", price: PRESET_PRICE, badge: "Roa Vocal Preset • $10.00" },
+            { id: "alejo", name: "Alejo", cover: "/willieimages/covers/alejo-v2.png", coverHover: "/willieimages/covers/alejo.jpg", icon: "⭐", price: PRESET_PRICE, badge: "Alejo Vocal Chain • $10.00" },
+            { id: "jovaan", name: "Jovaan", cover: "/willieimages/covers/jovaan.png", icon: "🕶️", price: PRESET_PRICE, badge: "Jovaan Vocal Preset • $10.00" },
+            { id: "fanta-rosario", name: "Fanta Rosario", cover: "/willieimages/covers/fanta-rosario.png", icon: "🥤", price: PRESET_PRICE, badge: "Fanta Rosario Vocal Chain • $10.00" },
+            { id: "omar-courtz", name: "Omar Courtz", cover: "/willieimages/covers/omar-courtz-v2.png", coverHover: "/willieimages/covers/omar-courtz.jpg", icon: "🕶️", price: PRESET_PRICE, badge: "Omar Courtz Vocal Chain • $10.00" },
+            { id: "yeat", name: "Yeat", cover: "/willieimages/covers/yeat.png", icon: "🛸", price: PRESET_PRICE, badge: "Yeat Rage Vocal Chain • $10.00" },
+            { id: "the-kid-laroi", name: "The Kid LAROI", cover: "/willieimages/covers/the-kid-laroi.png", icon: "🎸", price: PRESET_PRICE, badge: "The Kid LAROI Vocal Chain • $10.00" },
+            { id: "yeyo", name: "Yeyo", cover: "/willieimages/covers/yeyo-v2.png", coverHover: "/willieimages/covers/yeyo.png", icon: "⚡", price: PRESET_PRICE, badge: "Yeyo Vocal Preset • $10.00" },
             { id: "feid", name: "Feid", cover: "/willieimages/covers/feid.png", icon: "💚", price: PRESET_PRICE, badge: "Feid Ferxxo Vocal Chain • $10.00" },
             { id: "duki", name: "Duki", cover: "/willieimages/covers/duki.jpg", icon: "😈", price: PRESET_PRICE, badge: "Duki Trap Vocal Preset • $10.00" },
             { id: "milo-j", name: "Milo J", cover: "/willieimages/covers/milo-j.jpg", icon: "🎙️", price: PRESET_PRICE, badge: "Milo J Vocal Preset • $10.00" },
             { id: "saiko", name: "Saiko", cover: "/willieimages/covers/saiko.jpg", icon: "⚡", price: PRESET_PRICE, badge: "Saiko Space Vocal Chain • $10.00" },
-            { id: "yan-block", name: "Yan Block", cover: "/willieimages/covers/yan-block.png", icon: "🔥", price: PRESET_PRICE, badge: "Yan Block Vocal Chain • $10.00" },
-            { id: "omar-courtz", name: "Omar Courtz", cover: "/willieimages/covers/omar-courtz.jpg", icon: "🕶️", price: PRESET_PRICE, badge: "Omar Courtz Vocal Chain • $10.00" },
             { id: "dei-v", name: "Dei V", cover: "/willieimages/covers/dei-v.jpg", icon: "💎", price: PRESET_PRICE, badge: "Dei V Vocal Preset • $10.00" },
             { id: "trueno", name: "Trueno", cover: "/willieimages/covers/trueno.jpg", icon: "⚡", price: PRESET_PRICE, badge: "Trueno Rap/Trap Vocal Chain • $10.00" },
             { id: "ysy-a", name: "YSY A", cover: "/willieimages/covers/ysy-a.jpg", icon: "💥", price: PRESET_PRICE, badge: "YSY A Trap Vocal Preset • $10.00" },
@@ -2809,14 +3014,12 @@
             { id: "joji", name: "Joji", cover: "/willieimages/covers/joji.jpg", icon: "🌧️", price: PRESET_PRICE, badge: "Joji Lo-Fi Vocal Preset • $10.00" },
             { id: "bhavi", name: "Bhavi", cover: "/willieimages/covers/bhavi.jpg", icon: "🎨", price: PRESET_PRICE, badge: "Bhavi Vocal Preset • $10.00" },
             { id: "cro", name: "CRO", cover: "/willieimages/covers/cro.jpg", icon: "🌙", price: PRESET_PRICE, badge: "CRO Vocal Preset • $10.00" },
-            { id: "alejo", name: "Alejo", cover: "/willieimages/covers/alejo.jpg", icon: "⭐", price: PRESET_PRICE, badge: "Alejo Vocal Chain • $10.00" },
             { id: "hades-66", name: "Hades 66", cover: "/willieimages/covers/hades-66.jpg", icon: "🔥", price: PRESET_PRICE, badge: "Hades 66 Vocal Preset • $10.00" },
             { id: "paco-amoroso", name: "Paco Amoroso", cover: "/willieimages/covers/paco-amoroso.jpg", icon: "🕶️", price: PRESET_PRICE, badge: "Paco Amoroso Vocal Preset • $10.00" },
             { id: "young-cister", name: "Young Cister", cover: "/willieimages/covers/young-cister.jpg", icon: "✨", price: PRESET_PRICE, badge: "Young Cister Vocal Preset • $10.00" },
             { id: "young-beef", name: "Yung Beef", cover: "/willieimages/covers/young-beef.png", icon: "👑", price: PRESET_PRICE, badge: "Yung Beef Vocal Chain • $10.00" },
             { id: "gonzalo-genek", name: "Gonzalo Genek", cover: "/willieimages/covers/gonzalo-genek.jpg", icon: "🎙️", price: PRESET_PRICE, badge: "Gonzalo Genek Vocal Chain • $10.00" },
             { id: "kuraimokha", name: "Kuraimokha", cover: "/willieimages/covers/kuraimokha.jpg", icon: "🌊", price: PRESET_PRICE, badge: "Kuraimokha Vocal Preset • $10.00" },
-            { id: "roa", name: "Roa", cover: "/willieimages/covers/roa.jpg", icon: "⚡", price: PRESET_PRICE, badge: "Roa Vocal Preset • $10.00" },
             { id: "roju", name: "Roju", cover: "/willieimages/covers/roju.jpg", icon: "🚀", price: PRESET_PRICE, badge: "Roju Vocal Chain • $10.00" },
             { id: "enzocerobulto", name: "Enzo Cero Bulto", cover: "/willieimages/covers/enzocerobulto.jpg", icon: "🔥", price: PRESET_PRICE, badge: "Enzo Vocal Chain • $10.00" },
             { id: "frozouda", name: "Frozouda", cover: "/willieimages/covers/frozouda.jpg", icon: "❄️", price: PRESET_PRICE, badge: "Frozouda Vocal Preset • $10.00" },
@@ -2824,7 +3027,6 @@
             { id: "cosmic-kid", name: "Cosmic Kid", cover: "/willieimages/covers/cosmic-kid.jpg", icon: "🪐", price: PRESET_PRICE, badge: "Cosmic Kid Vocal Preset • $10.00" },
             { id: "blagh", name: "Blagh", cover: "/willieimages/covers/blagh.jpg", icon: "💀", price: PRESET_PRICE, badge: "Blagh Vocal Preset • $10.00" },
             { id: "oney-1", name: "Oney 1", cover: "/willieimages/covers/oney-1.jpg", icon: "🔥", price: PRESET_PRICE, badge: "Oney 1 Vocal Chain • $10.00" },
-            { id: "yeyo", name: "Yeyo", cover: "/willieimages/covers/yeyo.png", icon: "⚡", price: PRESET_PRICE, badge: "Yeyo Vocal Preset • $10.00" },
             { id: "zell", name: "Zell", cover: "/willieimages/covers/zell.jpg", icon: "💎", price: PRESET_PRICE, badge: "Zell Vocal Preset • $10.00" }
         ];
         let currentArtistIndex = 0;
@@ -2834,9 +3036,13 @@
             if (!container) return;
 
             container.innerHTML = artistsCatalog.map((artist, idx) => `
-                <button type="button" class="artist-avatar-card ${idx === 0 ? 'active' : ''}" onclick="selectArtistByIndex(${idx})" title="${artist.name}">
+                <button type="button" class="artist-avatar-card ${idx === 0 ? 'active' : ''} ${artist.coverHover ? 'has-variant' : ''}" onclick="selectArtistByIndex(${idx})" title="${artist.name}${artist.coverHover ? ' (Hover para ver variante)' : ''}">
                     <div class="artist-avatar-circle">
-                        <img src="${artist.cover}" alt="${artist.name}" loading="lazy" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
+                        <img src="${artist.cover}" alt="${artist.name}" class="avatar-img-main" loading="lazy" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
+                        ${artist.coverHover ? `
+                            <img src="${artist.coverHover}" alt="${artist.name} Variante" class="avatar-img-hover" loading="lazy" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
+                            <span class="avatar-variant-badge" title="2 estilos"><svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg></span>
+                        ` : ''}
                     </div>
                     <span class="artist-avatar-name">${artist.name}</span>
                 </button>
@@ -2856,23 +3062,46 @@
             const hugeTitle = document.getElementById('heroHugeTitle');
             if (hugeTitle) hugeTitle.textContent = artist.name;
 
-            const img = document.getElementById('heroProductImg');
-            if (img) {
-                img.classList.add('fade');
-                setTimeout(() => {
-                    img.src = artist.cover;
-                    img.classList.remove('fade');
-                }, 150);
+            const boxContainer = document.getElementById('heroBoxContainer');
+            const imgMain = document.getElementById('heroProductImg');
+            const imgHover = document.getElementById('heroProductImgHover');
+
+            if (boxContainer) {
+                if (artist.coverHover) {
+                    boxContainer.classList.add('has-variant');
+                } else {
+                    boxContainer.classList.remove('has-variant');
+                }
             }
 
-            const badgeIcon = document.getElementById('coverBadgeIcon');
-            const badgeText = document.getElementById('coverBadgeText');
-            if (badgeIcon) badgeIcon.textContent = artist.icon || "🔥";
-            if (badgeText) badgeText.textContent = `${artist.name} Vocal Preset • $10.00`;
+            // Actualización inmediata para eliminar parpadeos o imágenes residuales de hover
+            if (imgHover) {
+                if (artist.coverHover) {
+                    imgHover.src = artist.coverHover;
+                    imgHover.style.display = 'block';
+                } else {
+                    imgHover.src = '';
+                    imgHover.style.display = 'none';
+                }
+            }
+
+            if (imgMain) {
+                imgMain.src = artist.cover;
+            }
+
+            // Actualizar barra de producto debajo de la imagen
+            const productBarIcon = document.getElementById('productBarIcon');
+            const productBarTitle = document.getElementById('productBarTitle');
+            if (productBarIcon) productBarIcon.textContent = artist.icon || "🔥";
+            if (productBarTitle) productBarTitle.textContent = `${artist.name} Vocal Preset`;
 
             const hint = document.getElementById('playerStatusHint');
             if (hint) {
-                hint.textContent = `Toca play • cadena vocal de ${artist.name} lista para usar`;
+                if (currentMode === 'raw') {
+                    hint.textContent = `Toca play • voz cruda (${artist.name})`;
+                } else {
+                    hint.textContent = `Escuchando • voz con preset (${artist.name}) ✨`;
+                }
             }
         }
 

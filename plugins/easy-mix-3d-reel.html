@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Easy Mix 3D Reel Generator 4K | OFFSZN</title>
+  <!-- Three.js + GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: #030304;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* ── VIEWPORT CONTAINER (Adapts to 9:16, 1:1, 16:9) ── */
+    #stage-wrapper {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 120px rgba(0, 0, 0, 0.95), 0 0 50px rgba(191, 90, 242, 0.12);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #000;
+      transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ratio-9-16 {
+      width: min(100vw - 30px, 440px) !important;
+      height: min(100vh - 110px, 782px) !important;
+      aspect-ratio: 9 / 16;
+    }
+    .ratio-1-1 {
+      width: min(100vw - 30px, 580px) !important;
+      height: min(100vh - 110px, 580px) !important;
+      aspect-ratio: 1 / 1;
+    }
+    .ratio-16-9 {
+      width: min(100vw - 30px, 980px) !important;
+      height: min(100vh - 110px, 551px) !important;
+      aspect-ratio: 16 / 9;
+    }
+
+    canvas#webgl-canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+      outline: none;
+    }
+
+    /* ── HEADER WATERMARK ── */
+    .top-badge {
+      position: absolute;
+      top: 18px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .badge-pill {
+      background: rgba(14, 14, 18, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #ff9f0a;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .badge-pill .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #30d158;
+      box-shadow: 0 0 10px #30d158;
+      animation: pulse-dot 1.5s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.75); }
+    }
+
+    .timeline-indicator {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      background: rgba(14, 14, 18, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      z-index: 10;
+    }
+
+    /* ── CONTROLS PANEL ── */
+    .controls-panel {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(12, 12, 16, 0.92);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+      z-index: 100;
+    }
+
+    .btn {
+      background: #1a1a22;
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 9px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn:hover {
+      background: #262632;
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ff9f0a, #ff453a);
+      border: none;
+      color: #000;
+      font-weight: 800;
+      box-shadow: 0 4px 20px rgba(255, 159, 10, 0.35);
+    }
+
+    .btn-record {
+      background: #ff453a;
+      color: #fff;
+      border: none;
+      font-weight: 800;
+    }
+
+    .btn-record.recording {
+      background: #30d158;
+      animation: pulse-rec 1s infinite alternate;
+    }
+
+    @keyframes pulse-rec {
+      from { box-shadow: 0 0 10px #30d158; }
+      to { box-shadow: 0 0 25px #30d158; }
+    }
+
+    .ratio-group {
+      display: flex;
+      background: #101016;
+      border-radius: 10px;
+      padding: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      gap: 2px;
+    }
+
+    .ratio-btn {
+      background: transparent;
+      border: none;
+      color: #8e8e93;
+      padding: 6px 10px;
+      border-radius: 7px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .ratio-btn.active {
+      background: #262632;
+      color: #fff;
+    }
+
+    .divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* ── PROGRESS BAR ── */
+    .timeline-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      z-index: 10;
+    }
+
+    .timeline-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #bf5af2, #ff453a, #0a84ff);
+      transition: width 0.05s linear;
+    }
+
+    /* ── SHOT OVERLAY TEXT ── */
+    .shot-tag {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(10, 10, 14, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 7px 16px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #f2f2f7;
+      letter-spacing: 0.5px;
+      z-index: 10;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- STAGE VIEWPORT CONTAINER -->
+  <div id="stage-wrapper" class="ratio-9-16">
+    <canvas id="webgl-canvas"></canvas>
+
+    <div class="top-badge">
+      <div class="badge-pill">
+        <div class="dot"></div>
+        <span>OFFSZN EASY MIX 4K</span>
+      </div>
+    </div>
+
+    <div class="timeline-indicator" id="time-display">0.00s / 7.00s</div>
+    <div class="shot-tag" id="shot-tag">🎯 Toma 1: Macro Shot Knob Espacio & FX</div>
+
+    <div class="timeline-bar">
+      <div class="timeline-fill" id="timeline-fill"></div>
+    </div>
+  </div>
+
+  <!-- CONTROL PANEL -->
+  <div class="controls-panel">
+    <button class="btn btn-primary" id="btn-play">
+      <span id="play-icon">▶</span>
+      <span id="play-text">Pausar</span>
+    </button>
+    <button class="btn" id="btn-restart">🔄 Reiniciar</button>
+
+    <div class="divider"></div>
+
+    <div class="ratio-group">
+      <button class="ratio-btn active" data-ratio="ratio-9-16">9:16 Reel</button>
+      <button class="ratio-btn" data-ratio="ratio-1-1">1:1 Cuadrado</button>
+      <button class="ratio-btn" data-ratio="ratio-16-9">16:9 Wide</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="btn btn-record" id="btn-record">
+      🔴 <span id="record-text">Grabar Video (60fps)</span>
+    </button>
+  </div>
+
+  <script>
+    /* ─────────────────────────────────────────────────────────────
+       1. GENERADOR DE TEXTURA 4K ULTRA-NÍTIDA (VECTORIAL/CANVAS)
+    ───────────────────────────────────────────────────────────── */
+    function generate4KUiTexture() {
+      const w = 4000;
+      const h = 2020;
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext('2d');
+
+      // 1. Fondo negro mate profundo #0e0e12
+      ctx.fillStyle = '#0e0e12';
+      ctx.fillRect(0, 0, w, h);
+
+      // 2. Header Superior
+      ctx.fillStyle = '#141419';
+      ctx.fillRect(0, 0, w, 180);
+      ctx.strokeStyle = '#22222a';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(0, 0, w, 180);
+
+      // Logo EASY MIX
+      ctx.font = '900 68px Inter, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('EASY', 70, 115);
+      ctx.fillStyle = '#ff453a';
+      ctx.fillText('MIX', 260, 115);
+
+      // Badge 7 Días de prueba
+      ctx.fillStyle = '#1c2e20';
+      ctx.strokeStyle = '#30d158';
+      ctx.lineWidth = 3;
+      ctx.roundRect(430, 65, 340, 65, 12);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = '800 28px Inter, sans-serif';
+      ctx.fillStyle = '#30d158';
+      ctx.fillText('7 DÍAS DE PRUEBA', 465, 110);
+
+      // Selector MODO MIX & PRESETS
+      ctx.fillStyle = '#1c1c24';
+      ctx.strokeStyle = '#2d2d38';
+      ctx.roundRect(1450, 65, 340, 65, 12);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = '700 28px Inter, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('MODO MIX  ▾', 1510, 110);
+
+      ctx.roundRect(1850, 65, 300, 65, 12);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillText('PRESETS  ▾', 1905, 110);
+
+      // Helper para dibujar paneles
+      function drawPanel(x, y, pw, ph, title, colorHex, sectionNum) {
+        ctx.fillStyle = '#121217';
+        ctx.strokeStyle = colorHex;
+        ctx.lineWidth = 4;
+        ctx.shadowColor = colorHex;
+        ctx.shadowBlur = 12;
+        ctx.roundRect(x, y, pw, ph, 20);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Título sección
+        ctx.font = '800 32px Inter, sans-serif';
+        ctx.fillStyle = colorHex;
+        ctx.fillText(`${sectionNum}. ${title}`, x + 35, y + 55);
+
+        // Indicador de encendido
+        ctx.beginPath();
+        ctx.arc(x + pw - 45, y + 45, 12, 0, Math.PI * 2);
+        ctx.fillStyle = colorHex;
+        ctx.shadowColor = colorHex;
+        ctx.shadowBlur = 16;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // Panel 1: LIMPIEZA (Cyan/Azul)
+      drawPanel(60, 230, 1240, 1720, 'LIMPIEZA', '#0a84ff', 1);
+
+      // Sub-caja Eliminar Ruido (Display Waveform)
+      ctx.fillStyle = '#08080b';
+      ctx.strokeStyle = '#1a1a24';
+      ctx.lineWidth = 3;
+      ctx.roundRect(100, 330, 1160, 380, 16);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = '700 26px Inter, sans-serif';
+      ctx.fillStyle = '#8e8e93';
+      ctx.fillText('ELIMINAR RUIDO (OLED DISPLAY)', 130, 380);
+
+      // Sub-caja Equilibrar Voz
+      ctx.fillStyle = '#16161c';
+      ctx.strokeStyle = 'rgba(10, 132, 255, 0.4)';
+      ctx.roundRect(100, 750, 1160, 420, 16);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = '700 26px Inter, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('EQUILIBRAR VOZ', 130, 805);
+
+      // Sub-cajas Quitar Graves / Cartón / S
+      ctx.roundRect(100, 1210, 560, 320, 16);
+      ctx.stroke();
+      ctx.fillText('QUITAR GRAVES', 130, 1265);
+
+      ctx.roundRect(700, 1210, 560, 320, 16);
+      ctx.stroke();
+      ctx.fillText('QUITAR CARTÓN', 730, 1265);
+
+      ctx.roundRect(100, 1570, 1160, 340, 16);
+      ctx.stroke();
+      ctx.fillText('QUITAR "S" (DE-ESSER)', 130, 1625);
+
+      // Panel 2: COLOR Y CUERPO (Rojo/Naranja)
+      drawPanel(1360, 230, 1240, 1720, 'COLOR Y CUERPO', '#ff453a', 2);
+
+      ctx.fillStyle = '#16161c';
+      ctx.strokeStyle = 'rgba(255, 69, 58, 0.4)';
+      ctx.roundRect(1400, 330, 1160, 580, 16);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = '700 26px Inter, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('COMPRESOR PRINCIPAL', 1430, 385);
+
+      ctx.roundRect(1400, 950, 560, 440, 16);
+      ctx.stroke();
+      ctx.fillText('PRESENCIA (ALTOS)', 1430, 1005);
+
+      ctx.roundRect(2000, 950, 560, 440, 16);
+      ctx.stroke();
+      ctx.fillText('SATURACIÓN (CINTA)', 2030, 1005);
+
+      ctx.roundRect(1400, 1430, 1160, 480, 16);
+      ctx.stroke();
+      ctx.fillText('BRILLO FINO (AIRE)', 1430, 1485);
+
+      // Panel 3: ESPACIO Y FX (Púrpura)
+      drawPanel(2660, 230, 1280, 1720, 'ESPACIO Y FX', '#bf5af2', 3);
+
+      ctx.fillStyle = '#16161c';
+      ctx.strokeStyle = 'rgba(191, 90, 242, 0.4)';
+      ctx.roundRect(2700, 330, 1200, 440, 16);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = '700 28px Inter, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('DOUBLER / ESTÉREO', 2740, 390);
+
+      // Botón SUAVE (CLA)
+      ctx.fillStyle = '#bf5af2';
+      ctx.shadowColor = '#bf5af2';
+      ctx.shadowBlur = 20;
+      ctx.roundRect(3040, 350, 260, 60, 10);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.font = '800 24px Inter, sans-serif';
+      ctx.fillStyle = '#000000';
+      ctx.fillText('SUAVE (CLA)', 3085, 390);
+
+      // Reverb
+      ctx.fillStyle = '#16161c';
+      ctx.strokeStyle = 'rgba(191, 90, 242, 0.4)';
+      ctx.roundRect(2700, 810, 1200, 580, 16);
+      ctx.fill();
+      ctx.stroke();
+      ctx.font = '700 28px Inter, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('REVERBERACIÓN', 2740, 870);
+
+      // Eco (Delay)
+      ctx.roundRect(2700, 1430, 1200, 480, 16);
+      ctx.stroke();
+      ctx.fillText('ECO (DELAY)', 2740, 1490);
+
+      // Helper para dibujar marcas de perillas 2D nítidas
+      function drawKnob2D(kx, ky, label, col) {
+        ctx.beginPath();
+        ctx.arc(kx, ky, 90, 0, Math.PI * 2);
+        ctx.fillStyle = '#14141a';
+        ctx.strokeStyle = '#22222c';
+        ctx.lineWidth = 4;
+        ctx.fill();
+        ctx.stroke();
+
+        // Anillo de progreso sutil
+        ctx.beginPath();
+        ctx.arc(kx, ky, 115, Math.PI * 0.75, Math.PI * 2.0);
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 14;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = col;
+        ctx.shadowBlur = 18;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Label
+        ctx.font = '700 22px Inter, sans-serif';
+        ctx.fillStyle = '#a1a1aa';
+        ctx.textAlign = 'center';
+        ctx.fillText(label, kx, ky + 160);
+        ctx.textAlign = 'left';
+      }
+
+      // Dibujar perillas estáticas de fondo
+      drawKnob2D(400, 540, 'UMBRAL', '#0a84ff');
+      drawKnob2D(950, 540, 'CANTIDAD', '#0a84ff');
+      drawKnob2D(680, 970, 'NIVEL', '#0a84ff');
+      drawKnob2D(380, 1380, 'GRAVES', '#0a84ff');
+      drawKnob2D(980, 1380, 'CARTÓN', '#0a84ff');
+      drawKnob2D(680, 1750, 'REDUCCIÓN', '#0a84ff');
+
+      drawKnob2D(1980, 640, 'COMPRESIÓN', '#ff453a');
+      drawKnob2D(1680, 1200, 'MEDIOS', '#ff453a');
+      drawKnob2D(2280, 1200, 'ALTOS', '#ff453a');
+      drawKnob2D(1980, 1690, 'BRILLO AIRE', '#ff453a');
+
+      drawKnob2D(3000, 590, 'ANCHO', '#bf5af2');
+      drawKnob2D(3600, 590, 'VOLUMEN', '#bf5af2');
+      drawKnob2D(3000, 1130, 'LARGO', '#bf5af2');
+      drawKnob2D(3600, 1130, 'VOLUMEN', '#bf5af2');
+      drawKnob2D(3000, 1690, 'REPETICIONES', '#bf5af2');
+      drawKnob2D(3600, 1690, 'MEZCLA', '#bf5af2');
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.generateMipmaps = true;
+      tex.minFilter = THREE.LinearMipmapLinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      tex.anisotropy = 16;
+      return tex;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       2. THREE.JS SCENE & RENDERER SETUP
+    ───────────────────────────────────────────────────────────── */
+    const stageWrapper = document.getElementById('stage-wrapper');
+    const canvas = document.getElementById('webgl-canvas');
+    const timeDisplay = document.getElementById('time-display');
+    const timelineFill = document.getElementById('timeline-fill');
+    const shotTag = document.getElementById('shot-tag');
+    const btnPlay = document.getElementById('btn-play');
+    const btnRestart = document.getElementById('btn-restart');
+    const btnRecord = document.getElementById('btn-record');
+    const recordText = document.getElementById('record-text');
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x020204);
+
+    const camera = new THREE.PerspectiveCamera(40, stageWrapper.clientWidth / stageWrapper.clientHeight, 0.1, 100);
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, preserveDrawingBuffer: true });
+    renderer.setSize(stageWrapper.clientWidth, stageWrapper.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.5));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.25;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enabled = false;
+
+    /* ─────────────────────────────────────────────────────────────
+       3. CINEMATIC STUDIO LIGHTING
+    ───────────────────────────────────────────────────────────── */
+    // Soft Ambient Light (Keeps black deep and not washed out)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.35);
+    scene.add(ambientLight);
+
+    // Key Directional Light
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    keyLight.position.set(4, 6, 8);
+    scene.add(keyLight);
+
+    // Left Cyan Rim Light
+    const cyanLight = new THREE.PointLight(0x0a84ff, 4.0, 15);
+    cyanLight.position.set(-6, 1, 3);
+    scene.add(cyanLight);
+
+    // Right Purple Rim Light (Target for Macro Shot)
+    const purpleLight = new THREE.PointLight(0xbf5af2, 6.0, 15);
+    purpleLight.position.set(5.5, 0, 3.5);
+    scene.add(purpleLight);
+
+    // Moving Specular Sheen (Light Sweep)
+    const sweepLight = new THREE.SpotLight(0xffffff, 8.0, 25, Math.PI / 5, 0.25, 1);
+    sweepLight.position.set(-12, 10, 8);
+    sweepLight.target.position.set(0, 0, 0);
+    scene.add(sweepLight);
+    scene.add(sweepLight.target);
+
+    /* ─────────────────────────────────────────────────────────────
+       4. 3D HIGH-POLY HARDWARE MODEL (CHASSIS & FRONT PANEL)
+    ───────────────────────────────────────────────────────────── */
+    const pluginGroup = new THREE.Group();
+    scene.add(pluginGroup);
+
+    const pw = 6.0;
+    const ph = 3.03;
+    const pd = 0.28;
+
+    const uiTexture4K = generate4KUiTexture();
+
+    // High Gloss Faceplate Material
+    const frontMat = new THREE.MeshPhysicalMaterial({
+      map: uiTexture4K,
+      roughness: 0.18,
+      metalness: 0.1,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.1,
+      reflectivity: 0.9,
+    });
+
+    // Dark Brushed Titanium Chassis
+    const chassisMat = new THREE.MeshStandardMaterial({
+      color: 0x111116,
+      roughness: 0.25,
+      metalness: 0.9,
+    });
+
+    // Chrome Screws Material
+    const chromeMat = new THREE.MeshStandardMaterial({
+      color: 0xe0e0e8,
+      roughness: 0.1,
+      metalness: 0.95,
+    });
+
+    // Main Hardware Slab
+    const bodyGeo = new THREE.BoxGeometry(pw, ph, pd);
+    const materials = [
+      chassisMat, chassisMat, chassisMat, chassisMat,
+      frontMat,   chassisMat
+    ];
+    const pluginBody = new THREE.Mesh(bodyGeo, materials);
+    pluginGroup.add(pluginBody);
+
+    // 4 Corner Screws (High Poly)
+    const screwGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.03, 32);
+    const screwOffsets = [
+      [-pw/2 + 0.16, ph/2 - 0.16],
+      [pw/2 - 0.16, ph/2 - 0.16],
+      [-pw/2 + 0.16, -ph/2 + 0.16],
+      [pw/2 - 0.16, -ph/2 + 0.16]
+    ];
+    screwOffsets.forEach(([x, y]) => {
+      const screw = new THREE.Mesh(screwGeo, chromeMat);
+      screw.rotation.x = Math.PI / 2;
+      screw.position.set(x, y, pd / 2 + 0.01);
+      pluginGroup.add(screw);
+    });
+
+    /* ─────────────────────────────────────────────────────────────
+       5. HIGH-POLY 3D ROTARY KNOB (FOR THE MACRO SHOT)
+    ───────────────────────────────────────────────────────────── */
+    function createHighPolyKnob(colorHex, radius = 0.26) {
+      const knobGroup = new THREE.Group();
+
+      // Outer Beveled Base Ring
+      const baseGeo = new THREE.CylinderGeometry(radius * 1.08, radius * 1.15, 0.06, 128);
+      const baseMat = new THREE.MeshStandardMaterial({ color: 0x1a1a22, roughness: 0.3, metalness: 0.85 });
+      const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+      baseMesh.rotation.x = Math.PI / 2;
+      knobGroup.add(baseMesh);
+
+      // Brushed Metallic Main Dial
+      const dialGeo = new THREE.CylinderGeometry(radius, radius, 0.16, 128);
+      const dialMat = new THREE.MeshStandardMaterial({
+        color: 0x24242e,
+        roughness: 0.2,
+        metalness: 0.95,
+      });
+      const dial = new THREE.Mesh(dialGeo, dialMat);
+      dial.rotation.x = Math.PI / 2;
+      dial.position.z = 0.06;
+      knobGroup.add(dial);
+
+      // Top Chamfered Ring
+      const ringBevelGeo = new THREE.TorusGeometry(radius * 0.92, 0.015, 32, 128);
+      const ringBevelMat = new THREE.MeshStandardMaterial({ color: 0x555566, metalness: 0.9, roughness: 0.1 });
+      const ringBevel = new THREE.Mesh(ringBevelGeo, ringBevelMat);
+      ringBevel.position.z = 0.145;
+      knobGroup.add(ringBevel);
+
+      // Glowing Indicator Notch
+      const notchGeo = new THREE.BoxGeometry(0.022, radius * 0.65, 0.03);
+      const notchMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      const notch = new THREE.Mesh(notchGeo, notchMat);
+      notch.position.set(0, radius * 0.48, 0.15);
+      knobGroup.add(notch);
+
+      // High-Definition Neon LED Arc (128 Segments)
+      const ledArcGeo = new THREE.RingGeometry(radius * 1.28, radius * 1.48, 128, 1, 0, Math.PI * 1.5);
+      const ledArcMat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.98
+      });
+      const ledArc = new THREE.Mesh(ledArcGeo, ledArcMat);
+      ledArc.position.z = 0.01;
+      ledArc.rotation.z = Math.PI * 0.75;
+      knobGroup.add(ledArc);
+
+      return { knobGroup, dial, notch, ledArc };
+    }
+
+    // Main Purple Target Knob (ESPACIO Y FX - DOUBLER ANCHO)
+    const purpleMacroKnob = createHighPolyKnob(0xbf5af2, 0.28);
+    // Position corresponding to Doubler Ancho knob in Section 3
+    const purpleMacroPos = new THREE.Vector3(1.52, 0.46, pd / 2 + 0.02);
+    purpleMacroKnob.knobGroup.position.copy(purpleMacroPos);
+    pluginGroup.add(purpleMacroKnob.knobGroup);
+
+    // Dust particles
+    const particleGeo = new THREE.BufferGeometry();
+    const particleCount = 80;
+    const posArray = new Float32Array(particleCount * 3);
+    for (let i = 0; i < particleCount * 3; i += 3) {
+      posArray[i] = (Math.random() - 0.5) * 12;
+      posArray[i + 1] = (Math.random() - 0.5) * 8;
+      posArray[i + 2] = (Math.random() - 0.5) * 8;
+    }
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+    const particleMat = new THREE.PointsMaterial({
+      size: 0.035,
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.4
+    });
+    const particles = new THREE.Points(particleGeo, particleMat);
+    scene.add(particles);
+
+    /* ─────────────────────────────────────────────────────────────
+       6. GSAP CHOREOGRAPHED MASTER TIMELINE (7.0s TOTAL)
+    ───────────────────────────────────────────────────────────── */
+    const timelineState = { shotName: '🎯 Toma 1: Macro Shot Knob Espacio & FX' };
+
+    const masterTimeline = gsap.timeline({
+      paused: false,
+      repeat: -1,
+      onUpdate: () => {
+        const time = masterTimeline.time();
+        timeDisplay.textContent = `${time.toFixed(2)}s / 7.00s`;
+        timelineFill.style.width = `${(time / 7.0) * 100}%`;
+        shotTag.textContent = timelineState.shotName;
+      }
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    // SHOT 1 [0.0s - 2.2s]: CRISP MACRO CLOSE-UP (PURPLE KNOB)
+    // ─────────────────────────────────────────────────────────────
+    // Clean, perfectly framed close-up angle
+    masterTimeline.set(camera.position, { x: 2.1, y: 0.25, z: 2.1 });
+    masterTimeline.set(controls.target, { x: 1.52, y: 0.46, z: 0.2 });
+    masterTimeline.set(pluginGroup.rotation, { x: 0.06, y: -0.22, z: 0.02 });
+    masterTimeline.set(purpleMacroKnob.knobGroup.rotation, { z: -Math.PI * 0.4 });
+    masterTimeline.set(timelineState, { shotName: '🎯 Toma 1: Macro Shot Knob Espacio & FX' }, 0);
+
+    // Knob rotates smoothly from 0 to 75%
+    masterTimeline.to(purpleMacroKnob.knobGroup.rotation, {
+      z: Math.PI * 0.65,
+      duration: 2.0,
+      ease: 'power2.inOut'
+    }, 0.1);
+
+    // Subtle macro camera drift
+    masterTimeline.to(camera.position, {
+      x: 1.95,
+      y: 0.45,
+      z: 1.95,
+      duration: 2.2,
+      ease: 'sine.inOut'
+    }, 0);
+
+    // ─────────────────────────────────────────────────────────────
+    // SHOT 2 [2.2s - 5.0s]: SMOOTH ZOOM OUT & 3D PERSPECTIVE REVEAL
+    // ─────────────────────────────────────────────────────────────
+    masterTimeline.set(timelineState, { shotName: '🚀 Toma 2: Zoom Out & Órbita 3D Completa' }, 2.2);
+
+    // Camera smoothly glides out to reveal the full Easy Mix unit
+    masterTimeline.to(camera.position, {
+      x: 0.1,
+      y: 0.2,
+      z: 7.2, // Perfect distance for 9:16 vertical reels
+      duration: 2.8,
+      ease: 'power3.inOut'
+    }, 2.2);
+
+    masterTimeline.to(controls.target, {
+      x: 0,
+      y: 0,
+      z: 0,
+      duration: 2.8,
+      ease: 'power3.inOut'
+    }, 2.2);
+
+    // 3D Isometric Float Angle
+    masterTimeline.to(pluginGroup.rotation, {
+      x: 0.12,
+      y: -0.26,
+      z: 0.03,
+      duration: 2.8,
+      ease: 'power3.inOut'
+    }, 2.2);
+
+    // ─────────────────────────────────────────────────────────────
+    // SHOT 3 [5.0s - 7.0s]: SPECULAR LIGHT SHEEN SWEEP & HERO FLOAT
+    // ─────────────────────────────────────────────────────────────
+    masterTimeline.set(timelineState, { shotName: '✨ Toma 3: Barrido de Luz (Light Sweep)' }, 5.0);
+
+    // Light beam sweeps diagonally across the entire glass faceplate
+    masterTimeline.fromTo(sweepLight.position, 
+      { x: -10, y: 8, z: 6 },
+      { x: 10, y: -6, z: 6, duration: 2.0, ease: 'power2.inOut' },
+      5.0
+    );
+
+    // Gentle floating bobbing
+    masterTimeline.to(pluginGroup.position, {
+      y: 0.1,
+      duration: 1.0,
+      yoyo: true,
+      repeat: 1,
+      ease: 'sine.inOut'
+    }, 5.0);
+
+    /* ─────────────────────────────────────────────────────────────
+       7. RENDER LOOP
+    ───────────────────────────────────────────────────────────── */
+    let clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const elapsed = clock.getElapsedTime();
+      particles.rotation.y = elapsed * 0.02;
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    /* ─────────────────────────────────────────────────────────────
+       8. UI CONTROLS & ASPECT RATIOS
+    ───────────────────────────────────────────────────────────── */
+    let isPlaying = true;
+    const playIcon = document.getElementById('play-icon');
+    const playText = document.getElementById('play-text');
+
+    btnPlay.addEventListener('click', () => {
+      if (isPlaying) {
+        masterTimeline.pause();
+        controls.enabled = true;
+        playIcon.textContent = '▶';
+        playText.textContent = 'Reanudar';
+        shotTag.textContent = '🕹️ Modo Libre 3D (Usa el mouse para girar)';
+      } else {
+        controls.enabled = false;
+        masterTimeline.play();
+        playIcon.textContent = '⏸';
+        playText.textContent = 'Pausar';
+      }
+      isPlaying = !isPlaying;
+    });
+
+    btnRestart.addEventListener('click', () => {
+      controls.enabled = false;
+      masterTimeline.restart();
+      if (!isPlaying) {
+        masterTimeline.play();
+        isPlaying = true;
+        playIcon.textContent = '⏸';
+        playText.textContent = 'Pausar';
+      }
+    });
+
+    // Ratio Switcher
+    const ratioButtons = document.querySelectorAll('.ratio-btn');
+    ratioButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        ratioButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        stageWrapper.className = btn.dataset.ratio;
+
+        setTimeout(() => {
+          const width = stageWrapper.clientWidth;
+          const height = stageWrapper.clientHeight;
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          renderer.setSize(width, height);
+        }, 100);
+      });
+    });
+
+    window.addEventListener('resize', () => {
+      const width = stageWrapper.clientWidth;
+      const height = stageWrapper.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    });
+
+    /* ─────────────────────────────────────────────────────────────
+       9. 60 FPS HD VIDEO RECORDER (EXPORT REEL MP4 / WEBM)
+    ───────────────────────────────────────────────────────────── */
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let isRecording = false;
+
+    btnRecord.addEventListener('click', () => {
+      if (isRecording) return;
+      startRecording();
+    });
+
+    function startRecording() {
+      isRecording = true;
+      btnRecord.classList.add('recording');
+      recordText.textContent = 'Grabando Reel (7s)...';
+
+      masterTimeline.pause(0);
+      controls.enabled = false;
+
+      const stream = canvas.captureStream(60);
+      recordedChunks = [];
+
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? 'video/webm;codecs=vp9'
+        : 'video/webm';
+
+      mediaRecorder = new MediaRecorder(stream, {
+        mimeType: mimeType,
+        videoBitsPerSecond: 20000000 // 20 Mbps Ultra HD
+      });
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `OFFSZN_Easy_Mix_3D_Reel_${Date.now()}.webm`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        isRecording = false;
+        btnRecord.classList.remove('recording');
+        recordText.textContent = 'Grabar Video (60fps)';
+      };
+
+      mediaRecorder.start();
+      masterTimeline.play();
+
+      setTimeout(() => {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+      }, 7100);
+    }
+  </script>
+</body>
+</html>

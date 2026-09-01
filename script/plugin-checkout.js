@@ -115,8 +115,12 @@ class PluginDirectCheckout {
                         ? window.MetaPixel.getAttributionData()
                         : {};
 
+                    const isPromo2x1 = Boolean(window.IS_PROMO_2X1 || (window.PLUGIN_NAME && window.PLUGIN_NAME.includes('2x1')));
+
                     const createPayload = { 
                         directProductId: this.productId,
+                        isPromo2x1: isPromo2x1,
+                        pluginName: window.PLUGIN_NAME || this.downloads?.name,
                         ...attribution
                     };
                     if (window.CURRENT_PROMO_PRICE) {

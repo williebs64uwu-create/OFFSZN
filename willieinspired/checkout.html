@@ -12,6 +12,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Environment Variables (PayPal Client ID, Supabase, etc.) -->
+    <script src="/env.js"></script>
+    <!-- Mercado Pago SDK v2 -->
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
 
     <style>
         :root {
@@ -196,15 +200,15 @@
         }
 
         /* ==========================================================================
-           MAIN CHECKOUT CONTAINER (2 COLUMNAS)
+           MAIN CHECKOUT CONTAINER (2 COLUMNAS SHOPIFY STYLE)
            ========================================================================== */
         .checkout-main-container {
-            max-width: 1140px;
+            max-width: 1120px;
             width: 100%;
             margin: 0 auto;
-            padding: 2.5rem 1.5rem 4rem 1.5rem;
+            padding: 2.2rem 1.5rem 4rem 1.5rem;
             display: grid;
-            grid-template-columns: 1.18fr 0.82fr;
+            grid-template-columns: 1.15fr 0.85fr;
             gap: 3.5rem;
             align-items: start;
         }
@@ -215,111 +219,61 @@
         .checkout-form-col {
             display: flex;
             flex-direction: column;
-            gap: 1.75rem;
+            gap: 1.5rem;
         }
 
         /* Express Checkout */
-        .express-checkout-box {
+        .express-checkout-section {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 10px;
-        }
-
-        .express-header-text {
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .express-buttons-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
             width: 100%;
         }
 
-        .express-btn {
-            height: 48px;
-            border-radius: 8px;
-            border: 1px solid transparent;
+        .express-checkout-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: capitalize;
+            letter-spacing: -0.01em;
+        }
+
+        .express-checkout-grid {
+            width: 100%;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-weight: 800;
-            font-size: 0.95rem;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            padding: 0 12px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-        }
-
-        .express-btn:hover {
-            transform: translateY(-1.5px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .express-btn-paypal {
-            background: var(--accent-paypal);
-            color: #003087;
-        }
-
-        .express-btn-paypal svg {
-            height: 22px;
-        }
-
-        .express-btn-mp {
-            background: var(--accent-mp);
-            color: #ffffff;
-            font-size: 0.88rem;
-            gap: 6px;
-        }
-
-        .express-btn-mp svg {
-            height: 20px;
-            fill: #ffffff;
-        }
-
-        .express-btn-yape {
-            background: var(--accent-purple);
-            color: #ffffff;
-            font-size: 0.95rem;
-            gap: 6px;
-            font-weight: 900;
+            flex-direction: column;
+            gap: 8px;
         }
 
         /* Divisor "O" */
-        .divider-or-row {
+        .checkout-or-divider {
             display: flex;
             align-items: center;
             text-align: center;
             width: 100%;
-            margin: 0.5rem 0;
+            margin: 0.25rem 0;
+            color: #6b7280;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
 
-        .divider-or-row::before,
-        .divider-or-row::after {
+        .checkout-or-divider::before,
+        .checkout-or-divider::after {
             content: '';
             flex: 1;
-            border-bottom: 1px solid var(--stroke-light);
+            border-bottom: 1px solid #e5e7eb;
         }
 
-        .divider-or-text {
+        .checkout-or-divider span {
             padding: 0 14px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
         }
 
         /* Secciones de Formulario */
-        .checkout-section-card {
+        .checkout-section-box {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .section-header-row {
@@ -329,25 +283,25 @@
         }
 
         .section-title {
-            font-size: 1.18rem;
+            font-size: 1.15rem;
             font-weight: 800;
-            color: #000000;
+            color: #111827;
             letter-spacing: -0.02em;
         }
 
         .section-right-link {
             font-size: 0.82rem;
-            color: #000000;
-            font-weight: 700;
+            color: #111827;
+            font-weight: 600;
             text-decoration: underline;
             cursor: pointer;
         }
 
         .section-subtitle {
             font-size: 0.82rem;
-            color: var(--text-muted);
+            color: #6b7280;
             font-weight: 500;
-            margin-top: -6px;
+            margin-top: -4px;
         }
 
         /* Inputs Limpios */
@@ -365,7 +319,7 @@
             background: #ffffff;
             font-size: 0.92rem;
             font-weight: 600;
-            color: #000000;
+            color: #111827;
             outline: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
@@ -380,7 +334,7 @@
             right: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-subtle);
+            color: #9ca3af;
             font-size: 0.95rem;
             cursor: pointer;
         }
@@ -392,7 +346,7 @@
             gap: 10px;
             cursor: pointer;
             user-select: none;
-            margin-top: 4px;
+            margin-top: 2px;
         }
 
         .custom-checkbox-row input[type="checkbox"] {
@@ -405,45 +359,47 @@
 
         .custom-checkbox-label {
             font-size: 0.84rem;
-            color: var(--text-main);
+            color: #374151;
             font-weight: 600;
         }
 
         /* ==========================================================================
-           CONTENEDOR DE PAGO SEGMENTADO (TARJETAS / PAYPAL / MERCADO PAGO / YAPE)
+           ACORDEÓN DE PAGO (SHOPIFY STYLE)
            ========================================================================== */
-        .payment-options-container {
-            border: 1.5px solid var(--stroke-light);
+        .payment-accordion-container {
+            border: 1.5px solid #e5e7eb;
             border-radius: 12px;
             background: #ffffff;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            display: flex;
+            flex-direction: column;
         }
 
-        .payment-option-item {
-            border-bottom: 1px solid var(--stroke-light);
+        .payment-accordion-card {
+            border-bottom: 1.5px solid #e5e7eb;
+            transition: all 0.2s ease;
         }
 
-        .payment-option-item:last-child {
+        .payment-accordion-card:last-child {
             border-bottom: none;
         }
 
-        .payment-option-header {
+        .payment-accordion-card.active {
+            background: #fafafa;
+        }
+
+        .payment-accordion-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 16px;
+            padding: 15px 16px;
             cursor: pointer;
             user-select: none;
-            transition: background 0.15s ease;
             background: #ffffff;
+            transition: background 0.15s ease;
         }
 
-        .payment-option-header:hover {
-            background: #f9f9fb;
-        }
-
-        .payment-option-item.active .payment-option-header {
+        .payment-accordion-card.active .payment-accordion-header {
             background: #fafafa;
         }
 
@@ -463,10 +419,6 @@
             justify-content: center;
             transition: all 0.2s ease;
             flex-shrink: 0;
-        }
-
-        .payment-option-item.active .custom-radio-circle {
-            border-color: var(--accent-pink);
             background: #ffffff;
         }
 
@@ -474,29 +426,24 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: transparent;
             transition: background 0.2s ease;
-        }
-
-        .payment-option-item.active .custom-radio-dot {
-            background: var(--accent-pink);
         }
 
         .payment-option-title {
             font-size: 0.92rem;
             font-weight: 700;
-            color: #000000;
+            color: #111827;
         }
 
         .payment-badges-row {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
         .card-badge-pill {
             height: 22px;
-            padding: 2px 6px;
+            padding: 2px 7px;
             border-radius: 4px;
             border: 1px solid rgba(0, 0, 0, 0.08);
             background: #ffffff;
@@ -507,236 +454,138 @@
             justify-content: center;
         }
 
-        .badge-visa { color: #1a1f71; font-style: italic; }
-        .badge-mastercard { color: #eb001b; }
-        .badge-amex { color: #006fcf; }
-        .badge-count { background: #f3f4f6; color: var(--text-muted); font-size: 0.65rem; }
+        .badge-visa { color: #1a1f71; font-style: italic; font-weight: 900; }
+        .badge-mastercard { color: #eb001b; font-weight: 900; }
+        .badge-amex { color: #006fcf; font-weight: 900; }
 
-        /* Contenido Desplegable */
-        .payment-option-body {
-            display: none;
+        .payment-accordion-body {
             padding: 16px;
-            background: #f8f9fa;
-            border-top: 1px solid var(--stroke-light);
-        }
-
-        .payment-option-item.active .payment-option-body {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .card-fields-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .payment-desc-text {
-            font-size: 0.84rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-            font-weight: 500;
-        }
-
-        /* Yape Box */
-        .yape-box-container {
-            display: flex;
-            align-items: center;
-            gap: 16px;
+            border-top: 1px solid #e5e7eb;
             background: #ffffff;
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid var(--stroke-light);
         }
 
-        .yape-qr-thumb {
-            width: 72px;
-            height: 72px;
-            border-radius: 8px;
-            background: #742284;
-            color: #ffffff;
+        /* Yape Real Brick Form */
+        .yape-real-brick-container {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: 900;
-            flex-shrink: 0;
-        }
-
-        .yape-info-text h6 {
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: #000000;
-            margin-bottom: 2px;
-        }
-
-        .yape-info-text p {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        .yape-number-badge {
-            display: inline-block;
-            background: #f3e8ff;
-            color: #742284;
-            font-weight: 800;
-            font-size: 0.85rem;
-            padding: 2px 8px;
-            border-radius: 6px;
-            margin-top: 4px;
-        }
-
-        /* ==========================================================================
-           BANNER DE "OTROS MEDIOS DE PAGO" (WHATSAPP CHECKOUT DIRECTO)
-           ========================================================================== */
-        .whatsapp-checkout-card {
-            background: #f0fdf4;
-            border: 1.5px dashed #86efac;
+            gap: 14px;
+            background: #faf5ff;
+            padding: 18px;
             border-radius: 12px;
-            padding: 14px 16px;
+            border: 1.5px solid #e9d5ff;
+        }
+
+        .yape-price-pill-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 14px;
-        }
-
-        .whatsapp-checkout-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .whatsapp-checkout-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: var(--accent-whatsapp);
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.35rem;
-            flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
-        }
-
-        .whatsapp-checkout-info h5 {
-            font-size: 0.88rem;
-            font-weight: 800;
-            color: #14532d;
-            margin-bottom: 2px;
-        }
-
-        .whatsapp-checkout-info p {
-            font-size: 0.78rem;
-            color: #166534;
-            font-weight: 600;
-        }
-
-        .whatsapp-checkout-btn {
-            background: var(--accent-whatsapp);
-            color: #ffffff !important;
-            border: none;
-            border-radius: 9999px;
-            padding: 8px 16px;
-            font-size: 0.82rem;
-            font-weight: 800;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            white-space: nowrap;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
-        }
-
-        .whatsapp-checkout-btn:hover {
-            background: #20ba5a;
-            transform: translateY(-1px);
-        }
-
-        /* Dirección de Facturación */
-        .billing-options-box {
-            border: 1px solid var(--stroke-light);
-            border-radius: 12px;
             background: #ffffff;
-            overflow: hidden;
+            border: 1px solid #f0abfc;
+            padding: 10px 14px;
+            border-radius: 8px;
         }
 
-        .billing-option-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            cursor: pointer;
-            border-bottom: 1px solid var(--stroke-light);
-            font-size: 0.86rem;
-            font-weight: 600;
-            color: var(--text-main);
+        .yape-price-pill-label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #701a75;
         }
 
-        .billing-option-row:last-child {
-            border-bottom: none;
+        .yape-price-pill-val {
+            font-size: 1.15rem;
+            font-weight: 900;
+            color: #742284;
         }
 
-        /* Botón Principal Pagar Ahora */
-        .main-checkout-submit-btn {
-            width: 100%;
-            background: #000000;
-            color: #ffffff;
-            border: none;
-            border-radius: 12px;
-            padding: 16px 20px;
-            font-size: 1.05rem;
-            font-weight: 800;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* 6 OTP Boxes Container */
+        .yape-otp-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
             gap: 8px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-        }
-
-        .main-checkout-submit-btn:hover {
-            background: #222222;
-            transform: translateY(-1.5px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        .main-checkout-submit-btn:active {
-            transform: scale(0.98);
-        }
-
-        .checkout-guarantee-strip {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            font-size: 0.76rem;
-            color: var(--text-muted);
-            font-weight: 600;
             margin-top: 4px;
         }
 
+        .yape-otp-box {
+            width: 100%;
+            height: 48px;
+            background: #ffffff;
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
+            color: #000000;
+            font-family: monospace, inherit;
+            font-size: 1.3rem;
+            font-weight: 800;
+            text-align: center;
+            outline: none;
+            transition: all 0.15s ease;
+            box-sizing: border-box;
+            padding: 0;
+        }
+
+        .yape-otp-box:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 2px rgba(116, 34, 132, 0.2);
+        }
+
+        .yape-helper-text {
+            font-size: 0.76rem;
+            color: #6b7280;
+            line-height: 1.4;
+            margin-top: 4px;
+        }
+
+        .yape-helper-text strong {
+            color: #111827;
+        }
+
+        .yape-error-alert {
+            display: none;
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        /* Links Legales Footer */
+        .checkout-footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 0.5rem;
+        }
+
+        .checkout-footer-links a {
+            color: #6b7280;
+            font-size: 0.76rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+
+        .checkout-footer-links a:hover {
+            color: #111827;
+            text-decoration: underline;
+        }
+
         /* ==========================================================================
-           COLUMNA DERECHA: RESUMEN DEL PEDIDO (STICKY)
+           COLUMNA DERECHA: RESUMEN DEL PEDIDO (STICKY & SHOPIFY STYLE)
            ========================================================================== */
         .checkout-summary-col {
             position: sticky;
-            top: 90px;
+            top: 85px;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1.25rem;
             background: #ffffff;
             padding: 1.75rem;
             border-radius: 16px;
-            border: 1px solid var(--stroke-light);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
         }
 
         .summary-items-list {
@@ -764,8 +613,8 @@
 
         .summary-item-thumb-wrapper {
             position: relative;
-            width: 60px;
-            height: 60px;
+            width: 58px;
+            height: 58px;
             flex-shrink: 0;
         }
 
@@ -774,7 +623,7 @@
             height: 100%;
             border-radius: 10px;
             object-fit: cover;
-            border: 1px solid rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
             background: #f4f4f6;
         }
 
@@ -799,10 +648,10 @@
         }
 
         .summary-item-name {
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 800;
-            color: #000000;
-            line-height: 1.25;
+            color: #111827;
+            line-height: 1.3;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -810,17 +659,65 @@
         }
 
         .summary-item-meta {
-            font-size: 0.75rem;
-            color: var(--text-muted);
+            font-size: 0.74rem;
+            color: #6b7280;
             font-weight: 600;
             margin-top: 2px;
+            text-transform: uppercase;
+        }
+
+        .summary-item-bundle-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+            color: #15803d;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .summary-item-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .summary-item-prices {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.2;
+        }
+
+        .summary-item-original-price {
+            font-size: 0.78rem;
+            color: #9ca3af;
+            text-decoration: line-through;
+            font-weight: 600;
         }
 
         .summary-item-price {
             font-size: 0.95rem;
             font-weight: 800;
-            color: #000000;
+            color: #111827;
             white-space: nowrap;
+        }
+
+        .summary-item-remove-btn {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: color 0.15s ease, background 0.15s ease;
+        }
+
+        .summary-item-remove-btn:hover {
+            color: #ef4444;
+            background: #fee2e2;
         }
 
         /* Cupón / Código de Descuento */
@@ -854,7 +751,7 @@
             padding: 0 16px;
             font-size: 0.86rem;
             font-weight: 700;
-            color: var(--text-main);
+            color: #111827;
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -875,6 +772,7 @@
             border-radius: 8px;
             font-size: 0.8rem;
             font-weight: 700;
+            margin-top: 6px;
         }
 
         .coupon-remove-btn {
@@ -891,7 +789,7 @@
             flex-direction: column;
             gap: 10px;
             padding-top: 1rem;
-            border-top: 1px solid var(--stroke-light);
+            border-top: 1px solid #e5e7eb;
         }
 
         .summary-line {
@@ -899,23 +797,34 @@
             align-items: center;
             justify-content: space-between;
             font-size: 0.88rem;
-            color: var(--text-muted);
+            color: #6b7280;
             font-weight: 600;
         }
 
         .summary-line.total-row {
             padding-top: 10px;
-            border-top: 1px solid var(--stroke-light);
-            color: #000000;
+            border-top: 1px solid #e5e7eb;
+            color: #111827;
             font-size: 1.15rem;
             font-weight: 900;
         }
 
         .total-currency-tag {
             font-size: 0.75rem;
-            color: var(--text-muted);
+            color: #6b7280;
             font-weight: 700;
             margin-right: 4px;
+        }
+
+        /* Total Savings Row */
+        .total-savings-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #15803d;
+            margin-top: 4px;
         }
 
         /* Empty State */
@@ -933,7 +842,7 @@
 
         .checkout-empty-state p {
             font-size: 0.85rem;
-            color: var(--text-muted);
+            color: #6b7280;
             margin-bottom: 1rem;
         }
 
@@ -946,6 +855,262 @@
             border-radius: 9999px;
             font-size: 0.88rem;
             font-weight: 700;
+        }
+
+        /* ==========================================================================
+           MODAL DE ÉXITO / CONFIRMACIÓN
+           ========================================================================== */
+        .success-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .success-modal-backdrop.active {
+            display: flex;
+        }
+
+        .success-modal-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 2.2rem 2rem;
+            max-width: 460px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
+            animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.94); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .success-check-icon {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: #dcfce7;
+            color: #16a34a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            margin: 0 auto 1.25rem auto;
+        }
+
+        .success-title {
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: #000000;
+            margin-bottom: 6px;
+        }
+
+        .success-subtitle {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .success-key-box {
+            background: #f4f4f7;
+            border: 1px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .success-key-text {
+            font-family: monospace;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #000000;
+            letter-spacing: 1px;
+            word-break: break-all;
+        }
+
+        .success-copy-btn {
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* ==========================================================================
+           MODAL DE PAGO YAPE (POPUP ELEGANTE)
+           ========================================================================== */
+        .yape-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.78);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .yape-modal-backdrop.active {
+            display: flex;
+        }
+
+        .yape-modal-card {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 2.2rem 1.85rem;
+            max-width: 440px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 25px 60px rgba(116, 34, 132, 0.28), 0 10px 25px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .yape-modal-close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .yape-modal-close-btn:hover {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .yape-modal-header {
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .yape-modal-icon-badge {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #742284 0%, #9333ea 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px auto;
+            box-shadow: 0 4px 14px rgba(116, 34, 132, 0.35);
+        }
+
+        .yape-modal-title {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #111827;
+            margin-bottom: 2px;
+        }
+
+        .yape-modal-subtitle {
+            font-size: 0.8rem;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .yape-modal-amount-pill {
+            background: #faf5ff;
+            border: 1.5px solid #e9d5ff;
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+            font-size: 0.88rem;
+            color: #701a75;
+            font-weight: 700;
+        }
+
+        .yape-modal-amount-pill strong {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #742284;
+        }
+
+        .yape-modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .yape-modal-submit-btn {
+            background: #742284;
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 6px;
+            box-shadow: 0 4px 16px rgba(116, 34, 132, 0.35);
+            transition: all 0.2s ease;
+        }
+
+        .yape-modal-submit-btn:hover {
+            background: #5b1a68;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(116, 34, 132, 0.45);
+        }
+
+        .yape-modal-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Spinner */
+        .btn-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2.5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         /* ==========================================================================
@@ -973,7 +1138,7 @@
             .checkout-summary-col {
                 position: static;
                 order: -1;
-                display: none; /* Controlado por mobile-summary-toggle */
+                display: none;
                 padding: 1.25rem;
             }
 
@@ -1000,6 +1165,126 @@
             .card-fields-grid {
                 grid-template-columns: 1fr;
             }
+
+            .yape-otp-grid {
+                gap: 6px;
+            }
+
+            .yape-otp-box {
+                height: 44px;
+                font-size: 1.15rem;
+            }
+        }
+
+        @keyframes ppSkelPulse {
+            0%, 100% { opacity: .5; }
+            50% { opacity: .15; }
+        }
+
+        #paypalButtonContainer .paypal-button-container { border-radius: 8px; overflow: hidden; }
+
+        /* WIDGET FLOTANTE WHATSAPP (A LA DERECHA COMO EN LA LANDING) */
+        .whatsapp-widget-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            user-select: none;
+            transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
+        }
+
+        .whatsapp-bubble {
+            position: relative;
+            background: #ffffff;
+            color: #111827;
+            padding: 12px 28px 12px 16px;
+            border-radius: 14px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            max-width: 230px;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            animation: bubbleFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes bubbleFadeIn {
+            from {
+                opacity: 0;
+                transform: translateX(10px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        .whatsapp-bubble.hidden {
+            opacity: 0;
+            transform: scale(0.9) translateX(10px);
+            pointer-events: none;
+        }
+
+        .whatsapp-bubble-link {
+            text-decoration: none;
+            color: #111827;
+            font-size: 0.85rem;
+            font-weight: 700;
+            line-height: 1.35;
+            display: block;
+            cursor: pointer;
+        }
+
+        .whatsapp-bubble-close {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            border-radius: 50%;
+            transition: color 0.15s ease, background 0.15s ease;
+        }
+
+        .whatsapp-bubble-close:hover {
+            color: #111827;
+            background: rgba(0, 0, 0, 0.06);
+        }
+
+        .whatsapp-circle-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: #25d366;
+            color: #ffffff !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            text-decoration: none;
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .whatsapp-circle-btn i {
+            color: #ffffff !important;
+        }
+
+        .whatsapp-circle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 22px rgba(37, 211, 102, 0.55);
+        }
+
+        .whatsapp-circle-btn:active {
+            transform: scale(0.94);
         }
     </style>
 </head>
@@ -1013,7 +1298,7 @@
                 <i class="bi bi-chevron-left"></i> Tienda
             </a>
 
-            <a href="/willieinspired/" class="checkout-brand-center">
+            <a href="/willieinspired/" class="checkout-brand-center" title="Willie Inspired">
                 <div class="waveform-icon">
                     <span class="waveform-bar"></span>
                     <span class="waveform-bar"></span>
@@ -1044,210 +1329,129 @@
     <!-- Main Checkout Container -->
     <main class="checkout-main-container">
 
-        <!-- COLUMNA IZQUIERDA: FORMULARIO Y MÉTODOS DE PAGO -->
+        <!-- COLUMNA IZQUIERDA: FORMULARIO ESTILO SHOPIFY -->
         <section class="checkout-form-col">
 
-            <!-- Express Checkout -->
-            <div class="express-checkout-box">
-                <span class="express-header-text">Express checkout</span>
-                <div class="express-buttons-grid">
-                    <button type="button" class="express-btn express-btn-paypal" onclick="selectPaymentMethod('paypal'); executePayment();" title="Pagar rápido con PayPal">
-                        <svg viewBox="0 0 100 24" fill="currentColor">
-                            <path d="M12.5 3h6.3c3.8 0 6.2 1.8 5.6 5.5-.5 3.3-2.9 5.5-6.4 5.5h-2.8l-1.5 8h-4.3l3.1-19zm4.8 7.5c1.4 0 2.4-.8 2.6-2.2.2-1.3-.6-2.1-2-2.1h-2.1l-.8 4.3h2.3z" fill="#003087"/>
-                            <path d="M28.5 3h6.3c3.8 0 6.2 1.8 5.6 5.5-.5 3.3-2.9 5.5-6.4 5.5h-2.8l-1.5 8h-4.3l3.1-19zm4.8 7.5c1.4 0 2.4-.8 2.6-2.2.2-1.3-.6-2.1-2-2.1h-2.1l-.8 4.3h2.3z" fill="#0079C1"/>
-                        </svg>
-                    </button>
-
-                    <button type="button" class="express-btn express-btn-mp" onclick="selectPaymentMethod('mercadopago'); executePayment();" title="Pagar con Mercado Pago">
-                        <i class="bi bi-wallet2"></i> Mercado Pago
-                    </button>
-
-                    <button type="button" class="express-btn express-btn-yape" onclick="selectPaymentMethod('yape');" title="Pagar con Yape">
-                        <i class="bi bi-qr-code"></i> Yape
-                    </button>
+            <!-- 1. PAGO EXPRÉS -->
+            <div class="express-checkout-section">
+                <div class="express-checkout-label">Pago exprés</div>
+                <div class="express-checkout-grid">
+                    <div id="ppLoadingSkeleton">
+                        <div style="height:48px; background:rgba(245,187,80,.25); border-radius:8px; animation:ppSkelPulse 1.4s ease-in-out infinite;"></div>
+                        <div style="height:44px; background:rgba(0,0,0,.05); border-radius:8px; margin-top:8px; animation:ppSkelPulse 1.4s ease-in-out infinite;"></div>
+                    </div>
+                    <div id="paypalButtonContainer" style="display:none;"></div>
                 </div>
             </div>
 
-            <div class="divider-or-row">
-                <span class="divider-or-text">O</span>
+            <!-- Divisor O -->
+            <div class="checkout-or-divider">
+                <span>O</span>
             </div>
 
-            <!-- Sección Contacto -->
-            <div class="checkout-section-card">
+            <!-- 2. CONTACTO -->
+            <div class="checkout-section-box">
                 <div class="section-header-row">
                     <h3 class="section-title">Contacto</h3>
                     <a href="/cuenta/login.html" class="section-right-link">Iniciar sesión</a>
                 </div>
-
                 <div class="form-group">
-                    <input type="text" id="contactEmail" class="form-input" placeholder="Correo electrónico o número de celular" required autocomplete="email">
+                    <input type="email" id="contactEmail" class="form-input" placeholder="Correo electrónico o teléfono" autocomplete="email">
                     <i class="bi bi-question-circle form-input-help-icon" title="Enviaremos tus enlaces de descarga y comprobante a este correo"></i>
                 </div>
-
                 <label class="custom-checkbox-row">
                     <input type="checkbox" id="newsletterConsent" checked>
-                    <span class="custom-checkbox-label">Enviarme novedades, ofertas exclusivas y tutoriales</span>
+                    <span class="custom-checkbox-label">Enviarme novedades y ofertas exclusivas</span>
                 </label>
             </div>
 
-            <!-- Sección Pago -->
-            <div class="checkout-section-card">
-                <div class="section-header-row">
+            <!-- 3. PAGO -->
+            <div class="checkout-section-box">
+                <div class="section-header-row" style="margin-bottom: 2px;">
                     <h3 class="section-title">Pago</h3>
                 </div>
                 <p class="section-subtitle">Todas las transacciones son seguras y están encriptadas.</p>
 
-                <!-- Acordeón de Métodos de Pago -->
-                <div class="payment-options-container">
-
-                    <!-- Opción 1: Tarjeta de Crédito / Débito -->
-                    <div class="payment-option-item active" id="option-card" onclick="selectPaymentMethod('card')">
-                        <div class="payment-option-header">
+                <div class="payment-accordion-container">
+                    <!-- Opción 1: PayPal / Tarjeta de crédito o débito -->
+                    <div class="payment-accordion-card active" id="option-paypal">
+                        <div class="payment-accordion-header" onclick="selectPaymentMethod('paypal')">
                             <div class="payment-radio-left">
-                                <div class="custom-radio-circle">
-                                    <div class="custom-radio-dot"></div>
+                                <div class="custom-radio-circle" id="circlePaypal" style="border-color: #ec4899;">
+                                    <div class="custom-radio-dot" id="radioPaypalDot" style="background: #ec4899;"></div>
                                 </div>
-                                <span class="payment-option-title">Tarjeta de crédito / débito</span>
+                                <span class="payment-option-title">PayPal / Tarjeta de crédito o débito</span>
                             </div>
                             <div class="payment-badges-row">
                                 <span class="card-badge-pill badge-visa">VISA</span>
                                 <span class="card-badge-pill badge-mastercard">MC</span>
                                 <span class="card-badge-pill badge-amex">AMEX</span>
-                                <span class="card-badge-pill badge-count">+3</span>
+                                <span class="card-badge-pill" style="background:#003087; color:#fff; font-weight:900;">PayPal</span>
                             </div>
                         </div>
-
-                        <div class="payment-option-body">
-                            <div class="form-group">
-                                <input type="text" class="form-input" id="cardNumber" placeholder="Número de tarjeta" maxlength="19">
-                                <i class="bi bi-lock-fill form-input-help-icon"></i>
-                            </div>
-
-                            <div class="card-fields-grid">
-                                <input type="text" class="form-input" id="cardExpiry" placeholder="Fecha de vencimiento (MM / AA)" maxlength="5">
-                                <div class="form-group">
-                                    <input type="text" class="form-input" id="cardCvc" placeholder="Código de seguridad (CVV)" maxlength="4">
-                                    <i class="bi bi-question-circle form-input-help-icon" title="Código de 3 o 4 dígitos al reverso de tu tarjeta"></i>
-                                </div>
-                            </div>
-
-                            <input type="text" class="form-input" id="cardName" placeholder="Nombre en la tarjeta">
+                        <div class="payment-accordion-body" id="bodyPaypal" style="display: block;">
+                            <p style="font-size: 0.82rem; color: #6b7280; margin: 0; line-height: 1.45;">
+                                Completa tu pago seguro mediante <strong>PayPal</strong> o con cualquier tarjeta internacional (débito/crédito) usando los botones de Pago Exprés arriba.
+                            </p>
                         </div>
                     </div>
 
-                    <!-- Opción 2: PayPal -->
-                    <div class="payment-option-item" id="option-paypal" onclick="selectPaymentMethod('paypal')">
-                        <div class="payment-option-header">
+                    <!-- Opción 2: Yape (Cobro Automático en Soles 🇵🇪) -> Abre Modal -->
+                    <div class="payment-accordion-card" id="option-yape">
+                        <div class="payment-accordion-header" onclick="selectPaymentMethod('yape')">
                             <div class="payment-radio-left">
-                                <div class="custom-radio-circle">
-                                    <div class="custom-radio-dot"></div>
+                                <div class="custom-radio-circle" id="circleYape" style="border-color: #d1d5db;">
+                                    <div class="custom-radio-dot" id="radioYapeDot" style="background: transparent;"></div>
                                 </div>
-                                <span class="payment-option-title">PayPal</span>
-                            </div>
-                            <div class="payment-badges-row">
-                                <span style="font-weight: 800; color: #003087; font-size: 0.95rem;">Pay<span style="color: #0079C1;">Pal</span></span>
-                            </div>
-                        </div>
-
-                        <div class="payment-option-body">
-                            <p class="payment-desc-text">Al hacer clic en "Pagar Ahora", serás redirigido a PayPal para completar tu compra de forma segura con tu saldo o tarjetas internacionales.</p>
-                        </div>
-                    </div>
-
-                    <!-- Opción 3: Mercado Pago -->
-                    <div class="payment-option-item" id="option-mercadopago" onclick="selectPaymentMethod('mercadopago')">
-                        <div class="payment-option-header">
-                            <div class="payment-radio-left">
-                                <div class="custom-radio-circle">
-                                    <div class="custom-radio-dot"></div>
-                                </div>
-                                <span class="payment-option-title">Mercado Pago</span>
-                            </div>
-                            <div class="payment-badges-row">
-                                <span style="font-weight: 800; color: #009ee3; font-size: 0.85rem;"><i class="bi bi-wallet2"></i> Mercado Pago</span>
-                            </div>
-                        </div>
-
-                        <div class="payment-option-body">
-                            <p class="payment-desc-text">Paga en tu moneda local en toda Latinoamérica (Perú, México, Colombia, Argentina, Chile) mediante tarjetas locales, OXXO, PagoFácil o transferencias bancarias.</p>
-                        </div>
-                    </div>
-
-                    <!-- Opción 4: Yape / Plin (Perú) -->
-                    <div class="payment-option-item" id="option-yape" onclick="selectPaymentMethod('yape')">
-                        <div class="payment-option-header">
-                            <div class="payment-radio-left">
-                                <div class="custom-radio-circle">
-                                    <div class="custom-radio-dot"></div>
-                                </div>
-                                <span class="payment-option-title">Yape / Plin (Perú)</span>
+                                <span class="payment-option-title">Yape (Cobro Automático en Soles 🇵🇪)</span>
                             </div>
                             <div class="payment-badges-row">
                                 <span class="card-badge-pill" style="background: #742284; color: #fff; font-weight: 900;">YAPE</span>
-                                <span class="card-badge-pill" style="background: #00c3de; color: #fff; font-weight: 900;">PLIN</span>
                             </div>
                         </div>
-
-                        <div class="payment-option-body">
-                            <div class="yape-box-container">
-                                <div class="yape-qr-thumb">
-                                    <i class="bi bi-qr-code"></i>
-                                </div>
-                                <div class="yape-info-text">
-                                    <h6>Yape Directo OFFSZN</h6>
-                                    <p>Titular: <strong>Willie / OFFSZN</strong></p>
-                                    <span class="yape-number-badge">📱 921 839 257</span>
-                                </div>
-                            </div>
-                            <p class="payment-desc-text">Yapea el monto equivalente en Soles (Tipo de cambio ref. S/ 3.80). Al completar, enviaremos tus archivos inmediatamente.</p>
+                        <div class="payment-accordion-body" id="bodyYape" style="display: none;">
+                            <p style="font-size: 0.82rem; color: #6b7280; margin: 0 0 12px 0; line-height: 1.45;">
+                                Paga directamente en Soles ingresando tu número de celular y código de aprobación de la app Yape.
+                            </p>
+                            <button type="button" class="yape-modal-submit-btn" onclick="openYapeModal()" style="margin-top: 0; width: 100%;">
+                                <i class="bi bi-qr-code"></i> Abrir Ventana de Pago Yape (<span id="yapeBrickAmount">S/. 0.00</span>)
+                            </button>
                         </div>
                     </div>
 
-                </div>
-            </div>
-
-            <!-- Banner "Otros Medios de Pago" (WhatsApp Direct Checkout) -->
-            <div class="whatsapp-checkout-card">
-                <div class="whatsapp-checkout-left">
-                    <div class="whatsapp-checkout-icon">
-                        <i class="bi bi-whatsapp"></i>
+                    <!-- Opción 3: Mercado Pago / Transferencia Directa -> Abre WhatsApp -->
+                    <div class="payment-accordion-card" id="option-mercadopago">
+                        <div class="payment-accordion-header" onclick="selectPaymentMethod('mercadopago')">
+                            <div class="payment-radio-left">
+                                <div class="custom-radio-circle" id="circleMp" style="border-color: #d1d5db;">
+                                    <div class="custom-radio-dot" id="radioMpDot" style="background: transparent;"></div>
+                                </div>
+                                <span class="payment-option-title">Mercado Pago / Transferencia Bancaria</span>
+                            </div>
+                            <div class="payment-badges-row">
+                                <span class="card-badge-pill" style="background: #009ee3; color: #fff; font-weight: 900;">MP</span>
+                                <span class="card-badge-pill" style="background: #002a8f; color: #fff; font-weight: 800; font-size: 0.65rem;">BCP</span>
+                                <span class="card-badge-pill" style="background: #004481; color: #fff; font-weight: 800; font-size: 0.65rem;">BBVA</span>
+                            </div>
+                        </div>
+                        <div class="payment-accordion-body" id="bodyMercadopago" style="display: none;">
+                            <p style="font-size: 0.82rem; color: #6b7280; margin: 0 0 12px 0; line-height: 1.45;">
+                                Paga mediante <strong>transferencia directa (BCP, BBVA, Interbank)</strong> o solicita un link de <strong>Mercado Pago Perú sin comisiones</strong> directamente a través de nuestro WhatsApp.
+                            </p>
+                            <button type="button" class="yape-modal-submit-btn" onclick="openWhatsAppCheckout('mercadopago')" style="background: #25d366; margin-top: 0; width: 100%; box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);">
+                                <i class="bi bi-whatsapp"></i> Continuar por WhatsApp con mi Pedido
+                            </button>
+                        </div>
                     </div>
-                    <div class="whatsapp-checkout-info">
-                        <h5>¿Prefieres pagar por otro medio?</h5>
-                        <p>Transferencia Bancaria, Binance USDT, Western Union, etc.</p>
-                    </div>
-                </div>
-                <button type="button" class="whatsapp-checkout-btn" onclick="openWhatsAppCheckout()">
-                    Pagar por WhatsApp <i class="bi bi-arrow-right"></i>
-                </button>
-            </div>
-
-            <!-- Dirección de Facturación -->
-            <div class="checkout-section-card">
-                <h3 class="section-title">Dirección de facturación</h3>
-                <div class="billing-options-box">
-                    <label class="billing-option-row">
-                        <input type="radio" name="billingAddress" value="same" checked style="accent-color: #000;">
-                        <span>Misma dirección que el contacto (predeterminado)</span>
-                    </label>
-                    <label class="billing-option-row">
-                        <input type="radio" name="billingAddress" value="diff" style="accent-color: #000;">
-                        <span>Usar una dirección de facturación diferente</span>
-                    </label>
                 </div>
             </div>
 
-            <!-- Botón Principal Pagar Ahora -->
-            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 0.5rem;">
-                <button type="button" class="main-checkout-submit-btn" id="payNowBtn" onclick="executePayment()">
-                    <span>Pagar Ahora</span> • <span id="btnTotalPrice">$0.00 USD</span>
-                </button>
-
-                <div class="checkout-guarantee-strip">
-                    <span>⚡ Descarga Inmediata</span> • 
-                    <span>🔒 Pago 100% Seguro</span> • 
-                    <span>🛡️ Garantía OFFSZN</span>
-                </div>
+            <!-- Links Legales Footer (Shopify Style) -->
+            <div class="checkout-footer-links">
+                <a href="/legal/politicas-de-reembolso.html" target="_blank">Política de reembolso</a>
+                <a href="/legal/politicas-de-privacidad.html" target="_blank">Política de privacidad</a>
+                <a href="/legal/terminos-de-servicio.html" target="_blank">Términos del servicio</a>
+                <a href="/legal/ayuda-y-contacto.html" target="_blank">Ayuda y Contacto</a>
             </div>
 
         </section>
@@ -1257,7 +1461,7 @@
 
             <!-- Items del Pedido -->
             <div class="summary-items-list" id="summaryItemsList">
-                <!-- Se inyecta dinámicamente con JS -->
+                <!-- Inyectado dinámicamente con JS -->
             </div>
 
             <!-- Empty State si no hay productos -->
@@ -1282,7 +1486,7 @@
             <!-- Desglose de Totales -->
             <div class="summary-breakdown" id="summaryBreakdown">
                 <div class="summary-line">
-                    <span id="summarySubtotalLabel">Subtotal</span>
+                    <span id="summarySubtotalLabel">Subtotal • 1 producto</span>
                     <span id="summarySubtotalVal">$0.00</span>
                 </div>
 
@@ -1298,21 +1502,116 @@
                         <span id="summaryTotalVal">$0.00</span>
                     </div>
                 </div>
+
+                <!-- Total Savings Badge (Shopify Style) -->
+                <div class="total-savings-row" id="totalSavingsRow" style="display: none;">
+                    <i class="bi bi-tag-fill"></i>
+                    <span>TOTAL AHORRADO <strong id="totalSavingsVal">$0.00</strong></span>
+                </div>
             </div>
 
         </aside>
 
     </main>
 
-    <!-- JavaScript para Manejo en Tiempo Real y Métodos de Pago -->
+    <!-- MODAL DE PAGO YAPE (POPUP ELEGANTE) -->
+    <div class="yape-modal-backdrop" id="yapeModalBackdrop">
+        <div class="yape-modal-card">
+            <button type="button" class="yape-modal-close-btn" onclick="closeYapeModal()" title="Cerrar ventana">
+                <i class="bi bi-x-lg"></i>
+            </button>
+
+            <div class="yape-modal-header">
+                <div class="yape-modal-icon-badge">
+                    <span style="font-weight: 900; color: #fff; font-size: 1.1rem; letter-spacing: -0.02em;">YAPE</span>
+                </div>
+                <h3 class="yape-modal-title">Pagar con Yape</h3>
+                <p class="yape-modal-subtitle">Cobro automático seguro en Soles 🇵🇪</p>
+            </div>
+
+            <div class="yape-modal-amount-pill">
+                <span>Total a pagar:</span>
+                <strong id="yapeModalAmountText">S/. 0.00</strong>
+            </div>
+
+            <div class="yape-modal-form">
+                <div class="form-group" style="text-align: left;">
+                    <label style="font-size: 0.82rem; font-weight: 700; color: #374151; display: block; margin-bottom: 5px;">Celular registrado en Yape</label>
+                    <input type="tel" id="yapePhone" class="form-input" placeholder="9XX XXX XXX" maxlength="11" style="font-family: monospace; font-size: 1.05rem; font-weight: 700; height: 46px; letter-spacing: 0.05em;">
+                </div>
+
+                <div style="text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <label style="font-size: 0.82rem; font-weight: 700; color: #374151;">Código de aprobación (OTP)</label>
+                        <span style="font-size: 0.72rem; color: #742284; font-weight: 700;">6 dígitos</span>
+                    </div>
+
+                    <div class="yape-otp-grid" id="yapeOtpGrid">
+                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="0" pattern="[0-9]" inputmode="numeric" autocomplete="one-time-code">
+                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="1" pattern="[0-9]" inputmode="numeric">
+                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="2" pattern="[0-9]" inputmode="numeric">
+                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="3" pattern="[0-9]" inputmode="numeric">
+                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="4" pattern="[0-9]" inputmode="numeric">
+                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="5" pattern="[0-9]" inputmode="numeric">
+                    </div>
+
+                    <p class="yape-helper-text" style="margin-top: 6px;">
+                        Encuéntralo en tu <strong>app Yape &gt; Menú &gt; Código de aprobación</strong>.
+                    </p>
+                </div>
+
+                <div class="yape-error-alert" id="yapeErrorAlert"></div>
+
+                <button type="button" class="yape-modal-submit-btn" id="btnYapeSubmit" onclick="processYapePayment()">
+                    <i class="bi bi-qr-code"></i> Confirmar y Yapear <span id="yapeBtnAmount">S/. 0.00</span>
+                </button>
+            </div>
+
+            <p style="font-size: 0.72rem; color: #9ca3af; margin-top: 14px; text-align: center;">
+                🔒 Procesado con cifrado bancario a través de Mercado Pago Perú.
+            </p>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación y Éxito -->
+    <div class="success-modal-backdrop" id="successModalBackdrop">
+        <div class="success-modal-card">
+            <div class="success-check-icon">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <h2 class="success-title">¡Compra Completada con Éxito!</h2>
+            <p class="success-subtitle" id="successSubtitleText">Tu pago ha sido verificado y tus archivos están listos para descarga inmediata.</p>
+
+            <div class="success-key-box" id="successKeyBox" style="display: none;">
+                <span class="success-key-text" id="successKeyText">CARGANDO...</span>
+                <button type="button" class="success-copy-btn" id="successCopyBtn" onclick="copySerialKey()">Copiar Clave</button>
+            </div>
+
+            <div class="success-download-actions" id="successDownloadsContainer">
+                <a href="/willieinspired/" class="success-dl-btn" style="background: #000000;">
+                    <i class="bi bi-cloud-arrow-down-fill"></i> Descargar Archivos
+                </a>
+            </div>
+
+            <p style="color: #6b7280; font-size: 0.78rem; margin-top: 1.25rem;">
+                Hemos enviado una copia con tus accesos y recibo a tu correo.
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript Real Engine -->
     <script>
         // ==========================================================================
-        // ESTADO DE CHECKOUT
+        // CONFIGURACIÓN & ESTADO
         // ==========================================================================
         let cartItems = [];
         let appliedDiscountPercent = 0;
         let appliedDiscountAmount = 0;
-        let currentPaymentMethod = 'card';
+        let currentPaymentMethod = 'paypal'; // 'paypal' | 'yape' | 'mercadopago'
+        let yapeExchangeRate = 3.30;
+        let mpPublicKey = 'APP_USR-ca918f8a-784b-4413-aebb-d3fc5a6ae79c';
+        let mpInstance = null;
+        let williePaypalInitialized = false;
 
         // Cupones activos soportados
         const VALID_COUPONS = {
@@ -1324,10 +1623,46 @@
         // ==========================================================================
         // INICIALIZACIÓN
         // ==========================================================================
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             loadCartFromStorage();
+            setupYapeOTPHandlers();
+            setupYapePhoneFormatter();
+            await loadYapeConfig();
+            initWilliePayPalSDK();
         });
 
+        async function loadYapeConfig() {
+            try {
+                const res = await fetch('/api/orders/yape/config');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.publicKey) mpPublicKey = data.publicKey;
+                    if (data.exchangeRate) yapeExchangeRate = parseFloat(data.exchangeRate) || 3.30;
+                }
+            } catch (e) {
+                console.warn('[YapeConfig] Usando configuración local de respaldo:', e);
+            }
+
+            initMercadoPagoSDK();
+            updateYapePriceDisplay();
+        }
+
+        function initMercadoPagoSDK() {
+            if (window.MercadoPago && !mpInstance) {
+                try {
+                    mpInstance = new window.MercadoPago(mpPublicKey, {
+                        locale: 'es-PE'
+                    });
+                    console.log('✅ [MercadoPago] SDK Inicializado correctamente.');
+                } catch (e) {
+                    console.error('[MercadoPago] Error inicializando SDK:', e);
+                }
+            }
+        }
+
+        // ==========================================================================
+        // CARGA Y RENDERIZADO DEL CARRITO
+        // ==========================================================================
         function loadCartFromStorage() {
             try {
                 const saved = localStorage.getItem('offszn_cart');
@@ -1343,6 +1678,7 @@
                                     id: item.product.id || item.product.name,
                                     name: item.product.name,
                                     price: parseFloat(item.product.price) || 10,
+                                    originalPrice: parseFloat(item.product.original_price) || (parseFloat(item.product.price || 10) * 1.5),
                                     cover: item.product.image_url || '/willieimages/HERO.png',
                                     type: isPlugin ? 'plugin' : (item.product.type || 'preset'),
                                     os: item.product.os || (isPlugin ? 'win' : undefined),
@@ -1354,20 +1690,25 @@
                     }
                 }
             } catch (e) {
-                console.error("Error loading cart for checkout:", e);
+                console.error("Error cargando carrito para checkout:", e);
                 cartItems = [];
             }
 
             renderCheckoutUI();
         }
 
-        // ==========================================================================
-        // RENDERIZAR INTERFAZ EN TIEMPO REAL
-        // ==========================================================================
+        function removeFromCheckoutCart(index) {
+            if (index >= 0 && index < cartItems.length) {
+                cartItems.splice(index, 1);
+                localStorage.setItem('offszn_cart', JSON.stringify(cartItems));
+                renderCheckoutUI();
+                if (typeof updateYapePriceDisplay === 'function') updateYapePriceDisplay();
+            }
+        }
+
         function renderCheckoutUI() {
             const totalCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
             
-            // Badges de Carrito
             const headerBadge = document.getElementById('headerCartCount');
             if (headerBadge) headerBadge.textContent = totalCount;
 
@@ -1381,7 +1722,7 @@
                 if (emptyState) emptyState.style.display = 'block';
                 if (couponSection) couponSection.style.display = 'none';
                 if (breakdownSection) breakdownSection.style.display = 'none';
-                updateTotals(0);
+                updateTotals(0, 0);
                 return;
             }
 
@@ -1390,34 +1731,54 @@
             if (couponSection) couponSection.style.display = 'block';
             if (breakdownSection) breakdownSection.style.display = 'flex';
 
-            // Inyectar Items
-            itemsContainer.innerHTML = cartItems.map(item => {
+            let rawOriginalSubtotal = 0;
+
+            itemsContainer.innerHTML = cartItems.map((item, idx) => {
                 const isPlugin = item.type === 'plugin' || (item.name && item.name.toLowerCase().includes('plugin'));
-                const osBadge = isPlugin ? (item.os ? item.os.toUpperCase() : 'WIN') : 'Solo FL Studio';
+                const osBadge = isPlugin ? (item.os ? item.os.toUpperCase() : 'WINDOWS / MAC') : 'FL STUDIO';
+                const qty = item.quantity || 1;
+                const price = parseFloat(item.price) || 10;
+                const totalItemPrice = (price * qty).toFixed(2);
+                const originalUnitPrice = parseFloat(item.originalPrice) || (price > 15 ? price * 1.3 : price * 1.8);
+                const totalOriginalPrice = (originalUnitPrice * qty).toFixed(2);
+                rawOriginalSubtotal += (originalUnitPrice * qty);
+
+                const showStrike = parseFloat(totalOriginalPrice) > parseFloat(totalItemPrice);
+                const bundleDiscountTag = showStrike 
+                    ? `<div class="summary-item-bundle-tag"><i class="bi bi-tag-fill"></i> OFERTA -$${(totalOriginalPrice - totalItemPrice).toFixed(2)}</div>` 
+                    : '';
 
                 return `
                 <div class="summary-item-card">
                     <div class="summary-item-left">
                         <div class="summary-item-thumb-wrapper">
                             <img src="${item.cover}" alt="${item.name}" class="summary-item-thumb" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
-                            <span class="summary-item-qty-badge">${item.quantity || 1}</span>
+                            <span class="summary-item-qty-badge">${qty}</span>
                         </div>
                         <div class="summary-item-info">
-                            <h4 class="summary-item-name">${item.name}</h4>
+                            <h4 class="summary-item-name" title="${item.name}">${item.name}</h4>
                             <p class="summary-item-meta">${osBadge}</p>
+                            ${bundleDiscountTag}
                         </div>
                     </div>
-                    <span class="summary-item-price">$${(item.price * (item.quantity || 1)).toFixed(2)}</span>
+                    <div class="summary-item-right">
+                        <div class="summary-item-prices">
+                            ${showStrike ? `<span class="summary-item-original-price">$${totalOriginalPrice}</span>` : ''}
+                            <span class="summary-item-price">$${totalItemPrice}</span>
+                        </div>
+                        <button type="button" class="summary-item-remove-btn" onclick="removeFromCheckoutCart(${idx})" title="Eliminar del pedido">
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                    </div>
                 </div>
                 `;
             }).join('');
 
-            // Calcular Subtotal y Total
-            const rawSubtotal = cartItems.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
-            updateTotals(rawSubtotal);
+            const rawSubtotal = cartItems.reduce((acc, item) => acc + ((parseFloat(item.price) || 10) * (item.quantity || 1)), 0);
+            updateTotals(rawSubtotal, rawOriginalSubtotal);
         }
 
-        function updateTotals(rawSubtotal) {
+        function updateTotals(rawSubtotal, rawOriginalSubtotal) {
             let discountAmount = 0;
             if (appliedDiscountPercent > 0) {
                 discountAmount = (rawSubtotal * appliedDiscountPercent) / 100;
@@ -1426,16 +1787,16 @@
             }
 
             const finalTotal = Math.max(0, rawSubtotal - discountAmount);
-
-            // Actualizar Labels
             const totalCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+            
             const subtotalLabel = document.getElementById('summarySubtotalLabel');
             const subtotalVal = document.getElementById('summarySubtotalVal');
             const discountRow = document.getElementById('summaryDiscountRow');
             const discountVal = document.getElementById('summaryDiscountVal');
             const totalVal = document.getElementById('summaryTotalVal');
-            const btnTotalPrice = document.getElementById('btnTotalPrice');
             const mobileSummaryTotal = document.getElementById('mobileSummaryTotal');
+            const totalSavingsRow = document.getElementById('totalSavingsRow');
+            const totalSavingsVal = document.getElementById('totalSavingsVal');
 
             if (subtotalLabel) subtotalLabel.textContent = `Subtotal • ${totalCount} ${totalCount === 1 ? 'producto' : 'productos'}`;
             if (subtotalVal) subtotalVal.textContent = `$${rawSubtotal.toFixed(2)}`;
@@ -1450,8 +1811,126 @@
             }
 
             if (totalVal) totalVal.textContent = `$${finalTotal.toFixed(2)}`;
-            if (btnTotalPrice) btnTotalPrice.textContent = `$${finalTotal.toFixed(2)} USD`;
             if (mobileSummaryTotal) mobileSummaryTotal.textContent = `$${finalTotal.toFixed(2)}`;
+
+            // Cálculo y renderizado de Total Savings
+            const totalSavings = Math.max(0, (rawOriginalSubtotal || rawSubtotal) - finalTotal);
+            if (totalSavingsRow && totalSavingsVal) {
+                if (totalSavings > 0.5) {
+                    totalSavingsRow.style.display = 'flex';
+                    totalSavingsVal.textContent = `$${totalSavings.toFixed(2)} USD`;
+                } else {
+                    totalSavingsRow.style.display = 'none';
+                }
+            }
+
+            updateYapePriceDisplay(finalTotal);
+        }
+
+        function getCalculatedTotalUSD() {
+            const rawSubtotal = cartItems.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
+            let discountAmount = 0;
+            if (appliedDiscountPercent > 0) {
+                discountAmount = (rawSubtotal * appliedDiscountPercent) / 100;
+            } else if (appliedDiscountAmount > 0) {
+                discountAmount = Math.min(rawSubtotal, appliedDiscountAmount);
+            }
+            return Math.max(0, rawSubtotal - discountAmount);
+        }
+
+        function getCalculatedTotalPEN() {
+            const usd = getCalculatedTotalUSD();
+            return Number(usd * yapeExchangeRate).toFixed(2);
+        }
+
+        function updateYapePriceDisplay(totalUsd) {
+            const usd = totalUsd !== undefined ? totalUsd : getCalculatedTotalUSD();
+            const penVal = Number(usd * yapeExchangeRate).toFixed(2);
+            
+            const yapeDisplay = document.getElementById('yapePriceSoles');
+            if (yapeDisplay) yapeDisplay.textContent = `S/. ${penVal} Soles`;
+
+            const yapeModalAmt = document.getElementById('yapeModalAmountText');
+            if (yapeModalAmt) yapeModalAmt.textContent = `S/. ${penVal} Soles`;
+
+            const yapeBtnAmt = document.getElementById('yapeBtnAmount');
+            if (yapeBtnAmt) yapeBtnAmt.textContent = `S/. ${penVal}`;
+
+            const yapeBrickAmt = document.getElementById('yapeBrickAmount');
+            if (yapeBrickAmt) yapeBrickAmt.textContent = `S/. ${penVal}`;
+        }
+
+        // ==========================================================================
+        // SELECTOR DE MÉTODOS DE PAGO (ACORDEÓN SHOPIFY)
+        // ==========================================================================
+        function selectPaymentMethod(method) {
+            currentPaymentMethod = method;
+            const methods = ['paypal', 'yape', 'mercadopago'];
+
+            methods.forEach(m => {
+                const opt = document.getElementById(`option-${m}`);
+                const body = document.getElementById(`body-${m}`) || document.getElementById(`body${m.charAt(0).toUpperCase() + m.slice(1)}`);
+                const dot = document.getElementById(`radio${m.charAt(0).toUpperCase() + m.slice(1)}Dot`) || document.getElementById(`radio${m === 'mercadopago' ? 'Mp' : m.charAt(0).toUpperCase() + m.slice(1)}Dot`);
+                const circle = document.getElementById(`circle${m.charAt(0).toUpperCase() + m.slice(1)}`) || document.getElementById(`circle${m === 'mercadopago' ? 'Mp' : m.charAt(0).toUpperCase() + m.slice(1)}`);
+
+                if (m === method) {
+                    if (opt) opt.classList.add('active');
+                    if (body) body.style.display = 'block';
+                    const activeColor = (m === 'paypal' ? '#ec4899' : (m === 'yape' ? '#742284' : '#009ee3'));
+                    if (circle) circle.style.borderColor = activeColor;
+                    if (dot) dot.style.background = activeColor;
+                } else {
+                    if (opt) opt.classList.remove('active');
+                    if (body) body.style.display = 'none';
+                    if (circle) circle.style.borderColor = '#d1d5db';
+                    if (dot) dot.style.background = 'transparent';
+                }
+            });
+
+            if (method === 'yape') {
+                updateYapePriceDisplay();
+            }
+        }
+
+        // ==========================================================================
+        // CONTROLADOR MODAL YAPE (POPUP)
+        // ==========================================================================
+        function openYapeModal() {
+            const emailInput = document.getElementById('contactEmail');
+            const email = emailInput ? emailInput.value.trim() : '';
+
+            if (!email || !email.includes('@')) {
+                alert('Por favor ingresa tu correo electrónico en la sección de Contacto para enviarte los archivos tras tu pago.');
+                if (emailInput) {
+                    emailInput.focus();
+                    emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return;
+            }
+
+            if (cartItems.length === 0) {
+                alert('Tu carrito está vacío.');
+                return;
+            }
+
+            updateYapePriceDisplay();
+            const modal = document.getElementById('yapeModalBackdrop');
+            if (modal) modal.classList.add('active');
+
+            setTimeout(() => {
+                const phone = document.getElementById('yapePhone');
+                if (phone && !phone.value) phone.focus();
+                else {
+                    const firstBox = document.querySelector('.yape-otp-box');
+                    if (firstBox) firstBox.focus();
+                }
+            }, 150);
+        }
+
+        function closeYapeModal() {
+            const modal = document.getElementById('yapeModalBackdrop');
+            if (modal) modal.classList.remove('active');
+            hideYapeError();
         }
 
         // ==========================================================================
@@ -1496,42 +1975,308 @@
         }
 
         // ==========================================================================
-        // SELECTOR DE MÉTODOS DE PAGO
+        // AUTO-FORMATTERS (YAPE)
         // ==========================================================================
-        function selectPaymentMethod(method) {
-            currentPaymentMethod = method;
-            const methods = ['card', 'paypal', 'mercadopago', 'yape'];
+        function setupYapePhoneFormatter() {
+            const phoneInput = document.getElementById('yapePhone');
+            if (!phoneInput) return;
 
-            methods.forEach(m => {
-                const el = document.getElementById(`option-${m}`);
-                if (el) {
-                    if (m === method) {
-                        el.classList.add('active');
-                    } else {
-                        el.classList.remove('active');
-                    }
-                }
+            phoneInput.addEventListener('input', (e) => {
+                let raw = e.target.value.replace(/\D/g, '').substring(0, 9);
+                let formatted = '';
+                if (raw.length > 0) formatted = raw.substring(0, 3);
+                if (raw.length > 3) formatted += ' ' + raw.substring(3, 6);
+                if (raw.length > 6) formatted += ' ' + raw.substring(6, 9);
+                e.target.value = formatted;
             });
         }
 
+        function setupYapeOTPHandlers() {
+            const boxes = document.querySelectorAll('.yape-otp-box');
+            if (!boxes.length) return;
+
+            boxes.forEach((box, idx) => {
+                box.addEventListener('input', (e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    e.target.value = val ? val[0] : '';
+
+                    if (val && idx < boxes.length - 1) {
+                        boxes[idx + 1].focus();
+                        boxes[idx + 1].select();
+                    }
+                    updateYapeBoxesState(boxes);
+                });
+
+                box.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !box.value && idx > 0) {
+                        boxes[idx - 1].focus();
+                        boxes[idx - 1].select();
+                    }
+                });
+
+                box.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').substring(0, 6);
+                    if (text) {
+                        for (let i = 0; i < text.length && i < boxes.length; i++) {
+                            boxes[i].value = text[i];
+                        }
+                        const nextIdx = Math.min(text.length, boxes.length - 1);
+                        boxes[nextIdx].focus();
+                        updateYapeBoxesState(boxes);
+                    }
+                });
+
+                box.addEventListener('focus', () => box.select());
+            });
+        }
+
+        function updateYapeBoxesState(boxes) {
+            boxes.forEach(b => {
+                if (b.value) b.classList.add('filled');
+                else b.classList.remove('filled');
+            });
+        }
+
+        function getYapeOTPValue() {
+            const boxes = document.querySelectorAll('.yape-otp-box');
+            let otp = '';
+            boxes.forEach(b => otp += b.value.trim());
+            return otp;
+        }
+
+        function showYapeError(msg) {
+            const el = document.getElementById('yapeErrorAlert');
+            if (el) {
+                el.textContent = msg;
+                el.style.display = 'block';
+            }
+        }
+
+        function hideYapeError() {
+            const el = document.getElementById('yapeErrorAlert');
+            if (el) {
+                el.textContent = '';
+                el.style.display = 'none';
+            }
+        }
+
         // ==========================================================================
-        // OTROS MEDIOS DE PAGO (WHATSAPP DIRECT CHECKOUT)
+        // PROCESAMIENTO REAL DE YAPE (MERCADO PAGO PERÚ API)
         // ==========================================================================
-        function openWhatsAppCheckout() {
+        async function processYapePayment() {
+            hideYapeError();
+            const emailInput = document.getElementById('contactEmail');
+            const email = emailInput ? emailInput.value.trim() : '';
+
+            if (!email || !email.includes('@')) {
+                showYapeError('Por favor ingresa tu correo electrónico en la sección de Contacto.');
+                return;
+            }
+
+            if (cartItems.length === 0) {
+                showYapeError('Tu carrito está vacío.');
+                return;
+            }
+
+            const phone = document.getElementById('yapePhone')?.value.trim().replace(/\D/g, '') || '';
+            const otp = getYapeOTPValue();
+
+            if (phone.length < 9) {
+                showYapeError('Ingresa un número de celular Yape válido (9 dígitos).');
+                document.getElementById('yapePhone')?.focus();
+                return;
+            }
+
+            if (otp.length !== 6) {
+                showYapeError('Ingresa los 6 dígitos completos de tu código de aprobación.');
+                document.querySelector('.yape-otp-box')?.focus();
+                return;
+            }
+
+            const payBtn = document.getElementById('btnYapeSubmit');
+            const originalBtnHtml = payBtn ? payBtn.innerHTML : '';
+            if (payBtn) {
+                payBtn.disabled = true;
+                payBtn.innerHTML = `<span class="btn-spinner"></span> Validando con Yape...`;
+            }
+
+            try {
+                if (!mpInstance) {
+                    initMercadoPagoSDK();
+                }
+
+                if (!mpInstance || typeof mpInstance.yape !== 'function') {
+                    throw new Error('El servicio de Yape no está listo. Por favor refresca la página.');
+                }
+
+                const totalPEN = parseFloat(getCalculatedTotalPEN());
+                const totalUSD = getCalculatedTotalUSD();
+
+                // 1. Crear Token de Yape con Mercado Pago SDK
+                let yapeToken = null;
+                try {
+                    const yapeObj = mpInstance.yape({
+                        otp: otp,
+                        phoneNumber: phone,
+                        amount: totalPEN
+                    });
+                    const tokenRes = await yapeObj.create();
+                    yapeToken = (typeof tokenRes === 'string') ? tokenRes : (tokenRes?.id || tokenRes?.token || tokenRes);
+                    console.log('[Checkout] Token Yape generado:', yapeToken);
+                } catch (sdkErr) {
+                    console.error('[Checkout] Error SDK Yape:', sdkErr);
+                    let errMessage = 'El código de aprobación es incorrecto o ha vencido. Genera uno nuevo en tu app Yape.';
+                    if (sdkErr?.message) errMessage = sdkErr.message;
+                    throw new Error(errMessage);
+                }
+
+                if (!yapeToken) {
+                    throw new Error('No se pudo validar el código de Yape.');
+                }
+
+                if (payBtn) payBtn.innerHTML = `<span class="btn-spinner"></span> Procesando cobro S/. ${totalPEN}...`;
+
+                // 2. Enviar Cobro al Backend OFFSZN
+                const firstPlugin = cartItems.find(i => i.type === 'plugin');
+                const productId = firstPlugin ? (firstPlugin.id.toString().includes('easy-mix') ? 899 : 900) : 899;
+
+                const payload = {
+                    token: yapeToken,
+                    email: email,
+                    phoneNumber: phone,
+                    productId: productId,
+                    customPrice: totalUSD,
+                    customPricePEN: totalPEN,
+                    cartItems: cartItems
+                };
+
+                const chargeRes = await fetch('/api/orders/yape/charge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await chargeRes.json();
+
+                if (!chargeRes.ok || !result.success) {
+                    throw new Error(result.error || 'No se pudo completar el pago con Yape.');
+                }
+
+                // 3. Éxito: Cerrar modal Yape, limpiar carrito y mostrar modal de éxito
+                closeYapeModal();
+                localStorage.removeItem('offszn_cart');
+                renderSuccessModal(result, email);
+
+            } catch (err) {
+                console.error('[Checkout Yape] Error:', err);
+                showYapeError(err.message || 'Error procesando tu pago.');
+            } finally {
+                if (payBtn) {
+                    payBtn.disabled = false;
+                    payBtn.innerHTML = originalBtnHtml;
+                }
+            }
+        }
+
+        // ==========================================================================
+        // PAYPAL SMART BUTTONS (SDK REAL — Willie Inspired)
+        // ==========================================================================
+        function initWilliePayPalSDK() {
+            const fallbackClientId = 'ATPgFaKnGSf4hJZEN_lkw82QVO2sNc6O9d6QX7GcWBny9tqchRoXpZ89UxkUtD1U2ZWsbv9uAkwruu2B';
+            const clientId = window.PAYPAL_CLIENT_ID || fallbackClientId;
+            if (document.getElementById('willie-paypal-sdk')) {
+                renderWilliePayPalButtons();
+                return;
+            }
+            const script = document.createElement('script');
+            script.id = 'willie-paypal-sdk';
+            script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=MXV5F6X8JXG4S`;
+            script.setAttribute('data-merchant-id', 'MXV5F6X8JXG4S');
+            script.onload = () => {
+                console.log('✅ [PayPal SDK] Cargado correctamente.');
+                renderWilliePayPalButtons();
+            };
+            script.onerror = () => {
+                const skel = document.getElementById('ppLoadingSkeleton');
+                if (skel) skel.innerHTML = '<p style="color:#ef4444;font-size:.82rem;text-align:center;padding:12px;">No se pudo cargar PayPal. Por favor recarga la página o usa Yape.</p>';
+            };
+            document.head.appendChild(script);
+        }
+
+        function renderWilliePayPalButtons() {
+            if (!window.paypal || williePaypalInitialized) return;
+            williePaypalInitialized = true;
+            const skeleton = document.getElementById('ppLoadingSkeleton');
+            const container = document.getElementById('paypalButtonContainer');
+            if (skeleton) skeleton.style.display = 'none';
+            if (container) container.style.display = 'block';
+
+            window.paypal.Buttons({
+                style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay', tagline: false },
+                createOrder: () => {
+                    if (cartItems.length === 0) {
+                        alert('Tu carrito está vacío.');
+                        return Promise.reject(new Error('empty_cart'));
+                    }
+                    const email = document.getElementById('contactEmail')?.value.trim() || undefined;
+                    const couponInput = document.getElementById('couponCodeInput');
+                    const couponCode = couponInput ? couponInput.value.trim().toUpperCase() : '';
+                    return fetch('/api/willie/paypal/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ cartItems, email, couponCode: couponCode || undefined })
+                    }).then(r => r.json().then(d => {
+                        if (!r.ok || !d.id) throw new Error(d.error || 'Error al crear la orden.');
+                        console.log('[WillieCheckout] PayPal Order:', d.id);
+                        return d.id;
+                    }));
+                },
+                onApprove: (data) => {
+                    const email = document.getElementById('contactEmail')?.value.trim() || undefined;
+                    return fetch('/api/willie/paypal/capture', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderID: data.orderID, email, cartItems })
+                    }).then(r => r.json().then(result => {
+                        if (!r.ok || !result.success) throw new Error(result.error || 'Error al confirmar el pago.');
+                        console.log('[WillieCheckout] Capture OK:', result);
+                        localStorage.removeItem('offszn_cart');
+                        renderSuccessModal({ totalUSD: result.totalUSD }, email || 'tu correo de PayPal');
+                    })).catch(err => alert('Error al confirmar tu pago: ' + err.message));
+                },
+                onError: (err) => {
+                    if (err?.message !== 'empty_cart') {
+                        console.error('[PayPal Error]', err);
+                        alert('Hubo un problema procesando con PayPal. Por favor intenta de nuevo.');
+                    }
+                },
+                onCancel: () => { console.log('[PayPal] Cancelado por el usuario.'); }
+            }).render('#paypalButtonContainer').catch(err => console.error('[PayPal Render]', err));
+        }
+
+        function closeWhatsAppBubble(e) {
+            if (e) e.stopPropagation();
+            const b = document.getElementById('whatsappBubble');
+            if (b) b.classList.add('hidden');
+        }
+
+        // ==========================================================================
+        // OTROS MEDIOS DE PAGO (WHATSAPP DIRECT CHECKOUT & MERCADO PAGO)
+        // ==========================================================================
+        function openWhatsAppCheckout(type = 'whatsapp') {
             if (cartItems.length === 0) {
                 alert("Tu carrito está vacío.");
                 return;
             }
 
-            const rawSubtotal = cartItems.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
-            let discountAmount = (rawSubtotal * appliedDiscountPercent) / 100 + appliedDiscountAmount;
-            const total = Math.max(0, rawSubtotal - discountAmount);
+            const totalUSD = getCalculatedTotalUSD();
+            const totalPEN = getCalculatedTotalPEN();
 
-            // Generar lista de productos
             const itemsListText = cartItems.map(item => {
                 const isPlugin = item.type === 'plugin' || (item.name && item.name.toLowerCase().includes('plugin'));
                 const sysText = isPlugin ? ` [${(item.os || 'WIN').toUpperCase()}]` : ' [Solo FL Studio]';
-                return `• ${item.name}${sysText} x${item.quantity || 1} - $${(item.price * (item.quantity || 1)).toFixed(2)}`;
+                return `• ${item.name}${sysText} x${item.quantity || 1} - $${(item.price * (item.quantity || 1)).toFixed(2)} USD`;
             }).join('\n');
 
             const emailInput = document.getElementById('contactEmail');
@@ -1539,9 +2284,14 @@
 
             let msg = `¡Hola Willie! 👋 Quiero realizar una compra en tu tienda oficial:\n\n`;
             msg += `🛒 *PEDIDO:*\n${itemsListText}\n\n`;
-            msg += `💰 *TOTAL A PAGAR:* $${total.toFixed(2)} USD\n`;
-            if (customerEmail) msg += `📧 *Mi correo:* ${customerEmail}\n`;
-            msg += `\n¿Cuáles son los datos de pago para realizar la transferencia / Binance USDT / Western Union? Quedo atento. 🚀`;
+            msg += `💰 *TOTAL A PAGAR:* $${totalUSD.toFixed(2)} USD (aprox. S/. ${totalPEN} Soles)\n`;
+            if (customerEmail) msg += `📧 *Mi correo de entrega:* ${customerEmail}\n`;
+
+            if (type === 'mercadopago') {
+                msg += `\n💳 Deseo pagar mediante *Mercado Pago / Transferencia Bancaria (BCP / BBVA / Interbank)*. ¿Me envías los datos de pago por favor? 🚀`;
+            } else {
+                msg += `\n¿Cuáles son los datos de pago para transferencia / Binance USDT / Western Union? Quedo atento. 🚀`;
+            }
 
             const encodedMsg = encodeURIComponent(msg);
             const whatsappUrl = `https://wa.me/51921839257?text=${encodedMsg}`;
@@ -1550,49 +2300,48 @@
         }
 
         // ==========================================================================
-        // EJECUTAR PAGO
+        // MODAL DE ÉXITO
         // ==========================================================================
-        function executePayment() {
-            if (cartItems.length === 0) {
-                alert("Tu carrito está vacío. Agrega al menos un preset o plugin.");
-                return;
+        function renderSuccessModal(data, email) {
+            const backdrop = document.getElementById('successModalBackdrop');
+            const sub = document.getElementById('successSubtitleText');
+            const keyBox = document.getElementById('successKeyBox');
+            const keyText = document.getElementById('successKeyText');
+            const dlContainer = document.getElementById('successDownloadsContainer');
+
+            if (sub && email) {
+                sub.textContent = `Tu pago ha sido verificado con éxito. Hemos enviado una copia de tus enlaces y recibo a ${email}.`;
             }
 
-            const emailInput = document.getElementById('contactEmail');
-            const email = emailInput ? emailInput.value.trim() : '';
-
-            if (!email) {
-                alert("Por favor ingresa tu correo electrónico o número de celular en el campo de Contacto.");
-                if (emailInput) emailInput.focus();
-                return;
+            if (data?.serialKey && keyBox && keyText) {
+                keyBox.style.display = 'flex';
+                keyText.textContent = data.serialKey;
             }
 
-            if (currentPaymentMethod === 'yape') {
-                openWhatsAppCheckout();
-                return;
+            if (data?.downloads && dlContainer) {
+                let dlHtml = '';
+                if (data.downloads.win) {
+                    dlHtml += `<a href="${data.downloads.win}" target="_blank" class="success-dl-btn"><i class="bi bi-windows"></i> Descargar para Windows (.exe)</a>`;
+                }
+                if (data.downloads.mac) {
+                    dlHtml += `<a href="${data.downloads.mac}" target="_blank" class="success-dl-btn"><i class="bi bi-apple"></i> Descargar para macOS (.dmg)</a>`;
+                }
+                if (dlHtml) dlContainer.innerHTML = dlHtml;
             }
 
-            if (currentPaymentMethod === 'paypal') {
-                // Redirigir al flujo de PayPal seguro
-                alert(`Conectando con PayPal de forma segura para completar tu orden por $${document.getElementById('summaryTotalVal').textContent}...`);
-                window.location.href = `/api/paypal/create-order?email=${encodeURIComponent(email)}`;
-                return;
-            }
+            if (backdrop) backdrop.classList.add('active');
+        }
 
-            if (currentPaymentMethod === 'mercadopago') {
-                alert(`Redirigiendo a Mercado Pago para procesar tu pago local de forma segura...`);
-                window.location.href = `/api/mercadopago/checkout?email=${encodeURIComponent(email)}`;
-                return;
+        function copySerialKey() {
+            const keyText = document.getElementById('successKeyText')?.textContent;
+            if (keyText && keyText !== 'CARGANDO...') {
+                navigator.clipboard.writeText(keyText);
+                const btn = document.getElementById('successCopyBtn');
+                if (btn) {
+                    btn.textContent = '¡Copiado!';
+                    setTimeout(() => { btn.textContent = 'Copiar Clave'; }, 2000);
+                }
             }
-
-            // Tarjetas de Crédito / Débito
-            const cardNum = document.getElementById('cardNumber')?.value.trim();
-            if (!cardNum || cardNum.length < 15) {
-                alert("Por favor ingresa un número de tarjeta válido.");
-                return;
-            }
-
-            alert("Procesando tu pago de forma segura con encriptación SSL de 256 bits...");
         }
 
         // ==========================================================================
@@ -1607,6 +2356,22 @@
             }
         }
     </script>
+
+    <!-- WIDGET FLOTANTE WHATSAPP (A LA DERECHA COMO EN LA LANDING) -->
+    <div class="whatsapp-widget-container" id="whatsappWidget">
+        <div class="whatsapp-bubble" id="whatsappBubble">
+            <button type="button" class="whatsapp-bubble-close" onclick="closeWhatsAppBubble(event)" title="Cerrar mensaje" aria-label="Cerrar mensaje">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <a href="javascript:void(0)" onclick="openWhatsAppCheckout()" class="whatsapp-bubble-link">
+                <span>¿Prefieres pagar por WhatsApp? Contáctanos aquí</span>
+            </a>
+        </div>
+
+        <a href="javascript:void(0)" onclick="openWhatsAppCheckout()" class="whatsapp-circle-btn" title="Contactar por WhatsApp" aria-label="WhatsApp Willie Inspired">
+            <i class="bi bi-whatsapp"></i>
+        </a>
+    </div>
 
 </body>
 </html>

@@ -107,7 +107,19 @@ export const generateWebLicense = async (req, res) => {
             console.error('[PluginLicense] Error checking order history:', orderCheckErr);
         }
 
-        if (!orderItem) {
+        let hasPaidOrder = Boolean(orderItem);
+        if (!hasPaidOrder) {
+            const { data: directOrder } = await supabase
+                .from('orders')
+                .select('id')
+                .eq('user_id', user_id)
+                .eq('status', 'completed')
+                .in('product_id', validProductIds)
+                .maybeSingle();
+            if (directOrder) hasPaidOrder = true;
+        }
+
+        if (!hasPaidOrder) {
             return res.status(403).json({ error: 'No se encontró una orden de compra válida para este producto.' });
         }
 
@@ -305,12 +317,16 @@ export async function generatePluginLicense({ licenseType, userEmail, userId, pl
 export const activateSerial = async (req, res) => {
     console.log("➡️ [API /activate] Request body received:", req.body);
     try {
-        const { serial_key, device_name, user_email } = req.body;
+        const rawSerial = (req.body.serial_key || '').trim();
         // hwid is optional — if not provided or null, use a generic fallback
         const hwid = req.body.hwid || 'device-no-hwid';
-        if (!serial_key) {
+        if (!rawSerial) {
             return res.status(400).json({ error: 'Falta serial key' });
         }
+
+        // Robust extraction: Extract pure serial key pattern even if user copied "Easy Mix: EASY-FULL-..."
+        const keyMatch = rawSerial.match(/(EASY|MASTER|INKA|COKE)-(FULL|TRIAL|SUB)-[A-Z0-9]{4,8}-[A-Z0-9]{4,8}/i);
+        const serial_key = keyMatch ? keyMatch[0].toUpperCase() : rawSerial.toUpperCase();
 
         // 1. Find license
         const { data: license, error: licErr } = await supabase

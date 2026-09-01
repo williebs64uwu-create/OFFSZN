@@ -98,25 +98,27 @@ export const chargeYape = async (req, res) => {
         const validUsdPrice = parseFloat(customPrice) || 10;
         const amountPEN = req.body.customPricePEN ? Number(parseFloat(req.body.customPricePEN).toFixed(2)) : Number((validUsdPrice * exchangeRate).toFixed(2));
 
-        const strProdId = String(productId);
-        const prodInfo = PLUGIN_INFO_MAP[strProdId] || PLUGIN_INFO_MAP['899'];
-        const pluginName = prodInfo.name;
+        const isPromo2x1 = Boolean(req.body.isPromo2x1 || req.body.is_promo_2x1 || String(productId) === 'promo-2x1' || (req.body.pluginName || '').toLowerCase().includes('2x1'));
+        const strProdId = String(productId || '');
+        const prodInfo = PLUGIN_INFO_MAP[strProdId] || (strProdId === 'promo-2x1' ? PLUGIN_INFO_MAP['899'] : (productId ? PLUGIN_INFO_MAP['899'] : null));
+        const pluginName = prodInfo ? (isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : prodInfo.name) : (req.body.pluginName || 'Presets');
 
-        console.log(`[YapeCharge] Initiating charge: S/. ${amountPEN} PEN ($${validUsdPrice} USD @ T.C. ${exchangeRate}) for ${email} (${pluginName})`);
+        console.log(`[YapeCharge] Initiating charge: S/. ${amountPEN} PEN ($${validUsdPrice} USD @ T.C. ${exchangeRate}) for ${email} (${pluginName}) | 2x1: ${isPromo2x1}`);
 
         // 1. Call Mercado Pago Payments API
         const mpPayload = {
             token,
             transaction_amount: amountPEN,
             installments: 1,
-            description: `OFFSZN - ${pluginName} VST (Licencia Vitalicia)`,
+            description: prodInfo ? `OFFSZN - ${pluginName} (Licencia Vitalicia)` : `OFFSZN - ${pluginName}`,
             payment_method_id: 'yape',
             payer: {
                 email: email.trim().toLowerCase()
             },
             metadata: {
-                product_id: parseInt(productId, 10),
+                product_id: productId ? parseInt(productId, 10) || null : null,
                 plugin_name: pluginName,
+                is_promo_2x1: isPromo2x1,
                 usd_price: validUsdPrice,
                 exchange_rate: exchangeRate,
                 phone_number: phoneNumber || null
@@ -171,20 +173,36 @@ export const chargeYape = async (req, res) => {
 
         console.log(`✅ [YapeCharge] Payment APPROVED! MP Payment ID: ${mpData.id}`);
 
-        // 2. Generate Primary Lifetime License (generatePluginLicense already sends the activation email)
+        // 2. Generate Plugin Licenses (if applicable)
         let serialKey = null;
+        let bonusSerialKey = null;
 
-        try {
-            const licResult = await generatePluginLicense({
-                licenseType: 'lifetime',
-                userEmail: email,
-                userId: null,
-                pluginName: pluginName
-            });
-            serialKey = licResult?.serialKey;
-            console.log(`[YapeCharge] Generated Lifetime License for ${pluginName}: ${serialKey}`);
-        } catch (licErr) {
-            console.error('[YapeCharge] Error generating license:', licErr);
+        if (prodInfo) {
+            try {
+                const primaryPluginToGen = (pluginName.includes('Promo 2x1') || isPromo2x1) ? 'Easy Mix' : prodInfo.name;
+                const licResult = await generatePluginLicense({
+                    licenseType: 'lifetime',
+                    userEmail: email,
+                    userId: null,
+                    pluginName: primaryPluginToGen
+                });
+                serialKey = licResult?.serialKey;
+                console.log(`[YapeCharge] Generated Lifetime License for ${primaryPluginToGen}: ${serialKey}`);
+
+                // --- 2x1 PROMO: Únicamente si es compra explícita de Promo 2x1 ---
+                if (isPromo2x1 && primaryPluginToGen === 'Easy Mix') {
+                    console.log(`[YapeCharge] 2x1 Promo triggered! Generating free Easy Master for ${email}`);
+                    const bonusResult = await generatePluginLicense({
+                        licenseType: 'lifetime',
+                        userEmail: email,
+                        userId: null,
+                        pluginName: 'Easy Master'
+                    });
+                    bonusSerialKey = bonusResult?.serialKey;
+                }
+            } catch (licErr) {
+                console.error('[YapeCharge] Error generating license:', licErr);
+            }
         }
 
         // 3. Record Order in Supabase
@@ -196,7 +214,7 @@ export const chargeYape = async (req, res) => {
                 amount: validUsdPrice,
                 status: 'completed',
                 guest_email: email,
-                product_id: parseInt(productId, 10),
+                product_id: productId ? parseInt(productId, 10) || null : null,
                 transaction_id: `MP-YAPE-${mpData.id}`
             }).select('id').single();
 
@@ -242,9 +260,11 @@ export const chargeYape = async (req, res) => {
             paymentId: mpData.id,
             orderId: orderId,
             pluginName: pluginName,
+            isPromo2x1: isPromo2x1,
             amountPEN: amountPEN,
             serialKey: serialKey,
-            downloads: prodInfo.downloads
+            bonusSerialKey: bonusSerialKey,
+            downloads: prodInfo ? prodInfo.downloads : null
         });
 
     } catch (error) {

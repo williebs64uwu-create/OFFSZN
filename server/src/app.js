@@ -35,6 +35,7 @@ import cokeCheckoutRoutes from './infrastructure/http/routes/coke-checkout.route
 import calendarRoutes from './infrastructure/http/routes/calendar.routes.js';
 import walletRoutes from './infrastructure/http/routes/wallet.routes.js';
 import yapeRoutes from './infrastructure/http/routes/yape.routes.js';
+import willieRoutes from './infrastructure/http/routes/willie.routes.js';
 import { checkAndSendRemindersInternal } from './infrastructure/http/controllers/CalendarController.js';
 import { runSubscriptionScavenger } from './infrastructure/services/subscription-scavenger.js';
 
@@ -133,9 +134,10 @@ app.use(helmet({
                 "https://cdn.tailwindcss.com", "https://apis.google.com", "https://accounts.google.com",
                 "https://*.gstatic.com", "https://*.googleapis.com", "https://*.google.com", "https://*.googleusercontent.com",
                 // PayPal
-                "https://www.paypal.com", "https://www.sandbox.paypal.com",
-                // Mercado Pago Perú (Yape)
+                "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://*.paypal.com", "https://*.paypalobjects.com",
+                // Mercado Pago & Mercado Libre (Yape / Fraud SDK)
                 "https://sdk.mercadopago.com", "https://*.mercadopago.com", "https://*.mercadopago.com.pe", "https://http2.mlstatic.com", "https://*.mlstatic.com",
+                "https://*.mercadolibre.com", "https://*.mercadolibre.com.pe", "https://www.mercadolibre.com",
                 // EmailOctopus
                 "https://eomail5.com", "https://*.eomail5.com",
                 // Meta Pixel
@@ -152,8 +154,9 @@ app.use(helmet({
                 "https://grainy-gradients.vercel.app",
                 "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com",
                 "https://ui-avatars.com",
-                // Mercado Pago
+                // Mercado Pago & Mercado Libre (fraud/session images)
                 "https://*.mercadopago.com", "https://*.mercadopago.com.pe", "https://*.mlstatic.com", "https://http2.mlstatic.com",
+                "https://*.mercadolibre.com", "https://*.mercadolibre.com.pe", "https://www.mercadolibre.com",
                 // PayPal
                 "https://www.paypalobjects.com", "https://*.paypal.com",
                 "https://offszn.lat", "https://*.offszn.lat", "http://localhost:*",
@@ -168,7 +171,7 @@ app.use(helmet({
                 "https://eomail5.com", "https://*.eomail5.com",
                 // Mercado Pago & Mercado Libre Perú
                 "https://api.mercadopago.com", "https://*.mercadopago.com", "https://*.mercadopago.com.pe", "https://events.mercadopago.com",
-                "https://api.mercadolibre.com", "https://*.mercadolibre.com", "https://*.mercadolibre.com.pe",
+                "https://api.mercadolibre.com", "https://*.mercadolibre.com", "https://*.mercadolibre.com.pe", "https://www.mercadolibre.com",
                 // PayPal
                 "https://api.paypal.com", "https://www.paypal.com", "https://www.sandbox.paypal.com",
                 "https://api-m.paypal.com", "https://api-m.sandbox.paypal.com",
@@ -184,10 +187,11 @@ app.use(helmet({
             frameSrc: ["'self'",
                 "https://www.youtube.com", "https://www.youtube-nocookie.com",
                 "https://open.spotify.com",
-                // Mercado Pago
+                // Mercado Pago & Mercado Libre (Fraud iframes / Armor)
                 "https://*.mercadopago.com", "https://*.mercadopago.com.pe",
+                "https://*.mercadolibre.com", "https://*.mercadolibre.com.pe", "https://www.mercadolibre.com",
                 // PayPal
-                "https://www.paypal.com", "https://www.sandbox.paypal.com",
+                "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://*.paypal.com",
                 "https://accounts.google.com", "https://*.googleapis.com", "https://apis.google.com",
                 // EmailOctopus (for hidden iframe form response)
                 "https://eomail5.com", "https://*.eomail5.com",
@@ -324,6 +328,7 @@ app.use('/api', r2Routes);
 app.use('/api/imagekit', imagekitRoutes);
 app.use('/api', paypalRoutes);
 app.use('/api/orders/yape', yapeRoutes);
+app.use('/api', willieRoutes); // Willie Inspired dedicated checkout
 app.use('/api', cokeCheckoutRoutes);  // Isolated Coca-Cola checkout (no multi-payee)
 app.use('/api', youtubeRoutes);
 app.use('/api', youtubeSyncRoutes);

@@ -808,11 +808,15 @@
                     ? window.MetaPixel.getAttributionData()
                     : {};
 
+                const isPromo2x1 = Boolean(window.IS_PROMO_2X1 || (this.pluginName && this.pluginName.includes('2x1')));
+
                 const bodyPayload = {
                     token: yapeToken,
                     email: email,
                     phoneNumber: phone,
                     productId: this.productId,
+                    pluginName: this.pluginName,
+                    isPromo2x1: isPromo2x1,
                     customPrice: this.getPriceUSD(),
                     attribution: attribution
                 };

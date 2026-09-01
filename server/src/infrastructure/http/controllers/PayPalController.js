@@ -192,6 +192,8 @@ export const createPayPalOrder = async (req, res) => {
         const negotiateToken = req.body.negotiateToken;
         const directProductId = req.body.directProductId;
 
+        const isPromo2x1 = Boolean(req.body.isPromo2x1 || req.body.is_promo_2x1 || String(directProductId) === 'promo-2x1' || (req.body.pluginName || '').toLowerCase().includes('2x1'));
+
         if (directProductId) {
             let productObj = null;
             // Intercept special plugin IDs first
@@ -201,8 +203,13 @@ export const createPayPalOrder = async (req, res) => {
                 productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
             } else if (String(directProductId) === '900') {
                 productObj = { id: 900, name: 'Easy Master', price_basic: 5, producer_id: null };
-            } else if (String(directProductId) === '899' || String(directProductId) === '901') {
-                productObj = { id: 899, name: 'Easy Mix', price_basic: 10, producer_id: null };
+            } else if (String(directProductId) === '899' || String(directProductId) === '901' || String(directProductId) === 'promo-2x1') {
+                productObj = { 
+                    id: 899, 
+                    name: isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : 'Easy Mix', 
+                    price_basic: 10, 
+                    producer_id: null 
+                };
             } else {
                 const { data: product, error: prodErr } = await supabase
                     .from('products')
@@ -223,8 +230,9 @@ export const createPayPalOrder = async (req, res) => {
 
             cartItems = [{
                 product: productObj,
-                license_name: 'lifetime',
-                variant_price: variantPrice
+                license_name: isPromo2x1 ? 'promo_2x1' : 'lifetime',
+                variant_price: variantPrice,
+                is_promo_2x1: isPromo2x1
             }];
         } else if (isNegotiation && negotiateToken) {
             // NEGOTIATION FLOW
@@ -1099,8 +1107,9 @@ export const capturePayPalOrder = async (req, res) => {
                 const prodId = String(item.product?.id || '');
                 const isCoke = prodName.toLowerCase().includes('coca') || prodName.toLowerCase().includes('coke') || prodId === '903';
                 const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix') || prodId === '899' || prodId === '901';
-                const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster') || prodId === '900';
+                const isEasyMaster = (prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster') || prodId === '900') && !prodName.toLowerCase().includes('2x1');
                 const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola') || prodId === '902';
+                const isPromo2x1 = item.is_promo_2x1 === true || item.product?.is_promo_2x1 === true || prodName.toLowerCase().includes('2x1') || (item.license_name || '').toLowerCase().includes('2x1') || req.body.isPromo2x1 === true;
                 
                 if (isCoke || isEasyMix || isEasyMaster || isInkaKola) {
                     try {
@@ -1118,11 +1127,11 @@ export const capturePayPalOrder = async (req, res) => {
                         });
                         
                         if (licResult && licResult.serialKey) {
-                            keysGenerated.push(`${pluginName}: ${licResult.serialKey}`);
+                            keysGenerated.push({ plugin: pluginName, key: licResult.serialKey, isBonus: false });
                         }
 
-                        // --- 2x1 PROMO: Si compra Easy Mix Lifetime, regala Easy Master Lifetime ---
-                        if (isEasyMix && licenseType === 'lifetime') {
+                        // --- 2x1 PROMO: ÚNICAMENTE si es compra explícita de Promo 2x1 ---
+                        if (isPromo2x1 && isEasyMix && licenseType === 'lifetime') {
                             console.log(`[PayPalCapture] 2x1 Promo triggered! Generating free Easy Master for ${payerEmail}`);
                             try {
                                 const bonusResult = await generatePluginLicense({
@@ -1132,7 +1141,7 @@ export const capturePayPalOrder = async (req, res) => {
                                     pluginName: 'Easy Master'
                                 });
                                 if (bonusResult && bonusResult.serialKey) {
-                                    keysGenerated.push(`Easy Master (REGALO): ${bonusResult.serialKey}`);
+                                    keysGenerated.push({ plugin: 'Easy Master (REGALO 2x1)', key: bonusResult.serialKey, isBonus: true });
                                 }
                             } catch (bonusErr) {
                                 console.error(`[PayPalCapture] Error generating bonus Easy Master license:`, bonusErr);
@@ -1145,7 +1154,7 @@ export const capturePayPalOrder = async (req, res) => {
             }
 
             if (keysGenerated.length > 0) {
-                generatedLicenseKey = keysGenerated.join(' | ');
+                generatedLicenseKey = keysGenerated.map(k => k.key).join(' | ');
             }
 
             // 4. Update Sales Count
@@ -1261,11 +1270,16 @@ export const capturePayPalOrder = async (req, res) => {
                         const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola;
 
                         // A. Notify Client (Receipt) — includes serial key for plugin purchases
-                        const serialKeySection = (isPlugin && generatedLicenseKey) ? `
+                        const serialKeySection = (isPlugin && keysGenerated.length > 0) ? `
                             <div style="background:#111827; border:2px dashed #ff9f0a; border-radius:12px; padding:20px; margin:20px 0; text-align:center;">
-                                <p style="color:#ff9f0a; font-size:0.8rem; text-transform:uppercase; letter-spacing:2px; margin:0 0 10px; font-weight:700;">🔑 Tu Serial Key FULL</p>
-                                <p style="font-family:monospace; font-size:1.3rem; font-weight:800; color:#fff; letter-spacing:2px; margin:0; word-break:break-all;">${generatedLicenseKey}</p>
-                                <p style="color:#888; font-size:0.78rem; margin:12px 0 0;">Guarda esta clave en un lugar seguro. La necesitarás para activar el plugin en tu DAW.</p>
+                                <p style="color:#ff9f0a; font-size:0.8rem; text-transform:uppercase; letter-spacing:2px; margin:0 0 12px; font-weight:700;">🔑 Tu(s) Clave(s) de Activación</p>
+                                ${keysGenerated.map(k => `
+                                    <div style="margin: 10px 0; padding: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px;">
+                                        <p style="color:#a1a1aa; font-size:0.8rem; margin:0 0 4px; font-weight:600;">${k.plugin}:</p>
+                                        <p style="font-family:monospace; font-size:1.25rem; font-weight:800; color:#fff; letter-spacing:1px; margin:0; word-break:break-all; user-select:all;">${k.key}</p>
+                                    </div>
+                                `).join('')}
+                                <p style="color:#888; font-size:0.78rem; margin:12px 0 0;">Copia y pega la clave correspondiente en tu plugin para activarlo.</p>
                             </div>
                         ` : '';
 
