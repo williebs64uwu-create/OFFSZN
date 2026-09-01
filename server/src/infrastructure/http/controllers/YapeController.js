@@ -122,37 +122,50 @@ export const chargeYape = async (req, res) => {
             }
         };
 
-        const mpRes = await fetch('https://api.mercadopago.com/v1/payments', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-                'X-Idempotency-Key': `yape-${Date.now()}-${Math.random().toString(36).substring(7)}`
-            },
-            body: JSON.stringify(mpPayload)
-        });
-
-        const mpData = await mpRes.json();
-
-        if (!mpRes.ok || mpData.status !== 'approved') {
-            console.error('[YapeCharge] Payment failed or rejected by Mercado Pago:', JSON.stringify(mpData, null, 2));
-
-            let friendlyMessage = 'No se pudo completar el pago con Yape. Verifica los datos ingresados.';
-            if (mpData.status_detail === 'cc_rejected_bad_filled_security_code' || mpData.status_detail === 'bad_filled_security_code') {
-                friendlyMessage = 'El código de aprobación de Yape es incorrecto o ha expirado. Genera uno nuevo en tu app de Yape e inténtalo de nuevo.';
-            } else if (mpData.status_detail === 'cc_rejected_insufficient_amount') {
-                friendlyMessage = 'Saldo insuficiente en tu cuenta de Yape.';
-            } else if (mpData.status_detail === 'cc_rejected_call_for_authorize') {
-                friendlyMessage = 'La transacción no fue autorizada por el banco. Por favor verifica tu app de Yape.';
-            } else if (mpData.message) {
-                friendlyMessage = `Mercado Pago: ${mpData.message}`;
-            }
-
-            return res.status(400).json({
-                error: friendlyMessage,
-                status: mpData.status,
-                status_detail: mpData.status_detail
+        let mpData;
+        
+        // If it's a sandbox simulation test token
+        if (token.startsWith('TEST_YAPE_') && accessToken.startsWith('TEST-')) {
+            console.log(`🧪 [YapeCharge] Running in Sandbox Simulation Mode for test token: ${token}`);
+            mpData = {
+                id: `TEST_MP_${Date.now()}`,
+                status: 'approved',
+                status_detail: 'accredited',
+                transaction_amount: amountPEN
+            };
+        } else {
+            const mpRes = await fetch('https://api.mercadopago.com/v1/payments', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                    'X-Idempotency-Key': `yape-${Date.now()}-${Math.random().toString(36).substring(7)}`
+                },
+                body: JSON.stringify(mpPayload)
             });
+
+            mpData = await mpRes.json();
+
+            if (!mpRes.ok || mpData.status !== 'approved') {
+                console.error('[YapeCharge] Payment failed or rejected by Mercado Pago:', JSON.stringify(mpData, null, 2));
+
+                let friendlyMessage = 'No se pudo completar el pago con Yape. Verifica los datos ingresados.';
+                if (mpData.status_detail === 'cc_rejected_bad_filled_security_code' || mpData.status_detail === 'bad_filled_security_code') {
+                    friendlyMessage = 'El código de aprobación de Yape es incorrecto o ha expirado. Genera uno nuevo en tu app de Yape e inténtalo de nuevo.';
+                } else if (mpData.status_detail === 'cc_rejected_insufficient_amount') {
+                    friendlyMessage = 'Saldo insuficiente en tu cuenta de Yape.';
+                } else if (mpData.status_detail === 'cc_rejected_call_for_authorize') {
+                    friendlyMessage = 'La transacción no fue autorizada por el banco. Por favor verifica tu app de Yape.';
+                } else if (mpData.message) {
+                    friendlyMessage = `Mercado Pago: ${mpData.message}`;
+                }
+
+                return res.status(400).json({
+                    error: friendlyMessage,
+                    status: mpData.status,
+                    status_detail: mpData.status_detail
+                });
+            }
         }
 
         console.log(`✅ [YapeCharge] Payment APPROVED! MP Payment ID: ${mpData.id}`);
