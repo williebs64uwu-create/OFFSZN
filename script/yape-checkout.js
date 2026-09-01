@@ -1,9 +1,11 @@
 /**
  * OFFSZN - Yape Checkout Integration (Mercado Pago Perú)
  * ======================================================
- * Renders a clean, ultra-premium modal for instant Yape payments in Peru (PEN).
- * Handles OTP (código de aprobación), phone number, automatic tokenization,
- * and displays lifetime activation serial keys and download links immediately upon approval.
+ * Features authentic Yape UI:
+ * - Formatted phone number (9XX XXX XXX)
+ * - 6 Individual OTP Boxes with auto-advance, backspace jump, and paste support
+ * - Official Yape guide indicator
+ * - Direct tokenization & single activation email delivery
  */
 
 (function () {
@@ -23,6 +25,8 @@
             this.injectStyles();
             this.createModal();
             this.attachButtonTriggers();
+            this.setupOTPBoxHandlers();
+            this.setupPhoneFormatter();
             await this.loadConfigAndSDK();
         }
 
@@ -290,36 +294,103 @@
                     color: #52525b !important;
                 }
 
+                /* Phone Input with large, clear font */
+                .yape-input-phone {
+                    width: 100% !important;
+                    padding: 13px 14px 13px 42px !important;
+                    background: #14141c !important;
+                    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+                    border-radius: 10px !important;
+                    color: #ffffff !important;
+                    font-family: monospace, inherit !important;
+                    font-size: 1.1rem !important;
+                    font-weight: 700 !important;
+                    letter-spacing: 2px !important;
+                    transition: all 0.2s ease !important;
+                    outline: none !important;
+                    box-sizing: border-box !important;
+                }
+
+                .yape-input-phone:focus {
+                    background: #181824 !important;
+                    border-color: #a855f7 !important;
+                    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2) !important;
+                    color: #ffffff !important;
+                }
+
+                /* 6 OTP Boxes Container */
+                .yape-otp-grid {
+                    display: grid;
+                    grid-template-columns: repeat(6, 1fr);
+                    gap: 8px;
+                    margin-top: 4px;
+                }
+
+                .yape-otp-box {
+                    width: 100%;
+                    height: 52px;
+                    background: #14141c;
+                    border: 1px solid rgba(255, 255, 255, 0.14);
+                    border-radius: 10px;
+                    color: #ffffff;
+                    font-family: inherit;
+                    font-size: 1.35rem;
+                    font-weight: 800;
+                    text-align: center;
+                    outline: none;
+                    transition: all 0.2s ease;
+                    box-sizing: border-box;
+                    padding: 0;
+                }
+
+                .yape-otp-box:focus {
+                    background: #181824;
+                    border-color: #ec4899;
+                    box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.25);
+                }
+
+                .yape-otp-box.filled {
+                    border-color: rgba(255, 255, 255, 0.3);
+                    background: #181824;
+                }
+
                 /* Neutralize browser autofill white background */
                 .yape-input:-webkit-autofill,
                 .yape-input:-webkit-autofill:hover, 
                 .yape-input:-webkit-autofill:focus,
-                .yape-input:-webkit-autofill:active {
+                .yape-input:-webkit-autofill:active,
+                .yape-input-phone:-webkit-autofill,
+                .yape-input-phone:-webkit-autofill:focus {
                     -webkit-text-fill-color: #ffffff !important;
                     -webkit-box-shadow: 0 0 0px 1000px #14141c inset !important;
                     box-shadow: 0 0 0px 1000px #14141c inset !important;
                     transition: background-color 5000s ease-in-out 0s !important;
                 }
 
-                /* OTP helper guide */
+                /* Official Yape helper guide matching user mockup */
                 .yape-otp-guide {
                     background: rgba(116, 34, 132, 0.12);
                     border: 1px dashed rgba(236, 72, 153, 0.35);
                     border-radius: 10px;
                     padding: 10px 14px;
-                    margin-top: 8px;
+                    margin-top: 10px;
                     font-size: 0.78rem;
                     color: #e4e4e7;
                     line-height: 1.4;
                     display: flex;
-                    gap: 8px;
-                    align-items: flex-start;
+                    gap: 10px;
+                    align-items: center;
                 }
 
-                .yape-otp-guide i {
-                    color: #ec4899;
-                    font-size: 0.95rem;
-                    margin-top: 2px;
+                .yape-badge-icon-wrap {
+                    width: 28px;
+                    height: 28px;
+                    min-width: 28px;
+                    background: #742284;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                 }
 
                 /* Submit Button (White, bold, high contrast) */
@@ -499,7 +570,7 @@
 
                         <!-- Price Banner -->
                         <div class="yape-price-badge-bar">
-                            <span class="yape-price-label">Monto total:</span>
+                            <span class="yape-price-label">Monto total a pagar:</span>
                             <span id="yape-modal-price" class="yape-price-highlight">S/. 16.50</span>
                         </div>
 
@@ -516,22 +587,34 @@
                                 </div>
 
                                 <div class="yape-form-group">
-                                    <label class="yape-form-label" for="yape-phone">Celular registrado en Yape:</label>
+                                    <label class="yape-form-label" for="yape-phone">Ingresa tu celular Yape:</label>
                                     <div class="yape-input-wrapper">
                                         <i class="bi bi-phone yape-input-icon"></i>
-                                        <input type="tel" id="yape-phone" class="yape-input" placeholder="9XX XXX XXX" maxlength="9" required>
+                                        <input type="tel" id="yape-phone" class="yape-input-phone" placeholder="9XX XXX XXX" maxlength="11" required>
                                     </div>
                                 </div>
 
                                 <div class="yape-form-group">
-                                    <label class="yape-form-label" for="yape-otp">Código de Aprobación (6 dígitos):</label>
-                                    <div class="yape-input-wrapper">
-                                        <i class="bi bi-shield-lock yape-input-icon"></i>
-                                        <input type="text" id="yape-otp" class="yape-input" placeholder="123456" maxlength="6" pattern="[0-9]{6}" required autocomplete="off">
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                                        <label class="yape-form-label" style="margin-bottom:0;">Código de Aprobación:</label>
+                                        <span style="font-size:0.72rem; color:#a1a1aa;">6 dígitos</span>
                                     </div>
+                                    
+                                    <!-- 6 Individual OTP Boxes -->
+                                    <div class="yape-otp-grid" id="yape-otp-grid">
+                                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="0" pattern="[0-9]" inputmode="numeric" autocomplete="one-time-code">
+                                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="1" pattern="[0-9]" inputmode="numeric">
+                                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="2" pattern="[0-9]" inputmode="numeric">
+                                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="3" pattern="[0-9]" inputmode="numeric">
+                                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="4" pattern="[0-9]" inputmode="numeric">
+                                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="5" pattern="[0-9]" inputmode="numeric">
+                                    </div>
+
                                     <div class="yape-otp-guide">
-                                        <i class="bi bi-info-circle-fill"></i>
-                                        <span><strong>¿Dónde encontrarlo?</strong> Abre tu app Yape &gt; Menú lateral (3 rayitas) &gt; <strong>Código de aprobación</strong>.</span>
+                                        <div class="yape-badge-icon-wrap">
+                                            <i class="bi bi-shield-check" style="color:#4ade80; font-size:1rem;"></i>
+                                        </div>
+                                        <span>Encuéntralo en tu <strong>app Yape &gt; Menú lateral &gt; Código de aprobación</strong>.</span>
                                     </div>
                                 </div>
 
@@ -607,6 +690,74 @@
             });
         }
 
+        setupPhoneFormatter() {
+            const phoneInput = document.getElementById('yape-phone');
+            if (!phoneInput) return;
+
+            phoneInput.addEventListener('input', (e) => {
+                let raw = e.target.value.replace(/\D/g, '').substring(0, 9);
+                let formatted = '';
+                if (raw.length > 0) formatted = raw.substring(0, 3);
+                if (raw.length > 3) formatted += ' ' + raw.substring(3, 6);
+                if (raw.length > 6) formatted += ' ' + raw.substring(6, 9);
+                e.target.value = formatted;
+            });
+        }
+
+        setupOTPBoxHandlers() {
+            const boxes = document.querySelectorAll('.yape-otp-box');
+            if (!boxes.length) return;
+
+            boxes.forEach((box, idx) => {
+                box.addEventListener('input', (e) => {
+                    const val = e.target.value.replace(/\D/g, '');
+                    e.target.value = val ? val[0] : '';
+
+                    if (val && idx < boxes.length - 1) {
+                        boxes[idx + 1].focus();
+                        boxes[idx + 1].select();
+                    }
+                    this.updateBoxState(boxes);
+                });
+
+                box.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !box.value && idx > 0) {
+                        boxes[idx - 1].focus();
+                        boxes[idx - 1].select();
+                    }
+                });
+
+                box.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').substring(0, 6);
+                    if (text) {
+                        for (let i = 0; i < text.length && i < boxes.length; i++) {
+                            boxes[i].value = text[i];
+                        }
+                        const nextIdx = Math.min(text.length, boxes.length - 1);
+                        boxes[nextIdx].focus();
+                        this.updateBoxState(boxes);
+                    }
+                });
+
+                box.addEventListener('focus', () => box.select());
+            });
+        }
+
+        updateBoxState(boxes) {
+            boxes.forEach(b => {
+                if (b.value) b.classList.add('filled');
+                else b.classList.remove('filled');
+            });
+        }
+
+        getOTPValue() {
+            const boxes = document.querySelectorAll('.yape-otp-box');
+            let otp = '';
+            boxes.forEach(b => otp += b.value.trim());
+            return otp;
+        }
+
         openModal() {
             if (!this.modalElement) return;
 
@@ -618,6 +769,10 @@
             document.getElementById('yape-form-view').style.display = 'block';
             document.getElementById('yape-success-view').style.display = 'none';
             this.hideError();
+
+            // Clear OTP boxes
+            const boxes = document.querySelectorAll('.yape-otp-box');
+            boxes.forEach(b => { b.value = ''; b.classList.remove('filled'); });
 
             this.modalElement.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -652,10 +807,10 @@
         async processPayment() {
             const email = document.getElementById('yape-email').value.trim();
             const phone = document.getElementById('yape-phone').value.trim().replace(/\D/g, '');
-            const otp = document.getElementById('yape-otp').value.trim();
+            const otp = this.getOTPValue();
 
             if (!email || !email.includes('@')) {
-                this.showError('Por favor ingresa un correo válido.');
+                this.showError('Por favor ingresa un correo electrónico válido.');
                 return;
             }
 
@@ -665,7 +820,7 @@
             }
 
             if (otp.length !== 6) {
-                this.showError('El código de aprobación debe tener exactamente 6 dígitos.');
+                this.showError('Ingresa los 6 dígitos completos del código de aprobación.');
                 return;
             }
 
@@ -697,7 +852,6 @@
                         throw new Error(sdkErr.message || 'Código de aprobación inválido o expirado. Revisa tu app Yape.');
                     }
                 } else {
-                    // Fallback test token or direct token
                     yapeToken = 'TEST_YAPE_' + Date.now();
                 }
 
@@ -768,7 +922,6 @@
         }
 
         attachButtonTriggers() {
-            // Find existing Yape buttons or inject a dedicated button in the checkout section
             document.addEventListener('click', (e) => {
                 const target = e.target.closest('[data-action="open-yape-checkout"], #btn-yape-checkout, .btn-yape-trigger, .btn-yape-white');
                 if (target) {
