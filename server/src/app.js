@@ -134,6 +134,8 @@ app.use(helmet({
                 "https://*.gstatic.com", "https://*.googleapis.com", "https://*.google.com", "https://*.googleusercontent.com",
                 // PayPal
                 "https://www.paypal.com", "https://www.sandbox.paypal.com",
+                // Mercado Pago Perú (Yape)
+                "https://sdk.mercadopago.com", "https://*.mercadopago.com", "https://*.mercadopago.com.pe", "https://http2.mlstatic.com", "https://*.mlstatic.com",
                 // EmailOctopus
                 "https://eomail5.com", "https://*.eomail5.com",
                 // Meta Pixel
@@ -150,6 +152,8 @@ app.use(helmet({
                 "https://grainy-gradients.vercel.app",
                 "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com",
                 "https://ui-avatars.com",
+                // Mercado Pago
+                "https://*.mercadopago.com", "https://*.mercadopago.com.pe", "https://*.mlstatic.com", "https://http2.mlstatic.com",
                 // PayPal
                 "https://www.paypalobjects.com", "https://*.paypal.com",
                 "https://offszn.lat", "https://*.offszn.lat", "http://localhost:*",
@@ -162,6 +166,8 @@ app.use(helmet({
                 "https://*.cloudflarestorage.com", "https://*.r2.cloudflarestorage.com", "https://*.r2.dev",
                 "https://api.emailjs.com",
                 "https://eomail5.com", "https://*.eomail5.com",
+                // Mercado Pago Perú
+                "https://api.mercadopago.com", "https://*.mercadopago.com", "https://*.mercadopago.com.pe", "https://events.mercadopago.com",
                 // PayPal
                 "https://api.paypal.com", "https://www.paypal.com", "https://www.sandbox.paypal.com",
                 "https://api-m.paypal.com", "https://api-m.sandbox.paypal.com",
@@ -177,6 +183,8 @@ app.use(helmet({
             frameSrc: ["'self'",
                 "https://www.youtube.com", "https://www.youtube-nocookie.com",
                 "https://open.spotify.com",
+                // Mercado Pago
+                "https://*.mercadopago.com", "https://*.mercadopago.com.pe",
                 // PayPal
                 "https://www.paypal.com", "https://www.sandbox.paypal.com",
                 "https://accounts.google.com", "https://*.googleapis.com", "https://apis.google.com",

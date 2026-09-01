@@ -772,24 +772,30 @@
                 let yapeToken = null;
 
                 // 1. Generate token with Mercado Pago SDK
-                if (this.mpInstance && typeof this.mpInstance.yape === 'function') {
-                    try {
-                        const yape = this.mpInstance.yape({
-                            otp: otp,
-                            phoneNumber: phone
-                        });
-                        const tokenObj = await yape.create();
-                        yapeToken = tokenObj?.id || tokenObj;
-                    } catch (sdkErr) {
-                        console.error('[YapeCheckout] SDK token error:', sdkErr);
-                        throw new Error(sdkErr.message || 'Código de aprobación inválido o expirado. Revisa tu app Yape.');
-                    }
-                } else {
-                    yapeToken = 'TEST_YAPE_' + Date.now();
+                if (!this.mpInstance && window.MercadoPago) {
+                    this.initMP();
+                }
+
+                if (!this.mpInstance || typeof this.mpInstance.yape !== 'function') {
+                    throw new Error('El servicio de Yape no está disponible en este momento. Por favor recarga la página.');
+                }
+
+                try {
+                    const yape = this.mpInstance.yape({
+                        otp: otp,
+                        phoneNumber: phone
+                    });
+                    const tokenObj = await yape.create();
+                    yapeToken = (typeof tokenObj === 'string') ? tokenObj : (tokenObj?.id || tokenObj?.token || tokenObj);
+                } catch (sdkErr) {
+                    console.error('[YapeCheckout] SDK token error:', sdkErr);
+                    let errorMsg = 'El código de aprobación es incorrecto o ha expirado. Revisa tu app de Yape.';
+                    if (sdkErr?.message) errorMsg = sdkErr.message;
+                    throw new Error(errorMsg);
                 }
 
                 if (!yapeToken) {
-                    throw new Error('No se pudo generar el token de Yape. Revisa el código de aprobación.');
+                    throw new Error('Código de aprobación inválido. Genera uno nuevo en tu app de Yape.');
                 }
 
                 submitText.innerHTML = '<span class="yape-spinner"></span> Procesando cobro...';
