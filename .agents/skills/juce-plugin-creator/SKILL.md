@@ -19,6 +19,7 @@ graph TD
     B --> C[Phase 3: JUCE 8 DSP & DAW Stability Engine]
     C --> D[Phase 4: Multi-Layer Anti-Abuse Licensing]
     D --> E[Phase 5: Automated Packaging & CI/CD Pipelines]
+    E --> F[Phase 6: Web Landing Page, Yape Bricks & Instant Fulfillment]
 ```
 
 ---
@@ -341,3 +342,128 @@ end;
 - **Generator:** Always use `-G "Xcode"` with `-DCMAKE_OSX_DEPLOYMENT_TARGET="11.0"` on `macos-14` (Apple Silicon).
 - **Formats:** Compile both **VST3** and **AU (.component)** formats.
 - **Packaging:** Combine into an Apple installer `.pkg` via `pkgbuild` and `productbuild` with universal support (`arm64` + `x86_64`).
+
+---
+
+## 💳 Phase 6: Web Landing Page, Yape Bricks & Instant Fulfillment Architecture
+
+When publishing a new OFFSZN plugin or building its sales landing page, integrating the **Yape (Mercado Pago Perú)** instant checkout is mandatory alongside PayPal.
+
+```mermaid
+sequenceDiagram
+    participant User as Customer (Peru)
+    participant LP as Landing Page (yape-checkout.js)
+    participant MP as Mercado Pago SDK (JS v2)
+    participant BE as OFFSZN Server (YapeController.js)
+    participant MPApi as Mercado Pago Payments API (v1)
+    participant SB as Supabase DB & Mailer
+
+    User->>LP: Clicks "Pagar con Yape (Soles 🇵🇪)"
+    LP->>BE: GET /api/orders/yape/config
+    BE-->>LP: { publicKey, exchangeRate: 3.30 }
+    LP->>LP: Calculate price in Soles (USD * 3.30)
+    User->>LP: Inputs Phone + 6-digit OTP from Yape App
+    LP->>MP: mpInstance.yape({ otp, phoneNumber, amount: pricePEN })
+    MP-->>LP: yapeToken (Authorized Token)
+    LP->>BE: POST /api/orders/yape/charge { token, email, phoneNumber, productId, customPrice }
+    BE->>MPApi: POST /v1/payments { token, transaction_amount, installments: 1, payment_method_id: 'yape', ... }
+    MPApi-->>BE: { status: "approved", id: "..." }
+    BE->>SB: Generate FULL Serial Key + Save Order in DB
+    BE->>SB: Send automated fulfillment email with downloads & serial
+    BE-->>LP: { success: true, serialKey, downloads }
+    LP->>User: Displays Instant Success Screen (Copy Key + Download Buttons)
+```
+
+### 🛡️ Mandatory Technical Rules for Yape Checkout:
+
+#### 1. Frontend Landing Page Integration (`plugins/<plugin-slug>.html`)
+- **Trigger Button:** Use the standardized high-contrast `.btn-yape-white` button directly beneath PayPal/Mercado Pago.
+```html
+<!-- Botón Yape (Modal Instantáneo Mercado Pago Perú) -->
+<button type="button" data-action="open-yape-checkout" id="btn-yape-checkout" class="btn-yape-white">
+    <img src="/images/payments/yape.png" alt="Yape" style="width: 22px; height: 22px; object-fit: contain; border-radius: 5px;">
+    Pagar con Yape (Soles 🇵🇪)
+</button>
+```
+- **Scripts at Closing `</body>`:**
+```html
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script src="/script/plugin-checkout.js?v=2"></script>
+<script src="/script/yape-checkout.js?v=7"></script>
+```
+- **Mandatory Window Globals (Dynamic Pricing):**
+```javascript
+// Expose plugin metadata and dynamic A/B promo price to window
+window.PLUGIN_ID = 904; // Unique numeric ID
+window.PLUGIN_NAME = 'Plugin Name';
+window.CURRENT_PROMO_PRICE = assignedPrice; // Dynamic USD price ($5, $10, $15, $20)
+```
+
+#### 2. Mercado Pago JS SDK Tokenization Rule (`yape-checkout.js`)
+- **⚠️ CRITICAL GOTCHA (`amount` parameter):** When calling `mpInstance.yape()`, you **MUST** pass `amount: pricePEN`. If omitted, the SDK creates an unbacked 0-amount token, causing Mercado Pago to return `Invalid value for transaction_amount`.
+```javascript
+// ✅ Correct Token Creation with Amount
+const pricePEN = parseFloat(this.getPricePEN());
+const yape = this.mpInstance.yape({
+    otp: otp,
+    phoneNumber: phone,
+    amount: pricePEN // <-- MANDATORY
+});
+const tokenObj = await yape.create();
+const yapeToken = (typeof tokenObj === 'string') ? tokenObj : (tokenObj?.id || tokenObj?.token || tokenObj);
+```
+- **OTP Input UX:** Modal must use 6 isolated digit boxes (`[ ] [ ] [ ] [ ] [ ] [ ]`) with auto-advance, backspace navigation, paste support, and clean black & white aesthetic (no distracting heavy glows).
+
+#### 3. Backend Controller Standard (`server/src/infrastructure/http/controllers/YapeController.js`)
+- **Plugin Catalog Mapping:** Every new plugin must be registered in `PLUGIN_INFO_MAP`:
+```javascript
+'<NEW_ID>': {
+    name: '<Plugin Name>',
+    downloads: {
+        win: 'https://drive.google.com/... or /installer_output/...Setup.exe',
+        mac: 'https://drive.google.com/... or /downloads/...pkg'
+    }
+}
+```
+- **Mercado Pago `/v1/payments` Mandatory Payload Constraints:**
+```javascript
+const mpPayload = {
+    token: token,
+    transaction_amount: amountPEN, // Must be >= S/. 3.00 (MP Peru minimum)
+    installments: 1,               // ⚠️ MANDATORY: Failing to send installments: 1 causes 'Invalid installments'
+    description: `OFFSZN - ${pluginName} VST (Licencia Vitalicia)`,
+    payment_method_id: 'yape',     // ⚠️ MANDATORY
+    payer: {
+        email: email.trim().toLowerCase()
+    },
+    metadata: {
+        product_id: parseInt(productId, 10),
+        plugin_name: pluginName,
+        usd_price: validUsdPrice,
+        exchange_rate: exchangeRate,
+        phone_number: phoneNumber || null
+    }
+};
+```
+- **Dynamic Currency Calculation:**
+```javascript
+const exchangeRate = parseFloat(process.env.YAPE_EXCHANGE_RATE_PEN) || 3.30;
+const validUsdPrice = parseFloat(customPrice) || 10;
+const amountPEN = req.body.customPricePEN 
+    ? Number(parseFloat(req.body.customPricePEN).toFixed(2)) 
+    : Number((validUsdPrice * exchangeRate).toFixed(2));
+```
+
+#### 4. Content Security Policy (CSP) Directives (`server/src/app.js`)
+- Ensure Helmet CSP allows Mercado Pago and Mercado Libre telemetry to prevent console blocks:
+  - `connectSrc`: `https://*.mercadopago.com`, `https://*.mercadopago.com.pe`, `https://events.mercadopago.com`, `https://api.mercadolibre.com`, `https://*.mercadolibre.com`, `https://*.mercadolibre.com.pe`
+  - `frameSrc`: `https://*.mercadopago.com`, `https://*.mercadopago.com.pe`, `https://*.mercadolibre.com`
+  - `imgSrc`: `https://*.mercadopago.com`, `https://*.mercadopago.com.pe`, `https://*.mercadolibre.com`, `https://*.mercadolivre.com`
+
+#### 5. Instant Customer Fulfillment & Licensing
+- Upon payment verification (`status === 'approved'`):
+  1. Generate 1 official `FULL` lifetime license key (`generatePluginLicense({ email, productId, pluginName, licenseType: 'FULL' })`).
+  2. Record transaction in Supabase with payment method `yape` and Mercado Pago transaction ID.
+  3. Send 1 consolidated delivery email to customer with Serial Key and installer download links.
+  4. Dispatch Meta CAPI Purchase event for ad optimization.
+
