@@ -317,9 +317,11 @@ export async function generatePluginLicense({ licenseType, userEmail, userId, pl
 export const activateSerial = async (req, res) => {
     console.log("➡️ [API /activate] Request body received:", req.body);
     try {
-        const rawSerial = (req.body.serial_key || '').trim();
+        const { device_name, user_email, email } = req.body || {};
+        const rawSerial = (req.body?.serial_key || '').trim();
         // hwid is optional — if not provided or null, use a generic fallback
-        const hwid = req.body.hwid || 'device-no-hwid';
+        const hwid = req.body?.hwid || 'device-no-hwid';
+        const clientEmail = user_email || email || null;
         if (!rawSerial) {
             return res.status(400).json({ error: 'Falta serial key' });
         }
@@ -337,7 +339,7 @@ export const activateSerial = async (req, res) => {
 
         // ── Validation: Match Plugin product (Coca-Cola vs Inka Kola vs Easy Master vs Easy Mix) ──
         const upperSerial = (serial_key || '').toUpperCase();
-        const requestedPlugin = (req.body.plugin_name || '').toLowerCase();
+        const requestedPlugin = (req.body?.plugin_name || '').toLowerCase();
         const registeredPlugin = (license.plugin_name || '').toLowerCase();
 
         const isCokeKey = upperSerial.startsWith('COKE') || registeredPlugin.includes('coca') || registeredPlugin.includes('coke');
@@ -412,12 +414,14 @@ export const activateSerial = async (req, res) => {
             if (isFirstActivation) {
                 const expiresAtStr = license.expires_at ? license.expires_at : 'never';
                 // Try to get email: from request, or from linked user
-                let toEmail = user_email;
+                let toEmail = clientEmail;
                 if (!toEmail && license.user_id) {
                     const { data: u } = await supabase.from('users').select('email').eq('id', license.user_id).single();
                     toEmail = u?.email;
                 }
-                await sendActivationEmail({ to: toEmail, serialKey: serial_key, licenseType: license.license_type, expiresAt: expiresAtStr });
+                if (toEmail) {
+                    await sendActivationEmail({ to: toEmail, serialKey: serial_key, licenseType: license.license_type, expiresAt: expiresAtStr });
+                }
             }
         } else {
             console.log("ℹ️ [API /activate] Device already activated:", hwid);
