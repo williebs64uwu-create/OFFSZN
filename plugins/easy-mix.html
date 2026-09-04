@@ -1990,13 +1990,30 @@
                 const priceEl = document.getElementById('easy-mix-price-val');
                 if (priceEl) priceEl.innerText = `$${assignedPrice}`;
 
+                const solesMap = { 5: 19, 10: 38, 15: 57, 20: 76 };
+                const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
+
                 const waLinks = document.querySelectorAll('a[href*="wa.me"]');
                 waLinks.forEach(link => {
                     let currentHref = link.getAttribute('href');
                     if (currentHref.includes('text=')) {
                         let parts = currentHref.split('text=');
-                        let baseText = decodeURIComponent(parts[1]).replace(/por\s+\$?\d+(\s*USD)?/gi, '').trim();
-                        link.setAttribute('href', `${parts[0]}text=${encodeURIComponent(baseText + ' por $' + assignedPrice + ' USD')}`);
+                        let rawDecoded = decodeURIComponent(parts[1]);
+                        let isYape = rawDecoded.toLowerCase().includes('yape') || link.innerText.toLowerCase().includes('yape');
+                        let isMp = rawDecoded.toLowerCase().includes('mercado') || link.innerText.toLowerCase().includes('mercado');
+                        let isBinance = rawDecoded.toLowerCase().includes('binance') || link.innerText.toLowerCase().includes('binance');
+
+                        let baseText = rawDecoded.replace(/por\s+\$?\d+(\s*USD)?(\s*\/\s*S\/\s*\d+\s*soles)?/gi, '').replace(/\(\$?\d+(\s*USD)?(\s*\/\s*S\/\s*\d+\s*soles)?\)/gi, '').trim();
+
+                        if (isYape) {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero comprar el plugin Easy Mix por Yape ($' + assignedPrice + ' USD / S/ ' + solesPrice + ' soles)')}`);
+                        } else if (isMp) {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero comprar el plugin Easy Mix por Mercado Pago ($' + assignedPrice + ' USD)')}`);
+                        } else if (isBinance) {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero pagar con Binance el plugin Easy Mix ($' + assignedPrice + ' USD)')}`);
+                        } else {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent(baseText + ' por $' + assignedPrice + ' USD')}`);
+                        }
                     }
                 });
             });

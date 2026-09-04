@@ -1590,6 +1590,9 @@
                 const strikeEl = document.querySelector('#pricing-wall span[style*="line-through"]');
                 if (strikeEl) strikeEl.innerText = assignedPrice === 10 ? '$25' : '$30';
 
+                const solesMap = { 5: 19, 10: 38, 15: 57, 20: 76 };
+                const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
+
                 // Update specific contact and payment links cleanly
                 const mpBtn = document.querySelector('a[href*="Mercado%20Pago"], a[href*="Mercado+Pago"]');
                 if (mpBtn) {
@@ -1598,7 +1601,7 @@
 
                 const yapeBtn = document.querySelector('a[href*="Yape"], a[href*="yape"]');
                 if (yapeBtn && !yapeBtn.getAttribute('href').includes('instal')) {
-                    yapeBtn.setAttribute('href', `https://wa.me/51993525005?text=${encodeURIComponent('Hola, quiero comprar el plugin Coca-Cola por Yape ($' + assignedPrice + ' USD)')}`);
+                    yapeBtn.setAttribute('href', `https://wa.me/51993525005?text=${encodeURIComponent('Hola, quiero comprar el plugin Coca-Cola por Yape ($' + assignedPrice + ' USD / S/ ' + solesPrice + ' soles)')}`);
                 }
 
                 const binanceBtn = document.querySelector('a[href*="Binance"], a[href*="binance"]');
