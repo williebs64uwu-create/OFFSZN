@@ -74,6 +74,8 @@
                 return Number(window.YAPE_FIXED_PRICE_PEN).toFixed(2);
             }
             const usd = this.getPriceUSD();
+            const solesMap = { 5: 19, 10: 38, 15: 57, 20: 76 };
+            if (solesMap[usd]) return Number(solesMap[usd]).toFixed(2);
             return (usd * this.exchangeRate).toFixed(2);
         }
 
@@ -875,8 +877,12 @@
 
         attachButtonTriggers() {
             document.addEventListener('click', (e) => {
-                const target = e.target.closest('[data-action="open-yape-checkout"], #btn-yape-checkout, .btn-yape-trigger, .btn-yape-white');
+                const target = e.target.closest('[data-action="open-yape-checkout"], #btn-yape-checkout, #btn-yape, .btn-yape-trigger, .btn-yape-white, .btn-yape, a[href*="Yape"], a[href*="yape"]');
                 if (target) {
+                    const href = target.getAttribute('href') || '';
+                    if (href.includes('problemas') || href.includes('instalar') || href.includes('soporte') || href.includes('flp') || href.includes('tutorial')) {
+                        return;
+                    }
                     e.preventDefault();
                     this.openModal();
                 }
