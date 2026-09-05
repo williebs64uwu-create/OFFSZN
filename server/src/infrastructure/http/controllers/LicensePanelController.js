@@ -1,4 +1,3 @@
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import jwt from 'jsonwebtoken';
 import { LICENSE_PANEL_KEY, JWT_SECRET } from '../../../shared/config/config.js';
 
@@ -160,6 +159,18 @@ This Agreement is governed by the laws of Lima, Peru.
 
 IN WITNESS WHEREOF, the parties have executed this Agreement as of the date of purchase.`;
 
+    let pdfLibModule;
+    try {
+      pdfLibModule = await import('pdf-lib');
+    } catch (importErr) {
+      console.warn('[LicensePanel] pdf-lib not installed on backend, delegating to client CDN:', importErr.message);
+      return res.status(503).json({
+        success: false,
+        error: 'Generación PDF en backend no disponible. Usa la descarga directa desde el panel (CDN).'
+      });
+    }
+
+    const { PDFDocument, rgb, StandardFonts } = pdfLibModule;
     const pdfDoc = await PDFDocument.create();
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
