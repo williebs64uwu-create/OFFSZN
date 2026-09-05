@@ -88,3 +88,6 @@ export const META_PIXEL_ID = cleanConfigValue(process.env.META_PIXEL_ID);
 export const META_CAPI_ACCESS_TOKEN = cleanConfigValue(process.env.META_CAPI_ACCESS_TOKEN);
 export const META_GRAPH_API_VERSION = cleanConfigValue(process.env.META_GRAPH_API_VERSION) || 'v21.0';
 export const META_TEST_EVENT_CODE = cleanConfigValue(process.env.META_TEST_EVENT_CODE);
+
+// LICENSE GENERATOR PANEL KEY
+export const LICENSE_PANEL_KEY = cleanConfigValue(process.env.LICENSE_PANEL_KEY) || 'gian2030upc';

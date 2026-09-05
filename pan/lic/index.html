@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OFFSZN • Panel de Generación de Licencias</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <!-- pdf-lib CDN for standalone generation -->
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <style>
+    :root {
+      --bg: #070709;
+      --bg-card: #0f0f13;
+      --bg-card-hover: #16161c;
+      --border: #22222b;
+      --border-focus: #730ab8;
+      --primary: #9333ea;
+      --primary-dark: #730ab8;
+      --primary-glow: rgba(147, 51, 234, 0.25);
+      --accent: #10b981;
+      --accent-glow: rgba(16, 185, 129, 0.2);
+      --text: #f4f4f5;
+      --text-muted: #8b8b99;
+      --danger: #ef4444;
+      --radius: 14px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(115, 10, 184, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.06) 0%, transparent 45%);
+      background-attachment: fixed;
+    }
+
+    /* Auth Gate Screen */
+    #auth-screen {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 28px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 40px var(--primary-glow);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary), #ec4899, var(--accent));
+    }
+
+    .badge-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(147, 51, 234, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(147, 51, 234, 0.3);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .auth-card h1 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .auth-card p {
+      color: var(--text-muted);
+      font-size: 13.5px;
+      margin-bottom: 26px;
+      line-height: 1.5;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-control {
+      width: 100%;
+      background: #09090d;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 14px;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .input-control:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(115, 10, 184, 0.25);
+    }
+
+    .btn-toggle-eye {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg, #9333ea, #730ab8);
+      color: white;
+      border: none;
+      padding: 13px;
+      border-radius: 10px;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 20px rgba(147, 51, 234, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 25px rgba(147, 51, 234, 0.5);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    /* Main Dashboard Screen */
+    #dashboard-screen {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+    }
+
+    .header-nav {
+      background: rgba(15, 15, 19, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--primary), #4f46e5);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: white;
+    }
+
+    .brand-text h2 {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-text span {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: #3f3f4e;
+    }
+
+    .btn-logout {
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-logout:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: #ef4444;
+    }
+
+    .dashboard-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+      width: 100%;
+    }
+
+    /* Presets Strip */
+    .presets-bar {
+      margin-bottom: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .presets-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-right: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-preset {
+      background: #181822;
+      border: 1px solid #2e2e3e;
+      color: #e4e4e7;
+      padding: 7px 13px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-preset:hover {
+      background: #252535;
+      border-color: var(--primary);
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .btn-preset.highlight {
+      background: rgba(147, 51, 234, 0.2);
+      border-color: rgba(147, 51, 234, 0.5);
+      color: #d8b4fe;
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+
+    .card-header-clean {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-header-clean h3 {
+      font-size: 16px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .select-control {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b8b99' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+      padding-right: 36px;
+    }
+
+    /* Accordion Details */
+    .accordion-toggle {
+      background: #13131a;
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border-radius: 10px;
+      width: 100%;
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      margin-bottom: 14px;
+    }
+
+    .accordion-content {
+      display: none;
+      padding: 16px;
+      background: #09090e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 18px;
+    }
+
+    /* Certificate Live Preview Box */
+    .preview-card {
+      background: #000000;
+      border: 1px solid #27272a;
+      border-radius: 12px;
+      padding: 24px 20px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    }
+
+    .prev-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+    }
+
+    .prev-code-block {
+      text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #71717a;
+      line-height: 1.4;
+    }
+
+    .prev-code-hash {
+      color: #10b981;
+      font-weight: 700;
+    }
+
+    .prev-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: #d4d4d8;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .prev-purple-line {
+      height: 2px;
+      background: #730ab8;
+      margin-bottom: 20px;
+    }
+
+    .prev-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #71717a;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .prev-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .prev-label {
+      color: #a1a1aa;
+    }
+
+    .prev-val {
+      font-weight: 700;
+      color: #ffffff;
+      text-align: right;
+      max-width: 60%;
+      word-break: break-word;
+    }
+
+    .prev-divider {
+      height: 1px;
+      background: #27272a;
+      margin: 16px 0;
+    }
+
+    .prev-footer {
+      font-size: 8px;
+      color: #52525b;
+      margin-top: 24px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    /* History Table */
+    .history-card {
+      margin-top: 28px;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    th {
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #1a1a24;
+      color: #e4e4e7;
+    }
+
+    tr:hover td {
+      background: #14141d;
+    }
+
+    .badge-pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(147, 51, 234, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(147, 51, 234, 0.3);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #181822;
+      border: 1px solid #3b3b4f;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. AUTH SCREEN -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <div class="badge-tag">🔒 Acceso Restringido</div>
+      <h1>OFFSZN Legal Engine</h1>
+      <p>Panel de Emisión y Descarga de Licencias Oficiales OFFSZN</p>
+
+      <form id="auth-form">
+        <div class="input-group">
+          <label for="access-key">Clave de Seguridad (.env)</label>
+          <div class="input-wrapper">
+            <input type="password" id="access-key" class="input-control" placeholder="Ingresa la clave del panel..." required autocomplete="current-password">
+            <button type="button" class="btn-toggle-eye" id="toggle-eye" tabindex="-1">👁️</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="btn-login">
+          <span>Desbloquear Panel</span>
+          <span id="login-spinner" style="display: none;">⏳</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. MAIN DASHBOARD SCREEN -->
+  <div id="dashboard-screen">
+    
+    <!-- Top Nav -->
+    <header class="header-nav">
+      <div class="brand-title">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-text">
+          <h2>OFFSZN • Generador de Licencias</h2>
+          <span>Motor Legal Oficial v4.2 • Lima, Perú</span>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <button class="btn-secondary btn-logout" id="btn-logout">Cerrar Sesión</button>
+      </div>
+    </header>
+
+    <div class="dashboard-container">
+      
+      <!-- Presets Strip -->
+      <div class="presets-bar">
+        <span class="presets-title">⚡ Carga Rápida:</span>
+        <button type="button" class="btn-preset highlight" id="preset-lak">👑 La K ("intro" - $35 USD)</button>
+        <button type="button" class="btn-preset" id="preset-excl">📜 Exclusiva General ($40 USD)</button>
+        <button type="button" class="btn-preset" id="preset-unl">🎹 Ilimitada / Stems ($25 USD)</button>
+        <button type="button" class="btn-preset" id="preset-prem">💿 Premium WAV ($15 USD)</button>
+        <button type="button" class="btn-preset" id="preset-basic">🎧 Básica MP3 ($10 USD)</button>
+      </div>
+
+      <!-- Main Grid Form & Preview -->
+      <div class="main-grid">
+        
+        <!-- Form Section -->
+        <div class="panel-card">
+          <div class="card-header-clean">
+            <h3>📝 Datos de la Licencia</h3>
+            <button type="button" class="btn-secondary" id="btn-reset-form" style="font-size: 11px; padding: 4px 10px;">Limpiar</button>
+          </div>
+
+          <form id="license-form">
+            
+            <div class="form-grid-2">
+              <div class="input-group">
+                <label>Nombre del Beat / Instrumental *</label>
+                <input type="text" id="beat-name" class="input-control" value="intro" required placeholder="ej. intro, detroit type beat">
+              </div>
+
+              <div class="input-group">
+                <label>Productor / Licenciante *</label>
+                <input type="text" id="producer-name" class="input-control" value="Willie Inspired" required>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="input-group">
+                <label>Tipo de Licencia *</label>
+                <select id="license-type" class="input-control select-control">
+                  <option value="exclusive" selected>Exclusive Rights License (Exclusiva Total)</option>
+                  <option value="unlimited">Non-Exclusive Unlimited License (Trackout Stems)</option>
+                  <option value="premium">Non-Exclusive Premium License (WAV + MP3)</option>
+                  <option value="basic">Non-Exclusive Basic License (MP3)</option>
+                </select>
+              </div>
+
+              <div class="input-group">
+                <label>Precio Pagado (USD) *</label>
+                <input type="number" step="0.01" id="price-paid" class="input-control" value="35.00" required>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="input-group">
+                <label>Nombre del Comprador / Artista *</label>
+                <input type="text" id="buyer-name" class="input-control" value="La K" required placeholder="Nombre artístico o real">
+              </div>
+
+              <div class="input-group">
+                <label>Email del Comprador *</label>
+                <input type="email" id="buyer-email" class="input-control" value="leonardowranth2@gmail.com" required placeholder="cliente@gmail.com">
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="input-group">
+                <label>Order ID / Número de Orden *</label>
+                <div class="input-wrapper">
+                  <input type="text" id="order-id" class="input-control" value="2026" required>
+                  <button type="button" id="btn-rand-order" class="btn-secondary" style="margin-left: 8px; padding: 10px 12px; font-size: 11px;">🎲</button>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label>Fecha de Emisión *</label>
+                <input type="date" id="purchase-date" class="input-control">
+              </div>
+            </div>
+
+            <!-- Advanced options accordion -->
+            <button type="button" class="accordion-toggle" id="btn-toggle-adv">
+              <span>⚙️ Opciones Legales Avanzadas (Splits, Créditos, Entregables)</span>
+              <span id="adv-arrow">▼</span>
+            </button>
+
+            <div class="accordion-content" id="adv-content">
+              <div class="input-group">
+                <label>Archivos Entregables</label>
+                <input type="text" id="custom-files" class="input-control" placeholder="Automático según tipo (MP3, WAV, STEMS)">
+              </div>
+              <div class="form-grid-2">
+                <div class="input-group">
+                  <label>% Publishing Productor</label>
+                  <input type="number" id="split-prod" class="input-control" value="50">
+                </div>
+                <div class="input-group">
+                  <label>% Publishing Artista</label>
+                  <input type="number" id="split-buyer" class="input-control" value="50">
+                </div>
+              </div>
+              <div class="input-group">
+                <label>Formato de Crédito de Producción</label>
+                <input type="text" id="credits-text" class="input-control" value="Produced by Willie Inspired">
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary" id="btn-generate-pdf" style="padding: 15px; font-size: 15px;">
+              <span>⚡ GENERAR Y DESCARGAR PDF OFICIAL OFFSZN</span>
+            </button>
+
+          </form>
+        </div>
+
+        <!-- Live Preview Section -->
+        <div>
+          <div class="panel-card" style="padding: 18px;">
+            <div class="card-header-clean" style="margin-bottom: 14px;">
+              <h3>👁️ Vista Previa del Certificado</h3>
+              <span class="badge-pill" style="color:#10b981; border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.1);">Página 1</span>
+            </div>
+
+            <div class="preview-card" id="cert-preview">
+              <div class="prev-top-bar">
+                <div></div>
+                <div class="prev-code-block">
+                  <div>OFFSZN AUTHENTICITY CHECK</div>
+                  <div class="prev-code-hash" id="prev-code">CODE: MJAYNJPSZW9UYXJK</div>
+                  <div>ISSUED: LIMA, PERU</div>
+                </div>
+              </div>
+
+              <div class="prev-title">LICENSE CERTIFICATE</div>
+              <div class="prev-purple-line"></div>
+
+              <div class="prev-section-title">PURCHASE INFORMATION</div>
+              <div class="prev-row">
+                <span class="prev-label">Beat Name:</span>
+                <span class="prev-val" id="prev-beat">intro</span>
+              </div>
+              <div class="prev-row">
+                <span class="prev-label">Producer:</span>
+                <span class="prev-val" id="prev-prod">Willie Inspired</span>
+              </div>
+              <div class="prev-row">
+                <span class="prev-label">License Type:</span>
+                <span class="prev-val" id="prev-type">Exclusive Rights License</span>
+              </div>
+              <div class="prev-row">
+                <span class="prev-label">Price Paid:</span>
+                <span class="prev-val" id="prev-price" style="color: #10b981;">$35.00 USD</span>
+              </div>
+
+              <div class="prev-divider"></div>
+
+              <div class="prev-section-title">LICENSEE (BUYER)</div>
+              <div class="prev-row">
+                <span class="prev-label">Buyer Name:</span>
+                <span class="prev-val" id="prev-buyer">La K</span>
+              </div>
+              <div class="prev-row">
+                <span class="prev-label">Buyer Email:</span>
+                <span class="prev-val" id="prev-email" style="font-size: 10px;">leonardowranth2@gmail.com</span>
+              </div>
+              <div class="prev-row">
+                <span class="prev-label">Purchase Date:</span>
+                <span class="prev-val" id="prev-date">9/2/2026</span>
+              </div>
+              <div class="prev-row">
+                <span class="prev-label">Order ID:</span>
+                <span class="prev-val" id="prev-order">2026</span>
+              </div>
+
+              <div class="prev-footer">
+                OFFSZN DIGITAL SIGNATURE & VERIFICATION SYSTEM<br>
+                THIS LICENSE IS VALID GLOBALLY BUT GOVERNED BY THE LAWS OF LIMA, PERU.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- History of Generated Licenses -->
+      <div class="panel-card history-card">
+        <div class="card-header-clean">
+          <h3>🕒 Historial de Licencias Generadas (Esta Sesión)</h3>
+          <span id="history-count" style="font-size: 12px; color: var(--text-muted);">0 licencias</span>
+        </div>
+        <div class="table-responsive">
+          <table id="history-table">
+            <thead>
+              <tr>
+                <th>Fecha / Hora</th>
+                <th>Beat</th>
+                <th>Comprador</th>
+                <th>Tipo</th>
+                <th>Precio</th>
+                <th>Order ID</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="history-body">
+              <tr>
+                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">No has generado licencias en esta sesión aún.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Notification Toast -->
+  <div class="toast" id="toast-msg">
+    <span id="toast-icon">✅</span>
+    <span id="toast-text">Acción completada con éxito</span>
+  </div>
+
+  <script>
+    // Configuration & State
+    const API_BASE = '/api/pan/lic';
+    const TOKEN_KEY = 'offszn_lic_panel_jwt';
+    let sessionHistory = [];
+
+    // Initialize Purchase Date to Today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('purchase-date').value = today;
+
+    // Elements
+    const authScreen = document.getElementById('auth-screen');
+    const dashboardScreen = document.getElementById('dashboard-screen');
+    const authForm = document.getElementById('auth-form');
+    const accessKeyInput = document.getElementById('access-key');
+    const toggleEye = document.getElementById('toggle-eye');
+    const btnLogout = document.getElementById('btn-logout');
+    const licenseForm = document.getElementById('license-form');
+
+    // Toggle Eye Password
+    toggleEye.addEventListener('click', () => {
+      const isPass = accessKeyInput.type === 'password';
+      accessKeyInput.type = isPass ? 'text' : 'password';
+      toggleEye.textContent = isPass ? '🔒' : '👁️';
+    });
+
+    // Show Toast
+    function showToast(text, isError = false) {
+      const toast = document.getElementById('toast-msg');
+      const toastText = document.getElementById('toast-text');
+      const toastIcon = document.getElementById('toast-icon');
+
+      toastText.textContent = text;
+      toastIcon.textContent = isError ? '⚠️' : '✅';
+      toast.className = isError ? 'toast show' : 'toast show success';
+
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 3500);
+    }
+
+    // Auth Check on Startup
+    async function checkAuth() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        showAuthScreen();
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/verify`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.valid) {
+          showDashboard();
+        } else {
+          localStorage.removeItem(TOKEN_KEY);
+          showAuthScreen();
+        }
+      } catch (e) {
+        // Fallback for standalone/local environment if backend verification fails
+        showDashboard();
+      }
+    }
+
+    function showAuthScreen() {
+      authScreen.style.display = 'flex';
+      dashboardScreen.style.display = 'none';
+    }
+
+    function showDashboard() {
+      authScreen.style.display = 'none';
+      dashboardScreen.style.display = 'flex';
+      updatePreview();
+    }
+
+    // Login Form Submit
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const key = accessKeyInput.value.trim();
+      if (!key) return;
+
+      const spinner = document.getElementById('login-spinner');
+      spinner.style.display = 'inline-block';
+
+      try {
+        const res = await fetch(`${API_BASE}/auth`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          localStorage.setItem(TOKEN_KEY, data.token);
+          showToast('¡Autenticado correctamente!');
+          showDashboard();
+        } else {
+          showToast(data.error || 'Clave de acceso incorrecta', true);
+        }
+      } catch (err) {
+        // Client fallback if offline / standalone
+        if (key === 'gian2030upc') {
+          localStorage.setItem(TOKEN_KEY, 'gian2030upc');
+          showToast('Autenticado (Modo directo)');
+          showDashboard();
+        } else {
+          showToast('Clave incorrecta', true);
+        }
+      } finally {
+        spinner.style.display = 'none';
+      }
+    });
+
+    // Logout
+    btnLogout.addEventListener('click', () => {
+      localStorage.removeItem(TOKEN_KEY);
+      showAuthScreen();
+      showToast('Sesión cerrada');
+    });
+
+    // Accordion Toggle
+    const btnToggleAdv = document.getElementById('btn-toggle-adv');
+    const advContent = document.getElementById('adv-content');
+    const advArrow = document.getElementById('adv-arrow');
+
+    btnToggleAdv.addEventListener('click', () => {
+      const isVisible = advContent.style.display === 'block';
+      advContent.style.display = isVisible ? 'none' : 'block';
+      advArrow.textContent = isVisible ? '▼' : '▲';
+    });
+
+    // Random Order Button
+    document.getElementById('btn-rand-order').addEventListener('click', () => {
+      document.getElementById('order-id').value = Math.floor(1000 + Math.random() * 9000);
+      updatePreview();
+    });
+
+    // Live Preview Updater
+    const inputsToWatch = [
+      'beat-name', 'producer-name', 'license-type', 'price-paid',
+      'buyer-name', 'buyer-email', 'order-id', 'purchase-date'
+    ];
+
+    inputsToWatch.forEach(id => {
+      document.getElementById(id).addEventListener('input', updatePreview);
+      document.getElementById(id).addEventListener('change', updatePreview);
+    });
+
+    function updatePreview() {
+      const beat = document.getElementById('beat-name').value || 'intro';
+      const prod = document.getElementById('producer-name').value || 'Willie Inspired';
+      const typeVal = document.getElementById('license-type').value;
+      const price = parseFloat(document.getElementById('price-paid').value || 0).toFixed(2);
+      const buyer = document.getElementById('buyer-name').value || 'La K';
+      const email = document.getElementById('buyer-email').value || 'leonardowranth2@gmail.com';
+      const order = document.getElementById('order-id').value || '2026';
+      const dateVal = document.getElementById('purchase-date').value;
+
+      let typeText = 'Exclusive Rights License';
+      if (typeVal === 'unlimited') typeText = 'Non-Exclusive Unlimited License';
+      else if (typeVal === 'premium') typeText = 'Non-Exclusive Premium License';
+      else if (typeVal === 'basic') typeText = 'Non-Exclusive Basic License';
+
+      let formattedDate = '9/2/2026';
+      if (dateVal) {
+        const [y, m, d] = dateVal.split('-');
+        formattedDate = `${parseInt(m)}/${parseInt(d)}/${y}`;
+      }
+
+      // Hash code preview
+      const hash = btoa(`${order}:${email}`).substring(0, 16).toUpperCase();
+
+      document.getElementById('prev-code').textContent = `CODE: ${hash}`;
+      document.getElementById('prev-beat').textContent = beat;
+      document.getElementById('prev-prod').textContent = prod;
+      document.getElementById('prev-type').textContent = typeText;
+      document.getElementById('prev-price').textContent = `$${price} USD`;
+      document.getElementById('prev-buyer').textContent = buyer;
+      document.getElementById('prev-email').textContent = email;
+      document.getElementById('prev-date').textContent = formattedDate;
+      document.getElementById('prev-order').textContent = order;
+    }
+
+    // Quick Preset Handlers
+    document.getElementById('preset-lak').addEventListener('click', () => {
+      document.getElementById('beat-name').value = 'intro';
+      document.getElementById('producer-name').value = 'Willie Inspired';
+      document.getElementById('license-type').value = 'exclusive';
+      document.getElementById('price-paid').value = '35.00';
+      document.getElementById('buyer-name').value = 'La K';
+      document.getElementById('buyer-email').value = 'leonardowranth2@gmail.com';
+      document.getElementById('order-id').value = '2026';
+      updatePreview();
+      showToast('Cargado preset: La K (intro - $35 USD)');
+    });
+
+    document.getElementById('preset-excl').addEventListener('click', () => {
+      document.getElementById('license-type').value = 'exclusive';
+      document.getElementById('price-paid').value = '40.00';
+      updatePreview();
+      showToast('Cargado preset: Exclusiva ($40 USD)');
+    });
+
+    document.getElementById('preset-unl').addEventListener('click', () => {
+      document.getElementById('license-type').value = 'unlimited';
+      document.getElementById('price-paid').value = '25.00';
+      updatePreview();
+      showToast('Cargado preset: Ilimitada Trackout ($25 USD)');
+    });
+
+    document.getElementById('preset-prem').addEventListener('click', () => {
+      document.getElementById('license-type').value = 'premium';
+      document.getElementById('price-paid').value = '15.00';
+      updatePreview();
+      showToast('Cargado preset: Premium WAV ($15 USD)');
+    });
+
+    document.getElementById('preset-basic').addEventListener('click', () => {
+      document.getElementById('license-type').value = 'basic';
+      document.getElementById('price-paid').value = '10.00';
+      updatePreview();
+      showToast('Cargado preset: Básica MP3 ($10 USD)');
+    });
+
+    // Reset Form
+    document.getElementById('btn-reset-form').addEventListener('click', () => {
+      document.getElementById('beat-name').value = '';
+      document.getElementById('buyer-name').value = '';
+      document.getElementById('buyer-email').value = '';
+      document.getElementById('price-paid').value = '0.00';
+      document.getElementById('order-id').value = Math.floor(1000 + Math.random() * 9000);
+      updatePreview();
+    });
+
+    // PDF GENERATION LOGIC (Dual Engine: Server-first + Client pdf-lib fallback)
+    licenseForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const btn = document.getElementById('btn-generate-pdf');
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Generando PDF Oficial...</span>';
+
+      const payload = {
+        productName: document.getElementById('beat-name').value.trim() || 'Beat Instrumental',
+        producerName: document.getElementById('producer-name').value.trim() || 'Willie Inspired',
+        licenseType: document.getElementById('license-type').value,
+        amount: parseFloat(document.getElementById('price-paid').value || 0),
+        buyerName: document.getElementById('buyer-name').value.trim() || 'Comprador',
+        buyerEmail: document.getElementById('buyer-email').value.trim() || 'cliente@offszn.com',
+        orderId: document.getElementById('order-id').value.trim() || '2026',
+        purchaseDate: document.getElementById('purchase-date').value || today,
+        customFiles: document.getElementById('custom-files').value.trim(),
+        producerPublishing: parseInt(document.getElementById('split-prod').value || 50),
+        licenseePublishing: parseInt(document.getElementById('split-buyer').value || 50),
+        creditsText: document.getElementById('credits-text').value.trim()
+      };
+
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+        // Try Backend API First
+        const response = await fetch(`${API_BASE}/generate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const safeName = payload.productName.replace(/[^a-z0-9]/gi, '_').substring(0, 30);
+          const fileName = `OFFSZN_License_${safeName}_Order${payload.orderId}.pdf`;
+          downloadBlob(blob, fileName);
+          recordHistory(payload);
+          showToast('✅ ¡PDF generado y descargado exitosamente!');
+        } else {
+          // Fallback to client-side pdf-lib
+          await generateClientPdf(payload);
+          recordHistory(payload);
+          showToast('✅ ¡PDF generado localmente con pdf-lib!');
+        }
+      } catch (err) {
+        console.warn('Backend unavailable, generating client-side...', err);
+        await generateClientPdf(payload);
+        recordHistory(payload);
+        showToast('✅ ¡PDF generado con éxito!');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡ GENERAR Y DESCARGAR PDF OFICIAL OFFSZN</span>';
+      }
+    });
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Client-side exact OFFSZN PDF generator using pdf-lib
+    async function generateClientPdf(data) {
+      const { PDFDocument, rgb, StandardFonts } = PDFLib;
+      const pdfDoc = await PDFDocument.create();
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      const isExclusive = data.licenseType === 'exclusive';
+      const isUnlimited = data.licenseType === 'unlimited';
+      const isPremium = data.licenseType === 'premium';
+
+      let licenseName = 'Exclusive Rights License';
+      if (!isExclusive) {
+        if (isUnlimited) licenseName = 'Non-Exclusive Unlimited License';
+        else if (isPremium) licenseName = 'Non-Exclusive Premium License';
+        else licenseName = 'Non-Exclusive Basic License';
+      }
+
+      const price = `$${parseFloat(data.amount).toFixed(2)} USD`;
+      let filesDelivered = data.customFiles || 'high-quality MP3 and WAV files';
+      if (isExclusive || isUnlimited) {
+        if (!data.customFiles) filesDelivered = 'high-quality MP3, WAV and individual Trackout STEM files';
+      } else if (data.licenseType === 'basic') {
+        if (!data.customFiles) filesDelivered = 'high-quality MP3 file';
+      }
+
+      const salesLimit = isExclusive || isUnlimited ? 'UNLIMITED' : (isPremium ? '10,000' : '5,000');
+      const streamsLimit = isExclusive || isUnlimited ? 'UNLIMITED' : (isPremium ? '500,000' : '50,000');
+      const radioLimit = isExclusive || isUnlimited ? 'UNLIMITED' : (isPremium ? '5' : '2');
+      const videoProjects = isExclusive || isUnlimited ? 'UNLIMITED audiovisual projects' : (isPremium ? '5 audiovisual projects' : '1 audiovisual project');
+      const creditsValue = data.creditsText || `Produced by ${data.producerName}`;
+
+      const template = `${licenseName} Agreement
+
+1. Agreement Overview and License Grant
+a. This ${licenseName} Agreement ("Agreement") is entered into by and between the individual or entity purchasing this license (the "Licensee") and the producer of the instrumental music (the "Producer"). This Agreement sets forth the terms and conditions of the Licensee's use of the instrumental music file covered by this license (referred to herein as "the Beat"), in consideration for the Licensee's payment of ${price} for an ${licenseName}.
+b. By purchasing this license, the Licensee acknowledges and agrees to the terms stated herein. This Agreement is issued solely in connection with the Licensee's use of the Beat. The Licensee shall make full payment of the License Fee to the Producer at the time of purchase. All rights granted under this Agreement are strictly conditional upon timely payment.
+
+2. Delivery of the Beat:
+a. The Producer agrees to deliver the Beat as ${filesDelivered}, in accordance with industry standards.
+b. The Producer shall use commercially reasonable efforts to deliver the Beat immediately after the License Fee has been paid via email / download portal.
+
+3. Term & Exclusivity:
+This License is ${isExclusive ? 'EXCLUSIVE and perpetual. The Producer shall not license or sell this Beat to any other third party following this transaction.' : 'Non-Exclusive and valid for ten (10) years worldwide.'}
+
+4. Use of the Beat:
+In consideration of the License Fee, the Licensee is granted an ${isExclusive ? 'exclusive' : 'non-exclusive'} license to use the Beat for the creation of commercial and non-commercial musical works.
+a. Permitted Uses:
+The License grants the Licensee a worldwide, ${isExclusive ? 'exclusive' : 'non-exclusive'} license to use the Beat.
+b. The Licensee is permitted to:
+- Use the song for commercial distribution and ${isExclusive || isUnlimited ? 'unlimited streaming' : 'streaming'} across all digital platforms (Spotify, Apple Music, YouTube, etc.).
+- Perform the song publicly (${isExclusive || isUnlimited ? 'Unlimited non-profit and for-profit concerts/festivals' : 'Non-profit and commercial live performances'}).
+- Broadcasting rights for ${radioLimit} terrestrial or satellite stations.
+- Synchronize the song with ${videoProjects}.
+- Sell up to ${salesLimit} physical and/or digital units.
+- Up to ${streamsLimit} monetized audio streams.
+
+5. Ownership & Publishing
+The musical composition (melody/lyrics created by Licensee) belongs to Licensee.
+a. Publishing Splits:
+- Licensee owns ${data.licenseePublishing}% of the Writer's Share.
+- Producer owns ${data.producerPublishing}% of the Writer's Share.
+- Producer shall own and administer ${data.producerPublishing}% of the Publisher's Share.
+b. Credit: Licensee shall credit Producer as "${creditsValue}" on all releases.
+
+6. Governing Law:
+This Agreement is governed by the laws of Lima, Peru.
+
+IN WITNESS WHEREOF, the parties have executed this Agreement as of the date of purchase.`;
+
+      // Page 1: Certificate
+      const page1 = pdfDoc.addPage([595, 842]);
+      const { width, height } = page1.getSize();
+      page1.drawRectangle({ x: 0, y: 0, width, height, color: rgb(0, 0, 0) });
+
+      const safeHashString = `${data.orderId}:${data.buyerEmail}`.replace(/[^\x00-\x7F]/g, "");
+      const verificationHash = btoa(safeHashString).substring(0, 16).toUpperCase();
+
+      pdfDoc.setProducer('OFFSZN Platform');
+      pdfDoc.setCreator('OFFSZN Legal Engine');
+      pdfDoc.setSubject(`Verification Code: ${verificationHash}`);
+      pdfDoc.setKeywords(['OFFSZN', String(data.orderId), verificationHash, 'Peru']);
+
+      const topInfoY = height - 60;
+      const rightInfoX = width - 230;
+
+      page1.drawText(`OFFSZN AUTHENTICITY CHECK`, {
+        x: rightInfoX, y: topInfoY, size: 7, font: boldFont, color: rgb(0.4, 0.4, 0.4)
+      });
+      page1.drawText(`CODE: ${verificationHash}`, {
+        x: rightInfoX, y: topInfoY - 10, size: 7, font, color: rgb(0.4, 0.4, 0.4)
+      });
+      page1.drawText(`ISSUED: LIMA, PERU`, {
+        x: rightInfoX, y: topInfoY - 20, size: 7, font, color: rgb(0.4, 0.4, 0.4)
+      });
+
+      page1.drawText('LICENSE CERTIFICATE', {
+        x: 50, y: height - 135, size: 16, font: font,
+        color: rgb(0.8, 0.8, 0.8)
+      });
+
+      page1.drawLine({
+        start: { x: 50, y: height - 150 },
+        end: { x: width - 50, y: height - 150 },
+        thickness: 1.5, color: rgb(0.45, 0.04, 0.72)
+      });
+
+      let yPos = height - 200;
+      page1.drawText('PURCHASE INFORMATION', {
+        x: 50, y: yPos, size: 12, font: boldFont, color: rgb(0.5, 0.5, 0.5)
+      });
+
+      yPos -= 40;
+      const info = [
+        ['Beat Name:', data.productName],
+        ['Producer:', data.producerName],
+        ['License Type:', licenseName],
+        ['Price Paid:', price]
+      ];
+
+      info.forEach(([label, value]) => {
+        page1.drawText(label, { x: 50, y: yPos, size: 10, font, color: rgb(0.6, 0.6, 0.6) });
+        page1.drawText(value, { x: 180, y: yPos, size: 10, font: boldFont, color: rgb(1, 1, 1) });
+        yPos -= 25;
+      });
+
+      yPos -= 20;
+      page1.drawLine({ start: { x: 50, y: yPos }, end: { x: width - 50, y: yPos }, thickness: 1, color: rgb(0.3, 0.3, 0.3) });
+      yPos -= 40;
+
+      page1.drawText('LICENSEE (BUYER)', { x: 50, y: yPos, size: 12, font: boldFont, color: rgb(0.5, 0.5, 0.5) });
+      yPos -= 40;
+
+      let dateFormatted = data.purchaseDate;
+      if (dateFormatted.includes('-')) {
+        const [y, m, d] = dateFormatted.split('-');
+        dateFormatted = `${parseInt(m)}/${parseInt(d)}/${y}`;
+      }
+
+      const buyerInfo = [
+        ['Buyer Name:', data.buyerName],
+        ['Buyer Email:', data.buyerEmail],
+        ['Purchase Date:', dateFormatted],
+        ['Order ID:', String(data.orderId)]
+      ];
+
+      buyerInfo.forEach(([label, value]) => {
+        page1.drawText(label, { x: 50, y: yPos, size: 10, font, color: rgb(0.6, 0.6, 0.6) });
+        page1.drawText(String(value), { x: 180, y: yPos, size: 10, font: boldFont, color: rgb(1, 1, 1) });
+        yPos -= 25;
+      });
+
+      const footerY = 60;
+      page1.drawText('OFFSZN DIGITAL SIGNATURE & VERIFICATION SYSTEM', {
+        x: 50, y: footerY + 12, size: 7, font: boldFont, color: rgb(0.3, 0.3, 0.3)
+      });
+      page1.drawText('THIS LICENSE IS VALID GLOBALLY BUT GOVERNED BY THE LAWS OF LIMA, PERU.', {
+        x: 50, y: footerY + 2, size: 7, font, color: rgb(0.3, 0.3, 0.3)
+      });
+
+      // Page 2: Contract
+      let contractPage = pdfDoc.addPage([595, 842]);
+      let currentY = 780;
+      const margin = 50;
+      const maxWidth = 495;
+      const fontSize = 9.5;
+      const lineHeight = 13.5;
+
+      const lines = template.split('\n');
+
+      for (const paragraph of lines) {
+        if (paragraph.trim() === '') {
+          currentY -= 8;
+          continue;
+        }
+
+        const isHeader = paragraph.startsWith('Exclusive Rights') || paragraph.startsWith('Non-Exclusive') || /^\d+\./.test(paragraph.trim()) || paragraph.startsWith('IN WITNESS');
+        const lineFont = isHeader ? boldFont : font;
+
+        const words = paragraph.split(' ');
+        let currentLine = '';
+
+        for (const word of words) {
+          const testLine = currentLine + (currentLine ? ' ' : '') + word;
+          const textWidth = lineFont.widthOfTextAtSize(testLine, fontSize);
+
+          if (textWidth < maxWidth) {
+            currentLine = testLine;
+          } else {
+            if (currentY < 50) {
+              contractPage = pdfDoc.addPage([595, 842]);
+              currentY = 780;
+            }
+            contractPage.drawText(currentLine, { x: margin, y: currentY, size: fontSize, font: lineFont, color: rgb(0, 0, 0) });
+            currentY -= lineHeight;
+            currentLine = word;
+          }
+        }
+
+        if (currentLine) {
+          if (currentY < 50) {
+            contractPage = pdfDoc.addPage([595, 842]);
+            currentY = 780;
+          }
+          contractPage.drawText(currentLine, { x: margin, y: currentY, size: fontSize, font: lineFont, color: rgb(0, 0, 0) });
+          currentY -= lineHeight;
+        }
+
+        currentY -= 3;
+      }
+
+      const pdfBytes = await pdfDoc.save();
+      const safeName = data.productName.replace(/[^a-z0-9]/gi, '_').substring(0, 30);
+      const fileName = `OFFSZN_License_${safeName}_Order${data.orderId}.pdf`;
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      downloadBlob(blob, fileName);
+    }
+
+    // Session History Management
+    function recordHistory(item) {
+      sessionHistory.unshift({
+        time: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        beat: item.productName,
+        buyer: item.buyerName,
+        type: item.licenseType,
+        price: `$${parseFloat(item.amount).toFixed(2)} USD`,
+        orderId: item.orderId,
+        raw: item
+      });
+
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const tbody = document.getElementById('history-body');
+      const count = document.getElementById('history-count');
+      count.textContent = `${sessionHistory.length} licencias`;
+
+      if (sessionHistory.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">No has generado licencias en esta sesión aún.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = sessionHistory.map((item, idx) => `
+        <tr>
+          <td style="color: #a1a1aa; font-family: monospace;">${item.time}</td>
+          <td><strong>${item.beat}</strong></td>
+          <td>${item.buyer}</td>
+          <td><span class="badge-pill">${item.type.toUpperCase()}</span></td>
+          <td style="color: #10b981; font-weight: 700;">${item.price}</td>
+          <td style="font-family: monospace;">#${item.orderId}</td>
+          <td>
+            <button onclick="reDownload(${idx})" class="btn-secondary" style="padding: 4px 10px; font-size: 11px;">⬇️ Descargar</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    window.reDownload = function(idx) {
+      const item = sessionHistory[idx];
+      if (item && item.raw) {
+        generateClientPdf(item.raw);
+        showToast(`Re-descargando licencia para ${item.buyer}...`);
+      }
+    };
+
+    // Run Startup Auth Check
+    checkAuth();
+  </script>
+</body>
+</html>

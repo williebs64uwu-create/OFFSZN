@@ -36,6 +36,7 @@ import calendarRoutes from './infrastructure/http/routes/calendar.routes.js';
 import walletRoutes from './infrastructure/http/routes/wallet.routes.js';
 import yapeRoutes from './infrastructure/http/routes/yape.routes.js';
 import willieRoutes from './infrastructure/http/routes/willie.routes.js';
+import licensePanelRoutes from './infrastructure/http/routes/license-panel.routes.js';
 import { checkAndSendRemindersInternal } from './infrastructure/http/controllers/CalendarController.js';
 import { runSubscriptionScavenger } from './infrastructure/services/subscription-scavenger.js';
 
@@ -181,8 +182,8 @@ app.use(helmet({
                 "https://*.ytimg.com", "https://*.ggpht.com", "https://*.googleusercontent.com",
                 "https://get.geojs.io", "https://*.geojs.io", "https://ipapi.co",
                 "https://api.ipify.org", "https://ipinfo.io",
-                // Meta Pixel / Graph API
-                "https://connect.facebook.net", "https://www.facebook.com", "https://graph.facebook.com"
+                // Meta Pixel / Graph API / Edge Gateways
+                "https://connect.facebook.net", "https://www.facebook.com", "https://graph.facebook.com", "https://*.on.aws", "https://*.amazonaws.com"
             ],
             frameSrc: ["'self'",
                 "https://www.youtube.com", "https://www.youtube-nocookie.com",
@@ -333,6 +334,7 @@ app.use('/api', cokeCheckoutRoutes);  // Isolated Coca-Cola checkout (no multi-p
 app.use('/api', youtubeRoutes);
 app.use('/api', youtubeSyncRoutes);
 app.use('/api', calendarRoutes);
+app.use('/api/pan/lic', licensePanelRoutes);
 
 // B. PROTECTED ROUTERS (Use global router.use(authenticateTokenMiddleware) internally)
 // These MUST come after public/hybrid ones if mounted on the same prefix (/api)
@@ -432,10 +434,19 @@ app.get(['/willieinspired/:slug', '/@willieinspired/:slug'], (req, res, next) =>
     next();
 });
 
+// --- 3.0.2 OFFSZN LICENSE PANEL DIRECT ROUTE ---
+app.get(['/pan/lic', '/pan/lic/', '/pan/lic/index.html'], (req, res) => {
+    const panelPath = path.join(rootPath, 'pan/lic/index.html');
+    if (fs.existsSync(panelPath)) {
+        return res.sendFile(panelPath);
+    }
+    return res.status(404).send('License panel not found');
+});
+
 // B. Clean URLs (Force Redirects & Internal Rewrites)
 app.use((req, res, next) => {
-    // Skip API routes, willieinspired, and FFmpeg/Debug folders to avoid loops or blocking
-    const skipPaths = ['/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js', '/components', '/willieinspired', '/@willieinspired'];
+    // Skip API routes, willieinspired, pan/lic, and FFmpeg/Debug folders to avoid loops or blocking
+    const skipPaths = ['/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js', '/components', '/willieinspired', '/@willieinspired', '/pan/lic'];
     if (skipPaths.some(p => req.path.startsWith(p))) return next();
 
     // 1. Force Redirect: Remove .html from browser address bar

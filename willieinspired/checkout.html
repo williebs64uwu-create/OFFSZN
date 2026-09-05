@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Checkout • Willie Inspired</title>
     <link rel="icon" type="image/png" href="/willieimages/HERO.png">
-    <!-- Google Fonts: Plus Jakarta Sans -->
+    <!-- Google Fonts: Inter / Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Environment Variables (PayPal Client ID, Supabase, etc.) -->
@@ -19,20 +19,22 @@
 
     <style>
         :root {
-            --bg-texture: #fbfbfb;
-            --surface: #ffffff;
-            --text-main: #111827;
+            --bg-page: #ffffff;
+            --text-main: #1f2937;
             --text-muted: #6b7280;
             --text-subtle: #9ca3af;
+            --border-light: #e5e7eb;
+            --border-input: #d1d5db;
+            --border-focus: #3b82f6;
             --stroke-light: rgba(0, 0, 0, 0.08);
-            --stroke-focus: #000000;
-            --accent-pink: #ec4899;
-            --accent-purple: #742284;
+            --stroke-light-hover: rgba(0, 0, 0, 0.16);
             --accent-paypal: #ffc439;
+            --accent-black: #2c2e2f;
+            --accent-yape: #742284;
             --accent-mp: #009ee3;
-            --accent-whatsapp: #25d366;
-            --radius-card: 14px;
-            --radius-input: 10px;
+            --accent-wa: #25d366;
+            --radius-input: 6px;
+            --radius-btn: 6px;
         }
 
         html {
@@ -43,41 +45,40 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
         }
 
         body {
-            background-color: var(--bg-texture);
-            background-image: url('/willieimages/bg-noise.png');
-            background-repeat: repeat;
-            background-size: 280px;
+            background-color: var(--bg-page);
             color: var(--text-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Bloqueo de Scroll cuando el Drawer está Abierto */
+        html.cart-is-open,
+        body.cart-is-open {
+            overflow: hidden !important;
         }
 
         /* ==========================================================================
-           HEADER MINIMALISTA CON WAVEFORM Y BADGE DE CARRITO
+           HEADER MINIMALISTA PAYHIP STYLE
            ========================================================================== */
         .checkout-header {
             width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            background-image: url('/willieimages/bg-noise.png');
-            background-repeat: repeat;
-            background-size: 280px;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-bottom: 1px solid var(--stroke-light);
-            padding: 1.15rem 2rem;
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-light);
+            padding: 1.1rem 2rem;
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
         .checkout-header-inner {
-            max-width: 1140px;
+            max-width: 980px;
             margin: 0 auto;
             display: flex;
             align-items: center;
@@ -93,48 +94,47 @@
             text-decoration: none;
             font-size: 0.88rem;
             font-weight: 600;
-            transition: color 0.2s ease, transform 0.2s ease;
+            transition: color 0.15s ease;
         }
 
         .header-back-link:hover {
             color: #000000;
-            transform: translateX(-3px);
         }
 
         .checkout-brand-center {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
             display: flex;
             align-items: center;
             gap: 8px;
             text-decoration: none;
             color: #000000;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .waveform-icon {
             display: flex;
             align-items: center;
             gap: 2.5px;
-            height: 22px;
+            height: 20px;
         }
 
         .waveform-bar {
-            width: 3px;
+            width: 2.5px;
             background: #000000;
             border-radius: 999px;
         }
 
-        .waveform-bar:nth-child(1) { height: 8px; }
-        .waveform-bar:nth-child(2) { height: 16px; }
-        .waveform-bar:nth-child(3) { height: 22px; }
-        .waveform-bar:nth-child(4) { height: 14px; }
-        .waveform-bar:nth-child(5) { height: 7px; }
+        .waveform-bar:nth-child(1) { height: 7px; }
+        .waveform-bar:nth-child(2) { height: 14px; }
+        .waveform-bar:nth-child(3) { height: 20px; }
+        .waveform-bar:nth-child(4) { height: 12px; }
+        .waveform-bar:nth-child(5) { height: 6px; }
 
         .checkout-brand-title {
-            font-size: 1.15rem;
-            font-weight: 900;
-            letter-spacing: -0.03em;
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
             text-transform: uppercase;
         }
 
@@ -143,10 +143,14 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            color: var(--accent-pink);
-            font-size: 1.4rem;
+            color: #111827;
+            font-size: 1.3rem;
             text-decoration: none;
-            transition: transform 0.2s ease;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            transition: transform 0.15s ease;
         }
 
         .header-cart-icon-btn:hover {
@@ -159,10 +163,10 @@
             right: -8px;
             background: #000000;
             color: #ffffff;
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 800;
-            min-width: 18px;
-            height: 18px;
+            min-width: 17px;
+            height: 17px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -170,17 +174,17 @@
             padding: 0 4px;
         }
 
-        /* Mobile Order Summary Dropdown Bar */
+        /* Mobile Order Summary Toggle */
         .mobile-summary-toggle {
             display: none;
             width: 100%;
-            background: #f4f4f6;
-            border-bottom: 1px solid var(--stroke-light);
+            background: #f9fafb;
+            border-bottom: 1px solid var(--border-light);
             padding: 0.9rem 1.25rem;
             align-items: center;
             justify-content: space-between;
             font-size: 0.9rem;
-            font-weight: 700;
+            font-weight: 600;
             color: var(--text-main);
             cursor: pointer;
             user-select: none;
@@ -190,411 +194,256 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: #000000;
         }
 
         .mobile-summary-toggle-right {
-            font-size: 1.05rem;
-            font-weight: 900;
-            color: #000000;
+            font-size: 1rem;
+            font-weight: 800;
         }
 
         /* ==========================================================================
-           MAIN CHECKOUT CONTAINER (2 COLUMNAS SHOPIFY STYLE)
+           MAIN CHECKOUT CONTAINER (EXACT PAYHIP 2-COLUMN STRUCTURE)
            ========================================================================== */
         .checkout-main-container {
-            max-width: 1120px;
+            max-width: 980px;
             width: 100%;
             margin: 0 auto;
-            padding: 2.2rem 1.5rem 4rem 1.5rem;
+            padding: 3rem 1.5rem 5rem 1.5rem;
             display: grid;
-            grid-template-columns: 1.15fr 0.85fr;
-            gap: 3.5rem;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 4.5rem;
             align-items: start;
         }
 
         /* ==========================================================================
-           COLUMNA IZQUIERDA: FORMULARIO DE CHECKOUT
+           COLUMNA IZQUIERDA: FORMULARIO + BRICKS DE PAGO
            ========================================================================== */
         .checkout-form-col {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 1.6rem;
         }
 
-        /* Express Checkout */
-        .express-checkout-section {
+        .form-block {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
+            gap: 6px;
         }
 
-        .express-checkout-label {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: #6b7280;
-            text-transform: capitalize;
-            letter-spacing: -0.01em;
-        }
-
-        .express-checkout-grid {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        /* Divisor "O" */
-        .checkout-or-divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            width: 100%;
-            margin: 0.25rem 0;
-            color: #6b7280;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .checkout-or-divider::before,
-        .checkout-or-divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .checkout-or-divider span {
-            padding: 0 14px;
-        }
-
-        /* Secciones de Formulario */
-        .checkout-section-box {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .section-header-row {
+        .form-label-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-        }
-
-        .section-title {
-            font-size: 1.15rem;
-            font-weight: 800;
-            color: #111827;
-            letter-spacing: -0.02em;
-        }
-
-        .section-right-link {
-            font-size: 0.82rem;
-            color: #111827;
+            font-size: 0.88rem;
             font-weight: 600;
-            text-decoration: underline;
+            color: #374151;
+        }
+
+        .form-label-link {
+            color: #0284c7;
+            text-decoration: none;
+            font-size: 0.84rem;
+            font-weight: 600;
             cursor: pointer;
         }
 
-        .section-subtitle {
-            font-size: 0.82rem;
-            color: #6b7280;
-            font-weight: 500;
-            margin-top: -4px;
+        .form-label-link:hover {
+            text-decoration: underline;
         }
 
-        /* Inputs Limpios */
-        .form-group {
-            position: relative;
+        .form-input-clean {
             width: 100%;
-        }
-
-        .form-input {
-            width: 100%;
-            height: 48px;
-            padding: 0 14px;
+            height: 44px;
+            padding: 0 12px;
             border-radius: var(--radius-input);
-            border: 1px solid #d1d5db;
+            border: 1px solid var(--border-input);
             background: #ffffff;
             font-size: 0.92rem;
-            font-weight: 600;
             color: #111827;
             outline: none;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
         }
 
-        .form-input:focus {
-            border-color: #000000;
-            box-shadow: 0 0 0 1.5px #000000;
+        .form-input-clean:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
         }
 
-        .form-input-help-icon {
-            position: absolute;
-            right: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
-            font-size: 0.95rem;
-            cursor: pointer;
+        .form-input-clean.field-error {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
         }
 
-        /* Checkbox Custom */
-        .custom-checkbox-row {
+        .inline-field-error {
+            color: #ef4444;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .user-logged-row {
             display: flex;
             align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            user-select: none;
-            margin-top: 2px;
-        }
-
-        .custom-checkbox-row input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            border-radius: 4px;
-            accent-color: var(--accent-pink);
-            cursor: pointer;
-        }
-
-        .custom-checkbox-label {
-            font-size: 0.84rem;
-            color: #374151;
+            gap: 8px;
+            font-size: 0.9rem;
             font-weight: 600;
+            color: #111827;
+            margin-bottom: 2px;
+        }
+
+        .user-logout-link {
+            color: #0284c7;
+            text-decoration: none;
+            font-size: 0.84rem;
+            font-weight: 600;
+            margin-left: 4px;
+            cursor: pointer;
+        }
+
+        .user-logout-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Sección Datos Adicionales */
+        .section-subheading {
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: #111827;
+            margin-top: 0.25rem;
+            margin-bottom: 2px;
+        }
+
+        .form-select-clean {
+            width: 100%;
+            height: 44px;
+            padding: 0 36px 0 12px;
+            border-radius: var(--radius-input);
+            border: 1px solid var(--border-input);
+            background: #ffffff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") no-repeat right 12px center;
+            background-size: 16px;
+            font-size: 0.92rem;
+            font-weight: 500;
+            color: #111827;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .form-select-clean:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
         }
 
         /* ==========================================================================
-           ACORDEÓN DE PAGO (SHOPIFY STYLE)
+           BRICKS DE PAGO APILADOS (PAYHIP EXACT STYLE)
            ========================================================================== */
-        .payment-accordion-container {
-            border: 1.5px solid #e5e7eb;
-            border-radius: 12px;
-            background: #ffffff;
-            overflow: hidden;
+        .payment-bricks-container {
             display: flex;
             flex-direction: column;
-        }
-
-        .payment-accordion-card {
-            border-bottom: 1.5px solid #e5e7eb;
-            transition: all 0.2s ease;
-        }
-
-        .payment-accordion-card:last-child {
-            border-bottom: none;
-        }
-
-        .payment-accordion-card.active {
-            background: #fafafa;
-        }
-
-        .payment-accordion-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px 16px;
-            cursor: pointer;
-            user-select: none;
-            background: #ffffff;
-            transition: background 0.15s ease;
-        }
-
-        .payment-accordion-card.active .payment-accordion-header {
-            background: #fafafa;
-        }
-
-        .payment-radio-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .custom-radio-circle {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            border: 1.5px solid #d1d5db;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            flex-shrink: 0;
-            background: #ffffff;
-        }
-
-        .custom-radio-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            transition: background 0.2s ease;
-        }
-
-        .payment-option-title {
-            font-size: 0.92rem;
-            font-weight: 700;
-            color: #111827;
-        }
-
-        .payment-badges-row {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .card-badge-pill {
-            height: 22px;
-            padding: 2px 7px;
-            border-radius: 4px;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            background: #ffffff;
-            font-size: 0.68rem;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .badge-visa { color: #1a1f71; font-style: italic; font-weight: 900; }
-        .badge-mastercard { color: #eb001b; font-weight: 900; }
-        .badge-amex { color: #006fcf; font-weight: 900; }
-
-        .payment-accordion-body {
-            padding: 16px;
-            border-top: 1px solid #e5e7eb;
-            background: #ffffff;
-        }
-
-        /* Yape Real Brick Form */
-        .yape-real-brick-container {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            background: #faf5ff;
-            padding: 18px;
-            border-radius: 12px;
-            border: 1.5px solid #e9d5ff;
-        }
-
-        .yape-price-pill-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #ffffff;
-            border: 1px solid #f0abfc;
-            padding: 10px 14px;
-            border-radius: 8px;
-        }
-
-        .yape-price-pill-label {
-            font-size: 0.82rem;
-            font-weight: 700;
-            color: #701a75;
-        }
-
-        .yape-price-pill-val {
-            font-size: 1.15rem;
-            font-weight: 900;
-            color: #742284;
-        }
-
-        /* 6 OTP Boxes Container */
-        .yape-otp-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 8px;
-            margin-top: 4px;
-        }
-
-        .yape-otp-box {
-            width: 100%;
-            height: 48px;
-            background: #ffffff;
-            border: 1.5px solid #d1d5db;
-            border-radius: 8px;
-            color: #000000;
-            font-family: monospace, inherit;
-            font-size: 1.3rem;
-            font-weight: 800;
-            text-align: center;
-            outline: none;
-            transition: all 0.15s ease;
-            box-sizing: border-box;
-            padding: 0;
-        }
-
-        .yape-otp-box:focus {
-            border-color: var(--accent-purple);
-            box-shadow: 0 0 0 2px rgba(116, 34, 132, 0.2);
-        }
-
-        .yape-helper-text {
-            font-size: 0.76rem;
-            color: #6b7280;
-            line-height: 1.4;
-            margin-top: 4px;
-        }
-
-        .yape-helper-text strong {
-            color: #111827;
-        }
-
-        .yape-error-alert {
-            display: none;
-            background: #fef2f2;
-            border: 1px solid #fca5a5;
-            color: #991b1b;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 0.82rem;
-            font-weight: 700;
-        }
-
-        /* Links Legales Footer */
-        .checkout-footer-links {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            padding-top: 1.5rem;
-            border-top: 1px solid #e5e7eb;
+            gap: 10px;
             margin-top: 0.5rem;
         }
 
-        .checkout-footer-links a {
-            color: #6b7280;
-            font-size: 0.76rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: color 0.15s ease;
+        /* Botón Yape (Cobro Automático Soles 🇵🇪) */
+        .brick-yape-btn {
+            width: 100%;
+            height: 48px;
+            background: #742284;
+            border: none;
+            border-radius: var(--radius-btn);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.98rem;
+            font-weight: 800;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(116, 34, 132, 0.25);
+            transition: background 0.15s ease, transform 0.15s ease;
         }
 
-        .checkout-footer-links a:hover {
-            color: #111827;
+        .brick-yape-btn:hover {
+            background: #5c1869;
+        }
+
+        /* Botón Mercado Pago */
+        .brick-mp-btn {
+            width: 100%;
+            height: 48px;
+            background: #009ee3;
+            border: none;
+            border-radius: var(--radius-btn);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 0.98rem;
+            font-weight: 800;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 158, 227, 0.25);
+            transition: background 0.15s ease;
+        }
+
+        .brick-mp-btn:hover {
+            background: #0084be;
+        }
+
+        /* Footer de Seguridad y Enlaces Legales */
+        .checkout-trust-footer {
+            margin-top: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+        }
+
+        .trust-badge-line {
+            font-size: 0.78rem;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .trust-links-line {
+            font-size: 0.74rem;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .trust-links-line a {
+            color: #6b7280;
             text-decoration: underline;
         }
 
+        .trust-links-line a:hover {
+            color: #111827;
+        }
+
         /* ==========================================================================
-           COLUMNA DERECHA: RESUMEN DEL PEDIDO (STICKY & SHOPIFY STYLE)
+           COLUMNA DERECHA: RESUMEN DEL PEDIDO (LIMPIO PAYHIP STYLE)
            ========================================================================== */
         .checkout-summary-col {
-            position: sticky;
-            top: 85px;
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
-            background: #ffffff;
-            padding: 1.75rem;
-            border-radius: 16px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+            gap: 1.5rem;
+            padding-top: 0.25rem;
         }
 
         .summary-items-list {
             display: flex;
             flex-direction: column;
-            gap: 14px;
-            max-height: 380px;
-            overflow-y: auto;
-            padding-right: 4px;
+            gap: 16px;
         }
 
         .summary-item-card {
@@ -607,73 +456,44 @@
         .summary-item-left {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             min-width: 0;
         }
 
-        .summary-item-thumb-wrapper {
-            position: relative;
-            width: 58px;
-            height: 58px;
-            flex-shrink: 0;
-        }
-
         .summary-item-thumb {
-            width: 100%;
-            height: 100%;
-            border-radius: 10px;
+            width: 46px;
+            height: 46px;
+            border-radius: 6px;
             object-fit: cover;
-            border: 1px solid #e5e7eb;
-            background: #f4f4f6;
-        }
-
-        .summary-item-qty-badge {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: rgba(0, 0, 0, 0.85);
-            color: #ffffff;
-            font-size: 0.72rem;
-            font-weight: 800;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: #141414;
+            flex-shrink: 0;
+            border: 1px solid var(--border-light);
         }
 
         .summary-item-info {
+            display: flex;
+            flex-direction: column;
             min-width: 0;
         }
 
         .summary-item-name {
-            font-size: 0.88rem;
-            font-weight: 800;
+            font-size: 0.86rem;
+            font-weight: 700;
             color: #111827;
+            text-transform: uppercase;
             line-height: 1.3;
+            letter-spacing: -0.01em;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 180px;
+            max-width: 200px;
         }
 
         .summary-item-meta {
-            font-size: 0.74rem;
-            color: #6b7280;
-            font-weight: 600;
-            margin-top: 2px;
-            text-transform: uppercase;
-        }
-
-        .summary-item-bundle-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.7rem;
-            color: #15803d;
-            font-weight: 700;
-            margin-top: 2px;
+            font-size: 0.72rem;
+            color: #9ca3af;
+            font-weight: 500;
+            margin-top: 1px;
         }
 
         .summary-item-right {
@@ -683,25 +503,10 @@
             flex-shrink: 0;
         }
 
-        .summary-item-prices {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            line-height: 1.2;
-        }
-
-        .summary-item-original-price {
-            font-size: 0.78rem;
-            color: #9ca3af;
-            text-decoration: line-through;
-            font-weight: 600;
-        }
-
         .summary-item-price {
-            font-size: 0.95rem;
-            font-weight: 800;
+            font-size: 0.92rem;
+            font-weight: 600;
             color: #111827;
-            white-space: nowrap;
         }
 
         .summary-item-remove-btn {
@@ -710,138 +515,132 @@
             color: #9ca3af;
             cursor: pointer;
             padding: 4px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            transition: color 0.15s ease, background 0.15s ease;
+            font-size: 0.85rem;
+            transition: color 0.15s ease;
         }
 
         .summary-item-remove-btn:hover {
             color: #ef4444;
-            background: #fee2e2;
         }
 
-        /* Cupón / Código de Descuento */
-        .coupon-input-row {
+        /* Cupón de descuento */
+        .coupon-box-row {
             display: flex;
             gap: 8px;
-            width: 100%;
+            margin-top: 0.25rem;
         }
 
-        .coupon-input {
+        .coupon-input-field {
             flex: 1;
-            height: 44px;
-            padding: 0 14px;
+            height: 40px;
+            padding: 0 12px;
             border-radius: var(--radius-input);
-            border: 1px solid #d1d5db;
+            border: 1px solid var(--border-input);
             background: #ffffff;
             font-size: 0.88rem;
-            font-weight: 600;
             outline: none;
             text-transform: uppercase;
+            transition: border-color 0.15s ease;
         }
 
-        .coupon-input:focus {
-            border-color: #000000;
+        .coupon-input-field:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
         }
 
-        .coupon-apply-btn {
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
+        .coupon-apply-button {
+            background: #ffffff;
+            border: 1px solid var(--border-input);
             border-radius: var(--radius-input);
             padding: 0 16px;
-            font-size: 0.86rem;
-            font-weight: 700;
-            color: #111827;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
         }
 
-        .coupon-apply-btn:hover {
-            background: #000000;
-            color: #ffffff;
-            border-color: #000000;
+        .coupon-apply-button:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
         }
 
         .coupon-active-tag {
             display: none;
             align-items: center;
             justify-content: space-between;
-            background: #dcfce7;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
             color: #15803d;
             padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 700;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 600;
             margin-top: 6px;
         }
 
-        .coupon-remove-btn {
-            background: none;
-            border: none;
-            color: #15803d;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        /* Desglose de Totales */
-        .summary-breakdown {
+        /* Desglose de Precios (Limpio Payhip) */
+        .summary-totals-box {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            padding-top: 1rem;
-            border-top: 1px solid #e5e7eb;
+            padding-top: 0.75rem;
         }
 
-        .summary-line {
+        .summary-total-line {
             display: flex;
             align-items: center;
             justify-content: space-between;
             font-size: 0.88rem;
-            color: #6b7280;
-            font-weight: 600;
+            color: #374151;
+            font-weight: 500;
         }
 
-        .summary-line.total-row {
-            padding-top: 10px;
-            border-top: 1px solid #e5e7eb;
+        .summary-total-line.final-total-line {
+            margin-top: 6px;
+            font-size: 1.05rem;
+            font-weight: 800;
             color: #111827;
+        }
+
+        .summary-total-line.final-total-line .total-amount {
             font-size: 1.15rem;
             font-weight: 900;
         }
 
-        .total-currency-tag {
-            font-size: 0.75rem;
-            color: #6b7280;
-            font-weight: 700;
-            margin-right: 4px;
-        }
-
-        /* Total Savings Row */
-        .total-savings-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.85rem;
-            font-weight: 800;
-            color: #15803d;
-            margin-top: 4px;
-        }
-
-        /* Empty State */
+        /* ==========================================================================
+           EMPTY STATE + RECOMENDACIONES (SELECCIONADOS PARA TI)
+           ========================================================================== */
         .checkout-empty-state {
             display: none;
             text-align: center;
-            padding: 2rem 1rem;
+            padding: 1rem 0;
         }
 
-        .checkout-empty-state h4 {
-            font-size: 1.15rem;
-            font-weight: 800;
+        .empty-cart-top-box {
+            background: #f9fafb;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-cart-icon {
+            font-size: 2rem;
+            color: #9ca3af;
             margin-bottom: 6px;
         }
 
-        .checkout-empty-state p {
-            font-size: 0.85rem;
+        .empty-cart-top-box h4 {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .empty-cart-top-box p {
+            font-size: 0.84rem;
             color: #6b7280;
             margin-bottom: 1rem;
         }
@@ -851,113 +650,660 @@
             background: #000000;
             color: #ffffff;
             text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 9999px;
-            font-size: 0.88rem;
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-size: 0.82rem;
             font-weight: 700;
+            transition: background 0.15s ease;
         }
 
-        /* ==========================================================================
-           MODAL DE ÉXITO / CONFIRMACIÓN
-           ========================================================================== */
-        .success-modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            z-index: 99999;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
+        .checkout-empty-return-btn:hover {
+            background: #27272a;
         }
 
-        .success-modal-backdrop.active {
-            display: flex;
+        /* Sección: Seleccionados para ti */
+        .recommendations-box {
+            text-align: left;
         }
 
-        .success-modal-card {
-            background: #ffffff;
-            border-radius: 20px;
-            padding: 2.2rem 2rem;
-            max-width: 460px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.4);
-            animation: modalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: scale(0.94); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .success-check-icon {
-            width: 68px;
-            height: 68px;
-            border-radius: 50%;
-            background: #dcfce7;
-            color: #16a34a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.2rem;
-            margin: 0 auto 1.25rem auto;
-        }
-
-        .success-title {
-            font-size: 1.45rem;
-            font-weight: 900;
-            color: #000000;
-            margin-bottom: 6px;
-        }
-
-        .success-subtitle {
-            font-size: 0.88rem;
-            color: var(--text-muted);
-            margin-bottom: 1.5rem;
-            line-height: 1.5;
-        }
-
-        .success-key-box {
-            background: #f4f4f7;
-            border: 1px dashed #d1d5db;
-            border-radius: 12px;
-            padding: 12px 14px;
-            margin-bottom: 1.5rem;
+        .recommendations-header-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .recommendations-title {
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #111827;
+            letter-spacing: -0.01em;
+        }
+
+        .recommendations-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #742284;
+            background: #faf5ff;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid #e9d5ff;
+        }
+
+        .recommendations-grid {
+            display: flex;
+            flex-direction: column;
             gap: 10px;
         }
 
-        .success-key-text {
-            font-family: monospace;
-            font-size: 1.05rem;
-            font-weight: 800;
-            color: #000000;
-            letter-spacing: 1px;
-            word-break: break-all;
+        .rec-item-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1px solid var(--border-light);
+            border-radius: 10px;
+            padding: 10px 12px;
+            gap: 10px;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
         }
 
-        .success-copy-btn {
+        .rec-item-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            transform: translateY(-1px);
+        }
+
+        .rec-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .rec-item-thumb {
+            width: 42px;
+            height: 42px;
+            border-radius: 6px;
+            object-fit: cover;
+            background: #141414;
+            border: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+
+        .rec-item-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .rec-item-name {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #111827;
+            text-transform: uppercase;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 160px;
+        }
+
+        .rec-item-subtitle {
+            font-size: 0.7rem;
+            color: #6b7280;
+            font-weight: 500;
+            margin-top: 1px;
+        }
+
+        .rec-item-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .rec-item-price {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .rec-item-add-btn {
             background: #000000;
             color: #ffffff;
             border: none;
-            padding: 6px 14px;
-            border-radius: 8px;
+            border-radius: 6px;
+            padding: 6px 12px;
             font-size: 0.78rem;
             font-weight: 700;
             cursor: pointer;
-            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+
+        .rec-item-add-btn:hover {
+            background: #27272a;
+            transform: scale(1.02);
+        }
+
+        .rec-item-add-btn:active {
+            transform: scale(0.96);
         }
 
         /* ==========================================================================
-           MODAL DE PAGO YAPE (POPUP ELEGANTE)
+           DRAWER DEL CARRITO SIDEBAR (COMPLETO CON OFERTAS EXCLUSIVAS)
+           ========================================================================== */
+        .cart-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .cart-backdrop.is-open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .cart-drawer-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            background: #ffffff;
+            z-index: 100001;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -10px 0 40px rgba(0, 0, 0, 0.25);
+            box-sizing: border-box;
+        }
+
+        .cart-drawer-panel.is-open {
+            transform: translateX(0);
+        }
+
+        .cart-drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--stroke-light);
+            background: rgba(255, 255, 255, 0.98);
+        }
+
+        .cart-header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #000000;
+            letter-spacing: -0.02em;
+        }
+
+        .cart-count-bubble {
+            background: #000000;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 800;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cart-drawer-close {
+            background: #f4f4f7;
+            border: 1px solid var(--stroke-light);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cart-drawer-close:hover {
+            background: #e9e9ee;
+            transform: scale(1.05);
+        }
+
+        .cart-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .cart-items-list-drawer {
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+        }
+
+        .cart-drawer-item-card {
+            display: flex;
+            gap: 14px;
+            padding-bottom: 1.1rem;
+            border-bottom: 1px solid var(--stroke-light);
+            position: relative;
+        }
+
+        .cart-drawer-item-thumb {
+            width: 58px;
+            height: 58px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: #f0f0f3;
+            flex-shrink: 0;
+        }
+
+        .cart-drawer-item-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+        }
+
+        .cart-drawer-item-title-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .cart-drawer-item-title {
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #000000;
+            line-height: 1.3;
+        }
+
+        .cart-drawer-item-price {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #000000;
+            white-space: nowrap;
+        }
+
+        .cart-drawer-item-meta {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
+        .cart-os-selector-wrapper {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 4px;
+        }
+
+        .cart-os-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .cart-os-pills {
+            display: inline-flex;
+            align-items: center;
+            background: #f3f4f6;
+            border-radius: 9999px;
+            padding: 2px;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            gap: 2px;
+        }
+
+        .cart-os-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: transparent;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+
+        .cart-os-pill.active {
+            background: #000000;
+            color: #ffffff;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .cart-drawer-item-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .cart-qty-stepper {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #000000;
+            user-select: none;
+        }
+
+        .cart-qty-btn {
+            background: transparent;
+            border: none;
+            color: #777;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 2px 6px;
+            transition: color 0.15s ease;
+        }
+
+        .cart-qty-btn:hover {
+            color: #000000;
+        }
+
+        .cart-drawer-item-remove-btn {
+            background: transparent;
+            border: none;
+            color: #8e8c95;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s ease;
+        }
+
+        .cart-drawer-item-remove-btn:hover {
+            color: #ef4444;
+        }
+
+        /* Ofertas Exclusivas en Drawer */
+        .cart-level-up-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .level-up-header {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 2px;
+        }
+
+        .level-up-title {
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #000000;
+            letter-spacing: -0.01em;
+        }
+
+        .level-up-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1px solid var(--stroke-light);
+            border-radius: 14px;
+            padding: 12px 14px;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
+        }
+
+        .level-up-card:hover {
+            border-color: var(--stroke-light-hover);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        }
+
+        .level-card-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .level-card-thumb {
+            width: 46px;
+            height: 46px;
+            border-radius: 10px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #f0f0f3;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .level-card-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .level-card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .level-card-info h5 {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: #000000;
+            margin: 0;
+            line-height: 1.22;
+            letter-spacing: -0.01em;
+            text-transform: uppercase;
+        }
+
+        .level-card-subtext {
+            font-size: 0.76rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .level-os-inline-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 1px;
+            flex-wrap: nowrap;
+        }
+
+        .os-mini-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            background: #f3f4f6;
+            color: #374151;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            white-space: nowrap;
+        }
+
+        .level-card-right-action {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .level-price-anchor-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .level-old-price {
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-decoration: line-through;
+        }
+
+        .level-save-pill {
+            font-size: 0.66rem;
+            font-weight: 700;
+            color: #15803d;
+            background: #dcfce7;
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+
+        .level-card-add-btn {
+            background: #ffffff;
+            border: 1.5px solid #000000;
+            border-radius: 9999px;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #000000;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.18s ease;
+        }
+
+        .level-card-add-btn:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .cart-drawer-footer {
+            padding: 1.25rem 1.5rem;
+            border-top: 1px solid var(--stroke-light);
+            background: rgba(255, 255, 255, 0.98);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .cart-drawer-summary-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .cart-drawer-summary-line.total-line {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #000000;
+            letter-spacing: -0.02em;
+        }
+
+        .cart-drawer-checkout-cta-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 20px;
+            border-radius: 12px;
+            background: #000000;
+            border: none;
+            color: #ffffff;
+            font-size: 0.98rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            text-decoration: none;
+        }
+
+        .cart-drawer-checkout-cta-btn:hover:not(:disabled) {
+            background: #222222;
+            transform: translateY(-1px);
+        }
+
+        .cart-drawer-checkout-cta-btn:disabled {
+            background: #e5e7eb !important;
+            color: #6b7280 !important;
+            border: 1px solid #d1d5db !important;
+            font-size: 0.95rem !important;
+            font-weight: 700 !important;
+            cursor: not-allowed !important;
+            opacity: 1 !important;
+            transform: none !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+        }
+
+        .cart-drawer-checkout-cta-btn .cta-arrow-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            font-size: 0.8rem;
+        }
+
+        .cart-guarantee-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.72rem;
+            color: #6b7280;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .guarantee-dot {
+            color: #d1d5db;
+        }
+
+        /* ==========================================================================
+           MODAL DE PAGO YAPE (DISEÑO OFICIAL EXACTO A LA REFERENCIA)
            ========================================================================== */
         .yape-modal-backdrop {
             position: fixed;
@@ -965,7 +1311,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.78);
+            background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             z-index: 99999;
@@ -981,19 +1327,24 @@
 
         .yape-modal-card {
             background: #ffffff;
-            border-radius: 20px;
-            padding: 2.2rem 1.85rem;
-            max-width: 440px;
+            border-radius: 18px;
+            padding: 2rem 1.85rem;
+            max-width: 410px;
             width: 100%;
             position: relative;
-            box-shadow: 0 25px 60px rgba(116, 34, 132, 0.28), 0 10px 25px rgba(0, 0, 0, 0.2);
-            animation: modalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            animation: modalFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .yape-modal-close-btn {
             position: absolute;
-            top: 16px;
-            right: 16px;
+            top: 14px;
+            right: 14px;
             background: #f3f4f6;
             border: none;
             border-radius: 50%;
@@ -1014,24 +1365,22 @@
 
         .yape-modal-header {
             text-align: center;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
         }
 
-        .yape-modal-icon-badge {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #742284 0%, #9333ea 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .yape-modal-logo-img {
+            width: 58px;
+            height: 58px;
+            border-radius: 14px;
+            object-fit: cover;
             margin: 0 auto 10px auto;
-            box-shadow: 0 4px 14px rgba(116, 34, 132, 0.35);
+            display: block;
+            box-shadow: 0 4px 14px rgba(116, 34, 132, 0.25);
         }
 
         .yape-modal-title {
             font-size: 1.25rem;
-            font-weight: 900;
+            font-weight: 800;
             color: #111827;
             margin-bottom: 2px;
         }
@@ -1039,33 +1388,95 @@
         .yape-modal-subtitle {
             font-size: 0.8rem;
             color: #6b7280;
-            font-weight: 600;
-        }
-
-        .yape-modal-amount-pill {
-            background: #faf5ff;
-            border: 1.5px solid #e9d5ff;
-            border-radius: 12px;
-            padding: 10px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.25rem;
-            font-size: 0.88rem;
-            color: #701a75;
-            font-weight: 700;
-        }
-
-        .yape-modal-amount-pill strong {
-            font-size: 1.25rem;
-            font-weight: 900;
-            color: #742284;
+            font-weight: 500;
         }
 
         .yape-modal-form {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
+        }
+
+        .yape-field-label {
+            display: block;
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+            text-align: left;
+        }
+
+        .yape-clean-phone-input {
+            width: 100%;
+            height: 48px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1.5px solid var(--border-input);
+            padding: 0 14px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #111827;
+            letter-spacing: 0.04em;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .yape-clean-phone-input:focus {
+            border-color: #742284;
+            box-shadow: 0 0 0 3px rgba(116, 34, 132, 0.18);
+        }
+
+        .yape-clean-phone-input::placeholder {
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .yape-otp-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .yape-otp-box {
+            width: 100%;
+            height: 48px;
+            background: #ffffff;
+            border: 1.5px solid var(--border-input);
+            border-radius: 10px;
+            color: #111827;
+            font-family: inherit;
+            font-size: 1.3rem;
+            font-weight: 800;
+            text-align: center;
+            outline: none;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .yape-otp-box:focus {
+            border-color: #742284;
+            box-shadow: 0 0 0 3px rgba(116, 34, 132, 0.18);
+        }
+
+        .yape-helper-text {
+            font-size: 0.76rem;
+            color: #9ca3af;
+            margin-top: 6px;
+            line-height: 1.4;
+            text-align: left;
+        }
+
+        .yape-error-alert {
+            display: none;
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-align: left;
         }
 
         .yape-modal-submit-btn {
@@ -1073,37 +1484,104 @@
             color: #ffffff;
             border: none;
             border-radius: 12px;
-            padding: 14px;
-            font-size: 1rem;
+            height: 48px;
+            font-size: 1.05rem;
             font-weight: 800;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            margin-top: 6px;
-            box-shadow: 0 4px 16px rgba(116, 34, 132, 0.35);
-            transition: all 0.2s ease;
+            margin-top: 4px;
+            box-shadow: 0 4px 14px rgba(116, 34, 132, 0.35);
+            transition: all 0.15s ease;
         }
 
         .yape-modal-submit-btn:hover {
-            background: #5b1a68;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(116, 34, 132, 0.45);
+            background: #5c1869;
         }
 
         .yape-modal-submit-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
-            transform: none;
+        }
+
+        /* Modal de Éxito */
+        .success-modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .success-modal-backdrop.active {
+            display: flex;
+        }
+
+        .success-modal-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 2.25rem 2rem;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .success-check-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: #dcfce7;
+            color: #16a34a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin: 0 auto 1.25rem auto;
+        }
+
+        .success-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        .success-subtitle {
+            font-size: 0.85rem;
+            color: #6b7280;
+            line-height: 1.45;
+            margin-bottom: 1.5rem;
+        }
+
+        .success-dl-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 13px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.92rem;
+            color: #ffffff;
+            background: #000000;
         }
 
         /* Spinner */
         .btn-spinner {
             display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 2.5px solid rgba(255, 255, 255, 0.3);
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             border-top-color: #ffffff;
             animation: spin 0.8s linear infinite;
@@ -1113,77 +1591,14 @@
             to { transform: rotate(360deg); }
         }
 
-        /* ==========================================================================
-           RESPONSIVE MOBILE (< 768px)
-           ========================================================================== */
-        @media (max-width: 768px) {
-            .mobile-summary-toggle {
-                display: flex;
-            }
-
-            .checkout-header {
-                padding: 0.85rem 1.25rem;
-            }
-
-            .checkout-brand-title {
-                font-size: 1.05rem;
-            }
-
-            .checkout-main-container {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-                padding: 1.25rem 1rem 3rem 1rem;
-            }
-
-            .checkout-summary-col {
-                position: static;
-                order: -1;
-                display: none;
-                padding: 1.25rem;
-            }
-
-            .checkout-summary-col.is-open {
-                display: flex;
-            }
-
-            .express-buttons-grid {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-
-            .whatsapp-checkout-card {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .whatsapp-checkout-btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .card-fields-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .yape-otp-grid {
-                gap: 6px;
-            }
-
-            .yape-otp-box {
-                height: 44px;
-                font-size: 1.15rem;
-            }
-        }
-
         @keyframes ppSkelPulse {
             0%, 100% { opacity: .5; }
             50% { opacity: .15; }
         }
 
-        #paypalButtonContainer .paypal-button-container { border-radius: 8px; overflow: hidden; }
-
-        /* WIDGET FLOTANTE WHATSAPP (A LA DERECHA COMO EN LA LANDING) */
+        /* ==========================================================================
+           WIDGET FLOTANTE WHATSAPP (A LA DERECHA COMO EN LA LANDING)
+           ========================================================================== */
         .whatsapp-widget-container {
             position: fixed;
             bottom: 24px;
@@ -1196,6 +1611,14 @@
             transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
         }
 
+        html.cart-is-open .whatsapp-widget-container,
+        body.cart-is-open .whatsapp-widget-container {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            visibility: hidden !important;
+            transform: translateY(20px) !important;
+        }
+
         .whatsapp-bubble {
             position: relative;
             background: #ffffff;
@@ -1205,25 +1628,16 @@
             box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
             border: 1px solid rgba(0, 0, 0, 0.06);
             max-width: 230px;
-            transition: opacity 0.25s ease, transform 0.25s ease;
             animation: bubbleFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes bubbleFadeIn {
-            from {
-                opacity: 0;
-                transform: translateX(10px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0) scale(1);
-            }
+            from { opacity: 0; transform: translateX(10px) scale(0.95); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
         }
 
         .whatsapp-bubble.hidden {
-            opacity: 0;
-            transform: scale(0.9) translateX(10px);
-            pointer-events: none;
+            display: none !important;
         }
 
         .whatsapp-bubble-link {
@@ -1286,6 +1700,42 @@
         .whatsapp-circle-btn:active {
             transform: scale(0.94);
         }
+
+        /* ==========================================================================
+           RESPONSIVE MOBILE (< 768px)
+           ========================================================================== */
+        @media (max-width: 768px) {
+            .mobile-summary-toggle {
+                display: flex;
+            }
+
+            .checkout-header {
+                padding: 0.85rem 1.25rem;
+            }
+
+            .checkout-brand-title {
+                font-size: 1rem;
+            }
+
+            .checkout-main-container {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+                padding: 1.5rem 1rem 4rem 1rem;
+            }
+
+            .checkout-summary-col {
+                display: none;
+                padding: 1rem 0;
+            }
+
+            .checkout-summary-col.is-open {
+                display: flex;
+            }
+
+            .cart-drawer-panel {
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 
@@ -1309,10 +1759,10 @@
                 <span class="checkout-brand-title">WILLIE INSPIRED</span>
             </a>
 
-            <a href="/willieinspired/" class="header-cart-icon-btn" title="Ver carrito">
+            <button type="button" class="header-cart-icon-btn" onclick="toggleCartDrawer()" title="Abrir Carrito y Ofertas" aria-label="Abrir Carrito">
                 <i class="bi bi-bag"></i>
                 <span class="header-cart-count-badge" id="headerCartCount">0</span>
-            </a>
+            </button>
         </div>
     </header>
 
@@ -1323,190 +1773,174 @@
             <span>Mostrar resumen del pedido</span>
             <i class="bi bi-chevron-down" id="mobileSummaryChevron"></i>
         </div>
-        <div class="mobile-summary-toggle-right" id="mobileSummaryTotal">$0.00</div>
+        <div class="mobile-summary-toggle-right" id="mobileSummaryTotal">USD 0,00 $</div>
     </div>
 
-    <!-- Main Checkout Container -->
+    <!-- Main Checkout Container (Exact Payhip Layout) -->
     <main class="checkout-main-container">
 
-        <!-- COLUMNA IZQUIERDA: FORMULARIO ESTILO SHOPIFY -->
+        <!-- COLUMNA IZQUIERDA: FORMULARIO + BRICKS DE PAGO -->
         <section class="checkout-form-col">
 
-            <!-- 1. PAGO EXPRÉS -->
-            <div class="express-checkout-section">
-                <div class="express-checkout-label">Pago exprés</div>
-                <div class="express-checkout-grid">
-                    <div id="ppLoadingSkeleton">
-                        <div style="height:48px; background:rgba(245,187,80,.25); border-radius:8px; animation:ppSkelPulse 1.4s ease-in-out infinite;"></div>
-                        <div style="height:44px; background:rgba(0,0,0,.05); border-radius:8px; margin-top:8px; animation:ppSkelPulse 1.4s ease-in-out infinite;"></div>
+            <!-- 1. Dirección de correo electrónico / Estado logueado -->
+            <div class="form-block" id="emailBlock">
+                <div id="guestEmailContainer">
+                    <div class="form-label-row">
+                        <label for="contactEmail">Dirección de correo electrónico</label>
+                        <a href="/cuenta/login.html" class="form-label-link">Iniciar sesión</a>
                     </div>
-                    <div id="paypalButtonContainer" style="display:none;"></div>
+                    <input type="email" id="contactEmail" class="form-input-clean" placeholder="Tu dirección de correo electrónico" autocomplete="email">
+                    <div id="emailInlineError" class="inline-field-error">Por favor ingresa una dirección de correo electrónico válida.</div>
                 </div>
-            </div>
 
-            <!-- Divisor O -->
-            <div class="checkout-or-divider">
-                <span>O</span>
-            </div>
-
-            <!-- 2. CONTACTO -->
-            <div class="checkout-section-box">
-                <div class="section-header-row">
-                    <h3 class="section-title">Contacto</h3>
-                    <a href="/cuenta/login.html" class="section-right-link">Iniciar sesión</a>
-                </div>
-                <div class="form-group">
-                    <input type="email" id="contactEmail" class="form-input" placeholder="Correo electrónico o teléfono" autocomplete="email">
-                    <i class="bi bi-question-circle form-input-help-icon" title="Enviaremos tus enlaces de descarga y comprobante a este correo"></i>
-                </div>
-                <label class="custom-checkbox-row">
-                    <input type="checkbox" id="newsletterConsent" checked>
-                    <span class="custom-checkbox-label">Enviarme novedades y ofertas exclusivas</span>
-                </label>
-            </div>
-
-            <!-- 3. PAGO -->
-            <div class="checkout-section-box">
-                <div class="section-header-row" style="margin-bottom: 2px;">
-                    <h3 class="section-title">Pago</h3>
-                </div>
-                <p class="section-subtitle">Todas las transacciones son seguras y están encriptadas.</p>
-
-                <div class="payment-accordion-container">
-                    <!-- Opción 1: PayPal / Tarjeta de crédito o débito -->
-                    <div class="payment-accordion-card active" id="option-paypal">
-                        <div class="payment-accordion-header" onclick="selectPaymentMethod('paypal')">
-                            <div class="payment-radio-left">
-                                <div class="custom-radio-circle" id="circlePaypal" style="border-color: #ec4899;">
-                                    <div class="custom-radio-dot" id="radioPaypalDot" style="background: #ec4899;"></div>
-                                </div>
-                                <span class="payment-option-title">PayPal / Tarjeta de crédito o débito</span>
-                            </div>
-                            <div class="payment-badges-row">
-                                <span class="card-badge-pill badge-visa">VISA</span>
-                                <span class="card-badge-pill badge-mastercard">MC</span>
-                                <span class="card-badge-pill badge-amex">AMEX</span>
-                                <span class="card-badge-pill" style="background:#003087; color:#fff; font-weight:900;">PayPal</span>
-                            </div>
-                        </div>
-                        <div class="payment-accordion-body" id="bodyPaypal" style="display: block;">
-                            <p style="font-size: 0.82rem; color: #6b7280; margin: 0; line-height: 1.45;">
-                                Completa tu pago seguro mediante <strong>PayPal</strong> o con cualquier tarjeta internacional (débito/crédito) usando los botones de Pago Exprés arriba.
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Opción 2: Yape (Cobro Automático en Soles 🇵🇪) -> Abre Modal -->
-                    <div class="payment-accordion-card" id="option-yape">
-                        <div class="payment-accordion-header" onclick="selectPaymentMethod('yape')">
-                            <div class="payment-radio-left">
-                                <div class="custom-radio-circle" id="circleYape" style="border-color: #d1d5db;">
-                                    <div class="custom-radio-dot" id="radioYapeDot" style="background: transparent;"></div>
-                                </div>
-                                <span class="payment-option-title">Yape (Cobro Automático en Soles 🇵🇪)</span>
-                            </div>
-                            <div class="payment-badges-row">
-                                <span class="card-badge-pill" style="background: #742284; color: #fff; font-weight: 900;">YAPE</span>
-                            </div>
-                        </div>
-                        <div class="payment-accordion-body" id="bodyYape" style="display: none;">
-                            <p style="font-size: 0.82rem; color: #6b7280; margin: 0 0 12px 0; line-height: 1.45;">
-                                Paga directamente en Soles ingresando tu número de celular y código de aprobación de la app Yape.
-                            </p>
-                            <button type="button" class="yape-modal-submit-btn" onclick="openYapeModal()" style="margin-top: 0; width: 100%;">
-                                <i class="bi bi-qr-code"></i> Abrir Ventana de Pago Yape (<span id="yapeBrickAmount">S/. 0.00</span>)
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Opción 3: Mercado Pago / Transferencia Directa -> Abre WhatsApp -->
-                    <div class="payment-accordion-card" id="option-mercadopago">
-                        <div class="payment-accordion-header" onclick="selectPaymentMethod('mercadopago')">
-                            <div class="payment-radio-left">
-                                <div class="custom-radio-circle" id="circleMp" style="border-color: #d1d5db;">
-                                    <div class="custom-radio-dot" id="radioMpDot" style="background: transparent;"></div>
-                                </div>
-                                <span class="payment-option-title">Mercado Pago / Transferencia Bancaria</span>
-                            </div>
-                            <div class="payment-badges-row">
-                                <span class="card-badge-pill" style="background: #009ee3; color: #fff; font-weight: 900;">MP</span>
-                                <span class="card-badge-pill" style="background: #002a8f; color: #fff; font-weight: 800; font-size: 0.65rem;">BCP</span>
-                                <span class="card-badge-pill" style="background: #004481; color: #fff; font-weight: 800; font-size: 0.65rem;">BBVA</span>
-                            </div>
-                        </div>
-                        <div class="payment-accordion-body" id="bodyMercadopago" style="display: none;">
-                            <p style="font-size: 0.82rem; color: #6b7280; margin: 0 0 12px 0; line-height: 1.45;">
-                                Paga mediante <strong>transferencia directa (BCP, BBVA, Interbank)</strong> o solicita un link de <strong>Mercado Pago Perú sin comisiones</strong> directamente a través de nuestro WhatsApp.
-                            </p>
-                            <button type="button" class="yape-modal-submit-btn" onclick="openWhatsAppCheckout('mercadopago')" style="background: #25d366; margin-top: 0; width: 100%; box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);">
-                                <i class="bi bi-whatsapp"></i> Continuar por WhatsApp con mi Pedido
-                            </button>
-                        </div>
+                <div id="loggedUserContainer" style="display: none;">
+                    <div class="user-logged-row">
+                        <i class="bi bi-person-circle" style="font-size: 1.15rem; color: #111827;"></i>
+                        <span id="loggedUserEmail">usuario@ejemplo.com</span>
+                        <a href="javascript:void(0)" onclick="logoutCheckoutUser()" class="user-logout-link">Cerrar sesión</a>
                     </div>
                 </div>
             </div>
 
-            <!-- Links Legales Footer (Shopify Style) -->
-            <div class="checkout-footer-links">
-                <a href="/legal/politicas-de-reembolso.html" target="_blank">Política de reembolso</a>
-                <a href="/legal/politicas-de-privacidad.html" target="_blank">Política de privacidad</a>
-                <a href="/legal/terminos-de-servicio.html" target="_blank">Términos del servicio</a>
-                <a href="/legal/ayuda-y-contacto.html" target="_blank">Ayuda y Contacto</a>
+            <!-- 2. Datos adicionales (País) -->
+            <div class="form-block">
+                <h3 class="section-subheading">Datos adicionales</h3>
+                <div class="form-label-row" style="margin-bottom: 2px;">
+                    <label for="checkoutCountry">País</label>
+                </div>
+                <select id="checkoutCountry" class="form-select-clean">
+                    <option value="PE" selected>Perú</option>
+                    <option value="AR">Argentina</option>
+                    <option value="BO">Bolivia</option>
+                    <option value="CL">Chile</option>
+                    <option value="CO">Colombia</option>
+                    <option value="CR">Costa Rica</option>
+                    <option value="CU">Cuba</option>
+                    <option value="EC">Ecuador</option>
+                    <option value="SV">El Salvador</option>
+                    <option value="ES">España</option>
+                    <option value="US">Estados Unidos</option>
+                    <option value="GT">Guatemala</option>
+                    <option value="HN">Honduras</option>
+                    <option value="MX">México</option>
+                    <option value="NI">Nicaragua</option>
+                    <option value="PA">Panamá</option>
+                    <option value="PY">Paraguay</option>
+                    <option value="PR">Puerto Rico</option>
+                    <option value="DO">República Dominicana</option>
+                    <option value="UY">Uruguay</option>
+                    <option value="VE">Venezuela</option>
+                    <option value="OTHER">Otro país</option>
+                </select>
+            </div>
+
+            <!-- 3. Bricks de Pago Apilados (Exact Payhip Style) -->
+            <div class="payment-bricks-container">
+                <!-- PayPal Smart Buttons Container (Oficial SDK) -->
+                <div id="ppLoadingSkeleton">
+                    <div style="height:48px; background:rgba(255,196,57,.3); border-radius:6px; animation:ppSkelPulse 1.4s ease-in-out infinite;"></div>
+                    <div style="height:48px; background:rgba(44,46,47,.1); border-radius:6px; margin-top:10px; animation:ppSkelPulse 1.4s ease-in-out infinite;"></div>
+                </div>
+                <div id="paypalButtonContainer" style="display:none;"></div>
+
+                <!-- Brick Yape (Cobro Automático en Soles 🇵🇪) -> Abre Modal -->
+                <button type="button" class="brick-yape-btn" id="btnYapeBrick" onclick="openYapeModal()">
+                    <img src="/images/payments/yape.png" alt="Yape" style="width: 22px; height: 22px; border-radius: 5px; object-fit: contain;">
+                    <span>Pagar con Yape</span>
+                </button>
+
+                <!-- Brick Mercado Pago -->
+                <button type="button" class="brick-mp-btn" id="btnMpBrick" onclick="handleMercadoPagoClick()">
+                    <img src="/images/payments/mercadopago.png" alt="Mercado Pago" style="height: 18px; width: auto; object-fit: contain;">
+                    <span>Mercado Pago</span>
+                </button>
+            </div>
+
+            <!-- Footer de Seguridad y Enlaces Legales -->
+            <div class="checkout-trust-footer">
+                <div class="trust-badge-line">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <span>Todas las transacciones están protegidas y cifradas</span>
+                </div>
+                <div class="trust-links-line">
+                    <a href="/legal/terminos-de-servicio.html" target="_blank">Condiciones del servicio</a>
+                    <span>|</span>
+                    <a href="/legal/politicas-de-privacidad.html" target="_blank">Política de privacidad</a>
+                    <span>|</span>
+                    <span>Con la tecnología de <strong>OFFSZN</strong></span>
+                </div>
             </div>
 
         </section>
 
-        <!-- COLUMNA DERECHA: RESUMEN DEL PEDIDO EN TIEMPO REAL -->
+        <!-- COLUMNA DERECHA: RESUMEN DEL PEDIDO -->
         <aside class="checkout-summary-col" id="orderSummaryCol">
 
-            <!-- Items del Pedido -->
+            <!-- Lista de Productos -->
             <div class="summary-items-list" id="summaryItemsList">
                 <!-- Inyectado dinámicamente con JS -->
             </div>
 
-            <!-- Empty State si no hay productos -->
+            <!-- Empty State + Sección "Seleccionados para ti" -->
             <div class="checkout-empty-state" id="checkoutEmptyState">
-                <h4>Tu carrito está vacío</h4>
-                <p>No tienes productos en tu orden de compra.</p>
-                <a href="/willieinspired/" class="checkout-empty-return-btn">Ir a la tienda</a>
+                <div class="empty-cart-top-box">
+                    <div class="empty-cart-icon"><i class="bi bi-bag-x"></i></div>
+                    <h4>Tu carrito está vacío</h4>
+                    <p>No tienes productos en tu orden de compra.</p>
+                    <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" onclick="toggleCartDrawer()" class="checkout-empty-return-btn" style="border:none; cursor:pointer;">
+                            <i class="bi bi-bag-plus"></i> Ver ofertas del carrito
+                        </button>
+                        <a href="/willieinspired/" class="checkout-empty-return-btn" style="background:#ffffff; color:#000000; border:1px solid #d1d5db;">
+                            Ir a la tienda
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Recomendaciones Seleccionados para ti -->
+                <div class="recommendations-box">
+                    <div class="recommendations-header-row">
+                        <span class="recommendations-title">Seleccionados para ti:</span>
+                        <span class="recommendations-badge">⭐ Destacados</span>
+                    </div>
+                    <div class="recommendations-grid" id="recommendationsGrid">
+                        <!-- Inyectado dinámicamente -->
+                    </div>
+                </div>
             </div>
 
             <!-- Input Código de Descuento -->
             <div id="couponSection">
-                <div class="coupon-input-row">
-                    <input type="text" id="couponCodeInput" class="coupon-input" placeholder="Código de descuento">
-                    <button type="button" class="coupon-apply-btn" onclick="applyCouponCode()">Aplicar</button>
+                <div class="coupon-box-row">
+                    <input type="text" id="couponCodeInput" class="coupon-input-field" placeholder="CÓDIGO DEL CUPÓN">
+                    <button type="button" class="coupon-apply-button" onclick="applyCouponCode()">Aplicar</button>
                 </div>
                 <div class="coupon-active-tag" id="couponActiveTag">
                     <span id="couponActiveLabel">🏷️ DESCUENTO APLICADO</span>
-                    <button type="button" class="coupon-remove-btn" onclick="removeCouponCode()">✕</button>
+                    <button type="button" onclick="removeCouponCode()" style="background:none; border:none; color:#15803d; cursor:pointer; font-weight:700;">✕</button>
                 </div>
             </div>
 
             <!-- Desglose de Totales -->
-            <div class="summary-breakdown" id="summaryBreakdown">
-                <div class="summary-line">
-                    <span id="summarySubtotalLabel">Subtotal • 1 producto</span>
-                    <span id="summarySubtotalVal">$0.00</span>
+            <div class="summary-totals-box" id="summaryBreakdown">
+                <div class="summary-total-line">
+                    <span>Subtotal</span>
+                    <span id="summarySubtotalVal">0,00 $</span>
                 </div>
 
-                <div class="summary-line" id="summaryDiscountRow" style="display: none; color: #15803d;">
+                <div class="summary-total-line" id="summaryDiscountRow" style="display: none; color: #15803d;">
                     <span>Descuento</span>
-                    <span id="summaryDiscountVal">-$0.00</span>
+                    <span id="summaryDiscountVal">-0,00 $</span>
                 </div>
 
-                <div class="summary-line total-row">
+                <div class="summary-total-line">
+                    <span>Impuestos</span>
+                    <span>0,00 $</span>
+                </div>
+
+                <div class="summary-total-line final-total-line">
                     <span>Total</span>
-                    <div>
-                        <span class="total-currency-tag">USD</span>
-                        <span id="summaryTotalVal">$0.00</span>
-                    </div>
-                </div>
-
-                <!-- Total Savings Badge (Shopify Style) -->
-                <div class="total-savings-row" id="totalSavingsRow" style="display: none;">
-                    <i class="bi bi-tag-fill"></i>
-                    <span>TOTAL AHORRADO <strong id="totalSavingsVal">$0.00</strong></span>
+                    <span class="total-amount" id="summaryTotalVal">USD 0,00 $</span>
                 </div>
             </div>
 
@@ -1514,7 +1948,143 @@
 
     </main>
 
-    <!-- MODAL DE PAGO YAPE (POPUP ELEGANTE) -->
+    <!-- ==========================================================================
+         DRAWER DEL CARRITO SIDEBAR (COMPLETO CON OFERTAS EXCLUSIVAS)
+         ========================================================================== -->
+    <div class="cart-backdrop" id="cartBackdrop" onclick="toggleCartDrawer()"></div>
+    <aside class="cart-drawer-panel" id="cartDrawerPanel">
+        
+        <!-- Header del Carrito -->
+        <div class="cart-drawer-header">
+            <div class="cart-header-title">
+                <i class="bi bi-bag" style="font-size: 1.2rem;"></i>
+                <span>Tu carrito</span>
+                <span class="cart-count-bubble" id="cartDrawerCount">0</span>
+            </div>
+            <button type="button" class="cart-drawer-close" onclick="toggleCartDrawer()" aria-label="Cerrar Carrito">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Contenido Espacioso con Scroll -->
+        <div class="cart-drawer-body" id="cartDrawerBody">
+            
+            <!-- Lista de Productos en el Carrito -->
+            <div class="cart-items-list-drawer" id="cartDrawerItemsList">
+                <!-- Inyectado dinámicamente -->
+            </div>
+
+            <!-- SECCIÓN: OFERTAS EXCLUSIVAS (UPSELL CON ANCLAJE DE PRECIOS) -->
+            <div class="cart-level-up-section">
+                <div class="level-up-header">
+                    <span class="level-up-title">Ofertas exclusivas</span>
+                </div>
+
+                <!-- Card 1: TODOS LOS PRESETS DE ARTISTAS (Antes $120 -> Ahora $70) -->
+                <div class="level-up-card">
+                    <div class="level-card-left">
+                        <div class="level-card-thumb">
+                            <img src="/willieimages/HERO.png" alt="Todos los presets de artistas">
+                        </div>
+                        <div class="level-card-info">
+                            <h5>TODOS LOS PRESETS<br>DE ARTISTAS</h5>
+                            <p class="level-card-subtext">35 presets para FL Studio</p>
+                        </div>
+                    </div>
+                    <div class="level-card-right-action">
+                        <div class="level-price-anchor-tag">
+                            <span class="level-old-price">$120</span>
+                            <span class="level-save-pill">Ahorra $50</span>
+                        </div>
+                        <button type="button" class="level-card-add-btn" onclick="addBundleToCart('all-presets', 'TODOS LOS PRESETS DE ARTISTAS', 70.00, '/willieimages/HERO.png')">
+                            Añadir $70
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 2: EASY MIX PLUGIN (Antes $40 -> Ahora $15) -->
+                <div class="level-up-card">
+                    <div class="level-card-left">
+                        <div class="level-card-thumb">
+                            <img src="/images/LOGO%20OFFSZN.webp" alt="Easy Mix Plugin">
+                        </div>
+                        <div class="level-card-info">
+                            <h5>EASY MIX PLUGIN</h5>
+                            <div class="level-os-inline-row">
+                                <span class="os-mini-badge"><i class="bi bi-windows"></i> WIN</span>
+                                <span class="os-mini-badge"><i class="bi bi-apple"></i> MAC</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="level-card-right-action">
+                        <div class="level-price-anchor-tag">
+                            <span class="level-old-price">$40</span>
+                            <span class="level-save-pill">Ahorra $25</span>
+                        </div>
+                        <button type="button" class="level-card-add-btn" onclick="addBundleToCart('easy-mix-ai', 'EASY MIX PLUGIN', 15.00, '/images/LOGO%20OFFSZN.webp', 'plugin')">
+                            Añadir $15
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 3: COCA COLA PLUGIN (Antes $25 -> Ahora $10) -->
+                <div class="level-up-card">
+                    <div class="level-card-left">
+                        <div class="level-card-thumb">
+                            <img src="/images/plugins/coca-cola.png" alt="Coca Cola Plugin">
+                        </div>
+                        <div class="level-card-info">
+                            <h5>COCA COLA PLUGIN</h5>
+                            <div class="level-os-inline-row">
+                                <span class="os-mini-badge"><i class="bi bi-windows"></i> WIN</span>
+                                <span class="os-mini-badge"><i class="bi bi-apple"></i> MAC</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="level-card-right-action">
+                        <div class="level-price-anchor-tag">
+                            <span class="level-old-price">$25</span>
+                            <span class="level-save-pill">Ahorra $15</span>
+                        </div>
+                        <button type="button" class="level-card-add-btn" onclick="addBundleToCart('coca-cola-plugin', 'COCA COLA PLUGIN - WIN Y MAC', 10.00, '/images/plugins/coca-cola.png', 'plugin')">
+                            Añadir $10
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Footer Limpio del Carrito -->
+        <div class="cart-drawer-footer">
+            <div class="cart-drawer-summary-line">
+                <span id="cartDrawerSubtotalLabel">Subtotal (0 items)</span>
+                <span id="cartDrawerSubtotal">$0.00</span>
+            </div>
+            
+            <div class="cart-drawer-summary-line total-line">
+                <span>Total</span>
+                <span id="cartDrawerTotalVal">$0.00</span>
+            </div>
+
+            <button type="button" class="cart-drawer-checkout-cta-btn" id="cartDrawerCheckoutBtn" onclick="toggleCartDrawer()">
+                <span>Continuar con el Pago</span>
+                <span class="cta-arrow-circle"><i class="bi bi-arrow-right"></i></span>
+            </button>
+
+            <div class="cart-guarantee-row">
+                <span>⚡ Descarga Inmediata</span>
+                <span class="guarantee-dot">•</span>
+                <span>🔒 Pago Seguro</span>
+                <span class="guarantee-dot">•</span>
+                <span>🛡️ Garantía</span>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- MODAL DE PAGO YAPE (DISEÑO OFICIAL EXACTO A LA REFERENCIA) -->
     <div class="yape-modal-backdrop" id="yapeModalBackdrop">
         <div class="yape-modal-card">
             <button type="button" class="yape-modal-close-btn" onclick="closeYapeModal()" title="Cerrar ventana">
@@ -1522,30 +2092,19 @@
             </button>
 
             <div class="yape-modal-header">
-                <div class="yape-modal-icon-badge">
-                    <span style="font-weight: 900; color: #fff; font-size: 1.1rem; letter-spacing: -0.02em;">YAPE</span>
-                </div>
+                <img src="/images/payments/yape.png" alt="Yape" class="yape-modal-logo-img">
                 <h3 class="yape-modal-title">Pagar con Yape</h3>
                 <p class="yape-modal-subtitle">Cobro automático seguro en Soles 🇵🇪</p>
             </div>
 
-            <div class="yape-modal-amount-pill">
-                <span>Total a pagar:</span>
-                <strong id="yapeModalAmountText">S/. 0.00</strong>
-            </div>
-
             <div class="yape-modal-form">
-                <div class="form-group" style="text-align: left;">
-                    <label style="font-size: 0.82rem; font-weight: 700; color: #374151; display: block; margin-bottom: 5px;">Celular registrado en Yape</label>
-                    <input type="tel" id="yapePhone" class="form-input" placeholder="9XX XXX XXX" maxlength="11" style="font-family: monospace; font-size: 1.05rem; font-weight: 700; height: 46px; letter-spacing: 0.05em;">
+                <div>
+                    <label class="yape-field-label" for="yapePhone">Ingresa tu celular Yape</label>
+                    <input type="tel" id="yapePhone" class="yape-clean-phone-input" placeholder="949 930 037" maxlength="11" autocomplete="tel">
                 </div>
 
-                <div style="text-align: left;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                        <label style="font-size: 0.82rem; font-weight: 700; color: #374151;">Código de aprobación (OTP)</label>
-                        <span style="font-size: 0.72rem; color: #742284; font-weight: 700;">6 dígitos</span>
-                    </div>
-
+                <div>
+                    <label class="yape-field-label">Código de aprobación</label>
                     <div class="yape-otp-grid" id="yapeOtpGrid">
                         <input type="tel" maxlength="1" class="yape-otp-box" data-idx="0" pattern="[0-9]" inputmode="numeric" autocomplete="one-time-code">
                         <input type="tel" maxlength="1" class="yape-otp-box" data-idx="1" pattern="[0-9]" inputmode="numeric">
@@ -1554,22 +2113,15 @@
                         <input type="tel" maxlength="1" class="yape-otp-box" data-idx="4" pattern="[0-9]" inputmode="numeric">
                         <input type="tel" maxlength="1" class="yape-otp-box" data-idx="5" pattern="[0-9]" inputmode="numeric">
                     </div>
-
-                    <p class="yape-helper-text" style="margin-top: 6px;">
-                        Encuéntralo en tu <strong>app Yape &gt; Menú &gt; Código de aprobación</strong>.
-                    </p>
+                    <p class="yape-helper-text">Encuéntralo en el menú de Yape</p>
                 </div>
 
                 <div class="yape-error-alert" id="yapeErrorAlert"></div>
 
                 <button type="button" class="yape-modal-submit-btn" id="btnYapeSubmit" onclick="processYapePayment()">
-                    <i class="bi bi-qr-code"></i> Confirmar y Yapear <span id="yapeBtnAmount">S/. 0.00</span>
+                    Yapear S/ <span id="yapeBtnAmount">0.00</span>
                 </button>
             </div>
-
-            <p style="font-size: 0.72rem; color: #9ca3af; margin-top: 14px; text-align: center;">
-                🔒 Procesado con cifrado bancario a través de Mercado Pago Perú.
-            </p>
         </div>
     </div>
 
@@ -1582,13 +2134,8 @@
             <h2 class="success-title">¡Compra Completada con Éxito!</h2>
             <p class="success-subtitle" id="successSubtitleText">Tu pago ha sido verificado y tus archivos están listos para descarga inmediata.</p>
 
-            <div class="success-key-box" id="successKeyBox" style="display: none;">
-                <span class="success-key-text" id="successKeyText">CARGANDO...</span>
-                <button type="button" class="success-copy-btn" id="successCopyBtn" onclick="copySerialKey()">Copiar Clave</button>
-            </div>
-
             <div class="success-download-actions" id="successDownloadsContainer">
-                <a href="/willieinspired/" class="success-dl-btn" style="background: #000000;">
+                <a href="/willieinspired/" class="success-dl-btn">
                     <i class="bi bi-cloud-arrow-down-fill"></i> Descargar Archivos
                 </a>
             </div>
@@ -1599,6 +2146,22 @@
         </div>
     </div>
 
+    <!-- WIDGET FLOTANTE WHATSAPP (A LA DERECHA COMO EN LA LANDING) -->
+    <div class="whatsapp-widget-container" id="whatsappWidget">
+        <div class="whatsapp-bubble" id="whatsappBubble">
+            <button type="button" class="whatsapp-bubble-close" onclick="closeWhatsAppBubble(event)" title="Cerrar mensaje" aria-label="Cerrar mensaje">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <a href="javascript:void(0)" onclick="openWhatsAppCheckout('whatsapp')" class="whatsapp-bubble-link">
+                <span>¿Prefieres pagar por WhatsApp? Contáctanos aquí</span>
+            </a>
+        </div>
+
+        <a href="javascript:void(0)" onclick="openWhatsAppCheckout('whatsapp')" class="whatsapp-circle-btn" title="Contactar por WhatsApp" aria-label="WhatsApp Willie Inspired">
+            <i class="bi bi-whatsapp"></i>
+        </a>
+    </div>
+
     <!-- JavaScript Real Engine -->
     <script>
         // ==========================================================================
@@ -1607,29 +2170,159 @@
         let cartItems = [];
         let appliedDiscountPercent = 0;
         let appliedDiscountAmount = 0;
-        let currentPaymentMethod = 'paypal'; // 'paypal' | 'yape' | 'mercadopago'
         let yapeExchangeRate = 3.30;
         let mpPublicKey = 'APP_USR-ca918f8a-784b-4413-aebb-d3fc5a6ae79c';
         let mpInstance = null;
         let williePaypalInitialized = false;
 
-        // Cupones activos soportados
         const VALID_COUPONS = {
             'WILLIE10': { type: 'percent', value: 10, label: 'WILLIE10 (10% OFF)' },
             'OFFSZN': { type: 'amount', value: 5, label: 'OFFSZN ($5 USD OFF)' },
             'SPECIAL': { type: 'percent', value: 15, label: 'SPECIAL (15% OFF)' }
         };
 
-        // ==========================================================================
-        // INICIALIZACIÓN
-        // ==========================================================================
+        const RECOMMENDED_PRODUCTS = [
+            {
+                id: 'easy-mix-ai',
+                name: 'EASY MIX PLUGIN',
+                price: 10.00,
+                cover: '/images/LOGO%20OFFSZN.webp',
+                subtitle: 'Plugin VST3 (Win y Mac)',
+                type: 'plugin',
+                os: 'win'
+            },
+            {
+                id: 'bad-bunny-preset',
+                name: 'BAD BUNNY VOCAL PRESET',
+                price: 10.00,
+                cover: '/willieimages/covers/bad-bunny-v2.png',
+                subtitle: 'Preset Oficial FL Studio',
+                type: 'preset'
+            },
+            {
+                id: 'all-presets',
+                name: 'TODOS LOS PRESETS DE ARTISTAS',
+                price: 70.00,
+                cover: '/willieimages/HERO.png',
+                subtitle: 'Pack Completo (35 Presets)',
+                type: 'preset'
+            },
+            {
+                id: 'coca-cola-plugin',
+                name: 'COCA COLA PLUGIN - WIN Y MAC',
+                price: 10.00,
+                cover: '/images/plugins/coca-cola.png',
+                subtitle: 'Saturador Analógico VST3',
+                type: 'plugin',
+                os: 'win'
+            }
+        ];
+
         window.addEventListener('DOMContentLoaded', async () => {
+            initLoggedUserState();
             loadCartFromStorage();
+            setupEmailInputValidation();
             setupYapeOTPHandlers();
             setupYapePhoneFormatter();
+            renderRecommendations();
             await loadYapeConfig();
             initWilliePayPalSDK();
         });
+
+        // ==========================================================================
+        // MANEJO DE USUARIO LOGUEADO / INVITADO
+        // ==========================================================================
+        function initLoggedUserState() {
+            try {
+                let userEmail = null;
+                const savedUser = localStorage.getItem('offszn_user');
+                if (savedUser) {
+                    const u = JSON.parse(savedUser);
+                    if (u && u.email) userEmail = u.email;
+                }
+                const guestBox = document.getElementById('guestEmailContainer');
+                const loggedBox = document.getElementById('loggedUserContainer');
+                const userEmailSpan = document.getElementById('loggedUserEmail');
+
+                if (userEmail && guestBox && loggedBox && userEmailSpan) {
+                    guestBox.style.display = 'none';
+                    loggedBox.style.display = 'block';
+                    userEmailSpan.textContent = userEmail;
+                    const emailIn = document.getElementById('contactEmail');
+                    if (emailIn) emailIn.value = userEmail;
+                }
+            } catch (e) {
+                console.warn('Error leyendo usuario:', e);
+            }
+        }
+
+        function logoutCheckoutUser() {
+            try {
+                localStorage.removeItem('offszn_user');
+                localStorage.removeItem('offszn_auth_token');
+            } catch (e) {}
+            const guestBox = document.getElementById('guestEmailContainer');
+            const loggedBox = document.getElementById('loggedUserContainer');
+            if (guestBox) guestBox.style.display = 'block';
+            if (loggedBox) loggedBox.style.display = 'none';
+            const emailIn = document.getElementById('contactEmail');
+            if (emailIn) {
+                emailIn.value = '';
+                emailIn.focus();
+            }
+        }
+
+        // ==========================================================================
+        // VALIDACIÓN FLUIDA DE EMAIL (INLINE UI SIN ALERT DIALOG)
+        // ==========================================================================
+        function getEffectiveEmail() {
+            const loggedSpan = document.getElementById('loggedUserEmail');
+            const loggedBox = document.getElementById('loggedUserContainer');
+            if (loggedBox && loggedBox.style.display !== 'none' && loggedSpan) {
+                return loggedSpan.textContent.trim();
+            }
+            const input = document.getElementById('contactEmail');
+            return input ? input.value.trim() : '';
+        }
+
+        function isValidEmail(email) {
+            return email && email.includes('@') && email.includes('.') && email.length >= 5;
+        }
+
+        function validateContactEmail() {
+            const email = getEffectiveEmail();
+            const input = document.getElementById('contactEmail');
+            const errDiv = document.getElementById('emailInlineError');
+
+            if (!isValidEmail(email)) {
+                if (input) {
+                    input.classList.add('field-error');
+                    input.focus();
+                    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                if (errDiv) {
+                    errDiv.style.display = 'block';
+                }
+                return false;
+            }
+
+            if (input) input.classList.remove('field-error');
+            if (errDiv) errDiv.style.display = 'none';
+            return true;
+        }
+
+        function setupEmailInputValidation() {
+            const input = document.getElementById('contactEmail');
+            const errDiv = document.getElementById('emailInlineError');
+            if (!input) return;
+
+            input.addEventListener('input', () => {
+                if (isValidEmail(input.value.trim())) {
+                    input.classList.remove('field-error');
+                    if (errDiv) errDiv.style.display = 'none';
+                }
+            });
+        }
 
         async function loadYapeConfig() {
             try {
@@ -1639,9 +2332,7 @@
                     if (data.publicKey) mpPublicKey = data.publicKey;
                     if (data.exchangeRate) yapeExchangeRate = parseFloat(data.exchangeRate) || 3.30;
                 }
-            } catch (e) {
-                console.warn('[YapeConfig] Usando configuración local de respaldo:', e);
-            }
+            } catch (e) { console.warn('[YapeConfig] Usando configuración local de respaldo:', e); }
 
             initMercadoPagoSDK();
             updateYapePriceDisplay();
@@ -1650,18 +2341,13 @@
         function initMercadoPagoSDK() {
             if (window.MercadoPago && !mpInstance) {
                 try {
-                    mpInstance = new window.MercadoPago(mpPublicKey, {
-                        locale: 'es-PE'
-                    });
-                    console.log('✅ [MercadoPago] SDK Inicializado correctamente.');
-                } catch (e) {
-                    console.error('[MercadoPago] Error inicializando SDK:', e);
-                }
+                    mpInstance = new window.MercadoPago(mpPublicKey, { locale: 'es-PE' });
+                } catch (e) { console.error('[MercadoPago] Error inicializando SDK:', e); }
             }
         }
 
         // ==========================================================================
-        // CARGA Y RENDERIZADO DEL CARRITO
+        // MOTOR DEL CARRITO & SINCRONIZACIÓN LIVE
         // ==========================================================================
         function loadCartFromStorage() {
             try {
@@ -1671,14 +2357,11 @@
                     if (Array.isArray(parsed)) {
                         cartItems = parsed.map(item => {
                             if (item.product) {
-                                const isPlugin = item.product.type === 'plugin' || 
-                                                 (item.product.name && item.product.name.toLowerCase().includes('plugin')) ||
-                                                 (item.product.id && item.product.id.toString().includes('easy-mix'));
+                                const isPlugin = item.product.type === 'plugin' || (item.product.name && item.product.name.toLowerCase().includes('plugin')) || (item.product.id && item.product.id.toString().includes('easy-mix'));
                                 return {
                                     id: item.product.id || item.product.name,
                                     name: item.product.name,
                                     price: parseFloat(item.product.price) || 10,
-                                    originalPrice: parseFloat(item.product.original_price) || (parseFloat(item.product.price || 10) * 1.5),
                                     cover: item.product.image_url || '/willieimages/HERO.png',
                                     type: isPlugin ? 'plugin' : (item.product.type || 'preset'),
                                     os: item.product.os || (isPlugin ? 'win' : undefined),
@@ -1689,26 +2372,41 @@
                         });
                     }
                 }
-            } catch (e) {
-                console.error("Error cargando carrito para checkout:", e);
-                cartItems = [];
-            }
+            } catch (e) { console.error("Error cargando carrito para checkout:", e); cartItems = []; }
 
-            renderCheckoutUI();
+            syncAllCartViews();
         }
 
-        function removeFromCheckoutCart(index) {
-            if (index >= 0 && index < cartItems.length) {
-                cartItems.splice(index, 1);
-                localStorage.setItem('offszn_cart', JSON.stringify(cartItems));
-                renderCheckoutUI();
-                if (typeof updateYapePriceDisplay === 'function') updateYapePriceDisplay();
+        function saveCartToStorage() {
+            try {
+                const formatted = cartItems.map(item => ({
+                    product: {
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        image_url: item.cover,
+                        type: item.type,
+                        os: item.os
+                    },
+                    quantity: item.quantity || 1
+                }));
+                localStorage.setItem('offszn_cart', JSON.stringify(formatted));
+            } catch (e) {
+                console.log("Error saving cart:", e);
             }
+        }
+
+        function syncAllCartViews() {
+            renderCheckoutUI();
+            renderDrawerCartUI();
+        }
+
+        function formatPriceEU(amount) {
+            return (parseFloat(amount) || 0).toFixed(2).replace('.', ',') + ' $';
         }
 
         function renderCheckoutUI() {
             const totalCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
-            
             const headerBadge = document.getElementById('headerCartCount');
             if (headerBadge) headerBadge.textContent = totalCount;
 
@@ -1722,7 +2420,8 @@
                 if (emptyState) emptyState.style.display = 'block';
                 if (couponSection) couponSection.style.display = 'none';
                 if (breakdownSection) breakdownSection.style.display = 'none';
-                updateTotals(0, 0);
+                renderRecommendations();
+                updateTotals(0);
                 return;
             }
 
@@ -1731,43 +2430,24 @@
             if (couponSection) couponSection.style.display = 'block';
             if (breakdownSection) breakdownSection.style.display = 'flex';
 
-            let rawOriginalSubtotal = 0;
-
             itemsContainer.innerHTML = cartItems.map((item, idx) => {
-                const isPlugin = item.type === 'plugin' || (item.name && item.name.toLowerCase().includes('plugin'));
-                const osBadge = isPlugin ? (item.os ? item.os.toUpperCase() : 'WINDOWS / MAC') : 'FL STUDIO';
                 const qty = item.quantity || 1;
                 const price = parseFloat(item.price) || 10;
-                const totalItemPrice = (price * qty).toFixed(2);
-                const originalUnitPrice = parseFloat(item.originalPrice) || (price > 15 ? price * 1.3 : price * 1.8);
-                const totalOriginalPrice = (originalUnitPrice * qty).toFixed(2);
-                rawOriginalSubtotal += (originalUnitPrice * qty);
-
-                const showStrike = parseFloat(totalOriginalPrice) > parseFloat(totalItemPrice);
-                const bundleDiscountTag = showStrike 
-                    ? `<div class="summary-item-bundle-tag"><i class="bi bi-tag-fill"></i> OFERTA -$${(totalOriginalPrice - totalItemPrice).toFixed(2)}</div>` 
-                    : '';
+                const totalItemPrice = (price * qty);
 
                 return `
                 <div class="summary-item-card">
                     <div class="summary-item-left">
-                        <div class="summary-item-thumb-wrapper">
-                            <img src="${item.cover}" alt="${item.name}" class="summary-item-thumb" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
-                            <span class="summary-item-qty-badge">${qty}</span>
-                        </div>
+                        <img src="${item.cover}" alt="${item.name}" class="summary-item-thumb" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
                         <div class="summary-item-info">
                             <h4 class="summary-item-name" title="${item.name}">${item.name}</h4>
-                            <p class="summary-item-meta">${osBadge}</p>
-                            ${bundleDiscountTag}
+                            ${qty > 1 ? `<span class="summary-item-meta">Cantidad: ${qty}</span>` : ''}
                         </div>
                     </div>
                     <div class="summary-item-right">
-                        <div class="summary-item-prices">
-                            ${showStrike ? `<span class="summary-item-original-price">$${totalOriginalPrice}</span>` : ''}
-                            <span class="summary-item-price">$${totalItemPrice}</span>
-                        </div>
+                        <span class="summary-item-price">${formatPriceEU(totalItemPrice)}</span>
                         <button type="button" class="summary-item-remove-btn" onclick="removeFromCheckoutCart(${idx})" title="Eliminar del pedido">
-                            <i class="bi bi-trash3"></i>
+                            <i class="bi bi-x-lg"></i>
                         </button>
                     </div>
                 </div>
@@ -1775,10 +2455,217 @@
             }).join('');
 
             const rawSubtotal = cartItems.reduce((acc, item) => acc + ((parseFloat(item.price) || 10) * (item.quantity || 1)), 0);
-            updateTotals(rawSubtotal, rawOriginalSubtotal);
+            updateTotals(rawSubtotal);
         }
 
-        function updateTotals(rawSubtotal, rawOriginalSubtotal) {
+        function removeFromCheckoutCart(index) {
+            if (index >= 0 && index < cartItems.length) {
+                cartItems.splice(index, 1);
+                saveCartToStorage();
+                syncAllCartViews();
+            }
+        }
+
+        // ==========================================================================
+        // DRAWER LATERAL (SIDEBAR DE CARRITO CON OFERTAS)
+        // ==========================================================================
+        function toggleCartDrawer() {
+            const panel = document.getElementById('cartDrawerPanel');
+            const backdrop = document.getElementById('cartBackdrop');
+            if (panel && backdrop) {
+                const isOpen = panel.classList.toggle('is-open');
+                backdrop.classList.toggle('is-open');
+                document.documentElement.classList.toggle('cart-is-open', isOpen);
+                document.body.classList.toggle('cart-is-open', isOpen);
+                if (isOpen) renderDrawerCartUI();
+            }
+        }
+
+        function renderDrawerCartUI() {
+            const totalCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+            const drawerCount = document.getElementById('cartDrawerCount');
+            const subtotalLabel = document.getElementById('cartDrawerSubtotalLabel');
+            if (drawerCount) drawerCount.textContent = totalCount;
+            if (subtotalLabel) subtotalLabel.textContent = `Subtotal (${totalCount} ${totalCount === 1 ? 'item' : 'items'})`;
+
+            const container = document.getElementById('cartDrawerItemsList');
+            const subtotalEl = document.getElementById('cartDrawerSubtotal');
+            const totalValEl = document.getElementById('cartDrawerTotalVal');
+
+            const rawTotal = cartItems.reduce((acc, item) => acc + ((parseFloat(item.price) || 10) * (item.quantity || 1)), 0);
+
+            if (subtotalEl) subtotalEl.textContent = `$${rawTotal.toFixed(2)}`;
+            if (totalValEl) totalValEl.textContent = `$${rawTotal.toFixed(2)}`;
+
+            const ctaBtn = document.getElementById('cartDrawerCheckoutBtn');
+            if (ctaBtn) {
+                if (cartItems.length === 0) {
+                    ctaBtn.disabled = true;
+                    ctaBtn.innerHTML = `<span>Tu carrito está vacío</span>`;
+                } else {
+                    ctaBtn.disabled = false;
+                    ctaBtn.innerHTML = `<span>Continuar con el Pago</span><span class="cta-arrow-circle"><i class="bi bi-arrow-right"></i></span>`;
+                }
+            }
+
+            if (!container) return;
+
+            if (cartItems.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 1.5rem 1rem;">
+                        <h4 style="font-size: 1.1rem; font-weight: 800; color: #000000; margin-bottom: 4px;">Tu carrito está vacío</h4>
+                        <p style="font-size: 0.84rem; color: #6b7280;">Agrega cualquiera de las ofertas exclusivas abajo:</p>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = cartItems.map(item => {
+                    const isPlugin = item.type === 'plugin' || (item.name && item.name.toLowerCase().includes('plugin')) || (item.id && item.id.toString().includes('easy-mix'));
+                    const currentOS = item.os || 'win';
+                    const price = parseFloat(item.price) || 10;
+                    const qty = item.quantity || 1;
+
+                    return `
+                    <div class="cart-drawer-item-card">
+                        <img src="${item.cover}" alt="${item.name}" class="cart-drawer-item-thumb" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
+                        <div class="cart-drawer-item-info">
+                            <div>
+                                <div class="cart-drawer-item-title-row">
+                                    <h4 class="cart-drawer-item-title">${item.name}</h4>
+                                    <span class="cart-drawer-item-price">$${(price * qty).toFixed(2)}</span>
+                                </div>
+                                ${isPlugin ? `
+                                    <div class="cart-os-selector-wrapper">
+                                        <span class="cart-os-label">Sistema:</span>
+                                        <div class="cart-os-pills">
+                                            <button type="button" class="cart-os-pill ${currentOS === 'win' ? 'active' : ''}" onclick="updateItemOS('${item.id}', 'win')" title="Windows VST3">
+                                                <i class="bi bi-windows"></i> WIN
+                                            </button>
+                                            <button type="button" class="cart-os-pill ${currentOS === 'mac' ? 'active' : ''}" onclick="updateItemOS('${item.id}', 'mac')" title="macOS VST3/AU">
+                                                <i class="bi bi-apple"></i> MAC
+                                            </button>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <p class="cart-drawer-item-meta">Solo FL Studio</p>
+                                `}
+                            </div>
+
+                            <div class="cart-drawer-item-bottom">
+                                <div class="cart-qty-stepper">
+                                    <button type="button" class="cart-qty-btn" onclick="updateItemQuantity('${item.id}', -1)" aria-label="Disminuir">−</button>
+                                    <span>${qty}</span>
+                                    <button type="button" class="cart-qty-btn" onclick="updateItemQuantity('${item.id}', 1)" aria-label="Aumentar">+</button>
+                                </div>
+                                <button type="button" class="cart-drawer-item-remove-btn" onclick="removeFromDrawer('${item.id}')">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                `}).join('');
+            }
+        }
+
+        function addBundleToCart(id, name, price, cover, type = 'preset') {
+            const isPlugin = type === 'plugin' || name.toLowerCase().includes('plugin') || id.includes('easy-mix');
+            const existing = cartItems.find(i => i.id === id || i.name === name);
+            if (existing) {
+                existing.quantity = (existing.quantity || 1) + 1;
+            } else {
+                cartItems.push({
+                    id: id,
+                    name: name,
+                    price: price,
+                    cover: cover,
+                    type: isPlugin ? 'plugin' : 'preset',
+                    os: isPlugin ? 'win' : undefined,
+                    quantity: 1
+                });
+            }
+            saveCartToStorage();
+            syncAllCartViews();
+        }
+
+        function updateItemQuantity(id, change) {
+            const index = cartItems.findIndex(i => i.id === id);
+            if (index > -1) {
+                cartItems[index].quantity = (cartItems[index].quantity || 1) + change;
+                if (cartItems[index].quantity <= 0) {
+                    cartItems.splice(index, 1);
+                }
+                saveCartToStorage();
+                syncAllCartViews();
+            }
+        }
+
+        function updateItemOS(id, os) {
+            const item = cartItems.find(i => i.id === id);
+            if (item) {
+                item.os = os;
+                saveCartToStorage();
+                syncAllCartViews();
+            }
+        }
+
+        function removeFromDrawer(id) {
+            cartItems = cartItems.filter(item => item.id !== id);
+            saveCartToStorage();
+            syncAllCartViews();
+        }
+
+        // ==========================================================================
+        // RECOMENDACIONES: "SELECCIONADOS PARA TI"
+        // ==========================================================================
+        function renderRecommendations() {
+            const grid = document.getElementById('recommendationsGrid');
+            if (!grid) return;
+
+            const available = RECOMMENDED_PRODUCTS.filter(p => !cartItems.some(ci => ci.id === p.id || ci.name === p.name));
+            const list = available.length > 0 ? available : RECOMMENDED_PRODUCTS;
+
+            grid.innerHTML = list.map(prod => {
+                return `
+                <div class="rec-item-card">
+                    <div class="rec-item-left">
+                        <img src="${prod.cover}" alt="${prod.name}" class="rec-item-thumb" onerror="this.onerror=null; this.src='/willieimages/HERO.png';">
+                        <div class="rec-item-info">
+                            <h5 class="rec-item-name" title="${prod.name}">${prod.name}</h5>
+                            <span class="rec-item-subtitle">${prod.subtitle}</span>
+                        </div>
+                    </div>
+                    <div class="rec-item-right">
+                        <span class="rec-item-price">${formatPriceEU(prod.price)}</span>
+                        <button type="button" class="rec-item-add-btn" onclick="addRecommendationToCart('${prod.id}')" title="Añadir a mi compra">
+                            <i class="bi bi-plus-lg"></i> Añadir
+                        </button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function addRecommendationToCart(productId) {
+            const prod = RECOMMENDED_PRODUCTS.find(p => p.id === productId);
+            if (!prod) return;
+
+            const existing = cartItems.find(item => item.id === prod.id || item.name === prod.name);
+            if (existing) {
+                existing.quantity = (existing.quantity || 1) + 1;
+            } else {
+                cartItems.push({
+                    id: prod.id,
+                    name: prod.name,
+                    price: prod.price,
+                    cover: prod.cover,
+                    type: prod.type,
+                    os: prod.os,
+                    quantity: 1
+                });
+            }
+
+            saveCartToStorage();
+            syncAllCartViews();
+        }
+
+        function updateTotals(rawSubtotal) {
             let discountAmount = 0;
             if (appliedDiscountPercent > 0) {
                 discountAmount = (rawSubtotal * appliedDiscountPercent) / 100;
@@ -1787,48 +2674,32 @@
             }
 
             const finalTotal = Math.max(0, rawSubtotal - discountAmount);
-            const totalCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
             
-            const subtotalLabel = document.getElementById('summarySubtotalLabel');
             const subtotalVal = document.getElementById('summarySubtotalVal');
             const discountRow = document.getElementById('summaryDiscountRow');
             const discountVal = document.getElementById('summaryDiscountVal');
             const totalVal = document.getElementById('summaryTotalVal');
             const mobileSummaryTotal = document.getElementById('mobileSummaryTotal');
-            const totalSavingsRow = document.getElementById('totalSavingsRow');
-            const totalSavingsVal = document.getElementById('totalSavingsVal');
 
-            if (subtotalLabel) subtotalLabel.textContent = `Subtotal • ${totalCount} ${totalCount === 1 ? 'producto' : 'productos'}`;
-            if (subtotalVal) subtotalVal.textContent = `$${rawSubtotal.toFixed(2)}`;
+            if (subtotalVal) subtotalVal.textContent = formatPriceEU(rawSubtotal);
 
             if (discountRow && discountVal) {
                 if (discountAmount > 0) {
                     discountRow.style.display = 'flex';
-                    discountVal.textContent = `-$${discountAmount.toFixed(2)}`;
+                    discountVal.textContent = `-${formatPriceEU(discountAmount)}`;
                 } else {
                     discountRow.style.display = 'none';
                 }
             }
 
-            if (totalVal) totalVal.textContent = `$${finalTotal.toFixed(2)}`;
-            if (mobileSummaryTotal) mobileSummaryTotal.textContent = `$${finalTotal.toFixed(2)}`;
-
-            // Cálculo y renderizado de Total Savings
-            const totalSavings = Math.max(0, (rawOriginalSubtotal || rawSubtotal) - finalTotal);
-            if (totalSavingsRow && totalSavingsVal) {
-                if (totalSavings > 0.5) {
-                    totalSavingsRow.style.display = 'flex';
-                    totalSavingsVal.textContent = `$${totalSavings.toFixed(2)} USD`;
-                } else {
-                    totalSavingsRow.style.display = 'none';
-                }
-            }
+            if (totalVal) totalVal.textContent = `USD ${formatPriceEU(finalTotal)}`;
+            if (mobileSummaryTotal) mobileSummaryTotal.textContent = `USD ${formatPriceEU(finalTotal)}`;
 
             updateYapePriceDisplay(finalTotal);
         }
 
         function getCalculatedTotalUSD() {
-            const rawSubtotal = cartItems.reduce((acc, item) => acc + (item.price * (item.quantity || 1)), 0);
+            const rawSubtotal = cartItems.reduce((acc, item) => acc + ((parseFloat(item.price) || 10) * (item.quantity || 1)), 0);
             let discountAmount = 0;
             if (appliedDiscountPercent > 0) {
                 discountAmount = (rawSubtotal * appliedDiscountPercent) / 100;
@@ -1846,70 +2717,18 @@
         function updateYapePriceDisplay(totalUsd) {
             const usd = totalUsd !== undefined ? totalUsd : getCalculatedTotalUSD();
             const penVal = Number(usd * yapeExchangeRate).toFixed(2);
-            
-            const yapeDisplay = document.getElementById('yapePriceSoles');
-            if (yapeDisplay) yapeDisplay.textContent = `S/. ${penVal} Soles`;
-
-            const yapeModalAmt = document.getElementById('yapeModalAmountText');
-            if (yapeModalAmt) yapeModalAmt.textContent = `S/. ${penVal} Soles`;
 
             const yapeBtnAmt = document.getElementById('yapeBtnAmount');
-            if (yapeBtnAmt) yapeBtnAmt.textContent = `S/. ${penVal}`;
-
-            const yapeBrickAmt = document.getElementById('yapeBrickAmount');
-            if (yapeBrickAmt) yapeBrickAmt.textContent = `S/. ${penVal}`;
-        }
-
-        // ==========================================================================
-        // SELECTOR DE MÉTODOS DE PAGO (ACORDEÓN SHOPIFY)
-        // ==========================================================================
-        function selectPaymentMethod(method) {
-            currentPaymentMethod = method;
-            const methods = ['paypal', 'yape', 'mercadopago'];
-
-            methods.forEach(m => {
-                const opt = document.getElementById(`option-${m}`);
-                const body = document.getElementById(`body-${m}`) || document.getElementById(`body${m.charAt(0).toUpperCase() + m.slice(1)}`);
-                const dot = document.getElementById(`radio${m.charAt(0).toUpperCase() + m.slice(1)}Dot`) || document.getElementById(`radio${m === 'mercadopago' ? 'Mp' : m.charAt(0).toUpperCase() + m.slice(1)}Dot`);
-                const circle = document.getElementById(`circle${m.charAt(0).toUpperCase() + m.slice(1)}`) || document.getElementById(`circle${m === 'mercadopago' ? 'Mp' : m.charAt(0).toUpperCase() + m.slice(1)}`);
-
-                if (m === method) {
-                    if (opt) opt.classList.add('active');
-                    if (body) body.style.display = 'block';
-                    const activeColor = (m === 'paypal' ? '#ec4899' : (m === 'yape' ? '#742284' : '#009ee3'));
-                    if (circle) circle.style.borderColor = activeColor;
-                    if (dot) dot.style.background = activeColor;
-                } else {
-                    if (opt) opt.classList.remove('active');
-                    if (body) body.style.display = 'none';
-                    if (circle) circle.style.borderColor = '#d1d5db';
-                    if (dot) dot.style.background = 'transparent';
-                }
-            });
-
-            if (method === 'yape') {
-                updateYapePriceDisplay();
-            }
+            if (yapeBtnAmt) yapeBtnAmt.textContent = `${penVal}`;
         }
 
         // ==========================================================================
         // CONTROLADOR MODAL YAPE (POPUP)
         // ==========================================================================
         function openYapeModal() {
-            const emailInput = document.getElementById('contactEmail');
-            const email = emailInput ? emailInput.value.trim() : '';
-
-            if (!email || !email.includes('@')) {
-                alert('Por favor ingresa tu correo electrónico en la sección de Contacto para enviarte los archivos tras tu pago.');
-                if (emailInput) {
-                    emailInput.focus();
-                    emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-                return;
-            }
+            if (!validateContactEmail()) return;
 
             if (cartItems.length === 0) {
-                alert('Tu carrito está vacío.');
                 return;
             }
 
@@ -1931,6 +2750,11 @@
             const modal = document.getElementById('yapeModalBackdrop');
             if (modal) modal.classList.remove('active');
             hideYapeError();
+        }
+
+        function handleMercadoPagoClick() {
+            if (!validateContactEmail()) return;
+            openWhatsAppCheckout('mercadopago');
         }
 
         // ==========================================================================
@@ -1960,9 +2784,10 @@
                     activeTag.style.display = 'flex';
                 }
                 input.value = '';
-                renderCheckoutUI();
+                syncAllCartViews();
             } else {
-                alert(`El cupón "${code}" no es válido o ha expirado.`);
+                input.classList.add('field-error');
+                setTimeout(() => input.classList.remove('field-error'), 1500);
             }
         }
 
@@ -1971,7 +2796,7 @@
             appliedDiscountAmount = 0;
             const activeTag = document.getElementById('couponActiveTag');
             if (activeTag) activeTag.style.display = 'none';
-            renderCheckoutUI();
+            syncAllCartViews();
         }
 
         // ==========================================================================
@@ -2004,7 +2829,6 @@
                         boxes[idx + 1].focus();
                         boxes[idx + 1].select();
                     }
-                    updateYapeBoxesState(boxes);
                 });
 
                 box.addEventListener('keydown', (e) => {
@@ -2023,18 +2847,10 @@
                         }
                         const nextIdx = Math.min(text.length, boxes.length - 1);
                         boxes[nextIdx].focus();
-                        updateYapeBoxesState(boxes);
                     }
                 });
 
                 box.addEventListener('focus', () => box.select());
-            });
-        }
-
-        function updateYapeBoxesState(boxes) {
-            boxes.forEach(b => {
-                if (b.value) b.classList.add('filled');
-                else b.classList.remove('filled');
             });
         }
 
@@ -2066,11 +2882,10 @@
         // ==========================================================================
         async function processYapePayment() {
             hideYapeError();
-            const emailInput = document.getElementById('contactEmail');
-            const email = emailInput ? emailInput.value.trim() : '';
+            const email = getEffectiveEmail();
 
-            if (!email || !email.includes('@')) {
-                showYapeError('Por favor ingresa tu correo electrónico en la sección de Contacto.');
+            if (!isValidEmail(email)) {
+                showYapeError('Por favor ingresa tu correo electrónico.');
                 return;
             }
 
@@ -2135,7 +2950,7 @@
                     throw new Error('No se pudo validar el código de Yape.');
                 }
 
-                if (payBtn) payBtn.innerHTML = `<span class="btn-spinner"></span> Procesando cobro S/. ${totalPEN}...`;
+                if (payBtn) payBtn.innerHTML = `<span class="btn-spinner"></span> Procesando cobro S/ ${totalPEN}...`;
 
                 // 2. Enviar Cobro al Backend OFFSZN
                 const firstPlugin = cartItems.find(i => i.type === 'plugin');
@@ -2216,10 +3031,9 @@
                 style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay', tagline: false },
                 createOrder: () => {
                     if (cartItems.length === 0) {
-                        alert('Tu carrito está vacío.');
                         return Promise.reject(new Error('empty_cart'));
                     }
-                    const email = document.getElementById('contactEmail')?.value.trim() || undefined;
+                    const email = getEffectiveEmail() || undefined;
                     const couponInput = document.getElementById('couponCodeInput');
                     const couponCode = couponInput ? couponInput.value.trim().toUpperCase() : '';
                     return fetch('/api/willie/paypal/create', {
@@ -2233,7 +3047,7 @@
                     }));
                 },
                 onApprove: (data) => {
-                    const email = document.getElementById('contactEmail')?.value.trim() || undefined;
+                    const email = getEffectiveEmail() || undefined;
                     return fetch('/api/willie/paypal/capture', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -2248,25 +3062,17 @@
                 onError: (err) => {
                     if (err?.message !== 'empty_cart') {
                         console.error('[PayPal Error]', err);
-                        alert('Hubo un problema procesando con PayPal. Por favor intenta de nuevo.');
                     }
                 },
                 onCancel: () => { console.log('[PayPal] Cancelado por el usuario.'); }
             }).render('#paypalButtonContainer').catch(err => console.error('[PayPal Render]', err));
         }
 
-        function closeWhatsAppBubble(e) {
-            if (e) e.stopPropagation();
-            const b = document.getElementById('whatsappBubble');
-            if (b) b.classList.add('hidden');
-        }
-
         // ==========================================================================
-        // OTROS MEDIOS DE PAGO (WHATSAPP DIRECT CHECKOUT & MERCADO PAGO)
+        // WHATSAPP DIRECT CHECKOUT & MERCADO PAGO
         // ==========================================================================
         function openWhatsAppCheckout(type = 'whatsapp') {
             if (cartItems.length === 0) {
-                alert("Tu carrito está vacío.");
                 return;
             }
 
@@ -2279,8 +3085,7 @@
                 return `• ${item.name}${sysText} x${item.quantity || 1} - $${(item.price * (item.quantity || 1)).toFixed(2)} USD`;
             }).join('\n');
 
-            const emailInput = document.getElementById('contactEmail');
-            const customerEmail = emailInput ? emailInput.value.trim() : '';
+            const customerEmail = getEffectiveEmail();
 
             let msg = `¡Hola Willie! 👋 Quiero realizar una compra en tu tienda oficial:\n\n`;
             msg += `🛒 *PEDIDO:*\n${itemsListText}\n\n`;
@@ -2299,23 +3104,22 @@
             window.open(whatsappUrl, '_blank');
         }
 
+        function closeWhatsAppBubble(e) {
+            if (e) e.stopPropagation();
+            const b = document.getElementById('whatsappBubble');
+            if (b) b.classList.add('hidden');
+        }
+
         // ==========================================================================
         // MODAL DE ÉXITO
         // ==========================================================================
         function renderSuccessModal(data, email) {
             const backdrop = document.getElementById('successModalBackdrop');
             const sub = document.getElementById('successSubtitleText');
-            const keyBox = document.getElementById('successKeyBox');
-            const keyText = document.getElementById('successKeyText');
             const dlContainer = document.getElementById('successDownloadsContainer');
 
             if (sub && email) {
                 sub.textContent = `Tu pago ha sido verificado con éxito. Hemos enviado una copia de tus enlaces y recibo a ${email}.`;
-            }
-
-            if (data?.serialKey && keyBox && keyText) {
-                keyBox.style.display = 'flex';
-                keyText.textContent = data.serialKey;
             }
 
             if (data?.downloads && dlContainer) {
@@ -2324,24 +3128,12 @@
                     dlHtml += `<a href="${data.downloads.win}" target="_blank" class="success-dl-btn"><i class="bi bi-windows"></i> Descargar para Windows (.exe)</a>`;
                 }
                 if (data.downloads.mac) {
-                    dlHtml += `<a href="${data.downloads.mac}" target="_blank" class="success-dl-btn"><i class="bi bi-apple"></i> Descargar para macOS (.dmg)</a>`;
+                    dlHtml += `<a href="${data.downloads.mac}" target="_blank" class="success-dl-btn" style="margin-top:8px;"><i class="bi bi-apple"></i> Descargar para macOS (.dmg)</a>`;
                 }
                 if (dlHtml) dlContainer.innerHTML = dlHtml;
             }
 
             if (backdrop) backdrop.classList.add('active');
-        }
-
-        function copySerialKey() {
-            const keyText = document.getElementById('successKeyText')?.textContent;
-            if (keyText && keyText !== 'CARGANDO...') {
-                navigator.clipboard.writeText(keyText);
-                const btn = document.getElementById('successCopyBtn');
-                if (btn) {
-                    btn.textContent = '¡Copiado!';
-                    setTimeout(() => { btn.textContent = 'Copiar Clave'; }, 2000);
-                }
-            }
         }
 
         // ==========================================================================
@@ -2356,22 +3148,5 @@
             }
         }
     </script>
-
-    <!-- WIDGET FLOTANTE WHATSAPP (A LA DERECHA COMO EN LA LANDING) -->
-    <div class="whatsapp-widget-container" id="whatsappWidget">
-        <div class="whatsapp-bubble" id="whatsappBubble">
-            <button type="button" class="whatsapp-bubble-close" onclick="closeWhatsAppBubble(event)" title="Cerrar mensaje" aria-label="Cerrar mensaje">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            <a href="javascript:void(0)" onclick="openWhatsAppCheckout()" class="whatsapp-bubble-link">
-                <span>¿Prefieres pagar por WhatsApp? Contáctanos aquí</span>
-            </a>
-        </div>
-
-        <a href="javascript:void(0)" onclick="openWhatsAppCheckout()" class="whatsapp-circle-btn" title="Contactar por WhatsApp" aria-label="WhatsApp Willie Inspired">
-            <i class="bi bi-whatsapp"></i>
-        </a>
-    </div>
-
 </body>
 </html>
