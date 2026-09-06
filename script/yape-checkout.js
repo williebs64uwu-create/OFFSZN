@@ -812,6 +812,11 @@
 
                 const isPromo2x1 = Boolean(window.IS_PROMO_2X1 || (this.pluginName && this.pluginName.includes('2x1')));
 
+                let deviceId = null;
+                try {
+                    deviceId = window.MP_DEVICE_SESSION_ID || (window.MercadoPago && window.MercadoPago.device_id) || null;
+                } catch (e) {}
+
                 const bodyPayload = {
                     token: yapeToken,
                     email: email,
@@ -820,7 +825,8 @@
                     pluginName: this.pluginName,
                     isPromo2x1: isPromo2x1,
                     customPrice: this.getPriceUSD(),
-                    attribution: attribution
+                    attribution: attribution,
+                    deviceId: deviceId
                 };
 
                 if (window.YAPE_FIXED_PRICE_PEN) {

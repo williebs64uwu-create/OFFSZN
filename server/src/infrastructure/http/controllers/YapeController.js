@@ -105,15 +105,47 @@ export const chargeYape = async (req, res) => {
 
         console.log(`[YapeCharge] Initiating charge: S/. ${amountPEN} PEN ($${validUsdPrice} USD @ T.C. ${exchangeRate}) for ${email} (${pluginName}) | 2x1: ${isPromo2x1}`);
 
-        // 1. Call Mercado Pago Payments API
+        const cleanPhone = (phoneNumber || '').trim().replace(/\D/g, '');
+        const externalReference = `OFFSZN-YAPE-${productId || '899'}-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
+        // 1. Call Mercado Pago Payments API with full integration quality fields
         const mpPayload = {
             token,
             transaction_amount: amountPEN,
             installments: 1,
             description: prodInfo ? `OFFSZN - ${pluginName} (Licencia Vitalicia)` : `OFFSZN - ${pluginName}`,
             payment_method_id: 'yape',
+            external_reference: externalReference,
+            notification_url: 'https://offszn.lat/api/orders/mercadopago-webhook',
+            statement_descriptor: 'OFFSZN',
             payer: {
-                email: email.trim().toLowerCase()
+                email: email.trim().toLowerCase(),
+                ...(cleanPhone ? {
+                    phone: {
+                        area_code: '51',
+                        number: cleanPhone
+                    }
+                } : {})
+            },
+            additional_info: {
+                items: [
+                    {
+                        id: String(productId || '899'),
+                        title: `OFFSZN - ${pluginName}`,
+                        description: `Licencia vitalicia oficial de ${pluginName} para producción musical - OFFSZN`,
+                        category_id: 'software',
+                        quantity: 1,
+                        unit_price: amountPEN
+                    }
+                ],
+                ...(cleanPhone ? {
+                    payer: {
+                        phone: {
+                            area_code: '51',
+                            number: cleanPhone
+                        }
+                    }
+                } : {})
             },
             metadata: {
                 product_id: productId ? parseInt(productId, 10) || null : null,
@@ -121,7 +153,8 @@ export const chargeYape = async (req, res) => {
                 is_promo_2x1: isPromo2x1,
                 usd_price: validUsdPrice,
                 exchange_rate: exchangeRate,
-                phone_number: phoneNumber || null
+                phone_number: phoneNumber || null,
+                external_reference: externalReference
             }
         };
 
@@ -137,13 +170,20 @@ export const chargeYape = async (req, res) => {
                 transaction_amount: amountPEN
             };
         } else {
+            const mpHeaders = {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'X-Idempotency-Key': `yape-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+                'User-Agent': 'MercadoPago Node.js SDK/2.10.0'
+            };
+
+            if (req.body.deviceId) {
+                mpHeaders['X-Meli-Session-Id'] = req.body.deviceId;
+            }
+
             const mpRes = await fetch('https://api.mercadopago.com/v1/payments', {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                    'X-Idempotency-Key': `yape-${Date.now()}-${Math.random().toString(36).substring(7)}`
-                },
+                headers: mpHeaders,
                 body: JSON.stringify(mpPayload)
             });
 

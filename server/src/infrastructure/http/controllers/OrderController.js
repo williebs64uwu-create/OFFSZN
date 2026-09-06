@@ -46,6 +46,8 @@ export const createMercadoPagoPreference = async (req, res) => {
             line_items.push({
                 id: product.id.toString(),
                 title: product.name,
+                description: `Producto digital OFFSZN - ${product.name}`,
+                category_id: 'software',
                 picture_url: product.image_url,
                 quantity: 1,
                 currency_id: 'COP',
@@ -83,7 +85,8 @@ export const createMercadoPagoPreference = async (req, res) => {
             auto_return: "approved",
             external_reference: externalRef,
             statement_descriptor: "OFFSZN",
-            binary_mode: true
+            binary_mode: true,
+            notification_url: "https://offszn.lat/api/orders/mercadopago-webhook"
         };
 
         // Preference body construido (no loggear por seguridad)
@@ -170,8 +173,21 @@ const processPaymentAudit = async (paymentId) => {
 // 4. GUARDADO EN DB (SEPARADO PARA LIMPIEZA)
 // ------------------------------------------------------------------
 async function saveOrderToDB(paymentData) {
-    const metadata = JSON.parse(paymentData.external_reference);
-    const userId = metadata.u_id;
+    // Si es pago Yape o ya tiene prefijo OFFSZN-YAPE, fue procesado en tiempo real en YapeController
+    if (paymentData.payment_method_id === 'yape' || (typeof paymentData.external_reference === 'string' && paymentData.external_reference.startsWith('OFFSZN-YAPE'))) {
+        console.log(`ℹ️ [Webhook] Pago Yape ${paymentData.id} ya gestionado en tiempo real por YapeController.`);
+        return;
+    }
+
+    let userId = null;
+    try {
+        if (paymentData.external_reference) {
+            const metadata = JSON.parse(paymentData.external_reference);
+            userId = metadata?.u_id || null;
+        }
+    } catch {
+        console.warn(`[Webhook] external_reference no es JSON: ${paymentData.external_reference}`);
+    }
 
     const { data: order, error: orderError } = await supabase
         .from('orders')
