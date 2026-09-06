@@ -32,6 +32,7 @@ import youtubeSyncRoutes from './infrastructure/http/routes/youtube-sync.routes.
 import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
 import pluginLicensingRoutes from './infrastructure/http/routes/plugin-licensing.routes.js';
 import cokeCheckoutRoutes from './infrastructure/http/routes/coke-checkout.routes.js';
+import promo2x1CheckoutRoutes from './infrastructure/http/routes/promo2x1-checkout.routes.js';
 import calendarRoutes from './infrastructure/http/routes/calendar.routes.js';
 import walletRoutes from './infrastructure/http/routes/wallet.routes.js';
 import yapeRoutes from './infrastructure/http/routes/yape.routes.js';
@@ -331,6 +332,7 @@ app.use('/api', paypalRoutes);
 app.use('/api/orders/yape', yapeRoutes);
 app.use('/api', willieRoutes); // Willie Inspired dedicated checkout
 app.use('/api', cokeCheckoutRoutes);  // Isolated Coca-Cola checkout (no multi-payee)
+app.use('/api', promo2x1CheckoutRoutes); // Isolated Promo 2x1 checkout (guaranteed 2 licenses)
 app.use('/api', youtubeRoutes);
 app.use('/api', youtubeSyncRoutes);
 app.use('/api', calendarRoutes);

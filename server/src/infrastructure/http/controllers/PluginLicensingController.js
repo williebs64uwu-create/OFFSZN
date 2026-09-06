@@ -167,16 +167,12 @@ export const generateTrialWebLicense = async (req, res) => {
             return res.json({ success: true, serial_key: existingLic.serial_key, expires_at: existingLic.expires_at, license_type: 'trial' });
         }
 
-        // Create new trial key
+        // Create new trial key with NO expiry set yet (starts countdown on first activation in DAW)
         const isCoke   = (plugin_name === 'COCA COLA'   || plugin_name === 'Coca-Cola' || plugin_name === 'COCA-COLA');
         const isMaster = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
         const isInka   = (plugin_name === 'INKA KOLA'   || plugin_name === 'Inka Kola');
         const basePrefix = isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY'));
         const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
-        const expiryDate = new Date();
-        const trialDays = isInka ? 7 : 3;
-        expiryDate.setDate(expiryDate.getDate() + trialDays); // 7 days for INKA KOLA, 3 days for Coca-Cola, Master & Mix
-        const expiresAt = expiryDate.toISOString();
 
         const { data: newLic, error: licErr } = await supabase
             .from('plugin_licenses')
@@ -186,14 +182,14 @@ export const generateTrialWebLicense = async (req, res) => {
                 serial_key: serialKey,
                 license_type: 'trial',
                 status: 'active',
-                expires_at: expiresAt,
+                expires_at: null, // Timer starts when activated in plugin for the first time
                 max_devices: 1
             })
             .select('serial_key, expires_at').single();
 
         if (licErr) throw licErr;
 
-        return res.json({ success: true, serial_key: newLic.serial_key, expires_at: newLic.expires_at, license_type: 'trial' });
+        return res.json({ success: true, serial_key: newLic.serial_key, expires_at: null, license_type: 'trial' });
     } catch (error) {
         console.error('Error en generateTrialWebLicense:', error);
         res.status(500).json({ error: 'Error interno del servidor.' });
@@ -371,12 +367,38 @@ export const activateSerial = async (req, res) => {
             return res.status(403).json({ error: 'Esta licencia es exclusiva para Inka Kola y no sirve para otros plugins.' });
         }
 
-        // 2. Check expiration
-        if (license.expires_at && new Date(license.expires_at) < new Date()) {
-            return res.status(403).json({ error: 'La licencia o prueba ha expirado.' });
+        // 2. Count activations — use max_devices from DB (default 1)
+        const maxDevices = license.max_devices || 1;
+        const { data: activations, error: actErr } = await supabase
+            .from('plugin_activations').select('*').eq('license_id', license.id);
+        if (actErr) throw actErr;
+
+        const isAlreadyActivated = activations.some(a => a.hwid === hwid);
+        const isFirstActivation = activations.length === 0;
+
+        // ── 3. Dynamic Trial Countdown: Starts ONLY on first activation in DAW for NEW trials ──
+        if (license.license_type === 'trial' && !license.expires_at) {
+            const isCurrentInka = (license.plugin_name || '').toLowerCase().includes('inka');
+            const trialDays = isCurrentInka ? 7 : 3;
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + trialDays);
+            const newExpiresAt = expiryDate.toISOString();
+
+            await supabase
+                .from('plugin_licenses')
+                .update({ expires_at: newExpiresAt })
+                .eq('id', license.id);
+
+            license.expires_at = newExpiresAt;
+            console.log(`⏱️ [API /activate] Trial started upon first activation! (${trialDays} days) -> Expires: ${newExpiresAt}`);
         }
 
-        // 3. Prevent Trial Abuse: one trial per HWID ever per plugin
+        // 4. Check expiration (for trials and subscriptions)
+        if (license.expires_at && new Date(license.expires_at) < new Date()) {
+            return res.status(403).json({ error: 'Tu periodo de prueba gratuito o suscripción ha expirado.' });
+        }
+
+        // 5. Prevent Trial Abuse: one trial per HWID ever per plugin
         if (license.license_type === 'trial' && hwid !== 'device-no-hwid') {
             const { data: pastTrials, error: ptErr } = await supabase
                 .from('plugin_activations')
@@ -393,15 +415,6 @@ export const activateSerial = async (req, res) => {
                 }
             }
         }
-
-        // 4. Count activations — use max_devices from DB (default 1)
-        const maxDevices = license.max_devices || 1;
-        const { data: activations, error: actErr } = await supabase
-            .from('plugin_activations').select('*').eq('license_id', license.id);
-        if (actErr) throw actErr;
-
-        const isAlreadyActivated = activations.some(a => a.hwid === hwid);
-        const isFirstActivation = activations.length === 0;
 
         if (!isAlreadyActivated) {
             if (activations.length >= maxDevices) {

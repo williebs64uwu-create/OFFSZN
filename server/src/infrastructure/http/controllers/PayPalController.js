@@ -768,7 +768,7 @@ export const capturePayPalOrder = async (req, res) => {
             let cartItems = [];
             const isNegotiation = req.body.isNegotiation || false;
             const negotiateToken = req.body.negotiateToken;
-            const directProductId = req.body.directProductId;
+            const isPromo2x1Body = Boolean(req.body.isPromo2x1 || req.body.is_promo_2x1 || String(directProductId) === 'promo-2x1' || (req.body.pluginName || '').toLowerCase().includes('2x1'));
 
             if (directProductId) {
                 let productObj = null;
@@ -779,8 +779,13 @@ export const capturePayPalOrder = async (req, res) => {
                     productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
                 } else if (String(directProductId) === '900') {
                     productObj = { id: 900, name: 'Easy Master', price_basic: 5, producer_id: null };
-                } else if (String(directProductId) === '899' || String(directProductId) === '901') {
-                    productObj = { id: 899, name: 'Easy Mix', price_basic: 10, producer_id: null };
+                } else if (String(directProductId) === '899' || String(directProductId) === '901' || String(directProductId) === 'promo-2x1') {
+                    productObj = { 
+                        id: 899, 
+                        name: isPromo2x1Body ? 'Promo 2x1 (Easy Mix + Easy Master)' : 'Easy Mix', 
+                        price_basic: 10, 
+                        producer_id: null 
+                    };
                 } else {
                     const { data: product, error: prodErr } = await supabase
                         .from('products')
@@ -801,8 +806,9 @@ export const capturePayPalOrder = async (req, res) => {
 
                     cartItems = [{
                         product: productObj,
-                        license_name: 'lifetime',
-                        variant_price: variantPrice
+                        license_name: isPromo2x1Body ? 'promo_2x1' : 'lifetime',
+                        variant_price: variantPrice,
+                        is_promo_2x1: isPromo2x1Body
                     }];
                 }
             } else if (isNegotiation && negotiateToken) {
@@ -1154,7 +1160,9 @@ export const capturePayPalOrder = async (req, res) => {
             }
 
             if (keysGenerated.length > 0) {
-                generatedLicenseKey = keysGenerated.map(k => k.key).join(' | ');
+                generatedLicenseKey = keysGenerated.length === 1 
+                    ? keysGenerated[0].key 
+                    : keysGenerated.map(k => `${k.plugin}: ${k.key}`).join(' | ');
             }
 
             // 4. Update Sales Count

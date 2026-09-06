@@ -853,20 +853,72 @@
 
         renderSuccess(data) {
             document.getElementById('yape-form-view').style.display = 'none';
-            document.getElementById('yape-success-view').style.display = 'block';
+            const successView = document.getElementById('yape-success-view');
+            successView.style.display = 'block';
 
-            document.getElementById('yape-success-serial').innerText = data.serialKey || 'Activo en tu cuenta';
+            const isPromo2x1 = Boolean(data.isPromo2x1 || data.bonusSerialKey || window.IS_PROMO_2X1);
 
-            if (data.downloads) {
-                if (data.downloads.win) document.getElementById('yape-download-win').href = data.downloads.win;
-                if (data.downloads.mac) document.getElementById('yape-download-mac').href = data.downloads.mac;
+            if (isPromo2x1 && (data.bonusSerialKey || data.serialKey)) {
+                const mixKey = data.serialKey || 'Activo en tu cuenta';
+                const masterKey = data.bonusSerialKey || 'Activo en tu cuenta';
+
+                successView.innerHTML = `
+                    <div class="yape-success-icon-wrap" style="border-color:#ff9f0a; color:#ff9f0a; background:rgba(255,159,10,0.1);">
+                        <i class="bi bi-gift-fill"></i>
+                    </div>
+                    <h2 style="font-size:1.25rem; font-weight:800; margin:0 0 6px;">¡Promo 2x1 Activada! 🎁</h2>
+                    <p style="color:#a1a1aa; font-size:0.82rem; margin:0 0 16px;">Tus 2 licencias vitalicias han sido generadas con éxito.</p>
+
+                    <!-- KEY 1: EASY MIX -->
+                    <div class="yape-license-card" style="margin-bottom:12px; border-color:rgba(255,255,255,0.1);">
+                        <span style="font-size:0.72rem; color:#a1a1aa; text-transform:uppercase; letter-spacing:1px; font-weight:700;">1. Clave Easy Mix VST</span>
+                        <div class="yape-key-text" style="font-size:0.95rem; color:#fff;">${mixKey}</div>
+                        <button type="button" class="yape-btn-copy" onclick="navigator.clipboard.writeText('${mixKey}'); this.innerText='¡Copiado!'; setTimeout(()=>this.innerText='Copiar', 2000)">
+                            Copiar Clave
+                        </button>
+                    </div>
+
+                    <!-- KEY 2: EASY MASTER -->
+                    <div class="yape-license-card" style="margin-bottom:16px; border-color:rgba(255,159,10,0.3); background:rgba(255,159,10,0.03);">
+                        <span style="font-size:0.72rem; color:#ff9f0a; text-transform:uppercase; letter-spacing:1px; font-weight:800;">2. Clave Easy Master VST (REGALO)</span>
+                        <div class="yape-key-text" style="font-size:0.95rem; color:#ff9f0a;">${masterKey}</div>
+                        <button type="button" class="yape-btn-copy" style="background:#ff9f0a; color:#000;" onclick="navigator.clipboard.writeText('${masterKey}'); this.innerText='¡Copiado!'; setTimeout(()=>this.innerText='Copiar', 2000)">
+                            Copiar Clave
+                        </button>
+                    </div>
+
+                    <p style="font-size:0.8rem; color:#a1a1aa; margin:0 0 8px; font-weight:600;">📥 Descargar Easy Mix:</p>
+                    <div class="yape-download-actions" style="margin-bottom:12px;">
+                        <a href="https://drive.google.com/file/d/1wBErtaIXdj-CPObcaJV0fnomX9rzWVNu/view?usp=sharing" target="_blank" class="yape-download-btn yape-download-win">Windows</a>
+                        <a href="https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing" target="_blank" class="yape-download-btn yape-download-mac">macOS</a>
+                    </div>
+
+                    <p style="font-size:0.8rem; color:#ff9f0a; margin:0 0 8px; font-weight:600;">📥 Descargar Easy Master:</p>
+                    <div class="yape-download-actions">
+                        <a href="https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view" target="_blank" class="yape-download-btn yape-download-win">Windows</a>
+                        <a href="https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing" target="_blank" class="yape-download-btn yape-download-mac">macOS</a>
+                    </div>
+
+                    <p style="color:#71717a; font-size:0.75rem; margin-top:16px;">
+                        Hemos enviado una copia con ambas licencias e instaladores a tu correo.
+                    </p>
+                `;
+            } else {
+                document.getElementById('yape-success-serial').innerText = data.serialKey || 'Activo en tu cuenta';
+
+                if (data.downloads) {
+                    if (data.downloads.win) document.getElementById('yape-download-win').href = data.downloads.win;
+                    if (data.downloads.mac) document.getElementById('yape-download-mac').href = data.downloads.mac;
+                }
             }
 
             // Track Meta Pixel Purchase
             if (window.MetaPixel && typeof window.MetaPixel.trackPurchase === 'function') {
+                const pluginCode = isPromo2x1 ? 'promo_2x1' : 'easy_mix';
+                const pluginLabel = isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : 'Easy Mix VST';
                 window.MetaPixel.trackPurchase({
-                    content_ids: ['easy_mix'],
-                    content_name: 'Easy Mix VST',
+                    content_ids: [pluginCode],
+                    content_name: pluginLabel,
                     content_type: 'product',
                     value: this.getPriceUSD(),
                     currency: 'USD',
