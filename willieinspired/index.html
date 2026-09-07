@@ -1068,38 +1068,42 @@
             width: 58px;
             height: 58px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #ec4899 0%, #d946ef 100%);
-            border: none;
-            color: #ffffff;
+            background: #e4e4e7;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: #a1a1aa;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.45rem;
-            cursor: pointer;
-            box-shadow: 0 8px 24px rgba(236, 72, 153, 0.45);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: not-allowed;
+            box-shadow: none;
+            transition: none;
             flex-shrink: 0;
+            opacity: 0.85;
+            pointer-events: none;
         }
 
         .hero-play-btn:hover {
-            transform: scale(1.06);
-            box-shadow: 0 10px 30px rgba(236, 72, 153, 0.6);
+            transform: none;
+            box-shadow: none;
         }
 
         .hero-play-btn:active {
-            transform: scale(0.94);
+            transform: none;
         }
 
-        /* Switcher Cápsula Cruda vs Con Preset */
+        /* Switcher Cápsula Cruda vs Con Preset Bloqueado en Gris */
         .ab-pill-switcher {
             display: inline-flex;
             align-items: center;
-            background: #ffffff;
-            border: 1px solid rgba(236, 72, 153, 0.35);
+            background: #f4f4f5;
+            border: 1px solid rgba(0, 0, 0, 0.08);
             border-radius: 9999px;
             padding: 4px;
             gap: 2px;
-            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.12);
+            box-shadow: none;
+            opacity: 0.85;
+            pointer-events: none;
         }
 
         .ab-pill-btn {
@@ -1109,21 +1113,21 @@
             border-radius: 9999px;
             font-size: 0.885rem;
             font-weight: 700;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.22s ease;
+            color: #a1a1aa;
+            cursor: not-allowed;
+            transition: none;
         }
 
         .ab-pill-btn.active {
-            background: #000000;
-            color: #ffffff !important;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+            background: #e4e4e7;
+            color: #71717a !important;
+            box-shadow: none;
         }
 
         .ab-pill-btn.active-magenta {
             background: transparent;
-            color: #ec4899 !important;
-            font-weight: 800;
+            color: #a1a1aa !important;
+            font-weight: 700;
         }
 
         .hero-buy-cta-btn {
@@ -2649,20 +2653,20 @@
                     <span class="title-huge" id="heroHugeTitle">Bad Bunny</span>
                 </h1>
 
-                <!-- Fila de Reproductor A/B y Toggle Voz cruda vs Voz con preset -->
+                <!-- Fila de Reproductor A/B Bloqueado en Gris (Muestras en actualización) -->
                 <div class="hero-player-row">
-                    <button type="button" class="hero-play-btn" id="mainPlayBtn" onclick="toggleHeroPlay()" title="Reproducir / Pausar">
+                    <button type="button" class="hero-play-btn" id="mainPlayBtn" disabled title="Muestras en actualización">
                         <i class="bi bi-play-fill" id="playIcon"></i>
                     </button>
 
                     <div class="ab-pill-switcher">
-                        <button type="button" class="ab-pill-btn active" id="pillRaw" onclick="switchAbPill('raw')">Voz cruda</button>
-                        <button type="button" class="ab-pill-btn active-magenta" id="pillMainstream" onclick="switchAbPill('mainstream')">Voz con preset</button>
+                        <button type="button" class="ab-pill-btn active" id="pillRaw" disabled>Voz cruda</button>
+                        <button type="button" class="ab-pill-btn" id="pillMainstream" disabled>Voz con preset</button>
                     </div>
                 </div>
 
                 <p class="player-status-hint" id="playerStatusHint">
-                    Toca play • voz cruda (Bad Bunny)
+                    Muestras de audio en actualización • Presets 100% listos para usar
                 </p>
 
             </div>
@@ -2728,24 +2732,6 @@
                 <!-- Avatares inyectados dinámicamente -->
             </div>
 
-            <!-- Banner Flotante Inferior de Comparativa Antes y Después -->
-            <div class="before-after-banner">
-                <div class="banner-left-info">
-                    <div class="mini-presets-stack">
-                        <div class="mini-stack-thumb">🎙️</div>
-                        <div class="mini-stack-thumb">🎚️</div>
-                        <div class="mini-stack-thumb">✨</div>
-                    </div>
-                    <div class="banner-text-content">
-                        <h4>Escucha las 40 comparativas de antes y después</h4>
-                        <p>Toca cualquier voz para escuchar la transformación en tiempo real</p>
-                    </div>
-                </div>
-
-                <button type="button" class="banner-play-btn" onclick="toggleHeroPlay()" title="Reproducir Comparativas">
-                    <i class="bi bi-play-fill"></i>
-                </button>
-            </div>
         </section>
 
     </main>
@@ -2915,27 +2901,8 @@
         let isPlaying = false;
 
         function toggleHeroPlay() {
-            if (!audioRaw || !audioProcessed) return;
-
-            if (!isPlaying) {
-                const activeAudio = currentMode === 'raw' ? audioRaw : audioProcessed;
-                const inactiveAudio = currentMode === 'raw' ? audioProcessed : audioRaw;
-
-                activeAudio.volume = 1;
-                inactiveAudio.volume = 0;
-
-                activeAudio.play().then(() => {
-                    isPlaying = true;
-                    updatePlayIcons(true);
-                }).catch(err => {
-                    console.log("Audio play error:", err);
-                });
-            } else {
-                audioRaw.pause();
-                audioProcessed.pause();
-                isPlaying = false;
-                updatePlayIcons(false);
-            }
+            // Audio preview desactivado temporalmente sin generar errores
+            return false;
         }
 
         function switchAbPill(mode) {
@@ -3097,11 +3064,7 @@
 
             const hint = document.getElementById('playerStatusHint');
             if (hint) {
-                if (currentMode === 'raw') {
-                    hint.textContent = `Toca play • voz cruda (${artist.name})`;
-                } else {
-                    hint.textContent = `Escuchando • voz con preset (${artist.name}) ✨`;
-                }
+                hint.textContent = `Preset Oficial de ${artist.name} • Compatible con FL Studio`;
             }
         }
 
@@ -3289,6 +3252,21 @@
 
             if (subtotalEl) subtotalEl.textContent = `$${total.toFixed(2)}`;
             if (totalValEl) totalValEl.textContent = `$${total.toFixed(2)}`;
+
+            const checkoutBtn = document.getElementById('cartCheckoutBtn');
+            if (checkoutBtn) {
+                if (cartItems.length === 0) {
+                    checkoutBtn.disabled = true;
+                    checkoutBtn.style.opacity = '0.5';
+                    checkoutBtn.style.cursor = 'not-allowed';
+                    checkoutBtn.style.pointerEvents = 'none';
+                } else {
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.style.opacity = '1';
+                    checkoutBtn.style.cursor = 'pointer';
+                    checkoutBtn.style.pointerEvents = 'auto';
+                }
+            }
 
             if (!container) return;
 

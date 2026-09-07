@@ -364,12 +364,27 @@ const CartManager = {
             return;
         }
 
-        const producerIds = [...new Set(this.state.items.map(item => item.product.producer_id))].sort();
+        const producerIds = [...new Set(
+            this.state.items
+                .map(item => item.product?.producer_id)
+                .filter(id => id && id !== 'undefined' && id !== 'null')
+        )].sort();
         const currentHash = producerIds.join(',');
 
         if (this.state.isVerifying) return; // Already in progress
         if (this.state._lastProducerHash === currentHash && Object.keys(this.state.producerVerification).length > 0) {
             return; // Already verified this exact set of producers
+        }
+
+        // If all products in cart are direct/official products without external producer_id
+        if (producerIds.length === 0) {
+            this.state.producerVerification = {};
+            this.state.paymentEligibility = { paypal: true, yape: true, preferred: 'yape' };
+            this.state._lastProducerHash = currentHash;
+            sessionStorage.setItem('offszn_producer_verification', JSON.stringify({}));
+            sessionStorage.setItem('offszn_payment_eligibility', JSON.stringify(this.state.paymentEligibility));
+            sessionStorage.setItem('offszn_producer_hash', currentHash);
+            return;
         }
 
         this.state.isVerifying = true;

@@ -2978,10 +2978,33 @@
                     throw new Error(result.error || 'No se pudo completar el pago con Yape.');
                 }
 
-                // 3. Éxito: Cerrar modal Yape, limpiar carrito y mostrar modal de éxito
+                // 3. Éxito: Cerrar modal Yape, crear sesión de descarga y mostrar modal de éxito
                 closeYapeModal();
+                const purchasedCart = [...cartItems];
                 localStorage.removeItem('offszn_cart');
-                renderSuccessModal(result, email);
+
+                try {
+                    const deliveryRes = await fetch('/api/willie/delivery/create-session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email,
+                            items: purchasedCart,
+                            paymentMethod: 'yape',
+                            orderId: result.payment_id ? `YAPE-${result.payment_id}` : `YAPE-${Date.now()}`
+                        })
+                    });
+                    const deliveryData = await deliveryRes.json();
+                    if (deliveryData?.token) {
+                        localStorage.setItem('willie_last_order_token', deliveryData.token);
+                        renderSuccessModal(result, email, deliveryData.portalUrl);
+                    } else {
+                        renderSuccessModal(result, email);
+                    }
+                } catch (dErr) {
+                    console.warn('[Checkout Yape] Delivery session fallback:', dErr);
+                    renderSuccessModal(result, email);
+                }
 
             } catch (err) {
                 console.error('[Checkout Yape] Error:', err);
@@ -3052,11 +3075,33 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ orderID: data.orderID, email, cartItems })
-                    }).then(r => r.json().then(result => {
+                    }).then(r => r.json().then(async result => {
                         if (!r.ok || !result.success) throw new Error(result.error || 'Error al confirmar el pago.');
                         console.log('[WillieCheckout] Capture OK:', result);
+                        const purchasedCart = [...cartItems];
                         localStorage.removeItem('offszn_cart');
-                        renderSuccessModal({ totalUSD: result.totalUSD }, email || 'tu correo de PayPal');
+
+                        try {
+                            const deliveryRes = await fetch('/api/willie/delivery/create-session', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    email: email || 'cliente-paypal@willieinspired.com',
+                                    items: purchasedCart,
+                                    paymentMethod: 'paypal',
+                                    orderId: data.orderID || `PP-${Date.now()}`
+                                })
+                            });
+                            const deliveryData = await deliveryRes.json();
+                            if (deliveryData?.token) {
+                                localStorage.setItem('willie_last_order_token', deliveryData.token);
+                                renderSuccessModal({ totalUSD: result.totalUSD }, email || 'tu correo de PayPal', deliveryData.portalUrl);
+                            } else {
+                                renderSuccessModal({ totalUSD: result.totalUSD }, email || 'tu correo de PayPal');
+                            }
+                        } catch (dErr) {
+                            renderSuccessModal({ totalUSD: result.totalUSD }, email || 'tu correo de PayPal');
+                        }
                     })).catch(err => alert('Error al confirmar tu pago: ' + err.message));
                 },
                 onError: (err) => {
@@ -3111,26 +3156,35 @@
         }
 
         // ==========================================================================
-        // MODAL DE ÉXITO
+        // MODAL DE ÉXITO & PORTAL DE DESCARGAS SEGURAS (BUCKET 4)
         // ==========================================================================
-        function renderSuccessModal(data, email) {
+        function renderSuccessModal(data, email, portalUrl) {
             const backdrop = document.getElementById('successModalBackdrop');
             const sub = document.getElementById('successSubtitleText');
             const dlContainer = document.getElementById('successDownloadsContainer');
 
             if (sub && email) {
-                sub.textContent = `Tu pago ha sido verificado con éxito. Hemos enviado una copia de tus enlaces y recibo a ${email}.`;
+                sub.textContent = `Tu pago ha sido verificado con éxito. Cuentas con 4 créditos de descarga seguros protegidos en Cloudflare R2.`;
             }
 
-            if (data?.downloads && dlContainer) {
-                let dlHtml = '';
-                if (data.downloads.win) {
-                    dlHtml += `<a href="${data.downloads.win}" target="_blank" class="success-dl-btn"><i class="bi bi-windows"></i> Descargar para Windows (.exe)</a>`;
+            const token = localStorage.getItem('willie_last_order_token');
+            const targetUrl = portalUrl || (token ? `/willieinspired/descargas.html?token=${encodeURIComponent(token)}` : '/willieinspired/descargas.html?token=demo');
+
+            if (dlContainer) {
+                let dlHtml = `
+                    <a href="${targetUrl}" class="success-dl-btn" style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); font-weight: 800; font-size: 0.95rem; padding: 14px 22px; display: flex; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; text-decoration: none; color: #fff; box-shadow: 0 4px 18px rgba(236,72,153,0.4);">
+                        <i class="bi bi-cloud-arrow-down-fill"></i> Acceder a mis Presets (4 Créditos) ➔
+                    </a>
+                `;
+                if (data?.downloads) {
+                    if (data.downloads.win) {
+                        dlHtml += `<a href="${data.downloads.win}" target="_blank" class="success-dl-btn" style="margin-top:8px;"><i class="bi bi-windows"></i> Descargar Plugin Windows (.exe)</a>`;
+                    }
+                    if (data.downloads.mac) {
+                        dlHtml += `<a href="${data.downloads.mac}" target="_blank" class="success-dl-btn" style="margin-top:8px;"><i class="bi bi-apple"></i> Descargar Plugin macOS (.dmg)</a>`;
+                    }
                 }
-                if (data.downloads.mac) {
-                    dlHtml += `<a href="${data.downloads.mac}" target="_blank" class="success-dl-btn" style="margin-top:8px;"><i class="bi bi-apple"></i> Descargar para macOS (.dmg)</a>`;
-                }
-                if (dlHtml) dlContainer.innerHTML = dlHtml;
+                dlContainer.innerHTML = dlHtml;
             }
 
             if (backdrop) backdrop.classList.add('active');

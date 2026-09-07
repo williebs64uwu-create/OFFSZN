@@ -376,9 +376,9 @@ window.AuthUtils = {
         const publicPrefixes = [
             'products/', 'beats/mp3/', 'mp3_tagged/', 'avatars/', 'public/', 'banners/',
             'drumkits/', 'temp-previews/', 'covers/', 'audio/',
-            'secure-products/beats/mp3_tagged/'
+            'secure-products/beats/mp3_tagged/', 'willieimages/'
         ];
-        return publicPrefixes.some(prefix => key.startsWith(prefix));
+        return publicPrefixes.some(prefix => key.startsWith(prefix)) || key.includes('/covers/');
     },
 
     /** Tagged MP3 previews on the marketplace — guests may stream without signing. */

@@ -523,29 +523,29 @@
                             <form id="yape-checkout-form" onsubmit="return false;">
                                 <div class="yape-form-group">
                                     <label class="yape-form-label" for="yape-email">Correo Electrónico</label>
-                                    <input type="email" id="yape-email" class="yape-input" placeholder="tu@correo.com" required autocomplete="email">
+                                    <input type="email" id="yape-email" name="yape_email" class="yape-input" placeholder="tu@correo.com" required autocomplete="email">
                                     <span style="font-size:0.72rem; color:#71717a; margin-top:4px; display:block;">Aquí recibirás tu licencia y links de descarga.</span>
                                 </div>
 
                                 <div class="yape-form-group">
                                     <label class="yape-form-label" for="yape-phone">Celular Yape</label>
-                                    <input type="tel" id="yape-phone" class="yape-input-phone" placeholder="9XX XXX XXX" maxlength="11" required>
+                                    <input type="tel" id="yape-phone" name="yape_phone" class="yape-input-phone" placeholder="9XX XXX XXX" maxlength="11" required>
                                 </div>
 
                                 <div class="yape-form-group">
                                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                                        <label class="yape-form-label" style="margin-bottom:0;">Código de aprobación</label>
+                                        <label class="yape-form-label" for="yape-otp-0" style="margin-bottom:0;">Código de aprobación</label>
                                         <span style="font-size:0.72rem; color:#71717a;">6 dígitos</span>
                                     </div>
                                     
                                     <!-- 6 Individual OTP Boxes -->
                                     <div class="yape-otp-grid" id="yape-otp-grid">
-                                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="0" pattern="[0-9]" inputmode="numeric" autocomplete="one-time-code">
-                                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="1" pattern="[0-9]" inputmode="numeric">
-                                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="2" pattern="[0-9]" inputmode="numeric">
-                                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="3" pattern="[0-9]" inputmode="numeric">
-                                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="4" pattern="[0-9]" inputmode="numeric">
-                                        <input type="tel" maxlength="1" class="yape-otp-box" data-idx="5" pattern="[0-9]" inputmode="numeric">
+                                        <input type="tel" id="yape-otp-0" name="yape_otp_0" maxlength="1" class="yape-otp-box" data-idx="0" pattern="[0-9]" inputmode="numeric" autocomplete="one-time-code" aria-label="Dígito 1 del código">
+                                        <input type="tel" id="yape-otp-1" name="yape_otp_1" maxlength="1" class="yape-otp-box" data-idx="1" pattern="[0-9]" inputmode="numeric" aria-label="Dígito 2 del código">
+                                        <input type="tel" id="yape-otp-2" name="yape_otp_2" maxlength="1" class="yape-otp-box" data-idx="2" pattern="[0-9]" inputmode="numeric" aria-label="Dígito 3 del código">
+                                        <input type="tel" id="yape-otp-3" name="yape_otp_3" maxlength="1" class="yape-otp-box" data-idx="3" pattern="[0-9]" inputmode="numeric" aria-label="Dígito 4 del código">
+                                        <input type="tel" id="yape-otp-4" name="yape_otp_4" maxlength="1" class="yape-otp-box" data-idx="4" pattern="[0-9]" inputmode="numeric" aria-label="Dígito 5 del código">
+                                        <input type="tel" id="yape-otp-5" name="yape_otp_5" maxlength="1" class="yape-otp-box" data-idx="5" pattern="[0-9]" inputmode="numeric" aria-label="Dígito 6 del código">
                                     </div>
 
                                     <div class="yape-otp-guide-clean">

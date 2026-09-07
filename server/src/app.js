@@ -140,6 +140,7 @@ app.use(helmet({
                 // Mercado Pago & Mercado Libre (Yape / Fraud SDK)
                 "https://sdk.mercadopago.com", "https://*.mercadopago.com", "https://*.mercadopago.com.pe", "https://http2.mlstatic.com", "https://*.mlstatic.com",
                 "https://*.mercadolibre.com", "https://*.mercadolibre.com.pe", "https://www.mercadolibre.com",
+                "https://*.mercadolivre.com", "https://www.mercadolivre.com",
                 // EmailOctopus
                 "https://eomail5.com", "https://*.eomail5.com",
                 // Meta Pixel
@@ -159,6 +160,7 @@ app.use(helmet({
                 // Mercado Pago & Mercado Libre (fraud/session images)
                 "https://*.mercadopago.com", "https://*.mercadopago.com.pe", "https://*.mlstatic.com", "https://http2.mlstatic.com",
                 "https://*.mercadolibre.com", "https://*.mercadolibre.com.pe", "https://www.mercadolibre.com",
+                "https://*.mercadolivre.com", "https://www.mercadolivre.com",
                 // PayPal
                 "https://www.paypalobjects.com", "https://*.paypal.com",
                 "https://offszn.lat", "https://*.offszn.lat", "http://localhost:*",
@@ -174,6 +176,7 @@ app.use(helmet({
                 // Mercado Pago & Mercado Libre Perú
                 "https://api.mercadopago.com", "https://*.mercadopago.com", "https://*.mercadopago.com.pe", "https://events.mercadopago.com",
                 "https://api.mercadolibre.com", "https://*.mercadolibre.com", "https://*.mercadolibre.com.pe", "https://www.mercadolibre.com",
+                "https://*.mercadolivre.com", "https://www.mercadolivre.com",
                 // PayPal
                 "https://api.paypal.com", "https://www.paypal.com", "https://www.sandbox.paypal.com",
                 "https://api-m.paypal.com", "https://api-m.sandbox.paypal.com",
@@ -192,6 +195,7 @@ app.use(helmet({
                 // Mercado Pago & Mercado Libre (Fraud iframes / Armor)
                 "https://*.mercadopago.com", "https://*.mercadopago.com.pe",
                 "https://*.mercadolibre.com", "https://*.mercadolibre.com.pe", "https://www.mercadolibre.com",
+                "https://*.mercadolivre.com", "https://www.mercadolivre.com",
                 // PayPal
                 "https://www.paypal.com", "https://www.sandbox.paypal.com", "https://*.paypal.com",
                 "https://accounts.google.com", "https://*.googleapis.com", "https://apis.google.com",
@@ -200,6 +204,8 @@ app.use(helmet({
                 // Meta
                 "https://www.facebook.com"
             ],
+            workerSrc: ["'self'", "blob:"],
+            childSrc: ["'self'", "blob:"],
             formAction: ["'self'", "https://eomail5.com", "https://*.eomail5.com", "https://*.paypal.com", "https://www.paypal.com", "https://*.facebook.com"],
             objectSrc: ["'none'"],
             upgradeInsecureRequests: null,

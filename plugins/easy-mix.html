@@ -96,9 +96,58 @@
 
         /* ==================== HERO ==================== */
         .hero-section {
-            padding: 60px 0 40px;
+            position: relative;
+            margin-top: 0;
+            padding: 42px 0 38px;
             text-align: center;
-            animation: heroFadeIn 1s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: heroFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            transition: background 0.4s ease;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 28px 0 24px;
+            }
+        }
+
+        .hero-bg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/images/hero-bgs/hero-bg-5.png');
+            background-size: cover;
+            background-position: center top;
+            background-repeat: no-repeat;
+            opacity: 1;
+            pointer-events: none;
+            z-index: 0;
+            transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+        }
+
+        .hero-bg-layer.has-bg {
+            opacity: 1;
+        }
+
+        .hero-bg-layer::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom,
+                    transparent 0%,
+                    transparent 60%,
+                    rgba(10, 10, 10, 0.25) 80%,
+                    rgba(5, 5, 5, 0.85) 94%,
+                    #000000 100%);
+            pointer-events: none;
+        }
+
+        .hero-section>.container {
+            position: relative;
+            z-index: 2;
         }
 
         @keyframes heroFadeIn {
@@ -197,9 +246,8 @@
         }
 
         .btn-free-download:hover {
-            transform: translateY(-2px) scale(1.02);
-            background: #eee;
-            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.15);
+            background: #e4e4e7;
+            color: #000;
         }
 
         .btn-free-download.primary-large {
@@ -481,8 +529,8 @@
         }
 
         .btn-auth:hover {
-            transform: translateY(-2px);
-            background: #e5e5e5;
+            background: #ffffff;
+            color: #000000;
         }
 
         .btn-download {
@@ -717,109 +765,86 @@
             }
         }
 
-        /* ==================== STICKY BANNER ==================== */
-        .sticky-offer-banner {
-            position: fixed;
-            bottom: 0;
+        /* ==================== STICKY HEADER & TOP ANNOUNCEMENT BAR ==================== */
+        .sticky-header-wrapper {
+            position: sticky;
+            top: 0;
             left: 0;
             width: 100%;
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-top: 1px solid rgba(255, 159, 10, 0.3);
             z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            padding: 12px 20px;
-            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
-            animation: slideUpBanner 0.5s ease-out forwards;
-            animation-delay: 1s;
-            transform: translateY(100%);
         }
 
-        @keyframes slideUpBanner {
-            to {
-                transform: translateY(0);
-            }
-        }
-
-        .sticky-offer-text {
-            color: #ff9f0a;
-            font-weight: 800;
-            font-size: 1.05rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .sticky-offer-timer {
-            color: #fff;
-            font-weight: 700;
-            font-size: 0.95rem;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .sticky-offer-btn {
-            background: #ff9f0a;
-            color: #000;
-            padding: 8px 24px;
-            border-radius: 8px;
-            font-weight: 800;
+        .top-announcement-bar {
+            display: block;
             text-decoration: none;
+            background: linear-gradient(90deg, #022c22 0%, #064e3b 50%, #022c22 100%);
+            border-bottom: 1px solid rgba(52, 211, 153, 0.25);
+            padding: 9px 16px;
+            width: 100%;
+            cursor: pointer;
+            transition: background 0.25s ease, border-color 0.25s ease;
+        }
+
+        .top-announcement-bar:hover {
+            background: linear-gradient(90deg, #03362a 0%, #075e47 50%, #03362a 100%);
+            border-bottom-color: rgba(52, 211, 153, 0.45);
+        }
+
+        .top-announcement-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
             font-size: 0.9rem;
-            transition: all 0.2s;
+            color: #ffffff;
         }
 
-        .sticky-offer-btn:hover {
-            transform: translateY(-2px) scale(1.02);
-            background: #ffa826;
-            box-shadow: 0 5px 15px rgba(255, 159, 10, 0.3);
+        .top-announcement-text {
+            color: #f1f5f9;
+            font-weight: 500;
+            letter-spacing: -0.2px;
         }
 
-        .sticky-offer-mobile-link {
-            display: none;
+        .top-announcement-text strong {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .top-announcement-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.22s ease;
+        }
+
+        .top-announcement-bar:hover .top-announcement-arrow {
+            transform: translateX(4px);
+            background: rgba(255, 255, 255, 0.32);
         }
 
         @media (max-width: 768px) {
-            body {
-                padding-top: 38px !important;
+            .top-announcement-bar {
+                padding: 8px 12px;
             }
-            #navbar-placeholder > div {
-                top: 38px !important;
+
+            .top-announcement-content {
+                gap: 8px;
+                font-size: 0.82rem;
             }
-            .sticky-offer-banner {
-                top: 0 !important;
-                bottom: auto !important;
-                border-top: none !important;
-                border-bottom: 1px solid rgba(255, 159, 10, 0.3) !important;
-                padding: 0 !important;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
-                animation: none !important;
-                transform: none !important;
-                height: 38px !important;
-                display: flex !important;
-                justify-content: center !important;
-                align-items: center !important;
-            }
-            .sticky-offer-text,
-            .sticky-offer-timer,
-            .sticky-offer-btn {
-                display: none !important;
-            }
-            .sticky-offer-mobile-link {
-                display: block !important;
-                color: #ff9f0a;
-                font-weight: 800;
-                font-size: 0.85rem;
-                text-decoration: none;
-                text-align: center;
-                width: 100%;
-                height: 38px;
-                line-height: 38px;
+
+            .top-announcement-arrow {
+                width: 22px;
+                height: 22px;
+                font-size: 0.76rem;
             }
         }
 
@@ -858,7 +883,6 @@
         }
 
         .whatsapp-bubble-card:hover {
-            transform: translateY(-2px);
             box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
             color: #0f172a;
         }
@@ -897,18 +921,17 @@
             align-items: center;
             justify-content: center;
             font-size: 30px;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 20px rgba(37, 211, 102, 0.4);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            animation: whatsappPulse 2s infinite;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            transition: background-color 0.2s ease, opacity 0.2s ease;
             text-decoration: none;
             flex-shrink: 0;
         }
 
         .whatsapp-floating-btn:hover {
-            transform: scale(1.08) translateY(-3px);
             background-color: #20ba5a;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35), 0 0 30px rgba(37, 211, 102, 0.6);
             color: #fff;
+            opacity: 0.95;
+            transform: none;
         }
 
         @keyframes whatsappBubbleIn {
@@ -916,23 +939,10 @@
                 opacity: 0;
                 transform: translateX(20px) scale(0.9);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0) scale(1);
-            }
-        }
-
-        @keyframes whatsappPulse {
-            0% {
-                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 0px rgba(37, 211, 102, 0.4);
-            }
-
-            70% {
-                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 18px rgba(37, 211, 102, 0.7);
-            }
-
-            100% {
-                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25), 0 0 0px rgba(37, 211, 102, 0.4);
             }
         }
 
@@ -950,9 +960,679 @@
             }
 
             .whatsapp-floating-btn {
-                width: 48px;
-                height: 48px;
-                font-size: 24px;
+                width: 50px;
+                height: 50px;
+                font-size: 26px;
+            }
+        }
+
+        /* ==================== EASY MIX STICKY NAVBAR (APARECE AL SCROLLEAR A DEMO) ==================== */
+        .em-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 56px;
+            background: rgba(10, 10, 12, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        }
+
+        .em-navbar.nav-visible {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .em-nav-inner {
+            max-width: 1200px;
+            height: 100%;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .em-nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .em-nav-brand:hover {
+            opacity: 0.88;
+        }
+
+        .em-nav-logo-img {
+            height: 25px;
+            width: auto;
+            display: block;
+        }
+
+        .em-nav-badge {
+            background: rgba(255, 159, 10, 0.15);
+            color: #ff9f0a;
+            border: 1px solid rgba(255, 159, 10, 0.3);
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .em-nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            padding: 4px 6px;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .em-nav-link {
+            color: #d1d5db;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 14px;
+            border-radius: 999px;
+            transition: all 0.22s ease;
+        }
+
+        .em-nav-link:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .em-nav-pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+            display: inline-block;
+            animation: emNavPulseDot 2s infinite ease-in-out;
+            flex-shrink: 0;
+        }
+
+        @keyframes emNavPulseDot {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: scale(0.9);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+                box-shadow: 0 0 10px #10b981;
+            }
+        }
+
+        .em-nav-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .em-nav-btn-cta {
+            background: #ff9f0a;
+            color: #000000 !important;
+            font-weight: 800;
+            font-size: 0.9rem;
+            padding: 9px 20px;
+            border-radius: 999px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: opacity 0.2s ease, background 0.2s ease;
+        }
+
+        .em-nav-btn-cta:hover {
+            background: #ffa826;
+            opacity: 0.95;
+        }
+
+        @media (max-width: 768px) {
+            .em-navbar {
+                height: 52px;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                background: rgba(10, 10, 12, 0.98) !important;
+            }
+
+            .em-nav-inner {
+                padding: 0 16px;
+                gap: 12px;
+            }
+
+            .em-nav-badge {
+                display: none;
+            }
+
+            /* No existirá en móvil según lo pedido */
+            .em-nav-menu {
+                display: none !important;
+            }
+
+            /* Botón bien puesto y estilizado en móvil */
+            .em-nav-btn-cta {
+                font-size: 0.82rem;
+                font-weight: 700;
+                padding: 7px 16px;
+                border-radius: 999px;
+                white-space: nowrap;
+                letter-spacing: -0.2px;
+                box-shadow: 0 3px 12px rgba(255, 159, 10, 0.35);
+            }
+
+            .em-nav-btn-cta i {
+                font-size: 0.82rem;
+                display: inline-block;
+            }
+        }
+
+        /* ==================== AUDIO COMPARISON SECTION (MINIMALIST GLASS & WAVESURFER) ==================== */
+        .audio-comparison-section {
+            padding: 48px 0 75px;
+            background: radial-gradient(circle at 50% 12%, rgba(255, 45, 120, 0.04) 0%, rgba(5, 5, 5, 1) 50%), #000000;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .audio-comp-header {
+            text-align: center;
+            max-width: 860px;
+            margin: 0 auto 32px;
+        }
+
+        @media (max-width: 768px) {
+            .audio-comparison-section {
+                padding: 35px 0 55px;
+            }
+
+            .audio-comp-header {
+                margin: 0 auto 24px;
+            }
+        }
+
+        .audio-comp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #ffffff;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.35), 0 8px 24px rgba(0, 0, 0, 0.6);
+            padding: 6px 18px;
+            border-radius: 999px;
+            margin-bottom: 20px;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+            user-select: none;
+        }
+
+        .audio-comp-badge:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+            border-color: rgba(255, 255, 255, 0.28);
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5), 0 12px 30px rgba(0, 0, 0, 0.75);
+        }
+
+        .audio-comp-badge .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.95);
+            animation: liquidDotPulse 2.4s ease-in-out infinite;
+        }
+
+        @keyframes liquidDotPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.35;
+                transform: scale(0.8);
+            }
+        }
+
+        .audio-comp-title {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: -0.5px;
+            line-height: 1.15;
+            text-transform: uppercase;
+        }
+
+        .audio-comp-title .title-accent {
+            color: #ff2b88;
+        }
+
+        .audio-comp-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        /* Dark Glass Card Style */
+        .audio-glass-card {
+            background: rgba(14, 14, 14, 0.72);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 34px 28px 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+            display: flex;
+            flex-direction: column;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .audio-glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.16);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        }
+
+        /* Track row: play button + waveform side-by-side */
+        .ws-track-row {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            width: 100%;
+        }
+
+        .ws-play-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            line-height: 1;
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            transition: opacity 0.15s ease, transform 0.12s ease;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .ws-play-btn:hover {
+            opacity: 0.75;
+            transform: scale(1.08);
+        }
+
+        .ws-play-btn i {
+            display: block;
+            line-height: 1;
+        }
+
+        .ws-waveform-wrap {
+            flex: 1;
+            height: 48px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .ws-waveform-wrap>div {
+            width: 100%;
+        }
+
+        /* Centered caption like Image 2 */
+        .ws-track-caption {
+            text-align: center;
+            margin: 14px 0 28px;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+            line-height: 1.3;
+            user-select: none;
+        }
+
+        .ws-track-caption:last-child {
+            margin-bottom: 0;
+        }
+
+        .ws-tag-before {
+            color: #ffffff;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .ws-tag-after {
+            color: #ff2b88;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .ws-track-name {
+            color: #8e949e;
+            font-weight: 500;
+        }
+
+        @media (max-width: 900px) {
+            .audio-comp-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .audio-glass-card {
+                padding: 24px 18px 22px;
+            }
+
+            .ws-track-row {
+                gap: 12px;
+            }
+
+            .ws-play-btn {
+                font-size: 1.2rem;
+                width: 26px;
+                height: 26px;
+            }
+
+            .ws-track-caption {
+                margin: 12px 0 22px;
+                font-size: 0.88rem;
+            }
+        }
+
+        /* ==================== TESTIMONIALS CAROUSEL (2 ROWS INFINITE) ==================== */
+        :root {
+            --testi-gap: 18px;
+        }
+
+        .testimonios-section {
+            padding: 90px 0 75px;
+            background: #050505;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .testimonios-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            letter-spacing: 2.5px;
+            color: #ff9f0a;
+            text-transform: uppercase;
+            font-weight: 700;
+            background: rgba(255, 159, 10, 0.1);
+            border: 1px solid rgba(255, 159, 10, 0.25);
+            padding: 4px 14px;
+            border-radius: 999px;
+            margin-bottom: 14px;
+        }
+
+        .testimonios-title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+            line-height: 1.15;
+        }
+
+        .testimonios-subtitle {
+            color: #888;
+            font-size: 1rem;
+            max-width: 580px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .testi-carousel-wrapper {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            padding: 20px 0;
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+        }
+
+        .testi-carousel-fade-left,
+        .testi-carousel-fade-right {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 150px;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .testi-carousel-fade-left {
+            left: 0;
+            background: linear-gradient(to right, #050505 20%, rgba(5, 5, 5, 0) 100%);
+        }
+
+        .testi-carousel-fade-right {
+            right: 0;
+            background: linear-gradient(to left, #050505 20%, rgba(5, 5, 5, 0) 100%);
+        }
+
+        .testi-marquee-row {
+            display: flex;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            gap: var(--testi-gap, 18px);
+            width: 100%;
+        }
+
+        .testi-marquee-row+.testi-marquee-row {
+            margin-top: var(--testi-gap, 18px);
+        }
+
+        .testi-marquee-group {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: var(--testi-gap, 18px);
+            will-change: transform;
+        }
+
+        .testi-marquee-group.scroll-left {
+            animation: testiMarqueeScrollLeft 140s linear infinite;
+        }
+
+        .testi-marquee-group.scroll-right {
+            animation: testiMarqueeScrollLeft 150s linear infinite reverse;
+        }
+
+        .testi-carousel-wrapper:hover .testi-marquee-group {
+            animation-play-state: paused;
+        }
+
+        @keyframes testiMarqueeScrollLeft {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(calc(-100% - var(--testi-gap, 18px)));
+            }
+        }
+
+        .testi-card {
+            width: 280px;
+            height: 200px;
+            background: #000000;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            flex-shrink: 0;
+            position: relative;
+            transition: border-color 0.2s ease;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .testi-card:hover {
+            border-color: rgba(255, 255, 255, 0.22);
+            transform: none !important;
+        }
+
+        .testi-card:active,
+        .testi-card:focus {
+            outline: none !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .testi-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.22s ease;
+            border-radius: 15px;
+            pointer-events: none;
+        }
+
+        .testi-overlay-badge {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.2px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .testi-card:hover .testi-card-overlay {
+            opacity: 1;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        /* ==================== HIGH-PERFORMANCE HARDWARE-ACCELERATED REVEALS ==================== */
+        .em-reveal {
+            opacity: 0;
+            transform: translate3d(0, 20px, 0);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+
+        .em-reveal.is-revealed {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+            will-change: auto;
+        }
+
+        @media (max-width: 768px) {
+            .em-reveal {
+                transform: translate3d(0, 14px, 0);
+                transition-duration: 0.45s;
+            }
+        }
+
+        .testi-card img {
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 280 / 200;
+            object-fit: contain;
+            border-radius: 8px;
+            pointer-events: none;
+            display: block;
+            transform: none !important;
+            transition: none !important;
+        }
+
+        /* Prevent button jump on third-party button styles */
+        .btn-yape-white:hover {
+            transform: none !important;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --testi-gap: 12px;
+            }
+
+            .testi-card {
+                width: 220px;
+                height: 155px;
+                padding: 8px;
+                border-radius: 12px;
+            }
+
+            .testi-card-overlay {
+                border-radius: 11px;
+            }
+
+            .testi-overlay-badge {
+                font-size: 0.74rem;
+                padding: 4px 10px;
+            }
+
+            .testi-carousel-fade-left,
+            .testi-carousel-fade-right {
+                width: 60px;
+            }
+
+            .testi-marquee-group.scroll-left {
+                animation-duration: 105s;
+            }
+
+            .testi-marquee-group.scroll-right {
+                animation-duration: 115s;
             }
         }
     </style>
@@ -960,22 +1640,59 @@
 
 <body>
 
-    <!-- ==================== DYNAMIC NAVBAR ==================== -->
-    <div id="navbar-placeholder">
-        <div
-            style="background: rgba(0, 0, 0, 0.95); height: 58px; width: 100%; border-bottom: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 1000;">
+    <!-- ==================== TOP ANNOUNCEMENT BAR (SOLO BANNER VERDE EN HERO) ==================== -->
+    <a href="#pricing-section" class="top-announcement-bar" id="top-announcement-bar" title="Obtener licencia de Easy Mix">
+        <div class="top-announcement-content">
+            <span class="top-announcement-text">🚀 Obtén tu <strong>licencia de por vida</strong> de Easy Mix</span>
+            <span class="top-announcement-arrow" aria-hidden="true">
+                <i class="bi bi-arrow-right"></i>
+            </span>
         </div>
-    </div>
-    <script src="/script/load-navbar.js?v=25"></script>
+    </a>
+
+    <!-- ==================== FIXED STICKY NAVBAR (RECIÉN SALE AL SCROLLEAR A DEMO) ==================== -->
+    <header class="em-navbar" id="em-navbar">
+        <div class="em-nav-inner">
+            <!-- 1. Logo OFFSZN -->
+            <a href="/" class="em-nav-brand" title="Ir al inicio de OFFSZN">
+                <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN Logo" width="110" height="25" class="em-nav-logo-img">
+                <span class="em-nav-badge">EASY MIX</span>
+            </a>
+
+            <!-- 2. Nav Links (Cómo Suena + Resultados) -->
+            <nav class="em-nav-menu">
+                <a href="#audio-comparison" class="em-nav-link">
+                    <span class="em-nav-pulse-dot"></span>
+                    <i class="bi bi-soundwave" style="color: #6ee7b7; font-size: 0.95rem;"></i>
+                    <span>Cómo Suena</span>
+                </a>
+                <span class="em-nav-divider"></span>
+                <a href="#testimonios" class="em-nav-link">
+                    <i class="bi bi-star-fill" style="color: #ff9f0a; font-size: 0.8rem;"></i>
+                    <span>Resultados</span>
+                </a>
+            </nav>
+
+            <!-- 3. Action Button (Descargar plugin) -->
+            <div class="em-nav-actions">
+                <a href="#serial-section" class="em-nav-btn-cta">
+                    <i class="bi bi-download"></i>
+                    <span>Descargar plugin</span>
+                </a>
+            </div>
+        </div>
+    </header>
 
     <!-- ==================== MAIN CONTENT ==================== -->
     <main class="plugin-landing">
 
         <!-- HERO SECTION -->
         <section class="hero-section">
+            <div class="hero-bg-layer has-bg" id="hero-bg-layer"
+                style="background-image: url('/images/hero-bgs/hero-bg-5.png');"></div>
             <div class="container">
                 <!-- HERO TOP ACTIONS -->
-                <div class="hero-top-actions" style="justify-content: center; margin-bottom: 24px;">
+                <div class="hero-top-actions" style="justify-content: center; margin-bottom: 16px;">
                     <div class="area-2">
                         <a href="#serial-section" class="btn-free-download"><i class="bi bi-download"></i> DESCARGAR
                             PLUGIN</a>
@@ -983,27 +1700,264 @@
                 </div>
 
                 <h1 class="hero-title"
-                    style="background: linear-gradient(135deg, #ff9f0a 0%, #fff 100%); -webkit-background-clip: text; background-clip: text; font-size: clamp(2.5rem, 7vw, 4.5rem); line-height: 1.1; margin-bottom: 20px;">
-                    Voces pro al instante con nombres fáciles!
+                    style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; background: none !important; font-size: clamp(2.4rem, 6.5vw, 4.2rem); line-height: 1.1; margin-bottom: 14px; font-weight: 800;">
+                    Voces pro al instante <br> con nombres fáciles!
                 </h1>
-                <p class="hero-subtitle" style="font-size: 1.3rem; color: #aaa; max-width: 600px; margin: 0 auto 40px;">
+                <p class="hero-subtitle" style="font-size: 1.2rem; color: #aaa; max-width: 600px; margin: 0 auto 22px;">
                     El mejor plugin para mezclar en 2026.</p>
 
-                <div class="hero-image-container" style="max-width: 800px; margin: 30px auto 0;">
-                    <img src="/images/plugins/easy-mix.png" alt="Easy Mix VST"
-                        style="width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 30px 60px rgba(0,0,0,0.6);">
+                <div class="hero-image-container" style="max-width: 800px; margin: 24px auto 0;">
+                    <img src="/images/plugins/easy-mix.png" alt="Easy Mix VST" width="990" height="500"
+                        style="width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 30px 70px rgba(0,0,0,0.7), 0 0 50px rgba(133, 44, 60, 0.2);">
                 </div>
             </div>
         </section>
 
-        <!-- ==================== VIDEO DEMO SECTION ==================== -->
+        <!-- ==================== AUDIO COMPARISON SECTION (SECCIÓN 2: ANTES VS DESPUÉS) ==================== -->
+        <section id="audio-comparison" class="audio-comparison-section">
+            <div class="container" style="max-width: 1100px;">
+                <div class="audio-comp-header em-reveal">
+                    <div class="audio-comp-badge">
+                        <span class="badge-dot"></span>
+                        <span>Comparación en Tiempo Real</span>
+                    </div>
+                    <h2 class="audio-comp-title">
+                        Escucha el <span class="title-accent">ANTES VS DESPUÉS</span>
+                    </h2>
+                </div>
+
+                <div class="audio-comp-grid">
+                    <!-- CARD 1: TAMASHI -->
+                    <div class="audio-glass-card em-reveal" data-card-id="c1">
+                        <!-- PISTA ANTES -->
+                        <div class="ws-track-row" data-track-id="t1-before">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Antes">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap" data-audio-src="/music-raw-to-defined/tamashi-antes.mp3">
+                            </div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-before">ANTES:</span>
+                            <span class="ws-track-name">Voz cruda</span>
+                        </div>
+
+                        <!-- PISTA DESPUÉS -->
+                        <div class="ws-track-row" data-track-id="t1-after">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Después">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap" data-audio-src="/music-raw-to-defined/tamashi-despues.mp3">
+                            </div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-after">DESPUÉS:</span>
+                            <span class="ws-track-name">Voz clean</span>
+                        </div>
+                    </div>
+
+                    <!-- CARD 2: YAN BLOCK -->
+                    <div class="audio-glass-card em-reveal" data-card-id="c2">
+                        <!-- PISTA ANTES -->
+                        <div class="ws-track-row" data-track-id="t2-before">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Antes">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap"
+                                data-audio-src="/music-raw-to-defined/antes%20-%20yan%20block.wav"></div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-before">ANTES:</span>
+                            <span class="ws-track-name">Voz cruda</span>
+                        </div>
+
+                        <!-- PISTA DESPUÉS -->
+                        <div class="ws-track-row" data-track-id="t2-after">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Después">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap"
+                                data-audio-src="/music-raw-to-defined/despues%20-%20yan%20block.wav"></div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-after">DESPUÉS:</span>
+                            <span class="ws-track-name">Voz Yan Block</span>
+                        </div>
+                    </div>
+
+                    <!-- CARD 3: ALE -->
+                    <div class="audio-glass-card em-reveal" data-card-id="c3">
+                        <!-- PISTA ANTES -->
+                        <div class="ws-track-row" data-track-id="t3-before">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Antes">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap" data-audio-src="/music-raw-to-defined/ale-antes.mp3"></div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-before">ANTES:</span>
+                            <span class="ws-track-name">Voz cruda</span>
+                        </div>
+
+                        <!-- PISTA DESPUÉS -->
+                        <div class="ws-track-row" data-track-id="t3-after">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Después">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap" data-audio-src="/music-raw-to-defined/ale-despues.mp3"></div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-after">DESPUÉS:</span>
+                            <span class="ws-track-name">Voz dancehall</span>
+                        </div>
+                    </div>
+
+                    <!-- CARD 4: LEAD VOCAL -->
+                    <div class="audio-glass-card em-reveal" data-card-id="c4">
+                        <!-- PISTA ANTES -->
+                        <div class="ws-track-row" data-track-id="t4-before">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Antes">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap" data-audio-src="/music-raw-to-defined/lead-antes.mp3"></div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-before">ANTES:</span>
+                            <span class="ws-track-name">Voz cruda</span>
+                        </div>
+
+                        <!-- PISTA DESPUÉS -->
+                        <div class="ws-track-row" data-track-id="t4-after">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Después">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap" data-audio-src="/music-raw-to-defined/lead-despues.mp3"></div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-after">DESPUÉS:</span>
+                            <span class="ws-track-name">Voz under mejorado</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- WaveSurfer.js: Lazy-loaded ONLY when audio section enters viewport -->
+        <script>
+            (function () {
+                let wsInitialized = false;
+                const audioSection = document.getElementById('audio-comparison');
+                if (!audioSection) return;
+
+                function initWaveSurfer() {
+                    if (wsInitialized) return;
+                    wsInitialized = true;
+
+                    // Dynamically load WaveSurfer only when needed
+                    const wsScript = document.createElement('script');
+                    wsScript.src = '/libs/wavesurfer.min.js';
+                    wsScript.onload = function () {
+                        if (typeof WaveSurfer === 'undefined') return;
+
+                        const cards = document.querySelectorAll('.audio-glass-card');
+                        const tracks = [];
+                        let currentlyPlaying = null;
+
+                        cards.forEach((card) => {
+                            const cardId = card.getAttribute('data-card-id');
+                            const trackRows = card.querySelectorAll('.ws-track-row');
+
+                            trackRows.forEach((row, index) => {
+                                const playBtn = row.querySelector('.ws-play-btn');
+                                const waveWrap = row.querySelector('.ws-waveform-wrap');
+                                const audioSrc = waveWrap.getAttribute('data-audio-src');
+
+                                const ws = WaveSurfer.create({
+                                    container: waveWrap,
+                                    waveColor: 'rgba(255, 255, 255, 0.4)',
+                                    progressColor: '#ff2b88',
+                                    cursorWidth: 0,
+                                    barWidth: 2.5,
+                                    barGap: 3,
+                                    barRadius: 2,
+                                    height: 48,
+                                    normalize: true,
+                                    url: audioSrc
+                                });
+
+                                const trackObj = { cardId, playBtn, waveWrap, ws };
+                                tracks.push(trackObj);
+
+                                function setBtnState(isPlaying) {
+                                    const icon = playBtn.querySelector('i');
+                                    if (icon) icon.className = isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill';
+                                }
+
+                                function stopAllOtherTracks(exceptWs) {
+                                    tracks.forEach(t => {
+                                        if (t.ws !== exceptWs) {
+                                            if (t.ws.isPlaying()) t.ws.pause();
+                                            t.ws.seekTo(0);
+                                            const icon = t.playBtn.querySelector('i');
+                                            if (icon) icon.className = 'bi bi-play-fill';
+                                        }
+                                    });
+                                }
+
+                                function playTrack(seekTime = null) {
+                                    let transferTime = seekTime;
+                                    if (seekTime === null && currentlyPlaying && currentlyPlaying.cardId === cardId && currentlyPlaying.ws !== ws) {
+                                        transferTime = currentlyPlaying.ws.getCurrentTime();
+                                    }
+                                    stopAllOtherTracks(ws);
+                                    if (transferTime !== null && transferTime > 0) ws.setTime(transferTime);
+                                    ws.play().then(() => { setBtnState(true); currentlyPlaying = trackObj; })
+                                           .catch(err => { console.warn('Playback error:', err); setBtnState(false); currentlyPlaying = null; });
+                                }
+
+                                function pauseTrack() {
+                                    ws.pause(); setBtnState(false);
+                                    if (currentlyPlaying === trackObj) currentlyPlaying = null;
+                                }
+
+                                playBtn.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    ws.isPlaying() ? pauseTrack() : playTrack();
+                                });
+
+                                ws.on('interaction', () => {
+                                    stopAllOtherTracks(ws);
+                                    ws.play().then(() => { setBtnState(true); currentlyPlaying = trackObj; });
+                                });
+
+                                ws.on('finish', () => { ws.seekTo(0); setBtnState(false); if (currentlyPlaying === trackObj) currentlyPlaying = null; });
+                                ws.on('pause', () => { setBtnState(false); if (currentlyPlaying === trackObj) currentlyPlaying = null; });
+                            });
+                        });
+                    };
+                    document.head.appendChild(wsScript);
+                }
+
+                // Only init when audio section is ~300px from entering viewport
+                const wsObserver = new IntersectionObserver((entries, obs) => {
+                    if (entries[0].isIntersecting) {
+                        initWaveSurfer();
+                        obs.disconnect();
+                    }
+                }, { rootMargin: '300px 0px 0px 0px', threshold: 0 });
+
+                wsObserver.observe(audioSection);
+            })();
+        </script>
+
+        <!-- ==================== VIDEO DEMO SECTION (SECCIÓN 3: MIRA CÓMO SUENA) ==================== -->
         <section id="video-demo"
             style="padding: 80px 0; background: #050505; border-top: 1px solid rgba(255,255,255,0.04);">
             <div class="container" style="max-width: 950px;">
                 <div
                     style="display: flex; align-items: center; justify-content: center; gap: 40px; flex-wrap: wrap; text-align: left;">
                     <!-- Left Column: Titles & Text -->
-                    <div style="flex: 1; min-width: 300px;">
+                    <div class="video-text-content em-reveal" style="flex: 1; min-width: 300px;">
                         <div
                             style="font-size: 0.75rem; letter-spacing: 3px; color: #ff9f0a; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">
                             Demo en acción</div>
@@ -1015,7 +1969,7 @@
                     </div>
 
                     <!-- Right Column: Vertical 9:16 Video -->
-                    <div style="flex: 0 0 290px; max-width: 290px; width: 100%; margin: 0 auto;">
+                    <div class="video-col-visual em-reveal" style="flex: 0 0 290px; max-width: 290px; width: 100%; margin: 0 auto;">
                         <div
                             style="position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.8); border: 2.5px solid rgba(255,255,255,0.1); background: #111; aspect-ratio: 9 / 16;">
 
@@ -1034,8 +1988,8 @@
 
                             <video id="demo-video" src="/videos/video-offsz.mp4" autoplay muted loop playsinline
                                 controls
-                                style="width: 100%; height: 100%; display: block; object-fit: contain; image-rendering: -webkit-optimize-contrast; -webkit-backface-visibility: hidden; backface-visibility: hidden;"
-                                preload="auto">
+                                style="width: 100%; height: 100%; display: block; object-fit: contain; -webkit-backface-visibility: hidden; backface-visibility: hidden;"
+                                preload="none">
                                 Tu navegador no soporta la reproducción de video.
                             </video>
                         </div>
@@ -1075,8 +2029,6 @@
                 }
             }
         </script>
-
-
 
         <!-- ==================== COMPATIBILITY SECTION ==================== -->
         <section style="padding: 60px 0; background: #000; border-top: 1px solid rgba(255,255,255,0.05);">
@@ -1152,265 +2104,418 @@
                 </div>
                 <p
                     style="color: #888; font-size: 0.85rem; margin-top: 24px; margin-bottom: 0; display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
-                    <span><i class="fa-brands fa-windows" style="color: #0078d4; margin-right: 4px;"></i> Windows (VST3 de 64 bits)</span>
+                    <span><i class="fa-brands fa-windows" style="color: #0078d4; margin-right: 4px;"></i> Windows (VST3
+                        de 64 bits)</span>
                     <span style="color: rgba(255,255,255,0.15);">|</span>
-                    <span><i class="fa-brands fa-apple" style="color: #ffffff; margin-right: 4px;"></i> macOS (AU / VST3 / Standalone para Intel & Apple Silicon)</span>
+                    <span><i class="fa-brands fa-apple" style="color: #ffffff; margin-right: 4px;"></i> macOS (AU / VST3
+                        / Standalone para Intel & Apple Silicon)</span>
                 </p>
             </div>
         </section>
 
-        <!-- ==================== TESTIMONIALS SECTION ==================== -->
-        <section id="testimonios"
-            style="padding: 80px 0; background: #050505; border-top: 1px solid rgba(255,255,255,0.04);">
-            <div class="container" style="max-width: 1100px; text-align: center;">
-                <div
-                    style="font-size: 0.75rem; letter-spacing: 3px; color: #ff9f0a; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">
-                    Testimonios</div>
-                <h2
-                    style="font-size: clamp(2rem, 5vw, 2.8rem); font-weight: 800; margin-bottom: 48px; color: #fff; line-height: 1.15;">
-                    Lo que dicen los artistas y productores.</h2>
+        <!-- ==================== TESTIMONIALS SECTION (CARRUSEL 2 LÍNEAS) ==================== -->
+        <section id="testimonios" class="testimonios-section">
+            <div class="container" style="text-align: center; margin-bottom: 36px;">
+                <div class="testimonios-badge">
+                    <i class="bi bi-star-fill" style="color: #ff9f0a; font-size: 0.75rem;"></i> Testimonios & Feedback
+                </div>
+                <h2 class="testimonios-title">
+                    Lo que dicen los artistas y productores
+                </h2>
+                <p class="testimonios-subtitle">
+                    Capturas reales de productores usando Easy Mix en sus proyectos diarios. Pasa el cursor para pausar
+                    o haz clic para ampliar.
+                </p>
+            </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px;">
-                    <!-- Testimonios Recientes (Nuevos) -->
-                    <div onclick="openLightbox('/images/plugins/chrome_FnLh854qHf.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/chrome_FnLh854qHf.png" alt="Testimonio Easy Mix"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+            <!-- Carrusel Infinito con 2 Filas y Difuminado -->
+            <div class="testi-carousel-wrapper">
+                <div class="testi-carousel-fade-left"></div>
+                <div class="testi-carousel-fade-right"></div>
+
+                <!-- FILA 1: Desplazamiento hacia la Izquierda -->
+                <div class="testi-marquee-row">
+                    <div class="testi-marquee-group scroll-left">
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_FnLh854qHf.png')">
+                            <img src="/images/plugins/chrome_FnLh854qHf.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/be117299-3c27-4908-822c-d4d8021775ef.jpg')">
+                            <img src="/images/plugins/be117299-3c27-4908-822c-d4d8021775ef.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/6cd92798-42b1-4abe-bf58-31281e08bd90.jpg')">
+                            <img src="/images/plugins/6cd92798-42b1-4abe-bf58-31281e08bd90.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_d7xxjI3LEj.png')">
+                            <img src="/images/plugins/chrome_d7xxjI3LEj.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-1.jpg')">
+                            <img src="/images/plugins/testi-new-1.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-2.jpg')">
+                            <img src="/images/plugins/testi-new-2.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-3.jpg')">
+                            <img src="/images/plugins/testi-new-3.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-4.jpg')">
+                            <img src="/images/plugins/testi-new-4.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-5.jpg')">
+                            <img src="/images/plugins/testi-new-5.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-6.jpg')">
+                            <img src="/images/plugins/testi-new-6.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-7.jpg')">
+                            <img src="/images/plugins/testi-new-7.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-8.jpg')">
+                            <img src="/images/plugins/testi-new-8.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-1.jpg')">
+                            <img src="/images/plugins/testi-1.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-2.jpg')">
+                            <img src="/images/plugins/testi-2.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-3.jpg')">
+                            <img src="/images/plugins/testi-3.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/plugin-testi.png')">
+                            <img src="/images/plugins/plugin-testi.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-4.jpg')">
+                            <img src="/images/plugins/testi-4.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/REFERENCIA.jpg')">
+                            <img src="/images/plugins/REFERENCIA.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
                     </div>
-                    <div onclick="openLightbox('/images/plugins/be117299-3c27-4908-822c-d4d8021775ef.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/be117299-3c27-4908-822c-d4d8021775ef.jpg" alt="Testimonio Easy Mix"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    <!-- Copia exacta para bucle infinito continuo -->
+                    <div class="testi-marquee-group scroll-left" aria-hidden="true">
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_FnLh854qHf.png')">
+                            <img src="/images/plugins/chrome_FnLh854qHf.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/be117299-3c27-4908-822c-d4d8021775ef.jpg')">
+                            <img src="/images/plugins/be117299-3c27-4908-822c-d4d8021775ef.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/6cd92798-42b1-4abe-bf58-31281e08bd90.jpg')">
+                            <img src="/images/plugins/6cd92798-42b1-4abe-bf58-31281e08bd90.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_d7xxjI3LEj.png')">
+                            <img src="/images/plugins/chrome_d7xxjI3LEj.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-1.jpg')">
+                            <img src="/images/plugins/testi-new-1.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-2.jpg')">
+                            <img src="/images/plugins/testi-new-2.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-3.jpg')">
+                            <img src="/images/plugins/testi-new-3.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-4.jpg')">
+                            <img src="/images/plugins/testi-new-4.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-5.jpg')">
+                            <img src="/images/plugins/testi-new-5.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-6.jpg')">
+                            <img src="/images/plugins/testi-new-6.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-7.jpg')">
+                            <img src="/images/plugins/testi-new-7.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-8.jpg')">
+                            <img src="/images/plugins/testi-new-8.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-1.jpg')">
+                            <img src="/images/plugins/testi-1.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-2.jpg')">
+                            <img src="/images/plugins/testi-2.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-3.jpg')">
+                            <img src="/images/plugins/testi-3.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/plugin-testi.png')">
+                            <img src="/images/plugins/plugin-testi.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-4.jpg')">
+                            <img src="/images/plugins/testi-4.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/REFERENCIA.jpg')">
+                            <img src="/images/plugins/REFERENCIA.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
                     </div>
-                    <div onclick="openLightbox('/images/plugins/6cd92798-42b1-4abe-bf58-31281e08bd90.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/6cd92798-42b1-4abe-bf58-31281e08bd90.jpg" alt="Testimonio Easy Mix"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                </div>
+
+                <!-- FILA 2: Desplazamiento hacia la Derecha -->
+                <div class="testi-marquee-row">
+                    <div class="testi-marquee-group scroll-right">
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_sRDhkGjPW8.png')">
+                            <img src="/images/plugins/chrome_sRDhkGjPW8.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/REEFE3.jpg')">
+                            <img src="/images/plugins/REEFE3.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/refes4.png')">
+                            <img src="/images/plugins/refes4.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/R.jpg')">
+                            <img src="/images/plugins/R.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/R2.jpg')">
+                            <img src="/images/plugins/R2.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/esta.png')">
+                            <img src="/images/plugins/esta.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_CrwswjOYxU.png')">
+                            <img src="/images/plugins/chrome_CrwswjOYxU.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_wvvsGlZV7e.png')">
+                            <img src="/images/plugins/chrome_wvvsGlZV7e.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_18pXdN4UU8.png')">
+                            <img src="/images/plugins/chrome_18pXdN4UU8.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/1.jpg')">
+                            <img src="/images/plugins/1.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/2.jpg')">
+                            <img src="/images/plugins/2.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-5.jpg')">
+                            <img src="/images/plugins/testi-5.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-6.png')">
+                            <img src="/images/plugins/testi-6.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/refe2.png')">
+                            <img src="/images/plugins/refe2.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_UysuaXrBoQ.png')">
+                            <img src="/images/plugins/chrome_UysuaXrBoQ.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_X0VHS3Sw0h.png')">
+                            <img src="/images/plugins/chrome_X0VHS3Sw0h.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/8dfc1808-37e8-42e2-b509-5d7a91419150.jpg')">
+                            <img src="/images/plugins/8dfc1808-37e8-42e2-b509-5d7a91419150.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/01dd3668-441d-4e23-a917-101e410d0ab9.jpg')">
+                            <img src="/images/plugins/01dd3668-441d-4e23-a917-101e410d0ab9.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
                     </div>
-                    <div onclick="openLightbox('/images/plugins/chrome_d7xxjI3LEj.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/chrome_d7xxjI3LEj.png" alt="Testimonio Easy Mix"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <div onclick="openLightbox('/images/plugins/testi-new-1.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-new-1.jpg" alt="Testimonio Easy Mix 1"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <div onclick="openLightbox('/images/plugins/testi-new-2.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-new-2.jpg" alt="Testimonio Easy Mix 2"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <div onclick="openLightbox('/images/plugins/testi-new-3.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-new-3.jpg" alt="Testimonio Easy Mix 3"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <div onclick="openLightbox('/images/plugins/testi-new-4.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-new-4.jpg" alt="Testimonio Easy Mix 4"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <div onclick="openLightbox('/images/plugins/testi-new-5.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-new-5.jpg" alt="Testimonio Easy Mix 5"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <div onclick="openLightbox('/images/plugins/testi-new-6.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-new-6.jpg" alt="Testimonio Easy Mix 6"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <div onclick="openLightbox('/images/plugins/testi-new-7.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-new-7.jpg" alt="Testimonio Easy Mix 7"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <div onclick="openLightbox('/images/plugins/testi-new-8.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-new-8.jpg" alt="Testimonio Easy Mix 8"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonios Anteriores -->
-                    <div onclick="openLightbox('/images/plugins/testi-1.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-1.jpg" alt="Testimonio Easy Mix 1"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 2 -->
-                    <div onclick="openLightbox('/images/plugins/testi-2.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-2.jpg" alt="Testimonio Easy Mix 2"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 3 -->
-                    <div onclick="openLightbox('/images/plugins/testi-3.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-3.jpg" alt="Testimonio Easy Mix 3"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 4 -->
-                    <div onclick="openLightbox('/images/plugins/plugin-testi.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/plugin-testi.png" alt="Testimonio Easy Mix 4"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 5 -->
-                    <div onclick="openLightbox('/images/plugins/testi-4.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-4.jpg" alt="Testimonio Easy Mix 5"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 6 -->
-                    <div onclick="openLightbox('/images/plugins/REFERENCIA.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/REFERENCIA.jpg" alt="Testimonio Easy Mix 6"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 7 -->
-                    <div onclick="openLightbox('/images/plugins/chrome_sRDhkGjPW8.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/chrome_sRDhkGjPW8.png" alt="Testimonio Easy Mix 7"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 8 -->
-                    <div onclick="openLightbox('/images/plugins/REEFE3.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/REEFE3.jpg" alt="Testimonio Easy Mix 8"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 9 -->
-                    <div onclick="openLightbox('/images/plugins/refes4.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/refes4.png" alt="Testimonio Easy Mix 9"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 10 -->
-                    <div onclick="openLightbox('/images/plugins/R.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/R.jpg" alt="Testimonio Easy Mix 10"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 11 -->
-                    <div onclick="openLightbox('/images/plugins/R2.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/R2.jpg" alt="Testimonio Easy Mix 11"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 12 -->
-                    <div onclick="openLightbox('/images/plugins/esta.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/esta.png" alt="Testimonio Easy Mix 12"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 13 -->
-                    <div onclick="openLightbox('/images/plugins/chrome_CrwswjOYxU.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/chrome_CrwswjOYxU.png" alt="Testimonio Easy Mix 13"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 14 -->
-                    <div onclick="openLightbox('/images/plugins/chrome_wvvsGlZV7e.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/chrome_wvvsGlZV7e.png" alt="Testimonio Easy Mix 14"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 15 -->
-                    <div onclick="openLightbox('/images/plugins/chrome_18pXdN4UU8.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/chrome_18pXdN4UU8.png" alt="Testimonio Easy Mix 15"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 16 -->
-                    <div onclick="openLightbox('/images/plugins/1.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/1.jpg" alt="Testimonio Easy Mix 16"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 17 -->
-                    <div onclick="openLightbox('/images/plugins/2.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/2.jpg" alt="Testimonio Easy Mix 17"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 18 -->
-                    <div onclick="openLightbox('/images/plugins/testi-5.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-5.jpg" alt="Testimonio Easy Mix 18"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 19 -->
-                    <div onclick="openLightbox('/images/plugins/testi-6.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/testi-6.png" alt="Testimonio Easy Mix 19"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 20 -->
-                    <div onclick="openLightbox('/images/plugins/refe2.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/refe2.png" alt="Testimonio Easy Mix 20"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 21 -->
-                    <div onclick="openLightbox('/images/plugins/chrome_UysuaXrBoQ.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/chrome_UysuaXrBoQ.png" alt="Testimonio Easy Mix 21"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 22 -->
-                    <div onclick="openLightbox('/images/plugins/chrome_X0VHS3Sw0h.png')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/chrome_X0VHS3Sw0h.png" alt="Testimonio Easy Mix 22"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 23 -->
-                    <div onclick="openLightbox('/images/plugins/8dfc1808-37e8-42e2-b509-5d7a91419150.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/8dfc1808-37e8-42e2-b509-5d7a91419150.jpg" alt="Testimonio Easy Mix 23"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
-                    </div>
-                    <!-- Testimonio 24 -->
-                    <div onclick="openLightbox('/images/plugins/01dd3668-441d-4e23-a917-101e410d0ab9.jpg')"
-                        style="background: #000; border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: transform 0.3s; cursor: pointer; display: flex; align-items: center; justify-content: center; height: 210px; padding: 12px;"
-                        onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'">
-                        <img src="/images/plugins/01dd3668-441d-4e23-a917-101e410d0ab9.jpg" alt="Testimonio Easy Mix 24"
-                            style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;">
+                    <!-- Copia exacta para bucle infinito continuo -->
+                    <div class="testi-marquee-group scroll-right" aria-hidden="true">
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_sRDhkGjPW8.png')">
+                            <img src="/images/plugins/chrome_sRDhkGjPW8.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/REEFE3.jpg')">
+                            <img src="/images/plugins/REEFE3.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/refes4.png')">
+                            <img src="/images/plugins/refes4.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/R.jpg')">
+                            <img src="/images/plugins/R.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/R2.jpg')">
+                            <img src="/images/plugins/R2.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/esta.png')">
+                            <img src="/images/plugins/esta.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_CrwswjOYxU.png')">
+                            <img src="/images/plugins/chrome_CrwswjOYxU.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_wvvsGlZV7e.png')">
+                            <img src="/images/plugins/chrome_wvvsGlZV7e.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_18pXdN4UU8.png')">
+                            <img src="/images/plugins/chrome_18pXdN4UU8.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/1.jpg')">
+                            <img src="/images/plugins/1.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/2.jpg')">
+                            <img src="/images/plugins/2.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-5.jpg')">
+                            <img src="/images/plugins/testi-5.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-6.png')">
+                            <img src="/images/plugins/testi-6.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/refe2.png')">
+                            <img src="/images/plugins/refe2.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_UysuaXrBoQ.png')">
+                            <img src="/images/plugins/chrome_UysuaXrBoQ.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_X0VHS3Sw0h.png')">
+                            <img src="/images/plugins/chrome_X0VHS3Sw0h.png" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/8dfc1808-37e8-42e2-b509-5d7a91419150.jpg')">
+                            <img src="/images/plugins/8dfc1808-37e8-42e2-b509-5d7a91419150.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/01dd3668-441d-4e23-a917-101e410d0ab9.jpg')">
+                            <img src="/images/plugins/01dd3668-441d-4e23-a917-101e410d0ab9.jpg" alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1456,7 +2561,6 @@
         <section class="serial-section" id="serial-section">
             <div class="container">
                 <h2 class="section-title">Descarga tu Plugin</h2>
-                <p class="section-subtitle">Inicia sesión para descargar el plugin y ver tus licencias.</p>
 
                 <div class="serial-card" style="max-width: 800px; margin-bottom: 60px;">
 
@@ -1473,11 +2577,13 @@
                         style="display: none; flex-direction: column; align-items: center; gap: 20px; padding: 30px 20px;">
                         <!-- BOTÓN DE DESCARGA (Siempre visible cuando está logueado) -->
                         <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%;">
-                            <a href="https://drive.google.com/file/d/1wBErtaIXdj-CPObcaJV0fnomX9rzWVNu/view?usp=sharing" class="btn-download" target="_blank" onclick="openDownloadModal()"
+                            <a href="https://drive.google.com/file/d/1wBErtaIXdj-CPObcaJV0fnomX9rzWVNu/view?usp=sharing"
+                                class="btn-download" target="_blank" onclick="openDownloadModal()"
                                 style="display: inline-flex; align-items: center; gap: 8px;"><i
                                     class="fa-brands fa-windows" style="color: #0078d4; font-size: 1.2rem;"></i>
                                 Descargar para Windows</a>
-                            <a href="https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing" class="btn-download" target="_blank" onclick="openDownloadModal()"
+                            <a href="https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing"
+                                class="btn-download" target="_blank" onclick="openDownloadModal()"
                                 style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff;"><i
                                     class="fa-brands fa-apple" style="color: #ffffff; font-size: 1.2rem;"></i>
                                 Descargar para macOS</a>
@@ -1485,7 +2591,9 @@
 
                         <!-- WhatsApp Help Link -->
                         <div style="margin-top: 15px; font-size: 0.85rem; text-align: center;">
-                            <a href="https://wa.me/51993525005?text=Hola!%20Tengo%20problemas%20al%20instalar%20Easy%20Mix%20VST" target="_blank" rel="noopener noreferrer" style="color: #ff9f0a; text-decoration: underline; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                            <a href="https://wa.me/51993525005?text=Hola!%20Tengo%20problemas%20al%20instalar%20Easy%20Mix%20VST"
+                                target="_blank" rel="noopener noreferrer"
+                                style="color: #ff9f0a; text-decoration: underline; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
                                 <i class="bi bi-whatsapp"></i> ¿Problemas de instalación? Contáctanos para ayudarte
                             </a>
                         </div>
@@ -1540,7 +2648,8 @@
                             style="display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-bottom: 24px;">
                             <span
                                 style="font-size: 1.3rem; text-decoration: line-through; color: rgba(255,255,255,0.3); font-weight: 500;">$25</span>
-                            <span id="easy-mix-price-val" style="font-size: 3rem; font-weight: 800; color: #fff;">$5</span>
+                            <span id="easy-mix-price-val"
+                                style="font-size: 3rem; font-weight: 800; color: #fff;">$5</span>
                             <span style="font-size: 1rem; color: #888;">único</span>
                         </div>
                         <ul
@@ -1558,22 +2667,32 @@
                             </li>
                         </ul>
                         <!-- Direct PayPal Checkout -->
-                        <div id="plugin-paypal-button-container" style="margin-top: 0; min-height: 150px; width: 100%;"></div>
+                        <div id="plugin-paypal-button-container" style="margin-top: 0; min-height: 150px; width: 100%;">
+                        </div>
                         <!-- Botón Mercado Pago (Opción 3) -->
-                        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20comprar%20el%20plugin%20de%20easy%20mix" target="_blank" rel="noopener noreferrer"
+                        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20comprar%20el%20plugin%20de%20easy%20mix"
+                            target="_blank" rel="noopener noreferrer"
                             style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #009EE3; color: #ffffff; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-top: 12px; margin-bottom: 12px; text-decoration: none;">
-                            <img src="/images/payments/mercadopago.png" alt="Mercado Pago" style="width: 26px; height: 26px; object-fit: contain;">
+                            <img src="/images/payments/mercadopago.png" alt="Mercado Pago"
+                                style="width: 26px; height: 26px; object-fit: contain;">
                             Pagar con Mercado Pago
                         </a>
                         <!-- Botón Yape (Modal Instantáneo Mercado Pago Perú) -->
-                        <button type="button" data-action="open-yape-checkout" id="btn-yape-checkout" class="btn-yape-white">
-                            <img src="/images/payments/yape.png" alt="Yape" style="width: 22px; height: 22px; object-fit: contain; border-radius: 5px;">
+                        <button type="button" data-action="open-yape-checkout" id="btn-yape-checkout"
+                            class="btn-yape-white">
+                            <img src="/images/payments/yape.png" alt="Yape"
+                                style="width: 22px; height: 22px; object-fit: contain; border-radius: 5px;">
                             Pagar con Yape (Soles 🇵🇪)
                         </button>
                         <!-- Botón Binance (Opción 5) -->
-                        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20pagar%20con%20Binance%20el%20plugin%20de%20easy%20mix" target="_blank" rel="noopener noreferrer"
+                        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20pagar%20con%20Binance%20el%20plugin%20de%20easy%20mix"
+                            target="_blank" rel="noopener noreferrer"
                             style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #F0B90B; color: #000000; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-bottom: 0px; text-decoration: none;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4.5 9.5L7.33 12.33L12 7.66L16.67 12.33L19.5 9.5L12 2ZM4.5 14.5L2 12L4.5 9.5L7.33 12.33L4.5 14.5ZM19.5 14.5L16.67 12.33L19.5 9.5L22 12L19.5 14.5ZM12 22L4.5 14.5L7.33 11.67L12 16.34L16.67 11.67L19.5 14.5L12 22ZM12 13.5L9.17 10.67L12 7.84L14.83 10.67L12 13.5Z"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path
+                                    d="M12 2L4.5 9.5L7.33 12.33L12 7.66L16.67 12.33L19.5 9.5L12 2ZM4.5 14.5L2 12L4.5 9.5L7.33 12.33L4.5 14.5ZM19.5 14.5L16.67 12.33L19.5 9.5L22 12L19.5 14.5ZM12 22L4.5 14.5L7.33 11.67L12 16.34L16.67 11.67L19.5 14.5L12 22ZM12 13.5L9.17 10.67L12 7.84L14.83 10.67L12 13.5Z" />
+                            </svg>
                             Pagar con Binance
                         </a>
                     </div>
@@ -1691,7 +2810,6 @@
     <script src="/script/cart.js?v=21"></script>
     <script src="/script/notifications.js?v=21"></script>
     <script src="/script/footer.js?v=21"></script>
-    <script src="/script/navbar.js?v=21" type="module"></script>
 
     <!-- SERIAL KEY LOGIC -->
     <script>
@@ -1831,21 +2949,21 @@
             });
         });
     </script>
-    <div class="sticky-offer-banner">
-        <div class="sticky-offer-text">🚀 Obtener tu licencia de por vida</div>
-        <a href="#pricing-section" class="sticky-offer-btn">Lo quiero!</a>
-        <a href="#pricing-section" class="sticky-offer-mobile-link">Obtén tu licencia de por vida ➔</a>
-    </div>
+
 
     <!-- WhatsApp Floating Widget with Bubble -->
     <div class="whatsapp-widget-container" id="whatsapp-widget">
         <a href="https://wa.me/51993525005?text=Hola,%20quiero%20comprar%20el%20plugin%20de%20easy%20mix"
-            target="_blank" rel="noopener noreferrer" class="whatsapp-bubble-card" id="whatsapp-bubble-link" aria-label="Envíanos un mensaje de WhatsApp">
+            target="_blank" rel="noopener noreferrer" class="whatsapp-bubble-card" id="whatsapp-bubble-link"
+            aria-label="Envíanos un mensaje de WhatsApp">
             <span>Envíanos un mensaje de<br>WhatsApp</span>
-            <button type="button" class="whatsapp-bubble-close" onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('whatsapp-bubble-link').style.display='none';" aria-label="Cerrar mensaje">&times;</button>
+            <button type="button" class="whatsapp-bubble-close"
+                onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('whatsapp-bubble-link').style.display='none';"
+                aria-label="Cerrar mensaje">&times;</button>
         </a>
         <a href="https://wa.me/51993525005?text=Hola,%20quiero%20comprar%20el%20plugin%20de%20easy%20mix"
-            target="_blank" rel="noopener noreferrer" class="whatsapp-floating-btn" id="whatsapp-floating-btn" aria-label="Contactar por WhatsApp">
+            target="_blank" rel="noopener noreferrer" class="whatsapp-floating-btn" id="whatsapp-floating-btn"
+            aria-label="Contactar por WhatsApp">
             <i class="bi bi-whatsapp"></i>
         </a>
     </div>
@@ -1854,13 +2972,15 @@
         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
         <div onclick="event.stopPropagation()"
             style="background: #0d0d0d; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; padding: 35px 28px; max-width: 500px; width: 92%; text-align: center; color: #fff; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9); position: relative; transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
-            
+
             <button onclick="closeDownloadModal()"
                 style="position: absolute; top: 15px; right: 20px; font-size: 1.5rem; background: none; border: none; color: #888; cursor: pointer; transition: color 0.2s;"
                 onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">✕</button>
 
-            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px 20px;">
-                <h3 style="margin: 0 0 6px 0; font-size: 1.2rem; color: #ffffff; font-weight: 700;">Tu Licencia Actual</h3>
+            <div
+                style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px 20px;">
+                <h3 style="margin: 0 0 6px 0; font-size: 1.2rem; color: #ffffff; font-weight: 700;">Tu Licencia Actual
+                </h3>
                 <p style="color: rgba(255,255,255,0.55); font-size: 0.85rem; margin-bottom: 16px; line-height: 1.4;">
                     Pega esta clave dentro de Easy Mix en tu DAW para validarlo.
                 </p>
@@ -1871,7 +2991,8 @@
             </div>
 
             <div style="margin-top: 20px; font-size: 0.85rem; text-align: center;">
-                <a href="https://wa.me/51993525005?text=Hola!%20Tengo%20problemas%20al%20instalar%20Easy%20Mix%20VST" target="_blank" rel="noopener noreferrer"
+                <a href="https://wa.me/51993525005?text=Hola!%20Tengo%20problemas%20al%20instalar%20Easy%20Mix%20VST"
+                    target="_blank" rel="noopener noreferrer"
                     style="color: #ff9f0a; text-decoration: underline; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="bi bi-whatsapp"></i> ¿Problemas de instalación? Contáctanos para ayudarte
                 </a>
@@ -2017,6 +3138,56 @@
                     }
                 });
             });
+        })();
+    </script>
+    <!-- ==================== SCROLL ENGINES & REVEALS ==================== -->
+    <script>
+        // 1. Sticky Navbar: Pure IntersectionObserver on Hero (Zero scroll listener, zero lag)
+        (function () {
+            const nav = document.getElementById('em-navbar');
+            const hero = document.querySelector('.hero-section');
+            if (!nav || !hero) return;
+
+            const navObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    // When hero is intersecting near top, hide navbar; when user scrolls past hero, show navbar
+                    if (entry.isIntersecting) {
+                        nav.classList.remove('nav-visible');
+                    } else {
+                        nav.classList.add('nav-visible');
+                    }
+                });
+            }, {
+                threshold: 0,
+                rootMargin: "-60px 0px 0px 0px"
+            });
+
+            navObserver.observe(hero);
+        })();
+
+        // 2. Ultra-lightweight reveals: Native IntersectionObserver with 1-shot unobserve
+        (function () {
+            const revealElements = document.querySelectorAll('.em-reveal');
+            if (!revealElements.length) return;
+
+            if (!('IntersectionObserver' in window)) {
+                revealElements.forEach(el => el.classList.add('is-revealed'));
+                return;
+            }
+
+            const revealObserver = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-revealed');
+                        obs.unobserve(entry.target); // Free resources immediately
+                    }
+                });
+            }, {
+                threshold: 0.06,
+                rootMargin: "0px 0px -30px 0px"
+            });
+
+            revealElements.forEach(el => revealObserver.observe(el));
         })();
     </script>
     <script src="https://sdk.mercadopago.com/js/v2"></script>
