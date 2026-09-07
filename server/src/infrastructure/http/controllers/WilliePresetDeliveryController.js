@@ -7,13 +7,18 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getClientAndBucket } from '../../services/r2-storage.service.js';
 import { supabase } from '../../database/connection.js';
 
+import os from 'os';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Rutas de almacenamiento persistente
-const DATA_DIR = path.resolve(__dirname, '../../../data');
+// Rutas compatibles con Vercel Serverless (process.cwd()) y entornos locales
+const rootDir = process.env.VERCEL ? process.cwd() : path.resolve(__dirname, '../../../../');
+const DATA_DIR = process.env.VERCEL
+    ? path.join(os.tmpdir(), 'offszn-data')
+    : path.join(rootDir, 'server/data');
 const DELIVERIES_FILE = path.join(DATA_DIR, 'willie_deliveries.json');
-const CATALOG_PATH = path.resolve(__dirname, '../../../../../willieinspired/data/artist-presets-catalog.json');
+const CATALOG_PATH = path.join(rootDir, 'willieinspired/data/artist-presets-catalog.json');
 
 // Cargar catálogo de presets en memoria
 let artistCatalog = [];
@@ -30,34 +35,42 @@ function loadCatalog() {
 }
 loadCatalog();
 
-// Inicializar almacenamiento de entregas
+// Almacenamiento en memoria con persistencia en disco tolerante a fallos
+let inMemoryDeliveries = {};
+
 function ensureDataDir() {
-    if (!fs.existsSync(DATA_DIR)) {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    if (!fs.existsSync(DELIVERIES_FILE)) {
-        fs.writeFileSync(DELIVERIES_FILE, JSON.stringify({}), 'utf8');
+    try {
+        if (!fs.existsSync(DATA_DIR)) {
+            fs.mkdirSync(DATA_DIR, { recursive: true });
+        }
+        if (!fs.existsSync(DELIVERIES_FILE)) {
+            fs.writeFileSync(DELIVERIES_FILE, JSON.stringify({}), 'utf8');
+        }
+    } catch (e) {
+        // En Vercel o sistemas de solo lectura se ignora silenciosamente
     }
 }
-ensureDataDir();
 
 function readDeliveries() {
     try {
         ensureDataDir();
-        const content = fs.readFileSync(DELIVERIES_FILE, 'utf8');
-        return JSON.parse(content || '{}');
+        if (fs.existsSync(DELIVERIES_FILE)) {
+            const content = fs.readFileSync(DELIVERIES_FILE, 'utf8');
+            return JSON.parse(content || '{}');
+        }
     } catch (e) {
-        console.error('[WillieDelivery] Error leyendo willie_deliveries.json:', e.message);
-        return {};
+        console.warn('[WillieDelivery] Error leyendo willie_deliveries.json, usando memoria:', e.message);
     }
+    return inMemoryDeliveries;
 }
 
 function writeDeliveries(data) {
+    inMemoryDeliveries = data;
     try {
         ensureDataDir();
         fs.writeFileSync(DELIVERIES_FILE, JSON.stringify(data, null, 2), 'utf8');
     } catch (e) {
-        console.error('[WillieDelivery] Error guardando willie_deliveries.json:', e.message);
+        console.warn('[WillieDelivery] No se pudo persistir en disco (guardado en memoria):', e.message);
     }
 }
 

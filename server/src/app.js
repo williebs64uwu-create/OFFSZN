@@ -423,6 +423,14 @@ app.get(['/plugin/easy-mix', '/plugin/easy-mix.html'], (req, res) => {
     return res.sendFile(path.join(rootPath, 'plugins/easy-mix.html'));
 });
 
+app.get(['/plugins/easy-mix', '/plugins/easy-mix.html'], (req, res) => {
+    const pluginsLandingPath = path.join(rootPath, 'plugins/easy-mix.html');
+    if (fs.existsSync(pluginsLandingPath)) {
+        return res.sendFile(pluginsLandingPath);
+    }
+    return res.sendFile(path.join(rootPath, 'plugin/easy-mix.html'));
+});
+
 // --- 3.0.1 WILLIE INSPIRED DEDICATED DIRECT ROUTES (Clean URLs without redirects) ---
 app.get(['/willieinspired', '/@willieinspired'], (req, res) => {
     const willieLandingPath = path.join(rootPath, 'willieinspired/index.html');
