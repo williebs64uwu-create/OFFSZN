@@ -461,8 +461,8 @@ app.get(['/pan/lic', '/pan/lic/', '/pan/lic/index.html'], (req, res) => {
 
 // B. Clean URLs (Force Redirects & Internal Rewrites)
 app.use((req, res, next) => {
-    // Skip API routes, willieinspired, pan/lic, and FFmpeg/Debug folders to avoid loops or blocking
-    const skipPaths = ['/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js', '/components', '/willieinspired', '/@willieinspired', '/pan/lic'];
+    // Skip API routes, willieinspired, pan/lic, music assets, and FFmpeg/Debug folders to avoid loops or blocking
+    const skipPaths = ['/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js', '/components', '/willieinspired', '/@willieinspired', '/pan/lic', '/music-raw-to-defined'];
     if (skipPaths.some(p => req.path.startsWith(p))) return next();
 
     // 1. Force Redirect: Remove .html from browser address bar
@@ -507,6 +507,14 @@ app.use((req, res, next) => {
 // Use rootPath-relative paths so they work on both local and Vercel
 const publicPath = path.join(rootPath, 'public');
 const serverPublicPath = path.join(rootPath, 'server/public');
+const musicPath = path.join(rootPath, 'music-raw-to-defined');
+
+app.use('/music-raw-to-defined', express.static(musicPath, {
+    maxAge: '7d',
+    setHeaders: (res) => {
+        res.setHeader('Accept-Ranges', 'bytes');
+    }
+}));
 app.use(express.static(publicPath));
 app.use(express.static(serverPublicPath));
 
@@ -1018,6 +1026,9 @@ app.get([
 app.get(['/@:username/:slug', '/:username/:slug'], async (req, res, next) => {
     const { username, slug } = req.params;
 
+    // Fast-fail if this looks like a file or static asset
+    if (username.includes('.') || (slug && slug.includes('.'))) return next();
+
     // Custom product landings for willieinspired
     if (username === 'willieinspired') {
         const customProductPath = path.join(rootPath, 'willieinspired', `${slug}.html`);
@@ -1032,7 +1043,7 @@ app.get(['/@:username/:slug', '/:username/:slug'], async (req, res, next) => {
     // 1. Reserved Words Exclusion (same as profile)
     const reserved = ['api', 'auth', 'dashboard', 'login', 'register', 'admin', 'pages', 'legal', 'studio', 'comunidad', 'cursos',
         'plugins', 'css', 'script', 'scripts', 'libs', 'images', 'components', 'recursos', 'public', 'style', 'fonts',
-        'videos', 'ayuda', 'build', 'cuenta', 'store-builder', 'offszn_flow', 'upload', 'previews'];
+        'videos', 'ayuda', 'build', 'cuenta', 'store-builder', 'offszn_flow', 'upload', 'previews', 'music-raw-to-defined'];
     if (reserved.includes(username)) return next();
 
     try {
@@ -1044,6 +1055,8 @@ app.get(['/@:username/:slug', '/:username/:slug'], async (req, res, next) => {
             .select('nickname, avatar_url, socials')
             .eq('nickname', username)
             .single();
+
+        if (!user) return next();
 
         let html = fs.readFileSync(playlistPagePath, 'utf8');
 
@@ -1119,7 +1132,7 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
         'preferencias', 'favoritos', 'historial', 'mensajes', 'perfilpro',
         'siguiendo', 'search', 'comunidad', 'cursos', 'legal', 'recursos', 'planes', 'cuenta',
         'plugins', 'libs', 'style', 'fonts', 'videos', 'ayuda', 'build', 'public',
-        'store-builder', 'upload', 'previews', 'offszn_flow', 'studio'
+        'store-builder', 'upload', 'previews', 'offszn_flow', 'studio', 'music-raw-to-defined'
     ];
     if (reserved.includes(username)) return next();
 
