@@ -5,13 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Checkout • Willie Inspired</title>
-    <link rel="icon" type="image/png" href="/willieimages/HERO.png">
+    <link rel="icon" type="image/png" href="/willieimages/logo-og.png">
+    <link rel="shortcut icon" href="/willieimages/favicon.ico">
+    <link rel="apple-touch-icon" href="/willieimages/logo-og.png">
     <!-- Google Fonts: Inter / Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Preconnect a Servidores de PayPal (Acelera apertura de Tarjeta y verificación bancaria) -->
+    <link rel="preconnect" href="https://www.paypal.com">
+    <link rel="preconnect" href="https://www.paypalobjects.com" crossorigin>
+    <link rel="dns-prefetch" href="https://c.paypal.com">
     <!-- Environment Variables (PayPal Client ID, Supabase, etc.) -->
     <script src="/env.js"></script>
     <!-- Mercado Pago SDK v2 -->
@@ -3121,30 +3126,30 @@
                 return;
             }
 
-            const totalUSD = getCalculatedTotalUSD();
-            const totalPEN = getCalculatedTotalPEN();
-
             const itemsListText = cartItems.map(item => {
                 const isPlugin = item.type === 'plugin' || (item.name && item.name.toLowerCase().includes('plugin'));
-                const sysText = isPlugin ? ` [${(item.os || 'WIN').toUpperCase()}]` : ' [Solo FL Studio]';
-                return `• ${item.name}${sysText} x${item.quantity || 1} - $${(item.price * (item.quantity || 1)).toFixed(2)} USD`;
+                const sysText = isPlugin ? ` [${(item.os || 'WIN').toUpperCase()}]` : '';
+                const qtyText = (item.quantity && item.quantity > 1) ? ` (x${item.quantity})` : '';
+                return `• ${item.name}${sysText}${qtyText}`;
             }).join('\n');
 
             const customerEmail = getEffectiveEmail();
 
-            let msg = `¡Hola Willie! 👋 Quiero realizar una compra en tu tienda oficial:\n\n`;
-            msg += `🛒 *PEDIDO:*\n${itemsListText}\n\n`;
-            msg += `💰 *TOTAL A PAGAR:* $${totalUSD.toFixed(2)} USD (aprox. S/. ${totalPEN} Soles)\n`;
-            if (customerEmail) msg += `📧 *Mi correo de entrega:* ${customerEmail}\n`;
+            let msg = `¡Hola Willie! 👋 Quiero comprar:\n\n`;
+            msg += `${itemsListText}\n\n`;
+
+            if (customerEmail) {
+                msg += `📧 *Mi correo de entrega:* ${customerEmail}\n\n`;
+            }
 
             if (type === 'mercadopago') {
-                msg += `\n💳 Deseo pagar mediante *Mercado Pago / Transferencia Bancaria (BCP / BBVA / Interbank)*. ¿Me envías los datos de pago por favor? 🚀`;
+                msg += `💳 Deseo pagar mediante *Mercado Pago*. ¿Me envías los datos o link de pago por favor? 🚀`;
             } else {
-                msg += `\n¿Cuáles son los datos de pago para transferencia / Binance USDT / Western Union? Quedo atento. 🚀`;
+                msg += `💳 Deseo pagar por transferencia / Binance USDT / Western Union. ¿Me envías los datos por favor? 🚀`;
             }
 
             const encodedMsg = encodeURIComponent(msg);
-            const whatsappUrl = `https://wa.me/51921839257?text=${encodedMsg}`;
+            const whatsappUrl = `https://wa.me/51993525005?text=${encodedMsg}`;
 
             window.open(whatsappUrl, '_blank');
         }
