@@ -140,7 +140,7 @@ const CartManager = {
                 // AUTH: Load from DB
                 const { data, error } = await supabaseClient
                     .from('cart_items')
-                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id, status, storage_version, r2_version, promo_active, promo_buy_qty, promo_get_qty, licenses, producer:producer_id(*))')
+                    .select('quantity, license_name, variant_price, product:products(id, name, price_basic, image_url, product_type, producer_id, status, storage_version, r2_version, promo_active, promo_buy_qty, promo_get_qty, licenses, producer:producer_id(id, nickname, first_name, last_name, avatar_url, is_verified, license_settings))')
                     .eq('user_id', this.state.user.id);
 
                     if (!error && data) {
@@ -289,7 +289,7 @@ const CartManager = {
                 // Fetch from DB if not in cache
                 const { data, error } = await window.supabaseClient
                     .from('products')
-                    .select('*, producer:producer_id(*)')
+                    .select('*, producer:producer_id(id, nickname, first_name, last_name, avatar_url, is_verified, license_settings)')
                     .eq('id', productId)
                     .single();
                 

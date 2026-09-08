@@ -59,10 +59,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         // --- CONCURRENT FETCH 1: Session & Product ---
         let productPromise = null;
+        // Safe columns for joined producer profile (aligns with hardened Supabase security)
+        const PRODUCER_FIELDS = 'id, nickname, first_name, last_name, avatar_url, bio, role, is_producer, is_verified, banner_url, license_settings';
+
         if (urlData.id) {
-            productPromise = window.supabaseClient.from('products').select(`*, producer:producer_id (*)`).eq('id', urlData.id).neq('status', 'deleted').maybeSingle();
+            productPromise = window.supabaseClient.from('products').select(`*, producer:producer_id (${PRODUCER_FIELDS})`).eq('id', urlData.id).neq('status', 'deleted').maybeSingle();
         } else if (urlData.slug) {
-            productPromise = window.supabaseClient.from('products').select(`*, producer:producer_id (*)`).eq('public_slug', urlData.slug).neq('status', 'deleted').maybeSingle();
+            productPromise = window.supabaseClient.from('products').select(`*, producer:producer_id (${PRODUCER_FIELDS})`).eq('public_slug', urlData.slug).neq('status', 'deleted').maybeSingle();
         } else {
             productPromise = Promise.resolve({ data: null, error: new Error("Invalid URL params") });
         }
@@ -87,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Attempt 2: Slug Lookup (Fallback if ID failed or was invalid/collision)
         if (!product && urlData.id && urlData.slug) {
-            const fallbackRes = await window.supabaseClient.from('products').select(`*, producer:producer_id (*)`).eq('public_slug', urlData.slug).neq('status', 'deleted').maybeSingle();
+            const fallbackRes = await window.supabaseClient.from('products').select(`*, producer:producer_id (${PRODUCER_FIELDS})`).eq('public_slug', urlData.slug).neq('status', 'deleted').maybeSingle();
             product = fallbackRes.data;
             if (fallbackRes.error) error = fallbackRes.error;
         }

@@ -345,39 +345,302 @@ end;
 
 ---
 
-## 💳 Phase 6: Web Landing Page, Yape Bricks & Instant Fulfillment Architecture
+## 🌐 Phase 6: High-Converting Plugin Landing Page Design System & Checkout Architecture
 
-When publishing a new OFFSZN plugin or building its sales landing page, integrating the **Yape (Mercado Pago Perú)** instant checkout is mandatory alongside PayPal.
+When publishing a new OFFSZN plugin or building its sales/trial landing pages, always adhere to the following **High-Converting Design System** and **Instant Fulfillment Pipeline**.
+
+### 🔄 The Dual Landing Page Strategy
+Every OFFSZN plugin uses a two-tier landing page system:
+1. **Public Showcase Landing (`/plugins/<plugin-slug>.html`):** The organic exploration page. Includes free trial/demo download modals, tutorial video, full feature deep-dives, technical specifications, and the lifetime purchase CTA at the bottom.
+2. **Direct Sales & Ads Landing (`/plugin/<plugin-slug>.html`):** The high-velocity conversion page for ad traffic (Meta, TikTok, Google Ads). Eliminates friction, anchors immediately to `#pricing-section`, features dynamic A/B promo pricing ($5, $10, $15, $20), and triggers instant checkout modals (Yape, PayPal, Mercado Pago, Binance).
+
+> **Universal Rule:** Both landing pages **MUST** share the identical state-of-the-art visual design, Hero layout, pure white high-contrast CTA buttons, smart floating navbar, interactive audio comparison ("Antes vs Después"), continuous 2-row testimonials marquee, and unified philosophy banner.
+
+---
+
+### 🎨 Part A: Premium Landing Page Design System & Architecture
+
+All OFFSZN plugin landings must look state-of-the-art, high-tech, and extremely polished. Never produce flat, generic, or empty MVPs.
 
 ```mermaid
-sequenceDiagram
-    participant User as Customer (Peru)
-    participant LP as Landing Page (yape-checkout.js)
-    participant MP as Mercado Pago SDK (JS v2)
-    participant BE as OFFSZN Server (YapeController.js)
-    participant MPApi as Mercado Pago Payments API (v1)
-    participant SB as Supabase DB & Mailer
-
-    User->>LP: Clicks "Pagar con Yape (Soles 🇵🇪)"
-    LP->>BE: GET /api/orders/yape/config
-    BE-->>LP: { publicKey, exchangeRate: 3.30 }
-    LP->>LP: Calculate price in Soles (USD * 3.30)
-    User->>LP: Inputs Phone + 6-digit OTP from Yape App
-    LP->>MP: mpInstance.yape({ otp, phoneNumber, amount: pricePEN })
-    MP-->>LP: yapeToken (Authorized Token)
-    LP->>BE: POST /api/orders/yape/charge { token, email, phoneNumber, productId, customPrice }
-    BE->>MPApi: POST /v1/payments { token, transaction_amount, installments: 1, payment_method_id: 'yape', ... }
-    MPApi-->>BE: { status: "approved", id: "..." }
-    BE->>SB: Generate FULL Serial Key + Save Order in DB
-    BE->>SB: Send automated fulfillment email with downloads & serial
-    BE-->>LP: { success: true, serialKey, downloads }
-    LP->>User: Displays Instant Success Screen (Copy Key + Download Buttons)
+graph TD
+    A[Top Announcement Bar (Fixed at top: 0)] --> B[Hero Section (Ambient Mesh BG + White CTA + Glowing Mockup)]
+    B --> C[Fixed Glassmorphic Navbar (Auto-shows on scroll, Auto-hides on #pricing-section)]
+    C --> D[Interactive Audio Comparison (Antes vs Después + Lazy WaveSurfer.js)]
+    D --> E[DAW & OS Compatibility Grid (FL Studio, Ableton, Logic, Mac/Win)]
+    E --> F[2-Row Infinite Marquee Testimonials (Continuous loop, hover pause, Lightbox)]
+    F --> G[Double-Column Pricing Section (Desktop: checks left + card right | Mobile: card first)]
+    G --> H[Interactive FAQ Accordion]
+    H --> I[Unified Tagline CTA + Philosophy Statement Banner]
 ```
 
-### 🛡️ Mandatory Technical Rules for Yape Checkout:
+#### 1. Core Visual Identity & High-Contrast White CTA Standards
+- **Background:** Deep rich black (`#0a0a0a` to `#000000`).
+- **Typography:** Google Font **Geist** (`font-family: 'Geist', sans-serif`), with titles in `font-weight: 800` and tight line-height (`1.1` to `1.15`).
+- **High-Contrast Primary White CTA Button:**
+  In dark-mode UI, colored buttons (purple, green, blue) blend into the dark background and reduce visual priority. **Always use pure white (`#ffffff`) with deep black text (`#000000`) and ultra-bold weight (`800`)** for maximum visual pop, instant readability, and highest conversion rates.
+  ```css
+  .btn-free-download, .btn-primary-white {
+      background: #ffffff;
+      color: #000000 !important;
+      padding: 15px 36px;
+      border-radius: 100px;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 1.05rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ffffff;
+      gap: 8px;
+      cursor: pointer;
+  }
+  .btn-free-download:hover, .btn-primary-white:hover {
+      transform: translateY(-2px) scale(1.02);
+      background: #f0f0f0;
+      box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
+  }
 
-#### 1. Frontend Landing Page Integration (`plugins/<plugin-slug>.html`)
-- **Trigger Button:** Use the standardized high-contrast `.btn-yape-white` button directly beneath PayPal/Mercado Pago.
+  /* Compact Navbar White CTA */
+  .em-nav-cta {
+      background: #ffffff;
+      color: #000000 !important;
+      font-weight: 800;
+      font-size: 0.88rem;
+      padding: 8px 18px;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+  }
+  .em-nav-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.25);
+  }
+  ```
+- **Lightweight Reveal Animations (`.em-reveal`):**
+  Use native `IntersectionObserver` with 1-shot `unobserve` for 60fps scrolling without CPU lag:
+  ```css
+  .em-reveal {
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+  }
+  .em-reveal.is-revealed {
+      opacity: 1;
+      transform: translateY(0);
+  }
+  ```
+
+#### 2. Fixed Top Announcement Bar (`.top-announcement-bar`)
+Always placed at the very top of `<body>`, fixed at `top: 0`, height `40px` (`38px` on mobile), with emerald gradient:
+```html
+<a href="#pricing-section" class="top-announcement-bar" id="top-announcement-bar" title="Obtener licencia">
+    <div class="top-announcement-content">
+        <span class="top-announcement-text">🚀 Obtén tu <strong>licencia de por vida</strong> de <PluginName></span>
+        <span class="top-announcement-arrow" aria-hidden="true"><i class="bi bi-arrow-right"></i></span>
+    </div>
+</a>
+```
+- **CSS:**
+  ```css
+  .top-announcement-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 40px;
+      background: linear-gradient(90deg, #022c22 0%, #064e3b 50%, #022c22 100%);
+      border-bottom: 1px solid rgba(52, 211, 153, 0.25);
+      z-index: 1050;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: #ffffff;
+      font-size: 0.88rem;
+      transition: transform 0.3s ease;
+  }
+  body { padding-top: 40px; }
+  ```
+
+#### 3. Smart Floating Sticky Navbar (`.em-navbar`)
+A fixed navigation bar that coordinates dynamically with page scroll:
+- **Hidden in Hero:** When the user is at the top of the page, the navbar stays hidden (`transform: translateY(-100%)`). Only the top announcement bar is visible.
+- **Visible on Content:** When scrolling past the Hero, it slides down with glassmorphism (`background: rgba(10, 10, 12, 0.96); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.08);`).
+- **Interactive Pill Links:** Includes `"Cómo Suena"` with an animated emerald pulse dot (`#10b981`) and `"Resultados"` with an amber star icon.
+- **⚠️ Smart Hide at Checkout:** When user reaches `#pricing-section`, the navbar automatically slides up to leave the checkout card completely unobstructed.
+
+```html
+<nav class="em-navbar" id="em-navbar" aria-label="Navegación del Plugin">
+    <div class="em-nav-container">
+        <a href="#" class="em-nav-brand">
+            <span class="brand-text">OFFSZN <span class="brand-badge-pill"><PluginName></span></span>
+        </a>
+        <div class="em-nav-links">
+            <a href="#audio-comparison" class="em-nav-link"><span class="em-nav-dot"></span> Cómo Suena</a>
+            <a href="#testimonios" class="em-nav-link"><i class="bi bi-star-fill text-warning"></i> Resultados</a>
+            <a href="#pricing-section" class="em-nav-cta"><i class="bi bi-lightning-charge-fill"></i> Obtener Licencia</a>
+        </div>
+    </div>
+</nav>
+```
+
+```javascript
+// ✅ Smart Navbar Transition Script
+(function () {
+    const nav = document.getElementById('em-navbar');
+    const hero = document.querySelector('.hero-section');
+    const pricing = document.getElementById('pricing-section');
+    if (!nav || !hero || !pricing) return;
+
+    let pastHero = false;
+    let reachedPricing = false;
+
+    function updateNavbarState() {
+        if (pastHero && !reachedPricing) {
+            nav.classList.add('nav-visible');
+        } else {
+            nav.classList.remove('nav-visible');
+        }
+    }
+
+    const heroObserver = new IntersectionObserver(entries => {
+        entries.forEach(e => { pastHero = !e.isIntersecting; updateNavbarState(); });
+    }, { threshold: 0, rootMargin: "-40px 0px 0px 0px" });
+    heroObserver.observe(hero);
+
+    const pricingObserver = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            reachedPricing = e.isIntersecting || (e.boundingClientRect.top <= 60);
+            updateNavbarState();
+        });
+    }, { threshold: [0, 0.05, 0.1], rootMargin: "-60px 0px 0px 0px" });
+    pricingObserver.observe(pricing);
+})();
+```
+
+#### 4. Hero Section Standard
+The Hero must create an immediate "WOW" factor with layered atmospheric background, punchy typography, high-contrast white CTA, and glowing UI mockup render:
+```html
+<header class="hero-section text-center position-relative overflow-hidden">
+    <!-- Ambient Layered Background -->
+    <div class="hero-bg-layer has-bg" style="background-image: url('/images/hero-bgs/hero-bg-5.png');">
+        <div class="hero-mesh"></div>
+        <div class="hero-bottom-fade"></div>
+    </div>
+
+    <div class="container position-relative z-1">
+        <!-- Floating Pill / Offer Badge -->
+        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3 hero-badge">
+            <span class="live-dot pulse"></span>
+            <span class="badge-text">OFERTA DE LANZAMIENTO DISPONIBLE</span>
+        </div>
+
+        <!-- Geist 800 Title -->
+        <h1 class="hero-title" style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; background: none !important; font-size: clamp(2.4rem, 6.5vw, 4.2rem); line-height: 1.1; margin-bottom: 14px; font-weight: 800;">
+            Voces pro al instante <br> con nombres fáciles!
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="hero-sub mx-auto" style="max-width: 640px; font-size: 1.15rem; color: #a1a1aa; line-height: 1.5; margin-bottom: 24px;">
+            El plugin VST3/AU de mezcla vocal que transforma grabaciones crudas en voces listas para Spotify con un solo clic.
+        </p>
+
+        <!-- Primary High-Contrast White CTA Button -->
+        <div class="d-flex justify-content-center gap-3 align-items-center flex-wrap mb-4">
+            <a href="#pricing-section" class="btn-free-download">
+                <i class="bi bi-download"></i> Descargar Plugin Ahora
+            </a>
+        </div>
+
+        <!-- Trust Badges Row -->
+        <div class="hero-trust-row d-flex justify-content-center align-items-center gap-4 text-secondary small mb-4">
+            <span><i class="bi bi-windows me-1"></i> Windows & Mac (VST3/AU)</span>
+            <span><i class="bi bi-shield-check me-1"></i> Activación Vitalicia</span>
+            <span><i class="bi bi-cpu me-1"></i> Apple Silicon Nativo</span>
+        </div>
+
+        <!-- Glowing Mockup Container -->
+        <div class="hero-image-container" style="max-width: 860px; margin: 24px auto 0;">
+            <img src="/images/plugins/<mockup>.png" alt="Plugin Interface" width="990" height="500"
+                style="width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 30px 70px rgba(0,0,0,0.7), 0 0 50px rgba(16, 185, 129, 0.18);">
+        </div>
+    </div>
+</header>
+```
+- **CSS Architecture for Hero:**
+  ```css
+  .hero-section {
+      padding: 90px 20px 60px;
+      position: relative;
+      background: #000000;
+  }
+  .hero-bg-layer.has-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center top;
+      background-repeat: no-repeat;
+      pointer-events: none;
+      z-index: 0;
+  }
+  .hero-bottom-fade {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 180px;
+      background: linear-gradient(to bottom, transparent, #000000);
+  }
+  ```
+
+#### 5. Interactive Audio Comparison ("Antes vs Después")
+- **Dark Glass Cards (`.audio-glass-card`):** Dark frosted cards with border-radius `18px`, inner border, and hover glow.
+- **WaveSurfer.js Lazy Loading:**
+  Only inject `/libs/wavesurfer.min.js` when the `#audio-comparison` section is within `300px` of the viewport via `IntersectionObserver`.
+
+#### 6. Continuous 2-Row Infinite Marquee Testimonials
+- **Structure:**
+  - Header: Badge `★ TESTIMONIOS & FEEDBACK`, Title `Lo que dicen los artistas y productores`, Subtitle explaining real producer feedback.
+  - `.testi-carousel-wrapper`: Uses `-webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)` for smooth edge fading.
+  - **Row 1:** `.testi-marquee-group.scroll-left` + duplicate group with `aria-hidden="true"`.
+  - **Row 2:** `.testi-marquee-group.scroll-right` + duplicate group with `aria-hidden="true"`.
+  - **Keyframe Animation:**
+    ```css
+    @keyframes scrollLeft { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+    .scroll-left { animation: scrollLeft 38s linear infinite; }
+    .scroll-right { animation: scrollRight 42s linear infinite; }
+    .testi-carousel-wrapper:hover .testi-marquee-group { animation-play-state: paused; }
+    ```
+  - **Interactive Fullscreen Lightbox (`#lightbox-overlay`):** Clicking any review card opens the screenshot in high-resolution zoom with backdrop blur and escape/close triggers.
+
+#### 7. Unified Tagline + Philosophy Statement Section
+- **Eliminate Dead Spacing:** Combine the final CTA and the philosophy image in one compact `<section class="tagline-section">` with `padding: 70px 20px 30px;`.
+- **Primary White CTA:** `"Empieza Hoy con <Plugin>. Lleva tus voces al siguiente nivel"` with direct button to `#pricing-section`.
+- **Philosophy Banner Image:** Embedded directly below the button (e.g., `/images/plugins/chatgpt-image-6-sept-2026-13_11_35.png`: *"DISEÑADO PARA QUE ESCUCHES EL RESULTADO, NO PARA QUE MIRES 100 PARÁMETROS"*), with `max-width: 900px; border-radius: 14px; opacity: 0.95;`.
+- **Zero Gap Between Statements:** The CTA and the philosophy image belong together at the end of the page as a single unified closing argument.
+
+#### 8. Pricing Section Architecture (Desktop Double-Column & Fast Mobile Flow)
+- **Desktop Layout:** Two-column grid (`grid-template-columns: 1.15fr 460px; gap: 54px; max-width: 1120px; text-align: left;`).
+  - **Left Column:** Big headline `"Obtén tu licencia de por vida de <Plugin>"`, subtitle, and vertical `.pricing-checks-list` with green checkmarks.
+  - **Right Column:** Focused pricing card with price, "Pago único", and payment buttons.
+- **Mobile Checkout Optimization (`@media (max-width: 768px)`):**
+  - Payment card is displayed **first** for instant friction-free checkout.
+  - Benefits and checks appear **underneath** the card.
+  - Long marketing paragraphs and redundant titles are suppressed on mobile to minimize scrolling to payment buttons.
+
+---
+
+### 💳 Part B: Yape, Mercado Pago & Multi-Gateway Instant Fulfillment Pipeline
+
+When selling an OFFSZN plugin, integrating the **Yape (Mercado Pago Perú)** instant modal checkout is mandatory alongside PayPal, card links, and Binance.
+
 ```html
 <!-- Botón Yape (Modal Instantáneo Mercado Pago Perú) -->
 <button type="button" data-action="open-yape-checkout" id="btn-yape-checkout" class="btn-yape-white">

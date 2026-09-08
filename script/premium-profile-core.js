@@ -24,7 +24,7 @@
         try {
             // 1. Fetch live data from Supabase
             const [userRes, productsRes, configRes, currentUser] = await Promise.all([
-                supabase.from('users').select('*').eq('id', userId).single(),
+                supabase.from('users').select('id, nickname, first_name, last_name, avatar_url, bio, role, is_producer, is_verified, banner_url, license_settings, socials, created_at, plan').eq('id', userId).single(),
                 supabase.from('products').select('*').eq('producer_id', userId).eq('visibility', 'public').order('created_at', { ascending: false }),
                 supabase.from('store_configs').select('config_json').eq('user_id', userId).maybeSingle(),
                 AuthUtils.getCurrentUser()
