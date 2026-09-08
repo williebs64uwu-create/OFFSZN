@@ -1,6 +1,16 @@
 // AuthUtils is loaded globally via <script> in feed.html
 const AuthUtils = window.AuthUtils;
 
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initFeed();
     initModal();
@@ -310,15 +320,15 @@ function createActivityCard(activity) {
         case 'custom_request':
             contentHtml = `
                 <div class="activity-text" style="padding: 10px 0;">
-                    necesita ayuda: <span style="color: #fff; font-style: italic;">"${metadata.description}"</span>
-                    <div style="margin-top: 10px; font-size: 0.8rem; color: #777;">Presupuesto: <strong style="color: #fff;">${metadata.budget ? `$${metadata.budget}` : 'A convenir'}</strong></div>
+                    necesita ayuda: <span style="color: #fff; font-style: italic;">"${escapeHTML(metadata.description || '')}"</span>
+                    <div style="margin-top: 10px; font-size: 0.8rem; color: #777;">Presupuesto: <strong style="color: #fff;">${metadata.budget ? `$${escapeHTML(metadata.budget)}` : 'A convenir'}</strong></div>
                 </div>
                 <button class="btn-buy-feed btn-view-activity" style="width: 100%; justify-content: center; margin-top: 10px; background: #fff; color: #000; text-transform: uppercase;">Ver detalles</button>
             `;
             break;
 
         case 'user_joined':
-            const bioText = activity.metadata?.bio ? `<p class="welcome-bio">"${activity.metadata.bio}"</p>` : '';
+            const bioText = activity.metadata?.bio ? `<p class="welcome-bio">"${escapeHTML(activity.metadata.bio)}"</p>` : '';
             const socialsObj = activity.metadata?.socials || {};
             
             let socialsHtml = '';

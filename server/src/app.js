@@ -53,6 +53,25 @@ const app = express();
 app.disable('x-powered-by'); // Deshabilita el header que delata el uso de Express
 app.set('trust proxy', 1); // Confiar en el proxy de Render para express-rate-limit
 
+// --- 0. ANTI PATH-TRAVERSAL & DIRECTORY PROBING DEFENSE ---
+app.use((req, res, next) => {
+    const rawUrl = req.url || '';
+    const origUrl = req.originalUrl || '';
+    
+    // Reject any path traversal attempt with '..' or URL-encoded '%2e%2e'
+    if (
+        rawUrl.includes('..') ||
+        origUrl.includes('..') ||
+        rawUrl.toLowerCase().includes('%2e%2e') ||
+        origUrl.toLowerCase().includes('%2e%2e')
+    ) {
+        return res.status(403).json({
+            error: 'Acceso denegado: Secuencia de ruta no permitida (403 Forbidden).'
+        });
+    }
+    next();
+});
+
 // --- AGENT HUB OBFUSCATION KEY ---
 const AGENT_ACCESS_KEY = process.env.AGENT_ACCESS_KEY;
 
