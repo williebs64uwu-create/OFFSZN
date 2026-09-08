@@ -379,6 +379,18 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
             key = key.split('?')[0];
         }
 
+        // 🔒 SECURITY GUARD: NEVER serve master audio or secure files via public proxy!
+        // The public proxy is strictly for previews (MP3, covers, avatars, waveforms, banners).
+        const lowerKey = key.toLowerCase();
+        const isMasterAudioOrArchive = /\.(wav|zip|rar|7z)$/i.test(lowerKey);
+        const isSecureFolder = lowerKey.includes('secure-products') && !lowerKey.includes('/mp3_tagged/');
+
+        if (isMasterAudioOrArchive || isSecureFolder) {
+            return res.status(403).json({
+                error: 'Acceso no autorizado: Los archivos maestros y productos de pago requieren verificación de compra.'
+            });
+        }
+
         // 1. Check PERFORMANCE CACHE first
         const cacheHit = resolveCache.get(key);
         if (cacheHit) {
