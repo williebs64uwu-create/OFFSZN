@@ -384,7 +384,14 @@ function renderExploreFeed() {
     // Define preset criteria for filtering
     // Define preset criteria for filtering (incluyendo variaciones de la DB)
     const presetCriteria = (p) => {
+        const title = (p.title || p.name || '').toLowerCase();
+        // Excluir plugins de audio como Easy Mix del carrusel de presets de voces
+        if (title.includes('easy mix') || title.includes('easy master') || title.includes('inka kola') || title.includes('coca cola') || title.includes('plugin')) {
+            return false;
+        }
         const type = (p.product_type || '').toLowerCase();
+        if (type === 'plugin' || type === 'vst' || type === 'software') return false;
+
         const cat = (p.category || '').toLowerCase();
         return type === 'preset' || type === 'vocalpreset' || type.includes('preset') ||
             type === 'template' || type === 'plantilla' ||
@@ -433,7 +440,7 @@ function renderExploreFeed() {
 
     // 6. SHELF: PRESETS
     const presets = allProducts
-        .filter(p => !usedProductIds.has(p.id) && presetCriteria(p) && !p.public_slug?.startsWith('deleted'))
+        .filter(p => !usedProductIds.has(p.id) && presetCriteria(p) && !p.public_slug?.startsWith('deleted') && !(p.title || p.name || '').toLowerCase().includes('easy mix'))
         .slice(0, EXPLORE_CONFIG.CAROUSEL_LIMIT);
 
     if (presets.length > 0) {

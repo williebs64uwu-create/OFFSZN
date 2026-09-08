@@ -382,12 +382,13 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         }
 
         // 🔒 SECURITY GUARD: NEVER serve master audio or secure files via public proxy!
-        // The public proxy is strictly for previews (MP3, covers, avatars, waveforms, banners).
+        // The public proxy is strictly for previews (MP3, audio demos, covers, avatars, waveforms, banners).
         const lowerKey = key.toLowerCase();
-        const isMasterAudioOrArchive = /\.(wav|zip|rar|7z)$/i.test(lowerKey);
+        const isArchive = /\.(zip|rar|7z)$/i.test(lowerKey);
+        const isMasterBeatWav = lowerKey.includes('beats/wav/') || lowerKey.includes('/untagged/') || lowerKey.includes('/stems/');
         const isSecureFolder = lowerKey.includes('secure-products') && !lowerKey.includes('/mp3_tagged/');
 
-        if (isMasterAudioOrArchive || isSecureFolder) {
+        if (isArchive || isMasterBeatWav || isSecureFolder) {
             return res.status(403).json({
                 error: 'Acceso no autorizado: Los archivos maestros y productos de pago requieren verificación de compra.'
             });

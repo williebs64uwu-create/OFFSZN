@@ -372,13 +372,25 @@ window.AuthUtils = {
     },
 
     isPublicR2Key: function (key) {
-        if (!key) return false;
+        if (!key || typeof key !== 'string') return false;
+        const k = key.toLowerCase();
+
+        // 1. All image formats (covers, avatars, thumbnails, banners, youtube previews) are ALWAYS public!
+        if (/\.(jpg|jpeg|png|webp|avif|gif|svg)(\?|$)/.test(k)) {
+            return true;
+        }
+
         const publicPrefixes = [
             'products/', 'beats/mp3/', 'mp3_tagged/', 'avatars/', 'public/', 'banners/',
             'drumkits/', 'temp-previews/', 'covers/', 'audio/',
             'secure-products/beats/mp3_tagged/'
         ];
-        return publicPrefixes.some(prefix => key.startsWith(prefix)) || key.includes('/covers/');
+        return publicPrefixes.some(prefix => k.startsWith(prefix)) ||
+               k.includes('/covers/') ||
+               k.includes('_cover') ||
+               k.includes('avatar') ||
+               k.includes('banner') ||
+               k.includes('thumb');
     },
 
     /** Tagged MP3 previews on the marketplace — guests may stream without signing. */
