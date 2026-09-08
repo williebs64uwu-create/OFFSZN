@@ -561,7 +561,9 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
 
         const headers = {
             'Content-Type': response.ContentType || 'application/octet-stream',
-            'Cache-Control': 'public, max-age=31536000, immutable',
+            'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
+            'CDN-Cache-Control': 'public, max-age=31536000, immutable',
+            'Vercel-CDN-Cache-Control': 'public, max-age=31536000, immutable',
             'X-R2-Discovered-Version': foundVersion,
             'X-R2-Discovered-Key': foundKey,
             'Accept-Ranges': 'bytes'

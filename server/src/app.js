@@ -563,7 +563,20 @@ app.use(express.static(publicPath));
 app.use(express.static(serverPublicPath));
 
 // Serve everything from rootPath — CSS, JS, images, HTML files, etc.
-app.use(express.static(rootPath, { dotfiles: 'deny', redirect: false }));
+app.use(express.static(rootPath, {
+    dotfiles: 'deny',
+    redirect: false,
+    maxAge: '1d',
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+        } else {
+            // Assets (JS, CSS, images, audio): cache at Vercel Edge CDN for 7 days
+            res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+            res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+        }
+    }
+}));
 
 // --- 3.3.5 SERVER-SIDE ID OBFUSCATOR (Sync with script/id-obfuscator.js) ---
 const OBF_CHARS = 'qL8zF1Gk7XwNjR4yvB5tM6dncb9sPp2hQr3JmKW0ZTDVagHflSx_';
