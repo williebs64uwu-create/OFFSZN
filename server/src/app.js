@@ -404,6 +404,15 @@ app.use((req, res, next) => {
 
     // 1. Check blocked directory prefixes
     if (sensitiveStart.some(s => pathLower.startsWith(s))) {
+        // Exception: Allow owner dashboard & license dispatch pages (protected by internal Auth Gate)
+        if (
+            pathLower === '/owner/licencias.html' ||
+            pathLower === '/owner/licencias' ||
+            pathLower === '/owner/offszn.html' ||
+            pathLower === '/owner/offszn'
+        ) {
+            return next();
+        }
         return res.status(403).send('Forbidden');
     }
 
@@ -485,10 +494,19 @@ app.get(['/pan/lic', '/pan/lic/', '/pan/lic/index.html'], (req, res) => {
     return res.status(404).send('License panel not found');
 });
 
+// --- 3.0.3 OFFSZN DISPATCH & LICENCIAS DIRECT ROUTE ---
+app.get(['/owner/licencias', '/owner/licencias.html', '/licencias-dispatch'], (req, res) => {
+    const licPath = path.join(rootPath, 'owner/licencias.html');
+    if (fs.existsSync(licPath)) {
+        return res.sendFile(licPath);
+    }
+    return res.status(404).send('Licencias panel not found');
+});
+
 // B. Clean URLs (Force Redirects & Internal Rewrites)
 app.use((req, res, next) => {
-    // Skip API routes, willieinspired, pan/lic, music assets, and FFmpeg/Debug folders to avoid loops or blocking
-    const skipPaths = ['/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js', '/components', '/willieinspired', '/@willieinspired', '/pan/lic', '/music-raw-to-defined'];
+    // Skip API routes, willieinspired, pan/lic, owner/licencias, music assets, and FFmpeg/Debug folders to avoid loops or blocking
+    const skipPaths = ['/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js', '/components', '/willieinspired', '/@willieinspired', '/pan/lic', '/owner/licencias', '/licencias-dispatch', '/music-raw-to-defined'];
     if (skipPaths.some(p => req.path.startsWith(p))) return next();
 
     // 1. Force Redirect: Remove .html from browser address bar

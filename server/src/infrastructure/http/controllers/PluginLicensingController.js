@@ -637,3 +637,81 @@ export const adminGetABStats = async (req, res) => {
         res.status(500).json({ error: 'Error al consultar métricas A/B.' });
     }
 };
+
+// ─── POST /api/plugin/admin/verify-pin ─────────────────────────────────────────
+// Admin-only: Verifies master security PIN for the licenses dashboard
+export const adminVerifyPin = async (req, res) => {
+    try {
+        const { pin } = req.body;
+        const validKey = process.env.PLUGIN_ADMIN_KEY;
+        const masterPin = 'gian2030upc';
+
+        if (pin && (pin === masterPin || pin === validKey)) {
+            return res.json({ success: true, authorized: true });
+        }
+        return res.status(401).json({ success: false, error: 'PIN o Clave no autorizada.' });
+    } catch (err) {
+        console.error('💥 [Admin Verify PIN Error]:', err);
+        return res.status(500).json({ error: 'Error al verificar credenciales.' });
+    }
+};
+
+// ─── POST /api/plugin/admin/generate-key ───────────────────────────────────────
+// Admin-only: Generates a real FULL Lifetime license with 2 devices limit & saves in Supabase
+export const adminGenerateFullKey = async (req, res) => {
+    try {
+        const { admin_key, plugin_name, max_devices } = req.body;
+        const validKey = process.env.PLUGIN_ADMIN_KEY;
+        const masterPin = 'gian2030upc';
+
+        if (!admin_key || (admin_key !== validKey && admin_key !== masterPin)) {
+            return res.status(403).json({ error: 'Unauthorized: Clave de administrador inválida.' });
+        }
+
+        const validPlugins = {
+            'Easy Mix': 'EASY',
+            'Easy Master': 'MASTER',
+            'Coca Cola': 'COKE',
+            'Inka Kola': 'INKA'
+        };
+
+        const targetPlugin = Object.keys(validPlugins).find(k => k.toLowerCase() === (plugin_name || '').toLowerCase()) || 'Easy Mix';
+        const prefix = validPlugins[targetPlugin] || 'OFFSZN';
+        const devicesLimit = parseInt(max_devices) || 2; // Default 2 devices
+
+        const serialKey = `${prefix}-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+
+        const { data: inserted, error: dbErr } = await supabase
+            .from('plugin_licenses')
+            .insert({
+                serial_key: serialKey,
+                license_type: 'lifetime',
+                status: 'active',
+                expires_at: null,
+                max_devices: devicesLimit,
+                plugin_name: targetPlugin
+            })
+            .select('*')
+            .single();
+
+        if (dbErr) {
+            console.error('Error inserting generated license in Supabase:', dbErr);
+            throw dbErr;
+        }
+
+        console.log(`🔑 [Admin] Generated NEW ${targetPlugin} Full License (${devicesLimit} devices): ${serialKey}`);
+
+        return res.json({
+            success: true,
+            serial_key: serialKey,
+            plugin_name: targetPlugin,
+            max_devices: devicesLimit,
+            license_type: 'lifetime',
+            status: 'active'
+        });
+    } catch (err) {
+        console.error('💥 [Admin Generate Key Error]:', err);
+        return res.status(500).json({ error: err.message || 'Error al generar clave.' });
+    }
+};
+

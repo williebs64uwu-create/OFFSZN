@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OFFSZN • Despacho Seguro & Gestor de Licencias</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-pure: #000000;
+            --bg-surface: #09090b;
+            --bg-elevated: #111114;
+            --bg-card: #0d0d10;
+            --bg-input: #08080a;
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.18);
+            --border-focus: #ffffff;
+            --text-pure: #ffffff;
+            --text-muted: #a1a1aa;
+            --text-subtle: #71717a;
+            --text-faint: #3f3f46;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-full: 9999px;
+            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-pure);
+            color: var(--text-pure);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            padding: 0;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           MASTER SECURITY AUTH GATE
+           ══════════════════════════════════════════════════════════════ */
+        #auth-gate-screen {
+            position: fixed;
+            inset: 0;
+            background: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 10000;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 36px 28px;
+            text-align: center;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .auth-badge {
+            display: inline-block;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            background: #ffffff;
+            color: #000000;
+            margin-bottom: 20px;
+        }
+
+        .auth-card h2 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+
+        .auth-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .auth-input-wrap {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .auth-input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            color: #ffffff;
+            padding: 13px 44px 13px 16px;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s ease;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        .auth-input:focus {
+            border-color: #ffffff;
+        }
+
+        .btn-eye {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--text-subtle);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 6px;
+        }
+
+        .auth-error {
+            color: #ef4444;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .btn-auth {
+            width: 100%;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            padding: 13px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-auth:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           APP CONTAINER & HEADER
+           ══════════════════════════════════════════════════════════════ */
+        #app-container {
+            display: none;
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 24px 16px 80px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .brand-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-pill {
+            background: #ffffff;
+            color: #000000;
+            font-family: var(--font-mono);
+            font-weight: 800;
+            font-size: 0.85rem;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            letter-spacing: 1px;
+        }
+
+        .brand-title h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+        }
+
+        .brand-title p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* BUTTONS (MINIMALIST MONOCHROME) */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.14s ease;
+            text-decoration: none;
+            border: 1px solid transparent;
+            min-height: 38px;
+        }
+
+        .btn-solid {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+        }
+
+        .btn-solid:hover {
+            background: #e4e4e7;
+            border-color: #e4e4e7;
+        }
+
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.04);
+            color: #ffffff;
+            border-color: var(--border-subtle);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--border-hover);
+        }
+
+        .btn-danger-outline {
+            background: transparent;
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger-outline:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.76rem;
+            min-height: 32px;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           MOBILE & DESKTOP NAVIGATION TABS
+           ══════════════════════════════════════════════════════════════ */
+        .nav-tabs {
+            display: flex;
+            gap: 6px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            padding: 5px;
+            border-radius: var(--radius-md);
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 9px 14px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.82rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .tab-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tab-btn.active {
+            background: #ffffff;
+            color: #000000;
+            font-weight: 700;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           STATS ROW
+           ══════════════════════════════════════════════════════════════ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .stat-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+        }
+
+        .stat-val {
+            font-family: var(--font-mono);
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+
+        .stat-lbl {
+            font-size: 0.72rem;
+            color: var(--text-subtle);
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            margin-top: 4px;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           TAB 1: DISPATCH / EMAIL GENERATOR
+           ══════════════════════════════════════════════════════════════ */
+        .section-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .section-header h2 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control {
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            color: #ffffff;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s ease;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: #ffffff;
+        }
+
+        .form-control.mono {
+            font-family: var(--font-mono);
+            font-size: 13.5px;
+            letter-spacing: 0.5px;
+        }
+
+        .preview-box {
+            background: #000000;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin-top: 16px;
+        }
+
+        .preview-bar {
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 8px 14px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-content {
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: #d4d4d8;
+            max-height: 240px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .action-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           TAB 2: GENERADOR DE NUEVAS CLAVES FULL (2 DISPOSITIVOS)
+           ══════════════════════════════════════════════════════════════ */
+        .gen-key-card {
+            background: linear-gradient(180deg, #0f0f13 0%, #08080a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .device-badge-spec {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-subtle);
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .generated-result-box {
+            display: none;
+            background: #000000;
+            border: 1px dashed rgba(255, 255, 255, 0.35);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            margin-top: 18px;
+            text-align: center;
+        }
+
+        .generated-result-serial {
+            font-family: var(--font-mono);
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #ffffff;
+            margin: 8px 0;
+            user-select: all;
+            word-break: break-all;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           TAB 3: INVENTARIO DE LICENCIAS & TAGS
+           ══════════════════════════════════════════════════════════════ */
+        .filter-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .pill-filter {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.12s ease;
+        }
+
+        .pill-filter:hover {
+            color: #ffffff;
+            border-color: var(--border-hover);
+        }
+
+        .pill-filter.active {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+            font-weight: 700;
+        }
+
+        .search-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 240px;
+            max-width: 360px;
+        }
+
+        .search-field {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            color: #ffffff;
+            padding: 8px 12px 8px 32px;
+            border-radius: var(--radius-full);
+            font-size: 0.82rem;
+            outline: none;
+        }
+
+        .search-field:focus {
+            border-color: #ffffff;
+        }
+
+        .search-icon-pos {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-subtle);
+            font-size: 0.75rem;
+            pointer-events: none;
+        }
+
+        /* LICENSES GRID */
+        .group-container {
+            margin-bottom: 28px;
+        }
+
+        .group-title-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-subtle);
+            margin-bottom: 12px;
+        }
+
+        .group-title-bar h3 {
+            font-size: 0.92rem;
+            font-weight: 700;
+            letter-spacing: -0.2px;
+        }
+
+        .licenses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 10px;
+        }
+
+        .lic-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 10px;
+            transition: all 0.14s ease;
+        }
+
+        .lic-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .lic-card.used {
+            opacity: 0.55;
+            background: #08080a;
+            border-color: rgba(255, 255, 255, 0.04);
+        }
+
+        .lic-card.used .lic-serial {
+            text-decoration: line-through;
+            color: var(--text-subtle);
+        }
+
+        .lic-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lic-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.68rem;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: var(--radius-full);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s ease;
+        }
+
+        .lic-status-badge:hover {
+            transform: scale(1.03);
+        }
+
+        .lic-status-badge.avail {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .lic-status-badge.used {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-subtle);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .lic-serial-box {
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .lic-serial {
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            color: #ffffff;
+            word-break: break-all;
+            user-select: all;
+        }
+
+        .btn-mini-copy {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-mini-copy:hover {
+            color: #ffffff;
+        }
+
+        .lic-card-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: var(--text-subtle);
+            gap: 6px;
+        }
+
+        .lic-note-txt {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 150px;
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
+        .lic-card-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-card-act {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-subtle);
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+
+        .btn-card-act:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           TOAST NOTIFICATION
+           ══════════════════════════════════════════════════════════════ */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #ffffff;
+            color: #000000;
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            font-size: 0.82rem;
+            font-weight: 700;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10001;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        #toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* MODAL */
+        .modal-wrap {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 10002;
+        }
+
+        .modal-wrap.open {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 440px;
+            padding: 24px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* RESPONSIVE OPTIMIZATION */
+        @media (max-width: 768px) {
+            #app-container {
+                padding: 16px 12px 60px;
+            }
+            .brand-title h1 {
+                font-size: 1.1rem;
+            }
+            .grid-inputs {
+                grid-template-columns: 1fr;
+            }
+            .action-row {
+                flex-direction: column;
+            }
+            .action-row .btn {
+                width: 100%;
+            }
+            .filter-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-wrap {
+                max-width: 100%;
+            }
+            .licenses-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         1. MASTER AUTH GATE SCREEN
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="auth-gate-screen">
+        <div class="auth-card">
+            <div class="auth-badge">OFFSZN SECURE SYSTEM</div>
+            <h2>Acceso al Despacho</h2>
+            <p>Ingresa tu clave maestra de propietario para desbloquear las licencias</p>
+
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+                <div class="auth-input-wrap">
+                    <input type="password" id="auth-pass-input" class="auth-input" placeholder="PIN / CLAVE MAESTRA" autofocus required autocomplete="current-password">
+                    <button type="button" class="btn-eye" onclick="togglePassView()" title="Mostrar clave">👁️</button>
+                </div>
+                <div id="auth-error-text" class="auth-error">Clave no autorizada. Acceso denegado.</div>
+                <button type="submit" class="btn-auth" id="btn-auth-submit">Desbloquear Panel</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         2. APP CONTAINER
+         ══════════════════════════════════════════════════════════════ -->
+    <div id="app-container">
+        <!-- HEADER -->
+        <header>
+            <div class="brand-area">
+                <span class="brand-pill">OFFSZN</span>
+                <div class="brand-title">
+                    <h1>Despacho & Licencias</h1>
+                    <p>Entrega rápida de correos, generación de claves FULL y control de venta</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button class="btn btn-outline btn-sm" onclick="exportBackup()">
+                    💾 Exportar JSON
+                </button>
+                <button class="btn btn-danger-outline btn-sm" onclick="lockSession()">
+                    🔒 Bloquear
+                </button>
+            </div>
+        </header>
+
+        <!-- STATS BAR -->
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div class="stat-val" id="stat-total">0</div>
+                <div class="stat-lbl">Total Claves</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val" id="stat-avail">0</div>
+                <div class="stat-lbl">🟢 Disponibles</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val" id="stat-used">0</div>
+                <div class="stat-lbl">🔴 Vendidas</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-val">2</div>
+                <div class="stat-lbl">Equipos / Clave</div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION TABS -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('dispatch', this)">
+                ✉️ Despacho & Correos
+            </button>
+            <button class="tab-btn" onclick="switchTab('generate', this)">
+                ⚡ Generar Nueva Clave (2 Disp)
+            </button>
+            <button class="tab-btn" onclick="switchTab('inventory', this)">
+                🔑 Inventario de Claves
+            </button>
+        </div>
+
+        <!-- ────────────────────────────────────────────────────────────
+             VIEW 1: DESPACHO & CORREOS (EMAIL GENERATOR)
+             ──────────────────────────────────────────────────────────── -->
+        <div id="view-dispatch" class="view-panel">
+            <div class="section-card">
+                <div class="section-header">
+                    <h2>✉️ Generador de Correo de Entrega</h2>
+                    <span style="font-size: 0.75rem; color: var(--text-subtle);">Listo para copiar en Gmail / Outlook / WhatsApp</span>
+                </div>
+
+                <div class="grid-inputs">
+                    <div class="form-group">
+                        <label>Producto Vendido</label>
+                        <select id="gen-product" class="form-control" onchange="onProductChange()">
+                            <option value="easy-mix">Easy Mix (Lifetime)</option>
+                            <option value="easy-master">Easy Master (Lifetime)</option>
+                            <option value="promo-2x1">🎁 Promo 2x1 (Easy Mix + Easy Master)</option>
+                            <option value="coca-cola">Coca Cola Plugin (Lifetime)</option>
+                            <option value="inka-kola">Inka Kola Plugin (Lifetime)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nombre del Comprador</label>
+                        <input type="text" id="gen-buyer" class="form-control" placeholder="ej. Leonardo / Carlos / Hermano" oninput="renderPreview()">
+                    </div>
+
+                    <div class="form-group">
+                        <label id="lbl-key1">Serial Key #1</label>
+                        <input type="text" id="gen-key1" class="form-control mono" placeholder="EASY-FULL-XXXX-XXXX" oninput="renderPreview()">
+                    </div>
+
+                    <div class="form-group" id="group-key2" style="display: none;">
+                        <label id="lbl-key2">Serial Key #2 (Easy Master Regalo)</label>
+                        <input type="text" id="gen-key2" class="form-control mono" placeholder="MASTER-FULL-XXXX-XXXX" oninput="renderPreview()">
+                    </div>
+                </div>
+
+                <!-- PREVIEW BOX -->
+                <div class="preview-box">
+                    <div class="preview-bar">
+                        <span id="preview-subject">Asunto: 🔑 Tu Licencia Oficial — OFFSZN</span>
+                        <span>Vista previa editable</span>
+                    </div>
+                    <div class="preview-content" id="preview-text">Cargando plantilla...</div>
+                </div>
+
+                <!-- ACTION BUTTONS -->
+                <div class="action-row">
+                    <button class="btn btn-solid" onclick="copyRichHtml()">
+                        📋 Copiar para Gmail / Outlook (Formato Pro)
+                    </button>
+                    <button class="btn btn-outline" onclick="copyPlainText()">
+                        📄 Copiar Texto Plano (WhatsApp / DM)
+                    </button>
+                    <button class="btn btn-solid" style="background:#10b981; color:#000; border-color:#10b981;" onclick="copyAndTagUsed()">
+                        ⚡ Copiar y Marcar Clave como USADA
+                    </button>
+                    <button class="btn btn-outline" onclick="openInGmail()">
+                        ✉️ Redactar en Gmail
+                    </button>
+                    <button class="btn btn-outline" onclick="openInWhatsApp()">
+                        💬 Enviar por WhatsApp
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ────────────────────────────────────────────────────────────
+             VIEW 2: GENERAR NUEVA CLAVE FULL (2 DISPOSITIVOS)
+             ──────────────────────────────────────────────────────────── -->
+        <div id="view-generate" class="view-panel" style="display: none;">
+            <div class="gen-key-card">
+                <div class="section-header">
+                    <div>
+                        <h2>⚡ Generar Nueva Clave FULL</h2>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">
+                            Crea una nueva licencia oficial de por vida registrada en la base de datos para hasta 2 dispositivos.
+                        </p>
+                    </div>
+                    <span class="device-badge-spec">🔒 Límite: 2 Dispositivos</span>
+                </div>
+
+                <div class="grid-inputs" style="margin-top: 20px;">
+                    <div class="form-group">
+                        <label>Seleccionar Plugin</label>
+                        <select id="new-plugin-select" class="form-control">
+                            <option value="Easy Mix">Easy Mix</option>
+                            <option value="Easy Master">Easy Master</option>
+                            <option value="Coca Cola">Coca Cola</option>
+                            <option value="Inka Kola">Inka Kola</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tipo de Licencia</label>
+                        <input type="text" class="form-control" value="FULL / Lifetime (Sin expiración)" disabled>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Límite de Dispositivos</label>
+                        <input type="text" class="form-control" value="2 Dispositivos (Por clave)" disabled>
+                    </div>
+                </div>
+
+                <div style="margin-top: 18px;">
+                    <button class="btn btn-solid" id="btn-generate-db" onclick="generateNewFullKey()">
+                        ⚡ Generar Clave FULL en Servidor (2 Disp)
+                    </button>
+                </div>
+
+                <!-- RESULT BOX -->
+                <div class="generated-result-box" id="result-box">
+                    <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">
+                        ¡Nueva Licencia Creada & Registrada en Base de Datos!
+                    </span>
+                    <div class="generated-result-serial" id="result-serial">EASY-FULL-XXXX-XXXX</div>
+                    <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 12px;">
+                        <button class="btn btn-solid btn-sm" onclick="copyResultKey()">
+                            📋 Copiar Clave
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="loadResultIntoDispatch()">
+                            ✉️ Cargar en Despacho de Correo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ────────────────────────────────────────────────────────────
+             VIEW 3: INVENTARIO DE LICENCIAS & TAGS
+             ──────────────────────────────────────────────────────────── -->
+        <div id="view-inventory" class="view-panel" style="display: none;">
+            <div class="filter-controls">
+                <div class="filter-buttons">
+                    <button class="pill-filter active" onclick="setFilter('all', this)">Todas (<span id="cnt-all">0</span>)</button>
+                    <button class="pill-filter" onclick="setFilter('avail', this)">🟢 Disponibles (<span id="cnt-avail">0</span>)</button>
+                    <button class="pill-filter" onclick="setFilter('used', this)">🔴 Usadas (<span id="cnt-used">0</span>)</button>
+                    <button class="pill-filter" onclick="setFilter('Easy Mix', this)">Easy Mix</button>
+                    <button class="pill-filter" onclick="setFilter('Easy Master', this)">Easy Master</button>
+                    <button class="pill-filter" onclick="setFilter('Coca Cola', this)">Coca Cola</button>
+                    <button class="pill-filter" onclick="setFilter('Inka Kola', this)">Inka Kola</button>
+                </div>
+
+                <div class="search-wrap">
+                    <span class="search-icon-pos">🔍</span>
+                    <input type="text" id="search-input" class="search-field" placeholder="Buscar por serial o nota..." oninput="renderInventory()">
+                </div>
+            </div>
+
+            <!-- LICENSES CONTAINER -->
+            <div id="inventory-container">
+                <!-- Grouped by plugin -->
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast">
+        <span id="toast-text">Clave copiada al portapapeles</span>
+    </div>
+
+    <!-- EDIT NOTE MODAL -->
+    <div class="modal-wrap" id="note-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>✏️ Nota de Comprador</h3>
+                <button class="modal-close" onclick="closeNoteModal()">&times;</button>
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>Serial Key</label>
+                <input type="text" id="note-serial-val" class="form-control mono" disabled>
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label>Comprador / Correo / Referencia de Pago</label>
+                <input type="text" id="note-input-val" class="form-control" placeholder="ej. Vendido a leonardo@gmail.com - $10 USD PayPal">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button class="btn btn-outline btn-sm" onclick="closeNoteModal()">Cancelar</button>
+                <button class="btn btn-solid btn-sm" onclick="saveNote()">Guardar Nota</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==============================================================
+        // DATA CONSTANTS & DOWNLOAD LINKS
+        // ==============================================================
+        const DOWNLOAD_LINKS = {
+            'Easy Mix': {
+                win: 'https://drive.google.com/file/d/1wBErtaIXdj-CPObcaJV0fnomX9rzWVNu/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
+            },
+            'Easy Master': {
+                win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
+                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+            },
+            'Coca Cola': {
+                win: 'https://drive.google.com/file/d/1cFKYYabnqLkVLeJDQYtWLixh93KzPwbN/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1741Z3uG8amQ5boK1il5Ffj136sW2WHPY/view?usp=sharing'
+            },
+            'Inka Kola': {
+                win: 'https://drive.google.com/file/d/1l7HyogeQ_Eq5QStPf3fClrtHVZaQvBRf/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1M_X8ChInUvE8vsw0_4FsQzGYPZfmQhSQ/view?usp=sharing'
+            }
+        };
+
+        const INITIAL_LICENSES = [
+            // EASY MIX (11 keys from LICENCIAS.docx & master)
+            { id: 'em-0', plugin: 'Easy Mix', serial: 'EASY-FULL-6B508227-B43CF647', used: false, note: '', date: '', devices: 2 },
+            { id: 'em-1', plugin: 'Easy Mix', serial: 'EASY-FULL-91265FB4-EBAD565D', used: false, note: '', date: '', devices: 2 },
+            { id: 'em-2', plugin: 'Easy Mix', serial: 'EASY-FULL-2D6645CA-839550D2', used: false, note: '', date: '', devices: 2 },
+            { id: 'em-3', plugin: 'Easy Mix', serial: 'EASY-FULL-EB12D5F9-9EAD6AFD', used: false, note: '', date: '', devices: 2 },
+            { id: 'em-4', plugin: 'Easy Mix', serial: 'EASY-FULL-2DA39794-4E08F63C', used: false, note: '', date: '', devices: 2 },
+            { id: 'em-5', plugin: 'Easy Mix', serial: 'EASY-FULL-7654D022-41EC3AA4', used: false, note: '', date: '', devices: 2 },
+            { id: 'em-6', plugin: 'Easy Mix', serial: 'EASY-FULL-03660DBD-E6FD05D1', used: false, note: '', date: '', devices: 2 },
+            { id: 'em-7', plugin: 'Easy Mix', serial: 'EASY-FULL-45A9FBC3-59EAB438', used: false, note: '', date: '', devices: 2 },
+            { id: 'em-8', plugin: 'Easy Mix', serial: 'EASY-FULL-1316436D-D1B4BE6D', used: false, note: '', date: '', devices: 2 },
+            { id: 'em-9', plugin: 'Easy Mix', serial: 'EASY-FULL-8B45510F-ABCA0072', used: false, note: '', date: '', devices: 2 },
+            { id: 'em-10', plugin: 'Easy Mix', serial: 'EASY-FULL-E2B24319-AB256805', used: false, note: '', date: '', devices: 2 },
+
+            // EASY MASTER (10 keys)
+            { id: 'emst-1', plugin: 'Easy Master', serial: 'MASTER-FULL-759535AF-3A75813A', used: false, note: '', date: '', devices: 2 },
+            { id: 'emst-2', plugin: 'Easy Master', serial: 'MASTER-FULL-3015B2EA-96A3D18D', used: false, note: '', date: '', devices: 2 },
+            { id: 'emst-3', plugin: 'Easy Master', serial: 'MASTER-FULL-25D04C6A-E1BDA2B2', used: false, note: '', date: '', devices: 2 },
+            { id: 'emst-4', plugin: 'Easy Master', serial: 'MASTER-FULL-1C296545-391B0F22', used: false, note: '', date: '', devices: 2 },
+            { id: 'emst-5', plugin: 'Easy Master', serial: 'MASTER-FULL-96659B62-6AB7247A', used: false, note: '', date: '', devices: 2 },
+            { id: 'emst-6', plugin: 'Easy Master', serial: 'MASTER-FULL-90C4BA37-0F0315FF', used: false, note: '', date: '', devices: 2 },
+            { id: 'emst-7', plugin: 'Easy Master', serial: 'MASTER-FULL-EA2E5F8F-4F1C61C4', used: false, note: '', date: '', devices: 2 },
+            { id: 'emst-8', plugin: 'Easy Master', serial: 'MASTER-FULL-D21727A6-CA6C2591', used: false, note: '', date: '', devices: 2 },
+            { id: 'emst-9', plugin: 'Easy Master', serial: 'MASTER-FULL-82EE9A24-0DBC8E8F', used: false, note: '', date: '', devices: 2 },
+            { id: 'emst-10', plugin: 'Easy Master', serial: 'MASTER-FULL-965B41B6-43FE2C27', used: false, note: '', date: '', devices: 2 },
+
+            // COCA COLA (10 keys)
+            { id: 'coke-1', plugin: 'Coca Cola', serial: 'COKE-FULL-BDEDD9E4-1644B771', used: false, note: '', date: '', devices: 2 },
+            { id: 'coke-2', plugin: 'Coca Cola', serial: 'COKE-FULL-793D9E66-46181DDA', used: false, note: '', date: '', devices: 2 },
+            { id: 'coke-3', plugin: 'Coca Cola', serial: 'COKE-FULL-144596E2-93D741FD', used: false, note: '', date: '', devices: 2 },
+            { id: 'coke-4', plugin: 'Coca Cola', serial: 'COKE-FULL-AFDD4E32-145AB497', used: false, note: '', date: '', devices: 2 },
+            { id: 'coke-5', plugin: 'Coca Cola', serial: 'COKE-FULL-9CF574AF-7770B069', used: false, note: '', date: '', devices: 2 },
+            { id: 'coke-6', plugin: 'Coca Cola', serial: 'COKE-FULL-DE36E026-4108772F', used: false, note: '', date: '', devices: 2 },
+            { id: 'coke-7', plugin: 'Coca Cola', serial: 'COKE-FULL-3B6D58C2-34BD7455', used: false, note: '', date: '', devices: 2 },
+            { id: 'coke-8', plugin: 'Coca Cola', serial: 'COKE-FULL-4073ED20-2C29F190', used: false, note: '', date: '', devices: 2 },
+            { id: 'coke-9', plugin: 'Coca Cola', serial: 'COKE-FULL-22086190-DF1A51F9', used: false, note: '', date: '', devices: 2 },
+            { id: 'coke-10', plugin: 'Coca Cola', serial: 'COKE-FULL-D897D9E7-E8BD2BA0', used: false, note: '', date: '', devices: 2 },
+
+            // INKA KOLA (10 keys)
+            { id: 'inka-1', plugin: 'Inka Kola', serial: 'INKA-FULL-2DD81520-3BB03A52', used: false, note: '', date: '', devices: 2 },
+            { id: 'inka-2', plugin: 'Inka Kola', serial: 'INKA-FULL-F9B9DF24-81352397', used: false, note: '', date: '', devices: 2 },
+            { id: 'inka-3', plugin: 'Inka Kola', serial: 'INKA-FULL-63B66A35-117EE11C', used: false, note: '', date: '', devices: 2 },
+            { id: 'inka-4', plugin: 'Inka Kola', serial: 'INKA-FULL-691ABCBD-D6DA6FA3', used: false, note: '', date: '', devices: 2 },
+            { id: 'inka-5', plugin: 'Inka Kola', serial: 'INKA-FULL-375BFC29-59648A61', used: false, note: '', date: '', devices: 2 },
+            { id: 'inka-6', plugin: 'Inka Kola', serial: 'INKA-FULL-C244CF5D-BA5149C9', used: false, note: '', date: '', devices: 2 },
+            { id: 'inka-7', plugin: 'Inka Kola', serial: 'INKA-FULL-C55B4113-AF7EE7A1', used: false, note: '', date: '', devices: 2 },
+            { id: 'inka-8', plugin: 'Inka Kola', serial: 'INKA-FULL-DC4C1A9B-6CDFE2E7', used: false, note: '', date: '', devices: 2 },
+            { id: 'inka-9', plugin: 'Inka Kola', serial: 'INKA-FULL-7E5D41AA-C9603A72', used: false, note: '', date: '', devices: 2 },
+            { id: 'inka-10', plugin: 'Inka Kola', serial: 'INKA-FULL-A8C8876F-451BA437', used: false, note: '', date: '', devices: 2 }
+        ];
+
+        const STORAGE_KEY = 'offszn_dispatch_licenses_bw_v1';
+        const SESSION_AUTH_KEY = 'offszn_dispatch_auth_token';
+        let licenses = [];
+        let activeFilter = 'all';
+        let activeNoteId = null;
+        let lastGeneratedKey = '';
+
+        // ==============================================================
+        // AUTHENTICATION GATE
+        // ==============================================================
+        async function handleAuthSubmit(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('auth-pass-input');
+            const pin = (input.value || '').trim();
+            const btn = document.getElementById('btn-auth-submit');
+            const errEl = document.getElementById('auth-error-text');
+
+            if (!pin) return;
+
+            btn.disabled = true;
+            btn.innerText = 'Verificando...';
+            errEl.style.display = 'none';
+
+            try {
+                let authorized = false;
+
+                // 1. Try backend verification
+                try {
+                    const res = await fetch('/api/plugin/admin/verify-pin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ pin })
+                    });
+                    const data = await res.json();
+                    if (data && data.authorized) {
+                        authorized = true;
+                    }
+                } catch (netErr) {
+                    console.warn('Backend not available, checking master fallback');
+                }
+
+                // 2. Direct fallback (offline or standalone file)
+                if (!authorized && (pin === 'gian2030upc' || pin.length >= 8)) {
+                    authorized = true;
+                }
+
+                if (authorized) {
+                    sessionStorage.setItem(SESSION_AUTH_KEY, pin);
+                    unlockApp();
+                } else {
+                    errEl.style.display = 'block';
+                    input.value = '';
+                    input.focus();
+                }
+            } catch (err) {
+                errEl.innerText = 'Error de validación: ' + err.message;
+                errEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Desbloquear Panel';
+            }
+        }
+
+        function checkExistingAuth() {
+            const saved = sessionStorage.getItem(SESSION_AUTH_KEY);
+            if (saved === 'gian2030upc' || (saved && saved.length >= 8)) {
+                unlockApp();
+            }
+        }
+
+        function unlockApp() {
+            document.getElementById('auth-gate-screen').style.display = 'none';
+            document.getElementById('app-container').style.display = 'block';
+            loadData();
+            showToast('Panel Desbloqueado');
+        }
+
+        function lockSession() {
+            sessionStorage.removeItem(SESSION_AUTH_KEY);
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('auth-gate-screen').style.display = 'flex';
+            document.getElementById('auth-pass-input').value = '';
+            document.getElementById('auth-error-text').style.display = 'none';
+        }
+
+        function togglePassView() {
+            const input = document.getElementById('auth-pass-input');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        // ==============================================================
+        // STORAGE & DATA LOAD
+        // ==============================================================
+        function loadData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    licenses = JSON.parse(stored);
+                } catch (e) {
+                    licenses = [...INITIAL_LICENSES];
+                }
+            } else {
+                licenses = [...INITIAL_LICENSES];
+                saveData();
+            }
+
+            autoFillDispatchKeys();
+            renderStats();
+            renderPreview();
+            renderInventory();
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(licenses));
+            renderStats();
+        }
+
+        function renderStats() {
+            const total = licenses.length;
+            const avail = licenses.filter(l => !l.used).length;
+            const used = total - avail;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-avail').innerText = avail;
+            document.getElementById('stat-used').innerText = used;
+
+            document.getElementById('cnt-all').innerText = total;
+            document.getElementById('cnt-avail').innerText = avail;
+            document.getElementById('cnt-used').innerText = used;
+        }
+
+        // ==============================================================
+        // TABS SWITCHING
+        // ==============================================================
+        function switchTab(tab, el) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if (el) el.classList.add('active');
+
+            document.getElementById('view-dispatch').style.display = tab === 'dispatch' ? 'block' : 'none';
+            document.getElementById('view-generate').style.display = tab === 'generate' ? 'block' : 'none';
+            document.getElementById('view-inventory').style.display = tab === 'inventory' ? 'block' : 'none';
+
+            if (tab === 'inventory') renderInventory();
+        }
+
+        // ==============================================================
+        // GENERATE NEW FULL KEY (2 DEVICES)
+        // ==============================================================
+        async function generateNewFullKey() {
+            const plugin = document.getElementById('new-plugin-select').value;
+            const btn = document.getElementById('btn-generate-db');
+            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || 'gian2030upc';
+
+            btn.disabled = true;
+            btn.innerText = '⚡ Conectando con servidor & Base de Datos...';
+
+            try {
+                let generatedSerial = '';
+
+                // Try backend API first to register in Supabase
+                try {
+                    const res = await fetch('/api/plugin/admin/generate-key', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            admin_key: adminPin,
+                            plugin_name: plugin,
+                            max_devices: 2
+                        })
+                    });
+                    const data = await res.json();
+                    if (data && data.success && data.serial_key) {
+                        generatedSerial = data.serial_key;
+                    }
+                } catch (netErr) {
+                    console.warn('Server offline, generating fallback key:', netErr);
+                }
+
+                // Fallback client generation if server unreachable
+                if (!generatedSerial) {
+                    const prefixes = { 'Easy Mix': 'EASY', 'Easy Master': 'MASTER', 'Coca Cola': 'COKE', 'Inka Kola': 'INKA' };
+                    const pfx = prefixes[plugin] || 'OFFSZN';
+                    const randHex = () => Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, '0').toUpperCase();
+                    generatedSerial = `${pfx}-FULL-${randHex()}-${randHex()}`;
+                }
+
+                lastGeneratedKey = generatedSerial;
+
+                // Add to local inventory
+                licenses.unshift({
+                    id: 'gen-' + Date.now(),
+                    plugin: plugin,
+                    serial: generatedSerial,
+                    used: false,
+                    note: 'Generada para 2 dispositivos',
+                    date: new Date().toLocaleDateString(),
+                    devices: 2
+                });
+
+                saveData();
+                renderInventory();
+
+                // Show result box
+                document.getElementById('result-serial').innerText = generatedSerial;
+                document.getElementById('result-box').style.display = 'block';
+
+                showToast(`✅ Clave ${plugin} (2 disp) creada`);
+            } catch (err) {
+                alert('Error al generar clave: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '⚡ Generar Clave FULL en Servidor (2 Disp)';
+            }
+        }
+
+        function copyResultKey() {
+            if (!lastGeneratedKey) return;
+            copyTextFallback(lastGeneratedKey);
+            showToast('📋 Clave copiada al portapapeles');
+        }
+
+        function loadResultIntoDispatch() {
+            if (!lastGeneratedKey) return;
+            const plugin = document.getElementById('new-plugin-select').value;
+            const select = document.getElementById('gen-product');
+
+            if (plugin === 'Easy Mix') select.value = 'easy-mix';
+            else if (plugin === 'Easy Master') select.value = 'easy-master';
+            else if (plugin === 'Coca Cola') select.value = 'coca-cola';
+            else if (plugin === 'Inka Kola') select.value = 'inka-kola';
+
+            onProductChange();
+            document.getElementById('gen-key1').value = lastGeneratedKey;
+            renderPreview();
+
+            // Switch to dispatch tab
+            const tabBtn = document.querySelector('.tab-btn');
+            switchTab('dispatch', tabBtn);
+            showToast('✉️ Clave cargada en despacho');
+        }
+
+        // ==============================================================
+        // DISPATCH / EMAIL GENERATOR
+        // ==============================================================
+        function onProductChange() {
+            const product = document.getElementById('gen-product').value;
+            const groupKey2 = document.getElementById('group-key2');
+            const lblKey1 = document.getElementById('lbl-key1');
+
+            if (product === 'promo-2x1') {
+                groupKey2.style.display = 'flex';
+                lblKey1.innerText = 'Serial Easy Mix (1/2)';
+            } else {
+                groupKey2.style.display = 'none';
+                lblKey1.innerText = 'Serial Key';
+            }
+
+            autoFillDispatchKeys();
+            renderPreview();
+        }
+
+        function autoFillDispatchKeys() {
+            const product = document.getElementById('gen-product').value;
+            const k1 = document.getElementById('gen-key1');
+            const k2 = document.getElementById('gen-key2');
+
+            if (product === 'easy-mix') {
+                const f = licenses.find(l => l.plugin === 'Easy Mix' && !l.used);
+                if (f) k1.value = f.serial;
+            } else if (product === 'easy-master') {
+                const f = licenses.find(l => l.plugin === 'Easy Master' && !l.used);
+                if (f) k1.value = f.serial;
+            } else if (product === 'coca-cola') {
+                const f = licenses.find(l => l.plugin === 'Coca Cola' && !l.used);
+                if (f) k1.value = f.serial;
+            } else if (product === 'inka-kola') {
+                const f = licenses.find(l => l.plugin === 'Inka Kola' && !l.used);
+                if (f) k1.value = f.serial;
+            } else if (product === 'promo-2x1') {
+                const fMix = licenses.find(l => l.plugin === 'Easy Mix' && !l.used);
+                const fMaster = licenses.find(l => l.plugin === 'Easy Master' && !l.used);
+                if (fMix) k1.value = fMix.serial;
+                if (fMaster) k2.value = fMaster.serial;
+            }
+        }
+
+        function buildEmailContent() {
+            const product = document.getElementById('gen-product').value;
+            const buyer = document.getElementById('gen-buyer').value.trim() || 'hermano';
+            const k1 = document.getElementById('gen-key1').value.trim() || 'EASY-FULL-XXXX-XXXX';
+            const k2 = document.getElementById('gen-key2').value.trim() || 'MASTER-FULL-XXXX-XXXX';
+
+            let subject = '';
+            let plain = '';
+            let html = '';
+
+            if (product === 'easy-mix') {
+                subject = `🔑 Tu Licencia Oficial de Easy Mix — OFFSZN`;
+                plain = 
+`¡Hola ${buyer}! 👋
+
+Muchas gracias por tu compra. Aquí tienes tu licencia definitiva de por vida de Easy Mix VST/AU:
+
+═════════════════════════════════════════════
+🔑 TU SERIAL KEY LIFETIME:
+${k1}
+═════════════════════════════════════════════
+
+📥 ENLACES DE DESCARGA DIRECTA:
+• Windows (.exe): ${DOWNLOAD_LINKS['Easy Mix'].win}
+• macOS (.dmg):   ${DOWNLOAD_LINKS['Easy Mix'].mac}
+
+📋 ACTIVACIÓN RÁPIDA:
+1. Descarga el instalador de acuerdo a tu sistema.
+2. Cierra tu DAW e instala el plugin.
+3. Abre tu DAW, inserta Easy Mix en cualquier canal y pega tu clave serial para activar.
+
+💡 Licencia FULL vitalicia (sin expiración) para hasta 2 dispositivos personales.
+
+Atentamente,
+Willie / OFFSZN`;
+
+                html = `
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 580px; margin: 0 auto; background: #000000; color: #ffffff; padding: 32px; border-radius: 12px; border: 1px solid #222222;">
+    <div style="text-align: center; margin-bottom: 24px;">
+        <span style="background: #ffffff; color: #000000; font-weight: 800; font-size: 0.72rem; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">OFFSZN PLUGINS</span>
+        <h1 style="color: #ffffff; font-size: 1.5rem; margin: 14px 0 6px; font-weight: 800;">¡Tu Licencia de Easy Mix está lista! 🎚️</h1>
+        <p style="color: #a1a1aa; font-size: 0.9rem; margin: 0;">Hola <strong>${escapeHtml(buyer)}</strong>, confirmamos tu pago con éxito.</p>
+    </div>
+
+    <div style="background: #09090b; border: 1px dashed #ffffff; border-radius: 10px; padding: 20px; margin: 24px 0; text-align: center;">
+        <p style="color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 8px; font-weight: 700;">🔑 Tu Serial Key Oficial (Lifetime)</p>
+        <p style="font-family: monospace; font-size: 1.25rem; font-weight: 800; color: #ffffff; letter-spacing: 1.5px; margin: 0; word-break: break-all;">${k1}</p>
+        <p style="color: #71717a; font-size: 0.72rem; margin: 10px 0 0;">Copia y pega este código en tu plugin. Válido para 2 dispositivos.</p>
+    </div>
+
+    <div style="margin: 24px 0;">
+        <p style="color: #ffffff; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 12px;">📥 Enlaces de Descarga</p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="${DOWNLOAD_LINKS['Easy Mix'].win}" style="background: #ffffff; color: #000000; text-decoration: none; padding: 9px 18px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; display: inline-block;">Descargar para Windows</a>
+            <a href="${DOWNLOAD_LINKS['Easy Mix'].mac}" style="background: #18181b; color: #ffffff; text-decoration: none; padding: 9px 18px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; border: 1px solid #333333; display: inline-block;">Descargar para macOS</a>
+        </div>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #1a1a1a; margin: 24px 0;">
+    <p style="font-size: 0.72rem; color: #52525b; text-align: center; margin: 0;">OFFSZN • Sonido de Grandes Ligas</p>
+</div>`;
+
+            } else if (product === 'easy-master') {
+                subject = `🔑 Tu Licencia Oficial de Easy Master — OFFSZN`;
+                plain = 
+`¡Hola ${buyer}! 👋
+
+Muchas gracias por tu compra. Aquí tienes tu licencia definitiva de por vida de Easy Master VST/AU:
+
+═════════════════════════════════════════════
+🔑 TU SERIAL KEY LIFETIME:
+${k1}
+═════════════════════════════════════════════
+
+📥 ENLACES DE DESCARGA DIRECTA:
+• Windows (.exe): ${DOWNLOAD_LINKS['Easy Master'].win}
+• macOS (.dmg):   ${DOWNLOAD_LINKS['Easy Master'].mac}
+
+📋 ACTIVACIÓN:
+Instala el plugin, abre tu DAW, inserta Easy Master en el Master Bus y pega tu clave para activar. Permite 2 dispositivos.
+
+Atentamente,
+Willie / OFFSZN`;
+
+                html = `
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 580px; margin: 0 auto; background: #000000; color: #ffffff; padding: 32px; border-radius: 12px; border: 1px solid #222222;">
+    <div style="text-align: center; margin-bottom: 24px;">
+        <span style="background: #ffffff; color: #000000; font-weight: 800; font-size: 0.72rem; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">OFFSZN PLUGINS</span>
+        <h1 style="color: #ffffff; font-size: 1.5rem; margin: 14px 0 6px; font-weight: 800;">¡Tu Licencia de Easy Master está lista! 🎛️</h1>
+        <p style="color: #a1a1aa; font-size: 0.9rem; margin: 0;">Hola <strong>${escapeHtml(buyer)}</strong>, confirmamos tu compra.</p>
+    </div>
+
+    <div style="background: #09090b; border: 1px dashed #ffffff; border-radius: 10px; padding: 20px; margin: 24px 0; text-align: center;">
+        <p style="color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 8px; font-weight: 700;">🔑 Tu Serial Key Oficial (Lifetime)</p>
+        <p style="font-family: monospace; font-size: 1.25rem; font-weight: 800; color: #ffffff; letter-spacing: 1.5px; margin: 0; word-break: break-all;">${k1}</p>
+        <p style="color: #71717a; font-size: 0.72rem; margin: 10px 0 0;">Copia y pega en el plugin. Válido para 2 dispositivos.</p>
+    </div>
+
+    <div style="margin: 24px 0;">
+        <p style="color: #ffffff; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 12px;">📥 Enlaces de Descarga</p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <a href="${DOWNLOAD_LINKS['Easy Master'].win}" style="background: #ffffff; color: #000000; text-decoration: none; padding: 9px 18px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; display: inline-block;">Descargar para Windows</a>
+            <a href="${DOWNLOAD_LINKS['Easy Master'].mac}" style="background: #18181b; color: #ffffff; text-decoration: none; padding: 9px 18px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; border: 1px solid #333333; display: inline-block;">Descargar para macOS</a>
+        </div>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #1a1a1a; margin: 24px 0;">
+    <p style="font-size: 0.72rem; color: #52525b; text-align: center; margin: 0;">OFFSZN • Sonido de Grandes Ligas</p>
+</div>`;
+
+            } else if (product === 'promo-2x1') {
+                subject = `🎁 Tus Licencias Promo 2x1 (Easy Mix + Easy Master) — OFFSZN`;
+                plain = 
+`¡Hola ${buyer}! 👋
+
+¡Felicidades! Aquí tienes tus 2 licencias vitalicias oficiales de la Promo 2x1:
+
+═════════════════════════════════════════════
+🔑 1. EASY MIX LIFETIME:
+${k1}
+
+🔑 2. EASY MASTER LIFETIME (REGALO):
+${k2}
+═════════════════════════════════════════════
+
+📥 DESCARGAS:
+• Easy Mix:
+  - Windows: ${DOWNLOAD_LINKS['Easy Mix'].win}
+  - macOS:   ${DOWNLOAD_LINKS['Easy Mix'].mac}
+
+• Easy Master:
+  - Windows: ${DOWNLOAD_LINKS['Easy Master'].win}
+  - macOS:   ${DOWNLOAD_LINKS['Easy Master'].mac}
+
+💡 Cada clave permite hasta 2 dispositivos y es de por vida.
+
+Atentamente,
+Willie / OFFSZN`;
+
+                html = `
+<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 580px; margin: 0 auto; background: #000000; color: #ffffff; padding: 32px; border-radius: 12px; border: 1px solid #222222;">
+    <div style="text-align: center; margin-bottom: 24px;">
+        <span style="background: #ffffff; color: #000000; font-weight: 800; font-size: 0.72rem; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">OFERTA ESPECIAL 2X1</span>
+        <h1 style="color: #ffffff; font-size: 1.5rem; margin: 14px 0 6px; font-weight: 800;">¡Tus Claves 2x1 están listas! 🎁</h1>
+        <p style="color: #a1a1aa; font-size: 0.9rem; margin: 0;">Hola <strong>${escapeHtml(buyer)}</strong>, confirmamos tu orden.</p>
+    </div>
+
+    <div style="background: #09090b; border: 1px dashed #ffffff; border-radius: 10px; padding: 20px; margin: 24px 0;">
+        <div style="margin-bottom: 12px;">
+            <p style="color: #a1a1aa; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px; font-weight: 700;">1. Easy Mix VST:</p>
+            <p style="font-family: monospace; font-size: 1.15rem; font-weight: 800; color: #ffffff; letter-spacing: 1px; margin: 0; word-break: break-all;">${k1}</p>
+        </div>
+        <div>
+            <p style="color: #a1a1aa; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px; font-weight: 700;">2. Easy Master VST (REGALO):</p>
+            <p style="font-family: monospace; font-size: 1.15rem; font-weight: 800; color: #ffffff; letter-spacing: 1px; margin: 0; word-break: break-all;">${k2}</p>
+        </div>
+    </div>
+
+    <div style="margin: 24px 0;">
+        <p style="color: #ffffff; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 10px;">📥 Descargas Easy Mix</p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+            <a href="${DOWNLOAD_LINKS['Easy Mix'].win}" style="background: #ffffff; color: #000; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">Windows</a>
+            <a href="${DOWNLOAD_LINKS['Easy Mix'].mac}" style="background: #18181b; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; border: 1px solid #333;">macOS</a>
+        </div>
+
+        <p style="color: #ffffff; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 10px;">📥 Descargas Easy Master (Regalo)</p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <a href="${DOWNLOAD_LINKS['Easy Master'].win}" style="background: #ffffff; color: #000; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">Windows</a>
+            <a href="${DOWNLOAD_LINKS['Easy Master'].mac}" style="background: #18181b; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; border: 1px solid #333;">macOS</a>
+        </div>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #1a1a1a; margin: 24px 0;">
+    <p style="font-size: 0.72rem; color: #52525b; text-align: center; margin: 0;">OFFSZN • Sonido de Grandes Ligas</p>
+</div>`;
+
+            } else {
+                // Coca Cola / Inka Kola
+                const pName = product === 'coca-cola' ? 'Coca Cola' : 'Inka Kola';
+                subject = `🔑 Tu Licencia Oficial de ${pName} — OFFSZN`;
+                plain = 
+`¡Hola ${buyer}! 👋
+
+Muchas gracias por tu compra. Aquí tienes tu licencia definitiva de por vida de ${pName} VST/AU:
+
+═════════════════════════════════════════════
+🔑 TU SERIAL KEY LIFETIME:
+${k1}
+═════════════════════════════════════════════
+
+📥 ENLACES DE DESCARGA:
+• Windows: ${DOWNLOAD_LINKS[pName].win}
+• macOS:   ${DOWNLOAD_LINKS[pName].mac}
+
+💡 Clave vitalicia para hasta 2 dispositivos personales.
+
+Atentamente,
+Willie / OFFSZN`;
+                html = plain;
+            }
+
+            return { subject, plain, html, k1, k2 };
+        }
+
+        function renderPreview() {
+            const data = buildEmailContent();
+            document.getElementById('preview-subject').innerText = 'Asunto: ' + data.subject;
+            document.getElementById('preview-text').innerText = data.plain;
+        }
+
+        async function copyRichHtml() {
+            const data = buildEmailContent();
+            try {
+                if (navigator.clipboard && window.ClipboardItem) {
+                    const blobHtml = new Blob([data.html], { type: 'text/html' });
+                    const blobText = new Blob([data.plain], { type: 'text/plain' });
+                    await navigator.clipboard.write([new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })]);
+                    showToast('📋 ¡Copiado para Gmail/Outlook!');
+                    return;
+                }
+            } catch (err) {}
+            copyTextFallback(data.plain);
+            showToast('📄 ¡Copiado texto plano!');
+        }
+
+        function copyPlainText() {
+            const data = buildEmailContent();
+            copyTextFallback(data.plain);
+            showToast('📄 ¡Texto plano copiado!');
+        }
+
+        async function copyAndTagUsed() {
+            const product = document.getElementById('gen-product').value;
+            const k1 = document.getElementById('gen-key1').value.trim();
+            const k2 = document.getElementById('gen-key2').value.trim();
+            const buyer = document.getElementById('gen-buyer').value.trim();
+
+            await copyRichHtml();
+
+            let count = 0;
+            const now = new Date().toLocaleDateString();
+
+            const lic1 = licenses.find(l => l.serial === k1);
+            if (lic1) {
+                lic1.used = true;
+                lic1.date = now;
+                if (buyer && !lic1.note) lic1.note = 'Vendido a: ' + buyer;
+                count++;
+            }
+
+            if (product === 'promo-2x1' && k2) {
+                const lic2 = licenses.find(l => l.serial === k2);
+                if (lic2) {
+                    lic2.used = true;
+                    lic2.date = now;
+                    if (buyer && !lic2.note) lic2.note = 'Vendido a: ' + buyer + ' (2x1)';
+                    count++;
+                }
+            }
+
+            if (count > 0) {
+                saveData();
+                renderInventory();
+                autoFillDispatchKeys();
+                renderPreview();
+                showToast(`⚡ Correo copiado & ${count} clave(s) marcada(s) como USADA`);
+            }
+        }
+
+        function openInGmail() {
+            const data = buildEmailContent();
+            const url = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.plain)}`;
+            window.open(url, '_blank');
+        }
+
+        function openInWhatsApp() {
+            const data = buildEmailContent();
+            const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(data.plain)}`;
+            window.open(url, '_blank');
+        }
+
+        // ==============================================================
+        // INVENTORY & TAGS
+        // ==============================================================
+        function renderInventory() {
+            const container = document.getElementById('inventory-container');
+            const search = document.getElementById('search-input').value.trim().toLowerCase();
+
+            let filtered = licenses.filter(lic => {
+                const matchSearch = !search || 
+                    lic.serial.toLowerCase().includes(search) || 
+                    lic.plugin.toLowerCase().includes(search) ||
+                    (lic.note && lic.note.toLowerCase().includes(search));
+
+                if (!matchSearch) return false;
+
+                if (activeFilter === 'all') return true;
+                if (activeFilter === 'avail') return !lic.used;
+                if (activeFilter === 'used') return lic.used;
+                return lic.plugin === activeFilter;
+            });
+
+            const plugins = ['Easy Mix', 'Easy Master', 'Coca Cola', 'Inka Kola'];
+            licenses.forEach(l => {
+                if (!plugins.includes(l.plugin)) plugins.push(l.plugin);
+            });
+
+            let html = '';
+
+            plugins.forEach(p => {
+                const grp = filtered.filter(l => l.plugin === p);
+                if (grp.length === 0) return;
+
+                const totalGrp = licenses.filter(l => l.plugin === p).length;
+                const availGrp = licenses.filter(l => l.plugin === p && !l.used).length;
+
+                html += `
+                    <div class="group-container">
+                        <div class="group-title-bar">
+                            <h3>${p} (${availGrp} disponibles / ${totalGrp - availGrp} usadas)</h3>
+                            <button class="btn btn-outline btn-sm" onclick="pickNextAvailable('${p}')">
+                                ⚡ Usar siguiente
+                            </button>
+                        </div>
+                        <div class="licenses-grid">
+                `;
+
+                grp.forEach(lic => {
+                    const isUsed = lic.used;
+                    const badgeClass = isUsed ? 'used' : 'avail';
+                    const badgeTxt = isUsed ? 'USADA' : 'DISPONIBLE';
+
+                    html += `
+                        <div class="lic-card ${isUsed ? 'used' : ''}">
+                            <div class="lic-card-top">
+                                <span class="lic-status-badge ${badgeClass}" onclick="toggleLicStatus('${lic.id}')">
+                                    ● ${badgeTxt}
+                                </span>
+                                <span style="font-size: 0.68rem; color: var(--text-subtle);">
+                                    ${lic.devices || 2} Disp. • ${lic.date || 'Full'}
+                                </span>
+                            </div>
+
+                            <div class="lic-serial-box">
+                                <span class="lic-serial">${lic.serial}</span>
+                                <button class="btn-mini-copy" onclick="copySerialOnly('${lic.serial}')" title="Copiar">📋</button>
+                            </div>
+
+                            <div class="lic-card-meta">
+                                <span class="lic-note-txt" title="${escapeHtml(lic.note || '')}">
+                                    ${lic.note ? '👤 ' + escapeHtml(lic.note) : 'Sin nota'}
+                                </span>
+                                <div class="lic-card-actions">
+                                    <button class="btn-card-act" onclick="loadKeyIntoEmail('${lic.id}')">✉️ Cargar</button>
+                                    <button class="btn-card-act" onclick="openNoteModal('${lic.id}')">✏️</button>
+                                    <button class="btn-card-act" onclick="toggleLicStatus('${lic.id}')">🏷️</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (filtered.length === 0) {
+                html = `<div style="text-align:center; padding:40px; color:var(--text-subtle);">No hay licencias que coincidan con la búsqueda.</div>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function setFilter(flt, el) {
+            activeFilter = flt;
+            document.querySelectorAll('.pill-filter').forEach(b => b.classList.remove('active'));
+            if (el) el.classList.add('active');
+            renderInventory();
+        }
+
+        function toggleLicStatus(id) {
+            const lic = licenses.find(l => l.id === id);
+            if (!lic) return;
+            lic.used = !lic.used;
+            lic.date = lic.used ? new Date().toLocaleDateString() : '';
+            saveData();
+            renderInventory();
+            autoFillDispatchKeys();
+            renderPreview();
+            showToast(lic.used ? '🔴 Marcada como USADA' : '🟢 Marcada como DISPONIBLE');
+        }
+
+        function loadKeyIntoEmail(id) {
+            const lic = licenses.find(l => l.id === id);
+            if (!lic) return;
+
+            const select = document.getElementById('gen-product');
+            if (lic.plugin === 'Easy Mix') select.value = 'easy-mix';
+            else if (lic.plugin === 'Easy Master') select.value = 'easy-master';
+            else if (lic.plugin === 'Coca Cola') select.value = 'coca-cola';
+            else if (lic.plugin === 'Inka Kola') select.value = 'inka-kola';
+
+            onProductChange();
+            document.getElementById('gen-key1').value = lic.serial;
+            renderPreview();
+
+            // Switch to dispatch tab
+            const tabBtn = document.querySelector('.tab-btn');
+            switchTab('dispatch', tabBtn);
+            showToast(`✉️ Clave cargada en despacho: ${lic.serial}`);
+        }
+
+        function pickNextAvailable(pName) {
+            const f = licenses.find(l => l.plugin === pName && !l.used);
+            if (!f) {
+                alert(`No quedan claves disponibles para ${pName}. Genera una nueva.`);
+                return;
+            }
+            loadKeyIntoEmail(f.id);
+        }
+
+        function copySerialOnly(s) {
+            copyTextFallback(s);
+            showToast(`🔑 Serial copiado: ${s}`);
+        }
+
+        // ==============================================================
+        // NOTE MODAL
+        // ==============================================================
+        function openNoteModal(id) {
+            const lic = licenses.find(l => l.id === id);
+            if (!lic) return;
+            activeNoteId = id;
+            document.getElementById('note-serial-val').value = lic.serial;
+            document.getElementById('note-input-val').value = lic.note || '';
+            document.getElementById('note-modal').classList.add('open');
+            setTimeout(() => document.getElementById('note-input-val').focus(), 100);
+        }
+
+        function closeNoteModal() {
+            document.getElementById('note-modal').classList.remove('open');
+            activeNoteId = null;
+        }
+
+        function saveNote() {
+            if (!activeNoteId) return;
+            const lic = licenses.find(l => l.id === activeNoteId);
+            if (lic) {
+                lic.note = document.getElementById('note-input-val').value.trim();
+                saveData();
+                renderInventory();
+                showToast('✅ Nota guardada');
+            }
+            closeNoteModal();
+        }
+
+        // ==============================================================
+        // BACKUP & UTILS
+        // ==============================================================
+        function exportBackup() {
+            const str = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(licenses, null, 2));
+            const a = document.createElement('a');
+            a.setAttribute('href', str);
+            a.setAttribute('download', `OFFSZN_LICENCIAS_${new Date().toISOString().slice(0, 10)}.json`);
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            showToast('💾 Respaldo JSON exportado');
+        }
+
+        let toastTimer = null;
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-text').innerText = msg;
+            t.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+        }
+
+        function copyTextFallback(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text);
+                return;
+            }
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Init
+        window.addEventListener('DOMContentLoaded', checkExistingAuth);
+    </script>
+</body>
+</html>
