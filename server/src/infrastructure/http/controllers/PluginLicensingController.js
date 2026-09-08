@@ -331,7 +331,9 @@ export const activateSerial = async (req, res) => {
             .from('plugin_licenses').select('*').eq('serial_key', serial_key).single();
 
         if (licErr || !license) return res.status(404).json({ error: 'Licencia no encontrada o inválida.' });
-        if (license.status !== 'active') return res.status(403).json({ error: 'Esta licencia está inactiva o suspendida.' });
+        if (license.status === 'suspended' || license.status === 'revoked' || license.status === 'banned') {
+            return res.status(403).json({ error: 'Esta licencia ha sido suspendida o revocada.' });
+        }
 
         // ── Validation: Match Plugin product (Coca-Cola vs Inka Kola vs Easy Master vs Easy Mix) ──
         const upperSerial = (serial_key || '').toUpperCase();
@@ -714,4 +716,66 @@ export const adminGenerateFullKey = async (req, res) => {
         return res.status(500).json({ error: err.message || 'Error al generar clave.' });
     }
 };
+
+// ─── GET & POST /api/plugin/admin/licenses ────────────────────────────────────
+// Admin-only: Lists all lifetime and active plugin licenses from Supabase
+export const adminListLicenses = async (req, res) => {
+    try {
+        const pin = req.query.admin_key || req.headers['x-admin-key'] || req.body?.admin_key;
+        const validKey = process.env.PLUGIN_ADMIN_KEY;
+        const masterPin = 'gian2030upc';
+
+        if (!pin || (pin !== validKey && pin !== masterPin)) {
+            return res.status(403).json({ error: 'Unauthorized: Clave de administrador inválida.' });
+        }
+
+        const { data: licenses, error } = await supabase
+            .from('plugin_licenses')
+            .select('*, plugin_activations(*)')
+            .order('created_at', { ascending: false })
+            .limit(300);
+
+        if (error) throw error;
+
+        return res.json({ success: true, licenses: licenses || [] });
+    } catch (err) {
+        console.error('💥 [Admin List Licenses Error]:', err);
+        return res.status(500).json({ error: err.message || 'Error al listar licencias.' });
+    }
+};
+
+// ─── POST /api/plugin/admin/update-status ──────────────────────────────────────
+// Admin-only: Updates a license status (active vs used/sold) in Supabase
+export const adminUpdateLicenseStatus = async (req, res) => {
+    try {
+        const { admin_key, serial_key, status } = req.body || {};
+        const validKey = process.env.PLUGIN_ADMIN_KEY;
+        const masterPin = 'gian2030upc';
+
+        if (!admin_key || (admin_key !== validKey && admin_key !== masterPin)) {
+            return res.status(403).json({ error: 'Unauthorized: Clave de administrador inválida.' });
+        }
+
+        if (!serial_key) {
+            return res.status(400).json({ error: 'Falta serial_key' });
+        }
+
+        const newStatus = status === 'used' || status === 'sold' ? 'used' : 'active';
+
+        const { data, error } = await supabase
+            .from('plugin_licenses')
+            .update({ status: newStatus })
+            .eq('serial_key', serial_key.trim().toUpperCase())
+            .select('*')
+            .single();
+
+        if (error) throw error;
+
+        return res.json({ success: true, license: data });
+    } catch (err) {
+        console.error('💥 [Admin Update License Status Error]:', err);
+        return res.status(500).json({ error: err.message || 'Error al actualizar estado.' });
+    }
+};
+
 

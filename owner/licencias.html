@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -820,32 +820,154 @@
             cursor: pointer;
         }
 
-        /* RESPONSIVE OPTIMIZATION */
+        /* SEGMENTED PRODUCT CHIPS (ANTI-DROPDOWN SLOP) */
+        .product-selector-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .product-chips-wrap {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            margin-bottom: 16px;
+        }
+
+        .product-chips-wrap::-webkit-scrollbar {
+            display: none;
+        }
+
+        .product-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #111114;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-muted);
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.84rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.14s ease;
+            white-space: nowrap;
+            min-height: 44px;
+            user-select: none;
+        }
+
+        .product-chip:hover {
+            background: #18181d;
+            color: #ffffff;
+            border-color: var(--border-hover);
+        }
+
+        .product-chip.active {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+            font-weight: 800;
+            box-shadow: 0 4px 16px rgba(255, 255, 255, 0.16);
+            transform: translateY(-1px);
+        }
+
+        /* RESPONSIVE & MOBILE OPTIMIZATIONS */
         @media (max-width: 768px) {
             #app-container {
-                padding: 16px 12px 60px;
+                padding: 14px 12px 60px;
+            }
+            header {
+                flex-direction: row;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+            }
+            .brand-area {
+                gap: 8px;
             }
             .brand-title h1 {
-                font-size: 1.1rem;
+                font-size: 1.05rem;
+            }
+            .brand-title p {
+                display: none; /* Quita ruido visual en celular */
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+                margin-bottom: 16px;
+            }
+            .stat-box {
+                padding: 10px 12px;
+            }
+            .stat-val {
+                font-size: 1.25rem;
+            }
+            .nav-tabs {
+                margin-bottom: 16px;
+                padding: 4px;
+                gap: 4px;
+            }
+            .tab-btn {
+                min-width: 95px;
+                padding: 9px 8px;
+                font-size: 0.74rem;
+            }
+            .section-card, .gen-key-card {
+                padding: 16px 14px;
+                border-radius: var(--radius-md);
+                margin-bottom: 16px;
             }
             .grid-inputs {
                 grid-template-columns: 1fr;
+                gap: 12px;
             }
             .action-row {
                 flex-direction: column;
+                gap: 8px;
             }
             .action-row .btn {
                 width: 100%;
+                justify-content: center;
+                min-height: 44px;
+                font-size: 0.85rem;
             }
             .filter-controls {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 10px;
+            }
+            .filter-buttons {
+                overflow-x: auto;
+                padding-bottom: 4px;
+                scrollbar-width: none;
+            }
+            .filter-buttons::-webkit-scrollbar {
+                display: none;
             }
             .search-wrap {
                 max-width: 100%;
+                min-width: 100%;
             }
             .licenses-grid {
                 grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            .lic-card {
+                padding: 12px;
+            }
+            .lic-serial {
+                font-size: 0.8rem;
             }
         }
     </style>
@@ -940,15 +1062,28 @@
                 </div>
 
                 <div class="grid-inputs">
-                    <div class="form-group">
-                        <label>Producto Vendido</label>
-                        <select id="gen-product" class="form-control" onchange="onProductChange()">
-                            <option value="easy-mix">Easy Mix (Lifetime)</option>
-                            <option value="easy-master">Easy Master (Lifetime)</option>
-                            <option value="promo-2x1">🎁 Promo 2x1 (Easy Mix + Easy Master)</option>
-                            <option value="coca-cola">Coca Cola Plugin (Lifetime)</option>
-                            <option value="inka-kola">Inka Kola Plugin (Lifetime)</option>
-                        </select>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <div class="product-selector-label">
+                            <span>📦 Selecciona el Producto Vendido:</span>
+                        </div>
+                        <div class="product-chips-wrap" id="dispatch-product-chips">
+                            <button type="button" class="product-chip active" data-value="easy-mix" onclick="selectProductChip('easy-mix')">
+                                🎚️ Easy Mix
+                            </button>
+                            <button type="button" class="product-chip" data-value="easy-master" onclick="selectProductChip('easy-master')">
+                                🎛️ Easy Master
+                            </button>
+                            <button type="button" class="product-chip chip-highlight" data-value="promo-2x1" onclick="selectProductChip('promo-2x1')">
+                                🎁 Promo 2x1 (Mix + Master)
+                            </button>
+                            <button type="button" class="product-chip" data-value="coca-cola" onclick="selectProductChip('coca-cola')">
+                                🥤 Coca-Cola
+                            </button>
+                            <button type="button" class="product-chip" data-value="inka-kola" onclick="selectProductChip('inka-kola')">
+                                🟡 Inka Kola
+                            </button>
+                        </div>
+                        <input type="hidden" id="gen-product" value="easy-mix">
                     </div>
 
                     <div class="form-group">
@@ -1013,14 +1148,25 @@
                 </div>
 
                 <div class="grid-inputs" style="margin-top: 20px;">
-                    <div class="form-group">
-                        <label>Seleccionar Plugin</label>
-                        <select id="new-plugin-select" class="form-control">
-                            <option value="Easy Mix">Easy Mix</option>
-                            <option value="Easy Master">Easy Master</option>
-                            <option value="Coca Cola">Coca Cola</option>
-                            <option value="Inka Kola">Inka Kola</option>
-                        </select>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <div class="product-selector-label">
+                            <span>🔌 Plugin a Generar (2 Equipos):</span>
+                        </div>
+                        <div class="product-chips-wrap" id="gen-product-chips">
+                            <button type="button" class="product-chip active" data-value="Easy Mix" onclick="selectGenChip('Easy Mix')">
+                                🎚️ Easy Mix
+                            </button>
+                            <button type="button" class="product-chip" data-value="Easy Master" onclick="selectGenChip('Easy Master')">
+                                🎛️ Easy Master
+                            </button>
+                            <button type="button" class="product-chip" data-value="Coca Cola" onclick="selectGenChip('Coca Cola')">
+                                🥤 Coca-Cola
+                            </button>
+                            <button type="button" class="product-chip" data-value="Inka Kola" onclick="selectGenChip('Inka Kola')">
+                                🟡 Inka Kola
+                            </button>
+                        </div>
+                        <input type="hidden" id="new-plugin-select" value="Easy Mix">
                     </div>
 
                     <div class="form-group">
@@ -1193,6 +1339,119 @@
         let activeFilter = 'all';
         let activeNoteId = null;
         let lastGeneratedKey = '';
+
+        // ==============================================================
+        // PRODUCT CHIPS SELECTION & SYNC
+        // ==============================================================
+        function selectProductChip(val) {
+            document.querySelectorAll('#dispatch-product-chips .product-chip').forEach(c => {
+                if (c.dataset.value === val) c.classList.add('active');
+                else c.classList.remove('active');
+            });
+            document.getElementById('gen-product').value = val;
+            onProductChange();
+        }
+
+        function selectGenChip(val) {
+            document.querySelectorAll('#gen-product-chips .product-chip').forEach(c => {
+                if (c.dataset.value === val) c.classList.add('active');
+                else c.classList.remove('active');
+            });
+            document.getElementById('new-plugin-select').value = val;
+        }
+
+        function syncProductChips() {
+            const val = document.getElementById('gen-product').value;
+            document.querySelectorAll('#dispatch-product-chips .product-chip').forEach(c => {
+                if (c.dataset.value === val) c.classList.add('active');
+                else c.classList.remove('active');
+            });
+            const genVal = document.getElementById('new-plugin-select').value;
+            document.querySelectorAll('#gen-product-chips .product-chip').forEach(c => {
+                if (c.dataset.value === genVal) c.classList.add('active');
+                else c.classList.remove('active');
+            });
+        }
+
+        // ==============================================================
+        // STORAGE & DATA LOAD (LOCAL + SUPABASE CLOUD SYNC)
+        // ==============================================================
+        async function loadData() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    licenses = JSON.parse(stored);
+                } catch (e) {
+                    licenses = [...INITIAL_LICENSES];
+                }
+            } else {
+                licenses = [...INITIAL_LICENSES];
+            }
+
+            autoFillDispatchKeys();
+            renderStats();
+            renderPreview();
+            renderInventory();
+
+            // Cloud sync with Supabase
+            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || 'gian2030upc';
+            try {
+                const res = await fetch(`/api/plugin/admin/licenses?admin_key=${encodeURIComponent(adminPin)}`);
+                const data = await res.json();
+                if (data && data.success && Array.isArray(data.licenses)) {
+                    const dbLifetime = data.licenses.filter(l => l.license_type === 'lifetime' || l.license_type === 'full');
+                    
+                    dbLifetime.forEach(dbLic => {
+                        const existing = licenses.find(l => l.serial === dbLic.serial_key);
+                        const isUsed = dbLic.status === 'used' || dbLic.status === 'sold';
+                        if (existing) {
+                            existing.used = isUsed;
+                            existing.db_id = dbLic.id;
+                            if (dbLic.plugin_activations && dbLic.plugin_activations.length > 0) {
+                                existing.devices_used = dbLic.plugin_activations.length;
+                            }
+                        } else {
+                            licenses.unshift({
+                                id: dbLic.id,
+                                plugin: dbLic.plugin_name || 'Easy Mix',
+                                serial: dbLic.serial_key,
+                                used: isUsed,
+                                note: dbLic.user_id ? 'Vendido online' : '',
+                                date: new Date(dbLic.created_at).toLocaleDateString(),
+                                devices: dbLic.max_devices || 2
+                            });
+                        }
+                    });
+
+                    saveData();
+                    autoFillDispatchKeys();
+                    renderStats();
+                    renderPreview();
+                    renderInventory();
+                }
+            } catch (err) {
+                console.warn('Could not sync with Supabase cloud:', err);
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(licenses));
+            renderStats();
+        }
+
+        function renderStats() {
+            const total = licenses.length;
+            const avail = licenses.filter(l => !l.used).length;
+            const used = total - avail;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-avail').innerText = avail;
+            document.getElementById('stat-used').innerText = used;
+
+            document.getElementById('cnt-all').innerText = total;
+            document.getElementById('cnt-avail').innerText = avail;
+            document.getElementById('cnt-used').innerText = used;
+        }
 
         // ==============================================================
         // AUTHENTICATION GATE
@@ -1418,6 +1677,7 @@
             else if (plugin === 'Coca Cola') select.value = 'coca-cola';
             else if (plugin === 'Inka Kola') select.value = 'inka-kola';
 
+            syncProductChips();
             onProductChange();
             document.getElementById('gen-key1').value = lastGeneratedKey;
             renderPreview();
@@ -1739,6 +1999,23 @@ Willie / OFFSZN`;
                 autoFillDispatchKeys();
                 renderPreview();
                 showToast(`⚡ Correo copiado & ${count} clave(s) marcada(s) como USADA`);
+
+                // Persist status to Supabase in background
+                const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || 'gian2030upc';
+                if (lic1 && lic1.serial) {
+                    fetch('/api/plugin/admin/update-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ admin_key: adminPin, serial_key: lic1.serial, status: 'used' })
+                    }).catch(() => {});
+                }
+                if (lic2 && lic2.serial) {
+                    fetch('/api/plugin/admin/update-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ admin_key: adminPin, serial_key: lic2.serial, status: 'used' })
+                    }).catch(() => {});
+                }
             }
         }
 
@@ -1865,6 +2142,18 @@ Willie / OFFSZN`;
             autoFillDispatchKeys();
             renderPreview();
             showToast(lic.used ? '🔴 Marcada como USADA' : '🟢 Marcada como DISPONIBLE');
+
+            // Persist status to Supabase in background
+            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || 'gian2030upc';
+            fetch('/api/plugin/admin/update-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    admin_key: adminPin,
+                    serial_key: lic.serial,
+                    status: lic.used ? 'used' : 'active'
+                })
+            }).catch(e => console.warn('Could not sync status:', e));
         }
 
         function loadKeyIntoEmail(id) {
@@ -1877,6 +2166,7 @@ Willie / OFFSZN`;
             else if (lic.plugin === 'Coca Cola') select.value = 'coca-cola';
             else if (lic.plugin === 'Inka Kola') select.value = 'inka-kola';
 
+            syncProductChips();
             onProductChange();
             document.getElementById('gen-key1').value = lic.serial;
             renderPreview();

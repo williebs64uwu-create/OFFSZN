@@ -1,5 +1,17 @@
 import express from 'express';
-import { requestTrial, activateSerial, generateWebLicense, generateTrialWebLicense, adminResetLicense, adminDeleteLicense, adminGetABStats, adminVerifyPin, adminGenerateFullKey } from '../controllers/PluginLicensingController.js';
+import { 
+    requestTrial, 
+    activateSerial, 
+    generateWebLicense, 
+    generateTrialWebLicense, 
+    adminResetLicense, 
+    adminDeleteLicense, 
+    adminGetABStats, 
+    adminVerifyPin, 
+    adminGenerateFullKey,
+    adminListLicenses,
+    adminUpdateLicenseStatus
+} from '../controllers/PluginLicensingController.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 
 const router = express.Router();
@@ -23,6 +35,11 @@ router.get('/admin/ab-stats', adminGetABStats);
 router.post('/admin/verify-pin', adminVerifyPin);
 // Admin: Generar nueva clave FULL (2 dispositivos) y guardarla en Supabase
 router.post('/admin/generate-key', adminGenerateFullKey);
+// Admin: Listar todas las licencias de Supabase
+router.get('/admin/licenses', adminListLicenses);
+router.post('/admin/licenses', adminListLicenses);
+// Admin: Marcar estado de licencia en Supabase (active / used)
+router.post('/admin/update-status', adminUpdateLicenseStatus);
 
 export default router;
 

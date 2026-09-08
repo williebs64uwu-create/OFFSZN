@@ -407,12 +407,17 @@ app.use((req, res, next) => {
 
     // 1. Check blocked directory prefixes
     if (sensitiveStart.some(s => pathLower.startsWith(s))) {
-        // Exception: Allow owner dashboard & license dispatch pages (protected by internal Auth Gate)
+        // Exception: Allow owner dashboards, license dispatch, calendar, and public tools
         if (
             pathLower === '/owner/licencias.html' ||
             pathLower === '/owner/licencias' ||
             pathLower === '/owner/offszn.html' ||
-            pathLower === '/owner/offszn'
+            pathLower === '/owner/offszn' ||
+            pathLower === '/owner/content-calendar.html' ||
+            pathLower === '/owner/content-calendar' ||
+            pathLower === '/owner/audience-data.js' ||
+            pathLower === '/server/public/recovery_dashboard.html' ||
+            pathLower === '/server/public/system-logs.html'
         ) {
             return next();
         }
@@ -510,10 +515,59 @@ app.get(['/owner/licencias', '/owner/licencias.html', '/licencias-dispatch'], (r
     return res.status(404).send('Licencias panel not found');
 });
 
+// --- 3.0.4 OWNER OS MAESTRO DIRECT ROUTE ---
+app.get(['/owner/offszn', '/owner/offszn.html'], (req, res) => {
+    const p = path.join(rootPath, 'owner/offszn.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Owner OS not found');
+});
+
+// --- 3.0.5 CONTENT CALENDAR DIRECT ROUTE ---
+app.get(['/owner/content-calendar', '/owner/content-calendar.html'], (req, res) => {
+    const p = path.join(rootPath, 'owner/content-calendar.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Content calendar not found');
+});
+
+// --- 3.0.6 AUDIENCE DATA ASSET ROUTE ---
+app.get('/owner/audience-data.js', (req, res) => {
+    const p = path.join(rootPath, 'owner/audience-data.js');
+    if (fs.existsSync(p)) {
+        res.type('application/javascript');
+        return res.sendFile(p);
+    }
+    return res.status(404).send('Audience data not found');
+});
+
+// --- 3.0.7 RECOVERY DASHBOARD DIRECT ROUTE ---
+app.get(['/recovery-dashboard', '/recovery-dashboard.html', '/recovery_dashboard.html', '/server/public/recovery_dashboard.html'], (req, res) => {
+    const p = path.join(rootPath, 'server/public/recovery_dashboard.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Recovery dashboard not found');
+});
+
+// --- 3.0.8 SYSTEM LOGS DIRECT ROUTE ---
+app.get(['/system-logs', '/system-logs.html', '/server/public/system-logs.html'], (req, res) => {
+    const p = path.join(rootPath, 'server/public/system-logs.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('System logs not found');
+});
+
+// --- 3.0.9 AYUDA ANALYTICS DIRECT ROUTE ---
+app.get(['/ayuda/admin/analytics', '/ayuda/admin/analytics.html'], (req, res) => {
+    const p = path.join(rootPath, 'ayuda/admin/analytics.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Analytics not found');
+});
+
 // B. Clean URLs (Force Redirects & Internal Rewrites)
 app.use((req, res, next) => {
-    // Skip API routes, willieinspired, pan/lic, owner/licencias, music assets, and FFmpeg/Debug folders to avoid loops or blocking
-    const skipPaths = ['/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js', '/components', '/willieinspired', '/@willieinspired', '/pan/lic', '/owner/licencias', '/licencias-dispatch', '/music-raw-to-defined'];
+    // Skip API routes, willieinspired, pan/lic, owner routes, recovery, logs, analytics, etc.
+    const skipPaths = [
+        '/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js', '/components',
+        '/willieinspired', '/@willieinspired', '/pan/lic', '/owner', '/licencias-dispatch',
+        '/recovery-dashboard', '/system-logs', '/ayuda/admin', '/music-raw-to-defined'
+    ];
     if (skipPaths.some(p => req.path.startsWith(p))) return next();
 
     // 1. Force Redirect: Remove .html from browser address bar
