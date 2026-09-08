@@ -768,6 +768,7 @@ export const capturePayPalOrder = async (req, res) => {
             let cartItems = [];
             const isNegotiation = req.body.isNegotiation || false;
             const negotiateToken = req.body.negotiateToken;
+            const directProductId = req.body.directProductId;
             const isPromo2x1Body = Boolean(req.body.isPromo2x1 || req.body.is_promo_2x1 || String(directProductId) === 'promo-2x1' || (req.body.pluginName || '').toLowerCase().includes('2x1'));
 
             if (directProductId) {
