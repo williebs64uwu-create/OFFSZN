@@ -3227,21 +3227,9 @@
         async function savePayPal() {
             const email = document.getElementById('inputPaypalEmail').value;
             if (email && email.includes("@")) {
-                const userId = localStorage.getItem('userId');
-                // Fetch current methods from USERS table (not profiles)
-                const { data: user } = await supabaseClient
-                    .from('users')
-                    .select('payment_methods')
-                    .eq('id', userId)
-                    .single();
-
-                const currentMethods = user?.payment_methods || {};
-                currentMethods.paypal = email;
-
-                const { error } = await supabaseClient
-                    .from('users')
-                    .update({ payment_methods: currentMethods })
-                    .eq('id', userId);
+                const { error } = await supabaseClient.rpc('update_my_payment_settings', {
+                    p_paypal_email: email
+                });
 
                 if (!error) {
                     // Update UI immediately without reload
@@ -3254,7 +3242,7 @@
                     showToast("Error: " + error.message, "error");
                 }
             } else {
-                showToast("Correo inválido", "error");
+                showToast("Por favor ingresa un correo de PayPal válido", "error");
             }
         }
 

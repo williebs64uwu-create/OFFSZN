@@ -304,7 +304,7 @@ const CheckoutManager = {
         if (producerIds.length > 0) {
           const { data: profilesData } = await window.supabaseClient
             .from('users')
-            .select('id, nickname, paypal_email, payment_methods, yape_phone, is_verified')
+            .select('id, nickname, has_paypal, has_yape, is_verified')
             .in('id', producerIds);
 
           if (profilesData) {
@@ -313,8 +313,8 @@ const CheckoutManager = {
               profilesDict[pf.id] = nameToUse;
 
               // Check eligibility (PayPal exists or Yape is setup)
-              const hasPayPal = pf.paypal_email || pf.payment_methods?.paypal?.enabled || pf.payment_methods?.paypal;
-              const hasYape = pf.yape_phone;
+              const hasPayPal = !!pf.has_paypal;
+              const hasYape = !!pf.has_yape;
 
               if (hasPayPal || hasYape) {
                 eligibleProducers.add(pf.id);

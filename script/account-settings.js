@@ -58,14 +58,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadUserData() {
     try {
-        const { data, error } = await window.supabaseClient
-            .from('users')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single();
+        const [profileRes, paymentRes] = await Promise.all([
+            window.supabaseClient
+                .from('users')
+                .select('id, nickname, first_name, last_name, avatar_url, bio, role, socials, referral_code, experience, plan, storage_version')
+                .eq('id', currentUser.id)
+                .single(),
+            window.supabaseClient.rpc('get_my_payment_settings')
+        ]);
 
-        if (error) throw error;
-        currentProfileData = data;
+        if (profileRes.error) throw profileRes.error;
+        currentProfileData = {
+            ...profileRes.data,
+            email: currentUser.email,
+            paypal_email: paymentRes.data?.paypal_email || ''
+        };
     } catch (err) {
         // console.error("Error loading profile:", err);
     }
@@ -542,7 +549,12 @@ async function saveProfileChanges(e, type) {
             if (paypal_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(paypal_email)) {
                 throw new Error("Por favor ingresa un correo de PayPal válido.");
             }
-            updates = { paypal_email };
+            const { error: ppError } = await window.supabaseClient.rpc('update_my_payment_settings', {
+                p_paypal_email: paypal_email
+            });
+            if (ppError) throw ppError;
+            currentProfileData.paypal_email = paypal_email;
+            return;
         }
 
         // EXECUTE UPDATE

@@ -2418,14 +2418,13 @@
                     // Assume 60% completion if avatar or paypal is missing
                     const { data: profile } = await supabaseClient
                         .from('users') // Updated: references users table
-                        .select('avatar_url, payment_methods')
+                        .select('avatar_url, has_paypal')
                         .eq('id', userId)
                         .single();
 
                     const hasAvatar = profile?.avatar_url;
-                    // Check real paypal from JSONB
-                    const paypalEmail = profile?.payment_methods?.paypal;
-                    const hasPaypal = !!paypalEmail;
+                    // Check real paypal from safe has_paypal column
+                    const hasPaypal = !!(profile?.has_paypal);
 
                     // Update PayPal UI
                     const ppLabel = document.getElementById('paypalLabel');
@@ -2543,7 +2542,7 @@
                     // B. Fetch All Data in parallel
                     const [resProducts, resOrders, resReceived, resAccepted, resConversations] = await Promise.all([
                         supabaseClient.from('products').select('*').eq('producer_id', userId).eq('status', 'approved').order('created_at', { ascending: false }).limit(5),
-                        supabaseClient.from('order_items').select('id, price_at_purchase, created_at, license_name, product:products!inner(id, name, producer_id), order:orders(guest_email, buyer:users(nickname, email))').eq('products.producer_id', userId).order('created_at', { ascending: false }).limit(5),
+                        supabaseClient.from('order_items').select('id, price_at_purchase, created_at, license_name, product:products!inner(id, name, producer_id), order:orders(guest_email, buyer:users(nickname))').eq('products.producer_id', userId).order('created_at', { ascending: false }).limit(5),
                         // Received Invites (I am collaborator) - Join products to ensure they exist and are public
                         supabaseClient.from('collab_invitations').select('*, products:product_id(name, visibility, status)').eq('collaborator_id', userId).eq('status', 'pending').order('created_at', { ascending: false }).limit(5),
                         // Accepted Invites (I am inviter) - Join products to ensure they exist and are public

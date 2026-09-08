@@ -97,25 +97,10 @@ const PaymentSettings = {
     fetchStatus: async function () {
         try {
             const { data: user, error } = await window.supabaseClient
-                .from('users')
-                .select('paypal_email, paypal_verified, payment_methods, yape_phone, preferred_currency')
-                .eq('id', this.userId)
-                .single();
+                .rpc('get_my_payment_settings');
             if (error) throw error;
             
-            let paypalEmail = user?.paypal_email;
-            const legacyPaypal = user?.payment_methods?.paypal;
-
-            // Silent Migration: if paypal_email is empty but legacy data exists, sync it
-            if (!paypalEmail && legacyPaypal) {
-                paypalEmail = legacyPaypal;
-                // No need to await here to not block the UI, but we'll do it for consistency
-                await window.supabaseClient
-                    .from('users')
-                    .update({ paypal_email: legacyPaypal })
-                    .eq('id', this.userId);
-            }
-
+            const paypalEmail = user?.paypal_email || null;
             this.data.status = paypalEmail;
             this.data.isVerified = user?.paypal_verified || false;
             this.data.yapePhone = user?.yape_phone || null;
@@ -817,10 +802,9 @@ const PaymentSettings = {
                 btnSave.textContent = "Guardando...";
             }
 
-            const { error } = await window.supabaseClient
-                .from('users')
-                .update({ yape_phone: finalPhone })
-                .eq('id', this.userId);
+            const { error } = await window.supabaseClient.rpc('update_my_payment_settings', {
+                p_yape_phone: finalPhone
+            });
 
             if (error) throw error;
 
@@ -876,10 +860,9 @@ const PaymentSettings = {
             btn.disabled = true;
             btn.textContent = "Guardando...";
 
-            const { error } = await window.supabaseClient
-                .from('users')
-                .update({ paypal_email: email })
-                .eq('id', this.userId);
+            const { error } = await window.supabaseClient.rpc('update_my_payment_settings', {
+                p_paypal_email: email
+            });
 
             if (error) throw error;
 

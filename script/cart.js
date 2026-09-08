@@ -390,10 +390,10 @@ const CartManager = {
         this.state.isVerifying = true;
         
         try {
-            // Fetch Users (plan, payment methods, email, nickname, YAPE)
+            // Fetch Users (plan, payment eligibility, nickname)
             const { data: usersData, error: usersError } = await window.supabaseClient
                 .from('users')
-                .select('id, plan, payment_methods, paypal_email, nickname, yape_phone, is_verified')
+                .select('id, plan, has_paypal, has_yape, nickname, is_verified')
                 .in('id', producerIds);
 
             if (usersError) throw usersError;
@@ -413,18 +413,16 @@ const CartManager = {
                 const user = usersData?.find(u => String(u.id) === String(pId)) || {};
                 const profile = profilesData?.find(p => String(p.user_id) === String(pId)) || {};
                 
-                let hasPayPal = false;
-                if (user.paypal_email || (user.payment_methods && user.payment_methods.paypal)) {
-                    hasPayPal = true;
-                }
+                const hasPayPal = !!user.has_paypal;
+                const hasYape = !!user.has_yape;
 
                 verification[pId] = {
                     hasPayPal: hasPayPal,
-                    paypalEmail: user.paypal_email || user.payment_methods?.paypal || null,
+                    paypalEmail: null,
                     plan: user.plan || profile.plan || 'free',
                     nickname: user.nickname || profile.username || 'Productor',
                     username: profile.username || user.nickname || null,
-                    hasYape: !!(user.yape_phone)
+                    hasYape: hasYape
                 };
             });
 
