@@ -1009,6 +1009,9 @@
             </div>
 
             <div class="header-actions">
+                <button class="btn btn-outline btn-sm" id="btn-sync-cloud" onclick="syncCloudLicenses()">
+                    🔄 Sincronizar Nube
+                </button>
                 <button class="btn btn-outline btn-sm" onclick="exportBackup()">
                     💾 Exportar JSON
                 </button>
@@ -1176,13 +1179,18 @@
 
                     <div class="form-group">
                         <label>Límite de Dispositivos</label>
-                        <input type="text" class="form-control" value="2 Dispositivos (Por clave)" disabled>
+                        <select id="gen-device-count" class="form-control" style="background: var(--bg-input); color: #fff;">
+                            <option value="2" selected>2 Dispositivos (Estándar)</option>
+                            <option value="4">4 Dispositivos (Especial / Multi-estudio)</option>
+                            <option value="1">1 Dispositivo</option>
+                            <option value="3">3 Dispositivos</option>
+                        </select>
                     </div>
                 </div>
 
                 <div style="margin-top: 18px;">
                     <button class="btn btn-solid" id="btn-generate-db" onclick="generateNewFullKey()">
-                        ⚡ Generar Clave FULL en Servidor (2 Disp)
+                        ⚡ Generar Clave FULL en Servidor
                     </button>
                 </div>
 
@@ -1248,13 +1256,17 @@
                 <label>Serial Key</label>
                 <input type="text" id="note-serial-val" class="form-control mono" disabled>
             </div>
-            <div class="form-group" style="margin-bottom: 18px;">
+            <div class="form-group" style="margin-bottom: 14px;">
                 <label>Comprador / Correo / Referencia de Pago</label>
                 <input type="text" id="note-input-val" class="form-control" placeholder="ej. Vendido a leonardo@gmail.com - $10 USD PayPal">
             </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label>Dispositivos Permitidos (Límite Máximo)</label>
+                <input type="number" id="note-devices-val" class="form-control" min="1" max="10" value="2">
+            </div>
             <div style="display: flex; justify-content: flex-end; gap: 8px;">
                 <button class="btn btn-outline btn-sm" onclick="closeNoteModal()">Cancelar</button>
-                <button class="btn btn-solid btn-sm" onclick="saveNote()">Guardar Nota</button>
+                <button class="btn btn-solid btn-sm" onclick="saveNote()">Guardar Cambios</button>
             </div>
         </div>
     </div>
@@ -1285,7 +1297,7 @@
         const INITIAL_LICENSES = [
             // EASY MIX (11 keys from LICENCIAS.docx & master)
             { id: 'em-0', plugin: 'Easy Mix', serial: 'EASY-FULL-6B508227-B43CF647', used: false, note: '', date: '', devices: 2 },
-            { id: 'em-1', plugin: 'Easy Mix', serial: 'EASY-FULL-91265FB4-EBAD565D', used: false, note: '', date: '', devices: 2 },
+            { id: 'em-1', plugin: 'Easy Mix', serial: 'EASY-FULL-91265FB4-EBAD565D', used: true, note: 'Vendido a ezequielaleon@gmail.com', date: '08/09/2026', devices: 4 },
             { id: 'em-2', plugin: 'Easy Mix', serial: 'EASY-FULL-2D6645CA-839550D2', used: false, note: '', date: '', devices: 2 },
             { id: 'em-3', plugin: 'Easy Mix', serial: 'EASY-FULL-EB12D5F9-9EAD6AFD', used: false, note: '', date: '', devices: 2 },
             { id: 'em-4', plugin: 'Easy Mix', serial: 'EASY-FULL-2DA39794-4E08F63C', used: false, note: '', date: '', devices: 2 },
@@ -1298,7 +1310,7 @@
 
             // EASY MASTER (10 keys)
             { id: 'emst-1', plugin: 'Easy Master', serial: 'MASTER-FULL-759535AF-3A75813A', used: false, note: '', date: '', devices: 2 },
-            { id: 'emst-2', plugin: 'Easy Master', serial: 'MASTER-FULL-3015B2EA-96A3D18D', used: false, note: '', date: '', devices: 2 },
+            { id: 'emst-2', plugin: 'Easy Master', serial: 'MASTER-FULL-3015B2EA-96A3D18D', used: true, note: 'Vendido a ezequielaleon@gmail.com', date: '08/09/2026', devices: 4 },
             { id: 'emst-3', plugin: 'Easy Master', serial: 'MASTER-FULL-25D04C6A-E1BDA2B2', used: false, note: '', date: '', devices: 2 },
             { id: 'emst-4', plugin: 'Easy Master', serial: 'MASTER-FULL-1C296545-391B0F22', used: false, note: '', date: '', devices: 2 },
             { id: 'emst-5', plugin: 'Easy Master', serial: 'MASTER-FULL-96659B62-6AB7247A', used: false, note: '', date: '', devices: 2 },
@@ -1394,7 +1406,17 @@
             renderInventory();
 
             // Cloud sync with Supabase
+            await syncCloudLicenses();
+        }
+
+        async function syncCloudLicenses() {
             const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || 'gian2030upc';
+            const syncBtn = document.getElementById('btn-sync-cloud');
+            if (syncBtn) {
+                syncBtn.innerText = '🔄 Sincronizando...';
+                syncBtn.disabled = true;
+            }
+
             try {
                 const res = await fetch(`/api/plugin/admin/licenses?admin_key=${encodeURIComponent(adminPin)}`);
                 const data = await res.json();
@@ -1403,12 +1425,17 @@
                     
                     dbLifetime.forEach(dbLic => {
                         const existing = licenses.find(l => l.serial === dbLic.serial_key);
-                        const isUsed = dbLic.status === 'used' || dbLic.status === 'sold';
+                        const isUsed = dbLic.status === 'used' || dbLic.status === 'sold' || (dbLic.plugin_activations && dbLic.plugin_activations.length > 0);
+                        const maxDev = dbLic.max_devices || (existing ? existing.devices : 2);
+                        const activationsCount = (dbLic.plugin_activations && dbLic.plugin_activations.length) || 0;
+
                         if (existing) {
                             existing.used = isUsed;
                             existing.db_id = dbLic.id;
-                            if (dbLic.plugin_activations && dbLic.plugin_activations.length > 0) {
-                                existing.devices_used = dbLic.plugin_activations.length;
+                            existing.devices = maxDev;
+                            existing.devices_used = activationsCount;
+                            if (isUsed && !existing.date) {
+                                existing.date = new Date(dbLic.created_at).toLocaleDateString();
                             }
                         } else {
                             licenses.unshift({
@@ -1418,7 +1445,8 @@
                                 used: isUsed,
                                 note: dbLic.user_id ? 'Vendido online' : '',
                                 date: new Date(dbLic.created_at).toLocaleDateString(),
-                                devices: dbLic.max_devices || 2
+                                devices: maxDev,
+                                devices_used: activationsCount
                             });
                         }
                     });
@@ -1431,6 +1459,11 @@
                 }
             } catch (err) {
                 console.warn('Could not sync with Supabase cloud:', err);
+            } finally {
+                if (syncBtn) {
+                    syncBtn.innerText = '🔄 Sincronizar Nube';
+                    syncBtn.disabled = false;
+                }
             }
         }
 
@@ -1536,46 +1569,7 @@
             input.type = input.type === 'password' ? 'text' : 'password';
         }
 
-        // ==============================================================
-        // STORAGE & DATA LOAD
-        // ==============================================================
-        function loadData() {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                try {
-                    licenses = JSON.parse(stored);
-                } catch (e) {
-                    licenses = [...INITIAL_LICENSES];
-                }
-            } else {
-                licenses = [...INITIAL_LICENSES];
-                saveData();
-            }
 
-            autoFillDispatchKeys();
-            renderStats();
-            renderPreview();
-            renderInventory();
-        }
-
-        function saveData() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(licenses));
-            renderStats();
-        }
-
-        function renderStats() {
-            const total = licenses.length;
-            const avail = licenses.filter(l => !l.used).length;
-            const used = total - avail;
-
-            document.getElementById('stat-total').innerText = total;
-            document.getElementById('stat-avail').innerText = avail;
-            document.getElementById('stat-used').innerText = used;
-
-            document.getElementById('cnt-all').innerText = total;
-            document.getElementById('cnt-avail').innerText = avail;
-            document.getElementById('cnt-used').innerText = used;
-        }
 
         // ==============================================================
         // TABS SWITCHING
@@ -1603,6 +1597,7 @@
             btn.innerText = '⚡ Conectando con servidor & Base de Datos...';
 
             try {
+                const maxDevices = parseInt(document.getElementById('gen-device-count')?.value) || 2;
                 let generatedSerial = '';
 
                 // Try backend API first to register in Supabase
@@ -1613,7 +1608,7 @@
                         body: JSON.stringify({
                             admin_key: adminPin,
                             plugin_name: plugin,
-                            max_devices: 2
+                            max_devices: maxDevices
                         })
                     });
                     const data = await res.json();
@@ -1640,9 +1635,10 @@
                     plugin: plugin,
                     serial: generatedSerial,
                     used: false,
-                    note: 'Generada para 2 dispositivos',
+                    note: `Generada para ${maxDevices} dispositivo(s)`,
                     date: new Date().toLocaleDateString(),
-                    devices: 2
+                    devices: maxDevices,
+                    devices_used: 0
                 });
 
                 saveData();
@@ -1652,12 +1648,12 @@
                 document.getElementById('result-serial').innerText = generatedSerial;
                 document.getElementById('result-box').style.display = 'block';
 
-                showToast(`✅ Clave ${plugin} (2 disp) creada`);
+                showToast(`✅ Clave ${plugin} (${maxDevices} disp) creada`);
             } catch (err) {
                 alert('Error al generar clave: ' + err.message);
             } finally {
                 btn.disabled = false;
-                btn.innerText = '⚡ Generar Clave FULL en Servidor (2 Disp)';
+                btn.innerText = '⚡ Generar Clave FULL en Servidor';
             }
         }
 
@@ -2002,18 +1998,18 @@ Willie / OFFSZN`;
 
                 // Persist status to Supabase in background
                 const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || 'gian2030upc';
-                if (lic1 && lic1.serial) {
+                if (k1) {
                     fetch('/api/plugin/admin/update-status', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ admin_key: adminPin, serial_key: lic1.serial, status: 'used' })
+                        body: JSON.stringify({ admin_key: adminPin, serial_key: k1, status: 'used' })
                     }).catch(() => {});
                 }
-                if (lic2 && lic2.serial) {
+                if (product === 'promo-2x1' && k2) {
                     fetch('/api/plugin/admin/update-status', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ admin_key: adminPin, serial_key: lic2.serial, status: 'used' })
+                        body: JSON.stringify({ admin_key: adminPin, serial_key: k2, status: 'used' })
                     }).catch(() => {});
                 }
             }
@@ -2089,7 +2085,7 @@ Willie / OFFSZN`;
                                     ● ${badgeTxt}
                                 </span>
                                 <span style="font-size: 0.68rem; color: var(--text-subtle);">
-                                    ${lic.devices || 2} Disp. • ${lic.date || 'Full'}
+                                    ${lic.devices || 2} Disp. (${lic.devices_used || 0} activos) • ${lic.date || 'Full'}
                                 </span>
                             </div>
 
@@ -2200,6 +2196,7 @@ Willie / OFFSZN`;
             activeNoteId = id;
             document.getElementById('note-serial-val').value = lic.serial;
             document.getElementById('note-input-val').value = lic.note || '';
+            document.getElementById('note-devices-val').value = lic.devices || 2;
             document.getElementById('note-modal').classList.add('open');
             setTimeout(() => document.getElementById('note-input-val').focus(), 100);
         }
@@ -2214,9 +2211,24 @@ Willie / OFFSZN`;
             const lic = licenses.find(l => l.id === activeNoteId);
             if (lic) {
                 lic.note = document.getElementById('note-input-val').value.trim();
+                const newDevs = parseInt(document.getElementById('note-devices-val').value) || 2;
+                lic.devices = newDevs;
                 saveData();
                 renderInventory();
-                showToast('✅ Nota guardada');
+                showToast('✅ Cambios guardados');
+
+                // Persist device limit and status to Supabase in background
+                const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || 'gian2030upc';
+                fetch('/api/plugin/admin/update-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        admin_key: adminPin,
+                        serial_key: lic.serial,
+                        max_devices: newDevs,
+                        status: lic.used ? 'used' : 'active'
+                    })
+                }).catch(e => console.warn('Could not sync note & devices:', e));
             }
             closeNoteModal();
         }

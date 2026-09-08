@@ -748,7 +748,7 @@ export const adminListLicenses = async (req, res) => {
 // Admin-only: Updates a license status (active vs used/sold) in Supabase
 export const adminUpdateLicenseStatus = async (req, res) => {
     try {
-        const { admin_key, serial_key, status } = req.body || {};
+        const { admin_key, serial_key, status, max_devices } = req.body || {};
         const validKey = process.env.PLUGIN_ADMIN_KEY;
         const masterPin = 'gian2030upc';
 
@@ -760,11 +760,17 @@ export const adminUpdateLicenseStatus = async (req, res) => {
             return res.status(400).json({ error: 'Falta serial_key' });
         }
 
-        const newStatus = status === 'used' || status === 'sold' ? 'used' : 'active';
+        const updates = {};
+        if (status) {
+            updates.status = (status === 'used' || status === 'sold') ? 'used' : 'active';
+        }
+        if (max_devices !== undefined && max_devices !== null && !isNaN(parseInt(max_devices))) {
+            updates.max_devices = parseInt(max_devices);
+        }
 
         const { data, error } = await supabase
             .from('plugin_licenses')
-            .update({ status: newStatus })
+            .update(updates)
             .eq('serial_key', serial_key.trim().toUpperCase())
             .select('*')
             .single();
