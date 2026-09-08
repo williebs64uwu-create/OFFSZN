@@ -17,10 +17,14 @@
             if (typeof src === 'string' && (
                 src.includes('/images/') || 
                 src.includes('/assets/') || 
+                src.includes('/willieimages/') ||
                 src.startsWith('images/') || 
                 src.startsWith('assets/') || 
+                src.startsWith('willieimages/') ||
                 src.startsWith('../images') || 
-                src.startsWith('./images')
+                src.startsWith('./images') ||
+                src.startsWith('../willieimages') || 
+                src.startsWith('./willieimages')
             )) {
                 return;
             }
@@ -110,6 +114,10 @@
         // 2. Handle data-r2-bg (Background Images)
         const bgPath = el.getAttribute('data-r2-bg');
         if (bgPath) {
+            // Do not intercept static site backgrounds
+            if (typeof bgPath === 'string' && (bgPath.includes('/images/') || bgPath.includes('/willieimages/') || bgPath.startsWith('willieimages/'))) {
+                return;
+            }
             try {
                 if (el.dataset.r2Processing) return;
                 el.dataset.r2Processing = 'true';

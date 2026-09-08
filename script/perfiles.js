@@ -103,10 +103,13 @@ function actualizarHeaderPerfil(user) {
   const usernameEl = document.querySelector('.profile-username');
   if (usernameEl) {
     const displayName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.nickname;
-    usernameEl.innerHTML = `
-            ${displayName.toUpperCase()}
-            ${user.is_verified ? '<span class="verified-badge"><i class="bi bi-check-lg"></i></span>' : ''}
-        `;
+    usernameEl.textContent = displayName.toUpperCase() + ' ';
+    if (user.is_verified) {
+      const badge = document.createElement('span');
+      badge.className = 'verified-badge';
+      badge.innerHTML = '<i class="bi bi-check-lg"></i>';
+      usernameEl.appendChild(badge);
+    }
   }
 
   const roleEl = document.querySelector('.profile-role');

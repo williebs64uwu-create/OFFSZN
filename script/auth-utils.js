@@ -376,7 +376,7 @@ window.AuthUtils = {
         const publicPrefixes = [
             'products/', 'beats/mp3/', 'mp3_tagged/', 'avatars/', 'public/', 'banners/',
             'drumkits/', 'temp-previews/', 'covers/', 'audio/',
-            'secure-products/beats/mp3_tagged/', 'willieimages/'
+            'secure-products/beats/mp3_tagged/'
         ];
         return publicPrefixes.some(prefix => key.startsWith(prefix)) || key.includes('/covers/');
     },
@@ -423,6 +423,11 @@ window.AuthUtils = {
 
         if (!pathOrUrl) return null;
 
+        // 🔥 Fast-path for local site assets (never sign or proxy to R2)
+        if (typeof pathOrUrl === 'string' && (pathOrUrl.includes('willieimages') || pathOrUrl.startsWith('/images/'))) {
+            return pathOrUrl;
+        }
+
         const storageVersion = version || 'v4';
         const cacheKey = `${pathOrUrl}|${storageVersion}`;
 
@@ -436,48 +441,28 @@ window.AuthUtils = {
             pathOrUrl = this.normalizeR2StoragePath(pathOrUrl);
         }
 
-
-
         // 🔥 ZERO LATENCY FIX: If the URL is already a Cloudflare public DEV URL (pub-...), 
-
         // do NOT ask the backend to sign it. It's already public.
-
         if (typeof pathOrUrl === 'string' && pathOrUrl.includes('pub-') && pathOrUrl.includes('.r2.dev')) {
-
             return pathOrUrl;
-
         }
 
-
-
         // --- HYBRID LOGIC ---
-
         // 1. Identification: Is it R2 or a public Supabase URL?
-
         const isR2Url = (
-
             pathOrUrl.includes('r2.cloudflarestorage.com') ||
-
             pathOrUrl.includes('pub-') ||
-
             // Local Relative path check (Should be R2)
-
             (!pathOrUrl.startsWith('http') &&
-
                 !pathOrUrl.startsWith('data:') &&
-
                 !pathOrUrl.startsWith('/images') &&
-
+                !pathOrUrl.startsWith('/willieimages') &&
+                !pathOrUrl.startsWith('willieimages/') &&
                 !pathOrUrl.startsWith('/assets') &&
-
                 !pathOrUrl.startsWith('/icon') &&
-
                 !pathOrUrl.startsWith('/script') &&
-
                 pathOrUrl.includes('/')
-
             )
-
         );
 
 

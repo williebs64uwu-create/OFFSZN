@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { pipeline } from 'stream';
+import path from 'path';
+import fs from 'fs';
 import {
     getPresignedUploadUrl,
     getPresignedDownloadUrl,
@@ -389,6 +391,24 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
             return res.status(403).json({
                 error: 'Acceso no autorizado: Los archivos maestros y productos de pago requieren verificación de compra.'
             });
+        }
+
+        // 0. LOCAL ASSET DIRECT HANDLER: If key is a local file (e.g. willieimages/), serve directly from disk
+        if (key.startsWith('willieimages/') || key.startsWith('images/')) {
+            let rootPath = process.env.VERCEL ? process.cwd() : process.cwd();
+            if (!fs.existsSync(path.join(rootPath, 'willieimages')) && fs.existsSync(path.join(rootPath, '../willieimages'))) {
+                rootPath = path.resolve(rootPath, '../');
+            }
+            const localFile = path.resolve(rootPath, key);
+            // Strict containment check: ensure localFile is strictly inside rootPath
+            if (!localFile.startsWith(path.resolve(rootPath))) {
+                return res.status(403).json({ error: 'Acceso denegado: Ruta no permitida.' });
+            }
+            if (fs.existsSync(localFile)) {
+                res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+                res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+                return res.sendFile(localFile);
+            }
         }
 
         // 1. Check PERFORMANCE CACHE first

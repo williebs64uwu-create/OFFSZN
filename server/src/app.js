@@ -43,7 +43,7 @@ import { runSubscriptionScavenger } from './infrastructure/services/subscription
 
 import { submitNegotiation, respondNegotiation, generatePurchaseToken, validatePurchaseToken, reportIssue } from './infrastructure/http/controllers/NegotiationController.js';
 import { authenticateTokenMiddleware } from './infrastructure/middlewares/authenticateTokenMiddleware.js';
-import { globalLimiter } from './infrastructure/middlewares/rateLimiter.middleware.js';
+import { globalLimiter, authLimiter } from './infrastructure/middlewares/rateLimiter.middleware.js';
 
 
 
@@ -79,7 +79,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // On Vercel, ESM→CJS compilation can break import.meta.url path resolution.
 // process.cwd() always returns /var/task/ (the project root) in Vercel Lambda.
-const rootPath = process.env.VERCEL ? process.cwd() : path.join(__dirname, '../../');
+let rootPath = process.env.VERCEL ? process.cwd() : path.join(__dirname, '../../');
+if (!fs.existsSync(path.join(rootPath, 'index.html')) && fs.existsSync(path.join(rootPath, '../index.html'))) {
+    rootPath = path.resolve(rootPath, '../');
+}
 
 // --- 0. SECURITY HEADERS (MANDATORY FOR FFMPEG WASM) ---
 app.use((req, res, next) => {
@@ -377,7 +380,7 @@ app.use('/api', userRoutes);
 app.use('/api', chatRoutes);
 
 // C. SPECIFIC PREFIX ROUTERS
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/admin', adminRoutes);
 // app.use('/api/reels', reelsRoutes);
 
@@ -478,6 +481,10 @@ app.get(['/willieinspired', '/@willieinspired'], (req, res) => {
 app.get(['/willieinspired/:slug', '/@willieinspired/:slug'], (req, res, next) => {
     const { slug } = req.params;
     const cleanSlug = slug.replace(/\.html$/, '');
+    // Security check: Whitelist safe characters to prevent path traversal or parameter injection
+    if (!/^[a-zA-Z0-9_-]+$/.test(cleanSlug)) {
+        return next();
+    }
     const customProductPath = path.join(rootPath, 'willieinspired', `${cleanSlug}.html`);
     if (fs.existsSync(customProductPath)) {
         return res.sendFile(customProductPath);
@@ -561,6 +568,26 @@ app.use('/music-raw-to-defined', express.static(musicPath, {
 }));
 app.use(express.static(publicPath));
 app.use(express.static(serverPublicPath));
+
+// Dedicated static mount for willieimages & favicon to guarantee instant resolution
+const willieImagesPath = path.join(rootPath, 'willieimages');
+app.use('/willieimages', express.static(willieImagesPath, {
+    maxAge: '7d',
+    setHeaders: (res) => {
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+        res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+    }
+}));
+
+app.get('/favicon.ico', (req, res) => {
+    const fav = path.join(rootPath, 'favicon.ico');
+    if (fs.existsSync(fav)) {
+        res.setHeader('Content-Type', 'image/x-icon');
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+        return res.sendFile(fav);
+    }
+    res.status(204).end();
+});
 
 // Serve everything from rootPath — CSS, JS, images, HTML files, etc.
 app.use(express.static(rootPath, {
