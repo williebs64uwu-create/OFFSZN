@@ -111,11 +111,18 @@ const corsOptions = {
         const isMainDomain = allowedOrigins.indexOf(origin) !== -1;
         const isSubdomain = origin.endsWith('.offszn.lat') || origin.endsWith('.localhost:3000');
         
-        if (isMainDomain || isSubdomain || origin.startsWith('http://localhost') || origin === 'null') {
+        if (isMainDomain || isSubdomain || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1') || origin.endsWith('.vercel.app')) {
+            callback(null, true);
+        } else if (origin === 'null') {
             callback(null, true);
         } else {
-            console.log("⚠️ CORS Warning (dev):", origin);
-            callback(null, true);
+            if (process.env.NODE_ENV === 'production' && !process.env.VERCEL_ENV) {
+                console.warn("🚫 CORS Blocked untrusted origin:", origin);
+                callback(new Error('Bloqueado por política CORS'));
+            } else {
+                console.log("⚠️ CORS Warning (dev):", origin);
+                callback(null, true);
+            }
         }
     },
     credentials: true,
@@ -1238,18 +1245,21 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
             html = html.replace('<head>', `<head>\n    ${canonicalTag}`);
         }
 
+        // Helper to escape user inputs in HTML templates
+        const escapeHtml = (str) => String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
         // Specific Premium Template Placeholders
         if (user.template === 'premium') {
             html = html.replace('</head>', `
                 <script>
-                    window.OFFSZN_PROFILE_USER = "${user.nickname}";
+                    window.OFFSZN_PROFILE_USER = "${escapeHtml(user.nickname)}";
                     window.OFFSZN_USER_ID = "${user.id}";
                 </script>
             </head>`);
         } else if (user.template === 'editor_tienda') {
-            html = html.replace(/{{USER_NICKNAME}}/g, user.nickname);
-            html = html.replace(/{{USER_NAME_HERO}}/g, user.nickname.toUpperCase());
-            html = html.replace(/{{USER_BIO}}/g, user.bio || 'Productor Musical');
+            html = html.replace(/{{USER_NICKNAME}}/g, escapeHtml(user.nickname));
+            html = html.replace(/{{USER_NAME_HERO}}/g, escapeHtml(user.nickname).toUpperCase());
+            html = html.replace(/{{USER_BIO}}/g, escapeHtml(user.bio || 'Productor Musical'));
             html = html.replace('</head>', `
                 <script>window.OFFSZN_USER_ID = "${user.id}";</script>
                 <script src="/components/offszn_perfiles_profesionales/loader.js?v=22"></script>

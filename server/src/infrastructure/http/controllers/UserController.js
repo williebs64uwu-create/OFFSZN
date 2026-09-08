@@ -2,6 +2,16 @@ import { supabase } from '../../database/connection.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { syncUserToEmailOctopus, syncUserStatsToEmailOctopus } from '../../services/email-octopus.service.js';
 
+// Helper to strip HTML tags and dangerous protocols to prevent Stored XSS
+const sanitizeText = (str) => {
+    if (typeof str !== 'string') return str;
+    return str
+        .replace(/<[^>]*>/g, '') // Strip all HTML tags
+        .replace(/javascript:/gi, '')
+        .replace(/data:/gi, '')
+        .trim();
+};
+
 export const getMyPurchasedProducts = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -74,14 +84,14 @@ export const completeOnboarding = async (req, res) => {
             return res.status(409).json({ error: 'Ese nickname ya está en uso. Elige otro.' });
         }
 
-        // 2. Prepare Update Data
+        // 2. Prepare Update Data (sanitizados contra XSS)
         const updateData = {
-            nickname: nickname,
+            nickname: sanitizeText(nickname),
             ip_address: userIp // Log the IP
         };
-        if (role) updateData.role = role;
-        if (firstName) updateData.first_name = firstName;
-        if (lastName) updateData.last_name = lastName;
+        if (role) updateData.role = sanitizeText(role);
+        if (firstName) updateData.first_name = sanitizeText(firstName);
+        if (lastName) updateData.last_name = sanitizeText(lastName);
         if (socials && typeof socials === 'object') updateData.socials = socials;
         if (genres) updateData.genres = genres;
         if (daws) updateData.daws = daws;
@@ -89,7 +99,7 @@ export const completeOnboarding = async (req, res) => {
         if (goals) updateData.goals = goals;
         if (interests) updateData.interests = interests;
         if (source) updateData.source = source;
-        if (paypalEmail) updateData.paypal_email = paypalEmail;
+        if (paypalEmail) updateData.paypal_email = paypalEmail ? paypalEmail.trim() : null;
         updateData.onboarding_completed = true;
 
         // Supabase Auth signup does not hit /api/register — grant welcome credits on first onboarding
@@ -286,13 +296,13 @@ export const updateMyProfile = async (req, res) => {
         // Construimos el objeto de actualización
         const updateData = {};
 
-        // Solo añadimos los campos que el usuario envió
-        if (firstName !== undefined) updateData.first_name = firstName;
-        if (lastName !== undefined) updateData.last_name = lastName;
-        if (nickname !== undefined) updateData.nickname = nickname;
-        if (bio !== undefined) updateData.bio = bio; // Asumiendo que tienes una columna 'bio'
+        // Solo añadimos los campos que el usuario envió (sanitizados contra XSS)
+        if (firstName !== undefined) updateData.first_name = sanitizeText(firstName);
+        if (lastName !== undefined) updateData.last_name = sanitizeText(lastName);
+        if (nickname !== undefined) updateData.nickname = sanitizeText(nickname);
+        if (bio !== undefined) updateData.bio = sanitizeText(bio); // Sanitizado contra inyección XSS
         if (socials !== undefined) updateData.socials = socials; // Asumiendo columna 'socials' (jsonb)
-        if (paypalEmail !== undefined) updateData.paypal_email = paypalEmail;
+        if (paypalEmail !== undefined) updateData.paypal_email = paypalEmail ? paypalEmail.trim() : null;
         if (preferredCurrency !== undefined) updateData.preferred_currency = preferredCurrency;
 
         // Validar que el nickname no esté en uso por OTRO usuario

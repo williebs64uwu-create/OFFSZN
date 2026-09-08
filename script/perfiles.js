@@ -122,7 +122,10 @@ function actualizarHeaderPerfil(user) {
   const bioContent = document.querySelector('.bio-section .sidebar-content');
   if (bioContent) {
     if (user.bio) {
-      bioContent.innerHTML = `<p>${user.bio}</p>`;
+      const p = document.createElement('p');
+      p.textContent = user.bio;
+      bioContent.innerHTML = '';
+      bioContent.appendChild(p);
     } else {
       bioContent.innerHTML = '<p class="empty-state">(bio)</p>';
     }
