@@ -1,4 +1,4 @@
-/**
+﻿/**
  * YapeController.js
  * =================
  * Dedicated controller for Yape payments via Mercado Pago Perú.
@@ -17,14 +17,14 @@ const PLUGIN_INFO_MAP = {
     '899': {
         name: 'Easy Mix',
         downloads: {
-            win: 'https://drive.google.com/file/d/1wBErtaIXdj-CPObcaJV0fnomX9rzWVNu/view?usp=sharing',
+            win: 'https://drive.google.com/file/d/1JSArLjFypFYkcGJV3DIu67hxSFU4kG6q/view?usp=sharing',
             mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
         }
     },
     '901': {
         name: 'Easy Mix',
         downloads: {
-            win: 'https://drive.google.com/file/d/1wBErtaIXdj-CPObcaJV0fnomX9rzWVNu/view?usp=sharing',
+            win: 'https://drive.google.com/file/d/1JSArLjFypFYkcGJV3DIu67hxSFU4kG6q/view?usp=sharing',
             mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
         }
     },
