@@ -623,6 +623,16 @@ app.use('/music-raw-to-defined', express.static(musicPath, {
 app.use(express.static(publicPath));
 app.use(express.static(serverPublicPath));
 
+app.get('/willieimages/favicon.ico', (req, res) => {
+    const fav = path.join(rootPath, 'willieimages', 'favicon.ico');
+    if (fs.existsSync(fav)) {
+        res.setHeader('Content-Type', 'image/x-icon');
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+        return res.sendFile(fav);
+    }
+    res.status(204).end();
+});
+
 // Dedicated static mount for willieimages & favicon to guarantee instant resolution
 const willieImagesPath = path.join(rootPath, 'willieimages');
 app.use('/willieimages', express.static(willieImagesPath, {
