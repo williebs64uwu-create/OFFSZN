@@ -420,7 +420,8 @@ export const capturePayPalSubscriptionOrder = async (req, res) => {
 
         // 5. Update Profile (Immediate Tier Upgrade)
         // Even if stacking time, the user TIER becomes the new plan immediately
-        await supabase.from('users').update({ plan: plan }).eq('id', userId);
+        await supabase.from('users').update({ plan: plan, is_verified: true }).eq('id', userId);
+        await supabase.from('profiles').update({ plan: plan, is_verified: true }).eq('id', userId);
 
         // 6. Give credits
         const creditsToGive = planData.credits;
@@ -670,7 +671,8 @@ export const subscribePayPalSubscription = async (req, res) => {
             current_period_end: newPeriodEnd
         });
 
-        await supabase.from('users').update({ plan: plan }).eq('id', userId);
+        await supabase.from('users').update({ plan: plan, is_verified: true }).eq('id', userId);
+        await supabase.from('profiles').update({ plan: plan, is_verified: true }).eq('id', userId);
 
         // Give credits
         const creditsToGive = planData.credits;

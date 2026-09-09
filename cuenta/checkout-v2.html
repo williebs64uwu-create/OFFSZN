@@ -444,6 +444,54 @@
             border-color: rgba(48, 209, 88, 0.4);
             color: #30d158;
         }
+
+        /* Success Modal Styles */
+        .premium-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .premium-modal.active {
+            opacity: 1;
+            pointer-events: auto;
+            display: flex !important;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(14px);
+        }
+
+        .success-modal-content {
+            position: relative;
+            background: #0d0d12;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 40px 32px;
+            width: 90%;
+            max-width: 440px;
+            text-align: center;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.8);
+            transform: translateY(20px) scale(0.96);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .premium-modal.active .success-modal-content {
+            transform: translateY(0) scale(1);
+        }
     </style>
 </head>
 
@@ -619,6 +667,37 @@
         </div>
     </div>
 
+    <!-- SUCCESS SUBSCRIPTION MODAL -->
+    <div id="success-modal" class="premium-modal" style="display: none;">
+        <div class="modal-backdrop" onclick="closeSuccessModal()"></div>
+        <div class="modal-content success-modal-content">
+            <button class="close-btn" onclick="closeSuccessModal()" style="position: absolute; top: 18px; right: 18px; background: none; border: none; color: #888; cursor: pointer; font-size: 20px; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">
+                <i class="bi bi-x-lg"></i>
+            </button>
+
+            <div class="success-illustration" style="width: 72px; height: 72px; margin: 0 auto 20px; border-radius: 50%; background: rgba(255,255,255,0.04); border: 2px solid #ffffff; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #ffffff; box-shadow: 0 0 25px rgba(255,255,255,0.15);">
+                <i class="bi bi-check-lg"></i>
+            </div>
+
+            <div class="modal-header" style="text-align: center; margin-bottom: 24px;">
+                <h2 style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 8px;">¡Te has suscrito al plan <span id="success-plan-name" style="color: var(--accent-gold);">PRO</span>!</h2>
+                <p id="success-plan-desc" style="color: rgba(255,255,255,0.6); font-size: 14px; line-height: 1.6; margin: 0;">Tu periodo de prueba de 7 días está activo. Ya cuentas con subidas ilimitadas, 0% de comisión y todas tus ventajas desbloqueadas.</p>
+            </div>
+
+            <div class="modal-actions" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+                <button onclick="window.location.href='/cuenta/dashboard.html'" style="width: 100%; background: #ffffff; color: #000000; font-weight: 700; border-radius: 12px; padding: 15px; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; transition: all 0.2s;" onmouseover="this.style.background='#e5e5e5'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#ffffff'; this.style.transform='none'">
+                    <i class="bi bi-speedometer2"></i> Ir a mi Dashboard
+                </button>
+                <button onclick="window.location.href='/cuenta/subir-kit.html'" style="width: 100%; background: rgba(255, 255, 255, 0.06); color: #ffffff; font-weight: 600; border-radius: 12px; padding: 14px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgba(255, 255, 255, 0.15); transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'; this.style.transform='none'">
+                    <i class="bi bi-cloud-arrow-up-fill" style="color: var(--accent-purple);"></i> Subir Kit
+                </button>
+                <a id="modalProfileLink" href="https://offszn.lat" target="_blank" style="color: #999; font-size: 13px; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; margin-top: 4px; transition: color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#999'">
+                    <i class="bi bi-person-circle"></i> Ir a mi Perfil (<span id="modalProfileNickname">offszn.lat</span>) <i class="bi bi-box-arrow-up-right" style="font-size: 11px;"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
             ? 'http://localhost:3000'
@@ -770,6 +849,12 @@
                     window.location.reload();
                 };
 
+                // Cargar datos de perfil del usuario para las rutas del modal
+                try {
+                    const { data: u } = await window.supabaseClient.from('users').select('nickname').eq('id', session.user.id).single();
+                    if (u && u.nickname) currentUserNickname = u.nickname;
+                } catch (e) {}
+
                 // Verificar si ya tiene suscripción activa vigente
                 try {
                     const statusRes = await fetch(`${API_URL}/api/subscriptions/status`, {
@@ -875,10 +960,8 @@
 
                             if (res.ok && resData.success) {
                                 msgBox.className = 'success';
-                                msgBox.textContent = '¡Suscripción activada con éxito! Redirigiendo a tu cuenta...';
-                                setTimeout(() => {
-                                    window.location.href = '/cuenta/planes.html?upgrade=success&plan=' + currentPlanKey;
-                                }, 1200);
+                                msgBox.textContent = '¡Suscripción activada con éxito!';
+                                openSuccessModal(currentPlanKey);
                             } else {
                                 throw new Error(resData.error || 'Failed to activate');
                             }
@@ -895,6 +978,37 @@
                 }).render('#paypal-button-container');
             };
             document.head.appendChild(script);
+        }
+
+        let currentUserNickname = '';
+
+        function openSuccessModal(planName) {
+            const modal = document.getElementById('success-modal');
+            if (!modal) return;
+            const planSpan = document.getElementById('success-plan-name');
+            if (planSpan) planSpan.textContent = (planName || 'PRO').toUpperCase();
+
+            const profileLink = document.getElementById('modalProfileLink');
+            const profileNick = document.getElementById('modalProfileNickname');
+            if (currentUserNickname) {
+                if (profileLink) profileLink.href = `https://offszn.lat/@${currentUserNickname}`;
+                if (profileNick) profileNick.textContent = `offszn.lat/@${currentUserNickname}`;
+            } else {
+                if (profileLink) profileLink.href = `/cuenta/dashboard.html`;
+                if (profileNick) profileNick.textContent = `offszn.lat`;
+            }
+
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 20);
+        }
+
+        function closeSuccessModal() {
+            const modal = document.getElementById('success-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 300);
+            }
+            window.location.href = '/cuenta/dashboard.html';
         }
 
         document.addEventListener('DOMContentLoaded', init);

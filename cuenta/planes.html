@@ -1373,8 +1373,27 @@
             }
         }
 
+        async function goToMyProfile() {
+            try {
+                const sb = window.supabaseClient;
+                if (sb) {
+                    const { data: { session } } = await sb.auth.getSession();
+                    if (session) {
+                        const { data: u } = await sb.from('users').select('nickname').eq('id', session.user.id).single();
+                        if (u && u.nickname) {
+                            window.location.href = `https://offszn.lat/@${u.nickname}`;
+                            return;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Error al redirigir al perfil:", e);
+            }
+            window.location.href = '/cuenta/dashboard.html';
+        }
+
         function goToKits() {
-            window.location.href = 'https://offszn.lat/cuenta/mis-kits';
+            window.location.href = '/cuenta/subir-kit.html';
         }
 
         function triggerConfetti() {
@@ -1524,13 +1543,19 @@
             </div>
 
             <div class="modal-header" style="position: relative; z-index: 2;">
-                <h2>Te has suscrito al plan <span id="success-plan-name">PRO</span></h2>
-                <p class="subtitle" style="margin-bottom: 32px; color: rgba(255,255,255,0.5); line-height: 1.6; font-size: 15px;">Tu cuenta ha sido actualizada correctamente. Ya puedes empezar a disfrutar de todas tus ventajas premium.</p>
+                <h2>¡Te has suscrito al plan <span id="success-plan-name">PRO</span>!</h2>
+                <p class="subtitle" style="margin-bottom: 24px; color: rgba(255,255,255,0.6); line-height: 1.6; font-size: 14px;">Tu suscripción y periodo de prueba están activos. Ya tienes todas tus herramientas, créditos y ventajas desbloqueadas.</p>
             </div>
 
-            <div class="modal-actions" style="position: relative; z-index: 2; display: flex; flex-direction: column; width: 100%;">
-                <button class="btn-primary" onclick="goToKits()" style="width: 100%;">
-                    Subir Kits
+            <div class="modal-actions" style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                <button class="btn-primary" onclick="window.location.href='/cuenta/dashboard.html'" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="bi bi-speedometer2"></i> Ir a mi Dashboard
+                </button>
+                <button class="btn-secondary" onclick="window.location.href='/cuenta/subir-kit.html'" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="bi bi-cloud-arrow-up-fill"></i> Subir Kit
+                </button>
+                <button id="btn-success-profile" class="btn-secondary" onclick="goToMyProfile()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; border-color: rgba(255,255,255,0.15); color: #aaa;">
+                    <i class="bi bi-person-circle"></i> Ir a mi Perfil
                 </button>
             </div>
         </div>

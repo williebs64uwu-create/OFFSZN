@@ -40,9 +40,14 @@ export async function runSubscriptionScavenger() {
                 continue;
             }
 
-            // B. Downgrade user plan to free
+            // B. Downgrade user plan to free in users and profiles
             const { error: userUpdateError } = await supabase
                 .from('users')
+                .update({ plan: 'free' })
+                .eq('id', sub.user_id);
+
+            await supabase
+                .from('profiles')
                 .update({ plan: 'free' })
                 .eq('id', sub.user_id);
 

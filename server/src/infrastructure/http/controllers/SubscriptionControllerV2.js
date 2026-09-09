@@ -106,12 +106,21 @@ export const subscribePayPalRecurring = async (req, res) => {
             throw subError;
         }
 
-        // 5. Actualizar plan en users
+        // 5. Actualizar plan en users y profiles
         await supabase
             .from('users')
             .update({ 
                 plan: plan,
+                is_verified: true,
                 plan_start_date: new Date().toISOString()
+            })
+            .eq('id', userId);
+
+        await supabase
+            .from('profiles')
+            .update({ 
+                plan: plan,
+                is_verified: true
             })
             .eq('id', userId);
 
