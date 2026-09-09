@@ -417,6 +417,33 @@
                 transform: translate(-50%, -5px);
             }
         }
+
+        /* Message Box */
+        #messageBox {
+            display: none;
+            margin-top: 20px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        #messageBox.error {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+
+        #messageBox.success {
+            background: rgba(48, 209, 88, 0.12);
+            border-color: rgba(48, 209, 88, 0.4);
+            color: #30d158;
+        }
     </style>
 </head>
 
@@ -742,6 +769,32 @@
                     await window.supabaseClient.auth.signOut();
                     window.location.reload();
                 };
+
+                // Verificar si ya tiene suscripción activa vigente
+                try {
+                    const statusRes = await fetch(`${API_URL}/api/subscriptions/status`, {
+                        headers: { 'Authorization': `Bearer ${session.access_token}` }
+                    });
+                    if (statusRes.ok) {
+                        const statusData = await statusRes.json();
+                        if (statusData.status === 'active') {
+                            const container = document.getElementById('paypal-button-container');
+                            const loading = document.getElementById('paypalLoading');
+                            const msgBox = document.getElementById('messageBox');
+                            if (loading) loading.style.display = 'none';
+                            if (container) container.style.display = 'none';
+                            if (msgBox) {
+                                msgBox.style.display = 'block';
+                                msgBox.className = 'success';
+                                const expFormatted = statusData.expiry ? new Date(statusData.expiry).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+                                msgBox.innerHTML = `<i class="bi bi-check-circle-fill" style="font-size: 18px; display: block; margin-bottom: 8px;"></i>Ya cuentas con una suscripción activa (<strong>${statusData.plan_id.toUpperCase()}</strong>) vigente hasta el <strong>${expFormatted}</strong>.<br><br><a href="/cuenta/planes.html" style="color:#fff; text-decoration: underline; font-weight: 700;">Ir a Mis Planes</a>`;
+                            }
+                            return; // No mostrar botón si ya está activo
+                        }
+                    }
+                } catch (e) {
+                    console.warn('No se pudo verificar el estado previo de suscripción:', e);
+                }
             }
 
             if (currentCurrency !== 'PEN') {
@@ -788,11 +841,23 @@
                         return actions.subscription.create({ 'plan_id': paypalPlanId });
                     },
                     onApprove: async (data) => {
-                        document.getElementById('messageBox').style.display = 'block';
-                        document.getElementById('messageBox').textContent = 'Procesando tu suscripción...';
+                        const msgBox = document.getElementById('messageBox');
+                        msgBox.style.display = 'block';
+                        msgBox.className = '';
+                        msgBox.textContent = 'Procesando y activando tu suscripción... Por favor espera un momento.';
+
+                        const btnContainer = document.getElementById('paypal-button-container');
+                        if (btnContainer) {
+                            btnContainer.style.pointerEvents = 'none';
+                            btnContainer.style.opacity = '0.4';
+                        }
 
                         try {
                             const { data: { session } } = await window.supabaseClient.auth.getSession();
+                            if (!session) {
+                                throw new Error('Sesión no encontrada. Inicia sesión nuevamente.');
+                            }
+
                             const res = await fetch(`${API_URL}/api/subscriptions/paypal/subscribe-v2`, {
                                 method: 'POST',
                                 headers: {
@@ -805,14 +870,26 @@
                                     interval: currentInterval
                                 })
                             });
-                            if (res.ok) {
-                                window.location.href = '/cuenta/planes.html?upgrade=success&plan=' + currentPlanKey;
+
+                            const resData = await res.json().catch(() => ({}));
+
+                            if (res.ok && resData.success) {
+                                msgBox.className = 'success';
+                                msgBox.textContent = '¡Suscripción activada con éxito! Redirigiendo a tu cuenta...';
+                                setTimeout(() => {
+                                    window.location.href = '/cuenta/planes.html?upgrade=success&plan=' + currentPlanKey;
+                                }, 1200);
                             } else {
-                                throw new Error('Failed to activate');
+                                throw new Error(resData.error || 'Failed to activate');
                             }
                         } catch (e) {
-                            document.getElementById('messageBox').className = 'error';
-                            document.getElementById('messageBox').textContent = 'Error al activar. Contacta a soporte.';
+                            console.error('[Subscription Error]', e);
+                            msgBox.className = 'error';
+                            msgBox.innerHTML = `Tu suscripción se registró en PayPal (ID: <strong>${data.subscriptionID}</strong>), pero ocurrió un error al sincronizar con el servidor.<br><br>Por favor no vuelvas a suscribirte. Tu cuenta será validada en breve o contacta a soporte.`;
+                            if (btnContainer) {
+                                btnContainer.style.pointerEvents = 'auto';
+                                btnContainer.style.opacity = '1';
+                            }
                         }
                     }
                 }).render('#paypal-button-container');
