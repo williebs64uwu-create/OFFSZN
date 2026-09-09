@@ -1066,8 +1066,16 @@
 
                 <div class="grid-inputs">
                     <div class="form-group" style="grid-column: 1 / -1;">
-                        <div class="product-selector-label">
+                        <div class="product-selector-label" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                             <span>📦 Selecciona el Producto Vendido:</span>
+                            <div style="display: flex; gap: 6px;">
+                                <button type="button" class="btn btn-outline btn-sm" onclick="quickLoadPromo2x1()" style="border-color: #38bdf8; color: #38bdf8; font-weight: 700; font-size: 0.76rem; padding: 4px 12px; border-radius: var(--radius-full);">
+                                    ⚡ Cargar Siguiente 2x1 (Mix + Master)
+                                </button>
+                                <button type="button" class="btn btn-outline btn-sm" onclick="autoFillDispatchKeys(); renderPreview(); showToast('🔄 Claves refrescadas');" style="font-size: 0.76rem; padding: 4px 10px; border-radius: var(--radius-full);">
+                                    🔄 Siguiente
+                                </button>
+                            </div>
                         </div>
                         <div class="product-chips-wrap" id="dispatch-product-chips">
                             <button type="button" class="product-chip active" data-value="easy-mix" onclick="selectProductChip('easy-mix')">
@@ -1114,16 +1122,24 @@
                     <div class="preview-content" id="preview-text">Cargando plantilla...</div>
                 </div>
 
+                <!-- AUTO-TAG NOTIFICATION -->
+                <div style="display: flex; align-items: center; gap: 8px; margin: 16px 0 10px; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
+                    <input type="checkbox" id="auto-tag-on-copy" checked style="accent-color: #10b981; width: 17px; height: 17px; cursor: pointer;">
+                    <label for="auto-tag-on-copy" style="font-size: 0.82rem; color: #e4e4e7; cursor: pointer; user-select: none;">
+                        ⚡ <strong>Auto-marcar como USADAS:</strong> Al copiar o enviar, marcar inmediatamente las claves en el panel y en la Base de Datos con el nombre del comprador.
+                    </label>
+                </div>
+
                 <!-- ACTION BUTTONS -->
                 <div class="action-row">
+                    <button class="btn btn-solid" style="background:#10b981; color:#000000; border-color:#10b981; font-weight: 800; font-size: 0.92rem; padding: 12px 22px;" onclick="copyAndTagUsed()">
+                        🚀 Copiar Correo & Marcar USADA(S) (1 Clic)
+                    </button>
                     <button class="btn btn-solid" onclick="copyRichHtml()">
-                        📋 Copiar para Gmail / Outlook (Formato Pro)
+                        📋 Copiar Formato Gmail
                     </button>
                     <button class="btn btn-outline" onclick="copyPlainText()">
                         📄 Copiar Texto Plano (WhatsApp / DM)
-                    </button>
-                    <button class="btn btn-solid" style="background:#10b981; color:#000; border-color:#10b981;" onclick="copyAndTagUsed()">
-                        ⚡ Copiar y Marcar Clave como USADA
                     </button>
                     <button class="btn btn-outline" onclick="openInGmail()">
                         ✉️ Redactar en Gmail
@@ -1218,13 +1234,23 @@
         <div id="view-inventory" class="view-panel" style="display: none;">
             <div class="filter-controls">
                 <div class="filter-buttons">
-                    <button class="pill-filter active" onclick="setFilter('all', this)">Todas (<span id="cnt-all">0</span>)</button>
-                    <button class="pill-filter" onclick="setFilter('avail', this)">🟢 Disponibles (<span id="cnt-avail">0</span>)</button>
+                    <button class="pill-filter active" onclick="setFilter('avail', this)">🟢 Disponibles (<span id="cnt-avail">0</span>)</button>
+                    <button class="pill-filter" onclick="setFilter('all', this)">Todas (<span id="cnt-all">0</span>)</button>
                     <button class="pill-filter" onclick="setFilter('used', this)">🔴 Usadas (<span id="cnt-used">0</span>)</button>
                     <button class="pill-filter" onclick="setFilter('Easy Mix', this)">Easy Mix</button>
                     <button class="pill-filter" onclick="setFilter('Easy Master', this)">Easy Master</button>
                     <button class="pill-filter" onclick="setFilter('Coca Cola', this)">Coca Cola</button>
                     <button class="pill-filter" onclick="setFilter('Inka Kola', this)">Inka Kola</button>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-left: auto;">
+                    <button type="button" class="btn btn-outline btn-sm" onclick="quickLoadPromo2x1FromInventory()" style="border-color: #38bdf8; color: #38bdf8; font-weight: 700; font-size: 0.76rem; border-radius: var(--radius-full); padding: 5px 12px;">
+                        🎁 Despachar 2x1 Ahora
+                    </button>
+                    <label style="display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: #a1a1aa; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="chk-hide-used" checked onchange="toggleHideUsed(this.checked)" style="accent-color: #ffffff; width: 15px; height: 15px; cursor: pointer;">
+                        <span>Ocultar ya usadas</span>
+                    </label>
                 </div>
 
                 <div class="search-wrap">
@@ -1296,7 +1322,7 @@
 
         const INITIAL_LICENSES = [
             // EASY MIX (11 keys from LICENCIAS.docx & master)
-            { id: 'em-0', plugin: 'Easy Mix', serial: 'EASY-FULL-6B508227-B43CF647', used: false, note: '', date: '', devices: 2 },
+            { id: 'em-0', plugin: 'Easy Mix', serial: 'EASY-FULL-6B508227-B43CF647', used: true, note: 'Usada', date: '08/09/2026', devices: 3 },
             { id: 'em-1', plugin: 'Easy Mix', serial: 'EASY-FULL-91265FB4-EBAD565D', used: true, note: 'Vendido a ezequielaleon@gmail.com', date: '08/09/2026', devices: 4 },
             { id: 'em-2', plugin: 'Easy Mix', serial: 'EASY-FULL-2D6645CA-839550D2', used: false, note: '', date: '', devices: 2 },
             { id: 'em-3', plugin: 'Easy Mix', serial: 'EASY-FULL-EB12D5F9-9EAD6AFD', used: false, note: '', date: '', devices: 2 },
@@ -1309,7 +1335,7 @@
             { id: 'em-10', plugin: 'Easy Mix', serial: 'EASY-FULL-E2B24319-AB256805', used: false, note: '', date: '', devices: 2 },
 
             // EASY MASTER (10 keys)
-            { id: 'emst-1', plugin: 'Easy Master', serial: 'MASTER-FULL-759535AF-3A75813A', used: false, note: '', date: '', devices: 2 },
+            { id: 'emst-1', plugin: 'Easy Master', serial: 'MASTER-FULL-759535AF-3A75813A', used: true, note: 'Usada', date: '08/09/2026', devices: 3 },
             { id: 'emst-2', plugin: 'Easy Master', serial: 'MASTER-FULL-3015B2EA-96A3D18D', used: true, note: 'Vendido a ezequielaleon@gmail.com', date: '08/09/2026', devices: 4 },
             { id: 'emst-3', plugin: 'Easy Master', serial: 'MASTER-FULL-25D04C6A-E1BDA2B2', used: false, note: '', date: '', devices: 2 },
             { id: 'emst-4', plugin: 'Easy Master', serial: 'MASTER-FULL-1C296545-391B0F22', used: false, note: '', date: '', devices: 2 },
@@ -1345,10 +1371,11 @@
             { id: 'inka-10', plugin: 'Inka Kola', serial: 'INKA-FULL-A8C8876F-451BA437', used: false, note: '', date: '', devices: 2 }
         ];
 
-        const STORAGE_KEY = 'offszn_dispatch_licenses_bw_v1';
+        const STORAGE_KEY = 'offszn_dispatch_licenses_v5_live';
         const SESSION_AUTH_KEY = 'offszn_dispatch_auth_token';
         let licenses = [];
-        let activeFilter = 'all';
+        let activeFilter = 'avail';
+        let hideUsed = true;
         let activeNoteId = null;
         let lastGeneratedKey = '';
 
@@ -1709,24 +1736,58 @@
             const k1 = document.getElementById('gen-key1');
             const k2 = document.getElementById('gen-key2');
 
+            // Only pick strictly available licenses
+            const isAvail = l => !l.used && (l.devices_used || 0) === 0;
+
             if (product === 'easy-mix') {
-                const f = licenses.find(l => l.plugin === 'Easy Mix' && !l.used);
-                if (f) k1.value = f.serial;
+                const f = licenses.find(l => l.plugin === 'Easy Mix' && isAvail(l));
+                k1.value = f ? f.serial : '';
             } else if (product === 'easy-master') {
-                const f = licenses.find(l => l.plugin === 'Easy Master' && !l.used);
-                if (f) k1.value = f.serial;
+                const f = licenses.find(l => l.plugin === 'Easy Master' && isAvail(l));
+                k1.value = f ? f.serial : '';
             } else if (product === 'coca-cola') {
-                const f = licenses.find(l => l.plugin === 'Coca Cola' && !l.used);
-                if (f) k1.value = f.serial;
+                const f = licenses.find(l => l.plugin === 'Coca Cola' && isAvail(l));
+                k1.value = f ? f.serial : '';
             } else if (product === 'inka-kola') {
-                const f = licenses.find(l => l.plugin === 'Inka Kola' && !l.used);
-                if (f) k1.value = f.serial;
+                const f = licenses.find(l => l.plugin === 'Inka Kola' && isAvail(l));
+                k1.value = f ? f.serial : '';
             } else if (product === 'promo-2x1') {
-                const fMix = licenses.find(l => l.plugin === 'Easy Mix' && !l.used);
-                const fMaster = licenses.find(l => l.plugin === 'Easy Master' && !l.used);
-                if (fMix) k1.value = fMix.serial;
-                if (fMaster) k2.value = fMaster.serial;
+                const fMix = licenses.find(l => l.plugin === 'Easy Mix' && isAvail(l));
+                const fMaster = licenses.find(l => l.plugin === 'Easy Master' && isAvail(l));
+                k1.value = fMix ? fMix.serial : '';
+                k2.value = fMaster ? fMaster.serial : '';
             }
+        }
+
+        function quickLoadPromo2x1() {
+            document.getElementById('gen-product').value = 'promo-2x1';
+            syncProductChips();
+            onProductChange();
+
+            const isAvail = l => !l.used && (l.devices_used || 0) === 0;
+            const fMix = licenses.find(l => l.plugin === 'Easy Mix' && isAvail(l));
+            const fMaster = licenses.find(l => l.plugin === 'Easy Master' && isAvail(l));
+
+            if (!fMix || !fMaster) {
+                alert('⚠️ Atención: No hay suficientes claves libres de Easy Mix o Easy Master. Genera nuevas claves en la pestaña de Generar.');
+                return;
+            }
+
+            document.getElementById('gen-key1').value = fMix.serial;
+            document.getElementById('gen-key2').value = fMaster.serial;
+            renderPreview();
+
+            const b = document.getElementById('gen-buyer');
+            if (b) {
+                b.focus();
+            }
+            showToast('🎁 Promo 2x1 cargada con claves disponibles');
+        }
+
+        function quickLoadPromo2x1FromInventory() {
+            const tabBtn = document.querySelectorAll('.tab-btn')[0];
+            switchTab('dispatch', tabBtn);
+            quickLoadPromo2x1();
         }
 
         function buildEmailContent() {
@@ -1939,92 +2000,124 @@ Willie / OFFSZN`;
             document.getElementById('preview-text').innerText = data.plain;
         }
 
-        async function copyRichHtml() {
+        async function copyRichHtml(skipAutoTag = false) {
             const data = buildEmailContent();
+            let copied = false;
             try {
                 if (navigator.clipboard && window.ClipboardItem) {
                     const blobHtml = new Blob([data.html], { type: 'text/html' });
                     const blobText = new Blob([data.plain], { type: 'text/plain' });
                     await navigator.clipboard.write([new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })]);
-                    showToast('📋 ¡Copiado para Gmail/Outlook!');
-                    return;
+                    copied = true;
                 }
             } catch (err) {}
-            copyTextFallback(data.plain);
-            showToast('📄 ¡Copiado texto plano!');
+            if (!copied) {
+                copyTextFallback(data.plain);
+            }
+
+            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
+            if (!skipAutoTag && autoTag) {
+                const count = await markDispatchedKeysUsed();
+                showToast(`🚀 ¡Copiado para Gmail & ${count || 'las'} clave(s) marcadas como USADAS!`);
+                return;
+            }
+            showToast('📋 ¡Copiado para Gmail/Outlook!');
         }
 
-        function copyPlainText() {
-            const data = buildEmailContent();
-            copyTextFallback(data.plain);
-            showToast('📄 ¡Texto plano copiado!');
-        }
-
-        async function copyAndTagUsed() {
+        async function markDispatchedKeysUsed() {
             const product = document.getElementById('gen-product').value;
             const k1 = document.getElementById('gen-key1').value.trim();
             const k2 = document.getElementById('gen-key2').value.trim();
             const buyer = document.getElementById('gen-buyer').value.trim();
-
-            await copyRichHtml();
+            const now = new Date().toLocaleDateString();
+            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || 'gian2030upc';
 
             let count = 0;
-            const now = new Date().toLocaleDateString();
 
-            const lic1 = licenses.find(l => l.serial === k1);
-            if (lic1) {
-                lic1.used = true;
-                lic1.date = now;
-                if (buyer && !lic1.note) lic1.note = 'Vendido a: ' + buyer;
-                count++;
+            if (k1) {
+                const lic1 = licenses.find(l => l.serial.trim().toUpperCase() === k1.toUpperCase());
+                if (lic1) {
+                    lic1.used = true;
+                    lic1.date = now;
+                    lic1.note = buyer ? `Vendido a ${buyer}${product === 'promo-2x1' ? ' (2x1 Mix)' : ''}` : `Vendido ${now}`;
+                    count++;
+                }
+                fetch('/api/plugin/admin/update-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_key: adminPin, serial_key: k1, status: 'used' })
+                }).catch(e => console.warn('Sync error k1:', e));
             }
 
             if (product === 'promo-2x1' && k2) {
-                const lic2 = licenses.find(l => l.serial === k2);
+                const lic2 = licenses.find(l => l.serial.trim().toUpperCase() === k2.toUpperCase());
                 if (lic2) {
                     lic2.used = true;
                     lic2.date = now;
-                    if (buyer && !lic2.note) lic2.note = 'Vendido a: ' + buyer + ' (2x1)';
+                    lic2.note = buyer ? `Vendido a ${buyer} (2x1 Master Regalo)` : `Vendido 2x1 Regalo ${now}`;
                     count++;
                 }
+                fetch('/api/plugin/admin/update-status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_key: adminPin, serial_key: k2, status: 'used' })
+                }).catch(e => console.warn('Sync error k2:', e));
             }
 
-            if (count > 0) {
-                saveData();
-                renderInventory();
+            saveData();
+            renderInventory();
+            renderStats();
+
+            // Auto-advance form to next available keys!
+            setTimeout(() => {
                 autoFillDispatchKeys();
                 renderPreview();
-                showToast(`⚡ Correo copiado & ${count} clave(s) marcada(s) como USADA`);
+            }, 300);
 
-                // Persist status to Supabase in background
-                const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || 'gian2030upc';
-                if (k1) {
-                    fetch('/api/plugin/admin/update-status', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ admin_key: adminPin, serial_key: k1, status: 'used' })
-                    }).catch(() => {});
-                }
-                if (product === 'promo-2x1' && k2) {
-                    fetch('/api/plugin/admin/update-status', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ admin_key: adminPin, serial_key: k2, status: 'used' })
-                    }).catch(() => {});
-                }
+            return count;
+        }
+
+        async function copyAndTagUsed() {
+            await copyRichHtml(false);
+        }
+
+        async function copyPlainText() {
+            const data = buildEmailContent();
+            copyTextFallback(data.plain);
+            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
+            if (autoTag) {
+                const count = await markDispatchedKeysUsed();
+                showToast(`📄 ¡Texto copiado & ${count || 'las'} clave(s) marcadas como USADAS!`);
+            } else {
+                showToast('📄 ¡Texto plano copiado!');
             }
         }
 
-        function openInGmail() {
+        async function openInGmail() {
             const data = buildEmailContent();
             const url = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.plain)}`;
             window.open(url, '_blank');
+            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
+            if (autoTag) {
+                await markDispatchedKeysUsed();
+                showToast('✉️ Abriendo Gmail & clave(s) marcadas como USADAS');
+            }
         }
 
-        function openInWhatsApp() {
+        async function openInWhatsApp() {
             const data = buildEmailContent();
             const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(data.plain)}`;
             window.open(url, '_blank');
+            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
+            if (autoTag) {
+                await markDispatchedKeysUsed();
+                showToast('💬 Abriendo WhatsApp & clave(s) marcadas como USADAS');
+            }
+        }
+
+        function toggleHideUsed(checked) {
+            hideUsed = !!checked;
+            renderInventory();
         }
 
         // ==============================================================
@@ -2041,6 +2134,11 @@ Willie / OFFSZN`;
                     (lic.note && lic.note.toLowerCase().includes(search));
 
                 if (!matchSearch) return false;
+
+                // Ocultar usadas si el toggle de ocultar está activo (excepto si se filtró por 'used')
+                if (hideUsed && activeFilter !== 'used' && lic.used) {
+                    return false;
+                }
 
                 if (activeFilter === 'all') return true;
                 if (activeFilter === 'avail') return !lic.used;
@@ -2061,11 +2159,14 @@ Willie / OFFSZN`;
 
                 const totalGrp = licenses.filter(l => l.plugin === p).length;
                 const availGrp = licenses.filter(l => l.plugin === p && !l.used).length;
+                const usedGrp = totalGrp - availGrp;
+
+                const statsLabel = hideUsed ? `${availGrp} disponibles` : `${availGrp} disponibles / ${usedGrp} usadas`;
 
                 html += `
                     <div class="group-container">
                         <div class="group-title-bar">
-                            <h3>${p} (${availGrp} disponibles / ${totalGrp - availGrp} usadas)</h3>
+                            <h3>${p} (${statsLabel})</h3>
                             <button class="btn btn-outline btn-sm" onclick="pickNextAvailable('${p}')">
                                 ⚡ Usar siguiente
                             </button>
@@ -2125,6 +2226,14 @@ Willie / OFFSZN`;
             activeFilter = flt;
             document.querySelectorAll('.pill-filter').forEach(b => b.classList.remove('active'));
             if (el) el.classList.add('active');
+            const chk = document.getElementById('chk-hide-used');
+            if (flt === 'used') {
+                hideUsed = false;
+                if (chk) chk.checked = false;
+            } else if (flt === 'avail') {
+                hideUsed = true;
+                if (chk) chk.checked = true;
+            }
             renderInventory();
         }
 
