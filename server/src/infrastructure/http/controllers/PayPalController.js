@@ -1,4 +1,4 @@
-﻿import paypal from '@paypal/checkout-server-sdk';
+import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
 import { supabase } from '../../database/connection.js';
 import { PLATFORM_PAYPAL_EMAIL, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../../shared/config/config.js';
@@ -1970,6 +1970,45 @@ export const handlePayPalWebhook = async (req, res) => {
         let isOrder = false;
 
         if (eventType === 'PAYMENT.SALE.COMPLETED') {
+            // Handle Recurring Subscription Payments
+            const billingAgreementId = event.resource?.billing_agreement_id;
+            if (billingAgreementId) {
+                console.log(`🔔 [PayPalWebhook] Subscription payment received for Agreement ID: ${billingAgreementId}`);
+                const { data: subRecord } = await supabase
+                    .from('subscriptions')
+                    .select('id, user_id, plan_id')
+                    .eq('provider_subscription_id', billingAgreementId)
+                    .maybeSingle();
+
+                if (subRecord) {
+                    try {
+                        const accessToken = await getPayPalAccessToken();
+                        const subRes = await fetch(`${PAYPAL_API_BASE}/v1/billing/subscriptions/${billingAgreementId}`, {
+                            headers: { 'Authorization': `Bearer ${accessToken}` }
+                        });
+                        if (subRes.ok) {
+                            const subData = await subRes.json();
+                            const nextBilling = subData.billing_info?.next_billing_time;
+                            if (nextBilling) {
+                                await supabase
+                                    .from('subscriptions')
+                                    .update({ current_period_end: nextBilling, status: 'active' })
+                                    .eq('id', subRecord.id);
+
+                                const planName = subRecord.plan_id?.split('_')[0] || 'pro';
+                                await supabase.from('users').update({ plan: planName, is_verified: true }).eq('id', subRecord.user_id);
+                                await supabase.from('profiles').update({ plan: planName, is_verified: true }).eq('id', subRecord.user_id);
+
+                                console.log(`✅ [PayPalWebhook] Subscription ${billingAgreementId} auto-renewed until ${nextBilling}`);
+                            }
+                        }
+                    } catch (subErr) {
+                        console.error('[PayPalWebhook] Error auto-renewing subscription:', subErr.message);
+                    }
+                    return;
+                }
+            }
+
             transactionId = event.resource?.id;
             isSale = true;
         } else if (eventType === 'CHECKOUT.ORDER.APPROVED' || eventType === 'CHECKOUT.ORDER.COMPLETED') {
