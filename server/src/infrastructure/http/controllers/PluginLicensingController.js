@@ -784,4 +784,56 @@ export const adminUpdateLicenseStatus = async (req, res) => {
     }
 };
 
+// ─── POST /api/plugin/admin/send-email ─────────────────────────────────────────
+// Admin-only: Sends license email directly to buyer via Brevo REST API
+export const adminSendDispatchEmail = async (req, res) => {
+    try {
+        const { admin_key, to, subject, message, k1, k2, product, buyer } = req.body || {};
+        const validKey = process.env.PLUGIN_ADMIN_KEY;
+        const masterPin = 'gian2030upc';
+
+        if (!admin_key || (admin_key !== validKey && admin_key !== masterPin)) {
+            return res.status(403).json({ error: 'Unauthorized: Clave de administrador inválida.' });
+        }
+
+        if (!to || !message) {
+            return res.status(400).json({ error: 'Falta destinatario (to) o contenido (message)' });
+        }
+
+        const cleanTo = to.trim().toLowerCase();
+        // Plain-text formatted HTML for clean rendering in all email clients
+        const formattedHtml = `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #111111; line-height: 1.6; font-size: 15px; white-space: pre-wrap; word-break: break-word;">
+${message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+            </div>
+        `;
+
+        await sendOffsznEmail({
+            to: cleanTo,
+            subject: subject || 'Tus licencias — OFFSZN',
+            html: formattedHtml,
+            fromName: 'OFFSZN'
+        });
+
+        // Auto-mark keys as used in Supabase
+        if (k1) {
+            await supabase.from('plugin_licenses')
+                .update({ status: 'used' })
+                .eq('serial_key', k1.trim().toUpperCase());
+        }
+        if (k2 && product === 'promo-2x1') {
+            await supabase.from('plugin_licenses')
+                .update({ status: 'used' })
+                .eq('serial_key', k2.trim().toUpperCase());
+        }
+
+        console.log(`✉️ [Admin Send Dispatch Email] Sent to ${cleanTo} via Brevo`);
+        return res.json({ success: true, message: `Correo enviado con éxito a ${cleanTo} vía Brevo` });
+    } catch (err) {
+        console.error('💥 [Admin Send Dispatch Email Error]:', err);
+        return res.status(500).json({ error: err.message || 'Error al enviar correo por Brevo.' });
+    }
+};
+
+
 

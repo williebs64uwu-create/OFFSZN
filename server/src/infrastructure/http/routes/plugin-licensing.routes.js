@@ -10,7 +10,8 @@ import {
     adminVerifyPin, 
     adminGenerateFullKey,
     adminListLicenses,
-    adminUpdateLicenseStatus
+    adminUpdateLicenseStatus,
+    adminSendDispatchEmail
 } from '../controllers/PluginLicensingController.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 
@@ -40,6 +41,8 @@ router.get('/admin/licenses', adminListLicenses);
 router.post('/admin/licenses', adminListLicenses);
 // Admin: Marcar estado de licencia en Supabase (active / used)
 router.post('/admin/update-status', adminUpdateLicenseStatus);
+// Admin: Enviar correo directo de despacho vía Brevo
+router.post('/admin/send-email', adminSendDispatchEmail);
 
 export default router;
 

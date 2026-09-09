@@ -1108,6 +1108,11 @@
                     </div>
 
                     <div class="form-group">
+                        <label>Correo del Comprador (Opcional — para envío directo por Brevo)</label>
+                        <input type="email" id="gen-email" class="form-control" placeholder="cliente@correo.com (opcional)">
+                    </div>
+
+                    <div class="form-group">
                         <label id="lbl-key1">Serial Key #1</label>
                         <input type="text" id="gen-key1" class="form-control mono" placeholder="EASY-FULL-XXXX-XXXX" oninput="renderPreview()">
                     </div>
@@ -1121,10 +1126,10 @@
                 <!-- PREVIEW BOX -->
                 <div class="preview-box">
                     <div class="preview-bar">
-                        <span id="preview-subject">Asunto: 🔑 Tu Licencia Oficial — OFFSZN</span>
-                        <span>Vista previa editable</span>
+                        <span id="preview-subject">Asunto: 🎁 Tus 2 licencias de la promo 2x1 — OFFSZN</span>
+                        <span>Texto plano listo</span>
                     </div>
-                    <div class="preview-content" id="preview-text">Cargando plantilla...</div>
+                    <div class="preview-content" id="preview-text" style="white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.5; color: #f4f4f5;">Cargando plantilla...</div>
                 </div>
 
                 <!-- AUTO-TAG NOTIFICATION -->
@@ -1137,20 +1142,17 @@
 
                 <!-- ACTION BUTTONS -->
                 <div class="action-row">
-                    <button class="btn btn-solid" style="background:#10b981; color:#000000; border-color:#10b981; font-weight: 800; font-size: 0.92rem; padding: 12px 22px;" onclick="copyAndTagUsed()">
-                        🚀 Copiar Correo & Marcar USADA(S) (1 Clic)
+                    <button class="btn btn-solid" style="background:#10b981; color:#000000; border-color:#10b981; font-weight: 800; font-size: 0.94rem; padding: 12px 22px;" onclick="copyPlainTextAndTag()">
+                        📋 Copiar Mensaje & Marcar USADA(S)
                     </button>
-                    <button class="btn btn-solid" onclick="copyRichHtml()">
-                        📋 Copiar Formato Gmail
-                    </button>
-                    <button class="btn btn-outline" onclick="copyPlainText()">
-                        📄 Copiar Texto Plano (WhatsApp / DM)
+                    <button class="btn btn-outline" id="btn-brevo" style="border-color: #38bdf8; color: #38bdf8; font-weight: 700; padding: 12px 18px;" onclick="sendDirectEmailViaBrevo()">
+                        ⚡ Enviar Correo Directo (Brevo)
                     </button>
                     <button class="btn btn-outline" onclick="openInGmail()">
-                        ✉️ Redactar en Gmail
+                        ✉️ Abrir en Gmail
                     </button>
                     <button class="btn btn-outline" onclick="openInWhatsApp()">
-                        💬 Enviar por WhatsApp
+                        💬 Abrir en WhatsApp
                     </button>
                 </div>
             </div>
@@ -1376,7 +1378,7 @@
             { id: 'inka-10', plugin: 'Inka Kola', serial: 'INKA-FULL-A8C8876F-451BA437', used: false, note: '', date: '', devices: 2 }
         ];
 
-        const STORAGE_KEY = 'offszn_dispatch_licenses_v5_live';
+        const STORAGE_KEY = 'offszn_dispatch_licenses_v6_clean';
         const SESSION_AUTH_KEY = 'offszn_dispatch_auth_token';
         let licenses = [];
         let activeFilter = 'avail';
@@ -1803,200 +1805,47 @@
 
             let subject = '';
             let plain = '';
-            let html = '';
 
-            if (product === 'easy-mix') {
-                subject = `🔑 Tu Licencia Oficial de Easy Mix — OFFSZN`;
+            if (product === 'promo-2x1') {
+                subject = `🎁 Tus 2 licencias de la promo 2x1 — OFFSZN`;
                 plain = 
 `¡Hola ${buyer}! 👋
 
-Muchas gracias por tu compra. Aquí tienes tu licencia definitiva de por vida de Easy Mix VST/AU:
+¡Felicidades! Aquí tienes tus 2 licencias de la promo 2x1:
 
-═════════════════════════════════════════════
-🔑 TU SERIAL KEY LIFETIME:
+1. Easy Mix:
 ${k1}
-═════════════════════════════════════════════
+Descarga Windows: ${DOWNLOAD_LINKS['Easy Mix'].win}
+Descarga Mac:     ${DOWNLOAD_LINKS['Easy Mix'].mac}
 
-📥 ENLACES DE DESCARGA DIRECTA:
-• Windows (.exe): ${DOWNLOAD_LINKS['Easy Mix'].win}
-• macOS (.dmg):   ${DOWNLOAD_LINKS['Easy Mix'].mac}
-
-📋 ACTIVACIÓN RÁPIDA:
-1. Descarga el instalador de acuerdo a tu sistema.
-2. Cierra tu DAW e instala el plugin.
-3. Abre tu DAW, inserta Easy Mix en cualquier canal y pega tu clave serial para activar.
-
-💡 Licencia FULL vitalicia (sin expiración) para hasta 2 dispositivos personales.
-
-Atentamente,
-Willie / OFFSZN`;
-
-                html = `
-<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 580px; margin: 0 auto; background: #000000; color: #ffffff; padding: 32px; border-radius: 12px; border: 1px solid #222222;">
-    <div style="text-align: center; margin-bottom: 24px;">
-        <span style="background: #ffffff; color: #000000; font-weight: 800; font-size: 0.72rem; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">OFFSZN PLUGINS</span>
-        <h1 style="color: #ffffff; font-size: 1.5rem; margin: 14px 0 6px; font-weight: 800;">¡Tu Licencia de Easy Mix está lista! 🎚️</h1>
-        <p style="color: #a1a1aa; font-size: 0.9rem; margin: 0;">Hola <strong>${escapeHtml(buyer)}</strong>, confirmamos tu pago con éxito.</p>
-    </div>
-
-    <div style="background: #09090b; border: 1px dashed #ffffff; border-radius: 10px; padding: 20px; margin: 24px 0; text-align: center;">
-        <p style="color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 8px; font-weight: 700;">🔑 Tu Serial Key Oficial (Lifetime)</p>
-        <p style="font-family: monospace; font-size: 1.25rem; font-weight: 800; color: #ffffff; letter-spacing: 1.5px; margin: 0; word-break: break-all;">${k1}</p>
-        <p style="color: #71717a; font-size: 0.72rem; margin: 10px 0 0;">Copia y pega este código en tu plugin. Válido para 2 dispositivos.</p>
-    </div>
-
-    <div style="margin: 24px 0;">
-        <p style="color: #ffffff; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 12px;">📥 Enlaces de Descarga</p>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <a href="${DOWNLOAD_LINKS['Easy Mix'].win}" style="background: #ffffff; color: #000000; text-decoration: none; padding: 9px 18px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; display: inline-block;">Descargar para Windows</a>
-            <a href="${DOWNLOAD_LINKS['Easy Mix'].mac}" style="background: #18181b; color: #ffffff; text-decoration: none; padding: 9px 18px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; border: 1px solid #333333; display: inline-block;">Descargar para macOS</a>
-        </div>
-    </div>
-
-    <hr style="border: 0; border-top: 1px solid #1a1a1a; margin: 24px 0;">
-    <p style="font-size: 0.72rem; color: #52525b; text-align: center; margin: 0;">OFFSZN • Sonido de Grandes Ligas</p>
-</div>`;
-
-            } else if (product === 'easy-master') {
-                subject = `🔑 Tu Licencia Oficial de Easy Master — OFFSZN`;
-                plain = 
-`¡Hola ${buyer}! 👋
-
-Muchas gracias por tu compra. Aquí tienes tu licencia definitiva de por vida de Easy Master VST/AU:
-
-═════════════════════════════════════════════
-🔑 TU SERIAL KEY LIFETIME:
-${k1}
-═════════════════════════════════════════════
-
-📥 ENLACES DE DESCARGA DIRECTA:
-• Windows (.exe): ${DOWNLOAD_LINKS['Easy Master'].win}
-• macOS (.dmg):   ${DOWNLOAD_LINKS['Easy Master'].mac}
-
-📋 ACTIVACIÓN:
-Instala el plugin, abre tu DAW, inserta Easy Master en el Master Bus y pega tu clave para activar. Permite 2 dispositivos.
-
-Atentamente,
-Willie / OFFSZN`;
-
-                html = `
-<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 580px; margin: 0 auto; background: #000000; color: #ffffff; padding: 32px; border-radius: 12px; border: 1px solid #222222;">
-    <div style="text-align: center; margin-bottom: 24px;">
-        <span style="background: #ffffff; color: #000000; font-weight: 800; font-size: 0.72rem; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">OFFSZN PLUGINS</span>
-        <h1 style="color: #ffffff; font-size: 1.5rem; margin: 14px 0 6px; font-weight: 800;">¡Tu Licencia de Easy Master está lista! 🎛️</h1>
-        <p style="color: #a1a1aa; font-size: 0.9rem; margin: 0;">Hola <strong>${escapeHtml(buyer)}</strong>, confirmamos tu compra.</p>
-    </div>
-
-    <div style="background: #09090b; border: 1px dashed #ffffff; border-radius: 10px; padding: 20px; margin: 24px 0; text-align: center;">
-        <p style="color: #a1a1aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 8px; font-weight: 700;">🔑 Tu Serial Key Oficial (Lifetime)</p>
-        <p style="font-family: monospace; font-size: 1.25rem; font-weight: 800; color: #ffffff; letter-spacing: 1.5px; margin: 0; word-break: break-all;">${k1}</p>
-        <p style="color: #71717a; font-size: 0.72rem; margin: 10px 0 0;">Copia y pega en el plugin. Válido para 2 dispositivos.</p>
-    </div>
-
-    <div style="margin: 24px 0;">
-        <p style="color: #ffffff; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 12px;">📥 Enlaces de Descarga</p>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <a href="${DOWNLOAD_LINKS['Easy Master'].win}" style="background: #ffffff; color: #000000; text-decoration: none; padding: 9px 18px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; display: inline-block;">Descargar para Windows</a>
-            <a href="${DOWNLOAD_LINKS['Easy Master'].mac}" style="background: #18181b; color: #ffffff; text-decoration: none; padding: 9px 18px; border-radius: 6px; font-size: 0.82rem; font-weight: 700; border: 1px solid #333333; display: inline-block;">Descargar para macOS</a>
-        </div>
-    </div>
-
-    <hr style="border: 0; border-top: 1px solid #1a1a1a; margin: 24px 0;">
-    <p style="font-size: 0.72rem; color: #52525b; text-align: center; margin: 0;">OFFSZN • Sonido de Grandes Ligas</p>
-</div>`;
-
-            } else if (product === 'promo-2x1') {
-                subject = `🎁 Tus Licencias Promo 2x1 (Easy Mix + Easy Master) — OFFSZN`;
-                plain = 
-`¡Hola ${buyer}! 👋
-
-¡Felicidades! Aquí tienes tus 2 licencias vitalicias oficiales de la Promo 2x1:
-
-═════════════════════════════════════════════
-🔑 1. EASY MIX LIFETIME:
-${k1}
-
-🔑 2. EASY MASTER LIFETIME (REGALO):
+2. Easy Master:
 ${k2}
-═════════════════════════════════════════════
+Descarga Windows: ${DOWNLOAD_LINKS['Easy Master'].win}
+Descarga Mac:     ${DOWNLOAD_LINKS['Easy Master'].mac}
 
-📥 DESCARGAS:
-• Easy Mix:
-  - Windows: ${DOWNLOAD_LINKS['Easy Mix'].win}
-  - macOS:   ${DOWNLOAD_LINKS['Easy Mix'].mac}
-
-• Easy Master:
-  - Windows: ${DOWNLOAD_LINKS['Easy Master'].win}
-  - macOS:   ${DOWNLOAD_LINKS['Easy Master'].mac}
-
-💡 Cada clave permite hasta 2 dispositivos y es de por vida.
-
-Atentamente,
+Cualquier duda me avisas por aquí.
 Willie / OFFSZN`;
-
-                html = `
-<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 580px; margin: 0 auto; background: #000000; color: #ffffff; padding: 32px; border-radius: 12px; border: 1px solid #222222;">
-    <div style="text-align: center; margin-bottom: 24px;">
-        <span style="background: #ffffff; color: #000000; font-weight: 800; font-size: 0.72rem; padding: 4px 10px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">OFERTA ESPECIAL 2X1</span>
-        <h1 style="color: #ffffff; font-size: 1.5rem; margin: 14px 0 6px; font-weight: 800;">¡Tus Claves 2x1 están listas! 🎁</h1>
-        <p style="color: #a1a1aa; font-size: 0.9rem; margin: 0;">Hola <strong>${escapeHtml(buyer)}</strong>, confirmamos tu orden.</p>
-    </div>
-
-    <div style="background: #09090b; border: 1px dashed #ffffff; border-radius: 10px; padding: 20px; margin: 24px 0;">
-        <div style="margin-bottom: 12px;">
-            <p style="color: #a1a1aa; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px; font-weight: 700;">1. Easy Mix VST:</p>
-            <p style="font-family: monospace; font-size: 1.15rem; font-weight: 800; color: #ffffff; letter-spacing: 1px; margin: 0; word-break: break-all;">${k1}</p>
-        </div>
-        <div>
-            <p style="color: #a1a1aa; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 4px; font-weight: 700;">2. Easy Master VST (REGALO):</p>
-            <p style="font-family: monospace; font-size: 1.15rem; font-weight: 800; color: #ffffff; letter-spacing: 1px; margin: 0; word-break: break-all;">${k2}</p>
-        </div>
-    </div>
-
-    <div style="margin: 24px 0;">
-        <p style="color: #ffffff; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 10px;">📥 Descargas Easy Mix</p>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
-            <a href="${DOWNLOAD_LINKS['Easy Mix'].win}" style="background: #ffffff; color: #000; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">Windows</a>
-            <a href="${DOWNLOAD_LINKS['Easy Mix'].mac}" style="background: #18181b; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; border: 1px solid #333;">macOS</a>
-        </div>
-
-        <p style="color: #ffffff; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 10px;">📥 Descargas Easy Master (Regalo)</p>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <a href="${DOWNLOAD_LINKS['Easy Master'].win}" style="background: #ffffff; color: #000; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">Windows</a>
-            <a href="${DOWNLOAD_LINKS['Easy Master'].mac}" style="background: #18181b; color: #fff; text-decoration: none; padding: 8px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; border: 1px solid #333;">macOS</a>
-        </div>
-    </div>
-
-    <hr style="border: 0; border-top: 1px solid #1a1a1a; margin: 24px 0;">
-    <p style="font-size: 0.72rem; color: #52525b; text-align: center; margin: 0;">OFFSZN • Sonido de Grandes Ligas</p>
-</div>`;
-
             } else {
-                // Coca Cola / Inka Kola
-                const pName = product === 'coca-cola' ? 'Coca Cola' : 'Inka Kola';
-                subject = `🔑 Tu Licencia Oficial de ${pName} — OFFSZN`;
+                const pName = product === 'easy-mix' ? 'Easy Mix' :
+                              product === 'easy-master' ? 'Easy Master' :
+                              product === 'coca-cola' ? 'Coca Cola' : 'Inka Kola';
+                subject = `🔑 Tu licencia oficial de ${pName} — OFFSZN`;
                 plain = 
 `¡Hola ${buyer}! 👋
 
-Muchas gracias por tu compra. Aquí tienes tu licencia definitiva de por vida de ${pName} VST/AU:
+¡Felicidades! Aquí tienes tu licencia oficial de ${pName}:
 
-═════════════════════════════════════════════
-🔑 TU SERIAL KEY LIFETIME:
+Serial Key:
 ${k1}
-═════════════════════════════════════════════
 
-📥 ENLACES DE DESCARGA:
-• Windows: ${DOWNLOAD_LINKS[pName].win}
-• macOS:   ${DOWNLOAD_LINKS[pName].mac}
+Descarga Windows: ${DOWNLOAD_LINKS[pName].win}
+Descarga Mac:     ${DOWNLOAD_LINKS[pName].mac}
 
-💡 Clave vitalicia para hasta 2 dispositivos personales.
-
-Atentamente,
+Cualquier duda me avisas por aquí.
 Willie / OFFSZN`;
-                html = plain;
             }
 
-            return { subject, plain, html, k1, k2 };
+            return { subject, plain, k1, k2 };
         }
 
         function renderPreview() {
@@ -2005,28 +1854,89 @@ Willie / OFFSZN`;
             document.getElementById('preview-text').innerText = data.plain;
         }
 
-        async function copyRichHtml(skipAutoTag = false) {
+        async function copyPlainTextAndTag() {
             const data = buildEmailContent();
             let copied = false;
             try {
-                if (navigator.clipboard && window.ClipboardItem) {
-                    const blobHtml = new Blob([data.html], { type: 'text/html' });
-                    const blobText = new Blob([data.plain], { type: 'text/plain' });
-                    await navigator.clipboard.write([new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })]);
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(data.plain);
                     copied = true;
                 }
-            } catch (err) {}
+            } catch (e) {}
             if (!copied) {
                 copyTextFallback(data.plain);
             }
 
             const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
-            if (!skipAutoTag && autoTag) {
+            if (autoTag) {
                 const count = await markDispatchedKeysUsed();
-                showToast(`🚀 ¡Copiado para Gmail & ${count || 'las'} clave(s) marcadas como USADAS!`);
+                showToast(`📋 ¡Mensaje copiado & ${count || 'las'} clave(s) marcadas como USADAS!`);
+            } else {
+                showToast('📋 ¡Mensaje copiado en texto plano!');
+            }
+        }
+
+        async function sendDirectEmailViaBrevo() {
+            let email = document.getElementById('gen-email').value.trim();
+            if (!email) {
+                email = prompt('📧 Ingresa el correo del comprador para enviar directo por Brevo:');
+                if (email) {
+                    email = email.trim();
+                    document.getElementById('gen-email').value = email;
+                }
+            }
+            if (!email || !email.includes('@')) {
+                alert('⚠️ Por favor ingresa un correo electrónico válido.');
                 return;
             }
-            showToast('📋 ¡Copiado para Gmail/Outlook!');
+
+            const data = buildEmailContent();
+            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || 'gian2030upc';
+            const product = document.getElementById('gen-product').value;
+            const buyer = document.getElementById('gen-buyer').value.trim();
+            const btn = document.getElementById('btn-brevo');
+
+            try {
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerText = '⏳ Enviando por Brevo...';
+                }
+
+                const res = await fetch('/api/plugin/admin/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        admin_key: adminPin,
+                        to: email,
+                        subject: data.subject,
+                        message: data.plain,
+                        k1: data.k1,
+                        k2: data.k2,
+                        product,
+                        buyer
+                    })
+                });
+                const json = await res.json();
+                if (!res.ok || json.error) {
+                    throw new Error(json.error || 'Error en el servidor');
+                }
+
+                showToast(`🚀 ¡Correo enviado exitosamente a ${email} vía Brevo!`);
+
+                const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
+                if (autoTag) {
+                    await markDispatchedKeysUsed();
+                }
+                document.getElementById('gen-email').value = '';
+            } catch (err) {
+                console.error(err);
+                alert('❌ Error al enviar por Brevo: ' + err.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = '⚡ Enviar Correo Directo (Brevo)';
+                }
+            }
         }
 
         async function markDispatchedKeysUsed() {
@@ -2080,22 +1990,6 @@ Willie / OFFSZN`;
             }, 300);
 
             return count;
-        }
-
-        async function copyAndTagUsed() {
-            await copyRichHtml(false);
-        }
-
-        async function copyPlainText() {
-            const data = buildEmailContent();
-            copyTextFallback(data.plain);
-            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
-            if (autoTag) {
-                const count = await markDispatchedKeysUsed();
-                showToast(`📄 ¡Texto copiado & ${count || 'las'} clave(s) marcadas como USADAS!`);
-            } else {
-                showToast('📄 ¡Texto plano copiado!');
-            }
         }
 
         async function openInGmail() {
