@@ -815,16 +815,16 @@ ${message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
             fromName: 'OFFSZN'
         });
 
-        const shouldMarkUsed = mark_used === true || mark_used === 'true';
+        const shouldMarkUsed = mark_used === true || mark_used === 'true' || mark_used === 1;
 
         // Auto-mark keys as used in Supabase only if mark_used is true
         if (shouldMarkUsed) {
-            if (k1) {
+            if (k1 && !k1.includes('XXXX')) {
                 await supabase.from('plugin_licenses')
                     .update({ status: 'used' })
                     .eq('serial_key', k1.trim().toUpperCase());
             }
-            if (k2 && product === 'promo-2x1') {
+            if (k2 && !k2.includes('XXXX')) {
                 await supabase.from('plugin_licenses')
                     .update({ status: 'used' })
                     .eq('serial_key', k2.trim().toUpperCase());
@@ -834,7 +834,7 @@ ${message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
         console.log(`✉️ [Admin Send Dispatch Email] Sent to ${cleanTo} via Brevo (mark_used: ${shouldMarkUsed})`);
         return res.json({ 
             success: true, 
-            message: `Correo enviado con éxito a ${cleanTo} vía Brevo${shouldMarkUsed ? '' : ' (Modo Prueba: Claves NO consumidas)'}` 
+            message: `Correo enviado con éxito a ${cleanTo} vía Brevo${shouldMarkUsed ? ' y claves marcadas como USADAS en BD' : ' (Modo Prueba: Claves NO consumidas)'}` 
         });
     } catch (err) {
         console.error('💥 [Admin Send Dispatch Email Error]:', err);

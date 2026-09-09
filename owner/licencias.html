@@ -1367,13 +1367,13 @@
                 <!-- AUTO-TAG & TEST MODE NOTIFICATION -->
                 <div style="margin: 16px 0 10px; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
                     <div style="display: flex; align-items: center; gap: 9px;">
-                        <input type="checkbox" id="auto-tag-on-copy" style="accent-color: #10b981; width: 18px; height: 18px; cursor: pointer;">
+                        <input type="checkbox" id="auto-tag-on-copy" checked style="accent-color: #10b981; width: 18px; height: 18px; cursor: pointer;" onchange="toggleAutoTagHint()">
                         <label for="auto-tag-on-copy" style="font-size: 0.85rem; color: #ffffff; cursor: pointer; user-select: none; font-weight: 700;">
                             ⚡ Auto-marcar como USADA(S) al despachar / enviar
                         </label>
                     </div>
-                    <div style="font-size: 0.73rem; color: var(--text-muted); margin-top: 5px; margin-left: 27px;">
-                        💡 <em>Modo Prueba: Al estar desmarcado, puedes probar el envío por Brevo o copiar texto libremente sin gastar ni quemar claves del inventario.</em>
+                    <div id="auto-tag-status-hint" style="font-size: 0.73rem; color: #34d399; margin-top: 5px; margin-left: 27px;">
+                        ✅ <strong>Modo Real (Por defecto):</strong> Al enviar por Brevo o copiar, las claves se marcan como USADAS en la BD automáticamente y pasan a las siguientes. Desmarca solo si es prueba.
                     </div>
                 </div>
 
@@ -2219,12 +2219,25 @@ Willie / OFFSZN`;
                 copyTextFallback(data.plain);
             }
 
-            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? false;
+            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
             if (autoTag) {
                 const count = await markDispatchedKeysUsed();
                 showToast(`📋 ¡Mensaje copiado & ${count || 'las'} clave(s) marcadas como USADAS!`);
             } else {
                 showToast('📋 ¡Mensaje copiado en texto plano! (Modo prueba: sin gastar claves)');
+            }
+        }
+
+        function toggleAutoTagHint() {
+            const chk = document.getElementById('auto-tag-on-copy');
+            const hint = document.getElementById('auto-tag-status-hint');
+            if (!chk || !hint) return;
+            if (chk.checked) {
+                hint.innerHTML = '✅ <strong>Modo Real (Por defecto):</strong> Al enviar por Brevo o copiar, las claves se marcan como USADAS en la BD automáticamente y pasan a las siguientes. Desmarca solo si es prueba.';
+                hint.style.color = '#34d399';
+            } else {
+                hint.innerHTML = '⚠️ <strong>Modo Prueba (Sin consumir):</strong> Puedes probar el envío por Brevo o copiar texto libremente sin gastar ni quemar claves del inventario.';
+                hint.style.color = '#fbbf24';
             }
         }
 
@@ -2247,7 +2260,7 @@ Willie / OFFSZN`;
             const product = document.getElementById('gen-product').value;
             const buyer = document.getElementById('gen-buyer').value.trim();
             const btn = document.getElementById('btn-brevo');
-            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? false;
+            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
 
             try {
                 if (btn) {
@@ -2276,10 +2289,10 @@ Willie / OFFSZN`;
                 }
 
                 if (autoTag) {
-                    await markDispatchedKeysUsed();
-                    showToast(`🚀 ¡Correo enviado a ${email} & claves marcadas como USADAS!`);
+                    await markDispatchedKeysUsed(email);
+                    showToast(`🚀 ¡Correo enviado a ${email} vía Brevo & claves marcadas como USADAS!`);
                 } else {
-                    showToast(`🚀 ¡Correo de PRUEBA enviado a ${email} vía Brevo! (Sin consumir claves)`);
+                    showToast(`🚀 ¡Correo enviado a ${email} vía Brevo! (Modo Prueba: Sin consumir claves)`);
                 }
                 document.getElementById('gen-email').value = '';
             } catch (err) {
@@ -2293,22 +2306,26 @@ Willie / OFFSZN`;
             }
         }
 
-        async function markDispatchedKeysUsed() {
+        async function markDispatchedKeysUsed(forcedEmail) {
             const product = document.getElementById('gen-product').value;
             const k1 = document.getElementById('gen-key1').value.trim();
             const k2 = document.getElementById('gen-key2').value.trim();
             const buyer = document.getElementById('gen-buyer').value.trim();
+            const email = forcedEmail || document.getElementById('gen-email')?.value?.trim() || '';
             const now = new Date().toLocaleDateString();
             const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || 'gian2030upc';
 
             let count = 0;
+            const buyerLabel = buyer 
+                ? `Vendido a ${buyer}${email ? ' (' + email + ')' : ''}` 
+                : (email ? `Vendido a ${email}` : `Vendido ${now}`);
 
-            if (k1) {
+            if (k1 && !k1.includes('XXXX')) {
                 const lic1 = licenses.find(l => l.serial.trim().toUpperCase() === k1.toUpperCase());
                 if (lic1) {
                     lic1.used = true;
                     lic1.date = now;
-                    lic1.note = buyer ? `Vendido a ${buyer}${product === 'promo-2x1' ? ' (2x1 Mix)' : ''}` : `Vendido ${now}`;
+                    lic1.note = buyerLabel + (product === 'promo-2x1' ? ' (2x1 Mix)' : '');
                     count++;
                 }
                 fetch('/api/plugin/admin/update-status', {
@@ -2318,12 +2335,12 @@ Willie / OFFSZN`;
                 }).catch(e => console.warn('Sync error k1:', e));
             }
 
-            if (product === 'promo-2x1' && k2) {
+            if (k2 && !k2.includes('XXXX')) {
                 const lic2 = licenses.find(l => l.serial.trim().toUpperCase() === k2.toUpperCase());
                 if (lic2) {
                     lic2.used = true;
                     lic2.date = now;
-                    lic2.note = buyer ? `Vendido a ${buyer} (2x1 Master Regalo)` : `Vendido 2x1 Regalo ${now}`;
+                    lic2.note = buyerLabel + ' (2x1 Master Regalo)';
                     count++;
                 }
                 fetch('/api/plugin/admin/update-status', {
@@ -2350,7 +2367,7 @@ Willie / OFFSZN`;
             const data = buildEmailContent();
             const url = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.plain)}`;
             window.open(url, '_blank');
-            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? false;
+            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
             if (autoTag) {
                 await markDispatchedKeysUsed();
                 showToast('✉️ Abriendo Gmail & clave(s) marcadas como USADAS');
@@ -2363,7 +2380,7 @@ Willie / OFFSZN`;
             const data = buildEmailContent();
             const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(data.plain)}`;
             window.open(url, '_blank');
-            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? false;
+            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
             if (autoTag) {
                 await markDispatchedKeysUsed();
                 showToast('💬 Abriendo WhatsApp & clave(s) marcadas como USADAS');
