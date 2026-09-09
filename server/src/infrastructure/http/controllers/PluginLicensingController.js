@@ -788,7 +788,7 @@ export const adminUpdateLicenseStatus = async (req, res) => {
 // Admin-only: Sends license email directly to buyer via Brevo REST API
 export const adminSendDispatchEmail = async (req, res) => {
     try {
-        const { admin_key, to, subject, message, k1, k2, product, buyer } = req.body || {};
+        const { admin_key, to, subject, message, k1, k2, product, buyer, mark_used = true } = req.body || {};
         const validKey = process.env.PLUGIN_ADMIN_KEY;
         const masterPin = 'gian2030upc';
 
@@ -815,20 +815,27 @@ ${message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
             fromName: 'OFFSZN'
         });
 
-        // Auto-mark keys as used in Supabase
-        if (k1) {
-            await supabase.from('plugin_licenses')
-                .update({ status: 'used' })
-                .eq('serial_key', k1.trim().toUpperCase());
-        }
-        if (k2 && product === 'promo-2x1') {
-            await supabase.from('plugin_licenses')
-                .update({ status: 'used' })
-                .eq('serial_key', k2.trim().toUpperCase());
+        const shouldMarkUsed = mark_used === true || mark_used === 'true';
+
+        // Auto-mark keys as used in Supabase only if mark_used is true
+        if (shouldMarkUsed) {
+            if (k1) {
+                await supabase.from('plugin_licenses')
+                    .update({ status: 'used' })
+                    .eq('serial_key', k1.trim().toUpperCase());
+            }
+            if (k2 && product === 'promo-2x1') {
+                await supabase.from('plugin_licenses')
+                    .update({ status: 'used' })
+                    .eq('serial_key', k2.trim().toUpperCase());
+            }
         }
 
-        console.log(`✉️ [Admin Send Dispatch Email] Sent to ${cleanTo} via Brevo`);
-        return res.json({ success: true, message: `Correo enviado con éxito a ${cleanTo} vía Brevo` });
+        console.log(`✉️ [Admin Send Dispatch Email] Sent to ${cleanTo} via Brevo (mark_used: ${shouldMarkUsed})`);
+        return res.json({ 
+            success: true, 
+            message: `Correo enviado con éxito a ${cleanTo} vía Brevo${shouldMarkUsed ? '' : ' (Modo Prueba: Claves NO consumidas)'}` 
+        });
     } catch (err) {
         console.error('💥 [Admin Send Dispatch Email Error]:', err);
         return res.status(500).json({ error: err.message || 'Error al enviar correo por Brevo.' });
