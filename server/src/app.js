@@ -529,7 +529,7 @@ app.get(['/owner/content-calendar', '/owner/content-calendar.html'], (req, res) 
     return res.status(404).send('Content calendar not found');
 });
 
-// --- 3.0.6 AUDIENCE DATA ASSET ROUTE ---
+// --- 3.0.6 AUDIENCE & SALES DATA ASSET ROUTES ---
 app.get('/owner/audience-data.js', (req, res) => {
     const p = path.join(rootPath, 'owner/audience-data.js');
     if (fs.existsSync(p)) {
@@ -537,6 +537,25 @@ app.get('/owner/audience-data.js', (req, res) => {
         return res.sendFile(p);
     }
     return res.status(404).send('Audience data not found');
+});
+
+app.get(['/owner/payhip-sales-data.js', '/payhip-sales-data.js'], (req, res) => {
+    const p = path.join(rootPath, 'owner/payhip-sales-data.js');
+    if (fs.existsSync(p)) {
+        res.type('application/javascript');
+        return res.sendFile(p);
+    }
+    return res.status(404).send('Payhip sales data not found');
+});
+
+app.get(['/owner/leads_organizados_offszn.csv', '/leads_organizados_offszn.csv'], (req, res) => {
+    const p = path.join(rootPath, 'owner/leads_organizados_offszn.csv');
+    if (fs.existsSync(p)) {
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="leads_organizados_offszn.csv"');
+        return res.sendFile(p);
+    }
+    return res.status(404).send('Leads CSV not found');
 });
 
 // --- 3.0.7 RECOVERY DASHBOARD DIRECT ROUTE ---

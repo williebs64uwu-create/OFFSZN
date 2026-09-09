@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Intel | OFFSZN</title>
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/script/auth-utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000; --bg-card: #0a0a0a; --border: rgba(255,255,255,0.07);
+            --text: #fff; --dim: #666; --green: #00ff88; --red: #ff3e3e; --orange: #ffa500; --blue: #3e8eff;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Geist', sans-serif; }
+        body { background: var(--bg); color: var(--text); padding: 1.5rem 2rem; min-height: 100vh; }
+
+        /* Header */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+        .header-left h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+        .header-left p { color: var(--dim); font-size: 0.75rem; margin-top: 3px; }
+
+        /* Timeframe */
+        .tf-wrap { display: flex; gap: 8px; align-items: center; }
+        .tf-sel { display: flex; gap: 2px; background: #111; padding: 3px; border-radius: 7px; border: 1px solid var(--border); }
+        .tf-btn { background: 0; border: 0; color: var(--dim); font-size: 0.65rem; font-weight: 600; padding: 4px 12px; border-radius: 5px; cursor: pointer; transition: all 0.2s; }
+        .tf-btn.active { background: #222; color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.6); }
+        .btn-ref { padding: 4px 12px; background: #111; color: #fff; border: 1px solid var(--border); border-radius: 5px; cursor: pointer; font-size: 0.65rem; font-weight: 600; }
+
+        /* KPI Grid */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+        .kpi { background: var(--bg-card); border: 1px solid var(--border); padding: 14px; border-radius: 8px; }
+        .kpi:hover { border-color: rgba(255,255,255,0.12); }
+        .kpi-label { color: var(--dim); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+        .kpi .stat-value { font-size: 1.5rem; font-weight: 700; transition: opacity 0.3s; }
+
+        /* Section header */
+        .section-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .section-title .ico { font-size: 0.9rem; }
+
+        /* Dashboard Grid */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .grid-full { margin-bottom: 12px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); padding: 16px; border-radius: 8px; overflow: hidden; }
+        .card-wide { grid-column: span 2; }
+
+        /* Friction */
+        .friction-item { padding: 10px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .friction-item:last-child { border-bottom: none; }
+        .friction-info h4 { font-size: 0.78rem; margin-bottom: 2px; }
+        .friction-info p { font-size: 0.68rem; color: var(--dim); line-height: 1.4; }
+        .friction-info strong { color: #ccc; }
+
+        /* Tags */
+        .tag { padding: 2px 8px; border-radius: 3px; font-size: 0.55rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; flex-shrink: 0; }
+        .tag-critical { background: rgba(255,62,62,0.1); color: var(--red); border: 1px solid rgba(255,62,62,0.2); }
+        .tag-safe { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.2); }
+        .tag-warning { background: rgba(255,165,0,0.1); color: var(--orange); border: 1px solid rgba(255,165,0,0.2); }
+
+        /* Guard */
+        #admin-guard-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+        input#admin-pass { background: #111; border: 1px solid #333; color: #fff; padding: 10px 20px; border-radius: 8px; text-align: center; outline: 0; font-size: 0.9rem; }
+
+        /* Scrollable containers */
+        .scroll-box { max-height: 280px; overflow-y: auto; }
+        .scroll-box::-webkit-scrollbar { width: 4px; }
+        .scroll-box::-webkit-scrollbar-thumb { background: #222; border-radius: 2px; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 5000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-content { background: #0a0a0a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; max-width: 700px; width: 90%; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .modal-header h3 { font-size: 0.9rem; font-weight: 600; }
+        .modal-close { background: none; border: none; color: #666; font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1; }
+        .modal-close:hover { color: #fff; }
+        #modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+
+        @media (max-width: 1024px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .card-wide { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Guard -->
+<div id="admin-guard-overlay">
+    <div style="font-size:2.5rem;">🔒</div>
+    <h2>Admin Intel</h2>
+    <p style="color:#555;font-size:0.8rem;">Acceso restringido</p>
+    <input type="password" id="admin-pass" placeholder="Contraseña">
+    <p id="error-msg" style="color:var(--red);font-size:0.75rem;display:none;">Incorrecta</p>
+</div>
+
+<header>
+    <div class="header-left">
+        <h1>OFFSZN Analytics & Intelligence</h1>
+        <p id="current-period-text">Reporte: Últimos 7 días</p>
+    </div>
+    <div class="tf-wrap">
+        <div class="tf-sel">
+            <button class="tf-btn" onclick="updateTimeframe('daily',this)">Hoy</button>
+            <button class="tf-btn active" onclick="updateTimeframe('weekly',this)">Semana</button>
+            <button class="tf-btn" onclick="updateTimeframe('monthly',this)">Mes</button>
+            <button class="tf-btn" onclick="updateTimeframe('alltime',this)">Desde Inicio</button>
+        </div>
+        <button class="btn-ref" onclick="refreshData()">↻ Actualizar</button>
+    </div>
+</header>
+
+<!-- ═══ KPI CARDS ═══ -->
+<div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Usuarios Totales</div><div class="stat-value" id="val-total-users">—</div></div>
+    <div class="kpi"><div class="kpi-label">Registros (Periodo)</div><div class="stat-value" id="val-registrations">—</div></div>
+    <div class="kpi"><div class="kpi-label">Tasa Onboarding</div><div class="stat-value" id="val-onboarding-rate">—</div></div>
+    <div class="kpi"><div class="kpi-label">Productos</div><div class="stat-value" id="val-products">—</div></div>
+    <div class="kpi"><div class="kpi-label">Órdenes</div><div class="stat-value" id="val-orders">—</div></div>
+    <div class="kpi"><div class="kpi-label">Descargas</div><div class="stat-value" id="val-downloads">—</div></div>
+    <div class="kpi"><div class="kpi-label">Descargas Gratis</div><div class="stat-value" id="val-free-downloads">—</div></div>
+    <div class="kpi"><div class="kpi-label">Suscripciones</div><div class="stat-value" id="val-subscriptions">—</div></div>
+    <div class="kpi"><div class="kpi-label">Page Views</div><div class="stat-value" id="val-page-views">—</div></div>
+    <div class="kpi"><div class="kpi-label">Follows</div><div class="stat-value" id="val-follows">—</div></div>
+    <div class="kpi"><div class="kpi-label">Likes</div><div class="stat-value" id="val-likes">—</div></div>
+    <div class="kpi"><div class="kpi-label">Reproducciones</div><div class="stat-value" id="val-listens">—</div></div>
+</div>
+
+<!-- ═══ ROW: FUNNEL + FRICTION ═══ -->
+<div class="grid-2">
+    <div class="card">
+        <div class="section-title"><span class="ico">📊</span> Embudo de Conversión</div>
+        <div style="height:220px;"><canvas id="conversionFunnelChart"></canvas></div>
+        <div id="funnel-hint" style="text-align:center;font-size:0.55rem;color:#444;margin-top:4px;"></div>
+    </div>
+    <div class="card">
+        <div class="section-title"><span class="ico">🔴</span> Puntos de Fricción & Soluciones</div>
+        <div id="friction-items-container" class="scroll-box"></div>
+    </div>
+</div>
+
+<!-- ═══ ROW: ACTIVITY TIMELINE ═══ -->
+<div class="grid-full">
+    <div class="card">
+        <div class="section-title"><span class="ico">📈</span> Actividad: Page Views & Registros por Día</div>
+        <div style="height:200px;"><canvas id="activityChart"></canvas></div>
+    </div>
+</div>
+
+<!-- ═══ ROW: TOP PRODUCTS + RECENT DOWNLOADS ═══ -->
+<div class="grid-2">
+    <div class="card">
+        <div class="section-title"><span class="ico">🏆</span> Top Productos (por descargas)</div>
+        <div id="top-products-container" class="scroll-box"></div>
+    </div>
+    <div class="card">
+        <div class="section-title"><span class="ico">⬇️</span> Descargas Recientes</div>
+        <div id="recent-downloads-container" class="scroll-box"></div>
+    </div>
+</div>
+
+<!-- ═══ ROW: FREE DOWNLOADS + LISTENING ═══ -->
+<div class="grid-2">
+    <div class="card">
+        <div class="section-title"><span class="ico">📧</span> Descargas Gratis (Emails Recolectados)</div>
+        <div id="free-downloads-container" class="scroll-box"></div>
+    </div>
+    <div class="card">
+        <div class="section-title"><span class="ico">🎧</span> Más Escuchados</div>
+        <div id="listening-stats-container" class="scroll-box"></div>
+    </div>
+</div>
+
+<!-- ═══ ROW: CATEGORIES + YOUTUBE ═══ -->
+<div class="grid-2">
+    <div class="card">
+        <div class="section-title"><span class="ico">📂</span> Productos por Categoría</div>
+        <div style="max-width:300px;margin:0 auto;"><canvas id="categoryChart"></canvas></div>
+    </div>
+    <div class="card">
+        <div class="section-title"><span class="ico">🎬</span> YouTube Automation</div>
+        <div id="youtube-stats-container"></div>
+    </div>
+</div>
+
+<!-- ═══ ROW: PLANS + ROLES ═══ -->
+<div class="grid-2">
+    <div class="card">
+        <div class="section-title"><span class="ico">💎</span> Distribución por Plan</div>
+        <div style="max-width:250px;margin:0 auto;"><canvas id="planDistributionChart"></canvas></div>
+    </div>
+    <div class="card">
+        <div class="section-title"><span class="ico">👤</span> Distribución por Rol</div>
+        <div style="height:180px;"><canvas id="roleChart"></canvas></div>
+    </div>
+</div>
+
+<!-- ═══ ROW: SUBS + CREDITS ═══ -->
+<div class="grid-2">
+    <div class="card">
+        <div class="section-title"><span class="ico">💳</span> Suscripciones Detalle</div>
+        <div id="subs-detail-container" class="scroll-box"></div>
+    </div>
+    <div class="card">
+        <div class="section-title"><span class="ico">🪙</span> Créditos Gratis</div>
+        <div id="credits-container"></div>
+    </div>
+</div>
+
+<!-- ═══ ROW: TOP PAGES + SOCIAL ═══ -->
+<div class="grid-2">
+    <div class="card">
+        <div class="section-title"><span class="ico">🔥</span> Páginas Más Visitadas</div>
+        <div id="top-pages-container" class="scroll-box"></div>
+    </div>
+    <div class="card">
+        <div class="section-title"><span class="ico">💬</span> Social (Follows & Likes)</div>
+        <div id="social-stats-container"></div>
+    </div>
+</div>
+
+<!-- ═══ ROW: MISSING DATA ═══ -->
+<div class="grid-full">
+    <div class="card" style="border-color: rgba(255,62,62,0.15);">
+        <div class="section-title"><span class="ico">⚠️</span> Datos Críticos NO Registrados</div>
+        <div id="missing-data-container" class="scroll-box"></div>
+    </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="detail-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title"></h3>
+            <button onclick="closeModal()" class="modal-close">&times;</button>
+        </div>
+        <div id="modal-body"></div>
+    </div>
+</div>
+
+<script src="/ayuda/admin/admin-analytics.js"></script>
+<script>
+    const passInput = document.getElementById('admin-pass');
+    const overlay = document.getElementById('admin-guard-overlay');
+    const errorMsg = document.getElementById('error-msg');
+
+    if (sessionStorage.getItem('offszn_admin_auth') === 'true') {
+        overlay.style.display = 'none';
+        initDashboard();
+    }
+
+    passInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            if (passInput.value === 'willie2026') {
+                overlay.style.display = 'none';
+                sessionStorage.setItem('offszn_admin_auth', 'true');
+                initDashboard();
+            } else {
+                errorMsg.style.display = 'block';
+                passInput.value = '';
+            }
+        }
+    });
+</script>
+</body>
+</html>

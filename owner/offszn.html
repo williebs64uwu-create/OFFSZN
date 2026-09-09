@@ -26,6 +26,7 @@
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <script src="/env.js"></script>
     <script src="/owner/audience-data.js"></script>
+    <script src="/owner/payhip-sales-data.js"></script>
 
     <style>
         /* ══════════════════════════════════════════════════════════════
@@ -1410,7 +1411,7 @@
                     <i class="bi bi-people-fill"></i>
                     <span>Audiencia & Leads</span>
                 </div>
-                <span class="nav-badge">3,659</span>
+                <span class="nav-badge" id="badge-audience-count">3,949</span>
             </button>
 
             <div class="nav-section-title">Marketing & Embudos</div>
@@ -1511,51 +1512,69 @@
                 <div class="guide-content">
                     <i class="bi bi-info-circle-fill"></i>
                     <div>
-                        <strong>💡 Guía de Operación — Ventas & Transacciones:</strong>
-                        <div>Este módulo audita los cobros reales procesados en el checkout. Detecta automáticamente si una compra provino de la prueba A/B de precio dinámico ($5 vs $10 USD) o por Yape (Mercado Pago Perú S/. 33 PEN). Haz clic en cualquier orden para ver su desglose completo y reenviar comprobantes.</div>
+                        <strong>💡 Auditoría Integral de Ventas & Facturación Multicanal:</strong>
+                        <div>Este módulo audita los ingresos reales consolidados de <strong>OFFSZN Web Checkout</strong> (Supabase + PayPal / Yape) y <strong>Payhip Marketplace</strong>. Distingue entre ventas propias de Willie Inspired vs otros creadores, detecta compras de plugins con sus licencias emitidas, y audita precios dinámicos ($5 vs $10 USD).</div>
                         <div class="guide-tags">
-                            <span class="mono-pill"><i class="bi bi-lightning-fill"></i> Precios A/B Dinámicos</span>
-                            <span class="mono-pill"><i class="bi bi-phone"></i> T.C. Oficial Yape S/. 3.30</span>
+                            <span class="mono-pill"><i class="bi bi-globe2"></i> Web Checkout & Payhip</span>
+                            <span class="mono-pill"><i class="bi bi-cpu-fill"></i> Licencias de Plugins</span>
+                            <span class="mono-pill"><i class="bi bi-person-badge"></i> Filtro Willie vs Creadores</span>
                             <span class="mono-pill"><i class="bi bi-file-earmark-spreadsheet"></i> Exportación CSV</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Metric Cards -->
-            <div class="stats-grid">
+            <!-- Metric Cards (6 Cards Grid) -->
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                 <div class="shadcn-card">
-                    <div class="card-meta"><span>Ingresos Brutos (Cobro Real)</span><i class="bi bi-wallet2"></i></div>
+                    <div class="card-meta"><span>Facturación Bruta Consolidada</span><i class="bi bi-wallet2"></i></div>
                     <div class="card-val" id="val-total-rev">$0.00</div>
-                    <div class="card-subtext"><span class="badge-delta"><i class="bi bi-check"></i> Live</span><span>Cobros aprobados</span></div>
+                    <div class="card-subtext"><span class="badge-delta"><i class="bi bi-check"></i> Live</span><span>Cobros reales aprobados</span></div>
                 </div>
 
                 <div class="shadcn-card">
-                    <div class="card-meta"><span>Ventas PayPal (USD)</span><i class="bi bi-paypal"></i></div>
-                    <div class="card-val" id="val-paypal-rev">$0.00</div>
-                    <div class="card-subtext"><span id="val-paypal-count">0 órdenes</span> internacionales</div>
+                    <div class="card-meta"><span>Ventas Payhip Marketplace</span><i class="bi bi-shop"></i></div>
+                    <div class="card-val" id="val-payhip-rev">$0.00</div>
+                    <div class="card-subtext"><span id="val-payhip-count">0 órdenes</span> PayPal & Stripe</div>
                 </div>
 
                 <div class="shadcn-card">
-                    <div class="card-meta"><span>Ventas Yape (PEN)</span><i class="bi bi-phone"></i></div>
-                    <div class="card-val" id="val-yape-rev">S/. 0.00</div>
-                    <div class="card-subtext"><span id="val-yape-count">0 órdenes</span> Perú Mercado Pago</div>
+                    <div class="card-meta"><span>Ventas Web OFFSZN</span><i class="bi bi-globe2"></i></div>
+                    <div class="card-val" id="val-web-rev">$0.00</div>
+                    <div class="card-subtext"><span id="val-web-count">0 órdenes</span> Checkout Directo</div>
+                </div>
+
+                <div class="shadcn-card">
+                    <div class="card-meta"><span>Ventas de Plugins</span><i class="bi bi-cpu-fill"></i></div>
+                    <div class="card-val" id="val-plugins-rev" style="color: #60a5fa;">$0.00</div>
+                    <div class="card-subtext"><span id="val-plugins-count">0 licencias</span> (Mix, Coke, Inka)</div>
                 </div>
 
                 <div class="shadcn-card">
                     <div class="card-meta"><span>Neto Estimado (Tras Fees)</span><i class="bi bi-piggy-bank"></i></div>
                     <div class="card-val" id="val-net-rev" style="color: var(--dot-green);">$0.00</div>
-                    <div class="card-subtext">Margen operativo ~92%</div>
+                    <div class="card-subtext" id="val-net-margin">Margen operativo ~91%</div>
+                </div>
+
+                <div class="shadcn-card">
+                    <div class="card-meta"><span>Willie Inspired vs Otros</span><i class="bi bi-pie-chart-fill"></i></div>
+                    <div class="card-val" id="val-willie-rev" style="font-size: 20px;">$0.00</div>
+                    <div class="card-subtext" id="val-others-rev">0 órdenes de otros creadores</div>
                 </div>
             </div>
 
-            <!-- Dual Grid: Chart + A/B Price Split -->
+            <!-- Dual Grid: Chart + Breakdown -->
             <div class="dual-grid">
                 <div class="section-box" style="margin-bottom: 0;">
                     <div class="box-header">
                         <div class="box-title">
                             <h2>Historial Cronológico de Facturación</h2>
-                            <p>Facturación diaria de los últimos 14 días</p>
+                            <p>Facturación diaria multicanal combinada</p>
+                        </div>
+                        <div style="display: flex; gap: 4px;">
+                            <button class="btn-shadcn-outline active" id="tf-14d" style="padding: 3px 8px; font-size: 11px;" onclick="setTimeframeOrders('14D')">14 Días</button>
+                            <button class="btn-shadcn-outline" id="tf-30d" style="padding: 3px 8px; font-size: 11px;" onclick="setTimeframeOrders('30D')">30 Días</button>
+                            <button class="btn-shadcn-outline" id="tf-all" style="padding: 3px 8px; font-size: 11px;" onclick="setTimeframeOrders('ALL')">Histórico</button>
                         </div>
                     </div>
                     <div style="padding: 20px; height: 260px;">
@@ -1566,59 +1585,105 @@
                 <div class="section-box" style="margin-bottom: 0;">
                     <div class="box-header">
                         <div class="box-title">
-                            <h2>Auditoría A/B: Precios Dinámicos</h2>
-                            <p>Distribución de ventas por tier de precio</p>
+                            <h2>Desglose por Categoría & Auditoría</h2>
+                            <p>Distribución de ventas por catálogo y pricing</p>
                         </div>
-                        <span class="status-tag active">A/B Engine</span>
+                        <span class="status-tag active">Auditoría Real</span>
                     </div>
-                    <div style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+                    <div style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
                         <div>
-                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
-                                <span style="font-family: var(--font-mono); font-weight: 600;">Tier $10 USD (Precio Estándar)</span>
-                                <span id="ab-rev-10" style="color: var(--text-pure); font-weight: 700;">$0 (0)</span>
+                            <div style="display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 4px;">
+                                <span style="font-family: var(--font-mono); font-weight: 600;"><i class="bi bi-cpu"></i> Plugins (Easy Mix, Coke, Inka, Master)</span>
+                                <span id="cat-rev-plugins" style="color: #60a5fa; font-weight: 700;">$0 (0)</span>
                             </div>
-                            <div style="background: #27272a; height: 8px; border-radius: 99px; overflow: hidden;">
-                                <div id="ab-bar-10" style="background: #ffffff; width: 50%; height: 100%;"></div>
+                            <div style="background: #27272a; height: 6px; border-radius: 99px; overflow: hidden;">
+                                <div id="cat-bar-plugins" style="background: #3b82f6; width: 0%; height: 100%;"></div>
                             </div>
                         </div>
 
                         <div>
-                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px;">
-                                <span style="font-family: var(--font-mono); font-weight: 600;">Tier $5 USD (Oferta Dinámica A/B)</span>
-                                <span id="ab-rev-5" style="color: var(--text-pure); font-weight: 700;">$0 (0)</span>
+                            <div style="display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 4px;">
+                                <span style="font-family: var(--font-mono); font-weight: 600;"><i class="bi bi-soundwave"></i> Presets & Voces de Artistas</span>
+                                <span id="cat-rev-presets" style="color: var(--text-pure); font-weight: 700;">$0 (0)</span>
                             </div>
-                            <div style="background: #27272a; height: 8px; border-radius: 99px; overflow: hidden;">
-                                <div id="ab-bar-5" style="background: #a1a1aa; width: 50%; height: 100%;"></div>
+                            <div style="background: #27272a; height: 6px; border-radius: 99px; overflow: hidden;">
+                                <div id="cat-bar-presets" style="background: #a855f7; width: 0%; height: 100%;"></div>
                             </div>
                         </div>
 
-                        <div style="padding-top: 10px; border-top: 1px solid var(--border-subtle); font-size: 11px; color: var(--text-dim); line-height: 1.5;">
-                            <i class="bi bi-shield-check"></i> Las órdenes #2024 y #2023 se cobraron a $5; la #2030 fue vía Yape (S/. 33 = $10 USD). Haz clic en cualquier orden para auditar.
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 4px;">
+                                <span style="font-family: var(--font-mono); font-weight: 600;"><i class="bi bi-folder2"></i> Plantillas Profesionales de Mezcla</span>
+                                <span id="cat-rev-templates" style="color: var(--text-pure); font-weight: 700;">$0 (0)</span>
+                            </div>
+                            <div style="background: #27272a; height: 6px; border-radius: 99px; overflow: hidden;">
+                                <div id="cat-bar-templates" style="background: #22c55e; width: 0%; height: 100%;"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 4px;">
+                                <span style="font-family: var(--font-mono); font-weight: 600;"><i class="bi bi-lightning-charge"></i> Ofertas Dinámicas ($5 A/B Promo)</span>
+                                <span id="ab-rev-5" style="color: var(--dot-yellow); font-weight: 700;">$0 (0)</span>
+                            </div>
+                            <div style="background: #27272a; height: 6px; border-radius: 99px; overflow: hidden;">
+                                <div id="ab-bar-5" style="background: var(--dot-yellow); width: 0%; height: 100%;"></div>
+                            </div>
+                        </div>
+
+                        <div style="padding-top: 8px; border-top: 1px solid var(--border-subtle); font-size: 11px; color: var(--text-dim); line-height: 1.4;">
+                            <i class="bi bi-shield-check"></i> Monitoreo cruzado de órdenes con clave de licencia automática (Payhip / C++ HWID).
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Orders Table -->
+            <!-- Orders Table with Complete Filters -->
             <div class="section-box">
                 <div class="box-header">
                     <div class="box-title">
-                        <h2>Registro Maestro de Transacciones</h2>
-                        <p>Haz clic en cualquier fila para inspeccionar el comprobante, cliente y auditoría de precio</p>
+                        <h2>Registro Maestro de Transacciones Consolidadas</h2>
+                        <p>Auditoría completa de compras en Web OFFSZN y Payhip Marketplace</p>
                     </div>
 
-                    <div class="box-toolbar">
+                    <div class="box-toolbar" style="flex-wrap: wrap; gap: 8px;">
                         <button class="btn-shadcn-outline" onclick="exportOrdersCSV()">
                             <i class="bi bi-download"></i> Exportar Órdenes CSV
                         </button>
-                        <div class="search-input-wrapper">
+                        <div class="search-input-wrapper" style="min-width: 220px;">
                             <i class="bi bi-search"></i>
-                            <input type="text" id="order-search" class="shadcn-input" placeholder="Buscar por email, TX o #orden..." oninput="filterOrdersTable()">
+                            <input type="text" id="order-search" class="shadcn-input" placeholder="Buscar por cliente, email, orden, producto..." oninput="resetOrdersPageAndFilter()">
                         </div>
-                        <select id="order-filter-method" class="shadcn-select" onchange="filterOrdersTable()">
-                            <option value="ALL">Todos los métodos</option>
-                            <option value="PAYPAL">PayPal Live</option>
-                            <option value="YAPE">Yape / Mercado Pago</option>
+                        <select id="order-filter-channel" class="shadcn-select" onchange="resetOrdersPageAndFilter()" title="Filtrar por canal de venta">
+                            <option value="ALL">🌐 Todos los Canales</option>
+                            <option value="WEB">🌐 Checkout Web OFFSZN</option>
+                            <option value="PAYHIP">🛒 Payhip Marketplace</option>
+                        </select>
+                        <select id="order-filter-creator" class="shadcn-select" onchange="resetOrdersPageAndFilter()" title="Filtrar por creador">
+                            <option value="ALL">👤 Todos los Creadores</option>
+                            <option value="WILLIE">👑 Willie Inspired (Mías)</option>
+                            <option value="OTHERS">👥 Otros Productores</option>
+                        </select>
+                        <select id="order-filter-category" class="shadcn-select" onchange="resetOrdersPageAndFilter()" title="Filtrar por categoría">
+                            <option value="ALL">📦 Todas las Categorías</option>
+                            <option value="Plugins">🔌 Plugins</option>
+                            <option value="Presets">🎛️ Presets & Voces</option>
+                            <option value="Plantillas">📁 Plantillas</option>
+                            <option value="Beats & Kits">🎵 Beats & Kits</option>
+                            <option value="Servicios">🎧 Servicios</option>
+                        </select>
+                        <select id="order-filter-method" class="shadcn-select" onchange="resetOrdersPageAndFilter()" title="Filtrar por pasarela">
+                            <option value="ALL">💳 Todos los Métodos</option>
+                            <option value="PAYPAL">🅿️ PayPal</option>
+                            <option value="YAPE">📱 Yape (Mercado Pago)</option>
+                        </select>
+                        <select id="order-filter-pricing" class="shadcn-select" onchange="resetOrdersPageAndFilter()" title="Filtrar por cobro">
+                            <option value="PAID">💰 Solo Pagadas (> $0)</option>
+                            <option value="DYNAMIC_5">⚡ Dinámico $5</option>
+                            <option value="STANDARD_10">⭐ Estándar $10+</option>
+                            <option value="BUNDLE_15">🎁 Bundles $15+</option>
+                            <option value="FREE">🆓 Leads / Gratis ($0)</option>
+                            <option value="ALL">Todas las Órdenes</option>
                         </select>
                     </div>
                 </div>
@@ -1629,20 +1694,43 @@
                             <tr>
                                 <th>Orden #</th>
                                 <th>Cliente / Email</th>
-                                <th>Método</th>
-                                <th>Cobrado Real</th>
                                 <th>Producto / Item</th>
+                                <th>Creador</th>
+                                <th>Canal & Método</th>
+                                <th>Cobrado Real</th>
                                 <th>Fecha</th>
-                                <th>Auditoría A/B</th>
+                                <th>Licencia / Tag</th>
                                 <th>Acción</th>
                             </tr>
                         </thead>
                         <tbody id="orders-table-body">
                             <tr>
-                                <td colspan="8" style="text-align: center; padding: 24px; color: var(--text-dim);">Cargando órdenes de Supabase...</td>
+                                <td colspan="9" style="text-align: center; padding: 24px; color: var(--text-dim);">Sincronizando transacciones de Web OFFSZN y Payhip...</td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <!-- Table Pagination Footer -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid var(--border-subtle); flex-wrap: wrap; gap: 10px;">
+                    <div style="font-size: 11.5px; color: var(--text-dim); font-family: var(--font-mono);" id="orders-page-info">
+                        Mostrando 0 de 0 órdenes
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <select id="orders-page-size" class="shadcn-select" style="font-size: 11px; padding: 3px 8px;" onchange="changeOrdersPageSize()">
+                            <option value="25">25 por página</option>
+                            <option value="50" selected>50 por página</option>
+                            <option value="100">100 por página</option>
+                            <option value="500">500 por página</option>
+                        </select>
+                        <button class="btn-shadcn-outline" id="btn-orders-prev" onclick="changeOrdersPage(-1)" style="padding: 4px 10px; font-size: 11px;">
+                            <i class="bi bi-chevron-left"></i> Anterior
+                        </button>
+                        <span id="orders-page-num" style="font-family: var(--font-mono); font-size: 11px; color: var(--text-pure); padding: 0 4px;">1 / 1</span>
+                        <button class="btn-shadcn-outline" id="btn-orders-next" onclick="changeOrdersPage(1)" style="padding: 4px 10px; font-size: 11px;">
+                            Siguiente <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1849,12 +1937,13 @@
                 <div class="guide-content">
                     <i class="bi bi-people-fill"></i>
                     <div>
-                        <strong>💡 Guía de Operación — Audiencia & Leads (3,659 Contactos):</strong>
-                        <div>Directorio unificado de todos los clientes que han comprado o descargado productos en Payhip y OFFSZN. Puedes filtrar por valor de compra (VIP ≥$20, Compradores Paid $1-$19, y Leads Gratuitos), exportar a CSV para email marketing y hacer clic en cualquier contacto para ver su historial completo.</div>
+                        <strong>💡 Directorio Maestro de Audiencia & Leads Consolidados:</strong>
+                        <div>Directorio unificado de <strong>3,949 contactos únicos</strong> recopilados de Payhip, OFFSZN Web Checkout, Brevo y descargas gratuitas. Permite segmentar por valor de compra (VIP, Paid, Leads), identificar compradores de plugins con sus seriales y descargar el archivo CSV limpio y organizado para tus campañas de email marketing.</div>
                         <div class="guide-tags">
-                            <span class="mono-pill"><i class="bi bi-stars"></i> 772 VIPs</span>
-                            <span class="mono-pill"><i class="bi bi-bag-check"></i> 197 Paid</span>
-                            <span class="mono-pill"><i class="bi bi-gift"></i> 2,690 Leads Gratis</span>
+                            <span class="mono-pill"><i class="bi bi-cpu-fill"></i> 52 Dueños Plugins</span>
+                            <span class="mono-pill"><i class="bi bi-stars"></i> 72 VIPs</span>
+                            <span class="mono-pill"><i class="bi bi-bag-check"></i> 263 Paid</span>
+                            <span class="mono-pill"><i class="bi bi-gift"></i> 3,614 Leads Gratis</span>
                         </div>
                     </div>
                 </div>
@@ -1864,23 +1953,23 @@
             <div class="stats-grid">
                 <div class="shadcn-card">
                     <div class="card-meta"><span>Contactos Totales</span><i class="bi bi-people"></i></div>
-                    <div class="card-val" id="aud-total">3,659</div>
+                    <div class="card-val" id="aud-total">3,949</div>
                     <div class="card-subtext">Base de datos unificada</div>
                 </div>
                 <div class="shadcn-card">
-                    <div class="card-meta"><span>Clientes VIP (≥$20 USD)</span><i class="bi bi-stars"></i></div>
-                    <div class="card-val" id="aud-vip" style="color: var(--dot-yellow);">772</div>
-                    <div class="card-subtext">Top compradores de packs</div>
+                    <div class="card-meta"><span>Dueños de Plugins</span><i class="bi bi-cpu-fill"></i></div>
+                    <div class="card-val" id="aud-plugins" style="color: #60a5fa;">52</div>
+                    <div class="card-subtext">Easy Mix, Inka, Coke, Master</div>
                 </div>
                 <div class="shadcn-card">
-                    <div class="card-meta"><span>Compradores Paid ($1-$19)</span><i class="bi bi-bag-check"></i></div>
-                    <div class="card-val" id="aud-paid">197</div>
-                    <div class="card-subtext">Compradores de presets</div>
+                    <div class="card-meta"><span>Clientes VIP & Pagados</span><i class="bi bi-stars"></i></div>
+                    <div class="card-val" id="aud-paid" style="color: var(--dot-yellow);">335</div>
+                    <div class="card-subtext">72 VIPs + 263 Paid ($)</div>
                 </div>
                 <div class="shadcn-card">
                     <div class="card-meta"><span>Leads Gratuitos</span><i class="bi bi-gift"></i></div>
-                    <div class="card-val" id="aud-free">2,690</div>
-                    <div class="card-subtext">Descargas de presets demo</div>
+                    <div class="card-val" id="aud-free">3,614</div>
+                    <div class="card-subtext">Descargas de presets y plantillas</div>
                 </div>
             </div>
 
@@ -1890,14 +1979,17 @@
                     ⚡ Segmentos Listos para Campañas de Email Marketing:
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button class="btn-shadcn-outline" onclick="filterAudienceSegment('PAID_WITHOUT_EASYMIX')">
-                        🔥 Compradores Presets (280) — Hot Leads
+                    <button class="btn-shadcn-outline" onclick="filterAudienceSegment('PLUGINS')">
+                        🔌 Dueños de Plugins (52) — Clientes Premium
                     </button>
-                    <button class="btn-shadcn-outline" onclick="filterAudienceSegment('FREE_WITHOUT_EASYMIX')">
-                        🎁 Leads Gratuitos (3,371) — Embudo Masivo
+                    <button class="btn-shadcn-outline" onclick="filterAudienceSegment('PAID')">
+                        🔥 Compradores Presets (263) — Hot Leads
                     </button>
                     <button class="btn-shadcn-outline" onclick="filterAudienceSegment('VIP')">
-                        👑 Segmento VIP (772) — Clientes Clave
+                        👑 Segmento VIP (72) — Clientes Clave
+                    </button>
+                    <button class="btn-shadcn-outline" onclick="filterAudienceSegment('FREE')">
+                        🎁 Leads Gratuitos (3,614) — Embudo Masivo
                     </button>
                     <button class="btn-shadcn-outline" onclick="filterAudienceSegment('PERU')">
                         🇵🇪 Clientes de Perú (Yape Ready)
@@ -1910,26 +2002,31 @@
                 <div class="box-header">
                     <div class="box-title">
                         <h2>Directorio de Audiencia & CRM</h2>
-                        <p>Haz clic en cualquier cliente para ver sus compras, LTV y enviarle un correo directo</p>
+                        <p>Haz clic en cualquier cliente para ver sus compras, licencias de plugins y enviarle un correo directo</p>
                     </div>
 
-                    <div class="box-toolbar">
+                    <div class="box-toolbar" style="flex-wrap: wrap; gap: 8px;">
                         <button class="btn-shadcn" onclick="copyAudienceEmails()">
                             <i class="bi bi-clipboard-check"></i> Copiar Correos Filtrados
                         </button>
+                        <a href="/owner/leads_organizados_offszn.csv" download class="btn-shadcn-outline" style="text-decoration: none;">
+                            <i class="bi bi-file-earmark-spreadsheet-fill"></i> Descargar CSV Organizado
+                        </a>
                         <button class="btn-shadcn-outline" onclick="exportAudienceCSV()">
-                            <i class="bi bi-download"></i> Exportar CSV Completo
+                            <i class="bi bi-download"></i> Exportar Vista Actual
                         </button>
-                        <select id="aud-segment-select" class="shadcn-select" onchange="resetAudiencePageAndFilter()">
-                            <option value="ALL">Todos los segmentos</option>
-                            <option value="VIP">VIP (≥$20)</option>
-                            <option value="Paid">Compradores Paid</option>
-                            <option value="Free Lead">Leads Gratis</option>
-                        </select>
-                        <div class="search-input-wrapper">
+                        <div class="search-input-wrapper" style="min-width: 220px;">
                             <i class="bi bi-search"></i>
-                            <input type="text" id="aud-search-input" class="shadcn-input" placeholder="Buscar por email, nombre o producto..." oninput="resetAudiencePageAndFilter()">
+                            <input type="text" id="aud-search-input" class="shadcn-input" placeholder="Buscar por email, nombre, país o producto..." oninput="resetAudiencePageAndFilter()">
                         </div>
+                        <select id="aud-segment-select" class="shadcn-select" onchange="resetAudiencePageAndFilter()">
+                            <option value="ALL">Todos los Segmentos (3,949)</option>
+                            <option value="PLUGINS">🔌 Compradores de Plugins (52)</option>
+                            <option value="VIP">⭐ VIP (≥$20) (72)</option>
+                            <option value="Paid">💰 Compradores Paid (263)</option>
+                            <option value="Free Lead">🎁 Leads Gratuitos (3,614)</option>
+                            <option value="PERU">🇵🇪 Clientes Perú</option>
+                        </select>
                     </div>
                 </div>
 
@@ -2795,6 +2892,11 @@
         const MasterState = {
             activeTab: 'ventas',
             orders: [],
+            allOrders: [],
+            filteredOrders: [],
+            ordersPage: 1,
+            ordersPageSize: 50,
+            ordersTimeframe: '14D',
             licenses: [],
             audience: [],
             activeLicense: null,
@@ -2830,7 +2932,7 @@
             const tabNames = {
                 ventas: 'Ventas & Transacciones',
                 licencias: 'Licencias & Contratos',
-                audiencia: 'Audiencia & Leads (3,659)',
+                audiencia: 'Audiencia & Leads (3,949)',
                 funnel: 'Calculadora & Funnel Hub',
                 wallet: 'Google Wallet & Push',
                 recuperacion: 'Recuperación de Carritos',
@@ -2840,7 +2942,7 @@
             document.getElementById('crumb-tab').textContent = tabNames[tabId] || tabId;
 
             // Trigger data loader
-            if (tabId === 'ventas' && MasterState.orders.length === 0) loadMasterOrders();
+            if (tabId === 'ventas' && MasterState.allOrders.length === 0) loadMasterOrders();
             if (tabId === 'licencias' && MasterState.licenses.length === 0) loadMasterLicenses();
             if (tabId === 'audiencia' && MasterState.audience.length === 0) loadMasterAudience();
             if (tabId === 'wallet') initWalletQR();
@@ -2905,131 +3007,390 @@
         });
 
         // ────────────────────────────────────────────────────────────
-        // 1. VENTAS & AUDITORÍA DE PRECIOS DINÁMICOS
+        // 1. VENTAS & AUDITORÍA DE INGRESOS MULTICANAL & MULTICREADOR
         // ────────────────────────────────────────────────────────────
         async function loadMasterOrders() {
-            if (!MasterState.supabase) return;
             try {
-                const { data: orders, error } = await MasterState.supabase
-                    .from('orders')
-                    .select('id, transaction_id, guest_email, total_price, status, created_at, product_id, order_items(product_id, price_at_purchase, license_name)')
-                    .eq('status', 'completed')
-                    .order('created_at', { ascending: false })
-                    .limit(150);
+                let supabaseOrders = [];
+                if (MasterState.supabase) {
+                    try {
+                        // Fetch all paid web orders
+                        const { data: paidOrders, error: errPaid } = await MasterState.supabase
+                            .from('orders')
+                            .select('id, transaction_id, guest_email, total_price, status, created_at, product_id, producer_id, order_items(product_id, price_at_purchase, license_name)')
+                            .gt('total_price', 0)
+                            .order('created_at', { ascending: false });
 
-                if (error) throw error;
-                MasterState.orders = orders || [];
+                        if (!errPaid && paidOrders) {
+                            supabaseOrders = paidOrders;
+                        }
+
+                        // Fetch recent free orders (up to 250)
+                        const { data: freeOrders, error: errFree } = await MasterState.supabase
+                            .from('orders')
+                            .select('id, transaction_id, guest_email, total_price, status, created_at, product_id, producer_id, order_items(product_id, price_at_purchase, license_name)')
+                            .eq('total_price', 0)
+                            .order('created_at', { ascending: false })
+                            .limit(250);
+
+                        if (!errFree && freeOrders) {
+                            supabaseOrders = [...supabaseOrders, ...freeOrders];
+                        }
+                    } catch (dbErr) {
+                        console.warn('[Orders] Supabase orders fetch error:', dbErr);
+                    }
+                }
+
+                // Known product catalogue mapping
+                const PROD_CATALOG = {
+                    899: { name: 'Easy Mix Plugin', cat: 'Plugins' },
+                    900: { name: 'Easy Master Plugin', cat: 'Plugins' },
+                    902: { name: 'Inka Kola Plugin', cat: 'Plugins' },
+                    903: { name: 'Coca-Cola Plugin', cat: 'Plugins' }
+                };
+
+                // 1. Normalize Supabase Web Orders
+                const normalizedWeb = supabaseOrders.map(o => {
+                    const isYape = (o.transaction_id || '').startsWith('MP-YAPE');
+                    const price = parseFloat(o.total_price || 0);
+                    const prodInfo = PROD_CATALOG[o.product_id];
+                    let prodName = prodInfo ? prodInfo.name : ('Producto #' + (o.product_id || ''));
+                    let category = prodInfo ? prodInfo.cat : 'Presets';
+
+                    if (o.order_items && o.order_items.length > 0) {
+                        prodName = o.order_items.map(it => it.license_name || ('Producto #' + it.product_id)).join(', ');
+                        const lower = prodName.toLowerCase();
+                        if (lower.includes('plugin') || lower.includes('mix') || lower.includes('kola') || lower.includes('master')) {
+                            category = 'Plugins';
+                        }
+                    }
+
+                    const isWillie = !o.producer_id || o.producer_id === '499e9b25-b44c-473d-9d76-55734e5a0e5b' || o.producer_id === 1;
+                    const net = isYape ? (price * 0.95) : (price > 0 ? (price * 0.94 - 0.30) : 0);
+
+                    return {
+                        id: String(o.id),
+                        source: 'WEB',
+                        channel: 'WEB',
+                        transaction_id: o.transaction_id || ('WEB-' + o.id),
+                        guest_email: o.guest_email || 'Usuario Registrado',
+                        customer_name: '',
+                        country: isYape ? 'Perú' : 'Global',
+                        total_price: price,
+                        net_price: Math.max(0, net),
+                        currency: isYape ? 'PEN' : 'USD',
+                        status: o.status || 'completed',
+                        created_at: o.created_at || new Date().toISOString(),
+                        product_name: prodName,
+                        category: category,
+                        creator: isWillie ? 'Willie Inspired' : 'Otro Productor',
+                        payment_method: isYape ? 'YAPE' : 'PAYPAL',
+                        license_key: '',
+                        order_items: o.order_items,
+                        raw: o
+                    };
+                });
+
+                // 2. Normalize Payhip Historical & Live Orders
+                const payhipData = window.PAYHIP_SALES_DATA || [];
+                const normalizedPayhip = payhipData.map(p => ({
+                    id: String(p.id),
+                    source: 'PAYHIP',
+                    channel: 'PAYHIP',
+                    transaction_id: String(p.id),
+                    guest_email: p.email || 'cliente@payhip.com',
+                    customer_name: p.name || '',
+                    country: p.country || 'Global',
+                    total_price: parseFloat(p.gross || 0),
+                    net_price: parseFloat(p.net || 0),
+                    currency: 'USD',
+                    status: 'completed',
+                    created_at: p.date || new Date().toISOString(),
+                    product_name: p.item || 'Producto Payhip',
+                    category: p.category || (p.item && p.item.toLowerCase().includes('plugin') ? 'Plugins' : 'Presets'),
+                    creator: p.creator || 'Willie Inspired',
+                    payment_method: (p.paymentType || 'paypal').toUpperCase(),
+                    license_key: p.licenseKey || '',
+                    raw: p
+                }));
+
+                // Combine and sort by date descending
+                MasterState.allOrders = [...normalizedWeb, ...normalizedPayhip].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                MasterState.orders = MasterState.allOrders;
 
                 calculateSalesMetrics();
-                renderOrdersTable();
-                initSalesChart();
+                resetOrdersPageAndFilter();
+                initSalesChart(MasterState.ordersTimeframe);
             } catch (err) {
-                console.error('[Orders] Error loading orders:', err);
+                console.error('[Orders] Error unifying sales data:', err);
+                showToast('Error al procesar ventas');
             }
         }
 
         function calculateSalesMetrics() {
-            let totalUSD = 0;
-            let paypalUSD = 0, paypalCount = 0;
-            let yapePEN = 0, yapeCount = 0;
-            let tier5Count = 0, tier5Rev = 0;
-            let tier10Count = 0, tier10Rev = 0;
+            let totalGrossUSD = 0;
+            let payhipGrossUSD = 0, payhipCount = 0;
+            let webGrossUSD = 0, webCount = 0;
+            let pluginsGrossUSD = 0, pluginsCount = 0;
+            let willieGrossUSD = 0;
+            let othersGrossUSD = 0, othersCount = 0;
+            let totalNetUSD = 0;
 
-            MasterState.orders.forEach(o => {
-                const realPrice = parseFloat(o.total_price || 0);
-                totalUSD += realPrice;
+            let catPluginsRev = 0, catPluginsCount = 0;
+            let catPresetsRev = 0, catPresetsCount = 0;
+            let catTemplatesRev = 0, catTemplatesCount = 0;
+            let catDynamic5Rev = 0, catDynamic5Count = 0;
 
-                const isYape = (o.transaction_id || '').startsWith('MP-YAPE');
-                if (isYape) {
-                    yapeCount++;
-                    yapePEN += realPrice * 3.30;
+            MasterState.allOrders.forEach(o => {
+                const p = parseFloat(o.total_price || 0);
+                if (p <= 0) return;
+
+                totalGrossUSD += p;
+                totalNetUSD += (o.net_price !== undefined ? o.net_price : (p * 0.92));
+
+                if (o.channel === 'PAYHIP') {
+                    payhipGrossUSD += p;
+                    payhipCount++;
                 } else {
-                    paypalCount++;
-                    paypalUSD += realPrice;
+                    webGrossUSD += p;
+                    webCount++;
                 }
 
-                if (realPrice === 5) {
-                    tier5Count++;
-                    tier5Rev += 5;
-                } else if (realPrice >= 10) {
-                    tier10Count++;
-                    tier10Rev += realPrice;
+                const isPlugin = o.category === 'Plugins' || (o.product_name || '').toLowerCase().includes('plugin') || (o.product_name || '').toLowerCase().includes('mix') || (o.product_name || '').toLowerCase().includes('kola') || !!o.license_key;
+                if (isPlugin) {
+                    pluginsGrossUSD += p;
+                    pluginsCount++;
+                    catPluginsRev += p;
+                    catPluginsCount++;
+                } else if (o.category === 'Plantillas' || (o.product_name || '').toLowerCase().includes('plantilla')) {
+                    catTemplatesRev += p;
+                    catTemplatesCount++;
+                } else {
+                    catPresetsRev += p;
+                    catPresetsCount++;
+                }
+
+                if (o.creator === 'Willie Inspired') {
+                    willieGrossUSD += p;
+                } else {
+                    othersGrossUSD += p;
+                    othersCount++;
+                }
+
+                if (p === 5) {
+                    catDynamic5Rev += 5;
+                    catDynamic5Count++;
                 }
             });
 
-            // Estimated Net after gateway fees (~5.4% + $0.30 PayPal, ~3.99% Yape)
-            const netUSD = (paypalUSD * 0.94 - (paypalCount * 0.30)) + ((yapePEN / 3.30) * 0.95);
+            // Update 6-metric card grid
+            const elTotal = document.getElementById('val-total-rev');
+            if (elTotal) elTotal.textContent = `$${totalGrossUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const elTop = document.getElementById('top-total-rev');
+            if (elTop) elTop.textContent = `$${totalGrossUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-            document.getElementById('val-total-rev').textContent = `$${totalUSD.toFixed(2)}`;
-            document.getElementById('top-total-rev').textContent = `$${totalUSD.toFixed(2)}`;
-            document.getElementById('val-paypal-rev').textContent = `$${paypalUSD.toFixed(2)}`;
-            document.getElementById('val-paypal-count').textContent = `${paypalCount} órdenes`;
-            document.getElementById('val-yape-rev').textContent = `S/. ${yapePEN.toFixed(2)}`;
-            document.getElementById('val-yape-count').textContent = `${yapeCount} órdenes`;
-            document.getElementById('val-net-rev').textContent = `$${Math.max(0, netUSD).toFixed(2)}`;
-            document.getElementById('badge-sales-count').textContent = MasterState.orders.length;
+            const elPayhipRev = document.getElementById('val-payhip-rev');
+            if (elPayhipRev) elPayhipRev.textContent = `$${payhipGrossUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const elPayhipCount = document.getElementById('val-payhip-count');
+            if (elPayhipCount) elPayhipCount.textContent = `${payhipCount} órdenes aprobadas`;
 
-            document.getElementById('ab-rev-10').textContent = `$${tier10Rev} (${tier10Count} ventas)`;
-            document.getElementById('ab-rev-5').textContent = `$${tier5Rev} (${tier5Count} ventas)`;
-            const totalSplit = (tier10Count + tier5Count) || 1;
-            document.getElementById('ab-bar-10').style.width = `${(tier10Count / totalSplit) * 100}%`;
-            document.getElementById('ab-bar-5').style.width = `${(tier5Count / totalSplit) * 100}%`;
+            const elWebRev = document.getElementById('val-web-rev');
+            if (elWebRev) elWebRev.textContent = `$${webGrossUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const elWebCount = document.getElementById('val-web-count');
+            if (elWebCount) elWebCount.textContent = `${webCount} órdenes (PayPal/Yape)`;
+
+            const elPluginsRev = document.getElementById('val-plugins-rev');
+            if (elPluginsRev) elPluginsRev.textContent = `$${pluginsGrossUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const elPluginsCount = document.getElementById('val-plugins-count');
+            if (elPluginsCount) elPluginsCount.textContent = `${pluginsCount} licencias emitidas`;
+
+            const elNetRev = document.getElementById('val-net-rev');
+            if (elNetRev) elNetRev.textContent = `$${totalNetUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const elNetMargin = document.getElementById('val-net-margin');
+            if (elNetMargin && totalGrossUSD > 0) {
+                const marginPct = ((totalNetUSD / totalGrossUSD) * 100).toFixed(1);
+                elNetMargin.textContent = `Margen neto real ~${marginPct}%`;
+            }
+
+            const elWillieRev = document.getElementById('val-willie-rev');
+            if (elWillieRev) elWillieRev.textContent = `$${willieGrossUSD.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const elOthersRev = document.getElementById('val-others-rev');
+            if (elOthersRev) elOthersRev.textContent = `${othersCount} órdenes de otros creadores ($${othersGrossUSD.toFixed(2)})`;
+
+            const elBadge = document.getElementById('badge-sales-count');
+            if (elBadge) elBadge.textContent = (payhipCount + webCount).toLocaleString();
+
+            // Visual category distribution bars
+            const elCatPlugins = document.getElementById('cat-rev-plugins');
+            if (elCatPlugins) elCatPlugins.textContent = `$${catPluginsRev.toFixed(2)} (${catPluginsCount})`;
+            const elCatPresets = document.getElementById('cat-rev-presets');
+            if (elCatPresets) elCatPresets.textContent = `$${catPresetsRev.toFixed(2)} (${catPresetsCount})`;
+            const elCatTemplates = document.getElementById('cat-rev-templates');
+            if (elCatTemplates) elCatTemplates.textContent = `$${catTemplatesRev.toFixed(2)} (${catTemplatesCount})`;
+            const elAb5 = document.getElementById('ab-rev-5');
+            if (elAb5) elAb5.textContent = `$${catDynamic5Rev.toFixed(2)} (${catDynamic5Count})`;
+
+            const paidTotalCount = (payhipCount + webCount) || 1;
+            const barPlugins = document.getElementById('cat-bar-plugins');
+            if (barPlugins) barPlugins.style.width = `${Math.min(100, (catPluginsCount / paidTotalCount) * 100)}%`;
+            const barPresets = document.getElementById('cat-bar-presets');
+            if (barPresets) barPresets.style.width = `${Math.min(100, (catPresetsCount / paidTotalCount) * 100)}%`;
+            const barTemplates = document.getElementById('cat-bar-templates');
+            if (barTemplates) barTemplates.style.width = `${Math.min(100, (catTemplatesCount / paidTotalCount) * 100)}%`;
+            const bar5 = document.getElementById('ab-bar-5');
+            if (bar5) bar5.style.width = `${Math.min(100, (catDynamic5Count / paidTotalCount) * 100)}%`;
+        }
+
+        function resetOrdersPageAndFilter() {
+            MasterState.ordersPage = 1;
+            filterOrdersTable();
+        }
+
+        function filterOrdersTable() {
+            const search = (document.getElementById('order-search')?.value || '').toLowerCase().trim();
+            const channel = document.getElementById('order-filter-channel')?.value || 'ALL';
+            const creator = document.getElementById('order-filter-creator')?.value || 'ALL';
+            const category = document.getElementById('order-filter-category')?.value || 'ALL';
+            const method = document.getElementById('order-filter-method')?.value || 'ALL';
+            const pricing = document.getElementById('order-filter-pricing')?.value || 'PAID';
+
+            MasterState.filteredOrders = MasterState.allOrders.filter(o => {
+                const p = parseFloat(o.total_price || 0);
+
+                // Pricing filter
+                if (pricing === 'PAID' && p <= 0) return false;
+                if (pricing === 'DYNAMIC_5' && p !== 5) return false;
+                if (pricing === 'STANDARD_10' && (p < 10 || p >= 15)) return false;
+                if (pricing === 'BUNDLE_15' && p < 15) return false;
+                if (pricing === 'FREE' && p > 0) return false;
+
+                // Channel filter
+                if (channel !== 'ALL' && o.channel !== channel) return false;
+
+                // Creator filter
+                if (creator === 'WILLIE' && o.creator !== 'Willie Inspired') return false;
+                if (creator === 'OTHERS' && o.creator === 'Willie Inspired') return false;
+
+                // Category filter
+                if (category !== 'ALL') {
+                    if (category === 'Plugins' && o.category !== 'Plugins' && !o.license_key && !(o.product_name || '').toLowerCase().includes('plugin')) return false;
+                    if (category === 'Presets' && o.category !== 'Presets') return false;
+                    if (category === 'Plantillas' && o.category !== 'Plantillas') return false;
+                    if (category === 'Beats & Kits' && o.category !== 'Beats' && !(o.product_name || '').toLowerCase().includes('kit') && !(o.product_name || '').toLowerCase().includes('beat')) return false;
+                    if (category === 'Servicios' && o.category !== 'Servicios') return false;
+                }
+
+                // Method filter
+                if (method === 'PAYPAL' && o.payment_method !== 'PAYPAL') return false;
+                if (method === 'YAPE' && o.payment_method !== 'YAPE') return false;
+
+                // Search text
+                if (search) {
+                    const email = (o.guest_email || '').toLowerCase();
+                    const tx = (o.transaction_id || '').toLowerCase();
+                    const id = (o.id || '').toLowerCase();
+                    const prod = (o.product_name || '').toLowerCase();
+                    const name = (o.customer_name || '').toLowerCase();
+                    const lk = (o.license_key || '').toLowerCase();
+                    if (!email.includes(search) && !tx.includes(search) && !id.includes(search) && !prod.includes(search) && !name.includes(search) && !lk.includes(search)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            renderOrdersTable();
         }
 
         function renderOrdersTable() {
             const tbody = document.getElementById('orders-table-body');
-            const search = (document.getElementById('order-search').value || '').toLowerCase().trim();
-            const method = document.getElementById('order-filter-method').value;
+            if (!tbody) return;
 
-            const filtered = MasterState.orders.filter(o => {
-                const isYape = (o.transaction_id || '').startsWith('MP-YAPE');
-                if (method === 'PAYPAL' && isYape) return false;
-                if (method === 'YAPE' && !isYape) return false;
+            const filtered = MasterState.filteredOrders || [];
+            const totalFiltered = filtered.length;
+            const totalPages = Math.ceil(totalFiltered / MasterState.ordersPageSize) || 1;
+            if (MasterState.ordersPage > totalPages) MasterState.ordersPage = totalPages;
 
-                if (search) {
-                    const email = (o.guest_email || '').toLowerCase();
-                    const tx = (o.transaction_id || '').toLowerCase();
-                    const id = String(o.id);
-                    return email.includes(search) || tx.includes(search) || id.includes(search);
-                }
-                return true;
-            });
+            const startIdx = (MasterState.ordersPage - 1) * MasterState.ordersPageSize;
+            const endIdx = Math.min(startIdx + MasterState.ordersPageSize, totalFiltered);
+            const pageData = filtered.slice(startIdx, endIdx);
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--text-dim);">No se encontraron órdenes coincidentes.</td></tr>`;
+            const infoEl = document.getElementById('orders-page-info');
+            if (infoEl) {
+                infoEl.textContent = `Mostrando ${totalFiltered === 0 ? 0 : startIdx + 1} - ${endIdx} de ${totalFiltered.toLocaleString()} órdenes`;
+            }
+            const pageNumEl = document.getElementById('orders-page-num');
+            if (pageNumEl) {
+                pageNumEl.textContent = `${MasterState.ordersPage} / ${totalPages}`;
+            }
+            const btnPrev = document.getElementById('btn-orders-prev');
+            if (btnPrev) btnPrev.disabled = MasterState.ordersPage <= 1;
+            const btnNext = document.getElementById('btn-orders-next');
+            if (btnNext) btnNext.disabled = MasterState.ordersPage >= totalPages;
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 28px; color: var(--text-dim);"><i class="bi bi-search" style="font-size: 20px; display:block; margin-bottom:6px;"></i>No se encontraron órdenes con los filtros seleccionados.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = filtered.map(o => {
-                const isYape = (o.transaction_id || '').startsWith('MP-YAPE');
-                const badge = isYape 
+            tbody.innerHTML = pageData.map(o => {
+                const p = parseFloat(o.total_price || 0);
+                const isPayhip = o.channel === 'PAYHIP';
+                const isYape = o.payment_method === 'YAPE';
+
+                const channelBadge = isPayhip 
+                    ? `<span class="status-tag" style="background: rgba(255, 159, 10, 0.12); color: #ff9f0a; border: 1px solid rgba(255, 159, 10, 0.25);"><i class="bi bi-shop"></i> Payhip</span>`
+                    : `<span class="status-tag active"><i class="bi bi-globe2"></i> Web</span>`;
+
+                const methodBadge = isYape
                     ? `<span class="status-tag yape"><i class="bi bi-phone"></i> Yape</span>`
                     : `<span class="status-tag paypal"><i class="bi bi-paypal"></i> PayPal</span>`;
-                
-                const realPrice = parseFloat(o.total_price || 0);
-                const isDynamic = realPrice === 5 || realPrice === 15;
-                const auditBadge = isDynamic 
-                    ? `<span class="status-tag trial" title="Cobrado con oferta promocional A/B"><i class="bi bi-lightning-fill"></i> $${realPrice} Dynamic</span>`
-                    : `<span class="status-tag active"><i class="bi bi-check"></i> $${realPrice} Standard</span>`;
 
-                const prodMap = { 899: 'Easy Mix', 900: 'Easy Master', 902: 'Inka Kola', 903: 'Coca-Cola' };
-                const prodName = prodMap[o.product_id] || 'Preset / Beat';
-                const dateStr = new Date(o.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                let auditBadge = '';
+                if (o.license_key) {
+                    auditBadge = `<span class="status-tag" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);" title="${o.license_key}"><i class="bi bi-key-fill"></i> Clave Emitida</span>`;
+                } else if (p === 5) {
+                    auditBadge = `<span class="status-tag trial" title="Cobrado con oferta promocional $5"><i class="bi bi-lightning-fill"></i> $5 A/B Promo</span>`;
+                } else if (p >= 15) {
+                    auditBadge = `<span class="status-tag" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3);"><i class="bi bi-box-seam"></i> Bundle $${p.toFixed(0)}</span>`;
+                } else if (p > 0) {
+                    auditBadge = `<span class="status-tag active"><i class="bi bi-check"></i> Standard</span>`;
+                } else {
+                    auditBadge = `<span class="status-tag" style="background: rgba(113, 113, 122, 0.15); color: #a1a1aa; border: 1px solid rgba(113, 113, 122, 0.3);">Free Lead</span>`;
+                }
+
+                const creatorBadge = o.creator === 'Willie Inspired'
+                    ? `<span style="font-weight:600; color:#fff;"><i class="bi bi-patch-check-fill" style="color:#ff9f0a;"></i> Willie</span>`
+                    : `<span style="color:var(--text-dim); font-size:11px;">${o.creator || 'Otro'}</span>`;
+
+                const dateStr = o.created_at ? new Date(o.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
 
                 return `
-                    <tr style="cursor: pointer;" onclick="openOrderModal(${o.id})">
-                        <td class="mono-pill">#${o.id}</td>
+                    <tr style="cursor: pointer;" onclick="openOrderModal('${o.id}')">
+                        <td class="mono-pill">#${o.id.substring(0, 10)}</td>
                         <td>
-                            <div style="font-weight: 600; color: #ffffff;">${o.guest_email || 'Usuario Registrado'}</div>
-                            <div style="font-size: 10px; color: var(--text-dim); font-family: var(--font-mono);">${o.transaction_id || ''}</div>
+                            <div style="font-weight: 600; color: #ffffff;">${o.guest_email}</div>
+                            <div style="font-size: 10px; color: var(--text-dim); font-family: var(--font-mono);">${o.customer_name ? o.customer_name + ' • ' : ''}${o.country || 'Global'}</div>
                         </td>
-                        <td>${badge}</td>
-                        <td style="font-family: var(--font-mono); font-weight: 700; color: #ffffff;">$${realPrice.toFixed(2)}</td>
-                        <td><span class="mono-pill">${prodName}</span></td>
+                        <td style="max-width: 220px;">
+                            <div style="font-weight: 500; color: #f4f4f5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${o.product_name}">${o.product_name}</div>
+                            <span style="font-size: 10px; color: var(--text-dim); font-family: var(--font-mono);">${o.category || 'General'}</span>
+                        </td>
+                        <td>${creatorBadge}</td>
+                        <td>
+                            <div style="display: flex; gap: 4px; align-items: center;">
+                                ${channelBadge}
+                                ${methodBadge}
+                            </div>
+                        </td>
+                        <td style="font-family: var(--font-mono); font-weight: 700; color: ${p > 0 ? '#ffffff' : 'var(--text-dim)'};">
+                            $${p.toFixed(2)}
+                        </td>
                         <td style="color: var(--text-dim); font-size: 11px;">${dateStr}</td>
                         <td>${auditBadge}</td>
                         <td>
-                            <button class="btn-shadcn-outline" style="padding: 3px 8px; font-size: 10.5px;" onclick="event.stopPropagation(); openOrderModal(${o.id})">
+                            <button class="btn-shadcn-outline" style="padding: 3px 8px; font-size: 10.5px;" onclick="event.stopPropagation(); openOrderModal('${o.id}')">
                                 <i class="bi bi-eye"></i> Inspeccionar
                             </button>
                         </td>
@@ -3038,62 +3399,97 @@
             }).join('');
         }
 
-        function filterOrdersTable() {
+        function changeOrdersPage(delta) {
+            MasterState.ordersPage += delta;
             renderOrdersTable();
         }
 
+        function changeOrdersPageSize() {
+            const sz = parseInt(document.getElementById('orders-page-size')?.value || 50, 10);
+            MasterState.ordersPageSize = sz;
+            MasterState.ordersPage = 1;
+            renderOrdersTable();
+        }
+
+        function setTimeframeOrders(tf) {
+            MasterState.ordersTimeframe = tf;
+            document.querySelectorAll('#tf-14d, #tf-30d, #tf-all').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`tf-${tf.toLowerCase()}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            initSalesChart(tf);
+        }
+
         function openOrderModal(orderId) {
-            const order = MasterState.orders.find(o => o.id === orderId);
+            const order = MasterState.allOrders.find(o => String(o.id) === String(orderId));
             if (!order) return;
             MasterState.activeOrder = order;
 
             document.getElementById('modal-order-title').textContent = `Inspección de Orden #${order.id}`;
-            document.getElementById('modal-order-date').textContent = new Date(order.created_at).toLocaleString('es-ES');
-            document.getElementById('modal-buyer-email').textContent = order.guest_email || 'Usuario con sesión activa';
+            document.getElementById('modal-order-date').textContent = order.created_at ? new Date(order.created_at).toLocaleString('es-ES') : 'N/A';
+            document.getElementById('modal-buyer-email').textContent = order.guest_email || 'Sin correo';
             document.getElementById('modal-tx-id').textContent = order.transaction_id || 'N/A';
 
             const realPrice = parseFloat(order.total_price || 0);
             document.getElementById('modal-price-real').textContent = `$${realPrice.toFixed(2)} USD`;
 
-            const isYape = (order.transaction_id || '').startsWith('MP-YAPE');
-            document.getElementById('modal-payment-method').innerHTML = isYape 
-                ? `<span class="status-tag yape"><i class="bi bi-phone"></i> Yape (Mercado Pago Perú S/. ${(realPrice * 3.30).toFixed(2)})</span>`
-                : `<span class="status-tag paypal"><i class="bi bi-paypal"></i> PayPal Live USD</span>`;
+            const isPayhip = order.channel === 'PAYHIP';
+            const isYape = order.payment_method === 'YAPE';
+            document.getElementById('modal-payment-method').innerHTML = isPayhip
+                ? `<span class="status-tag" style="background:rgba(255,159,10,0.15); color:#ff9f0a; border:1px solid rgba(255,159,10,0.3);"><i class="bi bi-shop"></i> Payhip Live (${order.payment_method})</span>`
+                : (isYape 
+                    ? `<span class="status-tag yape"><i class="bi bi-phone"></i> Yape (Mercado Pago Perú S/. ${(realPrice * 3.30).toFixed(2)})</span>`
+                    : `<span class="status-tag paypal"><i class="bi bi-paypal"></i> PayPal Web Live USD</span>`);
 
-            // Audit badge & explanation
+            // Audit explanation & license key display
             const auditBadge = document.getElementById('modal-audit-badge');
             const auditExpl = document.getElementById('modal-audit-explanation');
-            if (realPrice === 5) {
+            if (order.license_key) {
+                auditBadge.className = 'status-tag active';
+                auditBadge.innerHTML = `<i class="bi bi-key-fill"></i> Licencia Emitida`;
+                auditExpl.innerHTML = `Esta orden corresponde a la compra de un plugin con <strong>clave de licencia generada</strong>:<br><code style="background:#000; padding:5px 10px; border-radius:5px; border:1px solid #3b82f6; color:#60a5fa; font-family:var(--font-mono); font-size:12px; display:inline-block; margin-top:8px;">${order.license_key}</code>`;
+            } else if (realPrice === 5) {
                 auditBadge.className = 'status-tag trial';
                 auditBadge.innerHTML = '<i class="bi bi-lightning-fill"></i> Oferta Dinámica $5';
-                auditExpl.innerHTML = `Esta orden fue procesada con el <strong>precio promocional de $5 USD</strong> (Landing A/B Test). El cliente pagó la mitad del precio regular y recibió su licencia completa.`;
-            } else if (realPrice === 15) {
+                auditExpl.innerHTML = `Esta orden fue procesada con el <strong>precio promocional de $5 USD</strong> (Landing A/B Test).`;
+            } else if (realPrice >= 15) {
                 auditBadge.className = 'status-tag trial';
-                auditBadge.innerHTML = '<i class="bi bi-box-seam"></i> Bundle Offer $15';
-                auditExpl.innerHTML = `Esta orden incluye una <strong>oferta combinada o bundle promocional</strong> de $15 USD.`;
-            } else {
+                auditBadge.innerHTML = '<i class="bi bi-box-seam"></i> Bundle Offer $' + realPrice.toFixed(0);
+                auditExpl.innerHTML = `Esta orden incluye un <strong>bundle o compra combinada</strong> de $${realPrice.toFixed(2)} USD.`;
+            } else if (realPrice > 0) {
                 auditBadge.className = 'status-tag active';
-                auditBadge.innerHTML = '<i class="bi bi-check"></i> Precio Estándar $10';
-                auditExpl.innerHTML = `Cobro regular al precio de catálogo estándar de $10 USD (o S/. 33 PEN en Yape).`;
+                auditBadge.innerHTML = '<i class="bi bi-check"></i> Catálogo Estándar';
+                auditExpl.innerHTML = `Cobro al precio de catálogo estándar de $${realPrice.toFixed(2)} USD.`;
+            } else {
+                auditBadge.className = 'status-tag';
+                auditBadge.innerHTML = '<i class="bi bi-gift"></i> Descarga Gratuita';
+                auditExpl.innerHTML = `Adquisición gratuita de lead ($0 USD).`;
             }
 
             const itemsContainer = document.getElementById('modal-items-list');
-            const items = order.order_items || [];
-            if (items.length > 0) {
-                itemsContainer.innerHTML = items.map(item => `
-                    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items:center;">
-                        <div>
-                            <span style="font-weight:600; color:#fff;">Producto ID: ${item.product_id}</span>
-                            <span style="font-size:11px; color:var(--text-dim); margin-left:6px;">(${item.license_name || 'Standard'})</span>
+            if (itemsContainer) {
+                if (order.order_items && order.order_items.length > 0) {
+                    itemsContainer.innerHTML = order.order_items.map(item => `
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items:center;">
+                            <div>
+                                <span style="font-weight:600; color:#fff;">Producto ID: ${item.product_id}</span>
+                                <span style="font-size:11px; color:var(--text-dim); margin-left:6px;">(${item.license_name || 'Standard'})</span>
+                            </div>
+                            <span style="font-family: var(--font-mono); color: var(--text-dim); font-size:11px;">$${item.price_at_purchase || realPrice}</span>
                         </div>
-                        <span style="font-family: var(--font-mono); color: var(--text-dim); font-size:11px;">Precio base catálogo: $${item.price_at_purchase}</span>
-                    </div>
-                `).join('');
-            } else {
-                itemsContainer.innerHTML = `<div style="color: var(--text-dim); font-size: 11.5px; padding: 4px 0;">Item directo: Producto #${order.product_id || '899 (Easy Mix)'}</div>`;
+                    `).join('');
+                } else {
+                    itemsContainer.innerHTML = `
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); padding: 8px 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items:center;">
+                            <span style="font-weight:600; color:#fff;">${order.product_name || 'Item Digital'}</span>
+                            <span style="font-family: var(--font-mono); color: #fff; font-weight:700;">$${realPrice.toFixed(2)}</span>
+                        </div>
+                    `;
+                }
             }
 
-            document.getElementById('modal-raw-json').textContent = JSON.stringify(order, null, 2);
+            const jsonEl = document.getElementById('modal-raw-json');
+            if (jsonEl) jsonEl.textContent = JSON.stringify(order.raw || order, null, 2);
+
             document.getElementById('order-inspector-modal').classList.add('active');
         }
 
@@ -3124,47 +3520,84 @@
         }
 
         function exportOrdersCSV() {
-            if (MasterState.orders.length === 0) {
+            const listToExport = (MasterState.filteredOrders && MasterState.filteredOrders.length > 0) 
+                ? MasterState.filteredOrders 
+                : MasterState.allOrders;
+
+            if (!listToExport || listToExport.length === 0) {
                 showToast('No hay órdenes para exportar');
                 return;
             }
-            const csv = Papa.unparse(MasterState.orders.map(o => ({
-                id: o.id,
-                email: o.guest_email || 'Anon',
-                total_usd: o.total_price,
-                transaction_id: o.transaction_id,
-                status: o.status,
-                created_at: o.created_at,
-                product_id: o.product_id
-            })));
+
+            const csvData = listToExport.map(o => ({
+                'Orden ID': o.id,
+                'Canal': o.channel,
+                'Creador': o.creator,
+                'Email Cliente': o.guest_email,
+                'Nombre': o.customer_name || '',
+                'País': o.country || '',
+                'Producto': o.product_name,
+                'Categoría': o.category,
+                'Monto USD': o.total_price,
+                'Neto Estimado USD': o.net_price,
+                'Método Pago': o.payment_method,
+                'Transacción ID': o.transaction_id,
+                'Licencia Key': o.license_key || '',
+                'Fecha': o.created_at
+            }));
+
+            const csv = Papa.unparse(csvData);
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `OFFSZN_Ordenes_${new Date().toISOString().slice(0,10)}.csv`;
+            a.download = `OFFSZN_Ventas_Consolidadas_${new Date().toISOString().slice(0,10)}.csv`;
             a.click();
-            showToast('Órdenes exportadas a CSV con éxito');
+            showToast(`${listToExport.length} órdenes exportadas a CSV con éxito`);
         }
 
-        function initSalesChart() {
+        function initSalesChart(tf) {
             const ctx = document.getElementById('salesChart');
             if (!ctx) return;
             if (MasterState.salesChart) MasterState.salesChart.destroy();
 
+            const timeframe = tf || MasterState.ordersTimeframe || '14D';
             const dayMap = {};
             const now = new Date();
-            for (let i = 13; i >= 0; i--) {
-                const d = new Date(now);
-                d.setDate(d.getDate() - i);
-                const key = d.toISOString().slice(5, 10);
-                dayMap[key] = 0;
+
+            if (timeframe === '14D') {
+                for (let i = 13; i >= 0; i--) {
+                    const d = new Date(now);
+                    d.setDate(d.getDate() - i);
+                    const key = d.toISOString().slice(5, 10);
+                    dayMap[key] = 0;
+                }
+            } else if (timeframe === '30D') {
+                for (let i = 29; i >= 0; i--) {
+                    const d = new Date(now);
+                    d.setDate(d.getDate() - i);
+                    const key = d.toISOString().slice(5, 10);
+                    dayMap[key] = 0;
+                }
+            } else {
+                for (let i = 11; i >= 0; i--) {
+                    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                    const key = d.toISOString().slice(0, 7);
+                    dayMap[key] = 0;
+                }
             }
 
-            MasterState.orders.forEach(o => {
+            MasterState.allOrders.forEach(o => {
                 if (!o.created_at) return;
-                const k = o.created_at.slice(5, 10);
-                if (dayMap[k] !== undefined) {
-                    dayMap[k] += parseFloat(o.total_price || 0);
+                const p = parseFloat(o.total_price || 0);
+                if (p <= 0) return;
+
+                if (timeframe === 'ALL') {
+                    const k = o.created_at.slice(0, 7);
+                    if (dayMap[k] !== undefined) dayMap[k] += p;
+                } else {
+                    const k = o.created_at.slice(5, 10);
+                    if (dayMap[k] !== undefined) dayMap[k] += p;
                 }
             });
 
@@ -3174,14 +3607,14 @@
                     labels: Object.keys(dayMap),
                     datasets: [{
                         label: 'Facturación ($ USD)',
-                        data: Object.values(dayMap),
+                        data: Object.values(dayMap).map(v => parseFloat(v.toFixed(2))),
                         borderColor: '#ffffff',
                         borderWidth: 2,
                         backgroundColor: 'rgba(255, 255, 255, 0.05)',
                         fill: true,
                         tension: 0.35,
                         pointBackgroundColor: '#ffffff',
-                        pointRadius: 3
+                        pointRadius: timeframe === 'ALL' ? 4 : 2.5
                     }]
                 },
                 options: {
@@ -3196,12 +3629,14 @@
                             borderColor: '#27272a',
                             borderWidth: 1,
                             padding: 10,
-                            displayColors: false
+                            callbacks: {
+                                label: (c) => `Facturación: $${c.parsed.y.toFixed(2)} USD`
+                            }
                         }
                     },
                     scales: {
                         x: { grid: { color: '#18181b' }, ticks: { color: '#71717a', font: { family: 'Geist Mono', size: 10 } } },
-                        y: { grid: { color: '#18181b' }, ticks: { color: '#71717a', font: { family: 'Geist Mono', size: 10 } } }
+                        y: { grid: { color: '#18181b' }, ticks: { color: '#71717a', font: { family: 'Geist Mono', size: 10 }, callback: v => '$' + v } }
                     }
                 }
             });
@@ -3623,7 +4058,12 @@
             const search = (document.getElementById('aud-search-input').value || '').toLowerCase().trim();
 
             const filtered = MasterState.audience.filter(c => {
-                if (segment === 'PERU') {
+                const itemsStr = (c.items || []).join(' ').toLowerCase();
+                const isPluginUser = itemsStr.includes('plugin') || itemsStr.includes('mix') || itemsStr.includes('master') || itemsStr.includes('kola') || (c.segment === 'Paid' && (c.pluginOwner || c.spent >= 10));
+
+                if (segment === 'PLUGINS') {
+                    if (!isPluginUser) return false;
+                } else if (segment === 'PERU') {
                     if (!(c.country || '').toLowerCase().includes('perú')) return false;
                 } else if (segment !== 'ALL' && c.segment !== segment) {
                     return false;
@@ -3633,8 +4073,7 @@
                     const email = (c.email || '').toLowerCase();
                     const name = (c.name || '').toLowerCase();
                     const country = (c.country || '').toLowerCase();
-                    const items = (c.items || []).join(' ').toLowerCase();
-                    return email.includes(search) || name.includes(search) || country.includes(search) || items.includes(search);
+                    return email.includes(search) || name.includes(search) || country.includes(search) || itemsStr.includes(search);
                 }
                 return true;
             });
@@ -3657,7 +4096,13 @@
                 return;
             }
 
-            tbody.innerHTML = pageData.map(c => `
+            tbody.innerHTML = pageData.map(c => {
+                const itemsStr = (c.items || []).join(' ').toLowerCase();
+                const isPluginOwner = itemsStr.includes('mix') || itemsStr.includes('plugin') || itemsStr.includes('master') || itemsStr.includes('kola');
+                const badgeClass = c.segment === 'VIP' ? 'trial' : (c.segment === 'Paid' ? 'active' : '');
+                const tagIcon = isPluginOwner ? '<i class="bi bi-cpu" style="margin-right:3px;"></i>' : '';
+
+                return `
                 <tr style="cursor: pointer;" onclick="openCustomerModal('${encodeURIComponent(c.email)}')">
                     <td>
                         <span style="font-weight: 600; color: #fff;">${c.email}</span>
@@ -3667,8 +4112,8 @@
                     </td>
                     <td style="color: var(--text-muted);">${c.name || 'Sin nombre'}</td>
                     <td>
-                        <span class="status-tag ${c.segment === 'VIP' ? 'trial' : (c.segment === 'Paid' ? 'active' : '')}">
-                            ${c.segment || 'Lead'}
+                        <span class="status-tag ${badgeClass}">
+                            ${tagIcon}${c.segment || 'Lead'}
                         </span>
                     </td>
                     <td style="font-family: var(--font-mono); font-weight: 700; color: #fff;">$${parseFloat(c.spent || 0).toFixed(2)}</td>
@@ -3683,7 +4128,8 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function changeAudiencePage(delta) {
@@ -3692,7 +4138,9 @@
         }
 
         function filterAudienceSegment(seg) {
-            if (seg === 'PAID_WITHOUT_EASYMIX') {
+            if (seg === 'PLUGINS') {
+                document.getElementById('aud-segment-select').value = 'PLUGINS';
+            } else if (seg === 'PAID_WITHOUT_EASYMIX') {
                 document.getElementById('aud-segment-select').value = 'Paid';
             } else if (seg === 'FREE_WITHOUT_EASYMIX') {
                 document.getElementById('aud-segment-select').value = 'Free Lead';
@@ -3711,12 +4159,21 @@
 
             const emails = MasterState.audience
                 .filter(c => {
-                    if (segment === 'PERU') return (c.country || '').toLowerCase().includes('perú');
-                    if (segment !== 'ALL' && c.segment !== segment) return false;
+                    const itemsStr = (c.items || []).join(' ').toLowerCase();
+                    const isPluginUser = itemsStr.includes('plugin') || itemsStr.includes('mix') || itemsStr.includes('master') || itemsStr.includes('kola') || (c.segment === 'Paid' && (c.pluginOwner || c.spent >= 10));
+
+                    if (segment === 'PLUGINS') {
+                        if (!isPluginUser) return false;
+                    } else if (segment === 'PERU') {
+                        if (!(c.country || '').toLowerCase().includes('perú')) return false;
+                    } else if (segment !== 'ALL' && c.segment !== segment) {
+                        return false;
+                    }
+
                     if (search) {
                         const email = (c.email || '').toLowerCase();
                         const name = (c.name || '').toLowerCase();
-                        return email.includes(search) || name.includes(search);
+                        return email.includes(search) || name.includes(search) || itemsStr.includes(search);
                     }
                     return true;
                 })
@@ -3735,7 +4192,7 @@
             a.href = url;
             a.download = `OFFSZN_Audiencia_Completa_${new Date().toISOString().slice(0,10)}.csv`;
             a.click();
-            showToast('CSV con 3,659 registros descargado');
+            showToast(`CSV con ${MasterState.audience.length.toLocaleString()} registros descargado`);
         }
 
         function openCustomerModal(encodedEmail) {
