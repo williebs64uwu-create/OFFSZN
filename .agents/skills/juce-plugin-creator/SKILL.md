@@ -299,20 +299,33 @@ void MyAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::Mid
 ## 📦 Phase 5: Packaging, Inno Setup & macOS CI/CD Standards
 
 ### 🪟 Windows Installer Standard (`<PLUGIN>.iss`)
+
+> [!CAUTION]
+> **CRITICAL: `DefaultDirName` MUST point to `{autopf}\OFFSZN\<Plugin Name>`**, NOT to `{commoncf}\VST3\<PLUGIN>.vst3`.  
+> Using the VST3 bundle folder as `DefaultDirName` causes Inno Setup to write `unins000.exe` and `unins000.dat` **inside the `.vst3` bundle**, which makes DAWs (FL Studio, Ableton, Reaper, Cubase) detect invalid files during plugin scan → **Error 11 / scan failure**.
+
 - **Flags:** Use `replacesameversion uninsneveruninstall` for `mockup.html` to guarantee GUI updates on reinstall without erasing user settings.
-- **Dependency Checks:** Auto-detect and silently install **Microsoft Visual C++ 2015-2022 x64** and **Microsoft Edge WebView2 Runtime**.
-- **Anti-Nesting Cleanup:** Purge legacy nested folders (`PLUGIN.vst3\PLUGIN.vst3`) during install step to eliminate duplicate `PLUGIN_2` DAW entries.
+- **VST3 DestDir:** Always set `DestDir: "{commoncf}\VST3\<PLUGIN_NAME>.vst3"` in `[Files]`, never use `{app}` for the VST3 binary.
+- **Anti-Nesting + Uninstaller Cleanup:** The `[Code]` block must:
+  1. Delete `unins000.exe/.dat` left inside the bundle by older installers.
+  2. Delete nested duplicate folder `PLUGIN.vst3\PLUGIN.vst3`.
+  3. Delete legacy folders with spaces (`PLUGIN NAME.vst3`).
 
 ```ini
 [Setup]
 AppId={{UNIQUE-GUID-HERE}}
 AppName=OFFSZN <PLUGIN_NAME> VST3
-AppVersion=2.0.1
+AppVersion=X.X.X
 AppPublisher=OFFSZN
 AppPublisherURL=https://offszn.lat
-DefaultDirName={commoncf}\VST3
+
+; ⚠️ CRITICAL: Uninstaller (unins000.exe) lives HERE, NOT inside the .vst3 bundle
+DefaultDirName={autopf}\OFFSZN\<PLUGIN DISPLAY NAME>
 DefaultGroupName=OFFSZN
 DisableProgramGroupPage=yes
+DisableDirPage=yes
+DirExistsWarning=no
+DisableWelcomePage=no
 OutputBaseFilename=OFFSZN_<PLUGIN_NAME>_Setup
 OutputDir=.\Output
 Compression=lzma2/ultra64
@@ -321,19 +334,61 @@ ArchitecturesInstallIn64BitMode=x64compatible
 ArchitecturesAllowed=x64compatible
 PrivilegesRequired=admin
 WizardStyle=modern
+UninstallDisplayName=OFFSZN <PLUGIN_NAME> VST3
+
+[Languages]
+Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [Files]
-Source: "build\<TARGET>_artefacts\Release\VST3\<PLUGIN_NAME>.vst3\*"; DestDir: "{commoncf}\VST3\<PLUGIN_NAME>.vst3"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "mockup.html"; DestDir: "{userappdata}\OFFSZN\<PluginGuiFolder>"; DestName: "mockup.html"; Flags: replacesameversion uninsneveruninstall
+; VST3 binary goes to Common Files\VST3 via DestDir (NOT via {app})
+Source: "build\<TARGET>_artefacts\Release\VST3\<PLUGIN_NAME>.vst3\*"; \
+    DestDir: "{commoncf}\VST3\<PLUGIN_NAME>.vst3"; \
+    Flags: ignoreversion recursesubdirs createallsubdirs
+
+; GUI HTML: always updated on reinstall, preserved on uninstall
+Source: "mockup.html"; \
+    DestDir: "{userappdata}\OFFSZN\<PluginGuiFolder>"; \
+    DestName: "mockup.html"; \
+    Flags: replacesameversion uninsneveruninstall
 
 [Code]
 procedure CurStepChanged(CurStep: TSetupStep);
+var
+  bundlePath: String;
 begin
   if CurStep = ssInstall then
   begin
-    DelTree(ExpandConstant('{commoncf}\VST3\<PLUGIN_NAME>.vst3\<PLUGIN_NAME>.vst3'), True, True, True);
+    bundlePath := ExpandConstant('{commoncf}\VST3\<PLUGIN_NAME>.vst3');
+
+    // Fix: remove uninstaller files left INSIDE the bundle by older installers
+    // (these cause Error 11 / scan failure in FL Studio, Ableton, Reaper, Cubase)
+    DeleteFile(bundlePath + '\unins000.exe');
+    DeleteFile(bundlePath + '\unins000.dat');
+    DeleteFile(bundlePath + '\unins001.exe');
+    DeleteFile(bundlePath + '\unins001.dat');
+
+    // Anti-nesting: remove duplicate nested bundle from old installers
+    DelTree(bundlePath + '\<PLUGIN_NAME>.vst3', True, True, True);
+
+    // Legacy name cleanup (if plugin was previously installed with spaces)
+    DelTree(ExpandConstant('{commoncf}\VST3\<PLUGIN DISPLAY NAME>.vst3'), True, True, True);
   end;
 end;
+
+function InitializeSetup(): Boolean;
+begin
+  MsgBox(
+    'Antes de continuar, cierra completamente:' + #13#10 +
+    '  - FL Studio' + #13#10 +
+    '  - Ableton Live' + #13#10 +
+    '  - Reaper, Cubase u otro DAW' + #13#10 + #13#10 +
+    'El instalador necesita acceso exclusivo a los archivos del plugin.',
+    mbInformation, MB_OK);
+  Result := True;
+end;
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{commoncf}\VST3\<PLUGIN_NAME>.vst3"
 ```
 
 ---
