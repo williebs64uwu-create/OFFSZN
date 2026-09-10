@@ -694,6 +694,9 @@ app.use(express.static(rootPath, {
             // Assets (JS, CSS, images, audio): cache at Vercel Edge CDN for 7 days
             res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
             res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+            if (filePath.endsWith('.mp4') || filePath.endsWith('.mp3') || filePath.endsWith('.wav')) {
+                res.setHeader('Accept-Ranges', 'bytes');
+            }
         }
     }
 }));
