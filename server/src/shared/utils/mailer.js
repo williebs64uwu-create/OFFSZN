@@ -66,6 +66,19 @@ export const sendOffsznEmail = async ({ to, subject, html, fromName = 'OFFSZN', 
         // Using API (Port 443) to avoid Render SMTP port blocking
         if (BREVO_API_KEY) {
             console.log(`[Mailer] Sending via Brevo REST API...`);
+
+            // Auto-unblock recipient from Brevo suppression list (e.g. if customer previously unsubscribed from marketing)
+            if (to) {
+                try {
+                    await fetch(`https://api.brevo.com/v3/smtp/blockedContacts/${encodeURIComponent(to.trim().toLowerCase())}`, {
+                        method: 'DELETE',
+                        headers: { 'api-key': BREVO_API_KEY }
+                    });
+                } catch (unblockErr) {
+                    // Ignore if contact wasn't blocked
+                }
+            }
+
             const response = await fetch('https://api.brevo.com/v3/smtp/email', {
                 method: 'POST',
                 headers: {
