@@ -639,6 +639,16 @@ app.use('/music-raw-to-defined', express.static(musicPath, {
         res.setHeader('Accept-Ranges', 'bytes');
     }
 }));
+
+const videosPath = path.join(rootPath, 'videos');
+app.use('/videos', express.static(videosPath, {
+    maxAge: '7d',
+    setHeaders: (res) => {
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+        res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+    }
+}));
 app.use(express.static(publicPath));
 app.use(express.static(serverPublicPath));
 
