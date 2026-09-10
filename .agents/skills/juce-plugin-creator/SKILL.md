@@ -52,30 +52,60 @@ To guarantee zero latency on plugin launch and eliminate network dependency / We
 // ✅ Correct Offline-First Startup Flow in mockup.html
 callNative("getLicenseState").then(function (state) {
   var isValid = state && state.isValid;
-  var serial = (state && state.serial || "").trim();
+  var rawSerial = (state && state.serial || "").trim();
 
-  if (serial) {
-    var isTrial = serial.toUpperCase().indexOf("TRIAL-") !== -1;
+  if (rawSerial) {
+    var isTrial = rawSerial.toUpperCase().indexOf("TRIAL-") !== -1;
     if (isTrial) {
       if (isValid) {
-        // Active trial: trust C++ local timestamp validation completely
-        var tokens = serial.split('|');
+        // 1. Active trial: trust C++ local timestamp validation completely (zero network lock)
+        try { localStorage.setItem('offszn_serial', rawSerial); } catch (e) { }
+
+        // 2. Parse timestamps: FORMAT = SERIAL|EXPIRES_UNIX|LAST_CHECK_UNIX
+        var tokens = rawSerial.split('|');
+        var trialSerial = tokens[0];
         var expiresUnix = tokens.length > 1 ? parseInt(tokens[1], 10) : 0;
         if (expiresUnix > 0) {
           var secondsLeft = expiresUnix - Math.floor(Date.now() / 1000);
           var daysLeft = Math.ceil(secondsLeft / 86400);
-          showTrialBadge(daysLeft);
+          updateTrialBadge(true, daysLeft > 1 ? (daysLeft + " DÍAS") : (daysLeft === 1 ? "1 DÍA" : "ÚLTIMO DÍA"));
+        } else {
+          updateTrialBadge(true, "3 DÍAS");
         }
+
+        // 3. Silent background check ONLY if online (NEVER blocks audio or UI if offline)
+        getHwidAsync().then(function (hwid) {
+          var effectiveHwid = hwid || getOrCreateDeviceId();
+          fetch(apiBase + "/api/plugin/activate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ serial_key: trialSerial, hwid: effectiveHwid, plugin_name: "<Plugin Name>" })
+          }).then(function (res) { return res.json(); }).then(function (response) {
+            if (response && !response.success) {
+              console.warn("[Trial] Serial revoked or expired by server:", response);
+              triggerLicenseExpired("Prueba Expirada", response.error || "Tu periodo de prueba ha expirado.");
+            }
+          }).catch(function (err) {
+            console.log("[Trial] Server unreachable / offline — continuing with local validation:", err);
+          });
+        });
       } else {
         // Expired or clock tamper detected locally by C++
         triggerLicenseExpired("Prueba Expirada", "Tu periodo de prueba ha expirado. Adquiere una licencia FULL en offszn.lat.");
       }
     } else {
-      // FULL Key: 100% offline forever
-      if (!isValid) openActivationModal(false);
+      // FULL Key: 100% offline forever, zero network requests
+      if (isValid) {
+        try { localStorage.setItem('offszn_serial', rawSerial); } catch (e) { }
+        updateTrialBadge(false);
+      } else {
+        callNative("setLicenseStatus", false);
+        openActivationModal(false);
+      }
     }
   } else {
-    // No serial: ask for activation
+    // No serial: prompt activation
+    callNative("setLicenseStatus", false);
     openActivationModal(false);
   }
 });
@@ -659,6 +689,16 @@ The Hero must create an immediate "WOW" factor with layered atmospheric backgrou
 - **WaveSurfer.js Lazy Loading:**
   Only inject `/libs/wavesurfer.min.js` when the `#audio-comparison` section is within `300px` of the viewport via `IntersectionObserver`.
 
+#### 5.1 Video Showcase & Streaming Architecture
+- **HTML Video Element Standards:**
+  - Always use `preload="auto"` and an explicit `<source src="/plugins/<plugin>.mp4" type="video/mp4">` inside `<video autoplay muted loop playsinline controls>`.
+  - **⚠️ NEVER use `preload="none"`:** causes black blank video boxes on mobile Safari and desktop Chrome until clicked.
+  - Wrap the video inside a responsive container with aspect-ratio (`9 / 16` for vertical reels or `16 / 9` for horizontal desktop).
+  - Include an unmuted floating badge (`CLIC PARA SONIDO`) with a click interceptor overlay that toggles audio (`muted = !muted`).
+- **HTTP 206 Partial Content Streaming (`server/src/app.js`):**
+  - All video assets must return `Accept-Ranges: bytes` so browsers can seek, stream, and buffer chunks on demand without loading the full file.
+  - Set Edge CDN cache headers: `Cache-Control: public, max-age=86400, s-maxage=604800` and `Vercel-CDN-Cache-Control: public, max-age=604800`.
+
 #### 6. Continuous 2-Row Infinite Marquee Testimonials
 - **Structure:**
   - Header: Badge `★ TESTIMONIOS & FEEDBACK`, Title `Lo que dicen los artistas y productores`, Subtitle explaining real producer feedback.
@@ -784,4 +824,42 @@ const amountPEN = req.body.customPricePEN
   2. Record transaction in Supabase with payment method `yape` and Mercado Pago transaction ID.
   3. Send 1 consolidated delivery email to customer with Serial Key and installer download links.
   4. Dispatch Meta CAPI Purchase event for ad optimization.
+
+#### 6. Platform Whitelist & Payment Blocker Bypass
+- **The Issue:** Supabase RLS protects private columns (`paypal_email`, `yape_phone`) from public anonymous queries. Only public boolean flags (`has_paypal`, `has_yape`) are exposed.
+- **Mandatory Whitelist for Plugins & Owner:**
+  In `script/product-core.js`, `script/cart.js`, and `store-builder/js/renderer/engine.js`, official plugins and the platform owner **MUST** be explicitly whitelisted to prevent false-positive blocked payment modals (`openBlockedPaymentModal`):
+  ```javascript
+  const isPlatformOrOwner = producerId === '0382a813-85c7-46c3-8d2c-61a5692adffd'
+      || (producerNickname && producerNickname.toLowerCase().includes('willie'))
+      || prodType === 'plugin';
+
+  const hasPaypal = !!(producer.has_paypal ?? producer.payment_methods?.paypal ?? producer.paypal_email);
+  const hasYape = !!(producer.has_yape ?? producer.payment_methods?.yape ?? producer.yape_phone);
+
+  if (!isPlatformOrOwner && !hasPaypal && !hasYape) {
+      openBlockedPaymentModal(producer);
+      return;
+  }
+  ```
+- **Never Query Private Seller Fields in Public Endpoints:** Always include `has_paypal, has_yape` in `PRODUCER_FIELDS`.
+
+#### 7. Plugin Favicons & Willie Inspired Brand Separation
+- **Brand Rules:**
+  - **All Plugin Pages (`/plugins/*`) and Willie's Store (`/willieinspired/*`):** **MUST** use the official square Willie Inspired "W" favicon:
+    - `<link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">`
+    - `<link rel="icon" type="image/png" sizes="32x32" href="/willieimages/favicon-32x32.png">`
+  - **OFFSZN Platform Pages (`/`, `explorar.html`, `owner/*`):** Use the official OFFSZN icon (`/favicon.ico`).
+- **Square 1:1 Multi-Resolution Rule:**
+  - Chrome's image decoder strictly rejects non-square `.ico` frames (e.g. 589x551) and falls back to a generic globe icon (`🌐`).
+  - All `.ico` files must contain standard square frames: `16x16, 32x32, 48x48, 64x64, 128x128, 256x256`.
+
+#### 8. Vercel Serverless Function 250 MB Bundle Guard & Media Architecture
+- **Hard Technical Limits on Vercel:**
+  1. **Uncompressed Lambda Bundle Limit:** **<= 250 MB**. Exceeding 250 MB fails the build immediately (`272.8mb uncompressed exceeds maximum limit of 250mb`).
+  2. **`vercel.json` `includeFiles` Limit:** **<= 256 characters**.
+- **The Media Rules for Plugins & Landing Pages:**
+  - **No Video Duplication:** Never commit duplicate video files (e.g. `COK.mp4` + `plugins/COK.mp4` + `plugins/coca-cola.mp4`). Keep a single canonical file under `plugins/<name>.mp4` or `videos/<name>.mp4`.
+  - **Never Use Blanket `**/*.mp4` Excludes:** Adding `**/*.mp4` to `excludeFiles` strips all plugin showcase videos from the Vercel Lambda, causing 404 errors in production.
+  - **Exclude Heavy Non-Web Files in `.vercelignore`:** Exclude large non-runtime folders (`cursos/**`, `Carrusel_Instagram/**`, `videos/video_para_modal.mp4`, `public/videos/**`) to keep the Lambda bundle around ~210-215 MB (giving >35 MB of safety margin).
 
