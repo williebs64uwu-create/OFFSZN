@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // --- CONCURRENT FETCH 1: Session & Product ---
         let productPromise = null;
         // Safe columns for joined producer profile (aligns with hardened Supabase security)
-        const PRODUCER_FIELDS = 'id, nickname, first_name, last_name, avatar_url, bio, role, is_producer, is_verified, banner_url, license_settings';
+        const PRODUCER_FIELDS = 'id, nickname, first_name, last_name, avatar_url, bio, role, is_producer, is_verified, banner_url, license_settings, has_paypal, has_yape';
 
         if (urlData.id) {
             productPromise = window.supabaseClient.from('products').select(`*, producer:producer_id (${PRODUCER_FIELDS})`).eq('id', urlData.id).neq('status', 'deleted').maybeSingle();
@@ -2856,18 +2856,25 @@ window.addToCart = async (id, license) => {
         if (Array.isArray(producer)) producer = producer[0];
 
         if (producer) {
-            // Check for PayPal (email or explicitly set in methods)
-            const has_paypal = producer.paypal_email || (producer.payment_methods && producer.payment_methods.paypal?.enabled);
-            // Check for Yape (verified phone)
-            const has_yape = producer.yape_phone && producer.is_verified;
+            const isPlatformOrOwner = producer.id === '0382a813-85c7-46c3-8d2c-61a5692adffd'
+                || (producer.nickname && producer.nickname.toLowerCase() === 'willieinspired')
+                || (product.product_type && product.product_type.toLowerCase() === 'plugin');
 
-            if (!has_paypal && !has_yape) {
-                if (window.openBlockedPaymentModal) {
-                    window.openBlockedPaymentModal(producer, product);
-                } else {
-                    alert("Este productor no tiene configurados métodos de pago.");
+            if (!isPlatformOrOwner) {
+                // Check boolean flags from users table (has_paypal, has_yape), or raw values if available
+                const has_paypal = !!(producer.has_paypal || producer.paypal_email || (producer.payment_methods && (producer.payment_methods.paypal?.enabled || producer.payment_methods.paypal)));
+                const has_yape = !!(producer.has_yape || producer.yape_phone);
+
+                // Only block if payment info was actually loaded (defined) and neither payment method is enabled
+                const paymentInfoLoaded = (producer.has_paypal !== undefined || producer.has_yape !== undefined || producer.paypal_email !== undefined || producer.yape_phone !== undefined);
+                if (paymentInfoLoaded && !has_paypal && !has_yape) {
+                    if (window.openBlockedPaymentModal) {
+                        window.openBlockedPaymentModal(producer, product);
+                    } else {
+                        alert("Este productor no tiene configurados métodos de pago.");
+                    }
+                    return;
                 }
-                return;
             }
         }
     }

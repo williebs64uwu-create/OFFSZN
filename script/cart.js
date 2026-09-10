@@ -195,18 +195,25 @@ const CartManager = {
             if (Array.isArray(producer)) producer = producer[0];
             
             if (producer) {
-                // Check for PayPal (email or explicitly set in methods)
-                const has_paypal = producer.paypal_email || (producer.payment_methods && (producer.payment_methods.paypal?.enabled || producer.payment_methods.paypal));
-                // Check for Yape (presence of yape_phone is now enough)
-                const has_yape = !!(producer.yape_phone);
+                const isPlatformOrOwner = producer.id === '0382a813-85c7-46c3-8d2c-61a5692adffd'
+                    || (producer.nickname && producer.nickname.toLowerCase() === 'willieinspired')
+                    || (product.product_type && product.product_type.toLowerCase() === 'plugin');
 
-                if (!has_paypal && !has_yape) {
-                    if (window.openBlockedPaymentModal) {
-                        window.openBlockedPaymentModal(producer, product);
-                    } else {
-                        console.warn("[Cart] No methods and modal missing.");
+                if (!isPlatformOrOwner) {
+                    // Check boolean flags from users table (has_paypal, has_yape), or raw values if available
+                    const has_paypal = !!(producer.has_paypal || producer.paypal_email || (producer.payment_methods && (producer.payment_methods.paypal?.enabled || producer.payment_methods.paypal)));
+                    const has_yape = !!(producer.has_yape || producer.yape_phone);
+
+                    // Only block if payment info was actually loaded and both are false
+                    const paymentInfoLoaded = (producer.has_paypal !== undefined || producer.has_yape !== undefined || producer.paypal_email !== undefined || producer.yape_phone !== undefined);
+                    if (paymentInfoLoaded && !has_paypal && !has_yape) {
+                        if (window.openBlockedPaymentModal) {
+                            window.openBlockedPaymentModal(producer, product);
+                        } else {
+                            console.warn("[Cart] No methods and modal missing.");
+                        }
+                        return;
                     }
-                    return;
                 }
             }
         }

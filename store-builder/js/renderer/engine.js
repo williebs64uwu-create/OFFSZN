@@ -195,17 +195,24 @@ if (!window.initSmartSearch) {
                 if (Array.isArray(producer)) producer = producer[0];
                 
                 if (producer) {
-                    const has_paypal = producer.paypal_email || (producer.payment_methods && producer.payment_methods.paypal?.enabled);
-                    const has_yape = producer.yape_phone && producer.is_verified;
+                    const isPlatformOrOwner = producer.id === '0382a813-85c7-46c3-8d2c-61a5692adffd'
+                        || (producer.nickname && producer.nickname.toLowerCase() === 'willieinspired')
+                        || (p.product_type && p.product_type.toLowerCase() === 'plugin');
 
-                    if (!has_paypal && !has_yape) {
-                        const openBlockedPaymentModal = window.openBlockedPaymentModal || (window.parent && window.parent.openBlockedPaymentModal);
-                        if (openBlockedPaymentModal) {
-                            openBlockedPaymentModal(producer, p);
-                        } else {
-                            alert("Este productor aún no ha configurado sus métodos de pago. Por favor, contáctalo directamente para completar tu compra.");
+                    if (!isPlatformOrOwner) {
+                        const has_paypal = !!(producer.has_paypal || producer.paypal_email || (producer.payment_methods && (producer.payment_methods.paypal?.enabled || producer.payment_methods.paypal)));
+                        const has_yape = !!(producer.has_yape || producer.yape_phone);
+
+                        const paymentInfoLoaded = (producer.has_paypal !== undefined || producer.has_yape !== undefined || producer.paypal_email !== undefined || producer.yape_phone !== undefined);
+                        if (paymentInfoLoaded && !has_paypal && !has_yape) {
+                            const openBlockedPaymentModal = window.openBlockedPaymentModal || (window.parent && window.parent.openBlockedPaymentModal);
+                            if (openBlockedPaymentModal) {
+                                openBlockedPaymentModal(producer, p);
+                            } else {
+                                alert("Este productor aún no ha configurado sus métodos de pago. Por favor, contáctalo directamente para completar tu compra.");
+                            }
+                            return;
                         }
-                        return;
                     }
                 }
             }
