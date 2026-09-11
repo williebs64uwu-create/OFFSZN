@@ -403,6 +403,51 @@ export const downloadPresetFile = async (req, res) => {
 };
 
 /**
+ * Helper interno reutilizable para crear la sesión de entrega tanto desde
+ * controllers (como capture de PayPal) como desde la ruta POST.
+ */
+export function createDeliverySessionRecord({ email, items = [], paymentMethod = 'checkout', orderId = null }) {
+    const token = generateOrderToken();
+    const deliveryItems = buildDeliveryItems(items);
+    const resolvedOrderId = orderId || `ORD-WI-${Date.now()}`;
+
+    const orderRecord = {
+        token,
+        order_id: resolvedOrderId,
+        customer_email: email,
+        payment_method: paymentMethod,
+        created_at: new Date().toISOString(),
+        status: 'completed',
+        items: deliveryItems,
+        download_logs: []
+    };
+
+    const deliveries = readDeliveries();
+    deliveries[token] = orderRecord;
+    writeDeliveries(deliveries);
+
+    // Guardar en Supabase si la tabla existe
+    if (supabase) {
+        supabase
+            .from('willie_orders')
+            .insert({
+                delivery_token: token,
+                order_id: resolvedOrderId,
+                customer_email: email,
+                order_payload: orderRecord
+            })
+            .then(() => {})
+            .catch(sErr => console.warn('[WillieDelivery] No se pudo guardar en tabla willie_orders:', sErr.message));
+    }
+
+    return {
+        token,
+        orderId: resolvedOrderId,
+        portalUrl: `/willieinspired/descargas.html?token=${token}`
+    };
+}
+
+/**
  * POST /api/willie/delivery/create-session
  * Crea un token de entrega tras un checkout exitoso (Yape, PayPal, Mercado Pago).
  */
@@ -414,46 +459,11 @@ export const createDeliverySession = async (req, res) => {
             return res.status(400).json({ error: 'EMAIL_REQUIRED', message: 'El correo electrónico es obligatorio' });
         }
 
-        const token = generateOrderToken();
-        const deliveryItems = buildDeliveryItems(items);
-        const resolvedOrderId = orderId || `ORD-WI-${Date.now()}`;
-
-        const orderRecord = {
-            token,
-            order_id: resolvedOrderId,
-            customer_email: email,
-            payment_method: paymentMethod,
-            created_at: new Date().toISOString(),
-            status: 'completed',
-            items: deliveryItems,
-            download_logs: []
-        };
-
-        const deliveries = readDeliveries();
-        deliveries[token] = orderRecord;
-        writeDeliveries(deliveries);
-
-        // Guardar en Supabase si la tabla existe
-        if (supabase) {
-            try {
-                await supabase
-                    .from('willie_orders')
-                    .insert({
-                        delivery_token: token,
-                        order_id: resolvedOrderId,
-                        customer_email: email,
-                        order_payload: orderRecord
-                    });
-            } catch (sErr) {
-                console.warn('[WillieDelivery] No se pudo guardar en tabla willie_orders de Supabase:', sErr.message);
-            }
-        }
+        const session = createDeliverySessionRecord({ email, items, paymentMethod, orderId });
 
         return res.status(200).json({
             ok: true,
-            token,
-            orderId: resolvedOrderId,
-            portalUrl: `/willieinspired/descargas.html?token=${token}`
+            ...session
         });
 
     } catch (err) {

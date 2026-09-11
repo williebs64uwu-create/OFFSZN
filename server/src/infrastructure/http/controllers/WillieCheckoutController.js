@@ -15,6 +15,7 @@ import paypalClient from '../paypalClient.js';
 import { supabase } from '../../database/connection.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { generatePluginLicense } from './PluginLicensingController.js';
+import { createDeliverySessionRecord } from './WilliePresetDeliveryController.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const OFFSZN_MERCHANT_ID = 'MXV5F6X8JXG4S';
@@ -250,7 +251,17 @@ export const captureWilliePayPalOrder = async (req, res) => {
             } catch (_) {}
         }
 
-        const buyerEmail = email || captureResponse.result.payer?.email_address || null;
+        let buyerEmail = email || captureResponse.result.payer?.email_address || null;
+        if (buyerEmail) {
+            buyerEmail = buyerEmail.trim().toLowerCase();
+            // Corrección automática de errores tipográficos comunes en dominios
+            buyerEmail = buyerEmail
+                .replace(/@gmsil\.com$/i, '@gmail.com')
+                .replace(/@gmai\.com$/i, '@gmail.com')
+                .replace(/@gmial\.com$/i, '@gmail.com')
+                .replace(/@hotmial\.com$/i, '@hotmail.com');
+        }
+        const paypalPayerEmail = captureResponse.result.payer?.email_address || null;
         const totalUSD = parseFloat(captureResponse.result.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || 0);
 
         // Record order in Supabase orders table
@@ -282,6 +293,22 @@ export const captureWilliePayPalOrder = async (req, res) => {
             const osPart = (i.type === 'plugin' && i.os) ? ` (${i.os.toUpperCase()})` : '';
             return `• ${i.name}${osPart} x${i.quantity} — $${(i.unitPrice * i.quantity).toFixed(2)}`;
         }).join('\n');
+
+        // Automatic delivery session creation for presets
+        const hasPresets = resolvedItems.some(i => i.type === 'preset' || !i.type || i.type === 'bundle');
+        let deliverySession = null;
+        if (hasPresets) {
+            try {
+                deliverySession = createDeliverySessionRecord({
+                    email: buyerEmail,
+                    items: resolvedItems,
+                    paymentMethod: 'paypal',
+                    orderId: orderID
+                });
+            } catch (dErr) {
+                console.warn('[WillieCheckout] Error creating delivery session record:', dErr?.message);
+            }
+        }
 
         // Generate plugin licenses if cart contains plugins (1 license per purchased plugin)
         const pluginLicensesGenerated = [];
@@ -316,45 +343,64 @@ export const captureWilliePayPalOrder = async (req, res) => {
             </div>
         ` : '';
 
+        const presetDownloadSection = deliverySession ? `
+            <div style="background: #111114; border: 1px solid #742284; border-radius: 12px; padding: 22px; margin-bottom: 24px; text-align: center;">
+                <p style="color: #ec4899; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 8px; font-weight: 700;">🎹 Tus Presets Listos para Descargar</p>
+                <p style="color: #a1a1aa; font-size: 0.85rem; margin: 0 0 16px;">Tus archivos oficiales están preparados con 4 créditos de descarga directa:</p>
+                <a href="https://offszn.lat${deliverySession.portalUrl}" style="display: inline-block; background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); color: #ffffff; padding: 14px 28px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; text-decoration: none; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);">
+                    ⚡ Descargar mis Presets Ahora ➔
+                </a>
+            </div>
+        ` : '';
+
+        const deliveryInfoText = deliverySession
+            ? `Haz clic en el botón de arriba para acceder a tu panel y descargar tus archivos (.fst y .flp) inmediatamente. Si compraste un plugin, usa la clave mostrada arriba. Si tienes cualquier duda, contáctanos a <a href="https://wa.me/51993525005" style="color: #a78bfa;">WhatsApp</a>.`
+            : `Si compraste un plugin, usa la clave de activación mostrada arriba. Si tienes alguna duda, escríbenos a <a href="https://wa.me/51993525005" style="color: #a78bfa;">WhatsApp</a>.`;
+
         // Send delivery email
-        if (buyerEmail) {
+        const emailHtml = `
+            <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 580px; margin: 0 auto; background: #09090b; color: #ffffff; border-radius: 16px; overflow: hidden;">
+                <div style="background: linear-gradient(135deg, #000000 0%, #1a0a24 100%); padding: 32px 28px; text-align: center;">
+                    <h1 style="font-size: 1.6rem; font-weight: 900; letter-spacing: -0.03em; margin: 0;">WILLIE INSPIRED</h1>
+                    <p style="color: #a78bfa; font-size: 0.85rem; margin: 6px 0 0;">by @willieinspired</p>
+                </div>
+                <div style="padding: 28px;">
+                    <h2 style="font-size: 1.2rem; font-weight: 800; margin: 0 0 8px;">¡Pago confirmado! 🎉</h2>
+                    <p style="color: #a1a1aa; font-size: 0.9rem; margin: 0 0 20px;">Hola, aquí tienes el resumen de tu compra:</p>
+                    <div style="background: #111114; border: 1px solid #27272a; border-radius: 12px; padding: 16px; margin-bottom: 20px; white-space: pre-line; font-size: 0.88rem; color: #e4e4e7;">${itemLines}</div>
+                    ${presetDownloadSection}
+                    ${pluginKeySection}
+                    <div style="background: #111114; border: 1px solid #27272a; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                        <p style="font-size: 0.8rem; color: #71717a; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Total pagado</p>
+                        <p style="font-size: 1.4rem; font-weight: 900; margin: 0; color: #ffffff;">$${totalUSD.toFixed(2)} USD</p>
+                    </div>
+                    <div style="background: #1c1c22; border: 1px solid #3f3f46; border-radius: 12px; padding: 18px; margin-bottom: 24px;">
+                        <p style="font-size: 0.88rem; color: #e4e4e7; font-weight: 700; margin: 0 0 8px;">📦 ¿Cómo recibo mis archivos?</p>
+                        <p style="font-size: 0.84rem; color: #a1a1aa; margin: 0; line-height: 1.5;">${deliveryInfoText}</p>
+                    </div>
+                    <p style="font-size: 0.8rem; color: #52525b; text-align: center; margin: 0;">
+                        Willie Inspired • OFFSZN • offszn.lat
+                    </p>
+                </div>
+            </div>
+        `;
+
+        const emailsToSend = new Set();
+        if (buyerEmail) emailsToSend.add(buyerEmail);
+        if (paypalPayerEmail && paypalPayerEmail.includes('@') && !paypalPayerEmail.toLowerCase().includes('@gmsil.')) {
+            emailsToSend.add(paypalPayerEmail);
+        }
+
+        for (const targetEmail of emailsToSend) {
             try {
                 await sendOffsznEmail({
-                    to: buyerEmail,
+                    to: targetEmail,
                     subject: '✅ ¡Tu compra en Willie Inspired está lista!',
-                    html: `
-                    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 580px; margin: 0 auto; background: #09090b; color: #ffffff; border-radius: 16px; overflow: hidden;">
-                        <div style="background: linear-gradient(135deg, #000000 0%, #1a0a24 100%); padding: 32px 28px; text-align: center;">
-                            <h1 style="font-size: 1.6rem; font-weight: 900; letter-spacing: -0.03em; margin: 0;">WILLIE INSPIRED</h1>
-                            <p style="color: #a78bfa; font-size: 0.85rem; margin: 6px 0 0;">by @willieinspired</p>
-                        </div>
-                        <div style="padding: 28px;">
-                            <h2 style="font-size: 1.2rem; font-weight: 800; margin: 0 0 8px;">¡Pago confirmado! 🎉</h2>
-                            <p style="color: #a1a1aa; font-size: 0.9rem; margin: 0 0 20px;">Hola, aquí tienes el resumen de tu compra:</p>
-                            <div style="background: #111114; border: 1px solid #27272a; border-radius: 12px; padding: 16px; margin-bottom: 20px; white-space: pre-line; font-size: 0.88rem; color: #e4e4e7;">${itemLines}</div>
-                            ${pluginKeySection}
-                            <div style="background: #111114; border: 1px solid #27272a; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
-                                <p style="font-size: 0.8rem; color: #71717a; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700;">Total pagado</p>
-                                <p style="font-size: 1.4rem; font-weight: 900; margin: 0; color: #ffffff;">$${totalUSD.toFixed(2)} USD</p>
-                            </div>
-                            <div style="background: #1c1c22; border: 1px solid #3f3f46; border-radius: 12px; padding: 18px; margin-bottom: 24px;">
-                                <p style="font-size: 0.88rem; color: #e4e4e7; font-weight: 700; margin: 0 0 8px;">📦 ¿Cómo recibo mis archivos?</p>
-                                <p style="font-size: 0.84rem; color: #a1a1aa; margin: 0; line-height: 1.5;">
-                                    Willie te enviará los archivos de tus presets a este correo en los próximos minutos.
-                                    Si compraste un plugin, usa la clave de activación mostrada arriba.
-                                    Si tienes alguna duda, escríbenos a <a href="https://wa.me/51921839257" style="color: #a78bfa;">WhatsApp</a>.
-                                </p>
-                            </div>
-                            <p style="font-size: 0.8rem; color: #52525b; text-align: center; margin: 0;">
-                                Willie Inspired • OFFSZN • offszn.lat
-                            </p>
-                        </div>
-                    </div>
-                    `
+                    html: emailHtml
                 });
-                console.log(`[WillieCheckout] Delivery email sent to: ${buyerEmail}`);
+                console.log(`[WillieCheckout] Delivery email sent to: ${targetEmail}`);
             } catch (emailErr) {
-                console.error('[WillieCheckout] Email delivery error:', emailErr?.message);
+                console.error(`[WillieCheckout] Email delivery error for ${targetEmail}:`, emailErr?.message);
             }
         }
 
@@ -365,7 +411,9 @@ export const captureWilliePayPalOrder = async (req, res) => {
             orderId,
             buyerEmail,
             totalUSD,
-            itemCount: resolvedItems.length
+            itemCount: resolvedItems.length,
+            deliveryToken: deliverySession?.token || null,
+            portalUrl: deliverySession?.portalUrl || null
         });
 
     } catch (err) {
