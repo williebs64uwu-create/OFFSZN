@@ -1,4 +1,4 @@
-﻿/**
+/**
  * YapeController.js
  * =================
  * Dedicated controller for Yape payments via Mercado Pago Perú.
@@ -302,6 +302,67 @@ export const chargeYape = async (req, res) => {
         } catch (capiErr) {
             console.warn('[YapeCharge] Meta CAPI tracking warning:', capiErr?.message);
         }
+
+        // 4b. Notify Platform Owner (Willie / OFFSZN Admin)
+        (async () => {
+            try {
+                const WILLIE_ADMIN_EMAIL = 'willie2008garay@gmail.com';
+                const incomingAffiliate = (req.body.affiliate || '').toString().trim().toLowerCase();
+                let affiliateInfo = null;
+
+                if (incomingAffiliate) {
+                    let commUSD = 0;
+                    if (validUsdPrice >= 15) commUSD = 5.00;
+                    else if (validUsdPrice >= 10) commUSD = 2.00;
+                    else commUSD = Math.round(validUsdPrice * 0.20 * 100) / 100;
+
+                    const netUSD = Math.max(0, validUsdPrice - commUSD);
+                    affiliateInfo = {
+                        name: incomingAffiliate.toUpperCase(),
+                        commission: commUSD,
+                        net: netUSD
+                    };
+                }
+
+                const referralBanner = affiliateInfo ? `
+                    <div style="background:#1e1b4b; border:1px solid #6366f1; border-radius:10px; padding:18px; margin:0 0 20px;">
+                        <p style="color:#a5b4fc; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; margin:0 0 6px; font-weight:700;">🎯 VENTA POR REFERIDO (YAPE)</p>
+                        <p style="color:#ffffff; font-size:1.1rem; margin:0 0 10px;">Afiliado: <b style="color:#38bdf8;">${affiliateInfo.name}</b></p>
+                        <div style="display:flex; gap:20px; font-size:0.95rem;">
+                            <div><span style="color:#94a3b8;">Pagar a ${affiliateInfo.name}:</span> <b style="color:#f43f5e; font-size:1.1rem;">$${affiliateInfo.commission.toFixed(2)} USD</b></div>
+                            <div><span style="color:#94a3b8;">Tu Neto (Willie):</span> <b style="color:#10B981; font-size:1.1rem;">$${affiliateInfo.net.toFixed(2)} USD</b></div>
+                        </div>
+                    </div>
+                ` : '';
+
+                const emailSubject = affiliateInfo 
+                    ? `💜 ¡Venta Yape ${pluginName}! [REFERIDO: ${affiliateInfo.name}] — S/. ${amountPEN} (~$${validUsdPrice} USD)`
+                    : `💜 ¡Nueva Venta por Yape! ${pluginName} — S/. ${amountPEN} (~$${validUsdPrice} USD)`;
+
+                const adminHtml = `
+                    <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px; border: 1px solid rgba(255,255,255,0.08);">
+                        <h2 style="color: #a855f7; margin-bottom:16px;">¡Cobro Yape Exitoso en OFFSZN! ⚡</h2>
+                        ${referralBanner}
+                        <p style="color:#ccc; line-height:1.6;">El cliente <b>${email}</b> (Tel: <b>${phoneNumber}</b>) compró <b style="color:#fff;">${pluginName}</b> por Yape.</p>
+                        <div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:20px; margin:20px 0;">
+                            <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Monto Cobrado:</b> <span style="color:#fff; font-weight:700;">S/. ${amountPEN} (~$${validUsdPrice} USD)</span></p>
+                            <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">ID Mercado Pago:</b> <span style="color:#fff; font-family:monospace;">${mpData.id}</span></p>
+                            ${serialKey ? `<p style="color:#888; margin:0;"><b style="color:#ff9f0a;">Serial Key Oficial:</b> <span style="font-family:monospace; color:#fff;">${serialKey}</span></p>` : ''}
+                        </div>
+                        <a href="https://offszn.lat/admin" style="display:inline-block; background:#8B5CF6; color:#fff; padding:12px 26px; border-radius:8px; text-decoration:none; font-weight:700;">PANEL DE CONTROL</a>
+                    </div>
+                `;
+
+                await sendOffsznEmail({
+                    to: WILLIE_ADMIN_EMAIL,
+                    subject: emailSubject,
+                    html: adminHtml,
+                    fromName: 'OFFSZN Ventas'
+                });
+            } catch (notifyErr) {
+                console.error('[YapeCharge] Error notifying Willie admin:', notifyErr);
+            }
+        })();
 
         // 5. Response to Frontend
         return res.json({

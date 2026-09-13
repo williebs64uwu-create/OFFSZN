@@ -1364,17 +1364,24 @@
                     <div class="preview-content" id="preview-text" style="white-space: pre-wrap; font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.5; color: #f4f4f5;">Cargando plantilla...</div>
                 </div>
 
-                <!-- AUTO-TAG & TEST MODE NOTIFICATION -->
-                <div style="margin: 16px 0 10px; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-md);">
-                    <div style="display: flex; align-items: center; gap: 9px;">
-                        <input type="checkbox" id="auto-tag-on-copy" checked style="accent-color: #10b981; width: 18px; height: 18px; cursor: pointer;" onchange="toggleAutoTagHint()">
-                        <label for="auto-tag-on-copy" style="font-size: 0.85rem; color: #ffffff; cursor: pointer; user-select: none; font-weight: 700;">
-                            ⚡ Auto-marcar como USADA(S) al despachar / enviar
-                        </label>
+                <!-- AUTO-TAG NOTIFICATION (SIEMPRE ACTIVO) -->
+                <div style="margin: 16px 0 10px; padding: 12px 14px; background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.25); border-radius: var(--radius-md);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                        <div style="display: flex; align-items: center; gap: 9px;">
+                            <span style="font-size: 1.1rem;">🔒</span>
+                            <span style="font-size: 0.88rem; color: #10b981; font-weight: 800;">
+                                SIEMPRE USADAS (Modo Real & Protegido Activo)
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #38bdf8;">
+                            <span class="live-dot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#38bdf8; box-shadow:0 0 8px #38bdf8; animation: pulse 2s infinite;"></span>
+                            <span id="realtime-status-txt">Sincronizado en tiempo real</span>
+                        </div>
                     </div>
-                    <div id="auto-tag-status-hint" style="font-size: 0.73rem; color: #34d399; margin-top: 5px; margin-left: 27px;">
-                        ✅ <strong>Modo Real (Por defecto):</strong> Al enviar por Brevo o copiar, las claves se marcan como USADAS en la BD automáticamente y pasan a las siguientes. Desmarca solo si es prueba.
+                    <div style="font-size: 0.75rem; color: #d1fae5; margin-top: 5px;">
+                        🛡️ Al presionar <strong>Copiar Mensaje</strong>, <strong>Enviar por Brevo</strong> o <strong>WhatsApp</strong>, las claves se marcan como <strong>USADAS</strong> inmediatamente tanto aquí como en la base de datos para que nunca se repitan.
                     </div>
+                    <input type="checkbox" id="auto-tag-on-copy" checked style="display: none;">
                 </div>
 
                 <!-- ACTION BUTTONS -->
@@ -1384,9 +1391,6 @@
                     </button>
                     <button class="btn btn-outline" id="btn-brevo" style="border-color: #38bdf8; color: #38bdf8; font-weight: 700; padding: 12px 18px;" onclick="sendDirectEmailViaBrevo()">
                         ⚡ Enviar Correo Directo (Brevo)
-                    </button>
-                    <button class="btn btn-outline" onclick="openInGmail()">
-                        ✉️ Abrir en Gmail
                     </button>
                     <button class="btn btn-outline" onclick="openInWhatsApp()">
                         💬 Abrir en WhatsApp
@@ -1679,58 +1683,71 @@
         }
 
         // ==============================================================
-        // STORAGE & DATA LOAD (LOCAL + SUPABASE CLOUD SYNC)
+        // STORAGE & DATA LOAD (SUPABASE COMO FUENTE ÚNICA EN TIEMPO REAL)
         // ==============================================================
         async function loadData() {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                try {
-                    licenses = JSON.parse(stored);
-                } catch (e) {
+            // Carga inicial rápida de fallback
+            if (licenses.length === 0) {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    try { licenses = JSON.parse(stored); } catch(e) { licenses = [...INITIAL_LICENSES]; }
+                } else {
                     licenses = [...INITIAL_LICENSES];
                 }
-            } else {
-                licenses = [...INITIAL_LICENSES];
             }
 
-            autoFillDispatchKeys();
             renderStats();
             renderPreview();
             renderInventory();
 
-            // Cloud sync with Supabase
-            await syncCloudLicenses();
+            // Sincronización inmediata con Supabase (La BD es la verdad absoluta)
+            await syncCloudLicenses(false);
         }
 
-        async function syncCloudLicenses() {
+        let realtimeTimer = null;
+
+        async function syncCloudLicenses(isBackground = false) {
             const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || 'gian2030upc';
             const syncBtn = document.getElementById('btn-sync-cloud');
-            if (syncBtn) {
+            const statusTxt = document.getElementById('realtime-status-txt');
+
+            if (!isBackground && syncBtn) {
                 syncBtn.innerText = '🔄 Sincronizando...';
                 syncBtn.disabled = true;
             }
 
             try {
-                const res = await fetch(`/api/plugin/admin/licenses?admin_key=${encodeURIComponent(adminPin)}`);
+                // Fetch fresco con no-cache para que Celular y PC siempre vean exactamente lo mismo
+                const res = await fetch(`/api/plugin/admin/licenses?admin_key=${encodeURIComponent(adminPin)}&_t=${Date.now()}`, {
+                    cache: 'no-store'
+                });
                 const data = await res.json();
                 if (data && data.success && Array.isArray(data.licenses)) {
-                    const dbLifetime = data.licenses.filter(l => l.license_type === 'lifetime' || l.license_type === 'full');
-                    
-                    dbLifetime.forEach(dbLic => {
-                        const existing = licenses.find(l => l.serial === dbLic.serial_key);
-                        const isUsed = dbLic.status === 'used' || dbLic.status === 'sold' || (dbLic.plugin_activations && dbLic.plugin_activations.length > 0);
-                        const maxDev = dbLic.max_devices || (existing ? existing.devices : 2);
-                        const activationsCount = (dbLic.plugin_activations && dbLic.plugin_activations.length) || 0;
+                    const dbMap = new Map();
+                    data.licenses.forEach(l => {
+                        if (l.serial_key) dbMap.set(l.serial_key.trim().toUpperCase(), l);
+                    });
 
-                        if (existing) {
-                            existing.used = isUsed;
-                            existing.db_id = dbLic.id;
-                            existing.devices = maxDev;
-                            existing.devices_used = activationsCount;
-                            if (isUsed && !existing.date) {
-                                existing.date = new Date(dbLic.created_at).toLocaleDateString();
+                    // Si la BD tiene licencias, sincronizamos el estado exacto de cada una
+                    licenses.forEach(lic => {
+                        const dbLic = dbMap.get(lic.serial.trim().toUpperCase());
+                        if (dbLic) {
+                            const isUsed = dbLic.status === 'used' || dbLic.status === 'sold' || (dbLic.plugin_activations && dbLic.plugin_activations.length > 0);
+                            lic.used = isUsed;
+                            lic.db_id = dbLic.id;
+                            lic.devices = dbLic.max_devices || lic.devices || 2;
+                            lic.devices_used = (dbLic.plugin_activations && dbLic.plugin_activations.length) || 0;
+                            if (isUsed && !lic.date) {
+                                lic.date = new Date(dbLic.created_at).toLocaleDateString();
                             }
-                        } else {
+                        }
+                    });
+
+                    // Agregar las que se hayan creado en otro dispositivo (ej. creadas desde PC o celular)
+                    data.licenses.forEach(dbLic => {
+                        const serial = (dbLic.serial_key || '').trim().toUpperCase();
+                        if (!licenses.some(l => l.serial.trim().toUpperCase() === serial)) {
+                            const isUsed = dbLic.status === 'used' || dbLic.status === 'sold' || (dbLic.plugin_activations && dbLic.plugin_activations.length > 0);
                             licenses.unshift({
                                 id: dbLic.id,
                                 plugin: dbLic.plugin_name || 'Easy Mix',
@@ -1738,8 +1755,8 @@
                                 used: isUsed,
                                 note: dbLic.user_id ? 'Vendido online' : '',
                                 date: new Date(dbLic.created_at).toLocaleDateString(),
-                                devices: maxDev,
-                                devices_used: activationsCount
+                                devices: dbLic.max_devices || 2,
+                                devices_used: (dbLic.plugin_activations && dbLic.plugin_activations.length) || 0
                             });
                         }
                     });
@@ -1749,14 +1766,26 @@
                     renderStats();
                     renderPreview();
                     renderInventory();
+
+                    if (statusTxt) {
+                        statusTxt.innerText = `En vivo • ${new Date().toLocaleTimeString()}`;
+                    }
                 }
             } catch (err) {
                 console.warn('Could not sync with Supabase cloud:', err);
+                if (statusTxt) statusTxt.innerText = 'Reconectando...';
             } finally {
-                if (syncBtn) {
+                if (!isBackground && syncBtn) {
                     syncBtn.innerText = '🔄 Sincronizar Nube';
                     syncBtn.disabled = false;
                 }
+            }
+
+            // Realtime loop cada 4 segundos garantizado tanto en celular como en PC
+            if (!realtimeTimer) {
+                realtimeTimer = setInterval(() => {
+                    syncCloudLicenses(true);
+                }, 4000);
             }
         }
 
@@ -2219,26 +2248,9 @@ Willie / OFFSZN`;
                 copyTextFallback(data.plain);
             }
 
-            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
-            if (autoTag) {
-                const count = await markDispatchedKeysUsed();
-                showToast(`📋 ¡Mensaje copiado & ${count || 'las'} clave(s) marcadas como USADAS!`);
-            } else {
-                showToast('📋 ¡Mensaje copiado en texto plano! (Modo prueba: sin gastar claves)');
-            }
-        }
-
-        function toggleAutoTagHint() {
-            const chk = document.getElementById('auto-tag-on-copy');
-            const hint = document.getElementById('auto-tag-status-hint');
-            if (!chk || !hint) return;
-            if (chk.checked) {
-                hint.innerHTML = '✅ <strong>Modo Real (Por defecto):</strong> Al enviar por Brevo o copiar, las claves se marcan como USADAS en la BD automáticamente y pasan a las siguientes. Desmarca solo si es prueba.';
-                hint.style.color = '#34d399';
-            } else {
-                hint.innerHTML = '⚠️ <strong>Modo Prueba (Sin consumir):</strong> Puedes probar el envío por Brevo o copiar texto libremente sin gastar ni quemar claves del inventario.';
-                hint.style.color = '#fbbf24';
-            }
+            // Siempre se marca como usada por solicitud estricta del usuario
+            const count = await markDispatchedKeysUsed();
+            showToast(`📋 ¡Mensaje copiado & ${count || 'las'} clave(s) marcadas como USADAS!`);
         }
 
         async function sendDirectEmailViaBrevo() {
@@ -2260,7 +2272,6 @@ Willie / OFFSZN`;
             const product = document.getElementById('gen-product').value;
             const buyer = document.getElementById('gen-buyer').value.trim();
             const btn = document.getElementById('btn-brevo');
-            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
 
             try {
                 if (btn) {
@@ -2280,7 +2291,7 @@ Willie / OFFSZN`;
                         k2: data.k2,
                         product,
                         buyer,
-                        mark_used: autoTag
+                        mark_used: true
                     })
                 });
                 const json = await res.json();
@@ -2288,12 +2299,8 @@ Willie / OFFSZN`;
                     throw new Error(json.error || 'Error en el servidor');
                 }
 
-                if (autoTag) {
-                    await markDispatchedKeysUsed(email);
-                    showToast(`🚀 ¡Correo enviado a ${email} vía Brevo & claves marcadas como USADAS!`);
-                } else {
-                    showToast(`🚀 ¡Correo enviado a ${email} vía Brevo! (Modo Prueba: Sin consumir claves)`);
-                }
+                await markDispatchedKeysUsed(email);
+                showToast(`🚀 ¡Correo enviado a ${email} vía Brevo & claves marcadas como USADAS!`);
                 document.getElementById('gen-email').value = '';
             } catch (err) {
                 console.error(err);
@@ -2320,6 +2327,8 @@ Willie / OFFSZN`;
                 ? `Vendido a ${buyer}${email ? ' (' + email + ')' : ''}` 
                 : (email ? `Vendido a ${email}` : `Vendido ${now}`);
 
+            const syncPromises = [];
+
             if (k1 && !k1.includes('XXXX')) {
                 const lic1 = licenses.find(l => l.serial.trim().toUpperCase() === k1.toUpperCase());
                 if (lic1) {
@@ -2328,11 +2337,13 @@ Willie / OFFSZN`;
                     lic1.note = buyerLabel + (product === 'promo-2x1' ? ' (2x1 Mix)' : '');
                     count++;
                 }
-                fetch('/api/plugin/admin/update-status', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_key: adminPin, serial_key: k1, status: 'used' })
-                }).catch(e => console.warn('Sync error k1:', e));
+                syncPromises.push(
+                    fetch('/api/plugin/admin/update-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ admin_key: adminPin, serial_key: k1, status: 'used' })
+                    }).catch(e => console.warn('Sync error k1:', e))
+                );
             }
 
             if (k2 && !k2.includes('XXXX')) {
@@ -2343,50 +2354,38 @@ Willie / OFFSZN`;
                     lic2.note = buyerLabel + ' (2x1 Master Regalo)';
                     count++;
                 }
-                fetch('/api/plugin/admin/update-status', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ admin_key: adminPin, serial_key: k2, status: 'used' })
-                }).catch(e => console.warn('Sync error k2:', e));
+                syncPromises.push(
+                    fetch('/api/plugin/admin/update-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ admin_key: adminPin, serial_key: k2, status: 'used' })
+                    }).catch(e => console.warn('Sync error k2:', e))
+                );
             }
 
             saveData();
             renderInventory();
             renderStats();
 
-            // Auto-advance form to next available keys!
-            setTimeout(() => {
-                autoFillDispatchKeys();
-                renderPreview();
-            }, 300);
+            // Auto-advance form to next available keys immediately!
+            autoFillDispatchKeys();
+            renderPreview();
+
+            // Ensure background sync completes
+            Promise.all(syncPromises).then(() => {
+                const dot = document.getElementById('realtime-status-txt');
+                if (dot) dot.innerText = 'Sincronizado con BD (' + new Date().toLocaleTimeString() + ')';
+            });
 
             return count;
-        }
-
-        async function openInGmail() {
-            const data = buildEmailContent();
-            const url = `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.plain)}`;
-            window.open(url, '_blank');
-            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
-            if (autoTag) {
-                await markDispatchedKeysUsed();
-                showToast('✉️ Abriendo Gmail & clave(s) marcadas como USADAS');
-            } else {
-                showToast('✉️ Abriendo Gmail (Modo prueba: sin gastar claves)');
-            }
         }
 
         async function openInWhatsApp() {
             const data = buildEmailContent();
             const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(data.plain)}`;
             window.open(url, '_blank');
-            const autoTag = document.getElementById('auto-tag-on-copy')?.checked ?? true;
-            if (autoTag) {
-                await markDispatchedKeysUsed();
-                showToast('💬 Abriendo WhatsApp & clave(s) marcadas como USADAS');
-            } else {
-                showToast('💬 Abriendo WhatsApp (Modo prueba: sin gastar claves)');
-            }
+            await markDispatchedKeysUsed();
+            showToast('💬 Abriendo WhatsApp & clave(s) marcadas como USADAS');
         }
 
         function toggleHideUsed(checked) {
@@ -2532,6 +2531,8 @@ Willie / OFFSZN`;
                     serial_key: lic.serial,
                     status: lic.used ? 'used' : 'active'
                 })
+            }).then(() => {
+                syncCloudLicenses(true);
             }).catch(e => console.warn('Could not sync status:', e));
         }
 

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * OFFSZN Plugin Direct Checkout
  * Renders PayPal Smart Buttons directly on the plugin page for immediate checkout,
  * bypassing the global shopping cart, and displays a premium success modal with the serial key.
@@ -117,10 +117,13 @@ class PluginDirectCheckout {
 
                     const isPromo2x1 = Boolean(window.IS_PROMO_2X1 || (window.PLUGIN_NAME && window.PLUGIN_NAME.includes('2x1')));
 
+                    const currentAffiliate = window.OFFSZN_AFFILIATE || localStorage.getItem('offszn_ref') || null;
+
                     const createPayload = { 
                         directProductId: this.productId,
                         isPromo2x1: isPromo2x1,
                         pluginName: window.PLUGIN_NAME || this.downloads?.name,
+                        affiliate: currentAffiliate,
                         ...attribution
                     };
                     if (window.CURRENT_PROMO_PRICE) {
@@ -188,11 +191,14 @@ class PluginDirectCheckout {
 
                     const isPromo2x1 = Boolean(window.IS_PROMO_2X1 || (window.PLUGIN_NAME && window.PLUGIN_NAME.includes('2x1')));
 
+                    const currentAffiliate = window.OFFSZN_AFFILIATE || localStorage.getItem('offszn_ref') || null;
+
                     const capturePayload = { 
                         orderID: data.orderID,
                         directProductId: this.productId,
                         isPromo2x1: isPromo2x1,
                         pluginName: window.PLUGIN_NAME || this.downloads?.name,
+                        affiliate: currentAffiliate,
                         ...attribution
                     };
                     if (window.CURRENT_PROMO_PRICE) {

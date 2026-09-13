@@ -3454,22 +3454,13 @@
     <script src="/env.js"></script>
     <script src="/script/meta-pixel.js"></script>
     <script>
-        // ── REFERRAL TRACKING ENGINE ──
+        // ── REFERRAL TRACKING ENGINE (PATRICK) ──
         (function initReferrals() {
             try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const refParam = urlParams.get('ref') || urlParams.get('afiliado') || urlParams.get('r');
-                if (refParam) {
-                    const cleanRef = refParam.trim().toLowerCase();
-                    localStorage.setItem('offszn_ref', cleanRef);
-                    document.cookie = `offszn_ref=${cleanRef}; path=/; max-age=2592000; SameSite=Lax`;
-                    window.OFFSZN_AFFILIATE = cleanRef;
-                } else {
-                    const savedRef = localStorage.getItem('offszn_ref');
-                    if (savedRef) {
-                        window.OFFSZN_AFFILIATE = savedRef;
-                    }
-                }
+                const affiliate = 'patrick';
+                localStorage.setItem('offszn_ref', affiliate);
+                document.cookie = `offszn_ref=${affiliate}; path=/; max-age=2592000; SameSite=Lax`;
+                window.OFFSZN_AFFILIATE = affiliate;
             } catch (e) {
                 console.warn('[Referrals] Error initializing referral tracking:', e);
             }

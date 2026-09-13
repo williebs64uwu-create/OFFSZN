@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Promo2x1CheckoutController.js
  * =============================
  * ISOLATED checkout endpoint exclusively for the Promo 2x1 (Easy Mix + Easy Master).
@@ -291,16 +291,49 @@ export const capturePromo2x1Order = async (req, res) => {
                 }
 
                 // Notify Admin (Willie)
+                const incomingAffiliate = (req.body.affiliate || '').toString().trim().toLowerCase();
+                let affiliateInfo = null;
+
+                if (incomingAffiliate) {
+                    let commUSD = 0;
+                    if (capturedAmount >= 15) commUSD = 5.00;
+                    else if (capturedAmount >= 10) commUSD = 2.00;
+                    else commUSD = Math.round(capturedAmount * 0.20 * 100) / 100;
+
+                    const netUSD = Math.max(0, capturedAmount - commUSD);
+                    affiliateInfo = {
+                        name: incomingAffiliate.toUpperCase(),
+                        commission: commUSD,
+                        net: netUSD
+                    };
+                }
+
+                const referralBanner = affiliateInfo ? `
+                    <div style="background:#1e1b4b; border:1px solid #6366f1; border-radius:10px; padding:16px; margin:0 0 16px;">
+                        <p style="color:#a5b4fc; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; margin:0 0 6px; font-weight:700;">🎯 VENTA POR REFERIDO</p>
+                        <p style="color:#ffffff; font-size:1rem; margin:0 0 8px;">Afiliado: <b style="color:#38bdf8;">${affiliateInfo.name}</b></p>
+                        <div style="display:flex; gap:16px; font-size:0.9rem;">
+                            <div><span style="color:#94a3b8;">Pagar a ${affiliateInfo.name}:</span> <b style="color:#f43f5e;">$${affiliateInfo.commission.toFixed(2)} USD</b></div>
+                            <div><span style="color:#94a3b8;">Tu Neto (Willie):</span> <b style="color:#10B981;">$${affiliateInfo.net.toFixed(2)} USD</b></div>
+                        </div>
+                    </div>
+                ` : '';
+
+                const promoSubject = affiliateInfo 
+                    ? `🔥 Venta Promo 2x1! [REFERIDO: ${affiliateInfo.name}] — $${capturedAmount.toFixed(2)} USD`
+                    : `🔥 Venta Promo 2x1: $${capturedAmount.toFixed(2)} USD (${payerEmail})`;
+
                 await sendOffsznEmail({
                     to: WILLIE_ADMIN_EMAIL,
-                    subject: `🔥 Venta Promo 2x1: $${capturedAmount.toFixed(2)} USD (${payerEmail})`,
+                    subject: promoSubject,
                     html: `
-                        <div style="font-family: system-ui; max-width: 500px; padding: 24px; background: #0a0a0a; color: #fff; border-radius: 12px;">
+                        <div style="font-family: system-ui; max-width: 500px; padding: 24px; background: #0a0a0a; color: #fff; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
                             <h2 style="color: #ff9f0a; margin: 0 0 12px;">Nueva Venta Promo 2x1</h2>
+                            ${referralBanner}
                             <p><b>Cliente:</b> ${payerName} (${payerEmail})</p>
                             <p><b>Total Cobrado:</b> $${capturedAmount.toFixed(2)} USD</p>
-                            <p><b>Easy Mix Key:</b> <code>${mixKey}</code></p>
-                            <p><b>Easy Master Key:</b> <code>${masterKey}</code></p>
+                            <p><b>Easy Mix Key (Oficial FULL):</b> <code>${mixKey}</code></p>
+                            <p><b>Easy Master Key (Oficial FULL):</b> <code>${masterKey}</code></p>
                             <p><b>PayPal Order ID:</b> <code>${orderID}</code></p>
                         </div>
                     `,

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * OFFSZN - Yape Checkout Integration (Mercado Pago Perú)
  * ======================================================
  * Minimalist Black & White / Monochrome Design.
@@ -817,6 +817,8 @@
                     deviceId = window.MP_DEVICE_SESSION_ID || (window.MercadoPago && window.MercadoPago.device_id) || null;
                 } catch (e) {}
 
+                const currentAffiliate = window.OFFSZN_AFFILIATE || localStorage.getItem('offszn_ref') || null;
+
                 const bodyPayload = {
                     token: yapeToken,
                     email: email,
@@ -825,6 +827,7 @@
                     pluginName: this.pluginName,
                     isPromo2x1: isPromo2x1,
                     customPrice: this.getPriceUSD(),
+                    affiliate: currentAffiliate,
                     attribution: attribution,
                     deviceId: deviceId
                 };
