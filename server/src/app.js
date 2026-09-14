@@ -474,6 +474,16 @@ app.get(['/plugins/easy-mix', '/plugins/easy-mix.html'], (req, res) => {
     return res.sendFile(path.join(rootPath, 'plugin/easy-mix.html'));
 });
 
+// Rutas directas para afiliados de Easy Mix (abi, allan, patrick, ximo, etc.)
+app.get(['/plugins/easy-mix-:affiliate', '/plugin/easy-mix-:affiliate'], (req, res, next) => {
+    const affiliate = req.params.affiliate.replace(/\.html$/, '').toLowerCase();
+    const affiliateLanding = path.join(rootPath, 'plugins', `easy-mix-${affiliate}.html`);
+    if (fs.existsSync(affiliateLanding)) {
+        return res.sendFile(affiliateLanding);
+    }
+    next();
+});
+
 // --- 3.0.1 WILLIE INSPIRED DEDICATED DIRECT ROUTES (Clean URLs without redirects) ---
 app.get(['/willieinspired', '/@willieinspired'], (req, res) => {
     const willieLandingPath = path.join(rootPath, 'willieinspired/index.html');

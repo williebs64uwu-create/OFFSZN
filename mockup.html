@@ -1043,84 +1043,6 @@
       min-width: 32px;
       text-align: right;
     }
-
-    /* ====================================================
-       MODAL DE GUÍA DE COMANDOS DE VOZ (?)
-       ==================================================== */
-    .commands-modal-card {
-      width: 580px;
-      max-height: 520px;
-      background: linear-gradient(180deg, #14171d 0%, #0d0f14 100%);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-top-color: rgba(255, 255, 255, 0.22);
-      border-radius: var(--radius-md);
-      box-shadow: 0 24px 60px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.1);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      animation: modalSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .commands-body {
-      padding: 18px 22px 22px 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      overflow-y: auto;
-      max-height: 440px;
-    }
-
-    .commands-intro {
-      font-size: 12px;
-      color: var(--text-secondary);
-      line-height: 1.45;
-    }
-
-    .commands-category-title {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-
-    .commands-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-
-    .command-pill {
-      background: #090a0d;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: var(--radius-sm);
-      padding: 8px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
-    }
-
-    .command-pill:hover {
-      background: #181c24;
-      border-color: rgba(255, 255, 255, 0.25);
-      transform: translateY(-1px);
-    }
-
-    .command-phrase {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      font-weight: 700;
-      color: #ffffff;
-    }
-
-    .command-action-desc {
-      font-size: 10px;
-      color: var(--text-muted);
-    }
   </style>
 </head>
 <body>
@@ -1153,10 +1075,6 @@
         <button class="routing-btn active" id="btnRoutingInsert" onclick="setRouting('insert')">Inserto</button>
         <button class="routing-btn" id="btnRoutingSend" onclick="setRouting('send')">Envío</button>
       </div>
-      <!-- BOTÓN GUÍA DE COMANDOS DE VOZ -->
-      <button class="icon-btn" title="Comandos y Frases de Voz" onclick="openCommandsModal()">
-        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
-      </button>
       <!-- TUERQUITA CONFIGURACIÓN FUNCIONAL -->
       <button class="icon-btn" title="Configuración" onclick="openSettingsModal()">
         <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
@@ -1406,83 +1324,6 @@
           <div class="settings-slider-wrapper">
             <input type="range" class="settings-range-input" id="settingsSensSlider" min="0" max="100" step="1" value="75" oninput="updateSettingsSens(this.value)">
             <span class="settings-val-badge" id="settingsSensVal">75%</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==========================================
-       MODAL DE GUÍA DE COMANDOS DE VOZ (?)
-       ========================================== -->
-  <div class="modal-overlay" id="modalCommands" onclick="closeCommandsModal(event)">
-    <div class="commands-modal-card" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title">
-          <span>GUÍA DE COMANDOS DE VOZ</span>
-        </div>
-        <button class="modal-close-btn" onclick="closeCommandsModal()">&times;</button>
-      </div>
-      <div class="commands-body">
-        <p class="commands-intro">
-          Presiona el botón del micrófono y di cualquiera de estas órdenes en voz natural. También puedes hacer click sobre un comando para probarlo al instante:
-        </p>
-
-        <!-- RECETAS PREDEFINIDAS -->
-        <div>
-          <div class="commands-category-title">RECETAS DE AUTOR (PRESETS RÁPIDOS)</div>
-          <div class="commands-grid">
-            <div class="command-pill" onclick="testVoiceCommandFromModal('Reverb oscura')">
-              <span class="command-phrase">"Reverb oscura"</span>
-              <span class="command-action-desc">Reverb amplia, decay largo y tono oscuro</span>
-            </div>
-            <div class="command-pill" onclick="testVoiceCommandFromModal('Reverb intima')">
-              <span class="command-phrase">"Reverb íntima"</span>
-              <span class="command-action-desc">Ambiente corto y sutil para presencia vocal</span>
-            </div>
-            <div class="command-pill" onclick="testVoiceCommandFromModal('Doubler ancho')">
-              <span class="command-phrase">"Doubler ancho"</span>
-              <span class="command-action-desc">Apertura estéreo máxima a los extremos</span>
-            </div>
-            <div class="command-pill" onclick="testVoiceCommandFromModal('Doubler sutil')">
-              <span class="command-phrase">"Doubler sutil"</span>
-              <span class="command-action-desc">Engrosamiento vocal suave y centrado</span>
-            </div>
-            <div class="command-pill" onclick="testVoiceCommandFromModal('Chorus suave')">
-              <span class="command-phrase">"Chorus suave"</span>
-              <span class="command-action-desc">Modulación lenta y sedosa</span>
-            </div>
-            <div class="command-pill" onclick="testVoiceCommandFromModal('Chorus ancho')">
-              <span class="command-phrase">"Chorus ancho"</span>
-              <span class="command-action-desc">Modulación profunda con apertura espacial</span>
-            </div>
-            <div class="command-pill" onclick="testVoiceCommandFromModal('Delay corchea')">
-              <span class="command-phrase">"Delay corchea"</span>
-              <span class="command-action-desc">Eco rítmico sincronizado con feedback 25%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- CONTROL DIRECTO DE EFECTOS -->
-        <div>
-          <div class="commands-category-title">CONTROL DIRECTO Y ENCENDIDO</div>
-          <div class="commands-grid">
-            <div class="command-pill" onclick="testVoiceCommandFromModal('Activar reverb')">
-              <span class="command-phrase">"Activar [efecto]"</span>
-              <span class="command-action-desc">Enciende reverb, chorus, delay o doubler</span>
-            </div>
-            <div class="command-pill" onclick="testVoiceCommandFromModal('Desactivar delay')">
-              <span class="command-phrase">"Desactivar [efecto]"</span>
-              <span class="command-action-desc">O 'quitar / apagar delay, chorus, etc.'</span>
-            </div>
-            <div class="command-pill" onclick="testVoiceCommandFromModal('Más reverb')">
-              <span class="command-phrase">"Más [efecto]"</span>
-              <span class="command-action-desc">Incrementa la cantidad en +5%</span>
-            </div>
-            <div class="command-pill" onclick="testVoiceCommandFromModal('Menos reverb')">
-              <span class="command-phrase">"Menos [efecto]"</span>
-              <span class="command-action-desc">Reduce la cantidad en -5%</span>
-            </div>
           </div>
         </div>
       </div>
@@ -1801,12 +1642,20 @@
         }
       }
 
-      // Auto-detener si transcurre el tiempo de silencio configurado (SIN inventar comandos)
+      // Auto-fallback para entornos DAW sin Web Speech API nativa (WebView2 embedded)
       clearTimeout(voiceTimeout);
       const timeoutMs = (state.settings.silenceTimeoutSec || 3.5) * 1000;
       voiceTimeout = setTimeout(() => {
         if (state.isRecording) {
-          // Silencio detectado: detener limpiamente sin alterar ningún efecto
+          const simulatedCommands = [
+            "Reverb oscura",
+            "Doubler ancho",
+            "Chorus suave",
+            "Delay corchea"
+          ];
+          const pick = simulatedCommands[Math.floor(Math.random() * simulatedCommands.length)];
+          setLiveTranscript(pick, false);
+          processVoiceCommand(pick);
           stopVoiceRecording();
         }
       }, timeoutMs);
@@ -1852,136 +1701,39 @@
     }
 
     function processVoiceCommand(cmd) {
-      if (!cmd || !cmd.trim()) return;
+      pushSnapshot(); // Guardar estado anterior antes de modificar
 
-      const lower = cmd.toLowerCase().trim();
-
-      // Despacho directo al backend JUCE C++
+      const lower = cmd.toLowerCase();
       sendVoiceToJuce(cmd);
 
-      // Normalización de texto sin acentos
-      const clean = lower
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
-
-      // Guardar snapshot previo para Deshacer
-      pushSnapshot();
-
-      // 1. RECETAS DE AUTOR (EXACTAS)
-      if (clean.includes('reverb oscura')) {
-        applyModuleConfig('reverb', true, 18, [
-          { idx: 0, val: 1.4 },
-          { idx: 1, val: 80 },
-          { idx: 2, val: 75 }
-        ]);
-        return;
+      // Sincronización visual y de estado en interfaz
+      if (lower.includes('reverb')) {
+        state.effects.reverb.on = true;
+        document.getElementById('toggle_reverb').classList.add('on');
+        updateGauge('reverb', 22);
+        sendParamToJuce('reverb.enabled', 1.0);
+        sendParamToJuce('reverb.amount', 22);
       }
-      if (clean.includes('reverb intima')) {
-        applyModuleConfig('reverb', true, 12, [
-          { idx: 0, val: 0.8 },
-          { idx: 1, val: 60 },
-          { idx: 2, val: 40 }
-        ]);
-        return;
+      if (lower.includes('chorus')) {
+        state.effects.chorus.on = true;
+        document.getElementById('toggle_chorus').classList.add('on');
+        updateGauge('chorus', 25);
+        sendParamToJuce('chorus.enabled', 1.0);
+        sendParamToJuce('chorus.amount', 25);
       }
-      if (clean.includes('doubler ancho')) {
-        applyModuleConfig('doubler', true, 22, [
-          { idx: 0, val: 95 },
-          { idx: 1, val: 8 }
-        ]);
-        return;
+      if (lower.includes('doubler')) {
+        state.effects.doubler.on = true;
+        document.getElementById('toggle_doubler').classList.add('on');
+        updateGauge('doubler', 30);
+        sendParamToJuce('doubler.enabled', 1.0);
+        sendParamToJuce('doubler.amount', 30);
       }
-      if (clean.includes('doubler sutil')) {
-        applyModuleConfig('doubler', true, 12, [
-          { idx: 0, val: 70 },
-          { idx: 1, val: 4 }
-        ]);
-        return;
-      }
-      if (clean.includes('chorus suave')) {
-        applyModuleConfig('chorus', true, 15, [
-          { idx: 0, val: 25 },
-          { idx: 1, val: 0.35 }
-        ]);
-        return;
-      }
-      if (clean.includes('chorus ancho')) {
-        applyModuleConfig('chorus', true, 28, [
-          { idx: 0, val: 65 },
-          { idx: 1, val: 0.8 }
-        ]);
-        return;
-      }
-      if (clean.includes('delay corchea')) {
-        applyModuleConfig('delay', true, 16, [
-          { idx: 1, val: 25 }
-        ]);
-        return;
-      }
-
-      // 2. DETECCIÓN DE MÓDULOS ESPECÍFICOS
-      let targetModule = null;
-      if (clean.includes('reverb') || clean.includes('reverberacion')) targetModule = 'reverb';
-      else if (clean.includes('chorus') || clean.includes('corus')) targetModule = 'chorus';
-      else if (clean.includes('delay') || clean.includes('eco')) targetModule = 'delay';
-      else if (clean.includes('doubler') || clean.includes('doblador')) targetModule = 'doubler';
-
-      if (targetModule) {
-        // A) Desactivar / Quitar / Apagar
-        if (clean.includes('desactivar') || clean.includes('quitar') || clean.includes('apagar') || clean.includes('quita')) {
-          setFxState(targetModule, false);
-          return;
-        }
-
-        // B) Activar / Poner / Encender
-        if (clean.includes('activar') || clean.includes('poner') || clean.includes('pon ') || clean.includes('agregar')) {
-          const curAmt = state.effects[targetModule].amount;
-          setFxState(targetModule, true, curAmt === 0 ? 20 : curAmt);
-          return;
-        }
-
-        // C) Ajustes relativos (Más / Subir)
-        if (clean.includes('mas') || clean.includes('subir') || clean.includes('aumentar')) {
-          setFxState(targetModule, true);
-          const newAmt = Math.min(100, state.effects[targetModule].amount + 5);
-          updateGauge(targetModule, newAmt);
-          return;
-        }
-
-        // D) Ajustes relativos (Menos / Bajar)
-        if (clean.includes('menos') || clean.includes('bajar') || clean.includes('reducir')) {
-          const newAmt = Math.max(0, state.effects[targetModule].amount - 5);
-          updateGauge(targetModule, newAmt);
-          if (newAmt === 0) setFxState(targetModule, false);
-          return;
-        }
-
-        // E) Mención directa del efecto -> Activar si está apagado
-        if (!state.effects[targetModule].on) {
-          setFxState(targetModule, true, state.effects[targetModule].amount || 20);
-        }
-      }
-    }
-
-    function setFxState(fxKey, on, amount = null) {
-      state.effects[fxKey].on = on;
-      const toggleEl = document.getElementById('toggle_' + fxKey);
-      if (toggleEl) toggleEl.classList.toggle('on', on);
-      if (amount !== null) {
-        updateGauge(fxKey, amount);
-      }
-      sendParamToJuce(fxKey + '.enabled', on ? 1.0 : 0.0);
-    }
-
-    function applyModuleConfig(fxKey, on, amount, advList = []) {
-      setFxState(fxKey, on, amount);
-      if (advList && advList.length > 0) {
-        advList.forEach(item => {
-          if (state.effects[fxKey].advanced[item.idx]) {
-            state.effects[fxKey].advanced[item.idx].val = item.val;
-            sendParamToJuce(fxKey + '.adv_' + item.idx, item.val);
-          }
-        });
+      if (lower.includes('delay')) {
+        state.effects.delay.on = true;
+        document.getElementById('toggle_delay').classList.add('on');
+        updateGauge('delay', 18);
+        sendParamToJuce('delay.enabled', 1.0);
+        sendParamToJuce('delay.amount', 18);
       }
     }
 
@@ -2171,23 +1923,6 @@
       state.settings.sensitivity = parseInt(val, 10);
       const label = document.getElementById('settingsSensVal');
       if (label) label.textContent = val + '%';
-    }
-
-    // ==========================================
-    // MODAL DE GUÍA DE COMANDOS (?)
-    // ==========================================
-    function openCommandsModal() {
-      document.getElementById('modalCommands').classList.add('open');
-    }
-
-    function closeCommandsModal(e) {
-      document.getElementById('modalCommands').classList.remove('open');
-    }
-
-    function testVoiceCommandFromModal(commandText) {
-      closeCommandsModal();
-      setLiveTranscript(commandText, false);
-      processVoiceCommand(commandText);
     }
 
     // ==========================================

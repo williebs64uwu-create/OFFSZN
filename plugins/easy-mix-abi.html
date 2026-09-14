@@ -1,0 +1,3681 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- PayPal Preconnect for Ultra Fast Load -->
+    <link rel="preconnect" href="https://www.paypal.com" crossorigin>
+    <link rel="preconnect" href="https://www.paypalobjects.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.paypal.com">
+    <link rel="dns-prefetch" href="https://www.paypalobjects.com">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Easy Mix VST | El Plugin de Mezcla de voces Fácil de OFFSZN</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/willieimages/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/willieimages/favicon-16x16.png">
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+    <link rel="shortcut icon" href="/willieimages/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/willieimages/apple-touch-icon.png">
+    <meta name="description"
+        content="¿Buscas cómo lograr una mezcla de voces fácil con 1 solo plugin? Descarga Easy Mix VST de OFFSZN y ten mezclas profesionales en FL Studio al instante.">
+    <meta name="keywords"
+        content="easy mix, easy mix plugin, plugin easy mix, easy mix offszn, mezcla de voces faciles con 1 plugin, plugin easy, plugin mix easy, vst voces fl studio">
+    <meta name="theme-color" content="#0a0a0a">
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="Easy Mix VST | El Plugin de Mezcla Vocal Fácil de OFFSZN">
+    <meta property="og:description"
+        content="Mezcla de voces fácil con 1 solo plugin. Limpieza, compresión, brillo y efectos en una interfaz intuitiva para FL Studio.">
+    <meta property="og:image" content="https://offszn.lat/images/plugins/easy%20mixx.png">
+    <meta property="og:url" content="https://offszn.lat/plugins/easy-mix">
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="OFFSZN">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://offszn.lat/images/plugins/easy%20mixx.png">
+
+    <!-- Schema.org Structured Data (Product & FAQ) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": "Easy Mix VST",
+      "image": "https://offszn.lat/images/plugins/easy%20mixx.png",
+      "description": "El plugin Easy Mix de OFFSZN te permite mezclar voces profesionales de forma fácil en FL Studio y otros DAWs con solo 1 plugin.",
+      "brand": {
+        "@type": "Brand",
+        "name": "OFFSZN"
+      },
+      "offers": {
+        "@type": "Offer",
+        "url": "https://offszn.lat/plugins/easy-mix",
+        "priceCurrency": "USD",
+        "price": "5.00",
+        "priceValidUntil": "2026-12-31",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "reviewCount": "142"
+      }
+    }
+    </script>
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Supabase & Config -->
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>window.supabaseClient = null;</script>
+    <script src="/script/config.js"></script>
+    <script src="/script/auth-utils.js?v=12"></script>
+
+    <style>
+        :root {
+            --accent: #ff9f0a;
+        }
+
+        .plugin-landing {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: 'Geist', sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ==================== HERO ==================== */
+        .hero-section {
+            position: relative;
+            margin-top: 0;
+            padding: 42px 0 38px;
+            text-align: center;
+            animation: heroFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            transition: background 0.4s ease;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 28px 0 24px;
+            }
+        }
+
+        .hero-bg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('/images/hero-bgs/hero-bg-5.png');
+            background-size: cover;
+            background-position: center top;
+            background-repeat: no-repeat;
+            opacity: 1;
+            pointer-events: none;
+            z-index: 0;
+            transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+        }
+
+        .hero-bg-layer.has-bg {
+            opacity: 1;
+        }
+
+        .hero-bg-layer::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom,
+                    transparent 0%,
+                    transparent 60%,
+                    rgba(10, 10, 10, 0.25) 80%,
+                    rgba(5, 5, 5, 0.85) 94%,
+                    #000000 100%);
+            pointer-events: none;
+        }
+
+        .hero-section>.container {
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes heroFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-top-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            width: 100%;
+        }
+
+        .area-1 {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .area-2 {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .hero-title {
+            font-size: clamp(2.2rem, 6vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: #888;
+            max-width: 550px;
+            margin: 0 auto 40px;
+            line-height: 1.5;
+        }
+
+        .hero-image-container {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+            animation: heroFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes heroFloat {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .hero-mockup {
+            width: 100%;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        /* CTA Buttons (Matching X Flow Analyzer) */
+        .btn-free-download {
+            background: #fff;
+            color: #000;
+            padding: 15px 36px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.05rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #fff;
+            gap: 8px;
+        }
+
+        .btn-free-download:hover {
+            background: #e4e4e7;
+            color: #000;
+        }
+
+        .btn-free-download.primary-large {
+            padding: 16px 48px;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+        }
+
+        .btn-serial {
+            background: transparent;
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            gap: 8px;
+            opacity: 0.7;
+            cursor: pointer;
+        }
+
+        .btn-serial:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.4);
+            opacity: 1;
+        }
+
+        /* ==================== CONTENT SECTIONS ==================== */
+        .feature-section {
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .alt-bg {
+            background: #080808;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            padding: 80px 0;
+        }
+
+        .content-grid.reverse {
+            direction: rtl;
+        }
+
+        .content-grid.reverse .text-content {
+            direction: ltr;
+        }
+
+        .feature-tag {
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .text-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 24px;
+            font-weight: 700;
+        }
+
+        .text-content p {
+            color: #aaa;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        .placeholder-img {
+            aspect-ratio: 1/1;
+            background: #161619;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            direction: ltr;
+        }
+
+        /* Plugin Mockup inside feature section */
+        .mockup-plugin {
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            width: 280px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .mockup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .mockup-logo {
+            font-weight: 800;
+            font-size: 12px;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .mockup-badge {
+            background: #111;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .mockup-drop {
+            background: #050505;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 30px 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mockup-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .mockup-icon.active {
+            background: #fff;
+            color: #000;
+            border-color: #fff;
+        }
+
+        .mockup-main-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .mockup-sub-text {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .mockup-btn {
+            background: #fff;
+            color: #000;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 12px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .mockup-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ==================== SERIAL KEY SECTION ==================== */
+        .serial-section {
+            padding: 80px 0;
+            text-align: center;
+            background: #000;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            color: #888;
+            font-size: 1.05rem;
+            max-width: 500px;
+            margin: 0 auto 40px;
+        }
+
+        .serial-card {
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .auth-wall {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .auth-wall i {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .serial-display {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .serial-box {
+            background: #000;
+            border: 1px dashed rgba(255, 255, 255, 0.3);
+            padding: 16px 24px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            border-radius: 8px;
+            width: 100%;
+            user-select: all;
+            cursor: pointer;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+
+        .serial-box:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-auth {
+            background: #fff;
+            color: #000;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-auth:hover {
+            background: #ffffff;
+            color: #000000;
+        }
+
+        .btn-download {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-download:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ==================== COMPRAR LICENCIA (DOBLE COLUMNA DESKTOP) ==================== */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        #pricing-section {
+            scroll-margin-top: 85px;
+        }
+
+        .pricing-double-layout {
+            display: grid;
+            grid-template-columns: 1.15fr 460px;
+            gap: 54px;
+            align-items: center;
+            max-width: 1120px;
+            margin: 50px auto 0;
+            text-align: left;
+        }
+
+        .pricing-text-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .pricing-headline {
+            font-size: clamp(2.2rem, 3.8vw, 3.2rem);
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.15;
+            margin: 0 0 16px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .pricing-subtext {
+            font-size: 1.05rem;
+            color: #a1a1aa;
+            line-height: 1.6;
+            margin: 0 0 32px 0;
+            max-width: 520px;
+        }
+
+        .pricing-checks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .pricing-check-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #f4f4f5;
+            font-size: 1.08rem;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+        }
+
+        .pricing-check-item svg {
+            flex-shrink: 0;
+            stroke: #ffffff;
+        }
+
+        .pricing-card-col {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .pricing-card-inner {
+            width: 100%;
+            max-width: 460px;
+            background: rgba(255, 159, 10, 0.05);
+            border: 1.5px solid rgba(255, 159, 10, 0.4);
+            padding: 36px 30px;
+            border-radius: 22px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 159, 10, 0.08);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-sizing: border-box;
+        }
+
+        .pricing-popular-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: #ff9f0a;
+            color: #000;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .pricing-card-title {
+            font-size: 1.6rem;
+            margin-bottom: 4px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .pricing-card-platform {
+            color: #a1a1aa;
+            font-size: 0.95rem;
+            margin-bottom: 22px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 960px) {
+            .pricing-double-layout {
+                display: flex;
+                flex-direction: column;
+                gap: 22px;
+                text-align: center;
+                margin-top: 24px;
+            }
+
+            .pricing-text-col {
+                display: contents;
+            }
+
+            .pricing-header-area {
+                order: 1;
+                width: 100%;
+            }
+
+            .pricing-headline {
+                font-size: clamp(1.85rem, 6vw, 2.3rem);
+                margin-bottom: 10px;
+            }
+
+            .pricing-subtext {
+                margin: 0 auto 16px auto;
+                font-size: 0.95rem;
+                padding: 0 10px;
+            }
+
+            .pricing-card-col {
+                order: 2;
+                width: 100%;
+            }
+
+            .pricing-card-col .pricing-card-inner {
+                max-width: 440px;
+                padding: 24px 18px;
+            }
+
+            .pricing-card-title {
+                display: none !important;
+            }
+
+            .pricing-popular-badge {
+                position: static;
+                margin: 0 auto 10px auto;
+                display: inline-block;
+                width: fit-content;
+            }
+
+            .pricing-card-platform {
+                margin-bottom: 14px;
+                font-size: 0.92rem;
+                color: #d4d4d8;
+            }
+
+            .pricing-checks-area {
+                order: 3;
+                width: 100%;
+                margin-top: 14px;
+                display: flex;
+                justify-content: center;
+            }
+
+            .pricing-checks-list {
+                display: flex;
+                flex-direction: column;
+                text-align: left;
+                max-width: 360px;
+                margin: 0 auto;
+                gap: 15px;
+            }
+
+            .pricing-check-item {
+                font-size: 0.98rem;
+                gap: 12px;
+            }
+        }
+
+        /* ==================== FEATURE GRID (AHORRA TIEMPO) ==================== */
+        .features-grid-section {
+            padding: 100px 0;
+            background: #000;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .features-grid-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .features-grid-header h2 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #fff;
+        }
+
+        .features-grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .f-grid-item {
+            padding: 40px;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: #050505;
+        }
+
+        .f-grid-icon {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .f-grid-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 15px;
+        }
+
+        .f-grid-desc {
+            font-size: 0.95rem;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 900px) {
+            .features-grid-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .features-grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ==================== FAQ SECTION ==================== */
+        .faq-section {
+            padding: 100px 0;
+            background: #000;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .faq-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .faq-header .subtitle {
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .faq-header h2 {
+            font-size: clamp(3rem, 6vw, 4.5rem);
+            font-weight: 800;
+            letter-spacing: -2px;
+            color: #fff;
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .faq-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .faq-question {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: left;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .faq-question i {
+            transition: transform 0.3s;
+            color: #666;
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            color: #888;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding-bottom: 24px;
+        }
+
+        /* ==================== TAGLINE (FINAL CTA) ==================== */
+        .tagline-section {
+            padding: 100px 20px;
+            text-align: center;
+            background: #000;
+        }
+
+        .tagline-section h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #666);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .content-grid.reverse {
+                direction: ltr;
+            }
+
+            .hero-top-actions {
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .area-1,
+            .area-2 {
+                align-items: center;
+            }
+
+            .tagline-section h2 {
+                font-size: 2rem;
+            }
+
+            .placeholder-img {
+                max-width: 300px;
+                margin: 0 auto;
+            }
+
+            .faq-section {
+                padding: 60px 0;
+            }
+
+            .faq-header {
+                margin-bottom: 30px;
+            }
+
+            .faq-header h2 {
+                font-size: 2.2rem;
+            }
+
+            .faq-question {
+                font-size: 1.05rem;
+                padding: 18px 0;
+            }
+
+            .faq-answer {
+                font-size: 0.95rem;
+                line-height: 1.5;
+            }
+        }
+
+        /* ==================== STICKY HEADER & TOP ANNOUNCEMENT BAR ==================== */
+        .sticky-header-wrapper {
+            position: sticky;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
+        }
+
+        body {
+            padding-top: 40px;
+        }
+
+        .top-announcement-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            background: linear-gradient(90deg, #022c22 0%, #064e3b 50%, #022c22 100%);
+            border-bottom: 1px solid rgba(52, 211, 153, 0.25);
+            padding: 0 16px;
+            z-index: 9999;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: background 0.25s ease, border-color 0.25s ease;
+        }
+
+        .top-announcement-bar:hover {
+            background: linear-gradient(90deg, #03362a 0%, #075e47 50%, #03362a 100%);
+            border-bottom-color: rgba(52, 211, 153, 0.45);
+        }
+
+        .top-announcement-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            color: #ffffff;
+        }
+
+        .top-announcement-text {
+            color: #f1f5f9;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+        }
+
+        .top-announcement-text strong {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .top-announcement-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.22s ease;
+        }
+
+        .top-announcement-bar:hover .top-announcement-arrow {
+            transform: translateX(4px);
+            background: rgba(255, 255, 255, 0.32);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 38px !important;
+            }
+
+            .top-announcement-bar {
+                height: 38px;
+                padding: 0 12px;
+            }
+
+            .top-announcement-content {
+                gap: 8px;
+                font-size: 0.82rem;
+            }
+
+            .top-announcement-arrow {
+                width: 22px;
+                height: 22px;
+                font-size: 0.76rem;
+            }
+        }
+
+        /* WhatsApp Floating Widget */
+        .whatsapp-widget-container {
+            position: fixed;
+            bottom: 90px;
+            right: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10000;
+            text-decoration: none;
+            pointer-events: none;
+        }
+
+        .whatsapp-bubble-card {
+            position: relative;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 10px 28px 10px 16px;
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            line-height: 1.3;
+            display: flex;
+            align-items: center;
+            pointer-events: auto;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: whatsappBubbleIn 0.5s ease;
+            white-space: nowrap;
+        }
+
+        .whatsapp-bubble-card:hover {
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+            color: #0f172a;
+        }
+
+        .whatsapp-bubble-close {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 2px 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        .whatsapp-bubble-close:hover {
+            color: #0f172a;
+            background: #f1f5f9;
+        }
+
+        .whatsapp-floating-btn {
+            pointer-events: auto;
+            width: 58px;
+            height: 58px;
+            background-color: #25D366;
+            color: #fff !important;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            transition: background-color 0.2s ease, opacity 0.2s ease;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .whatsapp-floating-btn:hover {
+            background-color: #20ba5a;
+            color: #fff;
+            opacity: 0.95;
+            transform: none;
+        }
+
+        @keyframes whatsappBubbleIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px) scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .whatsapp-widget-container {
+                bottom: 80px;
+                right: 16px;
+                gap: 8px;
+            }
+
+            .whatsapp-bubble-card {
+                font-size: 0.78rem;
+                padding: 8px 24px 8px 12px;
+                border-radius: 14px;
+            }
+
+            .whatsapp-floating-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 26px;
+            }
+        }
+
+        /* ==================== EASY MIX STICKY NAVBAR (APARECE AL SCROLLEAR A DEMO) ==================== */
+        .em-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 56px;
+            background: rgba(10, 10, 12, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        }
+
+        .em-navbar.nav-visible {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .em-nav-inner {
+            max-width: 1200px;
+            height: 100%;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .em-nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .em-nav-brand:hover {
+            opacity: 0.88;
+        }
+
+        .em-nav-logo-img {
+            height: 25px;
+            width: auto;
+            display: block;
+        }
+
+        .em-nav-badge {
+            background: rgba(255, 159, 10, 0.15);
+            color: #ff9f0a;
+            border: 1px solid rgba(255, 159, 10, 0.3);
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .em-nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            padding: 4px 6px;
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .em-nav-link {
+            color: #d1d5db;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 14px;
+            border-radius: 999px;
+            transition: all 0.22s ease;
+        }
+
+        .em-nav-link:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .em-nav-pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px #10b981;
+            display: inline-block;
+            animation: emNavPulseDot 2s infinite ease-in-out;
+            flex-shrink: 0;
+        }
+
+        @keyframes emNavPulseDot {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: scale(0.9);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+                box-shadow: 0 0 10px #10b981;
+            }
+        }
+
+        .em-nav-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .em-nav-btn-cta {
+            background: #ff9f0a;
+            color: #000000 !important;
+            font-weight: 800;
+            font-size: 0.9rem;
+            padding: 9px 20px;
+            border-radius: 999px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: opacity 0.2s ease, background 0.2s ease;
+        }
+
+        .em-nav-btn-cta:hover {
+            background: #ffa826;
+            opacity: 0.95;
+        }
+
+        @media (max-width: 768px) {
+            .em-navbar {
+                height: 52px;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                background: rgba(10, 10, 12, 0.98) !important;
+            }
+
+            .em-nav-inner {
+                padding: 0 16px;
+                gap: 12px;
+            }
+
+            .em-nav-badge {
+                display: none;
+            }
+
+            /* No existirá en móvil según lo pedido */
+            .em-nav-menu {
+                display: none !important;
+            }
+
+            /* Botón bien puesto y estilizado en móvil */
+            .em-nav-btn-cta {
+                font-size: 0.82rem;
+                font-weight: 700;
+                padding: 7px 16px;
+                border-radius: 999px;
+                white-space: nowrap;
+                letter-spacing: -0.2px;
+                box-shadow: 0 3px 12px rgba(255, 159, 10, 0.35);
+            }
+
+            .em-nav-btn-cta i {
+                font-size: 0.82rem;
+                display: inline-block;
+            }
+        }
+
+        /* ==================== AUDIO COMPARISON SECTION (MINIMALIST GLASS & WAVESURFER) ==================== */
+        .audio-comparison-section {
+            padding: 48px 0 75px;
+            background: radial-gradient(circle at 50% 12%, rgba(255, 45, 120, 0.04) 0%, rgba(5, 5, 5, 1) 50%), #000000;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .audio-comp-header {
+            text-align: center;
+            max-width: 860px;
+            margin: 0 auto 32px;
+        }
+
+        @media (max-width: 768px) {
+            .audio-comparison-section {
+                padding: 35px 0 55px;
+            }
+
+            .audio-comp-header {
+                margin: 0 auto 24px;
+            }
+        }
+
+        .audio-comp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #ffffff;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.35), 0 8px 24px rgba(0, 0, 0, 0.6);
+            padding: 6px 18px;
+            border-radius: 999px;
+            margin-bottom: 20px;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+            user-select: none;
+        }
+
+        .audio-comp-badge:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+            border-color: rgba(255, 255, 255, 0.28);
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5), 0 12px 30px rgba(0, 0, 0, 0.75);
+        }
+
+        .audio-comp-badge .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.95);
+            animation: liquidDotPulse 2.4s ease-in-out infinite;
+        }
+
+        @keyframes liquidDotPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.35;
+                transform: scale(0.8);
+            }
+        }
+
+        .audio-comp-title {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0;
+            letter-spacing: -0.5px;
+            line-height: 1.15;
+            text-transform: uppercase;
+        }
+
+        .audio-comp-title .title-accent {
+            color: #ff2b88;
+        }
+
+        .audio-comp-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        /* Dark Glass Card Style */
+        .audio-glass-card {
+            background: rgba(14, 14, 14, 0.72);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 34px 28px 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+            display: flex;
+            flex-direction: column;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .audio-glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.16);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        }
+
+        /* Track row: play button + waveform side-by-side */
+        .ws-track-row {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            width: 100%;
+        }
+
+        .ws-play-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            line-height: 1;
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            transition: opacity 0.15s ease, transform 0.12s ease;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .ws-play-btn:hover {
+            opacity: 0.75;
+            transform: scale(1.08);
+        }
+
+        .ws-play-btn i {
+            display: block;
+            line-height: 1;
+        }
+
+        .ws-waveform-wrap {
+            flex: 1;
+            height: 48px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .ws-waveform-wrap>div {
+            width: 100%;
+        }
+
+        /* Centered caption like Image 2 */
+        .ws-track-caption {
+            text-align: center;
+            margin: 14px 0 28px;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+            line-height: 1.3;
+            user-select: none;
+        }
+
+        .ws-track-caption:last-child {
+            margin-bottom: 0;
+        }
+
+        .ws-tag-before {
+            color: #ffffff;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .ws-tag-after {
+            color: #ff2b88;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .ws-track-name {
+            color: #8e949e;
+            font-weight: 500;
+        }
+
+        @media (max-width: 900px) {
+            .audio-comp-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .audio-glass-card {
+                padding: 24px 18px 22px;
+            }
+
+            .ws-track-row {
+                gap: 12px;
+            }
+
+            .ws-play-btn {
+                font-size: 1.2rem;
+                width: 26px;
+                height: 26px;
+            }
+
+            .ws-track-caption {
+                margin: 12px 0 22px;
+                font-size: 0.88rem;
+            }
+        }
+
+        /* ==================== TESTIMONIALS CAROUSEL (2 ROWS INFINITE) ==================== */
+        :root {
+            --testi-gap: 18px;
+        }
+
+        .testimonios-section {
+            padding: 90px 0 75px;
+            background: #050505;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .testimonios-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            letter-spacing: 2.5px;
+            color: #ff9f0a;
+            text-transform: uppercase;
+            font-weight: 700;
+            background: rgba(255, 159, 10, 0.1);
+            border: 1px solid rgba(255, 159, 10, 0.25);
+            padding: 4px 14px;
+            border-radius: 999px;
+            margin-bottom: 14px;
+        }
+
+        .testimonios-title {
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+            line-height: 1.15;
+        }
+
+        .testimonios-subtitle {
+            color: #888;
+            font-size: 1rem;
+            max-width: 580px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .testi-carousel-wrapper {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            padding: 20px 0;
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+        }
+
+        .testi-carousel-fade-left,
+        .testi-carousel-fade-right {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 150px;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .testi-carousel-fade-left {
+            left: 0;
+            background: linear-gradient(to right, #050505 20%, rgba(5, 5, 5, 0) 100%);
+        }
+
+        .testi-carousel-fade-right {
+            right: 0;
+            background: linear-gradient(to left, #050505 20%, rgba(5, 5, 5, 0) 100%);
+        }
+
+        .testi-marquee-row {
+            display: flex;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            gap: var(--testi-gap, 18px);
+            width: 100%;
+        }
+
+        .testi-marquee-row+.testi-marquee-row {
+            margin-top: var(--testi-gap, 18px);
+        }
+
+        .testi-marquee-group {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: var(--testi-gap, 18px);
+            will-change: transform;
+        }
+
+        .testi-marquee-group.scroll-left {
+            animation: testiMarqueeScrollLeft 140s linear infinite;
+        }
+
+        .testi-marquee-group.scroll-right {
+            animation: testiMarqueeScrollLeft 150s linear infinite reverse;
+        }
+
+        .testi-carousel-wrapper:hover .testi-marquee-group {
+            animation-play-state: paused;
+        }
+
+        @keyframes testiMarqueeScrollLeft {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(calc(-100% - var(--testi-gap, 18px)));
+            }
+        }
+
+        .testi-card {
+            width: 280px;
+            height: 200px;
+            background: #000000;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            flex-shrink: 0;
+            position: relative;
+            transition: border-color 0.2s ease;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .testi-card:hover {
+            border-color: rgba(255, 255, 255, 0.22);
+            transform: none !important;
+        }
+
+        .testi-card:active,
+        .testi-card:focus {
+            outline: none !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .testi-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.22s ease;
+            border-radius: 15px;
+            pointer-events: none;
+        }
+
+        .testi-overlay-badge {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.2px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .testi-card:hover .testi-card-overlay {
+            opacity: 1;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        /* ==================== HIGH-PERFORMANCE HARDWARE-ACCELERATED REVEALS ==================== */
+        .em-reveal {
+            opacity: 0;
+            transform: translate3d(0, 20px, 0);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+
+        .em-reveal.is-revealed {
+            opacity: 1;
+            transform: translate3d(0, 0, 0);
+            will-change: auto;
+        }
+
+        @media (max-width: 768px) {
+            .em-reveal {
+                transform: translate3d(0, 14px, 0);
+                transition-duration: 0.45s;
+            }
+        }
+
+        .testi-card img {
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 280 / 200;
+            object-fit: contain;
+            border-radius: 8px;
+            pointer-events: none;
+            display: block;
+            transform: none !important;
+            transition: none !important;
+        }
+
+        /* Prevent button jump on third-party button styles */
+        .btn-yape-white:hover {
+            transform: none !important;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --testi-gap: 12px;
+            }
+
+            .testi-card {
+                width: 220px;
+                height: 155px;
+                padding: 8px;
+                border-radius: 12px;
+            }
+
+            .testi-card-overlay {
+                border-radius: 11px;
+            }
+
+            .testi-overlay-badge {
+                font-size: 0.74rem;
+                padding: 4px 10px;
+            }
+
+            .testi-carousel-fade-left,
+            .testi-carousel-fade-right {
+                width: 60px;
+            }
+
+            .testi-marquee-group.scroll-left {
+                animation-duration: 105s;
+            }
+
+            .testi-marquee-group.scroll-right {
+                animation-duration: 115s;
+            }
+        }
+
+        /* ==================== WAVEFORM SKELETON SHIMMER ==================== */
+        /* Skeleton is an ABSOLUTE OVERLAY so WaveSurfer always measures real width */
+        .ws-waveform-wrap {
+            position: relative;
+        }
+
+        .ws-skeleton {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            overflow: hidden;
+            border-radius: 4px;
+            z-index: 2;
+            /* same dark bg as the card so it covers the blank canvas behind */
+            background: rgba(14, 14, 14, 0.72);
+            transition: opacity 0.35s ease;
+        }
+
+        .ws-waveform-wrap.ws-loaded .ws-skeleton {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .ws-skeleton-bar {
+            flex: 1;
+            border-radius: 2px;
+            background: linear-gradient(
+                90deg,
+                rgba(255,255,255,0.06) 25%,
+                rgba(255,255,255,0.16) 50%,
+                rgba(255,255,255,0.06) 75%
+            );
+            background-size: 200% 100%;
+            animation: wsSkelShimmer 1.6s ease-in-out infinite;
+        }
+
+        @keyframes wsSkelShimmer {
+            0%   { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+
+        /* Stagger bars for organic feel */
+        .ws-skeleton-bar:nth-child(3n+1) { animation-delay: -0.6s; }
+        .ws-skeleton-bar:nth-child(3n+2) { animation-delay: -1.1s; }
+        .ws-skeleton-bar:nth-child(3n+3) { animation-delay: -0.3s; }
+    </style>
+</head>
+
+<body>
+
+    <!-- ==================== TOP ANNOUNCEMENT BAR (SOLO BANNER VERDE EN HERO) ==================== -->
+    <a href="#pricing-section" class="top-announcement-bar" id="top-announcement-bar"
+        title="Obtener licencia de Easy Mix">
+        <div class="top-announcement-content">
+            <span class="top-announcement-text">🚀 Obtén tu <strong>licencia de por vida</strong> de Easy Mix</span>
+            <span class="top-announcement-arrow" aria-hidden="true">
+                <i class="bi bi-arrow-right"></i>
+            </span>
+        </div>
+    </a>
+
+    <!-- ==================== FIXED STICKY NAVBAR (RECIÉN SALE AL SCROLLEAR A DEMO) ==================== -->
+    <header class="em-navbar" id="em-navbar">
+        <div class="em-nav-inner">
+            <!-- 1. Logo OFFSZN -->
+            <a href="/" class="em-nav-brand" title="Ir al inicio de OFFSZN">
+                <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN Logo" width="110" height="25" class="em-nav-logo-img">
+                <span class="em-nav-badge">EASY MIX</span>
+            </a>
+
+            <!-- 2. Nav Links (Cómo Suena + Resultados) -->
+            <nav class="em-nav-menu">
+                <a href="#audio-comparison" class="em-nav-link">
+                    <span class="em-nav-pulse-dot"></span>
+                    <i class="bi bi-soundwave" style="color: #6ee7b7; font-size: 0.95rem;"></i>
+                    <span>Cómo Suena</span>
+                </a>
+                <span class="em-nav-divider"></span>
+                <a href="#testimonios" class="em-nav-link">
+                    <i class="bi bi-star-fill" style="color: #ff9f0a; font-size: 0.8rem;"></i>
+                    <span>Resultados</span>
+                </a>
+            </nav>
+
+            <!-- 3. Action Button (Descargar plugin) -->
+            <div class="em-nav-actions">
+                <a href="#serial-section" class="em-nav-btn-cta">
+                    <i class="bi bi-download"></i>
+                    <span>Descargar plugin</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="plugin-landing">
+
+        <!-- HERO SECTION -->
+        <section class="hero-section">
+            <div class="hero-bg-layer has-bg" id="hero-bg-layer"
+                style="background-image: url('/images/hero-bgs/hero-bg-5.png');"></div>
+            <div class="container">
+                <!-- HERO TOP ACTIONS -->
+                <div class="hero-top-actions" style="justify-content: center; margin-bottom: 16px;">
+                    <div class="area-2">
+                        <a href="#serial-section" class="btn-free-download"><i class="bi bi-download"></i> DESCARGAR
+                            PLUGIN</a>
+                    </div>
+                </div>
+
+                <h1 class="hero-title"
+                    style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; background: none !important; font-size: clamp(2.4rem, 6.5vw, 4.2rem); line-height: 1.1; margin-bottom: 14px; font-weight: 800;">
+                    Voces pro al instante <br> con nombres fáciles!
+                </h1>
+                <p class="hero-subtitle" style="font-size: 1.2rem; color: #aaa; max-width: 600px; margin: 0 auto 22px;">
+                    El mejor plugin para mezclar en 2026.</p>
+
+                <div class="hero-image-container" style="max-width: 800px; margin: 24px auto 0;">
+                    <img src="/images/plugins/heronuevo.png" alt="Easy Mix VST" width="990" height="500"
+                        style="width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 30px 70px rgba(0,0,0,0.7), 0 0 50px rgba(133, 44, 60, 0.2);">
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== AUDIO COMPARISON SECTION (SECCIÓN 2: ANTES VS DESPUÉS) ==================== -->
+        <section id="audio-comparison" class="audio-comparison-section">
+            <div class="container" style="max-width: 1100px;">
+                <div class="audio-comp-header em-reveal">
+                    <div class="audio-comp-badge">
+                        <span class="badge-dot"></span>
+                        <span>Comparación en Tiempo Real</span>
+                    </div>
+                    <h2 class="audio-comp-title">
+                        Escucha el <span class="title-accent">ANTES VS DESPUÉS</span>
+                    </h2>
+                </div>
+
+                <div class="audio-comp-grid">
+                    <!-- CARD 1: TAMASHI -->
+                    <div class="audio-glass-card em-reveal" data-card-id="c1">
+                        <!-- PISTA ANTES -->
+                        <div class="ws-track-row" data-track-id="t1-before">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Antes">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap" data-audio-src="/music-raw-to-defined/tamashi-antes.mp3">
+                            </div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-before">ANTES:</span>
+                            <span class="ws-track-name">Voz cruda</span>
+                        </div>
+
+                        <!-- PISTA DESPUÉS -->
+                        <div class="ws-track-row" data-track-id="t1-after">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Después">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap" data-audio-src="/music-raw-to-defined/tamashi-despues.mp3">
+                            </div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-after">DESPUÉS:</span>
+                            <span class="ws-track-name">Voz clean</span>
+                        </div>
+                    </div>
+
+                    <!-- CARD 2: YAN BLOCK -->
+                    <div class="audio-glass-card em-reveal" data-card-id="c2">
+                        <!-- PISTA ANTES -->
+                        <div class="ws-track-row" data-track-id="t2-before">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Antes">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap"
+                                data-audio-src="/music-raw-to-defined/antes-yan-block.mp3"></div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-before">ANTES:</span>
+                            <span class="ws-track-name">Voz cruda</span>
+                        </div>
+
+                        <!-- PISTA DESPUÉS -->
+                        <div class="ws-track-row" data-track-id="t2-after">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Después">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap"
+                                data-audio-src="/music-raw-to-defined/despues-yan-block.mp3"></div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-after">DESPUÉS:</span>
+                            <span class="ws-track-name">Voz Yan Block</span>
+                        </div>
+                    </div>
+
+                    <!-- CARD 3: ALE -->
+                    <div class="audio-glass-card em-reveal" data-card-id="c3">
+                        <!-- PISTA ANTES -->
+                        <div class="ws-track-row" data-track-id="t3-before">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Antes">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap" data-audio-src="/music-raw-to-defined/ale-antes.mp3"></div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-before">ANTES:</span>
+                            <span class="ws-track-name">Voz cruda</span>
+                        </div>
+
+                        <!-- PISTA DESPUÉS -->
+                        <div class="ws-track-row" data-track-id="t3-after">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Después">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap" data-audio-src="/music-raw-to-defined/ale-despues.mp3"></div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-after">DESPUÉS:</span>
+                            <span class="ws-track-name">Voz dancehall</span>
+                        </div>
+                    </div>
+
+                    <!-- CARD 4: LEAD VOCAL -->
+                    <div class="audio-glass-card em-reveal" data-card-id="c4">
+                        <!-- PISTA ANTES -->
+                        <div class="ws-track-row" data-track-id="t4-before">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Antes">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap" data-audio-src="/music-raw-to-defined/lead-antes.mp3"></div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-before">ANTES:</span>
+                            <span class="ws-track-name">Voz cruda</span>
+                        </div>
+
+                        <!-- PISTA DESPUÉS -->
+                        <div class="ws-track-row" data-track-id="t4-after">
+                            <button type="button" class="ws-play-btn" aria-label="Reproducir Después">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                            <div class="ws-waveform-wrap" data-audio-src="/music-raw-to-defined/lead-despues.mp3"></div>
+                        </div>
+                        <div class="ws-track-caption">
+                            <span class="ws-tag-after">DESPUÉS:</span>
+                            <span class="ws-track-name">Voz under mejorado</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- WaveSurfer.js: Skeleton first, real waveform when audio loads -->
+        <script>
+            (function () {
+                // ── 1. Inject skeleton bars into every waveform wrap immediately ──
+                const BAR_COUNT = 60;
+                document.querySelectorAll('.ws-waveform-wrap').forEach(function (wrap) {
+                    var skel = document.createElement('div');
+                    skel.className = 'ws-skeleton';
+                    for (var i = 0; i < BAR_COUNT; i++) {
+                        var bar = document.createElement('div');
+                        bar.className = 'ws-skeleton-bar';
+                        // Randomised heights so it already looks wave-like
+                        var h = 18 + Math.round(Math.abs(Math.sin(i * 0.42 + 0.8)) * 30);
+                        bar.style.height = h + 'px';
+                        skel.appendChild(bar);
+                    }
+                    wrap.appendChild(skel);
+                });
+
+                // ── 2. Boot WaveSurfer ──
+                let wsInitialized = false;
+                const audioSection = document.getElementById('audio-comparison');
+                if (!audioSection) return;
+
+                function initWaveSurfer() {
+                    if (wsInitialized) return;
+                    wsInitialized = true;
+
+                    const wsScript = document.createElement('script');
+                    wsScript.src = '/libs/wavesurfer.min.js';
+                    wsScript.onload = function () {
+                        if (typeof WaveSurfer === 'undefined') return;
+
+                        const cards = document.querySelectorAll('.audio-glass-card');
+                        const tracks = [];
+                        let currentlyPlaying = null;
+
+                        cards.forEach((card) => {
+                            const cardId = card.getAttribute('data-card-id');
+                            card.querySelectorAll('.ws-track-row').forEach((row) => {
+                                const playBtn = row.querySelector('.ws-play-btn');
+                                const waveWrap = row.querySelector('.ws-waveform-wrap');
+                                const audioSrc = waveWrap.getAttribute('data-audio-src');
+
+                                const ws = WaveSurfer.create({
+                                    container: waveWrap,
+                                    waveColor: 'rgba(255,255,255,0.45)',
+                                    progressColor: '#ff2b88',
+                                    cursorWidth: 0,
+                                    barWidth: 2,
+                                    barGap: 2,
+                                    barRadius: 2,
+                                    height: 48,
+                                    normalize: true,
+                                    url: audioSrc
+                                });
+
+                                // ── When WaveSurfer is ready, remove skeleton ──
+                                ws.on('ready', () => {
+                                    waveWrap.classList.add('ws-loaded');
+                                });
+
+                                const trackObj = { cardId, playBtn, waveWrap, ws };
+                                tracks.push(trackObj);
+
+                                function setBtnState(isPlaying) {
+                                    const icon = playBtn.querySelector('i');
+                                    if (icon) icon.className = isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill';
+                                }
+
+                                function stopAllOtherTracks(exceptWs) {
+                                    tracks.forEach(t => {
+                                        if (t.ws !== exceptWs) {
+                                            if (t.ws.isPlaying()) t.ws.pause();
+                                            t.ws.seekTo(0);
+                                            const icon = t.playBtn.querySelector('i');
+                                            if (icon) icon.className = 'bi bi-play-fill';
+                                        }
+                                    });
+                                }
+
+                                function playTrack(seekTime = null) {
+                                    let transferTime = seekTime;
+                                    if (seekTime === null && currentlyPlaying && currentlyPlaying.cardId === cardId && currentlyPlaying.ws !== ws) {
+                                        transferTime = currentlyPlaying.ws.getCurrentTime();
+                                    }
+                                    stopAllOtherTracks(ws);
+                                    if (transferTime !== null && transferTime > 0) ws.setTime(transferTime);
+                                    ws.play()
+                                        .then(() => { setBtnState(true); currentlyPlaying = trackObj; })
+                                        .catch(err => { console.warn('Playback error:', err); setBtnState(false); currentlyPlaying = null; });
+                                }
+
+                                function pauseTrack() {
+                                    ws.pause(); setBtnState(false);
+                                    if (currentlyPlaying === trackObj) currentlyPlaying = null;
+                                }
+
+                                playBtn.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    ws.isPlaying() ? pauseTrack() : playTrack();
+                                });
+
+                                ws.on('interaction', () => {
+                                    stopAllOtherTracks(ws);
+                                    ws.play().then(() => { setBtnState(true); currentlyPlaying = trackObj; });
+                                });
+
+                                ws.on('finish', () => { ws.seekTo(0); setBtnState(false); if (currentlyPlaying === trackObj) currentlyPlaying = null; });
+                                ws.on('pause', () => { setBtnState(false); if (currentlyPlaying === trackObj) currentlyPlaying = null; });
+                            });
+                        });
+                    };
+                    document.head.appendChild(wsScript);
+                }
+
+                // Init when audio section is ~400px from viewport
+                if ('IntersectionObserver' in window) {
+                    const wsObserver = new IntersectionObserver((entries, obs) => {
+                        if (entries[0].isIntersecting) { initWaveSurfer(); obs.disconnect(); }
+                    }, { rootMargin: '400px 0px 400px 0px', threshold: 0 });
+                    wsObserver.observe(audioSection);
+                }
+
+                // Fallback: init after 1.5s (e.g. direct hash navigation)
+                setTimeout(initWaveSurfer, 1500);
+            })();
+        </script>
+
+        <!-- ==================== VIDEO DEMO SECTION (SECCIÓN 3: MIRA CÓMO SUENA) ==================== -->
+        <section id="video-demo"
+            style="padding: 80px 0; background: #050505; border-top: 1px solid rgba(255,255,255,0.04);">
+            <div class="container" style="max-width: 950px;">
+                <div
+                    style="display: flex; align-items: center; justify-content: center; gap: 40px; flex-wrap: wrap; text-align: left;">
+                    <!-- Left Column: Titles & Text -->
+                    <div class="video-text-content em-reveal" style="flex: 1; min-width: 300px;">
+                        <div
+                            style="font-size: 0.75rem; letter-spacing: 3px; color: #ff9f0a; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">
+                            Demo en acción</div>
+                        <h2
+                            style="font-size: 2.5rem; font-weight: 800; margin-bottom: 16px; color: #fff; line-height: 1.2;">
+                            Mira cómo suena Easy Mix</h2>
+                        <p style="color: #aaa; font-size: 1rem; margin-bottom: 0; line-height: 1.6;">Del canal sin
+                            procesar al sonido profesional en segundos.</p>
+                    </div>
+
+                    <!-- Right Column: Vertical 9:16 Video -->
+                    <div class="video-col-visual em-reveal"
+                        style="flex: 0 0 290px; max-width: 290px; width: 100%; margin: 0 auto;">
+                        <div
+                            style="position: relative; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.8); border: 2.5px solid rgba(255,255,255,0.1); background: #111; aspect-ratio: 9 / 16;">
+
+                            <!-- Click Interceptor (Prevents pausing, toggles mute) -->
+                            <div onclick="toggleVideoMute(event)"
+                                style="position: absolute; top: 0; left: 0; right: 0; bottom: 50px; z-index: 4; cursor: pointer;">
+                            </div>
+
+                            <!-- Unmute Overlay Badge -->
+                            <div id="video-sound-overlay"
+                                style="position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid #ff9f0a; padding: 8px 14px; border-radius: 30px; display: flex; align-items: center; gap: 8px; color: #ff9f0a; font-weight: 700; font-size: 0.8rem; box-shadow: 0 8px 20px rgba(0,0,0,0.6); z-index: 5; transition: opacity 0.3s; pointer-events: none;">
+                                <i class="bi bi-volume-mute-fill" id="sound-overlay-icon"
+                                    style="font-size: 1.05rem;"></i>
+                                <span id="sound-overlay-text">CLIC PARA SONIDO</span>
+                            </div>
+
+                            <video id="demo-video" src="/videos/video-offsz.mp4" autoplay muted loop playsinline
+                                controls
+                                style="width: 100%; height: 100%; display: block; object-fit: contain; -webkit-backface-visibility: hidden; backface-visibility: hidden;"
+                                preload="auto">
+                                <source src="/videos/video-offsz.mp4" type="video/mp4">
+                                Tu navegador no soporta la reproducción de video.
+                            </video>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <script>
+            function toggleVideoMute(event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                const video = document.getElementById('demo-video');
+                const overlayText = document.getElementById('sound-overlay-text');
+                const overlayIcon = document.getElementById('sound-overlay-icon');
+                const overlay = document.getElementById('video-sound-overlay');
+
+                if (video) {
+                    if (video.muted) {
+                        video.muted = false;
+                        video.play().catch(e => console.log(e));
+                        overlayText.innerText = 'SONIDO ACTIVO';
+                        overlayIcon.className = 'bi bi-volume-up-fill';
+                        // Auto fade out overlay
+                        setTimeout(() => {
+                            overlay.style.opacity = '0';
+                        }, 1200);
+                    } else {
+                        video.muted = true;
+                        video.play().catch(e => console.log(e));
+                        overlay.style.opacity = '1';
+                        overlayText.innerText = 'CLIC PARA SONIDO';
+                        overlayIcon.className = 'bi bi-volume-mute-fill';
+                    }
+                }
+            }
+        </script>
+
+        <!-- ==================== COMPATIBILITY SECTION ==================== -->
+        <section style="padding: 60px 0; background: #000; border-top: 1px solid rgba(255,255,255,0.05);">
+            <div class="container" style="max-width: 800px; text-align: center;">
+                <h2
+                    style="font-size: 1.8rem; font-weight: 800; margin-bottom: 24px; color: #fff; text-transform: uppercase; letter-spacing: 1px;">
+                    Disponible en:</h2>
+
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: center;">
+                    <!-- FL Studio -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 12px; transition: transform 0.2s;">
+                        <img src="/images/logo fl.png" alt="FL Studio"
+                            style="height: 30px; width: auto; object-fit: contain;">
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">FL Studio</span>
+                    </div>
+
+                    <!-- Ableton Live -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">🎹</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Ableton Live</span>
+                    </div>
+
+                    <!-- Logic Pro -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">🍏</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Logic Pro</span>
+                    </div>
+
+                    <!-- Pro Tools -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">🎚️</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Pro Tools</span>
+                    </div>
+
+                    <!-- Studio One -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">🎛️</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Studio One</span>
+                    </div>
+
+                    <!-- Reaper -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">💻</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Reaper</span>
+                    </div>
+
+                    <!-- Cubase -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">🎸</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Cubase</span>
+                    </div>
+
+                    <!-- GarageBand -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">🎙️</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">GarageBand</span>
+                    </div>
+
+                    <!-- Bitwig Studio -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+                        <span style="font-size: 1.3rem;">🎹</span>
+                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Bitwig</span>
+                    </div>
+                </div>
+                <p
+                    style="color: #888; font-size: 0.85rem; margin-top: 24px; margin-bottom: 0; display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                    <span><i class="fa-brands fa-windows" style="color: #0078d4; margin-right: 4px;"></i> Windows (VST3
+                        de 64 bits)</span>
+                    <span style="color: rgba(255,255,255,0.15);">|</span>
+                    <span><i class="fa-brands fa-apple" style="color: #ffffff; margin-right: 4px;"></i> macOS (AU / VST3
+                        / Standalone para Intel & Apple Silicon)</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- ==================== TESTIMONIALS SECTION (CARRUSEL 2 LÍNEAS) ==================== -->
+        <section id="testimonios" class="testimonios-section">
+            <div class="container" style="text-align: center; margin-bottom: 36px;">
+                <div class="testimonios-badge">
+                    <i class="bi bi-star-fill" style="color: #ff9f0a; font-size: 0.75rem;"></i> Testimonios & Feedback
+                </div>
+                <h2 class="testimonios-title">
+                    Lo que dicen los artistas y productores
+                </h2>
+                <p class="testimonios-subtitle">
+                    Capturas reales de productores usando Easy Mix en sus proyectos diarios. Pasa el cursor para pausar
+                    o haz clic para ampliar.
+                </p>
+            </div>
+
+            <!-- Carrusel Infinito con 2 Filas y Difuminado -->
+            <div class="testi-carousel-wrapper">
+                <div class="testi-carousel-fade-left"></div>
+                <div class="testi-carousel-fade-right"></div>
+
+                <!-- FILA 1: Desplazamiento hacia la Izquierda -->
+                <div class="testi-marquee-row">
+                    <div class="testi-marquee-group scroll-left">
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_FnLh854qHf.png')">
+                            <img src="/images/plugins/chrome_FnLh854qHf.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/be117299-3c27-4908-822c-d4d8021775ef.jpg')">
+                            <img src="/images/plugins/be117299-3c27-4908-822c-d4d8021775ef.jpg"
+                                alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/6cd92798-42b1-4abe-bf58-31281e08bd90.jpg')">
+                            <img src="/images/plugins/6cd92798-42b1-4abe-bf58-31281e08bd90.jpg"
+                                alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_d7xxjI3LEj.png')">
+                            <img src="/images/plugins/chrome_d7xxjI3LEj.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-1.jpg')">
+                            <img src="/images/plugins/testi-new-1.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-2.jpg')">
+                            <img src="/images/plugins/testi-new-2.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-3.jpg')">
+                            <img src="/images/plugins/testi-new-3.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-4.jpg')">
+                            <img src="/images/plugins/testi-new-4.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-5.jpg')">
+                            <img src="/images/plugins/testi-new-5.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-6.jpg')">
+                            <img src="/images/plugins/testi-new-6.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-7.jpg')">
+                            <img src="/images/plugins/testi-new-7.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-8.jpg')">
+                            <img src="/images/plugins/testi-new-8.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-1.jpg')">
+                            <img src="/images/plugins/testi-1.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-2.jpg')">
+                            <img src="/images/plugins/testi-2.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-3.jpg')">
+                            <img src="/images/plugins/testi-3.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/plugin-testi.png')">
+                            <img src="/images/plugins/plugin-testi.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-4.jpg')">
+                            <img src="/images/plugins/testi-4.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/REFERENCIA.jpg')">
+                            <img src="/images/plugins/REFERENCIA.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                    </div>
+                    <!-- Copia exacta para bucle infinito continuo -->
+                    <div class="testi-marquee-group scroll-left" aria-hidden="true">
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_FnLh854qHf.png')">
+                            <img src="/images/plugins/chrome_FnLh854qHf.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/be117299-3c27-4908-822c-d4d8021775ef.jpg')">
+                            <img src="/images/plugins/be117299-3c27-4908-822c-d4d8021775ef.jpg"
+                                alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/6cd92798-42b1-4abe-bf58-31281e08bd90.jpg')">
+                            <img src="/images/plugins/6cd92798-42b1-4abe-bf58-31281e08bd90.jpg"
+                                alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_d7xxjI3LEj.png')">
+                            <img src="/images/plugins/chrome_d7xxjI3LEj.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-1.jpg')">
+                            <img src="/images/plugins/testi-new-1.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-2.jpg')">
+                            <img src="/images/plugins/testi-new-2.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-3.jpg')">
+                            <img src="/images/plugins/testi-new-3.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-4.jpg')">
+                            <img src="/images/plugins/testi-new-4.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-5.jpg')">
+                            <img src="/images/plugins/testi-new-5.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-6.jpg')">
+                            <img src="/images/plugins/testi-new-6.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-7.jpg')">
+                            <img src="/images/plugins/testi-new-7.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-new-8.jpg')">
+                            <img src="/images/plugins/testi-new-8.jpg" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-1.jpg')">
+                            <img src="/images/plugins/testi-1.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-2.jpg')">
+                            <img src="/images/plugins/testi-2.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-3.jpg')">
+                            <img src="/images/plugins/testi-3.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/plugin-testi.png')">
+                            <img src="/images/plugins/plugin-testi.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-4.jpg')">
+                            <img src="/images/plugins/testi-4.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/REFERENCIA.jpg')">
+                            <img src="/images/plugins/REFERENCIA.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FILA 2: Desplazamiento hacia la Derecha -->
+                <div class="testi-marquee-row">
+                    <div class="testi-marquee-group scroll-right">
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_sRDhkGjPW8.png')">
+                            <img src="/images/plugins/chrome_sRDhkGjPW8.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/REEFE3.jpg')">
+                            <img src="/images/plugins/REEFE3.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/refes4.png')">
+                            <img src="/images/plugins/refes4.png" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/R.jpg')">
+                            <img src="/images/plugins/R.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/R2.jpg')">
+                            <img src="/images/plugins/R2.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/esta.png')">
+                            <img src="/images/plugins/esta.png" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_CrwswjOYxU.png')">
+                            <img src="/images/plugins/chrome_CrwswjOYxU.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_wvvsGlZV7e.png')">
+                            <img src="/images/plugins/chrome_wvvsGlZV7e.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_18pXdN4UU8.png')">
+                            <img src="/images/plugins/chrome_18pXdN4UU8.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/1.jpg')">
+                            <img src="/images/plugins/1.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/2.jpg')">
+                            <img src="/images/plugins/2.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-5.jpg')">
+                            <img src="/images/plugins/testi-5.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-6.png')">
+                            <img src="/images/plugins/testi-6.png" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/refe2.png')">
+                            <img src="/images/plugins/refe2.png" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_UysuaXrBoQ.png')">
+                            <img src="/images/plugins/chrome_UysuaXrBoQ.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_X0VHS3Sw0h.png')">
+                            <img src="/images/plugins/chrome_X0VHS3Sw0h.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/8dfc1808-37e8-42e2-b509-5d7a91419150.jpg')">
+                            <img src="/images/plugins/8dfc1808-37e8-42e2-b509-5d7a91419150.jpg"
+                                alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/01dd3668-441d-4e23-a917-101e410d0ab9.jpg')">
+                            <img src="/images/plugins/01dd3668-441d-4e23-a917-101e410d0ab9.jpg"
+                                alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                    </div>
+                    <!-- Copia exacta para bucle infinito continuo -->
+                    <div class="testi-marquee-group scroll-right" aria-hidden="true">
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_sRDhkGjPW8.png')">
+                            <img src="/images/plugins/chrome_sRDhkGjPW8.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/REEFE3.jpg')">
+                            <img src="/images/plugins/REEFE3.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/refes4.png')">
+                            <img src="/images/plugins/refes4.png" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/R.jpg')">
+                            <img src="/images/plugins/R.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/R2.jpg')">
+                            <img src="/images/plugins/R2.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/esta.png')">
+                            <img src="/images/plugins/esta.png" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_CrwswjOYxU.png')">
+                            <img src="/images/plugins/chrome_CrwswjOYxU.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_wvvsGlZV7e.png')">
+                            <img src="/images/plugins/chrome_wvvsGlZV7e.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_18pXdN4UU8.png')">
+                            <img src="/images/plugins/chrome_18pXdN4UU8.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/1.jpg')">
+                            <img src="/images/plugins/1.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/2.jpg')">
+                            <img src="/images/plugins/2.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-5.jpg')">
+                            <img src="/images/plugins/testi-5.jpg" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/testi-6.png')">
+                            <img src="/images/plugins/testi-6.png" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/refe2.png')">
+                            <img src="/images/plugins/refe2.png" alt="Testimonio Easy Mix" width="280" height="200"
+                                loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_UysuaXrBoQ.png')">
+                            <img src="/images/plugins/chrome_UysuaXrBoQ.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card" onclick="openLightbox('/images/plugins/chrome_X0VHS3Sw0h.png')">
+                            <img src="/images/plugins/chrome_X0VHS3Sw0h.png" alt="Testimonio Easy Mix" width="280"
+                                height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/8dfc1808-37e8-42e2-b509-5d7a91419150.jpg')">
+                            <img src="/images/plugins/8dfc1808-37e8-42e2-b509-5d7a91419150.jpg"
+                                alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                        <div class="testi-card"
+                            onclick="openLightbox('/images/plugins/01dd3668-441d-4e23-a917-101e410d0ab9.jpg')">
+                            <img src="/images/plugins/01dd3668-441d-4e23-a917-101e410d0ab9.jpg"
+                                alt="Testimonio Easy Mix" width="280" height="200" loading="lazy">
+                            <div class="testi-card-overlay"><span class="testi-overlay-badge"><i
+                                        class="bi bi-arrows-fullscreen"></i> Ver imagen</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lightbox Overlay Component -->
+        <div id="lightbox-overlay" onclick="closeLightbox()"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 99999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; cursor: zoom-out;">
+            <img id="lightbox-img" src="" alt="Testimonio Zoom"
+                style="max-width: 90%; max-height: 85%; object-fit: contain; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 30px 70px rgba(0,0,0,0.9); transform: scale(0.92); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+            <button onclick="closeLightbox()"
+                style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 44px; height: 44px; color: #fff; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;"><i
+                    class="bi bi-x-lg"></i></button>
+        </div>
+
+        <script>
+            function openLightbox(src) {
+                const overlay = document.getElementById('lightbox-overlay');
+                const img = document.getElementById('lightbox-img');
+                if (overlay && img) {
+                    img.src = src;
+                    overlay.style.display = 'flex';
+                    // Trigger animation reflow
+                    overlay.offsetHeight;
+                    overlay.style.opacity = '1';
+                    img.style.transform = 'scale(1)';
+                }
+            }
+            function closeLightbox() {
+                const overlay = document.getElementById('lightbox-overlay');
+                const img = document.getElementById('lightbox-img');
+                if (overlay && img) {
+                    overlay.style.opacity = '0';
+                    img.style.transform = 'scale(0.92)';
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                    }, 300);
+                }
+            }
+        </script>
+
+        <!-- ==================== SERIAL KEY SECTION ==================== -->
+        <section class="serial-section" id="serial-section">
+            <div class="container">
+                <h2 class="section-title">Descarga tu Plugin</h2>
+
+                <div class="serial-card" style="max-width: 800px; margin-bottom: 60px;">
+
+                    <!-- ESTADO 1: NO LOGUEADO (AUTH WALL) -->
+                    <div class="auth-wall" id="ui-auth-wall">
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 10px;">Crea tu cuenta
+                            o inicia sesión para descargar.</p>
+                        <a href="/pages/login.html?redirect=/plugins/easy-mix" class="btn-auth"
+                            style="background: transparent; border: 1px solid #fff; color: #fff;">Crear Cuenta</a>
+                    </div>
+
+                    <!-- ESTADO 2: LOGUEADO Y LISTO -->
+                    <div class="serial-display" id="ui-serial-ready"
+                        style="display: none; flex-direction: column; align-items: center; gap: 20px; padding: 30px 20px;">
+                        <!-- BOTÓN DE DESCARGA (Siempre visible cuando está logueado) -->
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%;">
+                            <a href="https://drive.google.com/file/d/1JSArLjFypFYkcGJV3DIu67hxSFU4kG6q/view?usp=sharing"
+                                class="btn-download" target="_blank" onclick="openDownloadModal()"
+                                style="display: inline-flex; align-items: center; gap: 8px;"><i
+                                    class="fa-brands fa-windows" style="color: #0078d4; font-size: 1.2rem;"></i>
+                                Descargar para Windows</a>
+                            <a href="https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing"
+                                class="btn-download" target="_blank" onclick="openDownloadModal()"
+                                style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff;"><i
+                                    class="fa-brands fa-apple" style="color: #ffffff; font-size: 1.2rem;"></i>
+                                Descargar para macOS</a>
+                        </div>
+
+                        <!-- WhatsApp Help Link -->
+                        <div style="margin-top: 15px; font-size: 0.85rem; text-align: center;">
+                            <a href="https://wa.me/51993525005?text=Hola!%20Tengo%20problemas%20al%20instalar%20Easy%20Mix%20VST"
+                                target="_blank" rel="noopener noreferrer"
+                                style="color: #ff9f0a; text-decoration: underline; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                                <i class="bi bi-whatsapp"></i> ¿Problemas de instalación? Contáctanos para ayudarte
+                            </a>
+                        </div>
+
+                        <!-- PANEL DE LICENCIA (Oculto por defecto, se muestra solo si tiene licencia en DB) -->
+                        <div id="license-key-panel"
+                            style="display: none; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; margin-top: 10px;">
+                            <h3 style="margin:0 0 5px 0; font-size: 1.2rem;">Tu Licencia Actual</h3>
+                            <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 15px;">Pega esta
+                                clave dentro de Easy Mix en tu DAW para validarlo.</p>
+                            <div class="serial-box" id="serial-key-text" title="Clic para copiar" onclick="copySerial()"
+                                style="border-color: #ff9f0a; color: #ff9f0a; max-width: 400px; margin: 0 auto;">
+                                Cargando...</div>
+                        </div>
+
+                        <!-- PANEL SIN LICENCIA: BOTÓN PARA GENERAR TRIAL (Se muestra si no tiene licencias) -->
+                        <div id="no-license-panel"
+                            style="display: none; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; margin-top: 10px; text-align: center;">
+                            <p style="color: rgba(255,255,255,0.55); font-size: 0.9rem; margin-bottom: 18px;">Aún no
+                                tienes ninguna licencia asociada a tu cuenta.</p>
+                            <button id="btn-generate-trial" onclick="generateTrialWeb()"
+                                style="background: linear-gradient(135deg, #ff9f0a 0%, #ff7b00 100%); color: #000; border: none; font-weight: 800; font-size: 0.95rem; padding: 12px 28px; border-radius: 100px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="bi bi-gift-fill"></i> Obtener Prueba Gratuita (3 Días)
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ==================== COMPRAR LICENCIA (SECCIÓN DOBLE EN DESKTOP) ==================== -->
+                <div class="pricing-double-layout" id="pricing-section">
+
+                    <!-- COLUMNA IZQUIERDA (TEXTO & CHECKS) -->
+                    <div class="pricing-text-col">
+                        <div class="pricing-header-area">
+                            <h2 class="pricing-headline">Obtener licencia de por vida de Easy Mix</h2>
+                            <p class="pricing-subtext">
+                                Si ya lo probaste y te encantó, adquiere la licencia de por vida.
+                            </p>
+                        </div>
+
+                        <!-- Checks al estilo Imagen 3 -->
+                        <div class="pricing-checks-area">
+                            <ul class="pricing-checks-list">
+                                <li class="pricing-check-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Pago Único — Sin mensualidades</span>
+                                </li>
+                                <li class="pricing-check-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>1 Computadora (Transferible)</span>
+                                </li>
+                                <li class="pricing-check-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Actualizaciones de por vida</span>
+                                </li>
+                                <li class="pricing-check-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>+50 Presets de voces profesionales</span>
+                                </li>
+                                <li class="pricing-check-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Serial Key por correo al instante</span>
+                                </li>
+                                <li class="pricing-check-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Soporte VIP 24/7</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA DERECHA (TARJETA DE PAGO) -->
+                    <div class="pricing-card-col">
+                        <div id="pricing-wall" class="pricing-card-inner">
+                            <div class="pricing-popular-badge">MÁS POPULAR</div>
+                            <h3 class="pricing-card-title">Licencia Full de Easy Mix</h3>
+                            <p class="pricing-card-platform">Disponible en Windows y Mac</p>
+
+                            <div
+                                style="display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-bottom: 24px;">
+                                <span
+                                    style="font-size: 1.3rem; text-decoration: line-through; color: rgba(255,255,255,0.3); font-weight: 500;">$25</span>
+                                <span id="easy-mix-price-val"
+                                    style="font-size: 3rem; font-weight: 800; color: #fff;">$5</span>
+                                <span style="font-size: 1rem; color: #888;">único</span>
+                            </div>
+
+                            <!-- Direct PayPal Checkout -->
+                            <div id="plugin-paypal-button-container"
+                                style="margin-top: 0; min-height: 150px; width: 100%;"></div>
+
+                            <!-- Botón Mercado Pago (Opción 3) -->
+                            <a href="https://wa.me/51993525005?text=Hola,%20quiero%20comprar%20el%20plugin%20de%20easy%20mix"
+                                target="_blank" rel="noopener noreferrer"
+                                style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #009EE3; color: #ffffff; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-top: 12px; margin-bottom: 12px; text-decoration: none; transition: opacity 0.2s ease;">
+                                <img src="/images/payments/mercadopago.png" alt="Mercado Pago"
+                                    style="width: 26px; height: 26px; object-fit: contain;">
+                                Pagar con Mercado Pago
+                            </a>
+
+                            <!-- Botón Yape (Modal Instantáneo Mercado Pago Perú) -->
+                            <button type="button" data-action="open-yape-checkout" id="btn-yape-checkout"
+                                class="btn-yape-white">
+                                <img src="/images/payments/yape.png" alt="Yape"
+                                    style="width: 22px; height: 22px; object-fit: contain; border-radius: 5px;">
+                                Pagar con Yape (Soles 🇵🇪)
+                            </button>
+
+                            <!-- Botón Binance (Opción 5) -->
+                            <a href="https://wa.me/51993525005?text=Hola,%20quiero%20pagar%20con%20Binance%20el%20plugin%20de%20easy%20mix"
+                                target="_blank" rel="noopener noreferrer"
+                                style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #F0B90B; color: #000000; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-bottom: 0px; text-decoration: none; transition: opacity 0.2s ease;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="currentColor">
+                                    <path
+                                        d="M12 2L4.5 9.5L7.33 12.33L12 7.66L16.67 12.33L19.5 9.5L12 2ZM4.5 14.5L2 12L4.5 9.5L7.33 12.33L4.5 14.5ZM19.5 14.5L16.67 12.33L19.5 9.5L22 12L19.5 14.5ZM12 22L4.5 14.5L7.33 11.67L12 16.34L16.67 11.67L19.5 14.5L12 22ZM12 13.5L9.17 10.67L12 7.84L14.83 10.67L12 13.5Z" />
+                                </svg>
+                                Pagar con Binance
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==================== FAQ SECTION ==================== -->
+        <section class="faq-section">
+            <div class="container">
+                <div class="faq-header">
+                    <div class="subtitle">SOPORTE</div>
+                    <h2>Preguntas</h2>
+                </div>
+                <div class="faq-container">
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Es compatible con mi DAW?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Sí. Easy Mix se exporta en los formatos estándar de la industria (VST3 y AU). Esto lo hace
+                            compatible con casi todos los programas de producción modernos: FL Studio, Ableton Live,
+                            Logic Pro X, Studio One, Reaper, entre otros.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Cómo obtengo mi licencia?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Al suscribirte o comprar la versión de por vida, la licencia se vincula automáticamente a tu
+                            cuenta de OFFSZN. Podrás ver tu "Serial Key" aquí mismo y simplemente pegarla en el plugin
+                            la primera vez que lo abras.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Funciona en Mac y Windows?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Totalmente. Al descargar el instalador, tendrás acceso tanto a la versión ejecutable para
+                            Windows (.exe / VST3) como a la versión para macOS (.pkg / VST3 & AU). Ambas optimizadas
+                            para procesadores Intel y Apple Silicon (M1/M2/M3).
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Puedo usarlo en más de un dispositivo?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Sí. Tu Serial Key personal te permite activar el plugin en hasta 2 computadoras
+                            simultáneamente (por ejemplo, tu PC de estudio y tu laptop para viajar).
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Qué métodos de pago soportan?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Aceptamos pagos seguros mediante PayPal, y también puedes pagar directamente con cualquier
+                            tarjeta de Crédito o Débito.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Por qué elegir el plugin Easy Mix de OFFSZN para voces?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Easy Mix es un plugin de mezcla de voces fáciles en el que logras resultados profesionales
+                            con un solo plugin. En lugar de lidiar con múltiples compresores, ecualizadores y efectos
+                            complejos, este VST unifica todo en una interfaz simple y rápida. Si buscas "plugin mix
+                            easy" o "plugin easy mix" para acelerar tu flujo de trabajo en FL Studio, este es el plugin
+                            ideal.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- TAGLINE (CTA FINAL + SHOWCASE UNIFICADOS) -->
+        <section class="tagline-section" style="padding: 70px 20px 30px; text-align: center; background: #000;">
+            <div class="container" style="padding: 0 20px; max-width: 1060px; margin: 0 auto;">
+                <h2>Empieza Hoy con Easy Mix.</h2>
+                <div style="margin: 28px 0 42px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                    <a href="#serial-section" class="btn-free-download primary-large"><i class="bi bi-download"></i>
+                        Descargar Ahora</a>
+                </div>
+                <div class="em-reveal" style="max-width: 960px; margin: 0 auto;">
+                    <img src="/images/plugins/chatgpt-image-6-sept-2026-13_11_35.png"
+                        alt="Easy Mix - Diseñado para que escuches el resultado, no para que mires 100 parámetros"
+                        style="width: 100%; max-width: 900px; height: auto; border-radius: 18px; display: block; margin: 0 auto; box-shadow: 0 15px 45px rgba(0,0,0,0.7);"
+                        loading="lazy">
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== FOOTER ==================== -->
+    <div id="footer-placeholder"></div>
+
+    <!-- SCRIPTS -->
+    <script src="/script/id-obfuscator.js?v=1"></script>
+    <script src="/script/cart.js?v=21"></script>
+    <script src="/script/notifications.js?v=21"></script>
+    <script src="/script/footer.js?v=21"></script>
+
+    <!-- SERIAL KEY LOGIC -->
+    <script>
+        const UI_WALL = document.getElementById('ui-auth-wall');
+        const UI_READY = document.getElementById('ui-serial-ready');
+        const TEXT_SERIAL = document.getElementById('serial-key-text');
+        const BTN_GENERATE = document.getElementById('btn-generate-serial');
+
+        function copySerial() {
+            const text = TEXT_SERIAL.innerText;
+            if (text && text !== 'Cargando...' && text !== 'NO TIENES LICENCIA ACTIVA' && text !== 'GENERANDO...') {
+                navigator.clipboard.writeText(text);
+                const original = TEXT_SERIAL.innerText;
+                TEXT_SERIAL.innerText = '¡COPIADO!';
+                setTimeout(() => TEXT_SERIAL.innerText = original, 2000);
+            }
+        }
+
+        async function generateTrialWeb() {
+            const btn = document.getElementById('btn-generate-trial');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Generando...';
+            }
+
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) {
+                    alert('Por favor, inicia sesión para continuar.');
+                    window.location.href = '/pages/login.html?redirect=/plugins/easy-mix';
+                    return;
+                }
+
+                const res = await fetch('/api/plugin/generate-trial-web', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({ plugin_name: 'Easy Mix' })
+                });
+                const responseData = await res.json();
+
+                if (responseData && responseData.success && responseData.serial_key) {
+                    // Hide the no-license panel, show key panel
+                    document.getElementById('no-license-panel').style.display = 'none';
+                    document.getElementById('license-key-panel').style.display = 'block';
+                    TEXT_SERIAL.innerText = responseData.serial_key;
+                } else {
+                    // Fallback to manual button if automatic creation fails
+                    document.getElementById('license-key-panel').style.display = 'none';
+                    document.getElementById('no-license-panel').style.display = 'block';
+                    alert(responseData.error || 'Error al generar la prueba gratuita.');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-gift-fill"></i> Obtener Prueba Gratuita (3 Días)';
+                    }
+                }
+            } catch (err) {
+                console.error('Error generating trial:', err);
+                // Fallback to manual button
+                document.getElementById('license-key-panel').style.display = 'none';
+                document.getElementById('no-license-panel').style.display = 'block';
+                alert('Ocurrió un error al conectar con el servidor.');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-gift-fill"></i> Obtener Prueba Gratuita (3 Días)';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait for supabase to be ready
+            let retries = 0;
+            while (!window.supabaseClient && retries < 20) {
+                await new Promise(r => setTimeout(r, 200));
+                retries++;
+            }
+
+            if (!window.supabaseClient) {
+                console.warn('Supabase not loaded');
+                return;
+            }
+
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+
+            if (!session) {
+                UI_WALL.style.display = 'flex';
+                UI_READY.style.display = 'none';
+            } else {
+                UI_WALL.style.display = 'none';
+                UI_READY.style.display = 'flex';
+
+                const userId = session.user.id;
+
+                // Check if user already has ANY license for Easy Mix
+                const { data, error } = await window.supabaseClient
+                    .from('plugin_licenses')
+                    .select('serial_key, status, license_type, expires_at')
+                    .eq('user_id', userId)
+                    .eq('plugin_name', 'Easy Mix')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (data && data.serial_key) {
+                    // User already has a key (trial or paid) — show it
+                    document.getElementById('license-key-panel').style.display = 'block';
+                    document.getElementById('no-license-panel').style.display = 'none';
+                    TEXT_SERIAL.innerText = data.serial_key;
+                } else {
+                    // Automatically generate trial key on load!
+                    document.getElementById('license-key-panel').style.display = 'block';
+                    document.getElementById('no-license-panel').style.display = 'none';
+                    TEXT_SERIAL.innerText = 'Generando clave de prueba...';
+                    generateTrialWeb();
+                }
+            }
+        });
+    </script>
+    <!-- FAQ LOGIC -->
+    <script>
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const faqItem = button.parentElement;
+                const wasActive = faqItem.classList.contains('active');
+
+                // Close all others
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // Toggle current
+                if (!wasActive) {
+                    faqItem.classList.add('active');
+                }
+            });
+        });
+    </script>
+
+
+    <!-- WhatsApp Floating Widget with Bubble -->
+    <div class="whatsapp-widget-container" id="whatsapp-widget">
+        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20comprar%20el%20plugin%20de%20easy%20mix"
+            target="_blank" rel="noopener noreferrer" class="whatsapp-bubble-card" id="whatsapp-bubble-link"
+            aria-label="Envíanos un mensaje de WhatsApp">
+            <span>Envíanos un mensaje de<br>WhatsApp</span>
+            <button type="button" class="whatsapp-bubble-close"
+                onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('whatsapp-bubble-link').style.display='none';"
+                aria-label="Cerrar mensaje">&times;</button>
+        </a>
+        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20comprar%20el%20plugin%20de%20easy%20mix"
+            target="_blank" rel="noopener noreferrer" class="whatsapp-floating-btn" id="whatsapp-floating-btn"
+            aria-label="Contactar por WhatsApp">
+            <i class="bi bi-whatsapp"></i>
+        </a>
+    </div>
+    <!-- MODAL DE LICENCIA AL DESCARGAR -->
+    <div id="download-license-modal" onclick="closeDownloadModal(event)"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div onclick="event.stopPropagation()"
+            style="background: #0d0d0d; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; padding: 35px 28px; max-width: 500px; width: 92%; text-align: center; color: #fff; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9); position: relative; transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+
+            <button onclick="closeDownloadModal()"
+                style="position: absolute; top: 15px; right: 20px; font-size: 1.5rem; background: none; border: none; color: #888; cursor: pointer; transition: color 0.2s;"
+                onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">✕</button>
+
+            <div
+                style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px 20px;">
+                <h3 style="margin: 0 0 6px 0; font-size: 1.2rem; color: #ffffff; font-weight: 700;">Tu Licencia Actual
+                </h3>
+                <p style="color: rgba(255,255,255,0.55); font-size: 0.85rem; margin-bottom: 16px; line-height: 1.4;">
+                    Pega esta clave dentro de Easy Mix en tu DAW para validarlo.
+                </p>
+                <div class="serial-box" id="modal-serial-key-text" title="Clic para copiar" onclick="copyModalSerial()"
+                    style="border-color: #ff9f0a; color: #ff9f0a; max-width: 400px; margin: 0 auto; padding: 14px 18px; border: 2px dashed #ff9f0a; border-radius: 12px; font-family: monospace; font-size: 1.25rem; font-weight: 800; letter-spacing: 2px; cursor: pointer; background: rgba(255,159,10,0.05); user-select: all;">
+                    Cargando...
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; font-size: 0.85rem; text-align: center;">
+                <a href="https://wa.me/51993525005?text=Hola!%20Tengo%20problemas%20al%20instalar%20Easy%20Mix%20VST"
+                    target="_blank" rel="noopener noreferrer"
+                    style="color: #ff9f0a; text-decoration: underline; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-whatsapp"></i> ¿Problemas de instalación? Contáctanos para ayudarte
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function openDownloadModal() {
+            const mainSerial = document.getElementById('serial-key-text');
+            const modalSerial = document.getElementById('modal-serial-key-text');
+            if (mainSerial && modalSerial) {
+                modalSerial.innerText = mainSerial.innerText;
+            }
+            const modal = document.getElementById('download-license-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.style.opacity = '1';
+                    const card = modal.querySelector('div');
+                    if (card) card.style.transform = 'scale(1)';
+                }, 10);
+            }
+        }
+
+        function closeDownloadModal(e) {
+            if (e && e.target && e.target.id !== 'download-license-modal' && e.target.tagName !== 'BUTTON') {
+                return;
+            }
+            const modal = document.getElementById('download-license-modal');
+            if (modal) {
+                modal.style.opacity = '0';
+                const card = modal.querySelector('div');
+                if (card) card.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
+            }
+        }
+
+        function copyModalSerial() {
+            const modalSerial = document.getElementById('modal-serial-key-text');
+            if (modalSerial) {
+                const text = modalSerial.innerText;
+                if (text && text !== 'Cargando...' && text !== 'NO TIENES LICENCIA ACTIVA' && text !== 'GENERANDO...') {
+                    navigator.clipboard.writeText(text);
+                    const original = text;
+                    modalSerial.innerText = '¡COPIADO!';
+                    setTimeout(() => modalSerial.innerText = original, 2000);
+                }
+            }
+        }
+    </script>
+
+    <!-- Direct Checkout Configuration and Loader with A/B Testing -->
+    <script src="/env.js"></script>
+    <script src="/script/meta-pixel.js"></script>
+    <script>
+        // ── REFERRAL TRACKING ENGINE (ABI) ──
+        (function initReferrals() {
+            try {
+                const affiliate = 'abi';
+                localStorage.setItem('offszn_ref', affiliate);
+                document.cookie = `offszn_ref=${affiliate}; path=/; max-age=2592000; SameSite=Lax`;
+                window.OFFSZN_AFFILIATE = affiliate;
+            } catch (e) {
+                console.warn('[Referrals] Error initializing referral tracking:', e);
+            }
+        })();
+
+        // ── A/B TESTING ENGINE (4 TIERS: $5, $10, $15, $20 USD - Preferencia $10 USD) ──
+        (function initABTesting() {
+            const STORAGE_KEY = 'offszn_ab_easy_mix_price_v4';
+            const urlParams = new URLSearchParams(window.location.search);
+            const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
+            const validTiers = [5, 10, 15, 20];
+
+            let assignedPrice;
+            const parsedForced = parseInt(forcedPrice, 10);
+            if (forcedPrice && validTiers.includes(parsedForced)) {
+                assignedPrice = parsedForced;
+                localStorage.setItem(STORAGE_KEY, assignedPrice);
+            } else {
+                let saved = localStorage.getItem(STORAGE_KEY);
+                let parsedSaved = parseInt(saved, 10);
+                if (validTiers.includes(parsedSaved)) {
+                    assignedPrice = parsedSaved;
+                } else {
+                    // Ponderación: 50% de probabilidad para $10, 25% para $5, 15% para $15, 10% para $20
+                    const rand = Math.random();
+                    if (rand < 0.25) {
+                        assignedPrice = 5;   // 25%
+                    } else if (rand < 0.75) {
+                        assignedPrice = 10;  // 50% (La mayoría de veces)
+                    } else if (rand < 0.90) {
+                        assignedPrice = 15;  // 15%
+                    } else {
+                        assignedPrice = 20;  // 10%
+                    }
+                    localStorage.setItem(STORAGE_KEY, assignedPrice);
+                }
+            }
+
+            window.CURRENT_PROMO_PRICE = assignedPrice;
+            window.PLUGIN_ID = 899;
+
+            // --- META PIXEL: VIEW CONTENT (DYNAMIC PROMO PRICE) ---
+            function dispatchViewContent() {
+                if (window.MetaPixel && typeof window.MetaPixel.trackViewContent === 'function') {
+                    window.MetaPixel.trackViewContent({
+                        content_ids: ['easy_mix'],
+                        content_name: 'Easy Mix',
+                        content_type: 'product',
+                        value: assignedPrice,
+                        currency: 'USD'
+                    });
+                }
+            }
+
+            if (window.MetaPixel) {
+                dispatchViewContent();
+            } else {
+                window.addEventListener('DOMContentLoaded', dispatchViewContent);
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const priceEl = document.getElementById('easy-mix-price-val');
+                if (priceEl) priceEl.innerText = `$${assignedPrice}`;
+
+                const solesMap = { 5: 19, 10: 38, 15: 57, 20: 76 };
+                const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
+
+                const waLinks = document.querySelectorAll('a[href*="wa.me"]');
+                waLinks.forEach(link => {
+                    let currentHref = link.getAttribute('href');
+                    if (currentHref.includes('text=')) {
+                        let parts = currentHref.split('text=');
+                        let rawDecoded = decodeURIComponent(parts[1]);
+                        let isYape = rawDecoded.toLowerCase().includes('yape') || link.innerText.toLowerCase().includes('yape');
+                        let isMp = rawDecoded.toLowerCase().includes('mercado') || link.innerText.toLowerCase().includes('mercado');
+                        let isBinance = rawDecoded.toLowerCase().includes('binance') || link.innerText.toLowerCase().includes('binance');
+
+                        let baseText = rawDecoded.replace(/por\s+\$?\d+(\s*USD)?(\s*\/\s*S\/\s*\d+\s*soles)?/gi, '').replace(/\(\$?\d+(\s*USD)?(\s*\/\s*S\/\s*\d+\s*soles)?\)/gi, '').trim();
+
+                        if (isYape) {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero comprar el plugin Easy Mix por Yape ($' + assignedPrice + ' USD / S/ ' + solesPrice + ' soles)')}`);
+                        } else if (isMp) {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola Willie, quiero comprar el plugin Easy Mix por Mercado Pago')}`);
+                        } else if (isBinance) {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero pagar con Binance el plugin Easy Mix ($' + assignedPrice + ' USD)')}`);
+                        } else {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent(baseText + ' por $' + assignedPrice + ' USD')}`);
+                        }
+                    }
+                });
+            });
+        })();
+    </script>
+    <!-- ==================== SCROLL ENGINES & REVEALS ==================== -->
+    <script>
+        // 1. Navegación Inteligente: Banner Verde & Navbar Negro
+        (function () {
+            const nav = document.getElementById('em-navbar');
+            const hero = document.querySelector('.hero-section');
+            const serial = document.getElementById('serial-section');
+            if (!nav || !hero || !serial) return;
+
+            let pastHero = false;
+            let reachedDownload = false;
+
+            function updateNavbarState() {
+                // El navbar negro se muestra ÚNICAMENTE en las secciones intermedias.
+                // En el Hero o al llegar a Descargar Plugin, se oculta y queda solo el banner verde.
+                if (pastHero && !reachedDownload) {
+                    nav.classList.add('nav-visible');
+                } else {
+                    nav.classList.remove('nav-visible');
+                }
+            }
+
+            const heroObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    pastHero = !entry.isIntersecting;
+                    updateNavbarState();
+                });
+            }, {
+                threshold: 0,
+                rootMargin: "-40px 0px 0px 0px"
+            });
+            heroObserver.observe(hero);
+
+            const serialObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    reachedDownload = entry.isIntersecting || (entry.boundingClientRect.top <= 60);
+                    updateNavbarState();
+                });
+            }, {
+                threshold: [0, 0.05, 0.1],
+                rootMargin: "-60px 0px 0px 0px"
+            });
+            serialObserver.observe(serial);
+
+            // Respaldo pasivo con requestAnimationFrame para scroll fluido y saltos inmediatos
+            let ticking = false;
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    window.requestAnimationFrame(() => {
+                        const heroRect = hero.getBoundingClientRect();
+                        const serialRect = serial.getBoundingClientRect();
+
+                        pastHero = heroRect.bottom <= 45;
+                        reachedDownload = serialRect.top <= 60;
+
+                        updateNavbarState();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            }, { passive: true });
+
+            updateNavbarState();
+        })();
+
+        // 2. Ultra-lightweight reveals: Native IntersectionObserver with 1-shot unobserve
+        (function () {
+            const revealElements = document.querySelectorAll('.em-reveal');
+            if (!revealElements.length) return;
+
+            if (!('IntersectionObserver' in window)) {
+                revealElements.forEach(el => el.classList.add('is-revealed'));
+                return;
+            }
+
+            const revealObserver = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-revealed');
+                        obs.unobserve(entry.target); // Free resources immediately
+                    }
+                });
+            }, {
+                threshold: 0.06,
+                rootMargin: "0px 0px -30px 0px"
+            });
+
+            revealElements.forEach(el => revealObserver.observe(el));
+        })();
+
+        // 3. Sutil y fluido desplazamiento a secciones (Smooth Anchor Sliding con compensación de navbar)
+        (function () {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    if (!href || href === '#' || href.length <= 1) return;
+                    const target = document.querySelector(href);
+                    if (!target) return;
+
+                    e.preventDefault();
+
+                    // Al deslizar hacia serial-section o pricing-section el navbar se ocultará, dejando el banner verde de 40px
+                    const isToDownload = (href === '#serial-section' || href === '#pricing-section');
+                    const navOffset = isToDownload ? 55 : 68;
+
+                    const targetTop = target.getBoundingClientRect().top + window.pageYOffset - navOffset;
+
+                    window.scrollTo({
+                        top: Math.max(0, targetTop),
+                        behavior: 'smooth'
+                    });
+
+                    if (history.pushState) {
+                        history.pushState(null, null, href);
+                    }
+                });
+            });
+        })();
+    </script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <script src="/script/plugin-checkout.js?v=3"></script>
+    <script src="/script/yape-checkout.js?v=8"></script>
+</body>
+
+</html>
