@@ -732,8 +732,10 @@ export const adminListLicenses = async (req, res) => {
         const { data: licenses, error } = await supabase
             .from('plugin_licenses')
             .select('*, plugin_activations(*)')
+            .in('license_type', ['lifetime', 'full'])
+            .not('serial_key', 'ilike', '%TRIAL%')
             .order('created_at', { ascending: false })
-            .limit(300);
+            .limit(2000);
 
         if (error) throw error;
 

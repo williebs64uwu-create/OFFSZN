@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vocal Preset</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -407,9 +408,16 @@
       flex: 1;
       display: none;
       flex-direction: column;
-      justify-content: center;
-      padding: 30px 24px;
-      gap: 16px;
+      padding: 14px 24px;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .effects-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .effects-section-title {
@@ -418,6 +426,89 @@
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--text-muted);
+    }
+
+    /* BARRA DE CATEGORÍAS (TABS BISELADOS) */
+    .category-pills-bar {
+      display: flex;
+      gap: 6px;
+      background: #090a0d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.7);
+    }
+
+    .category-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .category-tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .category-tab-btn.active {
+      background: linear-gradient(180deg, #252a35 0%, #171a21 100%);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+    }
+
+    /* BOTÓN MICRÓFONO COMPACTO PARA EFECTOS Y PERSONALIZAR */
+    .compact-mic-btn {
+      background: linear-gradient(180deg, #242833 0%, #14161d 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-top-color: rgba(255, 255, 255, 0.25);
+      border-radius: var(--radius-sm);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .compact-mic-btn:hover {
+      background: linear-gradient(180deg, #2c313e 0%, #181b23 100%);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .compact-mic-btn.listening {
+      background: linear-gradient(180deg, #ffffff 0%, #d8dbe2 100%);
+      color: #090a0d;
+      border-color: #ffffff;
+      box-shadow: 0 0 14px rgba(255, 255, 255, 0.3);
+    }
+
+    .compact-mic-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .compact-mic-btn.listening .compact-mic-dot {
+      background: #090a0d;
+      border-color: #090a0d;
+      animation: pulseDot 1s infinite alternate ease-in-out;
     }
 
     .fx-grid {
@@ -811,7 +902,8 @@
     }
 
     .modal-card {
-      width: 600px;
+      width: 620px;
+      max-height: 520px;
       background: linear-gradient(180deg, #13161c 0%, #0d0f14 100%);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-top-color: rgba(255, 255, 255, 0.22);
@@ -829,12 +921,41 @@
     }
 
     .modal-header {
-      padding: 16px 22px;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       background: #0f1116;
+    }
+
+    .modal-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-modal-back {
+      background: linear-gradient(180deg, #1d212b 0%, #13151b 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.6);
+      transition: all 0.15s;
+    }
+
+    .btn-modal-back:hover {
+      background: #252b38;
+      border-color: rgba(255, 255, 255, 0.25);
     }
 
     .modal-title {
@@ -846,6 +967,12 @@
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+
+    .modal-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     .modal-close-btn {
@@ -863,10 +990,12 @@
     }
 
     .modal-body {
-      padding: 22px;
+      padding: 18px 22px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
+      overflow-y: auto;
+      max-height: 440px;
     }
 
     .modal-section-title {
@@ -875,6 +1004,60 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--text-muted);
+    }
+
+    /* SECCIÓN AVANZADO PLEGABLE (ACCORDION) */
+    .adv-accordion-card {
+      background: #090a0d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .adv-accordion-toggle {
+      width: 100%;
+      background: linear-gradient(180deg, #161820 0%, #101217 100%);
+      border: none;
+      border-bottom: 1px solid transparent;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .adv-accordion-toggle:hover {
+      background: #1c202a;
+      color: #ffffff;
+    }
+
+    .adv-accordion-toggle svg {
+      transition: transform 0.2s ease;
+    }
+
+    .adv-accordion-card.open .adv-accordion-toggle {
+      border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .adv-accordion-card.open .adv-accordion-toggle svg {
+      transform: rotate(180deg);
+    }
+
+    .adv-accordion-content {
+      display: none;
+      padding: 14px;
+      background: #08090c;
+    }
+
+    .adv-accordion-card.open .adv-accordion-content {
+      display: block;
     }
 
     .advanced-params-grid {
@@ -1198,96 +1381,31 @@
          2. PANTALLA: MODO EFECTOS (RACK EN RELIEVE)
          ========================================== -->
     <section class="screen-efectos" id="screenEfectos">
-      <div class="effects-section-title">PROCESADORES DE EFECTOS</div>
-
-      <div class="fx-grid">
-        <!-- DOUBLER -->
-        <div class="fx-card" id="card_doubler">
-          <div class="fx-card-top">
-            <span class="fx-card-title">Doubler</span>
-            <div class="switch-toggle" id="toggle_doubler" onclick="toggleFx('doubler', event)"></div>
-          </div>
-          <div class="arc-gauge-container" onmousedown="startGaugeDrag(event, 'doubler')">
-            <svg class="arc-gauge-svg" viewBox="0 0 80 80">
-              <circle class="arc-bg" cx="40" cy="40" r="28"></circle>
-              <circle class="arc-fill" id="arc_doubler" cx="40" cy="40" r="28" style="stroke-dashoffset: 176;"></circle>
-            </svg>
-            <div class="gauge-center-info">
-              <span class="gauge-val" id="val_doubler">0%</span>
-            </div>
-          </div>
-          <span class="gauge-subtext">Cantidad</span>
-          <button class="btn-personalizar-card" onclick="openPersonalizarModal('doubler')">
-            <span>Personalizar</span>
-            <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
-          </button>
+      <div class="effects-header-bar">
+        <div class="effects-section-title">PROCESADORES DE EFECTOS</div>
+        
+        <!-- SELECTOR DE CATEGORÍAS TABS -->
+        <div class="category-pills-bar">
+          <button class="category-tab-btn active" id="tabCat_favoritos" onclick="filterCategory('favoritos')">Favoritos</button>
+          <button class="category-tab-btn" id="tabCat_espacio" onclick="filterCategory('espacio')">Espacio</button>
+          <button class="category-tab-btn" id="tabCat_modulacion" onclick="filterCategory('modulacion')">Modulación</button>
+          <button class="category-tab-btn" id="tabCat_color" onclick="filterCategory('color')">Color</button>
+          <button class="category-tab-btn" id="tabCat_mezcla" onclick="filterCategory('mezcla')">Mezcla</button>
         </div>
 
-        <!-- CHORUS -->
-        <div class="fx-card" id="card_chorus">
-          <div class="fx-card-top">
-            <span class="fx-card-title">Chorus</span>
-            <div class="switch-toggle" id="toggle_chorus" onclick="toggleFx('chorus', event)"></div>
-          </div>
-          <div class="arc-gauge-container" onmousedown="startGaugeDrag(event, 'chorus')">
-            <svg class="arc-gauge-svg" viewBox="0 0 80 80">
-              <circle class="arc-bg" cx="40" cy="40" r="28"></circle>
-              <circle class="arc-fill" id="arc_chorus" cx="40" cy="40" r="28" style="stroke-dashoffset: 176;"></circle>
-            </svg>
-            <div class="gauge-center-info">
-              <span class="gauge-val" id="val_chorus">0%</span>
-            </div>
-          </div>
-          <span class="gauge-subtext">Cantidad</span>
-          <button class="btn-personalizar-card" onclick="openPersonalizarModal('chorus')">
-            <span>Personalizar</span>
-            <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
-          </button>
-        </div>
+        <!-- BOTÓN MICRÓFONO COMPACTO -->
+        <button class="compact-mic-btn" id="compactMicEffects" onclick="toggleVoiceRecording()" title="Hablar comando sin cambiar de vista">
+          <span class="compact-mic-dot"></span>
+          <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
+          <span id="compactMicEffectsText">Mic</span>
+        </button>
+      </div>
 
-        <!-- DELAY -->
-        <div class="fx-card" id="card_delay">
-          <div class="fx-card-top">
-            <span class="fx-card-title">Delay</span>
-            <div class="switch-toggle" id="toggle_delay" onclick="toggleFx('delay', event)"></div>
-          </div>
-          <div class="arc-gauge-container" onmousedown="startGaugeDrag(event, 'delay')">
-            <svg class="arc-gauge-svg" viewBox="0 0 80 80">
-              <circle class="arc-bg" cx="40" cy="40" r="28"></circle>
-              <circle class="arc-fill" id="arc_delay" cx="40" cy="40" r="28" style="stroke-dashoffset: 176;"></circle>
-            </svg>
-            <div class="gauge-center-info">
-              <span class="gauge-val" id="val_delay">0%</span>
-            </div>
-          </div>
-          <span class="gauge-subtext">Cantidad</span>
-          <button class="btn-personalizar-card" onclick="openPersonalizarModal('delay')">
-            <span>Personalizar</span>
-            <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
-          </button>
-        </div>
-
-        <!-- REVERB -->
-        <div class="fx-card" id="card_reverb">
-          <div class="fx-card-top">
-            <span class="fx-card-title">Reverb</span>
-            <div class="switch-toggle" id="toggle_reverb" onclick="toggleFx('reverb', event)"></div>
-          </div>
-          <div class="arc-gauge-container" onmousedown="startGaugeDrag(event, 'reverb')">
-            <svg class="arc-gauge-svg" viewBox="0 0 80 80">
-              <circle class="arc-bg" cx="40" cy="40" r="28"></circle>
-              <circle class="arc-fill" id="arc_reverb" cx="40" cy="40" r="28" style="stroke-dashoffset: 176;"></circle>
-            </svg>
-            <div class="gauge-center-info">
-              <span class="gauge-val" id="val_reverb">0%</span>
-            </div>
-          </div>
-          <span class="gauge-subtext">Cantidad</span>
-          <button class="btn-personalizar-card" onclick="openPersonalizarModal('reverb')">
-            <span>Personalizar</span>
-            <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
-          </button>
-        </div>
+      <div class="fx-grid" id="effectsGrid">
+        <!-- Tarjetas dinámicas generadas según categoría -->
       </div>
     </section>
 
@@ -1347,15 +1465,52 @@
   <div class="modal-overlay" id="modalPersonalizar" onclick="closePersonalizarModal(event)">
     <div class="modal-card" onclick="event.stopPropagation()">
       <div class="modal-header">
-        <div class="modal-title">
-          <span>PARÁMETROS DSP</span> — <span id="modalFxTitle">REVERB</span>
+        <div class="modal-header-left">
+          <button class="btn-modal-back" onclick="closePersonalizarModal()" title="Volver a la vista de efectos">
+            <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            <span>Volver</span>
+          </button>
+          <div class="modal-title">
+            <span>MÓDULO</span> — <span id="modalFxTitle">REVERB</span>
+          </div>
         </div>
-        <button class="modal-close-btn" onclick="closePersonalizarModal()">&times;</button>
+
+        <div class="modal-header-actions">
+          <!-- TOGGLE ACTIVACIÓN MÓDULO -->
+          <div class="switch-toggle" id="modalFxToggle" title="Activar/Desactivar módulo"></div>
+          
+          <!-- BOTÓN MICRÓFONO COMPACTO DENTRO DE PERSONALIZAR -->
+          <button class="compact-mic-btn" id="compactMicModal" onclick="toggleVoiceRecording()" title="Hablar comando en este contexto">
+            <span class="compact-mic-dot"></span>
+            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+            <span id="compactMicModalText">Mic</span>
+          </button>
+
+          <button class="modal-close-btn" onclick="closePersonalizarModal()">&times;</button>
+        </div>
       </div>
+
       <div class="modal-body">
-        <div class="modal-section-title">Controles Analógicos Avanzados</div>
-        <div class="advanced-params-grid" id="advancedGrid">
-          <!-- Se inyecta dinámicamente con sliders en 0% -->
+        <!-- CONTROLES PRINCIPALES DEL MÓDULO -->
+        <div class="modal-section-title">Parámetros Principales</div>
+        <div class="advanced-params-grid" id="primaryGrid">
+          <!-- Inyectado dinámicamente -->
+        </div>
+
+        <!-- SECCIÓN AVANZADO PLEGABLE (ACCORDION) -->
+        <div class="adv-accordion-card" id="advAccordionCard">
+          <button class="adv-accordion-toggle" onclick="toggleAdvAccordion()">
+            <span>Avanzado (Filtros, Modulación & Tono)</span>
+            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+          </button>
+          <div class="adv-accordion-content">
+            <div class="advanced-params-grid" id="advancedGrid">
+              <!-- Inyectado dinámicamente -->
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1440,9 +1595,21 @@
               <span class="command-phrase">"Reverb íntima"</span>
               <span class="command-action-desc">Ambiente corto y sutil para presencia vocal</span>
             </div>
-            <div class="command-pill" onclick="testVoiceCommandFromModal('Doubler ancho')">
-              <span class="command-phrase">"Doubler ancho"</span>
-              <span class="command-action-desc">Apertura estéreo máxima a los extremos</span>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Reverb amplia')">
+              <span class="command-phrase">"Reverb amplia"</span>
+              <span class="command-action-desc">Espacio amplio con decay de 2.8s</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Slapback')">
+              <span class="command-phrase">"Slapback"</span>
+              <span class="command-action-desc">Delay corto 100ms rápido estilo vintage</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Eco ping-pong')">
+              <span class="command-phrase">"Eco ping-pong"</span>
+              <span class="command-action-desc">Delay a corchea con rebote estéreo</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Dobles anchos')">
+              <span class="command-phrase">"Dobles anchos"</span>
+              <span class="command-action-desc">Doubler 90% anchura y microafinación</span>
             </div>
             <div class="command-pill" onclick="testVoiceCommandFromModal('Doubler sutil')">
               <span class="command-phrase">"Doubler sutil"</span>
@@ -1459,6 +1626,10 @@
             <div class="command-pill" onclick="testVoiceCommandFromModal('Delay corchea')">
               <span class="command-phrase">"Delay corchea"</span>
               <span class="command-action-desc">Eco rítmico sincronizado con feedback 25%</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Pon chorus suave y reverb oscura')">
+              <span class="command-phrase">"Pon chorus suave y reverb oscura"</span>
+              <span class="command-action-desc">Comando compuesto multi-módulo</span>
             </div>
           </div>
         </div>
@@ -1493,60 +1664,199 @@
     // ==========================================
     // ESTADO CENTRALIZADO Y CONFIGURACIÓN
     // ==========================================
-    const state = {
+    var state = {
       viewMode: 'hablar',
       routing: 'insert',
+      activeCategory: 'favoritos',
       isRecording: false,
       outGain: 0.0,
+      activeContextModule: null,
       settings: {
         lang: 'es-ES',
         silenceTimeoutSec: 3.5,
         sensitivity: 75
       },
       effects: {
+        // --- FAVORITOS & ESPACIO / MODULACIÓN IMPLEMENTADOS ---
         doubler: {
           name: 'Doubler',
+          category: 'modulacion',
+          implemented: true,
           on: false,
           amount: 0,
+          primary: [
+            { name: 'Anchura Estéreo', unit: '%', max: 100, val: 80 },
+            { name: 'Desafinación', unit: ' ct', max: 50, val: 5 }
+          ],
           advanced: [
-            { name: 'Separación Stereo', unit: '%', max: 100, val: 0 },
-            { name: 'Desafinación', unit: ' ct', max: 50, val: 0 },
-            { name: 'Retardo L/R', unit: ' ms', max: 40, val: 0 },
-            { name: 'Corte de Graves', unit: ' Hz', max: 400, val: 0 }
+            { name: 'Separación Temporal', unit: ' ms', max: 40, val: 18 },
+            { name: 'Corte de Graves', unit: ' Hz', max: 400, val: 80 }
           ]
         },
         chorus: {
           name: 'Chorus',
+          category: 'modulacion',
+          implemented: true,
           on: false,
           amount: 0,
+          primary: [
+            { name: 'Velocidad LFO', unit: ' Hz', max: 5, val: 0.8 },
+            { name: 'Profundidad', unit: '%', max: 100, val: 50 }
+          ],
           advanced: [
-            { name: 'Profundidad', unit: '%', max: 100, val: 0 },
-            { name: 'Velocidad LFO', unit: ' Hz', max: 5, val: 0 },
-            { name: 'Fase Stereo', unit: '°', max: 180, val: 0 },
-            { name: 'Color Cálido', unit: '%', max: 100, val: 0 }
+            { name: 'Anchura Estéreo', unit: '%', max: 100, val: 80 },
+            { name: 'Color Cálido', unit: '%', max: 100, val: 40 }
           ]
         },
         delay: {
           name: 'Delay',
+          category: 'espacio',
+          implemented: true,
           on: false,
           amount: 0,
+          primary: [
+            { name: 'Tiempo Sync', unit: ' ms', max: 1000, val: 250 },
+            { name: 'Feedback', unit: '%', max: 100, val: 25 }
+          ],
           advanced: [
-            { name: 'Tiempo Sync', unit: '%', max: 100, val: 0 },
-            { name: 'Repeticiones', unit: '%', max: 100, val: 0 },
             { name: 'Modo Ping-Pong', unit: '%', max: 100, val: 0 },
-            { name: 'Filtro Pasa Altos', unit: ' Hz', max: 600, val: 0 }
+            { name: 'Filtro Pasa Altos', unit: ' Hz', max: 600, val: 120 }
           ]
         },
         reverb: {
           name: 'Reverb',
+          category: 'espacio',
+          implemented: true,
           on: false,
           amount: 0,
+          primary: [
+            { name: 'Duración (Decay)', unit: ' s', max: 6, val: 1.8 },
+            { name: 'Oscuridad (Damp)', unit: '%', max: 100, val: 50 }
+          ],
           advanced: [
-            { name: 'Duración (Decay)', unit: ' s', max: 6, val: 0 },
-            { name: 'Anchura Stereo', unit: '%', max: 100, val: 0 },
-            { name: 'Oscuridad (Damp)', unit: '%', max: 100, val: 0 },
-            { name: 'Pre-retardo', unit: ' ms', max: 100, val: 0 }
+            { name: 'Pre-retardo', unit: ' ms', max: 100, val: 20 },
+            { name: 'Anchura Estéreo', unit: '%', max: 100, val: 85 }
           ]
+        },
+        // --- CATÁLOGO DE EFECTOS PLANIFICADOS V2 (MODULACIÓN) ---
+        flanger: {
+          name: 'Flanger',
+          category: 'modulacion',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Velocidad', unit: ' Hz', max: 5, val: 0.5 }, { name: 'Profundidad', unit: '%', max: 100, val: 60 }],
+          advanced: [{ name: 'Feedback', unit: '%', max: 100, val: 40 }, { name: 'Retardo Base', unit: ' ms', max: 20, val: 3 }]
+        },
+        phaser: {
+          name: 'Phaser',
+          category: 'modulacion',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Velocidad', unit: ' Hz', max: 5, val: 0.6 }, { name: 'Profundidad', unit: '%', max: 100, val: 70 }],
+          advanced: [{ name: 'Resonancia', unit: '%', max: 100, val: 50 }, { name: 'Etapas', unit: ' poles', max: 12, val: 4 }]
+        },
+        tremolo: {
+          name: 'Trémolo',
+          category: 'modulacion',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Velocidad', unit: ' Hz', max: 10, val: 4 }, { name: 'Profundidad', unit: '%', max: 100, val: 50 }],
+          advanced: [{ name: 'Forma de Onda', unit: '%', max: 100, val: 0 }, { name: 'Suavidad', unit: '%', max: 100, val: 50 }]
+        },
+        autopan: {
+          name: 'Auto Pan',
+          category: 'modulacion',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Velocidad', unit: ' Hz', max: 10, val: 2 }, { name: 'Profundidad', unit: '%', max: 100, val: 60 }],
+          advanced: [{ name: 'Forma', unit: '%', max: 100, val: 50 }, { name: 'Centro', unit: '%', max: 100, val: 50 }]
+        },
+        // --- COLOR ---
+        saturacion: {
+          name: 'Saturación',
+          category: 'color',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Drive', unit: ' dB', max: 24, val: 6 }, { name: 'Tono', unit: '%', max: 100, val: 50 }],
+          advanced: [{ name: 'Compensación', unit: ' dB', max: 12, val: 3 }, { name: 'Carácter', unit: '%', max: 100, val: 50 }]
+        },
+        distorsion: {
+          name: 'Distorsión',
+          category: 'color',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Drive', unit: '%', max: 100, val: 40 }, { name: 'Tono', unit: '%', max: 100, val: 50 }],
+          advanced: [{ name: 'Tipo', unit: ' mode', max: 4, val: 1 }, { name: 'Salida', unit: ' dB', max: 12, val: 0 }]
+        },
+        bitcrusher: {
+          name: 'Bitcrusher',
+          category: 'color',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Resolución', unit: ' bits', max: 16, val: 8 }, { name: 'Downsample', unit: 'x', max: 32, val: 4 }],
+          advanced: [{ name: 'Filtro Anti-alias', unit: ' Hz', max: 12000, val: 6000 }, { name: 'Mezcla', unit: '%', max: 100, val: 50 }]
+        },
+        filtro: {
+          name: 'Filtro',
+          category: 'color',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Corte Graves (HP)', unit: ' Hz', max: 1000, val: 350 }, { name: 'Corte Agudos (LP)', unit: ' Hz', max: 12000, val: 3500 }],
+          advanced: [{ name: 'Resonancia', unit: '%', max: 100, val: 20 }, { name: 'Pendiente', unit: ' dB/oct', max: 24, val: 12 }]
+        },
+        pitch: {
+          name: 'Pitch Creativo',
+          category: 'color',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Semitonos', unit: ' st', max: 24, val: 12 }, { name: 'Centésimas', unit: ' ct', max: 100, val: 0 }],
+          advanced: [{ name: 'Formante', unit: '%', max: 100, val: 50 }, { name: 'Calidad DSP', unit: ' mode', max: 3, val: 2 }]
+        },
+        // --- MEZCLA ---
+        eq: {
+          name: 'Tono (EQ)',
+          category: 'mezcla',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Graves', unit: ' dB', max: 12, val: 0 }, { name: 'Agudos', unit: ' dB', max: 12, val: 0 }],
+          advanced: [{ name: 'Medios', unit: ' dB', max: 12, val: 0 }, { name: 'Frecuencia Medios', unit: ' Hz', max: 8000, val: 2500 }]
+        },
+        compresor: {
+          name: 'Compresor',
+          category: 'mezcla',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Threshold', unit: ' dB', max: 40, val: 18 }, { name: 'Ratio', unit: ':1', max: 10, val: 3 }],
+          advanced: [{ name: 'Ataque', unit: ' ms', max: 50, val: 10 }, { name: 'Release', unit: ' ms', max: 500, val: 120 }]
+        },
+        deesser: {
+          name: 'De-Esser',
+          category: 'mezcla',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Sensibilidad', unit: '%', max: 100, val: 50 }, { name: 'Frecuencia', unit: ' kHz', max: 12, val: 6 }],
+          advanced: [{ name: 'Reducción Máxima', unit: ' dB', max: 18, val: 6 }, { name: 'Ancho de Banda', unit: ' Q', max: 5, val: 2 }]
+        },
+        gate: {
+          name: 'Gate',
+          category: 'mezcla',
+          implemented: false,
+          on: false,
+          amount: 0,
+          primary: [{ name: 'Umbral', unit: ' dB', max: 60, val: 40 }, { name: 'Release', unit: ' ms', max: 500, val: 150 }],
+          advanced: [{ name: 'Ataque', unit: ' ms', max: 20, val: 2 }, { name: 'Hold', unit: ' ms', max: 200, val: 20 }]
         }
       }
     };
@@ -1554,11 +1864,11 @@
     // ==========================================
     // SISTEMA DE HISTORIAL (UNDO / REDO)
     // ==========================================
-    let undoStack = [];
-    let redoStack = [];
+    var undoStack = [];
+    var redoStack = [];
 
     function pushSnapshot() {
-      const snapshot = {
+      var snapshot = {
         routing: state.routing,
         outGain: state.outGain,
         effects: JSON.parse(JSON.stringify(state.effects))
@@ -1582,53 +1892,56 @@
 
       // Actualizar perilla de salida
       document.getElementById('valOutDb').textContent = (state.outGain >= 0 ? '+' : '') + state.outGain.toFixed(1) + ' dB';
-      const pct = (state.outGain + 24) / 30;
-      const offset = 88 - (pct * 66);
-      const kf = document.getElementById('knobFill');
+      var pct = (state.outGain + 24) / 30;
+      var offset = 88 - (pct * 66);
+      var kf = document.getElementById('knobFill');
       if (kf) kf.style.strokeDashoffset = offset;
       sendParamToJuce('output.gainDb', state.outGain);
 
       // Actualizar toggles y gauges de efectos
-      for (const fxKey in state.effects) {
-        const fx = state.effects[fxKey];
-        const toggleEl = document.getElementById('toggle_' + fxKey);
-        if (toggleEl) toggleEl.classList.toggle('on', fx.on);
-        updateGauge(fxKey, fx.amount, false);
-        sendParamToJuce(fxKey + '.enabled', fx.on ? 1.0 : 0.0);
-        sendParamToJuce(fxKey + '.amount', fx.amount);
+      renderEffectsGrid();
+      if (currentModalFxKey) {
+        renderModalControls(currentModalFxKey);
+      }
+      for (var fxKey in state.effects) {
+        var fx = state.effects[fxKey];
+        if (fx.implemented) {
+          sendParamToJuce(fxKey + '.enabled', fx.on ? 1.0 : 0.0);
+          sendParamToJuce(fxKey + '.amount', fx.amount);
+        }
       }
       updateHistoryButtons();
     }
 
     function triggerUndo() {
       if (undoStack.length === 0) return;
-      const currentSnapshot = {
+      var currentSnapshot = {
         routing: state.routing,
         outGain: state.outGain,
         effects: JSON.parse(JSON.stringify(state.effects))
       };
       redoStack.push(currentSnapshot);
 
-      const prev = undoStack.pop();
+      var prev = undoStack.pop();
       applySnapshot(prev);
     }
 
     function triggerRedo() {
       if (redoStack.length === 0) return;
-      const currentSnapshot = {
+      var currentSnapshot = {
         routing: state.routing,
         outGain: state.outGain,
         effects: JSON.parse(JSON.stringify(state.effects))
       };
       undoStack.push(currentSnapshot);
 
-      const next = redoStack.pop();
+      var next = redoStack.pop();
       applySnapshot(next);
     }
 
     function updateHistoryButtons() {
-      const btnUndo = document.getElementById('btnUndo');
-      const btnRedo = document.getElementById('btnRedo');
+      var btnUndo = document.getElementById('btnUndo');
+      var btnRedo = document.getElementById('btnRedo');
       if (btnUndo) btnUndo.disabled = undoStack.length === 0;
       if (btnRedo) btnRedo.disabled = redoStack.length === 0;
     }
@@ -1638,7 +1951,8 @@
     // ==========================================
     function savePreset() {
       try {
-        const dataToSave = {
+        var dataToSave = {
+          viewMode: state.viewMode,
           routing: state.routing,
           outGain: state.outGain,
           settings: state.settings,
@@ -1646,11 +1960,11 @@
         };
         localStorage.setItem('vocalpreset_state', JSON.stringify(dataToSave));
         
-        const saveBtn = document.getElementById('btnSavePreset');
-        const saveText = document.getElementById('saveBtnText');
+        var saveBtn = document.getElementById('btnSavePreset');
+        var saveText = document.getElementById('saveBtnText');
         if (saveText) {
           saveText.textContent = '✓ Guardado';
-          setTimeout(() => {
+          setTimeout(function() {
             saveText.textContent = 'Guardar';
           }, 1500);
         }
@@ -1661,9 +1975,12 @@
 
     function loadSavedPreset() {
       try {
-        const raw = localStorage.getItem('vocalpreset_state');
+        var raw = localStorage.getItem('vocalpreset_state');
         if (raw) {
-          const parsed = JSON.parse(raw);
+          var parsed = JSON.parse(raw);
+          if (parsed.viewMode) {
+            selectMode(parsed.viewMode);
+          }
           if (parsed.effects) {
             state.effects = parsed.effects;
           }
@@ -1676,15 +1993,15 @@
           if (parsed.settings) {
             state.settings = Object.assign(state.settings, parsed.settings);
             // Reflejar en modal de settings
-            const langSel = document.getElementById('settingsLangSelect');
+            var langSel = document.getElementById('settingsLangSelect');
             if (langSel) langSel.value = state.settings.lang;
-            const silSlider = document.getElementById('settingsSilenceSlider');
+            var silSlider = document.getElementById('settingsSilenceSlider');
             if (silSlider) silSlider.value = state.settings.silenceTimeoutSec;
-            const silVal = document.getElementById('settingsSilenceVal');
+            var silVal = document.getElementById('settingsSilenceVal');
             if (silVal) silVal.textContent = state.settings.silenceTimeoutSec + 's';
-            const sensSlider = document.getElementById('settingsSensSlider');
+            var sensSlider = document.getElementById('settingsSensSlider');
             if (sensSlider) sensSlider.value = state.settings.sensitivity;
-            const sensVal = document.getElementById('settingsSensVal');
+            var sensVal = document.getElementById('settingsSensVal');
             if (sensVal) sensVal.textContent = state.settings.sensitivity + '%';
           }
         }
@@ -1706,8 +2023,8 @@
       document.getElementById('itemHablar').classList.toggle('active', mode === 'hablar');
       document.getElementById('itemEfectos').classList.toggle('active', mode === 'efectos');
 
-      const screenHablar = document.getElementById('screenHablar');
-      const screenEfectos = document.getElementById('screenEfectos');
+      var screenHablar = document.getElementById('screenHablar');
+      var screenEfectos = document.getElementById('screenEfectos');
 
       if (mode === 'hablar') {
         screenHablar.style.display = 'flex';
@@ -1718,63 +2035,120 @@
       }
 
       document.getElementById('dropdownMenu').classList.remove('show');
+      savePreset();
     }
 
-    window.addEventListener('click', (e) => {
+    window.addEventListener('click', function(e) {
       if (!e.target.closest('.view-mode-selector')) {
         document.getElementById('dropdownMenu').classList.remove('show');
       }
     });
 
     // ==========================================
-    // SISTEMA DE VOZ EN TIEMPO REAL (INTERIM RESULTS + CLICK-TO-TALK)
+    // SINCRONIZACIÓN DE ESTADO NATIVO C++ (JUCE <-> JS)
     // ==========================================
-    let recognition = null;
-    let voiceTimeout = null;
+    window.applyNativeState = function(data) {
+      if (!data) return;
+      if (data.routingMode !== undefined) {
+        state.routing = data.routingMode === 1 ? 'send' : 'insert';
+        document.getElementById('btnRoutingInsert').classList.toggle('active', state.routing === 'insert');
+        document.getElementById('btnRoutingSend').classList.toggle('active', state.routing === 'send');
+      }
+      if (data.outputGainDb !== undefined) {
+        state.outGain = data.outputGainDb;
+        document.getElementById('valOutDb').textContent = (state.outGain >= 0 ? '+' : '') + state.outGain.toFixed(1) + ' dB';
+        var pct = (state.outGain + 24) / 30;
+        var offset = 88 - (pct * 66);
+        var kf = document.getElementById('knobFill');
+        if (kf) kf.style.strokeDashoffset = offset;
+      }
+
+      // Doubler
+      if (state.effects.doubler) {
+        if (data.doublerOn !== undefined) state.effects.doubler.on = data.doublerOn;
+        if (data.doublerAmount !== undefined) state.effects.doubler.amount = data.doublerAmount;
+      }
+      // Chorus
+      if (state.effects.chorus) {
+        if (data.chorusOn !== undefined) state.effects.chorus.on = data.chorusOn;
+        if (data.chorusAmount !== undefined) state.effects.chorus.amount = data.chorusAmount;
+      }
+      // Delay
+      if (state.effects.delay) {
+        if (data.delayOn !== undefined) state.effects.delay.on = data.delayOn;
+        if (data.delayAmount !== undefined) state.effects.delay.amount = data.delayAmount;
+      }
+      // Reverb
+      if (state.effects.reverb) {
+        if (data.reverbOn !== undefined) state.effects.reverb.on = data.reverbOn;
+        if (data.reverbAmount !== undefined) state.effects.reverb.amount = data.reverbAmount;
+        if (data.reverbDecay !== undefined && state.effects.reverb.primary[0])
+          state.effects.reverb.primary[0].val = data.reverbDecay;
+        if (data.reverbDarkness !== undefined && state.effects.reverb.primary[1])
+          state.effects.reverb.primary[1].val = data.reverbDarkness;
+        if (data.reverbWidth !== undefined && state.effects.reverb.advanced[1])
+          state.effects.reverb.advanced[1].val = data.reverbWidth;
+      }
+
+      renderEffectsGrid();
+      if (currentModalFxKey) {
+        renderModalControls(currentModalFxKey);
+      }
+      savePreset();
+    };
+
+    // ==========================================
+    // SISTEMA DE VOZ EN TIEMPO REAL (CLICK-TO-TALK CONTINUO)
+    // ==========================================
+    var recognition = null;
+    var voiceTimeout = null;
+    var transcriptClearTimeout = null;
+    var accumulatedVoiceText = '';
 
     function initSpeechRecognition() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SpeechRecognition) {
         recognition = new SpeechRecognition();
-        recognition.continuous = true;
+        recognition.continuous = true; // No detenerse automáticamente al pausar
         recognition.lang = state.settings.lang || 'es-ES';
         recognition.interimResults = true;
 
-        recognition.onstart = () => {
+        recognition.onstart = function() {
           updateRecordingUI(true);
         };
 
-        recognition.onresult = (event) => {
-          let interimTranscript = '';
-          let finalTranscript = '';
-
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            const transcript = event.results[i][0].transcript;
+        recognition.onresult = function(event) {
+          var interimTranscript = '';
+          for (var i = event.resultIndex; i < event.results.length; ++i) {
+            var transcript = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-              finalTranscript += transcript;
+              accumulatedVoiceText += ' ' + transcript;
             } else {
               interimTranscript += transcript;
             }
           }
 
-          if (finalTranscript) {
-            setLiveTranscript(finalTranscript, false);
-            processVoiceCommand(finalTranscript);
-            // Detener después de procesar comando final
-            stopVoiceRecording();
-          } else if (interimTranscript) {
-            setLiveTranscript(interimTranscript, true);
+          var currentDisplay = (accumulatedVoiceText + ' ' + interimTranscript).trim();
+          if (currentDisplay) {
+            setLiveTranscript(currentDisplay, true);
           }
         };
 
-        recognition.onerror = (event) => {
+        recognition.onerror = function(event) {
           console.log('[Speech Error]', event.error);
-          stopVoiceRecording();
+          if (event.error !== 'no-speech') {
+            stopVoiceRecording();
+          }
         };
 
-        recognition.onend = () => {
+        recognition.onend = function() {
           if (state.isRecording) {
-            stopVoiceRecording();
+            // Si se desconectó inesperadamente pero el usuario no ha hecho click para parar, reiniciar
+            try {
+              recognition.start();
+            } catch (e) {
+              stopVoiceRecording();
+            }
           }
         };
       }
@@ -1790,6 +2164,10 @@
 
     function startVoiceRecording() {
       state.isRecording = true;
+      accumulatedVoiceText = '';
+      clearTimeout(transcriptClearTimeout);
+      clearTimeout(voiceTimeout);
+      clearLiveTranscript();
       updateRecordingUI(true);
 
       if (recognition) {
@@ -1800,16 +2178,6 @@
           console.warn('[Speech recognition already running]');
         }
       }
-
-      // Auto-detener si transcurre el tiempo de silencio configurado (SIN inventar comandos)
-      clearTimeout(voiceTimeout);
-      const timeoutMs = (state.settings.silenceTimeoutSec || 3.5) * 1000;
-      voiceTimeout = setTimeout(() => {
-        if (state.isRecording) {
-          // Silencio detectado: detener limpiamente sin alterar ningún efecto
-          stopVoiceRecording();
-        }
-      }, timeoutMs);
     }
 
     function stopVoiceRecording() {
@@ -1822,26 +2190,59 @@
       }
 
       updateRecordingUI(false);
+
+      // Obtener el texto acumulado durante toda la sesión de habla
+      var textToProcess = accumulatedVoiceText.trim();
+      var currentDisplay = document.getElementById('transcriptText');
+      if (!textToProcess && currentDisplay && currentDisplay.textContent) {
+        textToProcess = currentDisplay.textContent.trim();
+      }
+
+      if (textToProcess) {
+        processVoiceCommand(textToProcess);
+      } else {
+        clearLiveTranscript();
+      }
+      accumulatedVoiceText = '';
     }
 
     function updateRecordingUI(isRecording) {
-      const btn = document.getElementById('micToggleBtn');
-      const text = document.getElementById('micBtnText');
-      const cursor = document.getElementById('transcriptCursor');
+      // 1. Botón Modo Hablar
+      var btn = document.getElementById('micToggleBtn');
+      var text = document.getElementById('micBtnText');
+      var cursor = document.getElementById('transcriptCursor');
 
-      if (isRecording) {
-        btn.classList.add('listening');
-        text.textContent = 'Presionar para detener';
-        if (cursor) cursor.classList.add('active');
-      } else {
-        btn.classList.remove('listening');
-        text.textContent = 'Presionar para hablar';
-        if (cursor) cursor.classList.remove('active');
+      if (btn) {
+        if (isRecording) {
+          btn.classList.add('listening');
+          if (text) text.textContent = 'Escuchando... (Click para procesar)';
+          if (cursor) cursor.classList.add('active');
+        } else {
+          btn.classList.remove('listening');
+          if (text) text.textContent = 'Presionar para hablar';
+          if (cursor) cursor.classList.remove('active');
+        }
+      }
+
+      // 2. Botón Mic compacto Modo Efectos
+      var compactEffects = document.getElementById('compactMicEffects');
+      if (compactEffects) {
+        compactEffects.classList.toggle('listening', isRecording);
+        var t = document.getElementById('compactMicEffectsText');
+        if (t) t.textContent = isRecording ? 'Escuchando...' : 'Mic';
+      }
+
+      // 3. Botón Mic compacto Modal Personalizar
+      var compactModal = document.getElementById('compactMicModal');
+      if (compactModal) {
+        compactModal.classList.toggle('listening', isRecording);
+        var tm = document.getElementById('compactMicModalText');
+        if (tm) tm.textContent = isRecording ? 'Escuchando...' : 'Mic';
       }
     }
 
     function setLiveTranscript(text, isInterim) {
-      const el = document.getElementById('transcriptText');
+      var el = document.getElementById('transcriptText');
       if (!el) return;
       el.textContent = text;
       if (isInterim) {
@@ -1851,121 +2252,388 @@
       }
     }
 
-    function processVoiceCommand(cmd) {
-      if (!cmd || !cmd.trim()) return;
+    function clearLiveTranscript() {
+      var el = document.getElementById('transcriptText');
+      if (el) el.textContent = '';
+    }
 
-      const lower = cmd.toLowerCase().trim();
+    function setTemporaryTranscript(msg, isSuccess) {
+      if (isSuccess === undefined) isSuccess = true;
+      clearTimeout(transcriptClearTimeout);
+      setLiveTranscript(msg, false);
+      // REGLA OBLIGATORIA V2: 2.5s y desaparecer limpiamente a reposo
+      transcriptClearTimeout = setTimeout(function() {
+        if (!state.isRecording) {
+          clearLiveTranscript();
+        }
+      }, 2500);
+    }
 
-      // Despacho directo al backend JUCE C++
-      sendVoiceToJuce(cmd);
-
-      // Normalización de texto sin acentos
-      const clean = lower
+    // ==========================================
+    // SANITIZADOR FONÉTICO INTELIGENTE TIER 1 (0ms LATENCIA, OFFLINE/LOCAL)
+    // ==========================================
+    function sanitizeVoiceText(rawText) {
+      if (!rawText) return '';
+      var clean = rawText.toLowerCase().trim()
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '');
 
-      // Guardar snapshot previo para Deshacer
-      pushSnapshot();
+      // Corrección de artefactos fonéticos habituales en español/inglés:
+      // "river", "rever", "reber", "riber", "reberb", "reverberacion" -> "reverb"
+      clean = clean.replace(/\b(river|rever|reber|reverbe|reberb|reverberacion|reberberacion|riber|revel)\b/g, 'reverb');
+      // "diley", "deley", "dilei", "dilae" -> "delay"
+      clean = clean.replace(/\b(diley|deley|dilei|dilae|deleis)\b/g, 'delay');
+      // "corus", "choro", "choros", "curo" -> "chorus"
+      clean = clean.replace(/\b(corus|choro|choros|curo|curos)\b/g, 'chorus');
+      // "dobler", "dabler", "doblador", "dobles", "doble" -> "doubler"
+      clean = clean.replace(/\b(dobler|dabler|doblador|doble|dobles)\b/g, 'doubler');
+      // Normalizaciones fonéticas de presets
+      clean = clean.replace(/\b(intima|intimo)\b/g, 'intima');
+      clean = clean.replace(/\b(eslapbak|eslapback|slap|slap bak)\b/g, 'slapback');
+      clean = clean.replace(/\b(pingpong|pin pon|pim pom|ping pong)\b/g, 'ping-pong');
 
-      // 1. RECETAS DE AUTOR (EXACTAS)
-      if (clean.includes('reverb oscura')) {
-        applyModuleConfig('reverb', true, 18, [
-          { idx: 0, val: 1.4 },
-          { idx: 1, val: 80 },
-          { idx: 2, val: 75 }
-        ]);
+      return clean;
+    }
+
+    // ==========================================
+    // RESOLVER INTELIGENTE DE INTENCIÓN VÍA NVIDIA AI TIER 2 (ONLINE / ASYNC)
+    // ==========================================
+    function resolveIntentWithNvidiaAI(userSpeech) {
+      return new Promise(function(resolve) {
+        var apiKey = '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';
+        var prompt = 'Tu rol es clasificar el comando de voz del productor musical en el plugin OFFSZN Vocal Preset al comando canonico estricto.\n' +
+          'Comandos validos:\n' +
+          '- reverb (o river/rever)\n' +
+          '- reverb oscura\n' +
+          '- reverb amplia\n' +
+          '- reverb intima\n' +
+          '- slapback\n' +
+          '- eco ping-pong\n' +
+          '- delay corchea\n' +
+          '- dobles anchos\n' +
+          '- doubler ancho\n' +
+          '- doubler sutil\n' +
+          '- chorus suave\n' +
+          '- chorus ancho\n' +
+          '- mas reverb, menos reverb, mas delay, menos delay, mas chorus, menos chorus, mas doubler, menos doubler\n' +
+          '- desactivar reverb, desactivar delay, desactivar chorus, desactivar doubler\n' +
+          '- modo efectos, modo hablar, modo inserto, modo envio\n' +
+          '- guardar, deshacer, rehacer\n\n' +
+          'IMPORTANTE: Responde UNICAMENTE con el nombre exacto del comando canonico en minusculas, o NO_COMMAND si no tiene sentido musical.';
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, 3500);
+        fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + apiKey
+          },
+          body: JSON.stringify({
+            model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
+            messages: [
+              { role: 'system', content: prompt },
+              { role: 'user', content: userSpeech }
+            ],
+            max_tokens: 32,
+            temperature: 0.1,
+            chat_template_kwargs: { enable_thinking: false }
+          }),
+          signal: controller.signal
+        }).then(function(res) {
+          clearTimeout(timeoutId);
+          if (!res.ok) { resolve(null); return; }
+          return res.json();
+        }).then(function(data) {
+          if (!data) return;
+          var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+          if (text && text.trim() && !text.includes('NO_COMMAND')) {
+            resolve(text.trim().toLowerCase());
+          } else {
+            resolve(null);
+          }
+        }).catch(function(err) {
+          console.warn('[NVIDIA AI Resolver]', err.message);
+          resolve(null);
+        });
+      }); // end Promise
+    }
+
+    // ==========================================
+    // PARSER GRAMÁTICA V2 (RECETAS, COMPUESTOS, RELATIVOS, CONTEXTO)
+    // ==========================================
+    function processVoiceCommand(cmd) {
+      if (!cmd || !cmd.trim()) {
+        clearLiveTranscript();
         return;
+      }
+
+      // Despacho directo al backend JUCE C++ (texto crudo para logging/telemetría interna)
+      sendVoiceToJuce(cmd);
+
+      // PASO 1: Sanitizado fonético inteligente Tier 1 (0ms)
+      var clean = sanitizeVoiceText(cmd);
+
+      // REGLA V2: Negaciones desconocidas ("no pongas", "no actives") son no-op seguro
+      if (clean.includes('no pongas') || clean.includes('no actives') || clean.includes('no agregar') || clean.startsWith('no ')) {
+        if (clean.includes('no quiero reverb')) {
+          pushSnapshot();
+          setFxState('reverb', false);
+          setTemporaryTranscript('Reverb desactivada');
+          return;
+        }
+        if (clean.includes('no quiero delay')) {
+          pushSnapshot();
+          setFxState('delay', false);
+          setTemporaryTranscript('Delay desactivado');
+          return;
+        }
+        if (clean.includes('no quiero chorus')) {
+          pushSnapshot();
+          setFxState('chorus', false);
+          setTemporaryTranscript('Chorus desactivado');
+          return;
+        }
+        if (clean.includes('no quiero doubler')) {
+          pushSnapshot();
+          setFxState('doubler', false);
+          setTemporaryTranscript('Doubler desactivado');
+          return;
+        }
+        // Negación no-op: no cambia nada
+        setTemporaryTranscript('Comando no reconocido', false);
+        return;
+      }
+
+      // COMANDOS COMPUESTOS ("pon chorus suave y reverb oscura")
+      if (clean.includes(' y ') && !clean.includes('delay') && !clean.includes('decay')) {
+        var parts = clean.split(' y ');
+        if (parts.length === 2) {
+          pushSnapshot();
+          var r1 = executeSingleCommand(parts[0].trim());
+          var r2 = executeSingleCommand(parts[1].trim());
+          if (r1.success && r2.success) {
+            setTemporaryTranscript(r1.label + " · " + r2.label);
+            return;
+          } else {
+            // Regla v2: Si una cláusula es desconocida, revertir y no aplicar ninguna
+            triggerUndo();
+            setTemporaryTranscript('Comando no reconocido', false);
+            return;
+          }
+        }
+      }
+
+      // PASO 2: Intentar ejecutar comando directo localmente
+      pushSnapshot();
+      var res = executeSingleCommand(clean);
+      if (res.success) {
+        setTemporaryTranscript(res.label);
+        return;
+      }
+
+      // PASO 3: Si el parser local no reconoció la frase natural ("dame una sensación de cueva", "abre la voz con algo de river"),
+      // consultar a NVIDIA AI de forma asíncrona mientras se mantiene la UI 100% fluida
+      setLiveTranscript('Analizando intencion...', true);
+      resolveIntentWithNvidiaAI(cmd).then(function(resolvedIntent) {
+        if (resolvedIntent) {
+          var aiClean = sanitizeVoiceText(resolvedIntent);
+          var aiRes = executeSingleCommand(aiClean);
+          if (aiRes.success) {
+            setTemporaryTranscript(aiRes.label);
+            return;
+          }
+        }
+        // Si no se reconocio ni local ni remotamente
+        undoStack.pop();
+        updateHistoryButtons();
+        setTemporaryTranscript('Comando no reconocido', false);
+      });
+    }
+
+    function executeSingleCommand(clean) {
+      // 1. RECETAS DE AUTOR ESPECIFICACIÓN V2
+      if (clean.includes('slapback')) {
+        applyModuleConfig('delay', true, 15, [
+          { type: 'primary', idx: 0, val: 100 },
+          { type: 'primary', idx: 1, val: 10 }
+        ]);
+        state.activeContextModule = 'delay';
+        return { success: true, label: 'Slapback' };
+      }
+      if (clean.includes('eco ping-pong') || clean.includes('eco ping pong') || clean.includes('delay ping-pong')) {
+        applyModuleConfig('delay', true, 15, [
+          { type: 'primary', idx: 0, val: 250 },
+          { type: 'primary', idx: 1, val: 25 },
+          { type: 'advanced', idx: 0, val: 100 }
+        ]);
+        state.activeContextModule = 'delay';
+        return { success: true, label: 'Eco ping-pong' };
       }
       if (clean.includes('reverb intima')) {
-        applyModuleConfig('reverb', true, 12, [
-          { idx: 0, val: 0.8 },
-          { idx: 1, val: 60 },
-          { idx: 2, val: 40 }
+        applyModuleConfig('reverb', true, 10, [
+          { type: 'primary', idx: 0, val: 0.6 },
+          { type: 'primary', idx: 1, val: 35 },
+          { type: 'advanced', idx: 0, val: 15 }
         ]);
-        return;
+        state.activeContextModule = 'reverb';
+        return { success: true, label: 'Reverb íntima' };
       }
-      if (clean.includes('doubler ancho')) {
-        applyModuleConfig('doubler', true, 22, [
-          { idx: 0, val: 95 },
-          { idx: 1, val: 8 }
+      if (clean.includes('reverb amplia')) {
+        applyModuleConfig('reverb', true, 20, [
+          { type: 'primary', idx: 0, val: 2.8 },
+          { type: 'primary', idx: 1, val: 40 },
+          { type: 'advanced', idx: 0, val: 35 }
         ]);
-        return;
+        state.activeContextModule = 'reverb';
+        return { success: true, label: 'Reverb amplia' };
+      }
+      if (clean.includes('reverb oscura')) {
+        applyModuleConfig('reverb', true, 18, [
+          { type: 'primary', idx: 0, val: 1.8 },
+          { type: 'primary', idx: 1, val: 80 },
+          { type: 'advanced', idx: 1, val: 85 }
+        ]);
+        state.activeContextModule = 'reverb';
+        return { success: true, label: 'Reverb oscura' };
+      }
+      if (clean.includes('dobles anchos') || clean.includes('doubler ancho')) {
+        applyModuleConfig('doubler', true, 20, [
+          { type: 'primary', idx: 0, val: 90 },
+          { type: 'primary', idx: 1, val: 6 },
+          { type: 'advanced', idx: 0, val: 18 }
+        ]);
+        state.activeContextModule = 'doubler';
+        return { success: true, label: 'Dobles anchos' };
       }
       if (clean.includes('doubler sutil')) {
         applyModuleConfig('doubler', true, 12, [
-          { idx: 0, val: 70 },
-          { idx: 1, val: 4 }
+          { type: 'primary', idx: 0, val: 70 },
+          { type: 'primary', idx: 1, val: 4 }
         ]);
-        return;
+        state.activeContextModule = 'doubler';
+        return { success: true, label: 'Doubler sutil' };
       }
       if (clean.includes('chorus suave')) {
         applyModuleConfig('chorus', true, 15, [
-          { idx: 0, val: 25 },
-          { idx: 1, val: 0.35 }
+          { type: 'primary', idx: 0, val: 0.35 },
+          { type: 'primary', idx: 1, val: 25 }
         ]);
-        return;
+        state.activeContextModule = 'chorus';
+        return { success: true, label: 'Chorus suave' };
       }
       if (clean.includes('chorus ancho')) {
         applyModuleConfig('chorus', true, 28, [
-          { idx: 0, val: 65 },
-          { idx: 1, val: 0.8 }
+          { type: 'primary', idx: 0, val: 0.8 },
+          { type: 'primary', idx: 1, val: 65 },
+          { type: 'advanced', idx: 0, val: 95 }
         ]);
-        return;
+        state.activeContextModule = 'chorus';
+        return { success: true, label: 'Chorus ancho' };
       }
       if (clean.includes('delay corchea')) {
         applyModuleConfig('delay', true, 16, [
-          { idx: 1, val: 25 }
+          { type: 'primary', idx: 0, val: 250 },
+          { type: 'primary', idx: 1, val: 25 }
         ]);
-        return;
+        state.activeContextModule = 'delay';
+        return { success: true, label: 'Delay corchea' };
       }
 
-      // 2. DETECCIÓN DE MÓDULOS ESPECÍFICOS
-      let targetModule = null;
-      if (clean.includes('reverb') || clean.includes('reverberacion')) targetModule = 'reverb';
-      else if (clean.includes('chorus') || clean.includes('corus')) targetModule = 'chorus';
-      else if (clean.includes('delay') || clean.includes('eco')) targetModule = 'delay';
-      else if (clean.includes('doubler') || clean.includes('doblador')) targetModule = 'doubler';
+      // 2. COMANDOS DE NAVEGACIÓN Y VISTA
+      if (clean.includes('modo efectos')) {
+        selectMode('efectos');
+        return { success: true, label: 'Modo Efectos' };
+      }
+      if (clean.includes('modo hablar')) {
+        selectMode('hablar');
+        return { success: true, label: 'Modo Hablar' };
+      }
+      if (clean.includes('deshacer')) {
+        triggerUndo();
+        return { success: true, label: 'Deshacer' };
+      }
+      if (clean.includes('rehacer')) {
+        triggerRedo();
+        return { success: true, label: 'Rehacer' };
+      }
+      if (clean.includes('guardar')) {
+        savePreset();
+        return { success: true, label: 'Preset Guardado' };
+      }
 
-      if (targetModule) {
+      // 3. COMANDOS DE RACK / ENRUTAMIENTO
+      if (clean.includes('modo inserto')) {
+        setRouting('insert');
+        return { success: true, label: 'Modo Inserto' };
+      }
+      if (clean.includes('modo envio')) {
+        setRouting('send');
+        return { success: true, label: 'Modo Envío' };
+      }
+
+      // 4. DETECCIÓN DE MÓDULOS ESPECÍFICOS POR ALIAS
+      var targetModule = state.activeContextModule;
+      if (clean.includes('reverb')) targetModule = 'reverb';
+      else if (clean.includes('chorus')) targetModule = 'chorus';
+      else if (clean.includes('delay') || clean.includes('eco')) targetModule = 'delay';
+      else if (clean.includes('doubler')) targetModule = 'doubler';
+
+      if (targetModule && state.effects[targetModule]) {
+        state.activeContextModule = targetModule;
+        var fxName = state.effects[targetModule].name;
+
         // A) Desactivar / Quitar / Apagar
-        if (clean.includes('desactivar') || clean.includes('quitar') || clean.includes('apagar') || clean.includes('quita')) {
+        if (clean.includes('desactivar') || clean.includes('quitar') || clean.includes('apagar') || clean.includes('quita') || clean.includes('apaga') || clean.includes('mutear')) {
           setFxState(targetModule, false);
-          return;
+          return { success: true, label: fxName + " desactivado" };
         }
 
         // B) Activar / Poner / Encender
-        if (clean.includes('activar') || clean.includes('poner') || clean.includes('pon ') || clean.includes('agregar')) {
-          const curAmt = state.effects[targetModule].amount;
+        if (clean.includes('activar') || clean.includes('poner') || clean.includes('pon') || clean.includes('agregar') || clean.includes('dame') || clean.includes('enciende') || clean.includes('mete')) {
+          var curAmt = state.effects[targetModule].amount;
           setFxState(targetModule, true, curAmt === 0 ? 20 : curAmt);
-          return;
+          return { success: true, label: fxName + " activado" };
         }
 
         // C) Ajustes relativos (Más / Subir)
-        if (clean.includes('mas') || clean.includes('subir') || clean.includes('aumentar')) {
-          setFxState(targetModule, true);
-          const newAmt = Math.min(100, state.effects[targetModule].amount + 5);
+        if (clean.includes('mas') || clean.includes('subir') || clean.includes('aumentar') || clean.includes('sube')) {
+          if (!state.effects[targetModule].on) {
+            setFxState(targetModule, true, 20);
+            return { success: true, label: fxName + " activado" };
+          }
+          var newAmt = Math.min(100, state.effects[targetModule].amount + 5);
           updateGauge(targetModule, newAmt);
-          return;
+          return { success: true, label: fxName + " " + newAmt + "%" };
         }
 
         // D) Ajustes relativos (Menos / Bajar)
-        if (clean.includes('menos') || clean.includes('bajar') || clean.includes('reducir')) {
-          const newAmt = Math.max(0, state.effects[targetModule].amount - 5);
+        if (clean.includes('menos') || clean.includes('bajar') || clean.includes('reducir') || clean.includes('baja')) {
+          if (!state.effects[targetModule].on) {
+            return { success: true, label: fxName + " desactivado" };
+          }
+          var newAmt = Math.max(0, state.effects[targetModule].amount - 5);
           updateGauge(targetModule, newAmt);
           if (newAmt === 0) setFxState(targetModule, false);
-          return;
+          return { success: true, label: fxName + " " + newAmt + "%" };
         }
 
-        // E) Mención directa del efecto -> Activar si está apagado
+        // E) Mención directa ("reverb", "river", "rever", "delay", etc.) -> Activar si está apagado
         if (!state.effects[targetModule].on) {
           setFxState(targetModule, true, state.effects[targetModule].amount || 20);
+          return { success: true, label: fxName + " activado" };
+        } else {
+          return { success: true, label: fxName + " " + state.effects[targetModule].amount + "%" };
         }
       }
+
+      return { success: false };
     }
 
-    function setFxState(fxKey, on, amount = null) {
+    function setFxState(fxKey, on, amount) {
+      if (amount === undefined) amount = null;
+      if (!state.effects[fxKey]) return;
       state.effects[fxKey].on = on;
-      const toggleEl = document.getElementById('toggle_' + fxKey);
+      var toggleEl = document.getElementById('toggle_' + fxKey);
       if (toggleEl) toggleEl.classList.toggle('on', on);
       if (amount !== null) {
         updateGauge(fxKey, amount);
@@ -1973,15 +2641,92 @@
       sendParamToJuce(fxKey + '.enabled', on ? 1.0 : 0.0);
     }
 
-    function applyModuleConfig(fxKey, on, amount, advList = []) {
+    function applyModuleConfig(fxKey, on, amount, controls) {
+      if (controls === undefined) controls = [];
+      if (!state.effects[fxKey]) return;
       setFxState(fxKey, on, amount);
-      if (advList && advList.length > 0) {
-        advList.forEach(item => {
-          if (state.effects[fxKey].advanced[item.idx]) {
-            state.effects[fxKey].advanced[item.idx].val = item.val;
-            sendParamToJuce(fxKey + '.adv_' + item.idx, item.val);
+      if (controls && controls.length > 0) {
+        controls.forEach(function(item) {
+          var list = item.type === 'primary' ? state.effects[fxKey].primary : state.effects[fxKey].advanced;
+          if (list && list[item.idx]) {
+            list[item.idx].val = item.val;
+            sendParamToJuce(fxKey + "." + item.type + "_" + item.idx, item.val);
           }
         });
+      }
+      // Actualizar modal si está abierto
+      if (currentModalFxKey === fxKey) {
+        renderModalControls(fxKey);
+      }
+    }
+
+    // ==========================================
+    // RENDERIZADO DINÁMICO DE EFECTOS SEGÚN CATEGORÍA
+    // ==========================================
+    function filterCategory(catKey) {
+      state.activeCategory = catKey;
+      var tabs = document.querySelectorAll('.category-tab-btn');
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      var activeTab = document.getElementById('tabCat_' + catKey);
+      if (activeTab) activeTab.classList.add('active');
+
+      renderEffectsGrid();
+    }
+
+    function renderEffectsGrid() {
+      var grid = document.getElementById('effectsGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      var cat = state.activeCategory;
+
+      for (var fxKey in state.effects) {
+        var fx = state.effects[fxKey];
+
+        // Lógica de filtro por categoría
+        var shouldShow = false;
+        if (cat === 'favoritos') {
+          // Favoritos: Doubler, Chorus, Delay, Reverb
+          shouldShow = ['doubler', 'chorus', 'delay', 'reverb'].includes(fxKey);
+        } else {
+          shouldShow = (fx.category === cat);
+        }
+
+        if (!shouldShow) continue;
+
+        var isImplemented = fx.implemented;
+        var card = document.createElement('div');
+        card.className = 'fx-card' + (!isImplemented ? ' planned' : '');
+        card.id = 'card_' + fxKey;
+
+        // Offset gauge
+        var maxOffset = 176;
+        var minOffset = 44;
+        var offset = maxOffset - ((fx.amount / 100) * (maxOffset - minOffset));
+
+        card.innerHTML =
+          '<div class="fx-card-top">' +
+            '<span class="fx-card-title">' + fx.name + '</span>' +
+            (isImplemented
+              ? '<div class="switch-toggle ' + (fx.on ? 'on' : '') + '" id="toggle_' + fxKey + '" onclick="toggleFx(\'' + fxKey + '\', event)"></div>'
+              : '<span style="font-size:9px;color:var(--text-dim);font-weight:700;">PLANIFICADO</span>') +
+          '</div>' +
+          '<div class="arc-gauge-container"' + (isImplemented ? ' onmousedown="startGaugeDrag(event, \'' + fxKey + '\')"' : '') + ' title="' + (isImplemented ? 'Ajustar cantidad' : 'Proximamente en v2.1') + '">' +
+            '<svg class="arc-gauge-svg" viewBox="0 0 80 80">' +
+              '<circle class="arc-bg" cx="40" cy="40" r="28"></circle>' +
+              '<circle class="arc-fill" id="arc_' + fxKey + '" cx="40" cy="40" r="28" style="stroke-dashoffset: ' + (isImplemented ? offset : 176) + ';"></circle>' +
+            '</svg>' +
+            '<div class="gauge-center-info">' +
+              '<span class="gauge-val" id="val_' + fxKey + '">' + (isImplemented ? fx.amount + '%' : '\u2014') + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<span class="gauge-subtext">Cantidad</span>' +
+          '<button class="btn-personalizar-card" onclick="openPersonalizarModal(\'' + fxKey + '\')">' +
+            '<span>Personalizar</span>' +
+            '<svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>' +
+          '</button>';
+
+        grid.appendChild(card);
       }
     }
 
@@ -1990,28 +2735,31 @@
     // ==========================================
     function toggleFx(fxKey, event) {
       if (event) event.stopPropagation();
-      const fx = state.effects[fxKey];
-      if (!fx) return;
+      var fx = state.effects[fxKey];
+      if (!fx || !fx.implemented) return;
 
       pushSnapshot();
-
       fx.on = !fx.on;
-      const toggleEl = document.getElementById('toggle_' + fxKey);
+      state.activeContextModule = fxKey;
+
+      var toggleEl = document.getElementById('toggle_' + fxKey);
       if (toggleEl) toggleEl.classList.toggle('on', fx.on);
 
-      setLiveTranscript(fx.name + (fx.on ? ' activado' : ' desactivado'), false);
+      setTemporaryTranscript(fx.name + (fx.on ? ' activado' : ' desactivado'));
       sendParamToJuce(fxKey + '.enabled', fx.on ? 1.0 : 0.0);
     }
 
-    let activeGauge = null;
-    let gaugeStartY = 0;
-    let gaugeStartVal = 0;
+    var activeGauge = null;
+    var gaugeStartY = 0;
+    var gaugeStartVal = 0;
 
     function startGaugeDrag(e, fxKey) {
       e.preventDefault();
+      if (!state.effects[fxKey] || !state.effects[fxKey].implemented) return;
       pushSnapshot();
 
       activeGauge = fxKey;
+      state.activeContextModule = fxKey;
       gaugeStartY = e.clientY;
       gaugeStartVal = state.effects[fxKey].amount;
 
@@ -2021,8 +2769,8 @@
 
     function onGaugeMouseMove(e) {
       if (!activeGauge) return;
-      const deltaY = gaugeStartY - e.clientY;
-      let newVal = Math.round(gaugeStartVal + deltaY * 0.7);
+      var deltaY = gaugeStartY - e.clientY;
+      var newVal = Math.round(gaugeStartVal + deltaY * 0.7);
       newVal = Math.max(0, Math.min(100, newVal));
 
       updateGauge(activeGauge, newVal);
@@ -2037,14 +2785,16 @@
       window.removeEventListener('mouseup', onGaugeMouseUp);
     }
 
-    function updateGauge(fxKey, val, triggerJuce = true) {
+    function updateGauge(fxKey, val, triggerJuce) {
+      if (triggerJuce === undefined) triggerJuce = true;
+      if (!state.effects[fxKey]) return;
       state.effects[fxKey].amount = val;
-      const arc = document.getElementById('arc_' + fxKey);
-      const valEl = document.getElementById('val_' + fxKey);
+      var arc = document.getElementById('arc_' + fxKey);
+      var valEl = document.getElementById('val_' + fxKey);
 
-      const maxOffset = 176;
-      const minOffset = 44;
-      const offset = maxOffset - ((val / 100) * (maxOffset - minOffset));
+      var maxOffset = 176;
+      var minOffset = 44;
+      var offset = maxOffset - ((val / 100) * (maxOffset - minOffset));
 
       if (arc) arc.style.strokeDashoffset = offset;
       if (valEl) valEl.textContent = val + '%';
@@ -2055,42 +2805,78 @@
     }
 
     // ==========================================
-    // MODAL DE PERSONALIZACIÓN DSP (SLIDERS EN 0%)
+    // PANEL PERSONALIZAR CON VOLVER Y ACORDEÓN AVANZADO
     // ==========================================
-    let currentModalFxKey = null;
-    let activeModalSliderIdx = null;
+    var currentModalFxKey = null;
+    var activeModalSliderTarget = null;
 
     function openPersonalizarModal(fxKey) {
       currentModalFxKey = fxKey;
-      const modal = document.getElementById('modalPersonalizar');
-      const title = document.getElementById('modalFxTitle');
-      const grid = document.getElementById('advancedGrid');
-      const fx = state.effects[fxKey];
+      state.activeContextModule = fxKey; // Establecer contexto para comandos de voz
+      var modal = document.getElementById('modalPersonalizar');
+      var title = document.getElementById('modalFxTitle');
+      var toggle = document.getElementById('modalFxToggle');
+      var fx = state.effects[fxKey];
 
       title.textContent = fx.name.toUpperCase();
-      grid.innerHTML = '';
+      if (toggle) {
+        toggle.className = 'switch-toggle' + (fx.on ? ' on' : '');
+        toggle.onclick = function(e) {
+          toggleFx(fxKey, e);
+          toggle.classList.toggle('on', fx.on);
+        };
+      }
 
-      fx.advanced.forEach((item, idx) => {
-        const pct = item.val > 0 ? Math.round((item.val / item.max) * 100) : 0;
-        const displayVal = item.val > 0 ? (item.val + item.unit) : '—';
-
-        const div = document.createElement('div');
-        div.className = 'adv-param-card';
-        div.innerHTML = `
-          <div class="adv-param-header">
-            <span>${item.name}</span>
-            <span id="advVal_${idx}">${displayVal}</span>
-          </div>
-          <div class="slider-track" id="track_${idx}" onmousedown="startModalSliderDrag(event, ${idx})">
-            <div class="slider-fill" id="fill_${idx}" style="width: ${pct}%;">
-              <div class="slider-thumb"></div>
-            </div>
-          </div>
-        `;
-        grid.appendChild(div);
-      });
-
+      renderModalControls(fxKey);
       modal.classList.add('open');
+    }
+
+    function renderModalControls(fxKey) {
+      var fx = state.effects[fxKey];
+      var primaryGrid = document.getElementById('primaryGrid');
+      var advancedGrid = document.getElementById('advancedGrid');
+
+      if (primaryGrid) primaryGrid.innerHTML = '';
+      if (advancedGrid) advancedGrid.innerHTML = '';
+
+      // Renderizar controles primarios
+      if (fx.primary && primaryGrid) {
+        fx.primary.forEach(function(item, idx) {
+          var pct = Math.round((item.val / item.max) * 100);
+          var div = createSliderCard('primary', idx, item, pct);
+          primaryGrid.appendChild(div);
+        });
+      }
+
+      // Renderizar controles avanzados
+      if (fx.advanced && advancedGrid) {
+        fx.advanced.forEach(function(item, idx) {
+          var pct = Math.round((item.val / item.max) * 100);
+          var div = createSliderCard('advanced', idx, item, pct);
+          advancedGrid.appendChild(div);
+        });
+      }
+    }
+
+    function createSliderCard(type, idx, item, pct) {
+      var div = document.createElement('div');
+      div.className = 'adv-param-card';
+      div.innerHTML =
+        '<div class="adv-param-header">' +
+          '<span>' + item.name + '</span>' +
+          '<span id="sliderVal_' + type + '_' + idx + '">' + item.val + item.unit + '</span>' +
+        '</div>' +
+        '<div class="slider-track" id="track_' + type + '_' + idx + '" onmousedown="startModalSliderDrag(event, \'' + type + '\', ' + idx + ')">' +
+          '<div class="slider-fill" id="fill_' + type + '_' + idx + '" style="width: ' + pct + '%;">' +
+            '<div class="slider-thumb"></div>' +
+          '</div>' +
+        '</div>';
+      return div;
+    }
+
+    function toggleAdvAccordion() {
+      var card = document.getElementById('advAccordionCard');
+      if (card) card.classList.toggle('open');
     }
 
     function closePersonalizarModal(e) {
@@ -2098,49 +2884,51 @@
       currentModalFxKey = null;
     }
 
-    function startModalSliderDrag(e, idx) {
+    function startModalSliderDrag(e, type, idx) {
       e.preventDefault();
-      activeModalSliderIdx = idx;
-      updateModalSliderFromEvent(e, idx);
+      activeModalSliderTarget = { type, idx };
+      updateModalSliderFromEvent(e, type, idx);
 
       window.addEventListener('mousemove', onModalSliderMouseMove);
       window.addEventListener('mouseup', onModalSliderMouseUp);
     }
 
     function onModalSliderMouseMove(e) {
-      if (activeModalSliderIdx !== null) {
-        updateModalSliderFromEvent(e, activeModalSliderIdx);
+      if (activeModalSliderTarget) {
+        updateModalSliderFromEvent(e, activeModalSliderTarget.type, activeModalSliderTarget.idx);
       }
     }
 
     function onModalSliderMouseUp() {
-      activeModalSliderIdx = null;
+      activeModalSliderTarget = null;
       window.removeEventListener('mousemove', onModalSliderMouseMove);
       window.removeEventListener('mouseup', onModalSliderMouseUp);
     }
 
-    function updateModalSliderFromEvent(e, idx) {
+    function updateModalSliderFromEvent(e, type, idx) {
       if (!currentModalFxKey) return;
-      const track = document.getElementById('track_' + idx);
+      var track = document.getElementById("track_" + type + "_" + idx);
       if (!track) return;
 
-      const rect = track.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      let pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
+      var rect = track.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
 
-      const param = state.effects[currentModalFxKey].advanced[idx];
-      const realVal = Math.round((pct / 100) * param.max);
+      var list = type === 'primary' ? state.effects[currentModalFxKey].primary : state.effects[currentModalFxKey].advanced;
+      var param = list[idx];
+      var realVal = (pct / 100) * param.max;
+      realVal = param.max <= 10 ? Math.round(realVal * 10) / 10 : Math.round(realVal);
       param.val = realVal;
 
-      const fill = document.getElementById('fill_' + idx);
+      var fill = document.getElementById("fill_" + type + "_" + idx);
       if (fill) fill.style.width = pct + '%';
 
-      const valLabel = document.getElementById('advVal_' + idx);
+      var valLabel = document.getElementById("sliderVal_" + type + "_" + idx);
       if (valLabel) {
-        valLabel.textContent = realVal > 0 ? (realVal + param.unit) : '—';
+        valLabel.textContent = realVal + param.unit;
       }
 
-      sendParamToJuce(currentModalFxKey + '.adv_' + idx, realVal);
+      sendParamToJuce(currentModalFxKey + "." + type + "_" + idx, realVal);
     }
 
     // ==========================================
@@ -2163,13 +2951,13 @@
 
     function updateSettingsSilence(val) {
       state.settings.silenceTimeoutSec = parseFloat(val);
-      const label = document.getElementById('settingsSilenceVal');
+      var label = document.getElementById('settingsSilenceVal');
       if (label) label.textContent = val + 's';
     }
 
     function updateSettingsSens(val) {
       state.settings.sensitivity = parseInt(val, 10);
-      const label = document.getElementById('settingsSensVal');
+      var label = document.getElementById('settingsSensVal');
       if (label) label.textContent = val + '%';
     }
 
@@ -2205,9 +2993,9 @@
     // ==========================================
     // CONTROL DE SALIDA CON MEDIDOR ESTÉREO
     // ==========================================
-    let activeOutKnob = false;
-    let knobStartY = 0;
-    let knobStartVal = 0;
+    var activeOutKnob = false;
+    var knobStartY = 0;
+    var knobStartVal = 0;
 
     function startOutKnobDrag(e) {
       e.preventDefault();
@@ -2222,15 +3010,15 @@
 
     function onKnobMouseMove(e) {
       if (!activeOutKnob) return;
-      const deltaY = knobStartY - e.clientY;
-      let newDb = knobStartVal + (deltaY * 0.1);
+      var deltaY = knobStartY - e.clientY;
+      var newDb = knobStartVal + (deltaY * 0.1);
       newDb = Math.max(-24.0, Math.min(6.0, newDb));
       state.outGain = newDb;
 
       document.getElementById('valOutDb').textContent = (newDb >= 0 ? '+' : '') + newDb.toFixed(1) + ' dB';
       
-      const pct = (newDb + 24) / 30;
-      const offset = 88 - (pct * 66);
+      var pct = (newDb + 24) / 30;
+      var offset = 88 - (pct * 66);
       document.getElementById('knobFill').style.strokeDashoffset = offset;
 
       sendParamToJuce('output.gainDb', newDb);
@@ -2244,14 +3032,14 @@
 
     // Callback de medidores RMS de JUCE (30Hz)
     window.updateAudioMeters = function(lDb, rDb) {
-      const minDb = -60.0;
-      const maxDb = 0.0;
+      var minDb = -60.0;
+      var maxDb = 0.0;
       
-      const pctL = Math.max(0, Math.min(100, ((lDb - minDb) / (maxDb - minDb)) * 100));
-      const pctR = Math.max(0, Math.min(100, ((rDb - minDb) / (maxDb - minDb)) * 100));
+      var pctL = Math.max(0, Math.min(100, ((lDb - minDb) / (maxDb - minDb)) * 100));
+      var pctR = Math.max(0, Math.min(100, ((rDb - minDb) / (maxDb - minDb)) * 100));
 
-      const elL = document.getElementById('meterL');
-      const elR = document.getElementById('meterR');
+      var elL = document.getElementById('meterL');
+      var elR = document.getElementById('meterR');
       if (elL) elL.style.height = pctL + '%';
       if (elR) elR.style.height = pctR + '%';
     };
@@ -2282,20 +3070,15 @@
       // 1. Cargar preset previo si existe en localStorage
       loadSavedPreset();
 
-      // 2. Aplicar estado visual inicial
-      for (const fxKey in state.effects) {
-        const fx = state.effects[fxKey];
-        const toggleEl = document.getElementById('toggle_' + fxKey);
-        if (toggleEl) toggleEl.classList.toggle('on', fx.on);
-        updateGauge(fxKey, fx.amount, false);
-      }
+      // 2. Renderizar cuadrícula de efectos de la categoría activa
+      renderEffectsGrid();
 
       // 3. Inicializar dial de volumen
-      const pct = (state.outGain + 24) / 30;
-      const offset = 88 - (pct * 66);
-      const kf = document.getElementById('knobFill');
+      var pct = (state.outGain + 24) / 30;
+      var offset = 88 - (pct * 66);
+      var kf = document.getElementById('knobFill');
       if (kf) kf.style.strokeDashoffset = offset;
-      const dbLabel = document.getElementById('valOutDb');
+      var dbLabel = document.getElementById('valOutDb');
       if (dbLabel) dbLabel.textContent = (state.outGain >= 0 ? '+' : '') + state.outGain.toFixed(1) + ' dB';
 
       // 4. Inicializar botones de deshacer/rehacer
@@ -2303,6 +3086,11 @@
 
       // 5. Inicializar reconocimiento de voz
       try { initSpeechRecognition(); } catch (e) {}
+
+      // 6. Solicitar sincronización nativa de parámetros a JUCE
+      setTimeout(function() {
+        sendParamToJuce('ui-ready', 1.0);
+      }, 100);
     })();
   </script>
 </body>

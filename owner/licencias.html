@@ -12,6 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/env.js"></script>
     <style>
         :root {
             --bg-pure: #000000;
@@ -1641,13 +1643,24 @@
             { id: 'inka-10', plugin: 'Inka Kola', serial: 'INKA-FULL-A8C8876F-451BA437', used: false, note: '', date: '', devices: 2 }
         ];
 
-        const STORAGE_KEY = 'offszn_dispatch_licenses_v7_picker';
+        const STORAGE_KEY = 'offszn_dispatch_licenses_v10_lifetime_realtime';
         const SESSION_AUTH_KEY = 'offszn_dispatch_auth_token';
         let licenses = [];
         let activeFilter = 'avail';
         let hideUsed = true;
         let activeNoteId = null;
         let lastGeneratedKey = '';
+        let supabaseRealtimeChannel = null;
+
+        function normalizePluginName(p) {
+            if (!p) return 'Easy Mix';
+            const clean = p.trim().toLowerCase();
+            if (clean.includes('mix')) return 'Easy Mix';
+            if (clean.includes('master')) return 'Easy Master';
+            if (clean.includes('coca') || clean.includes('coke')) return 'Coca Cola';
+            if (clean.includes('inka')) return 'Inka Kola';
+            return p;
+        }
 
         // ==============================================================
         // PRODUCT CHIPS SELECTION & SYNC
@@ -1686,15 +1699,19 @@
         // STORAGE & DATA LOAD (SUPABASE COMO FUENTE ÚNICA EN TIEMPO REAL)
         // ==============================================================
         async function loadData() {
-            // Carga inicial rápida de fallback
-            if (licenses.length === 0) {
-                const stored = localStorage.getItem(STORAGE_KEY);
-                if (stored) {
-                    try { licenses = JSON.parse(stored); } catch(e) { licenses = [...INITIAL_LICENSES]; }
-                } else {
-                    licenses = [...INITIAL_LICENSES];
+            // Carga inicial rápida de fallback (SOLO FULL, descarta cualquier trial)
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try { 
+                    licenses = JSON.parse(stored).filter(l => l.serial && !l.serial.toUpperCase().includes('TRIAL')); 
+                } catch(e) { 
+                    licenses = [...INITIAL_LICENSES]; 
                 }
+            } else {
+                licenses = [...INITIAL_LICENSES];
             }
+
+            licenses = licenses.filter(l => l.serial && !l.serial.toUpperCase().includes('TRIAL'));
 
             renderStats();
             renderPreview();
@@ -1702,6 +1719,34 @@
 
             // Sincronización inmediata con Supabase (La BD es la verdad absoluta)
             await syncCloudLicenses(false);
+
+            // Iniciar conexión Realtime WebSocket con Supabase
+            initSupabaseRealtime();
+        }
+
+        function initSupabaseRealtime() {
+            if (supabaseRealtimeChannel) return;
+            try {
+                const sbUrl = window.SUPABASE_URL || 'https://qtjpvztpgfymjhhpoouq.supabase.co';
+                const sbKey = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0anB2enRwZ2Z5bWpoaHBvb3VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3ODA5MTUsImV4cCI6MjA3NjM1NjkxNX0.YsItTFk3hSQaVuy707-z7Z-j34mXa03O0wWGAlAzjrw';
+
+                if (typeof supabase !== 'undefined' && supabase.createClient && sbUrl && sbKey) {
+                    const client = supabase.createClient(sbUrl, sbKey);
+                    supabaseRealtimeChannel = client.channel('realtime_plugin_licenses')
+                        .on('postgres_changes', { event: '*', schema: 'public', table: 'plugin_licenses' }, payload => {
+                            console.log('⚡ [Supabase Realtime] Cambio en BD detectado:', payload);
+                            syncCloudLicenses(true);
+                        })
+                        .subscribe((status) => {
+                            const statusTxt = document.getElementById('realtime-status-txt');
+                            if (status === 'SUBSCRIBED' && statusTxt) {
+                                statusTxt.innerText = `🟢 Supabase Realtime Conectado`;
+                            }
+                        });
+                }
+            } catch (err) {
+                console.warn('Realtime subscription error:', err);
+            }
         }
 
         let realtimeTimer = null;
@@ -1723,41 +1768,43 @@
                 });
                 const data = await res.json();
                 if (data && data.success && Array.isArray(data.licenses)) {
-                    const dbMap = new Map();
-                    data.licenses.forEach(l => {
-                        if (l.serial_key) dbMap.set(l.serial_key.trim().toUpperCase(), l);
+                    // Filtrar estrictamente solo licencias FULL / LIFETIME (descartar cualquier trial)
+                    const dbFullOnly = data.licenses.filter(l => {
+                        const s = (l.serial_key || '').toUpperCase();
+                        const t = (l.license_type || '').toLowerCase();
+                        return s && !s.includes('TRIAL') && (t === 'lifetime' || t === 'full' || !t);
                     });
 
-                    // Si la BD tiene licencias, sincronizamos el estado exacto de cada una
-                    licenses.forEach(lic => {
-                        const dbLic = dbMap.get(lic.serial.trim().toUpperCase());
-                        if (dbLic) {
-                            const isUsed = dbLic.status === 'used' || dbLic.status === 'sold' || (dbLic.plugin_activations && dbLic.plugin_activations.length > 0);
-                            lic.used = isUsed;
-                            lic.db_id = dbLic.id;
-                            lic.devices = dbLic.max_devices || lic.devices || 2;
-                            lic.devices_used = (dbLic.plugin_activations && dbLic.plugin_activations.length) || 0;
-                            if (isUsed && !lic.date) {
-                                lic.date = new Date(dbLic.created_at).toLocaleDateString();
-                            }
-                        }
+                    // Guardar notas manuales existentes para no perderlas
+                    const prevNotes = new Map();
+                    licenses.forEach(l => {
+                        if (l.note && l.serial) prevNotes.set(l.serial.trim().toUpperCase(), l.note);
                     });
 
-                    // Agregar las que se hayan creado en otro dispositivo (ej. creadas desde PC o celular)
-                    data.licenses.forEach(dbLic => {
+                    // Reconstruir lista limpia desde Supabase (Fuente Única de Verdad)
+                    licenses = dbFullOnly.map(dbLic => {
                         const serial = (dbLic.serial_key || '').trim().toUpperCase();
-                        if (!licenses.some(l => l.serial.trim().toUpperCase() === serial)) {
-                            const isUsed = dbLic.status === 'used' || dbLic.status === 'sold' || (dbLic.plugin_activations && dbLic.plugin_activations.length > 0);
-                            licenses.unshift({
-                                id: dbLic.id,
-                                plugin: dbLic.plugin_name || 'Easy Mix',
-                                serial: dbLic.serial_key,
-                                used: isUsed,
-                                note: dbLic.user_id ? 'Vendido online' : '',
-                                date: new Date(dbLic.created_at).toLocaleDateString(),
-                                devices: dbLic.max_devices || 2,
-                                devices_used: (dbLic.plugin_activations && dbLic.plugin_activations.length) || 0
-                            });
+                        const isUsed = dbLic.status === 'used' || dbLic.status === 'sold' || (dbLic.plugin_activations && dbLic.plugin_activations.length > 0);
+                        const savedNote = prevNotes.get(serial);
+                        const buyerNote = savedNote || (dbLic.user_id ? 'Vendido online' : '');
+
+                        return {
+                            id: dbLic.id,
+                            plugin: normalizePluginName(dbLic.plugin_name),
+                            serial: serial,
+                            used: isUsed,
+                            note: buyerNote,
+                            date: isUsed ? new Date(dbLic.created_at).toLocaleDateString() : '',
+                            devices: dbLic.max_devices || 2,
+                            devices_used: (dbLic.plugin_activations && dbLic.plugin_activations.length) || 0
+                        };
+                    });
+
+                    // Si hay alguna clave inicial estática que falte registrar, agregarla como fallback
+                    INITIAL_LICENSES.forEach(initLic => {
+                        const serial = initLic.serial.trim().toUpperCase();
+                        if (!serial.includes('TRIAL') && !licenses.some(l => l.serial === serial)) {
+                            licenses.push({ ...initLic, plugin: normalizePluginName(initLic.plugin) });
                         }
                     });
 
@@ -1768,7 +1815,7 @@
                     renderInventory();
 
                     if (statusTxt) {
-                        statusTxt.innerText = `En vivo • ${new Date().toLocaleTimeString()}`;
+                        statusTxt.innerText = `🟢 En vivo Supabase (${licenses.length} FULL) • ${new Date().toLocaleTimeString()}`;
                     }
                 }
             } catch (err) {
@@ -1781,11 +1828,11 @@
                 }
             }
 
-            // Realtime loop cada 4 segundos garantizado tanto en celular como en PC
+            // Realtime loop cada 3 segundos garantizado tanto en celular como en PC
             if (!realtimeTimer) {
                 realtimeTimer = setInterval(() => {
                     syncCloudLicenses(true);
-                }, 4000);
+                }, 3000);
             }
         }
 
@@ -1951,9 +1998,10 @@
             const container = document.getElementById('picker-list-container');
             const countEl = document.getElementById('picker-count-txt');
 
-            // Only strictly available keys: not used and 0 activations
-            const isAvail = l => !l.used && (l.devices_used || 0) === 0;
-            const availableKeys = licenses.filter(l => l.plugin === targetPlugin && isAvail(l));
+            // Only strictly available FULL keys: not used, 0 activations, and NOT a trial
+            const isAvail = l => !l.used && (l.devices_used || 0) === 0 && l.serial && !l.serial.toUpperCase().includes('TRIAL');
+            const targetNorm = normalizePluginName(targetPlugin);
+            const availableKeys = licenses.filter(l => normalizePluginName(l.plugin) === targetNorm && isAvail(l));
 
             countEl.innerText = `${availableKeys.length} clave(s) libre(s) para ${targetPlugin}`;
 
@@ -2125,24 +2173,24 @@
             const k1 = document.getElementById('gen-key1');
             const k2 = document.getElementById('gen-key2');
 
-            // Only pick strictly available licenses
-            const isAvail = l => !l.used && (l.devices_used || 0) === 0;
+            // Solo elegir licencias FULL disponibles (estrictamente jamás un trial)
+            const isAvail = l => !l.used && (l.devices_used || 0) === 0 && l.serial && !l.serial.toUpperCase().includes('TRIAL');
 
             if (product === 'easy-mix') {
-                const f = licenses.find(l => l.plugin === 'Easy Mix' && isAvail(l));
+                const f = licenses.find(l => normalizePluginName(l.plugin) === 'Easy Mix' && isAvail(l));
                 k1.value = f ? f.serial : '';
             } else if (product === 'easy-master') {
-                const f = licenses.find(l => l.plugin === 'Easy Master' && isAvail(l));
+                const f = licenses.find(l => normalizePluginName(l.plugin) === 'Easy Master' && isAvail(l));
                 k1.value = f ? f.serial : '';
             } else if (product === 'coca-cola') {
-                const f = licenses.find(l => l.plugin === 'Coca Cola' && isAvail(l));
+                const f = licenses.find(l => normalizePluginName(l.plugin) === 'Coca Cola' && isAvail(l));
                 k1.value = f ? f.serial : '';
             } else if (product === 'inka-kola') {
-                const f = licenses.find(l => l.plugin === 'Inka Kola' && isAvail(l));
+                const f = licenses.find(l => normalizePluginName(l.plugin) === 'Inka Kola' && isAvail(l));
                 k1.value = f ? f.serial : '';
             } else if (product === 'promo-2x1') {
-                const fMix = licenses.find(l => l.plugin === 'Easy Mix' && isAvail(l));
-                const fMaster = licenses.find(l => l.plugin === 'Easy Master' && isAvail(l));
+                const fMix = licenses.find(l => normalizePluginName(l.plugin) === 'Easy Mix' && isAvail(l));
+                const fMaster = licenses.find(l => normalizePluginName(l.plugin) === 'Easy Master' && isAvail(l));
                 k1.value = fMix ? fMix.serial : '';
                 k2.value = fMaster ? fMaster.serial : '';
             }
@@ -2153,12 +2201,12 @@
             syncProductChips();
             onProductChange();
 
-            const isAvail = l => !l.used && (l.devices_used || 0) === 0;
-            const fMix = licenses.find(l => l.plugin === 'Easy Mix' && isAvail(l));
-            const fMaster = licenses.find(l => l.plugin === 'Easy Master' && isAvail(l));
+            const isAvail = l => !l.used && (l.devices_used || 0) === 0 && l.serial && !l.serial.toUpperCase().includes('TRIAL');
+            const fMix = licenses.find(l => normalizePluginName(l.plugin) === 'Easy Mix' && isAvail(l));
+            const fMaster = licenses.find(l => normalizePluginName(l.plugin) === 'Easy Master' && isAvail(l));
 
             if (!fMix || !fMaster) {
-                alert('⚠️ Atención: No hay suficientes claves libres de Easy Mix o Easy Master. Genera nuevas claves en la pestaña de Generar.');
+                alert('⚠️ Atención: No hay suficientes claves libres FULL de Easy Mix o Easy Master. Genera nuevas claves en la pestaña de Generar.');
                 return;
             }
 
@@ -2170,7 +2218,7 @@
             if (b) {
                 b.focus();
             }
-            showToast('🎁 Promo 2x1 cargada con claves disponibles');
+            showToast('🎁 Promo 2x1 cargada con claves FULL disponibles');
         }
 
         function quickLoadPromo2x1FromInventory() {
@@ -2421,17 +2469,18 @@ Willie / OFFSZN`;
 
             const plugins = ['Easy Mix', 'Easy Master', 'Coca Cola', 'Inka Kola'];
             licenses.forEach(l => {
-                if (!plugins.includes(l.plugin)) plugins.push(l.plugin);
+                const norm = normalizePluginName(l.plugin);
+                if (!plugins.includes(norm)) plugins.push(norm);
             });
 
             let html = '';
 
             plugins.forEach(p => {
-                const grp = filtered.filter(l => l.plugin === p);
+                const grp = filtered.filter(l => normalizePluginName(l.plugin) === p);
                 if (grp.length === 0) return;
 
-                const totalGrp = licenses.filter(l => l.plugin === p).length;
-                const availGrp = licenses.filter(l => l.plugin === p && !l.used).length;
+                const totalGrp = licenses.filter(l => normalizePluginName(l.plugin) === p).length;
+                const availGrp = licenses.filter(l => normalizePluginName(l.plugin) === p && !l.used).length;
                 const usedGrp = totalGrp - availGrp;
 
                 const statsLabel = hideUsed ? `${availGrp} disponibles` : `${availGrp} disponibles / ${usedGrp} usadas`;
@@ -2541,10 +2590,11 @@ Willie / OFFSZN`;
             if (!lic) return;
 
             const select = document.getElementById('gen-product');
-            if (lic.plugin === 'Easy Mix') select.value = 'easy-mix';
-            else if (lic.plugin === 'Easy Master') select.value = 'easy-master';
-            else if (lic.plugin === 'Coca Cola') select.value = 'coca-cola';
-            else if (lic.plugin === 'Inka Kola') select.value = 'inka-kola';
+            const norm = normalizePluginName(lic.plugin);
+            if (norm === 'Easy Mix') select.value = 'easy-mix';
+            else if (norm === 'Easy Master') select.value = 'easy-master';
+            else if (norm === 'Coca Cola') select.value = 'coca-cola';
+            else if (norm === 'Inka Kola') select.value = 'inka-kola';
 
             syncProductChips();
             onProductChange();
@@ -2557,9 +2607,10 @@ Willie / OFFSZN`;
         }
 
         function pickNextAvailable(pName) {
-            const f = licenses.find(l => l.plugin === pName && !l.used);
+            const norm = normalizePluginName(pName);
+            const f = licenses.find(l => normalizePluginName(l.plugin) === norm && !l.used && l.serial && !l.serial.toUpperCase().includes('TRIAL'));
             if (!f) {
-                alert(`No quedan claves disponibles para ${pName}. Genera una nueva.`);
+                alert(`No quedan claves disponibles FULL para ${pName}. Genera una nueva.`);
                 return;
             }
             loadKeyIntoEmail(f.id);
