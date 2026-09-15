@@ -2,29 +2,36 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Vocal Preset</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-main: #0a0b0e;
-      --bg-card: #111318;
-      --bg-card-hover: #15181f;
-      --bg-input: #101217;
-      --border-color: rgba(255, 255, 255, 0.08);
-      --border-card: rgba(255, 255, 255, 0.05);
-      --mint: #5cdbb5;
-      --mint-glow: rgba(92, 219, 181, 0.25);
-      --mint-dark: #1b352e;
-      --text-main: #f3f4f6;
-      --text-muted: #848a97;
-      --text-dim: #4d5360;
-      --radius-sm: 8px;
-      --radius-md: 12px;
-      --radius-lg: 16px;
-      --radius-full: 9999px;
+      /* PALETA PURA BLACK & WHITE / MONOCROMÁTICA AUDIO PRO */
+      --bg-deep: #08090a;
+      --bg-panel: #0f1115;
+      --bg-surface: #14171d;
+      --bg-control: #1a1d24;
+      --bg-control-active: #242832;
+      
+      --border-outer: #000000;
+      --border-panel: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(255, 255, 255, 0.14);
+      --border-inner-shadow: rgba(0, 0, 0, 0.85);
+
+      --text-pure: #ffffff;
+      --text-secondary: #c5c8d0;
+      --text-muted: #757b89;
+      --text-dim: #444a56;
+
+      --white-glow: rgba(255, 255, 255, 0.12);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-pill: 9999px;
     }
 
     * {
@@ -36,8 +43,8 @@
     }
 
     body {
-      background-color: var(--bg-main);
-      color: var(--text-main);
+      background-color: var(--bg-deep);
+      color: var(--text-pure);
       font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       width: 960px;
       height: 600px;
@@ -45,63 +52,101 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg);
       position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 25px 60px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.08);
     }
 
-    /* BARRA SUPERIOR */
+    /* TEXTURA SUTIL HARDWARE / GRAIN OVERLAY CON RELIEVE ANALÓGICO */
+    .texture-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.045;
+      background-image: radial-gradient(#ffffff 0.75px, transparent 0.75px);
+      background-size: 4px 4px;
+    }
+
+    /* ====================================================
+       BARRA SUPERIOR (HEADER)
+       ==================================================== */
     .header {
-      height: 58px;
-      padding: 0 24px;
+      height: 60px;
+      padding: 0 26px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--border-color);
-      background: #0d0f13;
+      background: linear-gradient(180deg, #13161c 0%, #0d0f14 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       z-index: 10;
     }
 
-    .brand-title {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      color: #ffffff;
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    /* DROPDOWN CENTRAL: MODO HABLAR / MODO EFECTOS */
+    .brand-badge {
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      padding: 3px 7px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: #fff;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* SELECTOR DE MODO (CHASIS BISELADO) */
     .view-mode-selector {
       position: relative;
     }
 
     .view-dropdown-btn {
-      background: #14171e;
-      border: 1px solid var(--border-color);
+      background: linear-gradient(180deg, #191c23 0%, #12141a 100%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-top-color: rgba(255, 255, 255, 0.18);
       border-radius: var(--radius-sm);
       color: #fff;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 7px 18px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      padding: 8px 18px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       cursor: pointer;
-      transition: all 0.2s;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
+      transition: all 0.15s ease;
     }
 
     .view-dropdown-btn:hover {
-      border-color: rgba(255, 255, 255, 0.2);
+      background: #1c2028;
+      border-color: rgba(255, 255, 255, 0.22);
     }
 
     .view-dropdown-menu {
       position: absolute;
-      top: 115%;
+      top: 120%;
       left: 0;
       width: 100%;
-      background: #151821;
-      border: 1px solid var(--border-color);
+      background: #12141a;
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: var(--radius-sm);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.7);
+      box-shadow: 0 16px 36px rgba(0,0,0,0.85);
       display: none;
       flex-direction: column;
       overflow: hidden;
@@ -122,73 +167,82 @@
     }
 
     .view-dropdown-item:hover, .view-dropdown-item.active {
-      background: #1f2533;
-      color: var(--mint);
+      background: #1e222c;
+      color: #ffffff;
     }
 
-    /* ROUTING (INSERTO / ENVÍO) & CONFIG */
+    /* ROUTING HARDWARE SWITCH (INSERTO / ENVÍO) */
     .header-right {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .routing-pills {
       display: flex;
-      background: #14171d;
-      border: 1px solid var(--border-color);
+      background: #090a0d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: var(--radius-sm);
       padding: 3px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.7);
     }
 
     .routing-btn {
       background: transparent;
-      border: none;
+      border: 1px solid transparent;
       color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 4px 14px;
-      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 4px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s;
     }
 
     .routing-btn.active {
-      background: #1c322b;
-      color: var(--mint);
-      border: 1px solid rgba(92, 219, 181, 0.35);
+      background: linear-gradient(180deg, #252a35 0%, #171a21 100%);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
     }
 
     .icon-btn {
-      background: transparent;
-      border: 1px solid transparent;
+      background: linear-gradient(180deg, #171920 0%, #101216 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-top-color: rgba(255, 255, 255, 0.14);
       color: var(--text-muted);
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+      transition: all 0.15s;
     }
 
     .icon-btn:hover {
-      border-color: var(--border-color);
+      border-color: rgba(255, 255, 255, 0.22);
       color: #fff;
     }
 
-    /* CONTENEDOR PRINCIPAL DE PANTALLAS */
+    /* ====================================================
+       CONTENEDOR CENTRAL DE PANTALLAS
+       ==================================================== */
     .main-container {
       flex: 1;
       display: flex;
       flex-direction: column;
       overflow: hidden;
       position: relative;
+      z-index: 2;
     }
 
     /* ====================================================
-       1. PANTALLA: MODO HABLAR (SOLO PARA HABLAR)
+       1. PANTALLA: MODO HABLAR (100% LIMPIA, TEXTO EN VIVO)
        ==================================================== */
     .screen-hablar {
       flex: 1;
@@ -196,139 +250,174 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 40px 24px;
+      padding: 30px 24px;
       text-align: center;
-      gap: 20px;
+      gap: 32px;
+    }
+
+    .hero-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .hero-title {
-      font-size: 32px;
+      font-size: 34px;
       font-weight: 800;
-      letter-spacing: -0.02em;
-      color: #fff;
+      letter-spacing: -0.03em;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.7);
     }
 
-    .ptt-btn-large {
-      background: var(--mint);
-      color: #0c0d10;
-      border: none;
+    /* BOTÓN PRINCIPAL TOGGLE MICRÓFONO CON TEXTURA METÁLICA Y RELIEVE */
+    .mic-button-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mic-toggle-btn {
+      position: relative;
+      background: linear-gradient(180deg, #242833 0%, #14161d 100%);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-top-color: rgba(255, 255, 255, 0.28);
+      border-bottom-color: rgba(0, 0, 0, 0.7);
       border-radius: var(--radius-md);
-      padding: 14px 36px;
-      font-size: 15px;
+      padding: 16px 42px;
+      font-size: 14px;
       font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 12px;
-      box-shadow: 0 4px 20px var(--mint-glow);
-      transition: transform 0.1s, box-shadow 0.2s, background-color 0.2s;
-    }
-
-    .ptt-btn-large:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 26px rgba(92, 219, 181, 0.4);
-    }
-
-    .ptt-btn-large:active, .ptt-btn-large.recording {
-      background: #ef4444;
-      color: #fff;
-      box-shadow: 0 0 28px rgba(239, 68, 68, 0.5);
-      transform: scale(0.98);
-    }
-
-    .cmd-input-container {
-      width: 520px;
-      background: var(--bg-input);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      padding: 5px 14px;
-      transition: border-color 0.2s;
-    }
-
-    .cmd-input-container:focus-within {
-      border-color: rgba(92, 219, 181, 0.5);
-    }
-
-    .cmd-input-box {
-      flex: 1;
-      background: transparent;
-      border: none;
+      gap: 14px;
+      box-shadow: 
+        0 6px 16px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.4);
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
       outline: none;
-      color: #fff;
-      font-size: 14px;
-      padding: 6px 0;
     }
 
-    .cmd-input-box::placeholder {
-      color: var(--text-dim);
+    .mic-toggle-btn:hover {
+      background: linear-gradient(180deg, #2c313e 0%, #181b23 100%);
+      border-color: rgba(255, 255, 255, 0.28);
+      transform: translateY(-1px);
+      box-shadow: 
+        0 8px 20px rgba(0, 0, 0, 0.7),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
     }
 
-    .cmd-arrow-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
+    .mic-toggle-btn:active {
+      transform: translateY(1px);
+      box-shadow: 
+        0 2px 6px rgba(0, 0, 0, 0.8),
+        inset 0 2px 4px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ESTADO ACTIVO: ESCUCHANDO (CONTRASTE INVERTIDO MONOCROMÁTICO B&W) */
+    .mic-toggle-btn.listening {
+      background: linear-gradient(180deg, #ffffff 0%, #d8dbe2 100%);
+      color: #090a0d;
+      border: 1px solid #ffffff;
+      box-shadow: 
+        0 4px 20px rgba(255, 255, 255, 0.25),
+        inset 0 1px 0 #ffffff,
+        inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .mic-icon {
+      width: 18px;
+      height: 18px;
+      transition: transform 0.15s;
+    }
+
+    .mic-indicator-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+
+    .mic-toggle-btn.listening .mic-indicator-dot {
+      background: #090a0d;
+      border-color: #090a0d;
+      animation: pulseDot 1s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulseDot {
+      from { opacity: 0.4; }
+      to { opacity: 1; }
+    }
+
+    /* ÁREA DE TRANSCRIPCIÓN EN VIVO: MINIMALISTA Y ELEGANTE */
+    .live-transcript-area {
+      min-height: 48px;
+      max-width: 680px;
+      width: 100%;
       display: flex;
       align-items: center;
-      transition: color 0.15s;
+      justify-content: center;
+      padding: 6px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      letter-spacing: -0.01em;
+      line-height: 1.4;
+      word-break: break-word;
     }
 
-    .cmd-arrow-btn:hover {
-      color: var(--mint);
+    .transcript-content {
+      color: #ffffff;
+      transition: color 0.15s ease;
     }
 
-    .chips-row {
-      display: flex;
-      gap: 10px;
+    .transcript-content.interim {
+      color: rgba(255, 255, 255, 0.55);
     }
 
-    .chip-item {
-      background: #14171e;
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-full);
-      padding: 6px 18px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.2s;
+    .transcript-cursor {
+      display: inline-block;
+      width: 8px;
+      height: 18px;
+      background-color: #ffffff;
+      margin-left: 6px;
+      vertical-align: middle;
+      opacity: 0;
+      transition: opacity 0.1s;
     }
 
-    .chip-item:hover {
-      border-color: var(--mint);
-      color: var(--mint);
-      background: #172421;
+    .transcript-cursor.active {
+      opacity: 1;
+      animation: blinkCursor 0.9s infinite step-end;
     }
 
-    /* TRANSCRIPCIÓN DIRECTA DEBAJO SIN RECUADROS NI BORDES */
-    .speech-transcript-text {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--mint);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 24px;
-    }
-
-    .speech-transcript-text svg {
-      width: 15px;
-      height: 15px;
-      fill: var(--mint);
+    @keyframes blinkCursor {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
     }
 
     /* ====================================================
-       2. PANTALLA: MODO EFECTOS (RACK COMPLETO)
+       2. PANTALLA: MODO EFECTOS (RACK EN RELIEVE HARDWARE B&W)
        ==================================================== */
     .screen-efectos {
       flex: 1;
       display: none;
       flex-direction: column;
-      justify-content: center;
-      padding: 30px 24px;
-      gap: 16px;
+      padding: 14px 24px;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .effects-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .effects-section-title {
@@ -339,27 +428,110 @@
       color: var(--text-muted);
     }
 
+    /* BARRA DE CATEGORÍAS (TABS BISELADOS) */
+    .category-pills-bar {
+      display: flex;
+      gap: 6px;
+      background: #090a0d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.7);
+    }
+
+    .category-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .category-tab-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .category-tab-btn.active {
+      background: linear-gradient(180deg, #252a35 0%, #171a21 100%);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+    }
+
+    /* BOTÓN MICRÓFONO COMPACTO PARA EFECTOS Y PERSONALIZAR */
+    .compact-mic-btn {
+      background: linear-gradient(180deg, #242833 0%, #14161d 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-top-color: rgba(255, 255, 255, 0.25);
+      border-radius: var(--radius-sm);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .compact-mic-btn:hover {
+      background: linear-gradient(180deg, #2c313e 0%, #181b23 100%);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .compact-mic-btn.listening {
+      background: linear-gradient(180deg, #ffffff 0%, #d8dbe2 100%);
+      color: #090a0d;
+      border-color: #ffffff;
+      box-shadow: 0 0 14px rgba(255, 255, 255, 0.3);
+    }
+
+    .compact-mic-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .compact-mic-btn.listening .compact-mic-dot {
+      background: #090a0d;
+      border-color: #090a0d;
+      animation: pulseDot 1s infinite alternate ease-in-out;
+    }
+
     .fx-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 16px;
     }
 
+    /* TARJETAS CON RELIEVE Y BISEL HARDWARE */
     .fx-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-card);
+      background: linear-gradient(180deg, #14171e 0%, #0d0f14 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-top-color: rgba(255, 255, 255, 0.16);
+      border-bottom-color: rgba(0, 0, 0, 0.85);
       border-radius: var(--radius-md);
       padding: 16px 14px 14px 14px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+      box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.65),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
       position: relative;
-    }
-
-    .fx-card:hover {
-      border-color: rgba(255, 255, 255, 0.14);
-      background: var(--bg-card-hover);
     }
 
     .fx-card-top {
@@ -371,24 +543,30 @@
     }
 
     .fx-card-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #ffffff;
     }
 
-    /* SWITCH TOGGLE */
+    /* SWITCH HARDWARE RELIEVE (TOGGLE ON/OFF) */
     .switch-toggle {
       width: 32px;
       height: 18px;
-      background: #232733;
-      border-radius: var(--radius-full);
+      background: #090a0d;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
       position: relative;
       cursor: pointer;
-      transition: background 0.2s;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+      transition: all 0.2s ease;
     }
 
     .switch-toggle.on {
-      background: var(--mint);
+      background: #ffffff;
+      border-color: #ffffff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
     }
 
     .switch-toggle::after {
@@ -396,19 +574,20 @@
       position: absolute;
       width: 14px;
       height: 14px;
-      background: #fff;
+      background: #757b89;
       border-radius: 50%;
-      top: 2px;
-      left: 2px;
-      transition: transform 0.2s ease;
+      top: 1px;
+      left: 1px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.6);
+      transition: transform 0.2s ease, background 0.2s;
     }
 
     .switch-toggle.on::after {
       transform: translateX(14px);
-      background: #0a0b0e;
+      background: #090a0d;
     }
 
-    /* CIRCULAR GAUGE (SUBE DE IZQUIERDA A DERECHA EN SENTIDO HORARIO) */
+    /* CIRCULAR GAUGE MONOCROMÁTICO (HORARIO DE IZQ A DER) */
     .arc-gauge-container {
       position: relative;
       width: 110px;
@@ -423,12 +602,12 @@
     .arc-gauge-svg {
       width: 100px;
       height: 100px;
-      transform: rotate(135deg); /* Abre abajo, gira de izq a der en sentido horario */
+      transform: rotate(135deg);
     }
 
     .arc-bg {
       fill: none;
-      stroke: #212530;
+      stroke: #181b22;
       stroke-width: 6;
       stroke-linecap: round;
       stroke-dasharray: 176;
@@ -437,13 +616,12 @@
 
     .arc-fill {
       fill: none;
-      stroke: var(--mint);
+      stroke: #ffffff;
       stroke-width: 6;
       stroke-linecap: round;
       stroke-dasharray: 176;
       stroke-dashoffset: 144;
       transition: stroke-dashoffset 0.05s ease-out;
-      filter: drop-shadow(0 0 5px var(--mint-glow));
     }
 
     .gauge-center-info {
@@ -464,45 +642,55 @@
 
     .gauge-subtext {
       font-size: 11px;
-      font-weight: 500;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       color: var(--text-muted);
       margin-bottom: 12px;
     }
 
-    /* BOTÓN PERSONALIZAR DEBAJO DE CADA EFECTO */
+    /* BOTÓN PERSONALIZAR BISELADO */
     .btn-personalizar-card {
       width: 100%;
-      background: #171a22;
-      border: 1px solid var(--border-color);
+      background: linear-gradient(180deg, #181c24 0%, #111319 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-top-color: rgba(255, 255, 255, 0.14);
       border-radius: var(--radius-sm);
       color: var(--text-muted);
       font-size: 11px;
-      font-weight: 600;
-      padding: 6px 0;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 7px 0;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      transition: all 0.2s;
+      gap: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+      transition: all 0.15s;
     }
 
     .btn-personalizar-card:hover {
-      background: #212633;
-      border-color: var(--mint);
-      color: var(--mint);
+      background: linear-gradient(180deg, #202530 0%, #151820 100%);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
     }
 
-    /* BARRA INFERIOR (FOOTER) */
+    /* ====================================================
+       BARRA INFERIOR (FOOTER) CON RELIEVE Y CONTROL DE SALIDA ELEGANTE
+       ==================================================== */
     .footer {
-      height: 52px;
-      padding: 0 24px;
+      height: 56px;
+      padding: 0 26px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-top: 1px solid var(--border-color);
-      background: #0d0f13;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      background: linear-gradient(180deg, #111318 0%, #0a0b0e 100%);
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
       margin-top: auto;
+      z-index: 10;
     }
 
     .footer-left {
@@ -511,23 +699,27 @@
       gap: 12px;
     }
 
-    /* GRUPO DESHACER Y REHACER MEJORADO */
+    /* GRUPO HISTORIAL DESHACER / REHACER HARDWARE */
     .history-group {
       display: flex;
       align-items: center;
-      background: #14171e;
-      border: 1px solid var(--border-color);
+      background: linear-gradient(180deg, #161820 0%, #101217 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-top-color: rgba(255, 255, 255, 0.14);
       border-radius: var(--radius-sm);
       overflow: hidden;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
     }
 
     .history-btn {
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 7px 12px;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -536,112 +728,169 @@
     }
 
     .history-btn:hover:not(:disabled) {
-      background: #1f232e;
+      background: #1c202a;
       color: #fff;
     }
 
     .history-btn:disabled {
-      opacity: 0.35;
+      opacity: 0.3;
       cursor: not-allowed;
     }
 
     .history-divider {
       width: 1px;
       height: 18px;
-      background: var(--border-color);
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .footer-save-btn {
-      background: #14171e;
-      border: 1px solid var(--border-color);
+      background: linear-gradient(180deg, #161820 0%, #101217 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-top-color: rgba(255, 255, 255, 0.14);
       border-radius: var(--radius-sm);
       color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 7px 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+      transition: all 0.15s;
     }
 
     .footer-save-btn:hover {
-      background: #1f232e;
+      background: #1c202a;
       color: #fff;
       border-color: rgba(255, 255, 255, 0.2);
     }
 
-    /* SALIDA Y TELEMETRÍA (FOOTER DERECHO) */
+    /* MÓDULO DE SALIDA TIPO RACK CON METER RMS + DIAL INTEGRADO */
     .footer-right {
       display: flex;
       align-items: center;
-      gap: 16px;
     }
 
-    .output-knob-group {
+    .output-rack-module {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 14px;
+      background: #090a0d;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: var(--radius-sm);
+      padding: 5px 12px;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.85);
     }
 
-    .output-info {
+    .output-labels {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
+      gap: 1px;
     }
 
     .output-title {
-      font-size: 10px;
-      color: var(--text-muted);
-      font-weight: 600;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      color: var(--text-muted);
     }
 
-    .output-db {
+    .output-db-badge {
       font-size: 12px;
       font-weight: 700;
       font-family: 'JetBrains Mono', monospace;
-      color: #fff;
+      color: #ffffff;
+      min-width: 52px;
+      text-align: right;
     }
 
-    .output-mini-knob {
-      width: 30px;
-      height: 30px;
+    /* DIAL / PERILLA DE SALIDA ANALÓGICA CON BISEL */
+    .output-dial-container {
+      width: 34px;
+      height: 34px;
       position: relative;
       cursor: ns-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .knob-svg {
-      width: 30px;
-      height: 30px;
+    .dial-outer-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #242833 0%, #12141a 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+
+    .dial-svg-indicator {
+      width: 34px;
+      height: 34px;
       transform: rotate(-90deg);
+      z-index: 2;
     }
 
-    .knob-bg {
+    .dial-bg {
       fill: none;
-      stroke: #222631;
-      stroke-width: 3;
+      stroke: #1b1e26;
+      stroke-width: 3.5;
     }
 
-    .knob-fill {
+    .dial-fill {
       fill: none;
-      stroke: var(--mint);
-      stroke-width: 3;
+      stroke: #ffffff;
+      stroke-width: 3.5;
       stroke-linecap: round;
-      stroke-dasharray: 82;
-      stroke-dashoffset: 20;
+      stroke-dasharray: 88;
+      stroke-dashoffset: 22;
+      transition: stroke-dashoffset 0.05s ease-out;
+    }
+
+    /* MINI LED METER STEREO (RMS) */
+    .output-stereo-meter {
+      display: flex;
+      gap: 3px;
+      height: 24px;
+      align-items: flex-end;
+      padding: 2px 4px;
+      background: #050608;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+    }
+
+    .meter-channel {
+      width: 4px;
+      height: 100%;
+      background: #14171d;
+      border-radius: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 45%;
+      background: linear-gradient(180deg, #ffffff 0%, #8c92a0 100%);
+      transition: height 0.08s ease-out;
     }
 
     /* ====================================================
-       MODAL DE PERSONALIZACIÓN AVANZADA (MODO EFECTOS)
+       MODAL DE PERSONALIZACIÓN AVANZADA DSP
        ==================================================== */
     .modal-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(6, 7, 10, 0.88);
-      backdrop-filter: blur(8px);
+      background: rgba(4, 5, 7, 0.9);
+      backdrop-filter: blur(6px);
       z-index: 100;
       display: none;
       align-items: center;
@@ -653,42 +902,77 @@
     }
 
     .modal-card {
-      width: 600px;
-      background: #13161d;
-      border: 1px solid var(--border-color);
+      width: 620px;
+      max-height: 520px;
+      background: linear-gradient(180deg, #13161c 0%, #0d0f14 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-top-color: rgba(255, 255, 255, 0.22);
       border-radius: var(--radius-md);
-      box-shadow: 0 20px 48px rgba(0,0,0,0.85);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.1);
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      animation: modalSlideUp 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: modalSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     @keyframes modalSlideUp {
-      from { opacity: 0; transform: translateY(14px); }
+      from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
     .modal-header {
-      padding: 16px 22px;
+      padding: 14px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--border-color);
-      background: #101217;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      background: #0f1116;
+    }
+
+    .modal-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-modal-back {
+      background: linear-gradient(180deg, #1d212b 0%, #13151b 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-sm);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.6);
+      transition: all 0.15s;
+    }
+
+    .btn-modal-back:hover {
+      background: #252b38;
+      border-color: rgba(255, 255, 255, 0.25);
     }
 
     .modal-title {
-      font-size: 14px;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
       color: #fff;
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .modal-title span {
-      color: var(--mint);
+    .modal-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     .modal-close-btn {
@@ -697,6 +981,7 @@
       color: var(--text-muted);
       cursor: pointer;
       font-size: 18px;
+      line-height: 1;
       transition: color 0.15s;
     }
 
@@ -705,18 +990,74 @@
     }
 
     .modal-body {
-      padding: 22px;
+      padding: 18px 22px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
+      overflow-y: auto;
+      max-height: 440px;
     }
 
     .modal-section-title {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* SECCIÓN AVANZADO PLEGABLE (ACCORDION) */
+    .adv-accordion-card {
+      background: #090a0d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .adv-accordion-toggle {
+      width: 100%;
+      background: linear-gradient(180deg, #161820 0%, #101217 100%);
+      border: none;
+      border-bottom: 1px solid transparent;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-secondary);
       font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: var(--mint);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .adv-accordion-toggle:hover {
+      background: #1c202a;
+      color: #ffffff;
+    }
+
+    .adv-accordion-toggle svg {
+      transition: transform 0.2s ease;
+    }
+
+    .adv-accordion-card.open .adv-accordion-toggle {
+      border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .adv-accordion-card.open .adv-accordion-toggle svg {
+      transform: rotate(180deg);
+    }
+
+    .adv-accordion-content {
+      display: none;
+      padding: 14px;
+      background: #08090c;
+    }
+
+    .adv-accordion-card.open .adv-accordion-content {
+      display: block;
     }
 
     .advanced-params-grid {
@@ -726,83 +1067,327 @@
     }
 
     .adv-param-card {
-      background: #0f1116;
+      background: #0a0b0e;
       padding: 12px 14px;
       border-radius: var(--radius-sm);
-      border: 1px solid rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
 
     .adv-param-header {
       display: flex;
       justify-content: space-between;
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       color: var(--text-muted);
     }
 
     .adv-param-header span:last-child {
-      color: var(--mint);
+      color: #ffffff;
       font-family: 'JetBrains Mono', monospace;
     }
 
     .slider-track {
       width: 100%;
-      height: 4px;
-      background: #232733;
-      border-radius: 2px;
+      height: 6px;
+      background: #1b1e26;
+      border-radius: 3px;
       position: relative;
       cursor: pointer;
     }
 
     .slider-fill {
       height: 100%;
-      background: var(--mint);
-      border-radius: 2px;
+      background: #ffffff;
+      border-radius: 3px;
       position: relative;
+      width: 0%;
+      transition: width 0.05s ease-out;
     }
 
     .slider-thumb {
       width: 12px;
       height: 12px;
-      background: #fff;
+      background: #ffffff;
       border-radius: 50%;
       position: absolute;
       top: 50%;
       right: -6px;
       transform: translateY(-50%);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.9);
     }
+
+    /* ====================================================
+       MODAL DE AJUSTES (CONFIGURACIÓN ⚙)
+       ==================================================== */
+    .settings-modal-card {
+      width: 440px;
+      background: linear-gradient(180deg, #14171d 0%, #0d0f14 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-top-color: rgba(255, 255, 255, 0.22);
+      border-radius: var(--radius-md);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modalSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .settings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding: 20px;
+    }
+
+    .settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: #090a0d;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+    }
+
+    .settings-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .settings-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+
+    .settings-desc {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .settings-select {
+      background: #161820;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: var(--radius-sm);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: inherit;
+      padding: 6px 12px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .settings-slider-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .settings-range-input {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100px;
+      height: 4px;
+      background: #1b1e26;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .settings-range-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.8);
+      cursor: pointer;
+    }
+
+    .settings-val-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+      min-width: 32px;
+      text-align: right;
+    }
+
+    /* ====================================================
+       MODAL DE GUÍA DE COMANDOS DE VOZ (?)
+       ==================================================== */
+    .commands-modal-card {
+      width: 580px;
+      max-height: 520px;
+      background: linear-gradient(180deg, #14171d 0%, #0d0f14 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-top-color: rgba(255, 255, 255, 0.22);
+      border-radius: var(--radius-md);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modalSlideUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .commands-body {
+      padding: 18px 22px 22px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+      max-height: 440px;
+    }
+
+    .commands-intro {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .commands-category-title {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .commands-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .command-pill {
+      background: #090a0d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .command-pill:hover {
+      background: #181c24;
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .command-phrase {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .command-action-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+  
+    /* === GEAR BUTTON AS EFFECTS TOGGLE === */
+    .gear-effects-btn {
+      position: relative;
+    }
+    .gear-effects-btn.active {
+      background: rgba(108, 99, 255, 0.25);
+      border-color: rgba(108, 99, 255, 0.5);
+      color: #a29bfe;
+    }
+    .gear-active-dot {
+      display: none;
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #6c63ff;
+      box-shadow: 0 0 6px #6c63ff;
+    }
+    .gear-active-dot.visible {
+      display: block;
+    }
+
+    /* === EFFECTS BACK BUTTON === */
+    .effects-back-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      color: rgba(255,255,255,0.65);
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 5px 10px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .effects-back-btn:hover {
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      border-color: rgba(255,255,255,0.25);
+    }
+
+    /* === EFFECTS HEADER ACTIONS (mic + settings) === */
+    .effects-header-actions {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
   </style>
 </head>
 <body>
 
+  <!-- TEXTURA GRAIN OVERLAY -->
+  <div class="texture-overlay"></div>
+
   <!-- BARRA SUPERIOR -->
   <header class="header">
-    <div class="brand-title">Vocal Preset</div>
-
-    <!-- DROPDOWN CENTRAL: MODO HABLAR / MODO EFECTOS -->
-    <div class="view-mode-selector">
-      <button class="view-dropdown-btn" id="dropdownBtn" onclick="toggleDropdown()">
-        <span id="currentModeLabel">Modo Hablar</span>
-        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
-      </button>
-      <div class="view-dropdown-menu" id="dropdownMenu">
-        <div class="view-dropdown-item active" id="itemHablar" onclick="selectMode('hablar')">Modo Hablar</div>
-        <div class="view-dropdown-item" id="itemEfectos" onclick="selectMode('efectos')">Modo Efectos</div>
-      </div>
+    <div class="brand-group">
+      <div class="brand-title">Vocal Preset</div>
     </div>
 
-    <!-- ROUTING & AJUSTES -->
+
+
+    <!-- ENRUTAMIENTO HARDWARE: INSERTO / ENVÍO -->
     <div class="header-right">
       <div class="routing-pills">
         <button class="routing-btn active" id="btnRoutingInsert" onclick="setRouting('insert')">Inserto</button>
         <button class="routing-btn" id="btnRoutingSend" onclick="setRouting('send')">Envío</button>
       </div>
-      <button class="icon-btn" title="Ajustes">
-        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+      <!-- BOTÓN GUÍA DE COMANDOS DE VOZ -->
+      <button class="icon-btn" title="Comandos y Frases de Voz" onclick="openCommandsModal()">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+      </button>
+      <!-- ENGRANAJE = TOGGLE PANTALLA EFECTOS -->
+      <button class="icon-btn gear-effects-btn" id="gearEffectsBtn" title="Efectos" onclick="toggleEffectsView()">
+        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        <span class="gear-active-dot" id="gearActiveDot"></span>
       </button>
     </div>
   </header>
@@ -810,306 +1395,1415 @@
   <!-- CONTENEDOR PRINCIPAL -->
   <main class="main-container">
     
-    <!-- 1. PANTALLA: MODO HABLAR (SOLO PARA HABLAR) -->
+    <!-- ==========================================
+         1. PANTALLA: MODO HABLAR (CLICK-TO-TALK / CLICK-TO-STOP)
+         ========================================== -->
     <section class="screen-hablar" id="screenHablar">
-      <h1 class="hero-title">Tu voz. Tus efectos.</h1>
+      <div class="hero-header">
+        <h1 class="hero-title">Tu voz. Tus efectos.</h1>
+      </div>
 
-      <!-- BOTÓN PUSH TO TALK GRANDE -->
-      <button class="ptt-btn-large" id="pttButton" onmousedown="startPTT()" onmouseup="stopPTT()" ontouchstart="startPTT()" ontouchend="stopPTT()">
-        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/><path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
-        <span id="pttLabel">Mantén para hablar</span>
-      </button>
-
-      <!-- BARRA DE ENTRADA MANUAL -->
-      <div class="cmd-input-container">
-        <input type="text" class="cmd-input-box" id="cmdInput" placeholder="O escribe un comando..." onkeydown="handleInputKey(event)" />
-        <button class="cmd-arrow-btn" onclick="executeCurrentInput()">
-          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M5 13h11.86l-5.43 5.43 1.42 1.42L21.14 12l-8.29-7.85-1.42 1.42L16.86 11H5v2z"/></svg>
+      <!-- BOTÓN TOGGLE: PRESIONAR PARA HABLAR / PRESIONAR PARA DETENER -->
+      <div class="mic-button-wrapper">
+        <button class="mic-toggle-btn" id="micToggleBtn" onclick="toggleVoiceRecording()">
+          <span class="mic-indicator-dot" id="micDot"></span>
+          <svg class="mic-icon" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
+          <span id="micBtnText">Presionar para hablar</span>
         </button>
       </div>
 
-      <!-- CHIPS RÁPIDOS -->
-      <div class="chips-row">
-        <div class="chip-item" onclick="applyQuickPrompt('Chorus suave')">Chorus suave</div>
-        <div class="chip-item" onclick="applyQuickPrompt('Doubler ancho')">Doubler ancho</div>
-        <div class="chip-item" onclick="applyQuickPrompt('Reverb oscura')">Reverb oscura</div>
-      </div>
-
-      <!-- TRANSCRIPCIÓN DIRECTA DEBAJO SIN RECUADROS -->
-      <div class="speech-transcript-text" id="speechTranscript">
-        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
-        <span id="speechTranscriptText">Reverb oscura aplicada</span>
+      <!-- ÁREA DE TRANSCRIPCIÓN EN TIEMPO REAL: INICIALMENTE VACÍA -->
+      <div class="live-transcript-area" id="liveTranscriptArea">
+        <span class="transcript-content" id="transcriptText"></span>
+        <span class="transcript-cursor" id="transcriptCursor"></span>
       </div>
     </section>
 
-    <!-- 2. PANTALLA: MODO EFECTOS (RACK COMPLETO) -->
+    <!-- ==========================================
+         2. PANTALLA: MODO EFECTOS (RACK EN RELIEVE)
+         ========================================== -->
     <section class="screen-efectos" id="screenEfectos">
-      <div class="effects-section-title">EFECTOS</div>
+      <div class="effects-header-bar">
+        <!-- BOTON VOLVER -->
+        <button class="effects-back-btn" onclick="toggleEffectsView()" title="Volver a la pantalla de voz">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          <span>Volver</span>
+        </button>
 
-      <div class="fx-grid">
-        
-        <!-- DOUBLER -->
-        <div class="fx-card" id="card_doubler">
-          <div class="fx-card-top">
-            <span class="fx-card-title">Doubler</span>
-            <div class="switch-toggle" id="toggle_doubler" onclick="toggleFx('doubler', event)"></div>
-          </div>
-          <div class="arc-gauge-container" onmousedown="startGaugeDrag(event, 'doubler')">
-            <svg class="arc-gauge-svg" viewBox="0 0 80 80">
-              <circle class="arc-bg" cx="40" cy="40" r="28"></circle>
-              <circle class="arc-fill" id="arc_doubler" cx="40" cy="40" r="28" style="stroke-dashoffset: 141;"></circle>
-            </svg>
-            <div class="gauge-center-info">
-              <span class="gauge-val" id="val_doubler">20%</span>
-            </div>
-          </div>
-          <span class="gauge-subtext">Cantidad</span>
-          <!-- BOTÓN PERSONALIZAR DEBAJO DEL EFECTO -->
-          <button class="btn-personalizar-card" onclick="openPersonalizarModal('doubler')">
-            <span>Personalizar</span>
-            <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
-          </button>
+        <!-- SELECTOR DE CATEGORÍAS TABS -->
+        <div class="category-pills-bar">
+          <button class="category-tab-btn active" id="tabCat_favoritos" onclick="filterCategory('favoritos')">Favoritos</button>
+          <button class="category-tab-btn" id="tabCat_mix" onclick="filterCategory('mix')">Mix</button>
+          <button class="category-tab-btn" id="tabCat_espacio" onclick="filterCategory('espacio')">Espacio</button>
+          <button class="category-tab-btn" id="tabCat_modulacion" onclick="filterCategory('modulacion')">Modulación</button>
         </div>
 
-        <!-- CHORUS -->
-        <div class="fx-card" id="card_chorus">
-          <div class="fx-card-top">
-            <span class="fx-card-title">Chorus</span>
-            <div class="switch-toggle" id="toggle_chorus" onclick="toggleFx('chorus', event)"></div>
-          </div>
-          <div class="arc-gauge-container" onmousedown="startGaugeDrag(event, 'chorus')">
-            <svg class="arc-gauge-svg" viewBox="0 0 80 80">
-              <circle class="arc-bg" cx="40" cy="40" r="28"></circle>
-              <circle class="arc-fill" id="arc_chorus" cx="40" cy="40" r="28" style="stroke-dashoffset: 149;"></circle>
+        <div class="effects-header-actions">
+          <!-- BOTÓN MICRÓFONO COMPACTO -->
+          <button class="compact-mic-btn" id="compactMicEffects" onclick="toggleVoiceRecording()" title="Hablar comando">
+            <span class="compact-mic-dot"></span>
+            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
             </svg>
-            <div class="gauge-center-info">
-              <span class="gauge-val" id="val_chorus">15%</span>
-            </div>
-          </div>
-          <span class="gauge-subtext">Cantidad</span>
-          <!-- BOTÓN PERSONALIZAR DEBAJO DEL EFECTO -->
-          <button class="btn-personalizar-card" onclick="openPersonalizarModal('chorus')">
-            <span>Personalizar</span>
-            <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            <span id="compactMicEffectsText">Mic</span>
+          </button>
+          <!-- CONFIG DENTRO DE EFECTOS -->
+          <button class="icon-btn" title="Configuración" onclick="openSettingsModal()" style="margin-left:4px">
+            <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
           </button>
         </div>
+      </div>
 
-        <!-- DELAY -->
-        <div class="fx-card" id="card_delay">
-          <div class="fx-card-top">
-            <span class="fx-card-title">Delay</span>
-            <div class="switch-toggle" id="toggle_delay" onclick="toggleFx('delay', event)"></div>
-          </div>
-          <div class="arc-gauge-container" onmousedown="startGaugeDrag(event, 'delay')">
-            <svg class="arc-gauge-svg" viewBox="0 0 80 80">
-              <circle class="arc-bg" cx="40" cy="40" r="28"></circle>
-              <circle class="arc-fill" id="arc_delay" cx="40" cy="40" r="28" style="stroke-dashoffset: 154;"></circle>
-            </svg>
-            <div class="gauge-center-info">
-              <span class="gauge-val" id="val_delay">12%</span>
-            </div>
-          </div>
-          <span class="gauge-subtext">Cantidad</span>
-          <!-- BOTÓN PERSONALIZAR DEBAJO DEL EFECTO -->
-          <button class="btn-personalizar-card" onclick="openPersonalizarModal('delay')">
-            <span>Personalizar</span>
-            <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
-          </button>
-        </div>
-
-        <!-- REVERB -->
-        <div class="fx-card" id="card_reverb">
-          <div class="fx-card-top">
-            <span class="fx-card-title">Reverb</span>
-            <div class="switch-toggle on" id="toggle_reverb" onclick="toggleFx('reverb', event)"></div>
-          </div>
-          <div class="arc-gauge-container" onmousedown="startGaugeDrag(event, 'reverb')">
-            <svg class="arc-gauge-svg" viewBox="0 0 80 80">
-              <circle class="arc-bg" cx="40" cy="40" r="28"></circle>
-              <circle class="arc-fill" id="arc_reverb" cx="40" cy="40" r="28" style="stroke-dashoffset: 144;"></circle>
-            </svg>
-            <div class="gauge-center-info">
-              <span class="gauge-val" id="val_reverb">18%</span>
-            </div>
-          </div>
-          <span class="gauge-subtext">Cantidad</span>
-          <!-- BOTÓN PERSONALIZAR DEBAJO DEL EFECTO -->
-          <button class="btn-personalizar-card" onclick="openPersonalizarModal('reverb')">
-            <span>Personalizar</span>
-            <svg width="11" height="11" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
-          </button>
-        </div>
-
+      <div class="fx-grid" id="effectsGrid">
+        <!-- Tarjetas dinámicas generadas según categoría -->
       </div>
     </section>
 
   </main>
 
-  <!-- BARRA INFERIOR (FOOTER) -->
+  <!-- ==========================================
+       BARRA INFERIOR (FOOTER): HISTORIAL + GUARDAR + SALIDA
+       ========================================== -->
   <footer class="footer">
     <div class="footer-left">
-      <!-- GRUPO DESHACER Y REHACER MEJORADO -->
       <div class="history-group">
-        <button class="history-btn" id="btnUndo" onclick="triggerUndo()" title="Deshacer última acción">
-          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+        <button class="history-btn" id="btnUndo" onclick="triggerUndo()" title="Deshacer última acción" disabled>
+          <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
           <span>Deshacer</span>
         </button>
         <div class="history-divider"></div>
-        <button class="history-btn" id="btnRedo" onclick="triggerRedo()" title="Rehacer acción">
-          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg>
+        <button class="history-btn" id="btnRedo" onclick="triggerRedo()" title="Rehacer acción" disabled>
+          <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg>
           <span>Rehacer</span>
         </button>
       </div>
 
-      <button class="footer-save-btn" onclick="savePreset()">
-        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
-        <span>Guardar</span>
+      <button class="footer-save-btn" id="btnSavePreset" onclick="savePreset()">
+        <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+        <span id="saveBtnText">Guardar</span>
       </button>
     </div>
 
+    <!-- MÓDULO DE SALIDA MEJORADO CON PERILLA BISELADA Y METERS RMS -->
     <div class="footer-right">
-      <div class="output-knob-group">
-        <div class="output-info">
+      <div class="output-rack-module">
+        <div class="output-labels">
           <span class="output-title">Salida</span>
-          <span class="output-db" id="valOutDb">0.0 dB</span>
+          <span class="output-db-badge" id="valOutDb">0.0 dB</span>
         </div>
-        <div class="output-mini-knob" onmousedown="startOutKnobDrag(event)">
-          <svg class="knob-svg" viewBox="0 0 30 30">
-            <circle class="knob-bg" cx="15" cy="15" r="12"></circle>
-            <circle class="knob-fill" id="knobFill" cx="15" cy="15" r="12" style="stroke-dashoffset: 20;"></circle>
+
+        <div class="output-dial-container" onmousedown="startOutKnobDrag(event)" title="Ajustar Nivel de Salida">
+          <div class="dial-outer-ring"></div>
+          <svg class="dial-svg-indicator" viewBox="0 0 34 34">
+            <circle class="dial-bg" cx="17" cy="17" r="14"></circle>
+            <circle class="dial-fill" id="knobFill" cx="17" cy="17" r="14"></circle>
           </svg>
+        </div>
+
+        <!-- MEDIDOR DE PICOS / RMS L & R -->
+        <div class="output-stereo-meter" title="Medidor de Nivel RMS">
+          <div class="meter-channel"><div class="meter-fill" id="meterL"></div></div>
+          <div class="meter-channel"><div class="meter-fill" id="meterR"></div></div>
         </div>
       </div>
     </div>
   </footer>
 
-  <!-- MODAL DE PERSONALIZACIÓN AVANZADA (ESTILO EASY MIX) -->
+  <!-- ==========================================
+       MODAL DE PERSONALIZACIÓN AVANZADA DSP
+       ========================================== -->
   <div class="modal-overlay" id="modalPersonalizar" onclick="closePersonalizarModal(event)">
     <div class="modal-card" onclick="event.stopPropagation()">
       <div class="modal-header">
-        <div class="modal-title">
-          <span>⚙ PERSONALIZAR</span> — <span id="modalFxTitle">REVERB</span>
+        <div class="modal-header-left">
+          <button class="btn-modal-back" onclick="closePersonalizarModal()" title="Volver a la vista de efectos">
+            <svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            <span>Volver</span>
+          </button>
+          <div class="modal-title">
+            <span>MÓDULO</span> — <span id="modalFxTitle">REVERB</span>
+          </div>
         </div>
-        <button class="modal-close-btn" onclick="closePersonalizarModal()">&times;</button>
+
+        <div class="modal-header-actions">
+          <!-- TOGGLE ACTIVACIÓN MÓDULO -->
+          <div class="switch-toggle" id="modalFxToggle" title="Activar/Desactivar módulo"></div>
+          
+          <!-- BOTÓN MICRÓFONO COMPACTO DENTRO DE PERSONALIZAR -->
+          <button class="compact-mic-btn" id="compactMicModal" onclick="toggleVoiceRecording()" title="Hablar comando en este contexto">
+            <span class="compact-mic-dot"></span>
+            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+            <span id="compactMicModalText">Mic</span>
+          </button>
+
+          <button class="modal-close-btn" onclick="closePersonalizarModal()">&times;</button>
+        </div>
       </div>
+
       <div class="modal-body">
-        <div class="modal-section-title">Parámetros Detallados & Controles DSP</div>
-        <div class="advanced-params-grid" id="advancedGrid">
-          <!-- Se inyecta dinámicamente según el efecto seleccionado -->
+        <!-- CONTROLES PRINCIPALES DEL MÓDULO -->
+        <div class="modal-section-title">Parámetros Principales</div>
+        <div class="advanced-params-grid" id="primaryGrid">
+          <!-- Inyectado dinámicamente -->
+        </div>
+
+        <!-- SECCIÓN AVANZADO PLEGABLE (ACCORDION) -->
+        <div class="adv-accordion-card" id="advAccordionCard">
+          <button class="adv-accordion-toggle" onclick="toggleAdvAccordion()">
+            <span>Avanzado (Filtros, Modulación & Tono)</span>
+            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+          </button>
+          <div class="adv-accordion-content">
+            <div class="advanced-params-grid" id="advancedGrid">
+              <!-- Inyectado dinámicamente -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL DE AJUSTES (CONFIGURACIÓN ⚙)
+       ========================================== -->
+  <div class="modal-overlay" id="modalSettings" onclick="closeSettingsModal(event)">
+    <div class="settings-modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>CONFIGURACIÓN DEL SISTEMA</span>
+        </div>
+        <button class="modal-close-btn" onclick="closeSettingsModal()">&times;</button>
+      </div>
+      <div class="settings-list">
+        <!-- IDIOMA -->
+        <div class="settings-item">
+          <div class="settings-info">
+            <span class="settings-title">Idioma de Reconocimiento</span>
+            <span class="settings-desc">Motor de voz del navegador o DAW</span>
+          </div>
+          <select class="settings-select" id="settingsLangSelect" onchange="updateSettingsLang(this.value)">
+            <option value="es-ES">Español (ES)</option>
+            <option value="en-US">English (US)</option>
+          </select>
+        </div>
+
+        <!-- TIEMPO SILENCIO AUTO-STOP -->
+        <div class="settings-item">
+          <div class="settings-info">
+            <span class="settings-title">Auto-detener Silencio</span>
+            <span class="settings-desc">Segundos antes de detener la escucha</span>
+          </div>
+          <div class="settings-slider-wrapper">
+            <input type="range" class="settings-range-input" id="settingsSilenceSlider" min="1" max="5" step="0.5" value="3.5" oninput="updateSettingsSilence(this.value)">
+            <span class="settings-val-badge" id="settingsSilenceVal">3.5s</span>
+          </div>
+        </div>
+
+        <!-- SENSIBILIDAD -->
+        <div class="settings-item">
+          <div class="settings-info">
+            <span class="settings-title">Sensibilidad Micrófono</span>
+            <span class="settings-desc">Calibración de umbral de entrada</span>
+          </div>
+          <div class="settings-slider-wrapper">
+            <input type="range" class="settings-range-input" id="settingsSensSlider" min="0" max="100" step="1" value="75" oninput="updateSettingsSens(this.value)">
+            <span class="settings-val-badge" id="settingsSensVal">75%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL DE GUÍA DE COMANDOS DE VOZ (?)
+       ========================================== -->
+  <div class="modal-overlay" id="modalCommands" onclick="closeCommandsModal(event)">
+    <div class="commands-modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>GUÍA DE COMANDOS DE VOZ</span>
+        </div>
+        <button class="modal-close-btn" onclick="closeCommandsModal()">&times;</button>
+      </div>
+      <div class="commands-body">
+        <p class="commands-intro">
+          Presiona el botón del micrófono y di cualquiera de estas órdenes en voz natural. También puedes hacer click sobre un comando para probarlo al instante:
+        </p>
+
+        <!-- RECETAS PREDEFINIDAS -->
+        <div>
+          <div class="commands-category-title">RECETAS DE AUTOR (PRESETS RÁPIDOS)</div>
+          <div class="commands-grid">
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Dame un preset')">
+              <span class="command-phrase">"Dame un preset"</span>
+              <span class="command-action-desc">Aplica starter Easy Mix al 50%</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Reverb oscura')">
+              <span class="command-phrase">"Reverb oscura"</span>
+              <span class="command-action-desc">Reverb amplia, decay largo y tono oscuro</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Reverb intima')">
+              <span class="command-phrase">"Reverb íntima"</span>
+              <span class="command-action-desc">Ambiente corto y sutil para presencia vocal</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Reverb amplia')">
+              <span class="command-phrase">"Reverb amplia"</span>
+              <span class="command-action-desc">Espacio amplio con decay de 2.8s</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Slapback')">
+              <span class="command-phrase">"Slapback"</span>
+              <span class="command-action-desc">Delay corto 100ms rápido estilo vintage</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Eco ping-pong')">
+              <span class="command-phrase">"Eco ping-pong"</span>
+              <span class="command-action-desc">Delay a corchea con rebote estéreo</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Dobles anchos')">
+              <span class="command-phrase">"Dobles anchos"</span>
+              <span class="command-action-desc">Doubler 90% anchura y microafinación</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Doubler sutil')">
+              <span class="command-phrase">"Doubler sutil"</span>
+              <span class="command-action-desc">Engrosamiento vocal suave y centrado</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Chorus suave')">
+              <span class="command-phrase">"Chorus suave"</span>
+              <span class="command-action-desc">Modulación lenta y sedosa</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Chorus ancho')">
+              <span class="command-phrase">"Chorus ancho"</span>
+              <span class="command-action-desc">Modulación profunda con apertura espacial</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Delay corchea')">
+              <span class="command-phrase">"Delay corchea"</span>
+              <span class="command-action-desc">Eco rítmico sincronizado con feedback 25%</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Pon chorus suave y reverb oscura')">
+              <span class="command-phrase">"Pon chorus suave y reverb oscura"</span>
+              <span class="command-action-desc">Comando compuesto multi-módulo</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTROL DIRECTO DE EFECTOS -->
+        <div>
+          <div class="commands-category-title">CONTROL DIRECTO Y ENCENDIDO</div>
+          <div class="commands-grid">
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Activar reverb')">
+              <span class="command-phrase">"Activar [efecto]"</span>
+              <span class="command-action-desc">Enciende reverb, chorus, delay o doubler</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Desactivar delay')">
+              <span class="command-phrase">"Desactivar [efecto]"</span>
+              <span class="command-action-desc">O 'quitar / apagar delay, chorus, etc.'</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Más reverb')">
+              <span class="command-phrase">"Más [efecto]"</span>
+              <span class="command-action-desc">Incrementa la cantidad en +5%</span>
+            </div>
+            <div class="command-pill" onclick="testVoiceCommandFromModal('Menos reverb')">
+              <span class="command-phrase">"Menos [efecto]"</span>
+              <span class="command-action-desc">Reduce la cantidad en -5%</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Estado General
-    const state = {
-      viewMode: 'hablar', // 'hablar' o 'efectos'
+    // ==========================================
+    // ESTADO CENTRALIZADO Y CONFIGURACIÓN
+    // ==========================================
+    var state = {
+      viewMode: 'hablar',
       routing: 'insert',
+      activeCategory: 'favoritos',
+      isRecording: false,
+      outGain: 0.0,
+      activeContextModule: null,
+      settings: {
+        lang: 'es-ES',
+        silenceTimeoutSec: 3.5,
+        sensitivity: 75
+      },
       effects: {
+        // --- CAPA MIX (EASY MIX MODULO PROCESADOR) ---
+        mix: {
+          name: 'Easy Mix',
+          category: 'mix',
+          implemented: true,
+          on: false,
+          amount: 50,
+          primary: [
+            { name: 'Quitar Graves (HPF)', unit: '%', max: 100, val: 30, dspKey: 'hpf' },
+            { name: 'Quitar Cartón (Boxy)', unit: '%', max: 100, val: 25, dspKey: 'boxy' },
+            { name: 'De-Esser (Quitar S)', unit: '%', max: 100, val: 40, dspKey: 'deesser' },
+            { name: 'Presencia Medios', unit: '%', max: 100, val: 35, dspKey: 'presMid' }
+          ],
+          advanced: [
+            { name: 'Presencia Altos', unit: '%', max: 100, val: 30, dspKey: 'presHigh' },
+            { name: 'Saturación Tape', unit: '%', max: 100, val: 20, dspKey: 'sat' },
+            { name: 'Aire & Brillo', unit: '%', max: 100, val: 35, dspKey: 'air' },
+            { name: 'Compresión Vocal', unit: '%', max: 100, val: 45, dspKey: 'comp' }
+          ]
+        },
+        // --- FAVORITOS & ESPACIO / MODULACIÓN IMPLEMENTADOS ---
         doubler: {
           name: 'Doubler',
+          category: 'modulacion',
+          implemented: true,
           on: false,
-          amount: 20,
+          amount: 0,
+          primary: [
+            { name: 'Anchura Estéreo', unit: '%', max: 100, val: 80 },
+            { name: 'Desafinación', unit: ' ct', max: 50, val: 5 }
+          ],
           advanced: [
-            { name: 'Separación Stereo', val: '85%' },
-            { name: 'Desafinación', val: '14 ct' },
-            { name: 'Retardo L/R', val: '12 ms' },
-            { name: 'Corte de Graves', val: '120 Hz' }
+            { name: 'Separación Temporal', unit: ' ms', max: 40, val: 18 },
+            { name: 'Corte de Graves', unit: ' Hz', max: 400, val: 80 }
           ]
         },
         chorus: {
           name: 'Chorus',
+          category: 'modulacion',
+          implemented: true,
           on: false,
-          amount: 15,
+          amount: 0,
+          primary: [
+            { name: 'Velocidad LFO', unit: ' Hz', max: 5, val: 0.8 },
+            { name: 'Profundidad', unit: '%', max: 100, val: 50 }
+          ],
           advanced: [
-            { name: 'Profundidad', val: '60%' },
-            { name: 'Velocidad LFO', val: '1.2 Hz' },
-            { name: 'Fase Stereo', val: '90°' },
-            { name: 'Color Cálido', val: 'Activo' }
+            { name: 'Anchura Estéreo', unit: '%', max: 100, val: 80 },
+            { name: 'Color Cálido', unit: '%', max: 100, val: 40 }
           ]
         },
         delay: {
           name: 'Delay',
+          category: 'espacio',
+          implemented: true,
           on: false,
-          amount: 12,
+          amount: 0,
+          primary: [
+            { name: 'Tiempo Sync', unit: ' ms', max: 1000, val: 250 },
+            { name: 'Feedback', unit: '%', max: 100, val: 25 }
+          ],
           advanced: [
-            { name: 'Tiempo Sync', val: '1/4D' },
-            { name: 'Repeticiones', val: '35%' },
-            { name: 'Modo Ping-Pong', val: 'Activo' },
-            { name: 'Filtro Pasa Altos', val: '220 Hz' }
+            { name: 'Modo Ping-Pong', unit: '%', max: 100, val: 0 },
+            { name: 'Filtro Pasa Altos', unit: ' Hz', max: 600, val: 120 }
           ]
         },
         reverb: {
           name: 'Reverb',
-          on: true,
-          amount: 18,
+          category: 'espacio',
+          implemented: true,
+          on: false,
+          amount: 0,
+          primary: [
+            { name: 'Duración (Decay)', unit: ' s', max: 6, val: 1.8 },
+            { name: 'Oscuridad (Damp)', unit: '%', max: 100, val: 50 }
+          ],
           advanced: [
-            { name: 'Duración (Decay)', val: '1.2 s' },
-            { name: 'Anchura Stereo', val: '80%' },
-            { name: 'Oscuridad (Damp)', val: '60%' },
-            { name: 'Pre-retardo', val: '24 ms' }
+            { name: 'Pre-retardo', unit: ' ms', max: 100, val: 20 },
+            { name: 'Anchura Estéreo', unit: '%', max: 100, val: 85 }
           ]
-        }
-      },
-      outGain: 0.0,
-      isRecording: false,
-      history: []
+        },
+        
+      }
     };
 
-    // Dropdown de Modos (Modo Hablar vs Modo Efectos)
-    function toggleDropdown() {
-      document.getElementById('dropdownMenu').classList.toggle('show');
+    // ==========================================
+    // SISTEMA DE HISTORIAL (UNDO / REDO)
+    // ==========================================
+    var undoStack = [];
+    var redoStack = [];
+
+    function pushSnapshot() {
+      var snapshot = {
+        routing: state.routing,
+        outGain: state.outGain,
+        effects: JSON.parse(JSON.stringify(state.effects))
+      };
+      undoStack.push(snapshot);
+      if (undoStack.length > 25) undoStack.shift();
+      redoStack = []; // Invalidar historial rehacer al haber nueva acción
+      updateHistoryButtons();
     }
+
+    function applySnapshot(snapshot) {
+      if (!snapshot) return;
+      state.routing = snapshot.routing;
+      state.outGain = snapshot.outGain;
+      state.effects = JSON.parse(JSON.stringify(snapshot.effects));
+
+      // Actualizar vista de routing
+      document.getElementById('btnRoutingInsert').classList.toggle('active', state.routing === 'insert');
+      document.getElementById('btnRoutingSend').classList.toggle('active', state.routing === 'send');
+      sendParamToJuce('global.routingMode', state.routing === 'send' ? 1.0 : 0.0);
+
+      // Actualizar perilla de salida
+      document.getElementById('valOutDb').textContent = (state.outGain >= 0 ? '+' : '') + state.outGain.toFixed(1) + ' dB';
+      var pct = (state.outGain + 24) / 30;
+      var offset = 88 - (pct * 66);
+      var kf = document.getElementById('knobFill');
+      if (kf) kf.style.strokeDashoffset = offset;
+      sendParamToJuce('output.gainDb', state.outGain);
+
+      // Actualizar toggles y gauges de efectos
+      renderEffectsGrid();
+      if (currentModalFxKey) {
+        renderModalControls(currentModalFxKey);
+      }
+      for (var fxKey in state.effects) {
+        var fx = state.effects[fxKey];
+        if (fx.implemented) {
+          sendParamToJuce(fxKey + '.enabled', fx.on ? 1.0 : 0.0);
+          sendParamToJuce(fxKey + '.amount', fx.amount);
+        }
+      }
+      updateHistoryButtons();
+    }
+
+    function triggerUndo() {
+      if (undoStack.length === 0) return;
+      var currentSnapshot = {
+        routing: state.routing,
+        outGain: state.outGain,
+        effects: JSON.parse(JSON.stringify(state.effects))
+      };
+      redoStack.push(currentSnapshot);
+
+      var prev = undoStack.pop();
+      applySnapshot(prev);
+    }
+
+    function triggerRedo() {
+      if (redoStack.length === 0) return;
+      var currentSnapshot = {
+        routing: state.routing,
+        outGain: state.outGain,
+        effects: JSON.parse(JSON.stringify(state.effects))
+      };
+      undoStack.push(currentSnapshot);
+
+      var next = redoStack.pop();
+      applySnapshot(next);
+    }
+
+    function updateHistoryButtons() {
+      var btnUndo = document.getElementById('btnUndo');
+      var btnRedo = document.getElementById('btnRedo');
+      if (btnUndo) btnUndo.disabled = undoStack.length === 0;
+      if (btnRedo) btnRedo.disabled = redoStack.length === 0;
+    }
+
+    // ==========================================
+    // SISTEMA GUARDAR PRESET (LOCALSTORAGE)
+    // ==========================================
+    function savePreset() {
+      try {
+        var dataToSave = {
+          viewMode: state.viewMode,
+          routing: state.routing,
+          outGain: state.outGain,
+          settings: state.settings,
+          effects: state.effects
+        };
+        localStorage.setItem('vocalpreset_state', JSON.stringify(dataToSave));
+        
+        var saveBtn = document.getElementById('btnSavePreset');
+        var saveText = document.getElementById('saveBtnText');
+        if (saveText) {
+          saveText.textContent = '✓ Guardado';
+          setTimeout(function() {
+            saveText.textContent = 'Guardar';
+          }, 1500);
+        }
+      } catch (err) {
+        console.warn('[Storage Error]', err);
+      }
+    }
+
+    function loadSavedPreset() {
+      try {
+        var raw = localStorage.getItem('vocalpreset_state');
+        if (raw) {
+          var parsed = JSON.parse(raw);
+          if (parsed.viewMode) {
+            selectMode(parsed.viewMode);
+          }
+          if (parsed.effects) {
+            state.effects = parsed.effects;
+          }
+          if (parsed.routing) {
+            state.routing = parsed.routing;
+          }
+          if (parsed.outGain !== undefined) {
+            state.outGain = parsed.outGain;
+          }
+          if (parsed.settings) {
+            state.settings = Object.assign(state.settings, parsed.settings);
+            // Reflejar en modal de settings
+            var langSel = document.getElementById('settingsLangSelect');
+            if (langSel) langSel.value = state.settings.lang;
+            var silSlider = document.getElementById('settingsSilenceSlider');
+            if (silSlider) silSlider.value = state.settings.silenceTimeoutSec;
+            var silVal = document.getElementById('settingsSilenceVal');
+            if (silVal) silVal.textContent = state.settings.silenceTimeoutSec + 's';
+            var sensSlider = document.getElementById('settingsSensSlider');
+            if (sensSlider) sensSlider.value = state.settings.sensitivity;
+            var sensVal = document.getElementById('settingsSensVal');
+            if (sensVal) sensVal.textContent = state.settings.sensitivity + '%';
+          }
+        }
+      } catch (e) {
+        console.warn('[Load Storage Error]', e);
+      }
+    }
+
+    // ==========================================
+    // NAVEGACIÓN ENTRE VISTAS
+    // ==========================================
+    
 
     function selectMode(mode) {
-      state.viewMode = mode;
-      document.getElementById('currentModeLabel').textContent = mode === 'hablar' ? 'Modo Hablar' : 'Modo Efectos';
-      document.getElementById('itemHablar').classList.toggle('active', mode === 'hablar');
-      document.getElementById('itemEfectos').classList.toggle('active', mode === 'efectos');
-
-      const screenHablar = document.getElementById('screenHablar');
-      const screenEfectos = document.getElementById('screenEfectos');
-
-      if (mode === 'hablar') {
-        screenHablar.style.display = 'flex';
-        screenEfectos.style.display = 'none';
+      // Legacy compatibility - routes to toggleEffectsView
+      if (mode === "efectos") {
+        if (!effectsViewOpen) toggleEffectsView();
       } else {
-        screenHablar.style.display = 'none';
-        screenEfectos.style.display = 'flex';
+        if (effectsViewOpen) toggleEffectsView();
       }
-
-      document.getElementById('dropdownMenu').classList.remove('show');
     }
 
-    window.addEventListener('click', (e) => {
+    var effectsViewOpen = false;
+
+    function toggleEffectsView() {
+      effectsViewOpen = !effectsViewOpen;
+      var screenHablar = document.getElementById("screenHablar");
+      var screenEfectos = document.getElementById("screenEfectos");
+      var gearBtn = document.getElementById("gearEffectsBtn");
+      if (effectsViewOpen) {
+        if (screenHablar) screenHablar.style.display = "none";
+        if (screenEfectos) screenEfectos.style.display = "flex";
+        if (gearBtn) gearBtn.classList.add("active");
+      } else {
+        if (screenHablar) screenHablar.style.display = "flex";
+        if (screenEfectos) screenEfectos.style.display = "none";
+        if (gearBtn) gearBtn.classList.remove("active");
+      }
+      updateGearDot();
+    }
+
+    function updateGearDot() {
+      var dot = document.getElementById("gearActiveDot");
+      if (!dot) return;
+      var hasActive = Object.values(state.effects).some(function(e) { return e.on; });
+      dot.classList.toggle("visible", hasActive);
+    }
+
+    window.addEventListener('click', function(e) {
       if (!e.target.closest('.view-mode-selector')) {
-        document.getElementById('dropdownMenu').classList.remove('show');
+        var _dm = document.getElementById('dropdownMenu'); if(_dm) _dm.classList.remove('show');
       }
     });
 
-    // Toggle Bypass de Efectos
-    function toggleFx(fxKey, event) {
-      if (event) event.stopPropagation();
-      const fx = state.effects[fxKey];
-      if (!fx) return;
+    // ==========================================
+    // SINCRONIZACIÓN DE ESTADO NATIVO C++ (JUCE <-> JS)
+    // ==========================================
+    window.applyNativeState = function(data) {
+      if (!data) return;
+      if (data.routingMode !== undefined) {
+        state.routing = data.routingMode === 1 ? 'send' : 'insert';
+        document.getElementById('btnRoutingInsert').classList.toggle('active', state.routing === 'insert');
+        document.getElementById('btnRoutingSend').classList.toggle('active', state.routing === 'send');
+      }
+      if (data.outputGainDb !== undefined) {
+        state.outGain = data.outputGainDb;
+        document.getElementById('valOutDb').textContent = (state.outGain >= 0 ? '+' : '') + state.outGain.toFixed(1) + ' dB';
+        var pct = (state.outGain + 24) / 30;
+        var offset = 88 - (pct * 66);
+        var kf = document.getElementById('knobFill');
+        if (kf) kf.style.strokeDashoffset = offset;
+      }
 
-      fx.on = !fx.on;
-      const toggleEl = document.getElementById('toggle_' + fxKey);
-      if (toggleEl) toggleEl.classList.toggle('on', fx.on);
+      // Doubler
+      if (state.effects.doubler) {
+        if (data.doublerOn !== undefined) state.effects.doubler.on = data.doublerOn;
+        if (data.doublerAmount !== undefined) state.effects.doubler.amount = data.doublerAmount;
+      }
+      // Chorus
+      if (state.effects.chorus) {
+        if (data.chorusOn !== undefined) state.effects.chorus.on = data.chorusOn;
+        if (data.chorusAmount !== undefined) state.effects.chorus.amount = data.chorusAmount;
+      }
+      // Delay
+      if (state.effects.delay) {
+        if (data.delayOn !== undefined) state.effects.delay.on = data.delayOn;
+        if (data.delayAmount !== undefined) state.effects.delay.amount = data.delayAmount;
+      }
+      // Reverb
+      if (state.effects.reverb) {
+        if (data.reverbOn !== undefined) state.effects.reverb.on = data.reverbOn;
+        if (data.reverbAmount !== undefined) state.effects.reverb.amount = data.reverbAmount;
+        if (data.reverbDecay !== undefined && state.effects.reverb.primary[0])
+          state.effects.reverb.primary[0].val = data.reverbDecay;
+        if (data.reverbDarkness !== undefined && state.effects.reverb.primary[1])
+          state.effects.reverb.primary[1].val = data.reverbDarkness;
+        if (data.reverbWidth !== undefined && state.effects.reverb.advanced[1])
+          state.effects.reverb.advanced[1].val = data.reverbWidth;
+      }
 
-      setTranscriptText(fx.name + (fx.on ? ' activado' : ' desactivado'));
-      sendToJuce(fxKey + '_on', fx.on ? 1.0 : 0.0);
+      // Mix Chain
+      if (state.effects.mix) {
+        if (data.mixMacro !== undefined) {
+          state.effects.mix.on = (data.mixMacro > 0.001);
+          state.effects.mix.amount = Math.round(data.mixMacro);
+        }
+        if (data.mixHpf !== undefined && state.effects.mix.primary[0]) state.effects.mix.primary[0].val = Math.round(data.mixHpf);
+        if (data.mixBoxy !== undefined && state.effects.mix.primary[1]) state.effects.mix.primary[1].val = Math.round(data.mixBoxy);
+        if (data.mixDeesser !== undefined && state.effects.mix.primary[2]) state.effects.mix.primary[2].val = Math.round(data.mixDeesser);
+        if (data.mixPresMid !== undefined && state.effects.mix.primary[3]) state.effects.mix.primary[3].val = Math.round(data.mixPresMid);
+        if (data.mixPresHigh !== undefined && state.effects.mix.advanced[0]) state.effects.mix.advanced[0].val = Math.round(data.mixPresHigh);
+        if (data.mixSat !== undefined && state.effects.mix.advanced[1]) state.effects.mix.advanced[1].val = Math.round(data.mixSat);
+        if (data.mixAir !== undefined && state.effects.mix.advanced[2]) state.effects.mix.advanced[2].val = Math.round(data.mixAir);
+        if (data.mixComp !== undefined && state.effects.mix.advanced[3]) state.effects.mix.advanced[3].val = Math.round(data.mixComp);
+      }
+
+      renderEffectsGrid();
+      if (currentModalFxKey) {
+        renderModalControls(currentModalFxKey);
+      }
+      savePreset();
+    };
+
+    // ==========================================
+    // SISTEMA DE VOZ EN TIEMPO REAL (CLICK-TO-TALK CONTINUO)
+    // ==========================================
+    var recognition = null;
+    var voiceTimeout = null;
+    var transcriptClearTimeout = null;
+    var accumulatedVoiceText = '';
+
+    function initSpeechRecognition() {
+      var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true; // No detenerse automáticamente al pausar
+        recognition.lang = state.settings.lang || 'es-ES';
+        recognition.interimResults = true;
+
+        recognition.onstart = function() {
+          updateRecordingUI(true);
+        };
+
+        recognition.onresult = function(event) {
+          var interimTranscript = '';
+          for (var i = event.resultIndex; i < event.results.length; ++i) {
+            var transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              accumulatedVoiceText += ' ' + transcript;
+            } else {
+              interimTranscript += transcript;
+            }
+          }
+
+          var currentDisplay = (accumulatedVoiceText + ' ' + interimTranscript).trim();
+          if (currentDisplay) {
+            setLiveTranscript(currentDisplay, true);
+          }
+        };
+
+        recognition.onerror = function(event) {
+          console.log('[Speech Error]', event.error);
+          if (event.error !== 'no-speech') {
+            stopVoiceRecording();
+          }
+        };
+
+        recognition.onend = function() {
+          if (state.isRecording) {
+            // Si se desconectó inesperadamente pero el usuario no ha hecho click para parar, reiniciar
+            try {
+              recognition.start();
+            } catch (e) {
+              stopVoiceRecording();
+            }
+          }
+        };
+      }
     }
 
-    // Drag del Gauge Circular (Sube de izquierda a derecha en sentido horario)
-    let activeGauge = null;
-    let gaugeStartY = 0;
-    let gaugeStartVal = 0;
+    function toggleVoiceRecording() {
+      if (!state.isRecording) {
+        startVoiceRecording();
+      } else {
+        stopVoiceRecording();
+      }
+    }
+
+    function startVoiceRecording() {
+      state.isRecording = true;
+      accumulatedVoiceText = '';
+      clearTimeout(transcriptClearTimeout);
+      clearTimeout(voiceTimeout);
+      clearLiveTranscript();
+      updateRecordingUI(true);
+
+      if (recognition) {
+        recognition.lang = state.settings.lang || 'es-ES';
+        try {
+          recognition.start();
+        } catch (e) {
+          console.warn('[Speech recognition already running]');
+        }
+      }
+    }
+
+    function stopVoiceRecording() {
+      if (!state.isRecording) return;
+      state.isRecording = false;
+      clearTimeout(voiceTimeout);
+
+      if (recognition) {
+        try { recognition.stop(); } catch (e) {}
+      }
+
+      updateRecordingUI(false);
+
+      // Obtener el texto acumulado durante toda la sesión de habla
+      var textToProcess = accumulatedVoiceText.trim();
+      var currentDisplay = document.getElementById('transcriptText');
+      if (!textToProcess && currentDisplay && currentDisplay.textContent) {
+        textToProcess = currentDisplay.textContent.trim();
+      }
+
+      if (textToProcess) {
+        processVoiceCommand(textToProcess);
+      } else {
+        clearLiveTranscript();
+      }
+      accumulatedVoiceText = '';
+    }
+
+    function updateRecordingUI(isRecording) {
+      // 1. Botón Modo Hablar
+      var btn = document.getElementById('micToggleBtn');
+      var text = document.getElementById('micBtnText');
+      var cursor = document.getElementById('transcriptCursor');
+
+      if (btn) {
+        if (isRecording) {
+          btn.classList.add('listening');
+          if (text) text.textContent = 'Escuchando... (Click para procesar)';
+          if (cursor) cursor.classList.add('active');
+        } else {
+          btn.classList.remove('listening');
+          if (text) text.textContent = 'Presionar para hablar';
+          if (cursor) cursor.classList.remove('active');
+        }
+      }
+
+      // 2. Botón Mic compacto Modo Efectos
+      var compactEffects = document.getElementById('compactMicEffects');
+      if (compactEffects) {
+        compactEffects.classList.toggle('listening', isRecording);
+        var t = document.getElementById('compactMicEffectsText');
+        if (t) t.textContent = isRecording ? 'Escuchando...' : 'Mic';
+      }
+
+      // 3. Botón Mic compacto Modal Personalizar
+      var compactModal = document.getElementById('compactMicModal');
+      if (compactModal) {
+        compactModal.classList.toggle('listening', isRecording);
+        var tm = document.getElementById('compactMicModalText');
+        if (tm) tm.textContent = isRecording ? 'Escuchando...' : 'Mic';
+      }
+    }
+
+    function setLiveTranscript(text, isInterim) {
+      var el = document.getElementById('transcriptText');
+      if (!el) return;
+      el.textContent = text;
+      if (isInterim) {
+        el.classList.add('interim');
+      } else {
+        el.classList.remove('interim');
+      }
+    }
+
+    function clearLiveTranscript() {
+      var el = document.getElementById('transcriptText');
+      if (el) el.textContent = '';
+    }
+
+        function setTemporaryTranscript(msg, isSuccess) {
+      if (isSuccess === undefined) isSuccess = true;
+      setLiveTranscript(msg, false);
+      if (transcriptClearTimeout) clearTimeout(transcriptClearTimeout);
+      transcriptClearTimeout = setTimeout(function() {
+        setLiveTranscript('', false);
+      }, 3500);
+
+      // When an effect is applied via voice, briefly show Modo Efectos
+      // so the user can see the dials update visually, then return
+      if (isSuccess && !effectsViewOpen) {
+        var effectKeys = ['reverb', 'delay', 'chorus', 'doubler'];
+        var isEffectCmd = false;
+        for (var i = 0; i < effectKeys.length; i++) {
+          if (state.effects[effectKeys[i]] && state.effects[effectKeys[i]].on) {
+            isEffectCmd = true; break;
+          }
+        }
+        if (isEffectCmd) {
+          selectMode('efectos');
+          if (transcriptClearTimeout) clearTimeout(transcriptClearTimeout);
+          transcriptClearTimeout = setTimeout(function() {
+            setLiveTranscript('', false);
+          }, 3500);
+        }
+      }
+    }
+
+    // ==========================================
+    // SANITIZADOR FONÉTICO INTELIGENTE TIER 1 (0ms LATENCIA, OFFLINE/LOCAL)
+    // ==========================================
+    function sanitizeVoiceText(rawText) {
+      if (!rawText) return '';
+      var clean = rawText.toLowerCase().trim()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+
+      // Corrección de artefactos fonéticos habituales en español/inglés:
+      // "river", "rever", "reber", "riber", "reberb", "reverberacion" -> "reverb"
+      clean = clean.replace(/\b(river|rever|reber|reverbe|reberb|reverberacion|reberberacion|riber|revel)\b/g, 'reverb');
+      // "diley", "deley", "dilei", "dilae" -> "delay"
+      clean = clean.replace(/\b(diley|deley|dilei|dilae|deleis)\b/g, 'delay');
+      // "corus", "choro", "choros", "curo" -> "chorus"
+      clean = clean.replace(/\b(corus|choro|choros|curo|curos)\b/g, 'chorus');
+      // "dobler", "dabler", "doblador", "dobles", "doble" -> "doubler"
+      clean = clean.replace(/\b(dobler|dabler|doblador|doble|dobles)\b/g, 'doubler');
+      // Normalizaciones fonéticas de presets
+      clean = clean.replace(/\b(intima|intimo)\b/g, 'intima');
+      clean = clean.replace(/\b(eslapbak|eslapback|slap|slap bak)\b/g, 'slapback');
+      clean = clean.replace(/\b(pingpong|pin pon|pim pom|ping pong)\b/g, 'ping-pong');
+
+      return clean;
+    }
+
+    // ==========================================
+    // RESOLVER INTELIGENTE DE INTENCIÓN VÍA NVIDIA AI TIER 2 (ONLINE / ASYNC)
+    // ==========================================
+    function resolveIntentWithNvidiaAI(userSpeech) {
+      return new Promise(function(resolve) {
+        var apiKey = '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';
+        var prompt = 'Tu rol es clasificar el comando de voz del productor musical en el plugin OFFSZN Vocal Preset al comando canonico estricto.\n' +
+          'Comandos validos:\n' +
+          '- reverb (o river/rever)\n' +
+          '- reverb oscura\n' +
+          '- reverb amplia\n' +
+          '- reverb intima\n' +
+          '- slapback\n' +
+          '- eco ping-pong\n' +
+          '- delay corchea\n' +
+          '- dobles anchos\n' +
+          '- doubler ancho\n' +
+          '- doubler sutil\n' +
+          '- chorus suave\n' +
+          '- chorus ancho\n' +
+          '- mas reverb, menos reverb, mas delay, menos delay, mas chorus, menos chorus, mas doubler, menos doubler\n' +
+          '- desactivar reverb, desactivar delay, desactivar chorus, desactivar doubler\n' +
+          '- modo efectos, modo hablar, modo inserto, modo envio\n' +
+          '- guardar, deshacer, rehacer\n\n' +
+          'IMPORTANTE: Responde UNICAMENTE con el nombre exacto del comando canonico en minusculas, o NO_COMMAND si no tiene sentido musical.';
+        var controller = new AbortController();
+        var timeoutId = setTimeout(function() { controller.abort(); }, 3500);
+        fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + apiKey
+          },
+          body: JSON.stringify({
+            model: 'nvidia/nemotron-3.5-lightning-30b-a3b',
+            messages: [
+              { role: 'system', content: prompt },
+              { role: 'user', content: userSpeech }
+            ],
+            max_tokens: 32,
+            temperature: 0.1,
+            chat_template_kwargs: { enable_thinking: false }
+          }),
+          signal: controller.signal
+        }).then(function(res) {
+          clearTimeout(timeoutId);
+          if (!res.ok) { resolve(null); return; }
+          return res.json();
+        }).then(function(data) {
+          if (!data) return;
+          var text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+          if (text && text.trim() && !text.includes('NO_COMMAND')) {
+            resolve(text.trim().toLowerCase());
+          } else {
+            resolve(null);
+          }
+        }).catch(function(err) {
+          console.warn('[NVIDIA AI Resolver]', err.message);
+          resolve(null);
+        });
+      }); // end Promise
+    }
+
+    // ==========================================
+    // PARSER GRAMÁTICA V2 (RECETAS, COMPUESTOS, RELATIVOS, CONTEXTO)
+    // ==========================================
+    function processVoiceCommand(cmd) {
+      if (!cmd || !cmd.trim()) {
+        clearLiveTranscript();
+        return;
+      }
+
+      // Despacho directo al backend JUCE C++ (texto crudo para logging/telemetría interna)
+      sendVoiceToJuce(cmd);
+
+      // PASO 1: Sanitizado fonético inteligente Tier 1 (0ms)
+      var clean = sanitizeVoiceText(cmd);
+
+      // REGLA V2: Negaciones desconocidas ("no pongas", "no actives") son no-op seguro
+      if (clean.includes('no pongas') || clean.includes('no actives') || clean.includes('no agregar') || clean.startsWith('no ')) {
+        if (clean.includes('no quiero reverb')) {
+          pushSnapshot();
+          setFxState('reverb', false);
+          setTemporaryTranscript('Reverb desactivada');
+          return;
+        }
+        if (clean.includes('no quiero delay')) {
+          pushSnapshot();
+          setFxState('delay', false);
+          setTemporaryTranscript('Delay desactivado');
+          return;
+        }
+        if (clean.includes('no quiero chorus')) {
+          pushSnapshot();
+          setFxState('chorus', false);
+          setTemporaryTranscript('Chorus desactivado');
+          return;
+        }
+        if (clean.includes('no quiero doubler')) {
+          pushSnapshot();
+          setFxState('doubler', false);
+          setTemporaryTranscript('Doubler desactivado');
+          return;
+        }
+        // Negación no-op: no cambia nada
+        setTemporaryTranscript('Comando no reconocido', false);
+        return;
+      }
+
+      // COMANDOS COMPUESTOS ("pon chorus suave y reverb oscura")
+      if (clean.includes(' y ') && !clean.includes('delay') && !clean.includes('decay')) {
+        var parts = clean.split(' y ');
+        if (parts.length === 2) {
+          pushSnapshot();
+          var r1 = executeSingleCommand(parts[0].trim());
+          var r2 = executeSingleCommand(parts[1].trim());
+          if (r1.success && r2.success) {
+            setTemporaryTranscript(r1.label + " · " + r2.label);
+            return;
+          } else {
+            // Regla v2: Si una cláusula es desconocida, revertir y no aplicar ninguna
+            triggerUndo();
+            setTemporaryTranscript('Comando no reconocido', false);
+            return;
+          }
+        }
+      }
+
+      // PASO 2: Intentar ejecutar comando directo localmente
+      pushSnapshot();
+      var res = executeSingleCommand(clean);
+      if (res.success) {
+        setTemporaryTranscript(res.label);
+        return;
+      }
+
+      // PASO 3: Si el parser local no reconoció la frase natural ("dame una sensación de cueva", "abre la voz con algo de river"),
+      // consultar a NVIDIA AI de forma asíncrona mientras se mantiene la UI 100% fluida
+      setLiveTranscript('Analizando intencion...', true);
+      resolveIntentWithNvidiaAI(cmd).then(function(resolvedIntent) {
+        if (resolvedIntent) {
+          var aiClean = sanitizeVoiceText(resolvedIntent);
+          var aiRes = executeSingleCommand(aiClean);
+          if (aiRes.success) {
+            setTemporaryTranscript(aiRes.label);
+            return;
+          }
+        }
+        // Si no se reconocio ni local ni remotamente
+        undoStack.pop();
+        updateHistoryButtons();
+        setTemporaryTranscript('Comando no reconocido', false);
+      });
+    }
+
+    function executeSingleCommand(clean) {
+      // 1. RECETAS DE AUTOR ESPECIFICACIÓN V2
+      if (clean.includes('dame preset') || clean.includes('dame un preset') || clean.includes('mejora mi voz') || clean.includes('mejorar mi voz') || clean.includes('preset starter') || clean.includes('starter') || clean.includes('modo mix') || clean.includes('easy mix') || clean.includes('voz pro')) {
+        // Starter de Willie: activa la cadena Easy Mix con el knob MIX al 50%
+        setFxState('mix', true, 50);
+        // Si no se han configurado knobs antes, asegurar los valores iniciales
+        var mixParams = [
+          { key: 'hpf', val: state.effects.mix.primary[0].val },
+          { key: 'boxy', val: state.effects.mix.primary[1].val },
+          { key: 'deesser', val: state.effects.mix.primary[2].val },
+          { key: 'presMid', val: state.effects.mix.primary[3].val },
+          { key: 'presHigh', val: state.effects.mix.advanced[0].val },
+          { key: 'sat', val: state.effects.mix.advanced[1].val },
+          { key: 'air', val: state.effects.mix.advanced[2].val },
+          { key: 'comp', val: state.effects.mix.advanced[3].val }
+        ];
+        mixParams.forEach(function(p) {
+          sendParamToJuce('mix.' + p.key, p.val);
+        });
+        state.activeContextModule = 'mix';
+        return { success: true, label: 'Easy Mix Starter 50% aplicado' };
+      }
+      if (clean.includes('slapback')) {
+        applyModuleConfig('delay', true, 15, [
+          { type: 'primary', idx: 0, val: 100 },
+          { type: 'primary', idx: 1, val: 10 }
+        ]);
+        state.activeContextModule = 'delay';
+        return { success: true, label: 'Slapback' };
+      }
+      if (clean.includes('eco ping-pong') || clean.includes('eco ping pong') || clean.includes('delay ping-pong')) {
+        applyModuleConfig('delay', true, 15, [
+          { type: 'primary', idx: 0, val: 250 },
+          { type: 'primary', idx: 1, val: 25 },
+          { type: 'advanced', idx: 0, val: 100 }
+        ]);
+        state.activeContextModule = 'delay';
+        return { success: true, label: 'Eco ping-pong' };
+      }
+      if (clean.includes('reverb intima')) {
+        applyModuleConfig('reverb', true, 10, [
+          { type: 'primary', idx: 0, val: 0.6 },
+          { type: 'primary', idx: 1, val: 35 },
+          { type: 'advanced', idx: 0, val: 15 }
+        ]);
+        state.activeContextModule = 'reverb';
+        return { success: true, label: 'Reverb íntima' };
+      }
+      if (clean.includes('reverb amplia')) {
+        applyModuleConfig('reverb', true, 20, [
+          { type: 'primary', idx: 0, val: 2.8 },
+          { type: 'primary', idx: 1, val: 40 },
+          { type: 'advanced', idx: 0, val: 35 }
+        ]);
+        state.activeContextModule = 'reverb';
+        return { success: true, label: 'Reverb amplia' };
+      }
+      if (clean.includes('reverb oscura')) {
+        applyModuleConfig('reverb', true, 18, [
+          { type: 'primary', idx: 0, val: 1.8 },
+          { type: 'primary', idx: 1, val: 80 },
+          { type: 'advanced', idx: 1, val: 85 }
+        ]);
+        state.activeContextModule = 'reverb';
+        return { success: true, label: 'Reverb oscura' };
+      }
+      if (clean.includes('dobles anchos') || clean.includes('doubler ancho')) {
+        applyModuleConfig('doubler', true, 20, [
+          { type: 'primary', idx: 0, val: 90 },
+          { type: 'primary', idx: 1, val: 6 },
+          { type: 'advanced', idx: 0, val: 18 }
+        ]);
+        state.activeContextModule = 'doubler';
+        return { success: true, label: 'Dobles anchos' };
+      }
+      if (clean.includes('doubler sutil')) {
+        applyModuleConfig('doubler', true, 12, [
+          { type: 'primary', idx: 0, val: 70 },
+          { type: 'primary', idx: 1, val: 4 }
+        ]);
+        state.activeContextModule = 'doubler';
+        return { success: true, label: 'Doubler sutil' };
+      }
+      if (clean.includes('chorus suave')) {
+        applyModuleConfig('chorus', true, 15, [
+          { type: 'primary', idx: 0, val: 0.35 },
+          { type: 'primary', idx: 1, val: 25 }
+        ]);
+        state.activeContextModule = 'chorus';
+        return { success: true, label: 'Chorus suave' };
+      }
+      if (clean.includes('chorus ancho')) {
+        applyModuleConfig('chorus', true, 28, [
+          { type: 'primary', idx: 0, val: 0.8 },
+          { type: 'primary', idx: 1, val: 65 },
+          { type: 'advanced', idx: 0, val: 95 }
+        ]);
+        state.activeContextModule = 'chorus';
+        return { success: true, label: 'Chorus ancho' };
+      }
+      if (clean.includes('delay corchea')) {
+        applyModuleConfig('delay', true, 16, [
+          { type: 'primary', idx: 0, val: 250 },
+          { type: 'primary', idx: 1, val: 25 }
+        ]);
+        state.activeContextModule = 'delay';
+        return { success: true, label: 'Delay corchea' };
+      }
+
+      // 2. COMANDOS DE NAVEGACIÓN Y VISTA
+      if (clean.includes('modo efectos')) {
+        selectMode('efectos');
+        return { success: true, label: 'Modo Efectos' };
+      }
+      if (clean.includes('modo hablar')) {
+        selectMode('hablar');
+        return { success: true, label: 'Modo Hablar' };
+      }
+      if (clean.includes('deshacer')) {
+        triggerUndo();
+        return { success: true, label: 'Deshacer' };
+      }
+      if (clean.includes('rehacer')) {
+        triggerRedo();
+        return { success: true, label: 'Rehacer' };
+      }
+      if (clean.includes('guardar')) {
+        savePreset();
+        return { success: true, label: 'Preset Guardado' };
+      }
+
+      // 3. COMANDOS DE RACK / ENRUTAMIENTO
+      if (clean.includes('modo inserto')) {
+        setRouting('insert');
+        return { success: true, label: 'Modo Inserto' };
+      }
+      if (clean.includes('modo envio')) {
+        setRouting('send');
+        return { success: true, label: 'Modo Envío' };
+      }
+
+      // 4. DETECCIÓN DE MÓDULOS ESPECÍFICOS POR ALIAS
+      var targetModule = state.activeContextModule;
+      if (clean.includes('reverb')) targetModule = 'reverb';
+      else if (clean.includes('chorus')) targetModule = 'chorus';
+      else if (clean.includes('delay') || clean.includes('eco')) targetModule = 'delay';
+      else if (clean.includes('doubler')) targetModule = 'doubler';
+      else if (clean.includes('mix') || clean.includes('mezcla') || clean.includes('cadena mix')) targetModule = 'mix';
+
+      if (targetModule && state.effects[targetModule]) {
+        state.activeContextModule = targetModule;
+        var fxName = state.effects[targetModule].name;
+
+        // A0) Ajuste explícito de porcentaje (ej: "reverb al 50%", "river al 50%", "delay al 30%")
+        var pctMatch = clean.match(/(?:al|a|en)?\s*(\d{1,3})\s*%/);
+        if (!pctMatch) {
+          pctMatch = clean.match(/\b(?:al|a|en)\s*(\d{1,3})\b/);
+        }
+        if (pctMatch) {
+          var targetPct = parseInt(pctMatch[1], 10);
+          if (!isNaN(targetPct)) {
+            targetPct = Math.max(0, Math.min(100, targetPct));
+            setFxState(targetModule, targetPct > 0, targetPct);
+            return { success: true, label: fxName + " " + targetPct + "%" };
+          }
+        }
+
+        // A) Desactivar / Quitar / Apagar
+        if (clean.includes('desactivar') || clean.includes('quitar') || clean.includes('apagar') || clean.includes('quita') || clean.includes('apaga') || clean.includes('mutear')) {
+          setFxState(targetModule, false);
+          return { success: true, label: fxName + " desactivado" };
+        }
+
+        // B) Activar / Poner / Encender
+        if (clean.includes('activar') || clean.includes('poner') || clean.includes('pon') || clean.includes('agregar') || clean.includes('dame') || clean.includes('enciende') || clean.includes('mete')) {
+          var curAmt = state.effects[targetModule].amount;
+          setFxState(targetModule, true, curAmt === 0 ? 20 : curAmt);
+          return { success: true, label: fxName + " activado" };
+        }
+
+        // C) Ajustes relativos (Más / Subir)
+        if (clean.includes('mas') || clean.includes('subir') || clean.includes('aumentar') || clean.includes('sube')) {
+          if (!state.effects[targetModule].on) {
+            setFxState(targetModule, true, 20);
+            return { success: true, label: fxName + " activado" };
+          }
+          var newAmt = Math.min(100, state.effects[targetModule].amount + 5);
+          updateGauge(targetModule, newAmt);
+          return { success: true, label: fxName + " " + newAmt + "%" };
+        }
+
+        // D) Ajustes relativos (Menos / Bajar)
+        if (clean.includes('menos') || clean.includes('bajar') || clean.includes('reducir') || clean.includes('baja')) {
+          if (!state.effects[targetModule].on) {
+            return { success: true, label: fxName + " desactivado" };
+          }
+          var newAmt = Math.max(0, state.effects[targetModule].amount - 5);
+          updateGauge(targetModule, newAmt);
+          if (newAmt === 0) setFxState(targetModule, false);
+          return { success: true, label: fxName + " " + newAmt + "%" };
+        }
+
+        // E) Mención directa ("reverb", "river", "rever", "delay", etc.) -> Activar si está apagado
+        if (!state.effects[targetModule].on) {
+          setFxState(targetModule, true, state.effects[targetModule].amount || 20);
+          return { success: true, label: fxName + " activado" };
+        } else {
+          return { success: true, label: fxName + " " + state.effects[targetModule].amount + "%" };
+        }
+      }
+
+      return { success: false };
+    }
+
+    function setFxState(fxKey, on, amount) {
+      if (amount === undefined) amount = null;
+      if (!state.effects[fxKey]) return;
+      state.effects[fxKey].on = on;
+      var toggleEl = document.getElementById('toggle_' + fxKey);
+      if (toggleEl) toggleEl.classList.toggle('on', on);
+      if (amount !== null) {
+        state.effects[fxKey].amount = amount;
+        updateGauge(fxKey, amount);
+        if (fxKey === 'mix') {
+          sendParamToJuce('mix.macro', on ? amount : 0);
+        } else {
+          sendParamToJuce(fxKey + '.amount', amount);
+        }
+      }
+      if (fxKey === 'mix') {
+        sendParamToJuce('mix.macro', on ? state.effects.mix.amount : 0);
+      } else {
+        sendParamToJuce(fxKey + '.enabled', on ? 1.0 : 0.0);
+      }
+      updateGearDot();
+    }
+
+    function applyModuleConfig(fxKey, on, amount, controls) {
+      if (controls === undefined) controls = [];
+      if (!state.effects[fxKey]) return;
+      setFxState(fxKey, on, amount);
+      if (controls && controls.length > 0) {
+        controls.forEach(function(item) {
+          var list = item.type === 'primary' ? state.effects[fxKey].primary : state.effects[fxKey].advanced;
+          if (list && list[item.idx]) {
+            list[item.idx].val = item.val;
+            sendParamToJuce(fxKey + "." + item.type + "_" + item.idx, item.val);
+          }
+        });
+      }
+      // Actualizar modal si está abierto
+      if (currentModalFxKey === fxKey) {
+        renderModalControls(fxKey);
+      }
+    }
+
+    // ==========================================
+    // RENDERIZADO DINÁMICO DE EFECTOS SEGÚN CATEGORÍA
+    // ==========================================
+    function filterCategory(catKey) {
+      state.activeCategory = catKey;
+      var tabs = document.querySelectorAll('.category-tab-btn');
+      tabs.forEach(function(t) { t.classList.remove('active'); });
+      var activeTab = document.getElementById('tabCat_' + catKey);
+      if (activeTab) activeTab.classList.add('active');
+
+      renderEffectsGrid();
+    }
+
+    function renderEffectsGrid() {
+      var grid = document.getElementById('effectsGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      var cat = state.activeCategory;
+
+      for (var fxKey in state.effects) {
+        var fx = state.effects[fxKey];
+
+        // Lógica de filtro por categoría
+        var shouldShow = false;
+        if (cat === 'favoritos') {
+          // Favoritos: Doubler, Chorus, Delay, Reverb
+          shouldShow = ['mix', 'doubler', 'chorus', 'delay', 'reverb'].includes(fxKey);
+        } else {
+          shouldShow = (fx.category === cat);
+        }
+
+        if (!shouldShow) continue;
+
+        var card = document.createElement('div');
+        card.className = 'fx-card';
+        card.id = 'card_' + fxKey;
+
+        var maxOffset = 176;
+        var minOffset = 44;
+        var offset = maxOffset - ((fx.amount / 100) * (maxOffset - minOffset));
+
+        card.innerHTML =
+          '<div class="fx-card-top">' +
+            '<span class="fx-card-title">' + fx.name + '</span>' +
+            '<div class="switch-toggle ' + (fx.on ? 'on' : '') + '" id="toggle_' + fxKey + '" onclick="toggleFx(\'' + fxKey + '\', event)"></div>' +
+          '</div>' +
+          '<div class="arc-gauge-container" onmousedown="startGaugeDrag(event, \'' + fxKey + '\')" title="Ajustar cantidad">' +
+            '<svg class="arc-gauge-svg" viewBox="0 0 80 80">' +
+              '<circle class="arc-bg" cx="40" cy="40" r="28"></circle>' +
+              '<circle class="arc-fill" id="arc_' + fxKey + '" cx="40" cy="40" r="28" style="stroke-dashoffset: ' + offset + ';"></circle>' +
+            '</svg>' +
+            '<div class="gauge-center-info">' +
+              '<span class="gauge-val" id="val_' + fxKey + '">' + fx.amount + '%</span>' +
+            '</div>' +
+          '</div>' +
+          '<span class="gauge-subtext">Cantidad</span>' +
+          '<button class="btn-personalizar-card" onclick="openPersonalizarModal(\'' + fxKey + '\')">' +
+            '<span>Personalizar</span>' +
+            '<svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>' +
+          '</button>';
+        grid.appendChild(card);
+      }
+    }
+
+    // ==========================================
+    // CONTROLES DE EFECTOS Y GAUGES
+    // ==========================================
+    function toggleFx(fxKey, event) {
+      if (event) event.stopPropagation();
+      var fx = state.effects[fxKey];
+      if (!fx || !fx.implemented) return;
+
+      pushSnapshot();
+      fx.on = !fx.on;
+      state.activeContextModule = fxKey;
+
+      var toggleEl = document.getElementById('toggle_' + fxKey);
+      if (toggleEl) toggleEl.classList.toggle('on', fx.on);
+
+      setTemporaryTranscript(fx.name + (fx.on ? ' activado' : ' desactivado'));
+      sendParamToJuce(fxKey + '.enabled', fx.on ? 1.0 : 0.0);
+    }
+
+    var activeGauge = null;
+    var gaugeStartY = 0;
+    var gaugeStartVal = 0;
 
     function startGaugeDrag(e, fxKey) {
       e.preventDefault();
+      if (!state.effects[fxKey] || !state.effects[fxKey].implemented) return;
+      pushSnapshot();
+
       activeGauge = fxKey;
+      state.activeContextModule = fxKey;
       gaugeStartY = e.clientY;
       gaugeStartVal = state.effects[fxKey].amount;
 
@@ -1119,8 +2813,8 @@
 
     function onGaugeMouseMove(e) {
       if (!activeGauge) return;
-      const deltaY = gaugeStartY - e.clientY; // Arrastre hacia arriba sube cantidad
-      let newVal = Math.round(gaugeStartVal + deltaY * 0.7);
+      var deltaY = gaugeStartY - e.clientY;
+      var newVal = Math.round(gaugeStartVal + deltaY * 0.7);
       newVal = Math.max(0, Math.min(100, newVal));
 
       updateGauge(activeGauge, newVal);
@@ -1128,179 +2822,241 @@
 
     function onGaugeMouseUp() {
       if (activeGauge) {
-        sendToJuce(activeGauge + '_amount', state.effects[activeGauge].amount / 100.0);
+        if (activeGauge === 'mix') {
+          sendParamToJuce('mix.macro', state.effects.mix.on ? state.effects.mix.amount : 0);
+        } else {
+          sendParamToJuce(activeGauge + '.amount', state.effects[activeGauge].amount);
+        }
       }
       activeGauge = null;
       window.removeEventListener('mousemove', onGaugeMouseMove);
       window.removeEventListener('mouseup', onGaugeMouseUp);
     }
 
-    function updateGauge(fxKey, val) {
+    function updateGauge(fxKey, val, triggerJuce) {
+      if (triggerJuce === undefined) triggerJuce = true;
+      if (!state.effects[fxKey]) return;
       state.effects[fxKey].amount = val;
-      const arc = document.getElementById('arc_' + fxKey);
-      const valEl = document.getElementById('val_' + fxKey);
+      var arc = document.getElementById('arc_' + fxKey);
+      var valEl = document.getElementById('val_' + fxKey);
 
-      // Longitud total del arco visible ~132 (abre abajo, gira horario)
-      const maxOffset = 176;
-      const minOffset = 44;
-      const offset = maxOffset - ((val / 100) * (maxOffset - minOffset));
+      var maxOffset = 176;
+      var minOffset = 44;
+      var offset = maxOffset - ((val / 100) * (maxOffset - minOffset));
 
       if (arc) arc.style.strokeDashoffset = offset;
       if (valEl) valEl.textContent = val + '%';
+
+      if (triggerJuce) {
+        if (fxKey === 'mix') {
+          sendParamToJuce('mix.macro', state.effects.mix.on ? val : 0);
+        } else {
+          sendParamToJuce(fxKey + '.amount', val);
+        }
+      }
     }
 
-    // Modal Personalizar (Debajo de cada tarjeta en Modo Efectos)
+    // ==========================================
+    // PANEL PERSONALIZAR CON VOLVER Y ACORDEÓN AVANZADO
+    // ==========================================
+    var currentModalFxKey = null;
+    var activeModalSliderTarget = null;
+
     function openPersonalizarModal(fxKey) {
-      const modal = document.getElementById('modalPersonalizar');
-      const title = document.getElementById('modalFxTitle');
-      const grid = document.getElementById('advancedGrid');
-      const fx = state.effects[fxKey];
+      currentModalFxKey = fxKey;
+      state.activeContextModule = fxKey; // Establecer contexto para comandos de voz
+      var modal = document.getElementById('modalPersonalizar');
+      var title = document.getElementById('modalFxTitle');
+      var toggle = document.getElementById('modalFxToggle');
+      var fx = state.effects[fxKey];
 
       title.textContent = fx.name.toUpperCase();
-      grid.innerHTML = '';
+      if (toggle) {
+        toggle.className = 'switch-toggle' + (fx.on ? ' on' : '');
+        toggle.onclick = function(e) {
+          toggleFx(fxKey, e);
+          toggle.classList.toggle('on', fx.on);
+        };
+      }
 
-      fx.advanced.forEach((item, idx) => {
-        const div = document.createElement('div');
-        div.className = 'adv-param-card';
-        div.innerHTML = `
-          <div class="adv-param-header">
-            <span>${item.name}</span>
-            <span>${item.val}</span>
-          </div>
-          <div class="slider-track" onmousedown="startModalSliderDrag(event, ${idx})">
-            <div class="slider-fill" style="width: 60%;">
-              <div class="slider-thumb"></div>
-            </div>
-          </div>
-        `;
-        grid.appendChild(div);
-      });
-
+      renderModalControls(fxKey);
       modal.classList.add('open');
+    }
+
+    function renderModalControls(fxKey) {
+      var fx = state.effects[fxKey];
+      var primaryGrid = document.getElementById('primaryGrid');
+      var advancedGrid = document.getElementById('advancedGrid');
+
+      if (primaryGrid) primaryGrid.innerHTML = '';
+      if (advancedGrid) advancedGrid.innerHTML = '';
+
+      // Renderizar controles primarios
+      if (fx.primary && primaryGrid) {
+        fx.primary.forEach(function(item, idx) {
+          var pct = Math.round((item.val / item.max) * 100);
+          var div = createSliderCard('primary', idx, item, pct);
+          primaryGrid.appendChild(div);
+        });
+      }
+
+      // Renderizar controles avanzados
+      if (fx.advanced && advancedGrid) {
+        fx.advanced.forEach(function(item, idx) {
+          var pct = Math.round((item.val / item.max) * 100);
+          var div = createSliderCard('advanced', idx, item, pct);
+          advancedGrid.appendChild(div);
+        });
+      }
+    }
+
+    function createSliderCard(type, idx, item, pct) {
+      var div = document.createElement('div');
+      div.className = 'adv-param-card';
+      div.innerHTML =
+        '<div class="adv-param-header">' +
+          '<span>' + item.name + '</span>' +
+          '<span id="sliderVal_' + type + '_' + idx + '">' + item.val + item.unit + '</span>' +
+        '</div>' +
+        '<div class="slider-track" id="track_' + type + '_' + idx + '" onmousedown="startModalSliderDrag(event, \'' + type + '\', ' + idx + ')">' +
+          '<div class="slider-fill" id="fill_' + type + '_' + idx + '" style="width: ' + pct + '%;">' +
+            '<div class="slider-thumb"></div>' +
+          '</div>' +
+        '</div>';
+      return div;
+    }
+
+    function toggleAdvAccordion() {
+      var card = document.getElementById('advAccordionCard');
+      if (card) card.classList.toggle('open');
     }
 
     function closePersonalizarModal(e) {
       document.getElementById('modalPersonalizar').classList.remove('open');
+      currentModalFxKey = null;
     }
 
-    function startModalSliderDrag(e, idx) {
+    function startModalSliderDrag(e, type, idx) {
       e.preventDefault();
-      // Interacción visual suave de sliders dentro del modal
+      activeModalSliderTarget = { type, idx };
+      updateModalSliderFromEvent(e, type, idx);
+
+      window.addEventListener('mousemove', onModalSliderMouseMove);
+      window.addEventListener('mouseup', onModalSliderMouseUp);
     }
 
-    // Push To Talk (Modo Hablar)
-    function startPTT() {
-      state.isRecording = true;
-      const btn = document.getElementById('pttButton');
-      const lbl = document.getElementById('pttLabel');
-      btn.classList.add('recording');
-      lbl.textContent = 'Escuchando voz...';
-      setTranscriptText('Escuchando voz localmente...');
-    }
-
-    function stopPTT() {
-      if (!state.isRecording) return;
-      state.isRecording = false;
-      const btn = document.getElementById('pttButton');
-      const lbl = document.getElementById('pttLabel');
-      btn.classList.remove('recording');
-      lbl.textContent = 'Mantén para hablar';
-
-      setTimeout(() => {
-        const randomAnswers = [
-          "Reverb oscura aplicada",
-          "Doubler ancho activado",
-          "Chorus suave al 20%",
-          "Delay tempo sync aplicado"
-        ];
-        const res = randomAnswers[Math.floor(Math.random() * randomAnswers.length)];
-        applyTextCommand(res);
-      }, 300);
-    }
-
-    function handleInputKey(e) {
-      if (e.key === 'Enter') {
-        executeCurrentInput();
+    function onModalSliderMouseMove(e) {
+      if (activeModalSliderTarget) {
+        updateModalSliderFromEvent(e, activeModalSliderTarget.type, activeModalSliderTarget.idx);
       }
     }
 
-    function executeCurrentInput() {
-      const input = document.getElementById('cmdInput');
-      const text = input.value.trim();
-      if (text.length > 0) {
-        applyTextCommand(text);
-        input.value = '';
+    function onModalSliderMouseUp() {
+      activeModalSliderTarget = null;
+      window.removeEventListener('mousemove', onModalSliderMouseMove);
+      window.removeEventListener('mouseup', onModalSliderMouseUp);
+    }
+
+    function updateModalSliderFromEvent(e, type, idx) {
+      if (!currentModalFxKey) return;
+      var track = document.getElementById("track_" + type + "_" + idx);
+      if (!track) return;
+
+      var rect = track.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
+
+      var list = type === 'primary' ? state.effects[currentModalFxKey].primary : state.effects[currentModalFxKey].advanced;
+      var param = list[idx];
+      var realVal = (pct / 100) * param.max;
+      realVal = param.max <= 10 ? Math.round(realVal * 10) / 10 : Math.round(realVal);
+      param.val = realVal;
+
+      var fill = document.getElementById("fill_" + type + "_" + idx);
+      if (fill) fill.style.width = pct + '%';
+
+      var valLabel = document.getElementById("sliderVal_" + type + "_" + idx);
+      if (valLabel) {
+        valLabel.textContent = realVal + param.unit;
+      }
+
+      if (currentModalFxKey === 'mix') {
+        var dspKey = param.dspKey || ('param_' + idx);
+        sendParamToJuce('mix.' + dspKey, realVal);
+      } else {
+        sendParamToJuce(currentModalFxKey + "." + type + "_" + idx, realVal);
       }
     }
 
-    function applyQuickPrompt(text) {
-      applyTextCommand(text);
+    // ==========================================
+    // MODAL DE CONFIGURACIÓN (⚙)
+    // ==========================================
+    function openSettingsModal() {
+      document.getElementById('modalSettings').classList.add('open');
     }
 
-    function applyTextCommand(text) {
-      setTranscriptText(text);
-      const lower = text.toLowerCase();
+    function closeSettingsModal(e) {
+      document.getElementById('modalSettings').classList.remove('open');
+    }
 
-      if (lower.includes('reverb')) {
-        state.effects.reverb.on = true;
-        document.getElementById('toggle_reverb').classList.add('on');
-        updateGauge('reverb', 22);
-      }
-      if (lower.includes('chorus')) {
-        state.effects.chorus.on = true;
-        document.getElementById('toggle_chorus').classList.add('on');
-        updateGauge('chorus', 25);
-      }
-      if (lower.includes('doubler')) {
-        state.effects.doubler.on = true;
-        document.getElementById('toggle_doubler').classList.add('on');
-        updateGauge('doubler', 30);
-      }
-      if (lower.includes('delay')) {
-        state.effects.delay.on = true;
-        document.getElementById('toggle_delay').classList.add('on');
-        updateGauge('delay', 18);
-      }
-
-      if (window.__JUCE_EXECUTE_CMD) {
-        window.__JUCE_EXECUTE_CMD(text);
+    function updateSettingsLang(lang) {
+      state.settings.lang = lang;
+      if (recognition) {
+        recognition.lang = lang;
       }
     }
 
-    function setTranscriptText(text) {
-      const el = document.getElementById('speechTranscriptText');
-      if (el) el.textContent = text;
+    function updateSettingsSilence(val) {
+      state.settings.silenceTimeoutSec = parseFloat(val);
+      var label = document.getElementById('settingsSilenceVal');
+      if (label) label.textContent = val + 's';
     }
 
-    // Routing
+    function updateSettingsSens(val) {
+      state.settings.sensitivity = parseInt(val, 10);
+      var label = document.getElementById('settingsSensVal');
+      if (label) label.textContent = val + '%';
+    }
+
+    // ==========================================
+    // MODAL DE GUÍA DE COMANDOS (?)
+    // ==========================================
+    function openCommandsModal() {
+      document.getElementById('modalCommands').classList.add('open');
+    }
+
+    function closeCommandsModal(e) {
+      document.getElementById('modalCommands').classList.remove('open');
+    }
+
+    function testVoiceCommandFromModal(commandText) {
+      closeCommandsModal();
+      setLiveTranscript(commandText, false);
+      processVoiceCommand(commandText);
+    }
+
+    // ==========================================
+    // ENRUTAMIENTO HARDWARE
+    // ==========================================
     function setRouting(mode) {
+      pushSnapshot();
       state.routing = mode;
       document.getElementById('btnRoutingInsert').classList.toggle('active', mode === 'insert');
       document.getElementById('btnRoutingSend').classList.toggle('active', mode === 'send');
-      setTranscriptText('Modo ' + (mode === 'insert' ? 'Inserto (Dry + Wet)' : 'Envío (Solo Wet)'));
-      sendToJuce('routing_mode', mode === 'send' ? 1.0 : 0.0);
+      setLiveTranscript('Enrutamiento ' + (mode === 'insert' ? 'Inserto' : 'Envío'), false);
+      sendParamToJuce('global.routingMode', mode === 'send' ? 1.0 : 0.0);
     }
 
-    // Deshacer / Rehacer
-    function triggerUndo() {
-      setTranscriptText('Acción deshecha');
-    }
-
-    function triggerRedo() {
-      setTranscriptText('Acción rehecha');
-    }
-
-    function savePreset() {
-      setTranscriptText('Configuración guardada correctamente');
-    }
-
-    // Salida Knob
-    let activeOutKnob = false;
-    let knobStartY = 0;
-    let knobStartVal = 0;
+    // ==========================================
+    // CONTROL DE SALIDA CON MEDIDOR ESTÉREO
+    // ==========================================
+    var activeOutKnob = false;
+    var knobStartY = 0;
+    var knobStartVal = 0;
 
     function startOutKnobDrag(e) {
       e.preventDefault();
+      pushSnapshot();
       activeOutKnob = true;
       knobStartY = e.clientY;
       knobStartVal = state.outGain;
@@ -1311,15 +3067,18 @@
 
     function onKnobMouseMove(e) {
       if (!activeOutKnob) return;
-      const deltaY = knobStartY - e.clientY;
-      let newDb = knobStartVal + (deltaY * 0.1);
+      var deltaY = knobStartY - e.clientY;
+      var newDb = knobStartVal + (deltaY * 0.1);
       newDb = Math.max(-24.0, Math.min(6.0, newDb));
       state.outGain = newDb;
 
       document.getElementById('valOutDb').textContent = (newDb >= 0 ? '+' : '') + newDb.toFixed(1) + ' dB';
-      const pct = (newDb + 24) / 30;
-      const offset = 82 - (pct * 60);
+      
+      var pct = (newDb + 24) / 30;
+      var offset = 88 - (pct * 66);
       document.getElementById('knobFill').style.strokeDashoffset = offset;
+
+      sendParamToJuce('output.gainDb', newDb);
     }
 
     function onKnobMouseUp() {
@@ -1328,11 +3087,122 @@
       window.removeEventListener('mouseup', onKnobMouseUp);
     }
 
-    function sendToJuce(param, val) {
-      if (window.__JUCE_SET_PARAM) {
-        window.__JUCE_SET_PARAM(param, val);
+    // Callback de medidores RMS de JUCE (30Hz)
+    window.updateAudioMeters = function(lDb, rDb) {
+      var minDb = -60.0;
+      var maxDb = 0.0;
+      
+      var pctL = Math.max(0, Math.min(100, ((lDb - minDb) / (maxDb - minDb)) * 100));
+      var pctR = Math.max(0, Math.min(100, ((rDb - minDb) / (maxDb - minDb)) * 100));
+
+      var elL = document.getElementById('meterL');
+      var elR = document.getElementById('meterR');
+      if (elL) elL.style.height = pctL + '%';
+      if (elR) elR.style.height = pctR + '%';
+    };
+
+    // ==========================================
+    // COMUNICACIÓN NATIVA CON EL PLUGIN JUCE C++
+    // ==========================================
+    var jucePromises = new Map();
+    var juceCompleteListenerInstalled = false;
+
+    function ensureJuceCompleteListener() {
+      if (juceCompleteListenerInstalled) return;
+      if (window.__JUCE__ && window.__JUCE__.backend) {
+        window.__JUCE__.backend.addEventListener("__juce__complete", function (ev) {
+          var pid = ev.promiseId;
+          if (jucePromises.has(pid)) {
+            jucePromises.get(pid).resolve(ev.result);
+            jucePromises.delete(pid);
+          }
+        });
+        juceCompleteListenerInstalled = true;
       }
     }
+    // Try immediately and also on DOMContentLoaded
+    ensureJuceCompleteListener();
+    window.addEventListener('load', ensureJuceCompleteListener);
+
+    function hasJuceBridge() {
+      if (window.__JUCE__ && window.__JUCE__.backend) return true;
+      if (window.chrome && window.chrome.webview) return true;
+      return false;
+    }
+
+    function callNative(funcName) {
+      ensureJuceCompleteListener();
+      var args = [];
+      for (var i = 1; i < arguments.length; i++) {
+        args.push(arguments[i]);
+      }
+      try {
+        if (window.__JUCE__ && window.__JUCE__.backend) {
+          var promiseId = Math.floor(Math.random() * 1000000000);
+          var p = new Promise(function (resolve) {
+            jucePromises.set(promiseId, {
+              resolve: resolve
+            });
+          });
+          window.__JUCE__.backend.emitEvent("__juce__invoke", {
+            name: funcName,
+            params: args,
+            resultId: promiseId
+          });
+          return p;
+        }
+        if (window.chrome && window.chrome.webview) {
+          window.chrome.webview.postMessage(JSON.stringify({
+            func: funcName,
+            args: args
+          }));
+          return Promise.resolve();
+        }
+      } catch (err) { }
+      return Promise.resolve();
+    }
+
+    function sendParamToJuce(paramId, value) {
+      try {
+        callNative("setParam", String(paramId), Number(value));
+      } catch (e) { }
+    }
+
+    function sendVoiceToJuce(commandText) {
+      try {
+        callNative("executeCommand", String(commandText));
+      } catch (e) { }
+    }
+
+    // ==========================================
+    // INICIALIZACIÓN GLOBAL
+    // ==========================================
+    (function initializeApp() {
+      // 1. Cargar preset previo si existe en localStorage
+      try { loadSavedPreset(); } catch(e) { console.warn("loadSavedPreset error:", e); }
+
+      // 2. Renderizar cuadricula de efectos de la categoria activa
+      try { renderEffectsGrid(); } catch(e) { console.warn("renderEffectsGrid error:", e); }
+
+      // 3. Inicializar dial de volumen
+      var pct = (state.outGain + 24) / 30;
+      var offset = 88 - (pct * 66);
+      var kf = document.getElementById('knobFill');
+      if (kf) kf.style.strokeDashoffset = offset;
+      var dbLabel = document.getElementById('valOutDb');
+      if (dbLabel) dbLabel.textContent = (state.outGain >= 0 ? '+' : '') + state.outGain.toFixed(1) + ' dB';
+
+      // 4. Inicializar botones de deshacer/rehacer
+      updateHistoryButtons();
+
+      // 5. Inicializar reconocimiento de voz
+      try { initSpeechRecognition(); } catch (e) {}
+
+      // 6. Solicitar sincronización nativa de parámetros a JUCE
+      setTimeout(function() {
+        sendParamToJuce('ui-ready', 1.0);
+      }, 100);
+    })();
   </script>
 </body>
 </html>
