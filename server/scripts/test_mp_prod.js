@@ -1,5 +1,17 @@
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '../.env') });
+
 async function testProductionCredentials() {
-    const accessToken = 'APP_USR-3149823083942106-083118-90df5f34038bf7eb4208fc29f733a5a8-3653881661';
+    const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+    if (!accessToken) {
+        console.error('❌ MERCADOPAGO_ACCESS_TOKEN not found in .env');
+        return;
+    }
     
     console.log('🔍 Testing Mercado Pago Production Token...');
     try {
