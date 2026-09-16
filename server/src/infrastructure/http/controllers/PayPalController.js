@@ -1739,11 +1739,45 @@ export const getSecureDownloadUrl = async (req, res) => {
 
             try {
                 const downloadUrl = await getPresignedDownloadUrl(finalKey, 3600, storageType);
-                return res.status(200).json({ 
+                
+                // Enviar inmediatamente la respuesta al cliente para garantizar la descarga
+                res.status(200).json({ 
                     signedUrl: downloadUrl,
                     debug_cleaned_path: finalKey,
                     debug_is_r2: true
                 });
+
+                // Post-descarga: Trackeo asíncrono y seguro (después de entregar el archivo)
+                (async () => {
+                    try {
+                        const clientIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || req.ip || '0.0.0.0';
+                        const userAgent = req.headers['user-agent'] || 'Browser';
+                        const effectiveUserId = userId || item.orders?.user_id || null;
+
+                        // 1. Registrar en auditoría de descargas
+                        await supabase.from('download_logs').insert([{
+                            order_id: item.orders?.id || (isNumericId ? parseInt(orderId, 10) : null),
+                            product_id: parseInt(productId, 10),
+                            user_id: effectiveUserId,
+                            ip_address: clientIp,
+                            user_agent: userAgent
+                        }]);
+
+                        // 2. Incrementar conteo de descargas del producto
+                        await supabase.rpc('increment_product_downloads', { row_id: parseInt(productId, 10) }).catch(async () => {
+                            const { data: pData } = await supabase.from('products').select('downloads_count').eq('id', productId).single();
+                            if (pData) {
+                                await supabase.from('products').update({ downloads_count: (pData.downloads_count || 0) + 1 }).eq('id', productId);
+                            }
+                        });
+
+                        console.log(`[SecureDownload] ✅ Tracked download log for order=${orderId}, product=${productId}, user=${effectiveUserId || 'guest'}`);
+                    } catch (trackErr) {
+                        console.warn('[SecureDownload] Error registering download log (safe to ignore):', trackErr.message);
+                    }
+                })();
+
+                return;
             } catch (r2Error) {
                 console.error('[SecureDownload] R2 Signing Error:', r2Error);
                 return res.status(500).json({ error: 'Error al generar enlace seguro (R2)' });
@@ -1771,6 +1805,36 @@ export const getSecureDownloadUrl = async (req, res) => {
                 debug_cleaned_path: cleanPath,
                 debug_is_r2: false
             });
+
+            // Post-descarga: Trackeo asíncrono y seguro
+            (async () => {
+                try {
+                    const clientIp = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || req.ip || '0.0.0.0';
+                    const userAgent = req.headers['user-agent'] || 'Browser';
+                    const effectiveUserId = userId || item.orders?.user_id || null;
+
+                    await supabase.from('download_logs').insert([{
+                        order_id: item.orders?.id || (isNumericId ? parseInt(orderId, 10) : null),
+                        product_id: parseInt(productId, 10),
+                        user_id: effectiveUserId,
+                        ip_address: clientIp,
+                        user_agent: userAgent
+                    }]);
+
+                    await supabase.rpc('increment_product_downloads', { row_id: parseInt(productId, 10) }).catch(async () => {
+                        const { data: pData } = await supabase.from('products').select('downloads_count').eq('id', productId).single();
+                        if (pData) {
+                            await supabase.from('products').update({ downloads_count: (pData.downloads_count || 0) + 1 }).eq('id', productId);
+                        }
+                    });
+
+                    console.log(`[SecureDownload] ✅ Tracked download log for order=${orderId}, product=${productId}`);
+                } catch (trackErr) {
+                    console.warn('[SecureDownload] Error registering download log (safe to ignore):', trackErr.message);
+                }
+            })();
+
+            return;
         }
 
     } catch (err) {
