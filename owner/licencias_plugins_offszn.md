@@ -77,6 +77,24 @@ INKA-FULL-A8C8876F-451BA437
 
 ---
 
+## 🎙️ 5. VOCAL PRESET (10 Claves Lifetime)
+**Plugin:** `Vocal Preset` | **Tipo:** `lifetime` | **Dispositivos:** 3 | **Expiración:** NUNCA
+
+```text
+VOCA-FULL-91265FB4-EBAD565D
+VOCA-FULL-2D6645CA-839550D2
+VOCA-FULL-EB12D5F9-9EAD6AFD
+VOCA-FULL-2DA39794-4E08F63C
+VOCA-FULL-7654D022-41EC3AA4
+VOCA-FULL-03660DBD-E6FD05D1
+VOCA-FULL-45A9FBC3-59EAB438
+VOCA-FULL-1316436D-D1B4BE6D
+VOCA-FULL-8B45510F-ABCA0072
+VOCA-FULL-E2B24319-AB256805
+```
+
+---
+
 ## 📋 Resumen Total
 
 | Plugin | Claves Generadas | Tipo | Status | Expira | Límite Dispositivos |
@@ -85,4 +103,5 @@ INKA-FULL-A8C8876F-451BA437
 | **Easy Master** | 10 | `lifetime` | `active` | NUNCA | 3 por clave |
 | **Coca Cola** | 10 | `lifetime` | `active` | NUNCA | 3 por clave |
 | **Inka Kola** | 10 | `lifetime` | `active` | NUNCA | 3 por clave |
-| **TOTAL** | **40** | | | | |
+| **Vocal Preset** | 10 | `lifetime` | `active` | NUNCA | 3 por clave |
+| **TOTAL** | **50** | | | | |

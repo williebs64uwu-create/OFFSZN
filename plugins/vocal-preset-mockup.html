@@ -1277,6 +1277,172 @@
       font-size: 10px;
       color: var(--text-muted);
     }
+  
+    /* ── LICENSE STATUS / TRIAL BADGE (HEADER) ── */
+    .license-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #94a3b8;
+    }
+    .license-badge:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .license-badge.full {
+      color: #34d399;
+      border-color: rgba(52, 211, 153, 0.3);
+      background: rgba(52, 211, 153, 0.08);
+    }
+    .license-badge.trial {
+      color: #fbbf24;
+      border-color: rgba(251, 191, 36, 0.35);
+      background: rgba(251, 191, 36, 0.08);
+    }
+    .license-badge.demo {
+      color: #fb7185;
+      border-color: rgba(251, 113, 133, 0.35);
+      background: rgba(251, 113, 133, 0.08);
+    }
+    .license-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .license-badge.trial .license-dot {
+      animation: licensePulse 1.8s infinite ease-in-out;
+    }
+    @keyframes licensePulse {
+      0%, 100% { opacity: 0.4; transform: scale(0.85); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* ── ACTIVATION & SYSTEM MODALS ── */
+    .activation-modal {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 7, 10, 0.88);
+      z-index: 20000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .activation-modal.visible {
+      display: flex;
+    }
+    .act-container {
+      width: 360px;
+      max-width: 90%;
+      background: #11141c;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95);
+      position: relative;
+      text-align: center;
+    }
+    .act-btn-close {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      background: transparent;
+      border: none;
+      color: #71717a;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .act-btn-close:hover {
+      color: #ffffff;
+    }
+    .act-title {
+      color: #ffffff;
+      margin: 0 0 6px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .act-sub {
+      color: #94a3b8;
+      font-size: 11px;
+      line-height: 1.45;
+      margin: 0 0 16px;
+    }
+    .act-input {
+      width: 100%;
+      background: #080a0f;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      text-align: center;
+      letter-spacing: 1.5px;
+      outline: none;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      transition: border-color 0.2s;
+    }
+    .act-input:focus {
+      border-color: #38bdf8;
+    }
+    .act-btn {
+      width: 100%;
+      padding: 11px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .act-btn-primary {
+      background: #ffffff;
+      color: #000000;
+    }
+    .act-btn-primary:hover {
+      background: #f1f5f9;
+      transform: translateY(-1px);
+    }
+    .act-btn-secondary {
+      background: transparent;
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .act-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.4);
+      color: #ffffff;
+    }
+    .act-btn.btn-loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
   </style>
 </head>
 <body>
@@ -1301,6 +1467,11 @@
 
     <!-- ENRUTAMIENTO + GUÍA + ENGRANAJE EFECTOS -->
     <div class="header-right">
+            <!-- BADGE DE LICENCIA / ACTIVACIÓN -->
+      <div class="license-badge demo" id="licenseBadge" onclick="onLicenseBadgeClick()" title="Estado de Licencia">
+        <span class="license-dot"></span>
+        <span id="licenseBadgeText">DEMO · ACTIVAR</span>
+      </div>
       <div class="routing-pills">
         <button class="routing-btn active" id="btnRoutingInsert" onclick="setRouting('insert')">Inserto</button>
         <button class="routing-btn" id="btnRoutingSend" onclick="setRouting('send')">Envío</button>
@@ -1392,6 +1563,7 @@
             <div class="mix-hero-title">
               <span>EASY MIX — CADENA VOCAL</span>
               <div class="switch-toggle on" id="toggleMixChain" onclick="toggleMixChain(event)" title="Activar/Desactivar Cadena Easy Mix"></div>
+              <span id="toggleMixChainBadge" style="font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: #ffffff; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.18);">ACTIVO</span>
             </div>
             <span class="mix-hero-subtitle">Corte de graves, de-esser, cuerpo, saturación analógica y dinámica.</span>
           </div>
@@ -2001,13 +2173,24 @@
     // ==========================================
     // MACRO MIX CONTROL (0 - 100%, DEFAULT 50%)
     // ==========================================
+    function updateMixChainToggleUI() {
+      var toggle = document.getElementById('toggleMixChain');
+      var badge = document.getElementById('toggleMixChainBadge');
+      if (toggle) toggle.classList.toggle('on', !!state.mixChainOn);
+      if (badge) {
+        badge.textContent = state.mixChainOn ? 'ACTIVO' : 'BYPASS';
+        badge.style.color = state.mixChainOn ? '#ffffff' : '#757b89';
+        badge.style.background = state.mixChainOn ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.05)';
+      }
+    }
+
     function toggleMixChain(e) {
       if (e) e.stopPropagation();
       pushSnapshot();
       state.mixChainOn = !state.mixChainOn;
-      var toggle = document.getElementById('toggleMixChain');
-      if (toggle) toggle.classList.toggle('on', state.mixChainOn);
+      updateMixChainToggleUI();
       sendParamToJuce('mix.macro', state.mixChainOn ? state.mixMacro : 0.0);
+      setTemporaryTranscript(state.mixChainOn ? 'Easy Mix Activado' : 'Easy Mix en Bypass');
       savePreset();
     }
 
@@ -2617,6 +2800,7 @@
         sendParamToJuce('mix.' + k, state.mixParams[k].val);
       }
 
+      updateMixChainToggleUI();
       updateMixMacroUI(50);
       renderMixGrid();
       savePreset();
@@ -2723,21 +2907,60 @@
       renderCreativeGrid();
     };
 
-    // COMUNICACIÓN CON JUCE C++
-    function sendParamToJuce(paramId, value) {
-      if (window.__JUCE__ && window.__JUCE__.backend) {
-        window.__JUCE__.backend.emit('setParam', [paramId, value]);
-      } else if (window.__JUCE_SET_PARAM) {
-        window.__JUCE_SET_PARAM(paramId, value);
+    // COMUNICACIÓN CON JUCE C++ (JUCE 8 WebView Bridge Oficial)
+    var jucePromises = new Map();
+    function initJuceBridge() {
+      if (window.__JUCE__ && window.__JUCE__.backend && !window.__juce_listener_attached) {
+        window.__juce_listener_attached = true;
+        window.__JUCE__.backend.addEventListener('__juce__complete', function(ev) {
+          var pid = ev.promiseId;
+          if (jucePromises.has(pid)) {
+            jucePromises.get(pid).resolve(ev.result);
+            jucePromises.delete(pid);
+          }
+        });
       }
+    }
+    initJuceBridge();
+
+    function callNative(funcName) {
+      var args = [];
+      for (var i = 1; i < arguments.length; i++) {
+        args.push(arguments[i]);
+      }
+      try {
+        initJuceBridge();
+        if (window.__JUCE__ && window.__JUCE__.backend) {
+          var promiseId = Math.floor(Math.random() * 1000000000);
+          var p = new Promise(function(resolve) {
+            jucePromises.set(promiseId, { resolve: resolve });
+          });
+          window.__JUCE__.backend.emitEvent('__juce__invoke', {
+            name: funcName,
+            params: args,
+            resultId: promiseId
+          });
+          return p;
+        }
+        if (window.chrome && window.chrome.webview) {
+          window.chrome.webview.postMessage(JSON.stringify({ func: funcName, args: args }));
+          return Promise.resolve();
+        }
+        if (window.__JUCE_SET_PARAM && funcName === 'setParam') {
+          window.__JUCE_SET_PARAM(args[0], args[1]);
+        }
+      } catch (err) {
+        console.warn('[Bridge error]', err);
+      }
+      return Promise.resolve();
+    }
+
+    function sendParamToJuce(paramId, value) {
+      callNative('setParam', paramId, Number(value));
     }
 
     function sendVoiceToJuce(cmd) {
-      if (window.__JUCE__ && window.__JUCE__.backend) {
-        window.__JUCE__.backend.emit('executeCommand', [cmd]);
-      } else if (window.__JUCE_EXECUTE_CMD) {
-        window.__JUCE_EXECUTE_CMD(cmd);
-      }
+      callNative('setParam', 'voiceCommand', cmd);
     }
 
     // MODAL COMANDOS
@@ -2776,14 +2999,301 @@
       renderCreativeGrid();
       updateOutKnobUI(state.outGain);
       updateMixMacroUI(state.mixMacro);
+      updateMixChainToggleUI();
       updateHistoryButtons();
 
       try { initSpeechRecognition(); } catch (e) {}
 
       setTimeout(function() {
+        // Enviar parámetros iniciales para sincronizar audio DSP inmediatamente
+        sendParamToJuce('mix.macro', state.mixChainOn ? state.mixMacro : 0.0);
+        for (var k in state.mixParams) {
+          sendParamToJuce('mix.' + k, state.mixParams[k].val);
+        }
         sendParamToJuce('ui-ready', 1.0);
-      }, 100);
+      }, 150);
     })();
+  
+  // ========================================================
+  // SISTEMA DE LICENCIAMIENTO & SEGURIDAD (OFFSZN STANDARD)
+  // ========================================================
+  var OFFSZN_PLUGIN_NAME = "Vocal Preset";
+  var apiBase = "https://offszn.lat";
+
+  function formatSerialInput(input) {
+    var val = input.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    input.value = val;
+  }
+
+  function getOrCreateDeviceId() {
+    var id = localStorage.getItem('offszn_device_id');
+    if (!id) {
+      id = 'web-' + Math.random().toString(36).substring(2) + '-' + Date.now().toString(36);
+      try { localStorage.setItem('offszn_device_id', id); } catch(e) {}
+    }
+    return id;
+  }
+
+  function getHwidAsync() {
+    if (window.OFFSZN_HWID) return Promise.resolve(window.OFFSZN_HWID);
+    if (typeof hasJuceBridge === 'function' && hasJuceBridge()) {
+      return callNative("getHardwareId").then(function(hwid) {
+        return hwid || getOrCreateDeviceId();
+      });
+    }
+    return Promise.resolve(getOrCreateDeviceId());
+  }
+
+  function openActivationModal(cancellable) {
+    var modal = document.getElementById('activation-modal');
+    var closeBtn = document.getElementById('btn-close-activation');
+    if (modal) modal.classList.add('visible');
+    if (closeBtn) closeBtn.style.display = cancellable ? 'block' : 'none';
+  }
+
+  function closeActivationModal() {
+    var modal = document.getElementById('activation-modal');
+    if (modal) modal.classList.remove('visible');
+  }
+
+  function closeWelcomeModal() {
+    var modal = document.getElementById('welcome-modal');
+    if (modal) modal.classList.remove('visible');
+  }
+
+  function showCustomAlert(title, msg, icon) {
+    var modal = document.getElementById('custom-alert-modal');
+    var t = document.getElementById('custom-alert-title');
+    var m = document.getElementById('custom-alert-msg');
+    var ic = document.getElementById('custom-alert-icon');
+    if (t) t.textContent = title;
+    if (m) m.textContent = msg;
+    if (ic) ic.textContent = icon || '⚠️';
+    if (modal) modal.classList.add('visible');
+  }
+
+  function closeCustomAlert() {
+    var modal = document.getElementById('custom-alert-modal');
+    if (modal) modal.classList.remove('visible');
+  }
+
+  function updateLicenseBadge(type, label) {
+    var badge = document.getElementById('licenseBadge');
+    var txt = document.getElementById('licenseBadgeText');
+    if (!badge || !txt) return;
+    badge.className = 'license-badge ' + type;
+    txt.textContent = label;
+  }
+
+  function onLicenseBadgeClick() {
+    openActivationModal(true);
+  }
+
+  function submitSerial() {
+    var input = document.getElementById('serial-input');
+    var serial = (input ? input.value : '').trim().toUpperCase();
+    if (!serial) {
+      showCustomAlert("Activar Licencia", "Por favor ingresa tu Serial Key de OFFSZN.", "🔑");
+      return;
+    }
+
+    var btn = document.getElementById('act-submit-btn');
+    if (btn) btn.classList.add('btn-loading');
+
+    getHwidAsync().then(function(hwid) {
+      fetch(apiBase + "/api/plugin/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serial_key: serial,
+          hwid: hwid,
+          plugin_name: OFFSZN_PLUGIN_NAME
+        })
+      }).then(function(res) {
+        return res.json();
+      }).then(function(response) {
+        if (btn) btn.classList.remove('btn-loading');
+        if (response && response.success) {
+          try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+          if (typeof hasJuceBridge === 'function' && hasJuceBridge()) {
+            callNative("setLicenseStatus", true, serial);
+          }
+          closeActivationModal();
+          var isTrial = serial.indexOf("TRIAL") !== -1 || (response.license_type === 'trial');
+          if (isTrial) {
+            var days = response.days_remaining || 3;
+            updateLicenseBadge('trial', 'PRUEBA · ' + days + ' DÍAS');
+          } else {
+            updateLicenseBadge('full', 'FULL · OFFSZN');
+          }
+          var welcome = document.getElementById('welcome-modal');
+          if (welcome) welcome.classList.add('visible');
+        } else {
+          if (typeof hasJuceBridge === 'function' && hasJuceBridge()) callNative("setLicenseStatus", false);
+          showCustomAlert("Error de Activación", response.error || "Licencia inválida o no encontrada.", "❌");
+        }
+      }).catch(function(err) {
+        if (btn) btn.classList.remove('btn-loading');
+        if (typeof hasJuceBridge !== 'function' || !hasJuceBridge()) {
+          // Mock preview mode in browser
+          if (serial.startsWith("VOCA-FULL-") || serial.startsWith("VOCA-TRIAL-")) {
+            try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+            closeActivationModal();
+            var isTrial = serial.indexOf("TRIAL") !== -1;
+            updateLicenseBadge(isTrial ? 'trial' : 'full', isTrial ? 'PRUEBA · 3 DÍAS' : 'FULL · OFFSZN');
+            var welcome = document.getElementById('welcome-modal');
+            if (welcome) welcome.classList.add('visible');
+            return;
+          }
+        }
+        showCustomAlert("Error de Conexión", "No se pudo conectar al servidor de licencias. Verifica tu conexión a Internet para la primera activación.", "🌐");
+      });
+    });
+  }
+
+  function initLicenseBoot() {
+    if (typeof hasJuceBridge === 'function' && hasJuceBridge()) {
+      callNative("getLicenseState").then(function(state) {
+        var isValid = state && state.isValid;
+        var rawSerial = ((state && state.serial) || "").trim();
+
+        if (rawSerial) {
+          var isTrial = rawSerial.toUpperCase().indexOf("TRIAL") !== -1;
+          if (isTrial) {
+            if (isValid) {
+              try { localStorage.setItem('offszn_serial', rawSerial); } catch(e) {}
+              var tokens = rawSerial.split('|');
+              var expiresUnix = tokens.length > 1 ? parseInt(tokens[1], 10) : 0;
+              if (expiresUnix > 0) {
+                var secondsLeft = expiresUnix - Math.floor(Date.now() / 1000);
+                var daysLeft = Math.ceil(secondsLeft / 86400);
+                updateLicenseBadge('trial', 'PRUEBA · ' + (daysLeft > 1 ? daysLeft + " DÍAS" : (daysLeft === 1 ? "1 DÍA" : "ÚLTIMO DÍA")));
+              } else {
+                updateLicenseBadge('trial', 'PRUEBA · 3 DÍAS');
+              }
+              getHwidAsync().then(function(hwid) {
+                fetch(apiBase + "/api/plugin/activate", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ serial_key: tokens[0], hwid: hwid, plugin_name: OFFSZN_PLUGIN_NAME })
+                }).then(function(res){ return res.json(); }).then(function(resp){
+                  if (resp && !resp.success) {
+                    callNative("setLicenseStatus", false);
+                    updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+                    openActivationModal(false);
+                  }
+                }).catch(function(){ });
+              });
+            } else {
+              callNative("setLicenseStatus", false);
+              updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+              openActivationModal(false);
+            }
+          } else {
+            if (isValid) {
+              try { localStorage.setItem('offszn_serial', rawSerial); } catch(e) {}
+              updateLicenseBadge('full', 'FULL · OFFSZN');
+            } else {
+              callNative("setLicenseStatus", false);
+              updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+              openActivationModal(false);
+            }
+          }
+        } else {
+          callNative("setLicenseStatus", false);
+          updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+          openActivationModal(false);
+        }
+      });
+    } else {
+      var storedSerial = '';
+      try { storedSerial = localStorage.getItem('offszn_serial') || ''; } catch(e) {}
+      if (storedSerial) {
+        var isTrial = storedSerial.toUpperCase().indexOf("TRIAL") !== -1;
+        updateLicenseBadge(isTrial ? 'trial' : 'full', isTrial ? 'PRUEBA · 3 DÍAS' : 'FULL · OFFSZN');
+      } else {
+        updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+      }
+    }
+  }
+
+  // Ejecutar boot al cargar
+  setTimeout(initLicenseBoot, 120);
+
+  
+  // ========================================================
+  // HELPER PARA PRUEBAS RÁPIDAS DE ESTADOS DE LICENCIA
+  // ========================================================
+  window.testLicense = function(mode, days) {
+    if (mode === 'demo' || mode === 'reset') {
+      try { localStorage.removeItem('offszn_serial'); } catch(e) {}
+      if (typeof hasJuceBridge === 'function' && hasJuceBridge()) callNative("setLicenseStatus", false);
+      updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+      closeWelcomeModal();
+      openActivationModal(false);
+      console.log("[Test License] Estado: DEMO / SIN LICENCIA (Bloqueo activo)");
+    } else if (mode === 'trial') {
+      var d = days || 3;
+      var key = 'VOCA-TRIAL-3DAY-DEMO01';
+      try { localStorage.setItem('offszn_serial', key); } catch(e) {}
+      if (typeof hasJuceBridge === 'function' && hasJuceBridge()) callNative("setLicenseStatus", true, key);
+      updateLicenseBadge('trial', 'PRUEBA · ' + d + ' DÍAS');
+      closeActivationModal();
+      closeWelcomeModal();
+      console.log("[Test License] Estado: TRIAL ACTIVO (" + d + " días restantes)");
+    } else if (mode === 'expired') {
+      try { localStorage.setItem('offszn_serial', 'VOCA-TRIAL-EXPIRED-TEST'); } catch(e) {}
+      if (typeof hasJuceBridge === 'function' && hasJuceBridge()) callNative("setLicenseStatus", false);
+      updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+      closeWelcomeModal();
+      openActivationModal(false);
+      showCustomAlert("Prueba Expirada", "Tu periodo de prueba gratuito de 3 días ha expirado. Adquiere tu licencia FULL para continuar.", "⏳");
+      console.log("[Test License] Estado: TRIAL EXPIRADO (Bloqueo activo)");
+    } else if (mode === 'full') {
+      var fullKey = 'VOCA-FULL-91265FB4-EBAD565D';
+      try { localStorage.setItem('offszn_serial', fullKey); } catch(e) {}
+      if (typeof hasJuceBridge === 'function' && hasJuceBridge()) callNative("setLicenseStatus", true, fullKey);
+      updateLicenseBadge('full', 'FULL · OFFSZN');
+      closeActivationModal();
+      var welcome = document.getElementById('welcome-modal');
+      if (welcome) welcome.classList.add('visible');
+      console.log("[Test License] Estado: FULL LIFETIME (Desbloqueado permanente)");
+    }
+  };
+
   </script>
+  <!-- MODAL DE ACTIVACIÓN -->
+  <div id="activation-modal" class="activation-modal">
+    <div class="act-container">
+      <button class="act-btn-close" id="btn-close-activation" onclick="closeActivationModal()" style="display: none;" title="Cerrar">✕</button>
+      <div style="font-size: 24px; margin-bottom: 8px;">🔑</div>
+      <h3 class="act-title">Ingresa tu Serial Key</h3>
+      <p class="act-sub">Activa tu plugin para siempre. Consigue tu licencia en OFFSZN.</p>
+      <input type="text" class="act-input" placeholder="VOCA-FULL-XXXX-XXXX" id="serial-input" spellcheck="false" autocomplete="off" oninput="formatSerialInput(this)">
+      <button class="act-btn act-btn-primary" id="act-submit-btn" onclick="submitSerial()">Activar Plugin</button>
+      <button class="act-btn act-btn-secondary" id="act-link-btn" onclick="openExternalURL('https://offszn.lat/plugins/vocal-preset');">Consigue tu Licencia</button>
+    </div>
+  </div>
+
+  <!-- MODAL DE BIENVENIDA / CELEBRACIÓN -->
+  <div id="welcome-modal" class="activation-modal">
+    <div class="act-container">
+      <div style="font-size: 32px; margin-bottom: 10px;">🎉</div>
+      <h3 class="act-title">¡Bienvenido a Vocal Preset!</h3>
+      <p class="act-sub" style="margin-bottom: 20px;">Tu licencia ha sido activada exitosamente.<br>Disfruta de voces profesionales al instante.</p>
+      <button class="act-btn act-btn-primary" onclick="closeWelcomeModal()">Comenzar</button>
+    </div>
+  </div>
+
+  <!-- MODAL DE ALERTA NATIVA -->
+  <div id="custom-alert-modal" class="activation-modal" style="z-index: 25000;">
+    <div class="act-container" style="width: 320px;">
+      <div id="custom-alert-icon" style="font-size: 26px; margin-bottom: 8px;">⚠️</div>
+      <h3 class="act-title" id="custom-alert-title">Atención</h3>
+      <p class="act-sub" id="custom-alert-msg">Mensaje del sistema</p>
+      <button class="act-btn act-btn-primary" onclick="closeCustomAlert()">Entendido</button>
+    </div>
+  </div>
+
 </body>
 </html>

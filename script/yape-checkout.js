@@ -923,8 +923,8 @@
 
             // Track Meta Pixel Purchase
             if (window.MetaPixel && typeof window.MetaPixel.trackPurchase === 'function') {
-                const pluginCode = isPromo2x1 ? 'promo_2x1' : 'easy_mix';
-                const pluginLabel = isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : 'Easy Mix VST';
+                const pluginCode = isPromo2x1 ? 'promo_2x1' : (this.pluginName ? this.pluginName.toLowerCase().replace(/\s+/g, '_') : 'easy_mix');
+                const pluginLabel = isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : ((this.pluginName || 'Easy Mix') + ' VST');
                 window.MetaPixel.trackPurchase({
                     content_ids: [pluginCode],
                     content_name: pluginLabel,

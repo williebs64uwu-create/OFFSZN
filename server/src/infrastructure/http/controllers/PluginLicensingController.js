@@ -38,7 +38,8 @@ async function sendActivationEmail({ to, serialKey, licenseType, expiresAt }) {
         const isCoke   = upperSerial.startsWith('COKE');
         const isMaster = upperSerial.startsWith('MASTER');
         const isInka   = upperSerial.startsWith('INKA');
-        const pluginName = isCoke ? 'Coca-Cola' : (isInka ? 'Inka Kola' : (isMaster ? 'Easy Master' : 'Easy Mix'));
+        const isVoca   = upperSerial.startsWith('VOCA');
+        const pluginName = isVoca ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInka ? 'Inka Kola' : (isMaster ? 'Easy Master' : 'Easy Mix')));
 
         const html = `
         <div style="font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
@@ -323,7 +324,7 @@ export const activateSerial = async (req, res) => {
         }
 
         // Robust extraction: Extract pure serial key pattern even if user copied "Easy Mix: EASY-FULL-..."
-        const keyMatch = rawSerial.match(/(EASY|MASTER|INKA|COKE)-(FULL|TRIAL|SUB)-[A-Z0-9]{4,8}-[A-Z0-9]{4,8}/i);
+        const keyMatch = rawSerial.match(/(EASY|MASTER|INKA|COKE|VOCA)-(FULL|TRIAL|SUB)-[A-Z0-9]{4,8}-[A-Z0-9]{4,8}/i);
         const serial_key = keyMatch ? keyMatch[0].toUpperCase() : rawSerial.toUpperCase();
 
         // 1. Find license
@@ -335,7 +336,7 @@ export const activateSerial = async (req, res) => {
             return res.status(403).json({ error: 'Esta licencia ha sido suspendida o revocada.' });
         }
 
-        // ── Validation: Match Plugin product (Coca-Cola vs Inka Kola vs Easy Master vs Easy Mix) ──
+        // ── Validation: Match Plugin product (Coca-Cola vs Inka Kola vs Easy Master vs Easy Mix vs Vocal Preset) ──
         const upperSerial = (serial_key || '').toUpperCase();
         const requestedPlugin = (req.body?.plugin_name || '').toLowerCase();
         const registeredPlugin = (license.plugin_name || '').toLowerCase();
@@ -343,12 +344,14 @@ export const activateSerial = async (req, res) => {
         const isCokeKey = upperSerial.startsWith('COKE') || registeredPlugin.includes('coca') || registeredPlugin.includes('coke');
         const isInkaKey = upperSerial.startsWith('INKA') || registeredPlugin.includes('inka');
         const isMasterKey = upperSerial.startsWith('MASTER') || registeredPlugin.includes('master');
+        const isVocaKey = upperSerial.startsWith('VOCA') || registeredPlugin.includes('vocal');
         const isMixKey = (upperSerial.startsWith('EASY-') && !upperSerial.startsWith('EASY-MASTER')) || (registeredPlugin.includes('mix') && !registeredPlugin.includes('master'));
 
         const isCokeReq = requestedPlugin.includes('coca') || requestedPlugin.includes('coke');
         const isInkaReq = requestedPlugin.includes('inka');
         const isMasterReq = requestedPlugin.includes('master');
-        const isMixReq = requestedPlugin.includes('mix') && !requestedPlugin.includes('master') && !requestedPlugin.includes('coca') && !requestedPlugin.includes('coke');
+        const isVocaReq = requestedPlugin.includes('vocal') || requestedPlugin.includes('voca');
+        const isMixReq = requestedPlugin.includes('mix') && !requestedPlugin.includes('master') && !requestedPlugin.includes('coca') && !requestedPlugin.includes('coke') && !requestedPlugin.includes('vocal');
 
         if (isCokeReq && !isCokeKey) {
             return res.status(403).json({ error: 'Esta licencia no pertenece a Coca-Cola Plugin.' });
@@ -359,6 +362,9 @@ export const activateSerial = async (req, res) => {
         if (isMasterReq && !isMasterKey) {
             return res.status(403).json({ error: 'Esta licencia no pertenece a Easy Master.' });
         }
+        if (isVocaReq && !isVocaKey) {
+            return res.status(403).json({ error: 'Esta licencia no pertenece a Vocal Preset.' });
+        }
         if (isMixReq && !isMixKey) {
             return res.status(403).json({ error: 'Esta licencia no pertenece a Easy Mix.' });
         }
@@ -367,6 +373,9 @@ export const activateSerial = async (req, res) => {
         }
         if (isInkaKey && !isInkaReq && requestedPlugin.length > 0) {
             return res.status(403).json({ error: 'Esta licencia es exclusiva para Inka Kola y no sirve para otros plugins.' });
+        }
+        if (isVocaKey && !isVocaReq && requestedPlugin.length > 0) {
+            return res.status(403).json({ error: 'Esta licencia es exclusiva para Vocal Preset y no sirve para otros plugins.' });
         }
 
         // 2. Count activations — use max_devices from DB (default 1)
@@ -674,7 +683,8 @@ export const adminGenerateFullKey = async (req, res) => {
             'Easy Mix': 'EASY',
             'Easy Master': 'MASTER',
             'Coca Cola': 'COKE',
-            'Inka Kola': 'INKA'
+            'Inka Kola': 'INKA',
+            'Vocal Preset': 'VOCA'
         };
 
         const targetPlugin = Object.keys(validPlugins).find(k => k.toLowerCase() === (plugin_name || '').toLowerCase()) || 'Easy Mix';

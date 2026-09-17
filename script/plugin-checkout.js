@@ -14,6 +14,7 @@ class PluginDirectCheckout {
         const isCoke = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola' || window.PLUGIN_NAME === 'COCA COLA';
         const isMaster = this.productId === 900 || window.PLUGIN_NAME === 'Easy Master';
         const isInka = this.productId === 902 || window.PLUGIN_NAME === 'INKA KOLA' || window.PLUGIN_NAME === 'Inka Kola';
+        const isVocalPreset = this.productId === 905 || window.PLUGIN_NAME === 'Vocal Preset';
 
         if (isCoke) {
             this.downloads = {
@@ -32,6 +33,12 @@ class PluginDirectCheckout {
                 name: 'Easy Master',
                 win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
                 mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+            };
+        } else if (isVocalPreset) {
+            this.downloads = {
+                name: 'Vocal Preset',
+                win: 'https://drive.google.com/file/d/1JSArLjFypFYkcGJV3DIu67hxSFU4kG6q/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
             };
         } else {
             this.downloads = {

@@ -1077,31 +1077,44 @@
             width: 58px;
             height: 58px;
             border-radius: 50%;
-            background: #e4e4e7;
-            border: 1px solid rgba(0, 0, 0, 0.08);
-            color: #a1a1aa;
+            background: #000000;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 1.45rem;
-            cursor: not-allowed;
-            box-shadow: none;
-            transition: none;
+            cursor: pointer;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             flex-shrink: 0;
-            opacity: 0.85;
-            pointer-events: none;
+            opacity: 1;
+            pointer-events: auto;
         }
 
-        .hero-play-btn:hover {
-            transform: none;
-            box-shadow: none;
+        .hero-play-btn:hover:not(:disabled) {
+            transform: scale(1.06);
+            background: #18181b;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
         }
 
-        .hero-play-btn:active {
-            transform: none;
+        .hero-play-btn:active:not(:disabled) {
+            transform: scale(0.96);
         }
 
-        /* Switcher Cápsula Cruda vs Con Preset Bloqueado en Gris */
+        .hero-play-btn.disabled,
+        .hero-play-btn:disabled {
+            background: #e4e4e7 !important;
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            color: #a1a1aa !important;
+            cursor: not-allowed !important;
+            box-shadow: none !important;
+            transform: none !important;
+            opacity: 0.85 !important;
+            pointer-events: none !important;
+        }
+
+        /* Switcher Cápsula Cruda vs Con Preset */
         .ab-pill-switcher {
             display: inline-flex;
             align-items: center;
@@ -1110,9 +1123,15 @@
             border-radius: 9999px;
             padding: 4px;
             gap: 2px;
-            box-shadow: none;
-            opacity: 0.85;
-            pointer-events: none;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+            opacity: 1;
+            pointer-events: auto;
+            transition: all 0.2s ease;
+        }
+
+        .ab-pill-switcher.disabled {
+            opacity: 0.7 !important;
+            pointer-events: none !important;
         }
 
         .ab-pill-btn {
@@ -1122,21 +1141,37 @@
             border-radius: 9999px;
             font-size: 0.885rem;
             font-weight: 700;
-            color: #a1a1aa;
-            cursor: not-allowed;
-            transition: none;
+            color: #71717a;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .ab-pill-btn:hover:not(:disabled) {
+            color: #000000;
         }
 
         .ab-pill-btn.active {
-            background: #e4e4e7;
-            color: #71717a !important;
-            box-shadow: none;
+            background: #000000;
+            color: #ffffff !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         .ab-pill-btn.active-magenta {
-            background: transparent;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            color: #ffffff !important;
+            box-shadow: 0 2px 12px rgba(236, 72, 153, 0.35);
+        }
+
+        .ab-pill-btn:disabled,
+        .ab-pill-switcher.disabled .ab-pill-btn {
             color: #a1a1aa !important;
-            font-weight: 700;
+            cursor: not-allowed !important;
+        }
+
+        .ab-pill-switcher.disabled .ab-pill-btn.active {
+            background: #e4e4e7 !important;
+            color: #71717a !important;
+            box-shadow: none !important;
         }
 
         .hero-buy-cta-btn {
@@ -2790,15 +2825,15 @@
                     <span class="title-huge" id="heroHugeTitle">Bad Bunny</span>
                 </h1>
 
-                <!-- Fila de Reproductor A/B Bloqueado en Gris (Muestras en actualización) -->
+                <!-- Fila de Reproductor A/B con Switcher Sincronizado -->
                 <div class="hero-player-row">
-                    <button type="button" class="hero-play-btn" id="mainPlayBtn" disabled title="Muestras en actualización">
+                    <button type="button" class="hero-play-btn disabled" id="mainPlayBtn" onclick="toggleHeroPlay()" disabled title="Muestras en actualización">
                         <i class="bi bi-play-fill" id="playIcon"></i>
                     </button>
 
-                    <div class="ab-pill-switcher">
-                        <button type="button" class="ab-pill-btn active" id="pillRaw" disabled>Voz cruda</button>
-                        <button type="button" class="ab-pill-btn" id="pillMainstream" disabled>Voz con preset</button>
+                    <div class="ab-pill-switcher disabled" id="abPillSwitcher">
+                        <button type="button" class="ab-pill-btn active" id="pillRaw" onclick="switchAbPill('raw')" disabled>Voz cruda</button>
+                        <button type="button" class="ab-pill-btn" id="pillMainstream" onclick="switchAbPill('processed')" disabled>Voz con preset</button>
                     </div>
                 </div>
 
@@ -3038,8 +3073,34 @@
         let isPlaying = false;
 
         function toggleHeroPlay() {
-            // Audio preview desactivado temporalmente sin generar errores
-            return false;
+            const artist = artistsCatalog[currentArtistIndex];
+            if (!artist || !artist.audioRaw || !artist.audioProcessed) return;
+
+            const activeAudio = currentMode === 'raw' ? audioRaw : audioProcessed;
+
+            if (isPlaying) {
+                audioRaw.pause();
+                audioProcessed.pause();
+                isPlaying = false;
+                updatePlayIcons(false);
+            } else {
+                const targetTime = activeAudio.currentTime || 0;
+                audioRaw.currentTime = targetTime;
+                audioProcessed.currentTime = targetTime;
+
+                activeAudio.play().then(() => {
+                    isPlaying = true;
+                    updatePlayIcons(true);
+                    const hint = document.getElementById('playerStatusHint');
+                    if (hint) {
+                        hint.textContent = currentMode === 'raw'
+                            ? `Escuchando: Voz cruda de ${artist.name} (Sin procesar)`
+                            : `Escuchando: Con Preset Oficial de ${artist.name} ✨`;
+                    }
+                }).catch(err => {
+                    console.log("Audio play error:", err);
+                });
+            }
         }
 
         function switchAbPill(mode) {
@@ -3047,31 +3108,31 @@
             const pillRaw = document.getElementById('pillRaw');
             const pillMainstream = document.getElementById('pillMainstream');
             const hint = document.getElementById('playerStatusHint');
-            const artist = artistsCatalog[currentArtistIndex] || { name: 'Bad Bunny' };
+            const artist = artistsCatalog[currentArtistIndex] || { name: 'Artista' };
 
             if (mode === 'raw') {
                 pillRaw.className = 'ab-pill-btn active';
-                pillMainstream.className = 'ab-pill-btn active-magenta';
-                if (hint) hint.textContent = `Toca play • voz cruda (${artist.name})`;
+                pillMainstream.className = 'ab-pill-btn';
+                if (hint) hint.textContent = `Escuchando: Voz cruda de ${artist.name} (Sin procesar)`;
 
                 if (isPlaying) {
                     const time = audioProcessed.currentTime;
                     audioProcessed.pause();
                     audioRaw.currentTime = time;
                     audioRaw.volume = 1;
-                    audioRaw.play();
+                    audioRaw.play().catch(e => console.log(e));
                 }
             } else {
                 pillRaw.className = 'ab-pill-btn';
-                pillMainstream.className = 'ab-pill-btn active';
-                if (hint) hint.textContent = `Escuchando • voz con preset (${artist.name}) ✨`;
+                pillMainstream.className = 'ab-pill-btn active-magenta';
+                if (hint) hint.textContent = `Escuchando: Con Preset Oficial de ${artist.name} ✨`;
 
                 if (isPlaying) {
                     const time = audioRaw.currentTime;
                     audioRaw.pause();
                     audioProcessed.currentTime = time;
                     audioProcessed.volume = 1;
-                    audioProcessed.play();
+                    audioProcessed.play().catch(e => console.log(e));
                 }
             }
         }
@@ -3094,15 +3155,15 @@
         const artistsCatalog = [
             { id: "bad-bunny", name: "Bad Bunny", cover: "/willieimages/covers/bad-bunny-v2.png", coverHover: "/willieimages/covers/bad-bunny.jpg", icon: "🐰", price: PRESET_PRICE, badge: "Bad Bunny Vocal Preset • $10.00" },
             { id: "cris-mj", name: "Cris Mj", cover: "/willieimages/covers/cris-mj.png", icon: "🦅", price: PRESET_PRICE, badge: "Cris Mj Vocal Chain • $10.00" },
-            { id: "yan-block", name: "Yan Block", cover: "/willieimages/covers/yan-block-v2.png", coverHover: "/willieimages/covers/yan-block.png", icon: "🔥", price: PRESET_PRICE, badge: "Yan Block Vocal Chain • $10.00" },
+            { id: "yan-block", name: "Yan Block", cover: "/willieimages/covers/yan-block-v2.png", coverHover: "/willieimages/covers/yan-block.png", icon: "🔥", price: PRESET_PRICE, badge: "Yan Block Vocal Chain • $10.00", audioRaw: "/music-raw-to-defined/antes-yan-block.mp3", audioProcessed: "/music-raw-to-defined/despues-yan-block.mp3" },
             { id: "roa", name: "Roa", cover: "/willieimages/covers/roa-v2.png", coverHover: "/willieimages/covers/roa.jpg", icon: "⚡", price: PRESET_PRICE, badge: "Roa Vocal Preset • $10.00" },
-            { id: "alejo", name: "Alejo", cover: "/willieimages/covers/alejo-v2.png", coverHover: "/willieimages/covers/alejo.jpg", icon: "⭐", price: PRESET_PRICE, badge: "Alejo Vocal Chain • $10.00" },
+            { id: "alejo", name: "Alejo", cover: "/willieimages/covers/alejo-v2.png", coverHover: "/willieimages/covers/alejo.jpg", icon: "⭐", price: PRESET_PRICE, badge: "Alejo Vocal Chain • $10.00", audioRaw: "/music-raw-to-defined/ale-antes.mp3", audioProcessed: "/music-raw-to-defined/ale-despues.mp3" },
             { id: "jovaan", name: "Jovaan", cover: "/willieimages/covers/jovaan.png", icon: "🕶️", price: PRESET_PRICE, badge: "Jovaan Vocal Preset • $10.00" },
             { id: "fanta-rosario", name: "Fanta Rosario", cover: "/willieimages/covers/fanta-rosario.png", icon: "🥤", price: PRESET_PRICE, badge: "Fanta Rosario Vocal Chain • $10.00" },
-            { id: "omar-courtz", name: "Omar Courtz", cover: "/willieimages/covers/omar-courtz-v2.png", coverHover: "/willieimages/covers/omar-courtz.jpg", icon: "🕶️", price: PRESET_PRICE, badge: "Omar Courtz Vocal Chain • $10.00" },
+            { id: "omar-courtz", name: "Omar Courtz", cover: "/willieimages/covers/omar-courtz-v2.png", coverHover: "/willieimages/covers/omar-courtz.jpg", icon: "🕶️", price: PRESET_PRICE, badge: "Omar Courtz Vocal Chain • $10.00", audioRaw: "/music-raw-to-defined/antes-omar-courtz.mp3", audioProcessed: "/music-raw-to-defined/despues-omar-courtz.mp3" },
             { id: "yeat", name: "Yeat", cover: "/willieimages/covers/yeat.png", icon: "🛸", price: PRESET_PRICE, badge: "Yeat Rage Vocal Chain • $10.00" },
             { id: "the-kid-laroi", name: "The Kid LAROI", cover: "/willieimages/covers/the-kid-laroi.png", icon: "🎸", price: PRESET_PRICE, badge: "The Kid LAROI Vocal Chain • $10.00" },
-            { id: "yeyo", name: "Yeyo", cover: "/willieimages/covers/yeyo-v2.png", coverHover: "/willieimages/covers/yeyo.png", icon: "⚡", price: PRESET_PRICE, badge: "Yeyo Vocal Preset • $10.00" },
+            { id: "yeyo", name: "Yeyo", cover: "/willieimages/covers/yeyo-v2.png", coverHover: "/willieimages/covers/yeyo.png", icon: "⚡", price: PRESET_PRICE, badge: "Yeyo Vocal Preset • $10.00", audioRaw: "/music-raw-to-defined/antes-yeyo.mp3", audioProcessed: "/music-raw-to-defined/despues-yeyo.mp3" },
             { id: "feid", name: "Feid", cover: "/willieimages/covers/feid.png", icon: "💚", price: PRESET_PRICE, badge: "Feid Ferxxo Vocal Chain • $10.00" },
             { id: "duki", name: "Duki", cover: "/willieimages/covers/duki.jpg", icon: "😈", price: PRESET_PRICE, badge: "Duki Trap Vocal Preset • $10.00" },
             { id: "milo-j", name: "Milo J", cover: "/willieimages/covers/milo-j.jpg", icon: "🎙️", price: PRESET_PRICE, badge: "Milo J Vocal Preset • $10.00" },
@@ -3199,9 +3260,54 @@
             if (productBarIcon) productBarIcon.textContent = artist.icon || "🔥";
             if (productBarTitle) productBarTitle.textContent = `${artist.name} Vocal Preset`;
 
+            // Sincronizar reproductor de audio con el artista seleccionado
+            const playBtn = document.getElementById('mainPlayBtn');
+            const switcher = document.getElementById('abPillSwitcher');
+            const pillRaw = document.getElementById('pillRaw');
+            const pillMainstream = document.getElementById('pillMainstream');
             const hint = document.getElementById('playerStatusHint');
-            if (hint) {
-                hint.textContent = `Preset Oficial de ${artist.name} • Compatible con FL Studio`;
+
+            // Pausar si estaba reproduciendo
+            if (isPlaying) {
+                audioRaw.pause();
+                audioProcessed.pause();
+                isPlaying = false;
+                updatePlayIcons(false);
+            }
+
+            if (artist.audioRaw && artist.audioProcessed) {
+                audioRaw.src = artist.audioRaw;
+                audioProcessed.src = artist.audioProcessed;
+                audioRaw.currentTime = 0;
+                audioProcessed.currentTime = 0;
+                audioRaw.load();
+                audioProcessed.load();
+
+                if (playBtn) {
+                    playBtn.disabled = false;
+                    playBtn.classList.remove('disabled');
+                    playBtn.title = `Escuchar comparativa Antes / Después de ${artist.name}`;
+                }
+                if (switcher) switcher.classList.remove('disabled');
+                if (pillRaw) pillRaw.disabled = false;
+                if (pillMainstream) pillMainstream.disabled = false;
+
+                if (hint) {
+                    hint.textContent = `Comparativa A/B disponible • Toca Play para escuchar a ${artist.name} 🎧`;
+                }
+            } else {
+                if (playBtn) {
+                    playBtn.disabled = true;
+                    playBtn.classList.add('disabled');
+                    playBtn.title = "Muestras de audio en actualización";
+                }
+                if (switcher) switcher.classList.add('disabled');
+                if (pillRaw) pillRaw.disabled = true;
+                if (pillMainstream) pillMainstream.disabled = true;
+
+                if (hint) {
+                    hint.textContent = `Muestras de audio en actualización • Presets 100% listos para usar`;
+                }
             }
         }
 

@@ -647,6 +647,8 @@ app.use('/music-raw-to-defined', express.static(musicPath, {
     maxAge: '7d',
     setHeaders: (res) => {
         res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Cache-Control', 'public, max-age=604800, s-maxage=2592000, immutable');
+        res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=2592000');
     }
 }));
 
