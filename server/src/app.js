@@ -474,6 +474,19 @@ app.get(['/plugins/easy-mix', '/plugins/easy-mix.html'], (req, res) => {
     return res.sendFile(path.join(rootPath, 'plugin/easy-mix.html'));
 });
 
+// Rutas directas para Vocal Preset
+app.get(['/plugin/vocal-preset', '/plugin/vocal-preset.html', '/plugins/vocal-preset', '/plugins/vocal-preset.html'], (req, res) => {
+    const pluginsLandingPath = path.join(rootPath, 'plugins/vocal-preset.html');
+    if (fs.existsSync(pluginsLandingPath)) {
+        return res.sendFile(pluginsLandingPath);
+    }
+    const pluginLandingPath = path.join(rootPath, 'plugin/vocal-preset.html');
+    if (fs.existsSync(pluginLandingPath)) {
+        return res.sendFile(pluginLandingPath);
+    }
+    return res.sendFile(path.join(rootPath, 'vocal-preset.html'));
+});
+
 // Rutas directas para afiliados de Easy Mix (abi, allan, patrick, ximo, etc.)
 app.get(['/plugins/easy-mix-:affiliate', '/plugin/easy-mix-:affiliate'], (req, res, next) => {
     const affiliate = req.params.affiliate.replace(/\.html$/, '').toLowerCase();
@@ -785,6 +798,7 @@ app.get('/sitemap.xml', async (req, res) => {
             { loc: 'https://offszn.lat/recursos/plugins.html', priority: '0.7', changefreq: 'monthly' },
             { loc: 'https://offszn.lat/plugins/all.html', priority: '0.8', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/easy-mix.html', priority: '0.9', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/plugins/vocal-preset.html', priority: '0.9', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/easy-master.html', priority: '0.9', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/inka-kola.html', priority: '0.9', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/offszn-recorder.html', priority: '0.8', changefreq: 'weekly' },

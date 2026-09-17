@@ -125,7 +125,7 @@
       align-items: center;
       gap: 8px;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.5);
       transition: all 0.15s ease;
     }
 
@@ -491,7 +491,7 @@
       background: linear-gradient(180deg, #ffffff 0%, #d8dbe2 100%);
       color: #090a0d;
       border-color: #ffffff;
-      box-shadow: 0 0 14px rgba(255, 255, 255, 0.3);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
     }
 
     .compact-mic-dot {
@@ -510,14 +510,14 @@
     .mix-hero-card {
       background: linear-gradient(180deg, #161922 0%, #0d0f15 100%);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      border-top-color: rgba(255, 255, 255, 0.22);
+      border-top-color: rgba(255, 255, 255, 0.2);
       border-radius: var(--radius-md);
-      padding: 12px 18px;
+      padding: 10px 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
-      margin-bottom: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
+      margin-bottom: 12px;
     }
 
     .mix-hero-info {
@@ -620,11 +620,13 @@
       border-top-color: rgba(255, 255, 255, 0.16);
       border-bottom-color: rgba(0, 0, 0, 0.85);
       border-radius: var(--radius-md);
-      padding: 12px 10px;
+      padding: 14px 12px 14px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      justify-content: space-between;
+      min-height: 126px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
       position: relative;
     }
 
@@ -664,7 +666,7 @@
     .switch-toggle.on {
       background: #ffffff;
       border-color: #ffffff;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+      box-shadow: none;
     }
 
     .switch-toggle::after {
@@ -1332,14 +1334,19 @@
     /* ── ACTIVATION & SYSTEM MODALS ── */
     .activation-modal {
       display: none;
-      position: absolute;
-      inset: 0;
-      background: rgba(5, 7, 10, 0.88);
-      z-index: 20000;
-      justify-content: center;
-      align-items: center;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      background: rgba(5, 7, 10, 0.94) !important;
+      z-index: 999999 !important;
+      justify-content: center !important;
+      align-items: center !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+    }
+    .activation-modal.visible {
+      display: flex !important;
     }
     .activation-modal.visible {
       display: flex;
@@ -1443,6 +1450,192 @@
       pointer-events: none;
     }
 
+  
+    /* ── CREATIVE / EFECTOS CARDS EXPANDIDAS & CONTROLES ESPECÍFICOS ── */
+    #creativeGrid .fx-card {
+      min-height: 250px;
+      padding: 12px 10px 10px;
+      justify-content: flex-start;
+      gap: 6px;
+    }
+    .card-mini-ctrl-block {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-sm);
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 2px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+    .badge-stereo-always {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      width: 100%;
+      padding: 5px 6px;
+      background: rgba(45, 212, 191, 0.08);
+      border: 1px solid rgba(45, 212, 191, 0.28);
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: #2dd4bf;
+      text-transform: uppercase;
+    }
+    .badge-stereo-always .stereo-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #2dd4bf;
+      box-shadow: 0 0 8px rgba(45, 212, 191, 0.85);
+      animation: pulseStereo 2s infinite ease-in-out;
+    }
+    @keyframes pulseStereo {
+      0%, 100% { opacity: 0.5; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+    .card-pill-btn {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 4px;
+      color: #94a3b8;
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 4px 6px;
+      cursor: pointer;
+      text-align: center;
+      text-transform: uppercase;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .card-pill-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .card-pill-btn.active {
+      background: rgba(56, 189, 248, 0.14);
+      border-color: rgba(56, 189, 248, 0.5);
+      color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.18);
+    }
+    .card-pill-btn.active.purple {
+      background: rgba(192, 132, 252, 0.14);
+      border-color: rgba(192, 132, 252, 0.5);
+      color: #c084fc;
+      box-shadow: 0 0 10px rgba(192, 132, 252, 0.18);
+    }
+    .card-quick-select {
+      background: #080a0f;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 4px;
+      color: #38bdf8;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 6px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .card-quick-select:focus {
+      border-color: #38bdf8;
+    }
+
+    /* ── EQ GRÁFICO INTERACTIVO EN MODAL ── */
+    .eq-display-container {
+      width: 100%;
+      height: 120px;
+      background: #080a0f;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 12px;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.85);
+      user-select: none;
+    }
+    .eq-display-header {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .eq-mode-badge {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+    }
+    .eq-interactive-node {
+      cursor: ew-resize;
+      transition: r 0.15s ease;
+    }
+    .eq-interactive-node:hover {
+      r: 8;
+    }
+    .modal-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0f1218;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+    }
+    .modal-toggle-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .modal-toggle-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+    .modal-toggle-desc {
+      font-size: 10px;
+      color: #94a3b8;
+    }
+    .btn-pill-action {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      transition: all 0.15s;
+    }
+    .btn-pill-action.active {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+    }
+
   </style>
 </head>
 <body>
@@ -1453,8 +1646,7 @@
   <!-- BARRA SUPERIOR -->
   <header class="header">
     <div class="brand-group">
-      <div class="brand-badge">OFFSZN</div>
-      <div class="brand-title">Vocal Preset</div>
+      <div class="brand-title" style="font-size: 15px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #ffffff;">VOCAL PRESET</div>
     </div>
 
     <!-- BOTÓN VOLVER AL MICRÓFONO (Visible en pantalla de efectos) -->
@@ -1495,13 +1687,13 @@
          ========================================== -->
     <section class="screen-hablar" id="screenHablar">
       <div class="hero-header">
-        <h1 class="hero-title">Tu voz. Tus efectos.</h1>
-        <span class="hero-subtitle">Habla de forma natural para procesar tu voz al instante</span>
+        <h1 class="hero-title" style="transform: translate(2px, 5px);">Tu voz. Tus efectos.</h1>
+        <span class="hero-subtitle" style="display: none;">Habla de forma natural para procesar tu voz al instante</span>
       </div>
 
       <!-- BOTÓN PRINCIPAL DEL MICRÓFONO -->
       <div class="mic-button-wrapper">
-        <button class="mic-toggle-btn" id="micToggleBtn" onclick="toggleVoiceRecording()">
+        <button class="mic-toggle-btn" id="micToggleBtn" onclick="toggleVoiceRecording()" style="transform: translate(-10px, 35px) scale(1.48); font-size: 15px;">
           <span class="mic-indicator-dot" id="micDot"></span>
           <svg class="mic-icon" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
@@ -1517,11 +1709,28 @@
         <span class="transcript-cursor" id="transcriptCursor"></span>
       </div>
 
-      <!-- ACCESO RÁPIDO: DAME UN PRESET STARTER -->
-      <div class="quick-voice-prompts">
-        <button class="quick-prompt-btn" onclick="applyStarterPreset()">
+      <!-- BARRA DE COMANDOS REMOVIDA -->
+
+      <!-- ACCESO RÁPIDO: PÍLDORAS DE COMANDOS DIRECTOS -->
+      <div class="quick-voice-prompts" style="display: none;">
+        <button class="quick-prompt-btn" onclick="executeVoiceCommandDirect('dame un preset')" title="Aplica mezcla starter limpia y calibrada">
           <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          <span>"Dame un preset" (Starter Mix 50%)</span>
+          <span>"Starter Vocal" (100%)</span>
+        </button>
+        <button class="quick-prompt-btn" onclick="executeVoiceCommandDirect('voz al frente')" title="Compresión y presencia vocal">
+          <span>🎙 "Voz al frente"</span>
+        </button>
+        <button class="quick-prompt-btn" onclick="executeVoiceCommandDirect('más brillo')" title="Top-end sedoso y aire">
+          <span>✨ "Más brillo"</span>
+        </button>
+        <button class="quick-prompt-btn" onclick="executeVoiceCommandDirect('limpiar graves')" title="Corte de graves y cartón">
+          <span>🧼 "Limpiar graves"</span>
+        </button>
+        <button class="quick-prompt-btn" onclick="executeVoiceCommandDirect('espacio')" title="Añade reverb y delay">
+          <span>🌊 "Espacio"</span>
+        </button>
+        <button class="quick-prompt-btn" onclick="resetVocalPresetState()" title="Borra caché y restablece a fábrica">
+          <span>↺ Reset Factory</span>
         </button>
         <button class="quick-prompt-btn" onclick="showEffectsScreen()">
           <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
@@ -1535,12 +1744,12 @@
          ========================================== -->
     <section class="screen-efectos" id="screenEfectos">
       <div class="effects-header-bar">
-        <div class="effects-section-title">PROCESADORES & EFECTOS</div>
+        
         
         <!-- PESTAÑAS: MEZCLA / ESPACIO & MODULACIÓN / AJUSTES -->
         <div class="category-pills-bar">
-          <button class="category-tab-btn active" id="tabCat_mezcla" onclick="switchCategoryTab('mezcla')">Mezcla (Easy Mix)</button>
-          <button class="category-tab-btn" id="tabCat_espacio" onclick="switchCategoryTab('espacio')">Espacio & Modulación</button>
+          <button class="category-tab-btn active" id="tabCat_mezcla" onclick="switchCategoryTab('mezcla')">Cadena</button>
+          <button class="category-tab-btn" id="tabCat_espacio" onclick="switchCategoryTab('espacio')">Efectos</button>
           <button class="category-tab-btn" id="tabCat_ajustes" onclick="switchCategoryTab('ajustes')">Ajustes</button>
         </div>
 
@@ -1560,12 +1769,10 @@
         <!-- HERO BANNER CON TOGGLE + MACRO MIX (50%) + EXPORTAR PRESET -->
         <div class="mix-hero-card">
           <div class="mix-hero-info">
-            <div class="mix-hero-title">
-              <span>EASY MIX — CADENA VOCAL</span>
-              <div class="switch-toggle on" id="toggleMixChain" onclick="toggleMixChain(event)" title="Activar/Desactivar Cadena Easy Mix"></div>
-              <span id="toggleMixChainBadge" style="font-size: 10px; font-weight: 800; letter-spacing: 0.08em; color: #ffffff; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.18);">ACTIVO</span>
+            <div class="mix-hero-title" style="display: flex; align-items: center; gap: 10px;">
+              <span id="toggleMixChainBadge" style="font-size: 13px; font-weight: 800; letter-spacing: 0.08em; color: #ffffff;">PRENDIDO</span>
+              <div class="switch-toggle on" id="toggleMixChain" onclick="toggleMixChain(event)" title="Activar/Desactivar Cadena"></div>
             </div>
-            <span class="mix-hero-subtitle">Corte de graves, de-esser, cuerpo, saturación analógica y dinámica.</span>
           </div>
 
           <div class="mix-hero-actions">
@@ -1573,21 +1780,17 @@
             <div class="macro-knob-wrapper">
               <div class="macro-labels">
                 <span class="macro-title">MIX GLOBAL</span>
-                <span class="macro-val" id="valMixMacro">50%</span>
+                <span class="macro-val" id="valMixMacro">100%</span>
               </div>
               <div class="arc-gauge-container" style="width: 58px; height: 50px;" onmousedown="startMixMacroDrag(event)" title="Ajustar Intensidad Global Mix">
                 <svg class="arc-gauge-svg" viewBox="0 0 80 80" style="width: 54px; height: 54px;">
                   <circle class="arc-bg" cx="40" cy="40" r="28"></circle>
-                  <circle class="arc-fill" id="arcMixMacro" cx="40" cy="40" r="28" style="stroke-dashoffset: 110;"></circle>
+                  <circle class="arc-fill" id="arcMixMacro" cx="40" cy="40" r="28" style="stroke-dashoffset: 44;"></circle>
                 </svg>
               </div>
             </div>
 
-            <!-- BOTÓN EXPORTAR PRESET -->
-            <button class="btn-export-preset" onclick="openExportModal()" title="Ver y copiar los valores de tu preset">
-              <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-              <span>Copiar Preset</span>
-            </button>
+
           </div>
         </div>
 
@@ -1762,7 +1965,7 @@
         <div class="commands-grid">
           <div class="command-pill" onclick="testVoiceCommandFromModal('Dame un preset')">
             <span class="command-phrase">"Dame un preset"</span>
-            <span class="command-action-desc">Aplica la cadena Easy Mix con Mix al 50%</span>
+            <span class="command-action-desc">Aplica el Preset Starter con Mix al 50%</span>
           </div>
           <div class="command-pill" onclick="testVoiceCommandFromModal('Reverb oscura')">
             <span class="command-phrase">"Reverb oscura"</span>
@@ -1811,6 +2014,7 @@
 
   <script>
     // ==========================================
+    var canvaState = null;
     // ESTADO CENTRALIZADO Y CONFIGURACIÓN V4
     // ==========================================
     var state = {
@@ -1820,7 +2024,7 @@
       isRecording: false,
       outGain: 0.0,
       mixChainOn: true,
-      mixMacro: 50,
+      mixMacro: 100,
       settings: {
         lang: 'es-ES',
         silenceTimeoutSec: 3.5,
@@ -1828,68 +2032,55 @@
       },
       // CADENA EASY MIX (8 PARÁMETROS)
       mixParams: {
-        hpf:      { name: 'Quitar Graves (HPF)', val: 30, desc: 'Corte subs y retumbes' },
-        boxy:     { name: 'Quitar Cartón',       val: 25, desc: 'Corte en 350-500 Hz' },
-        deesser:  { name: 'De-Esser (Quitar S)', val: 40, desc: 'Control de sibilancias' },
-        presMid:  { name: 'Presencia Medios',    val: 35, desc: 'Cuerpo y articulación (2.5k)' },
-        presHigh: { name: 'Presencia Altos',     val: 30, desc: 'Definición vocal (5k)' },
-        sat:      { name: 'Saturación Tape',     val: 20, desc: 'Calor armónico de cinta' },
-        air:      { name: 'Aire & Brillo',       val: 35, desc: 'Top-end sedoso (12k+)' },
-        comp:     { name: 'Compresión Vocal',    val: 45, desc: 'Pegada y dinamismo parejo' }
+        hpf:      { name: 'QUITAR GRAVES', val: 79, desc: 'Corte subs y retumbes (130Hz mud notch)' },
+        boxy:     { name: 'MOLDEAR VOZ',       val: 16, desc: 'Corte en 250-450 Hz' },
+        deesser:  { name: 'QUITAR S', val: 43, desc: 'Control de sibilancias (6.5kHz)' },
+        presMid:  { name: 'aumentar medios',    val: 100, desc: 'Cuerpo y articulación (Fresh Air Mid)' },
+        presHigh: { name: 'SUBIR BRILLO DE VOZ',     val: 100, desc: 'Definición vocal (Fresh Air High)' },
+        sat:      { name: 'ARMÓNICOS',     val: 0, desc: 'Calor armónico de cinta (Saturn/Spectre)' },
+        air:      { name: 'dar aire a la voz',       val: 40, desc: 'Top-end sedoso y apertura estéreo' },
+        comp:     { name: 'equilibrar voz',    val: 13, desc: 'Pegada y dinamismo parejo (CLA-76)' }
       },
       // EFECTOS CREATIVOS (ESPACIO & MODULACIÓN)
-      creative: {
+            creative: {
         doubler: {
-          name: 'Doubler',
+          name: 'STEREO A LA VOZ',
           on: false,
           amount: 20,
-          primary: [
-            { name: 'Anchura Estéreo', unit: '%', max: 100, val: 80 },
-            { name: 'Desafinación', unit: ' ct', max: 50, val: 5 }
-          ],
-          advanced: [
-            { name: 'Separación Temporal', unit: ' ms', max: 40, val: 18 },
-            { name: 'Corte de Graves', unit: ' Hz', max: 400, val: 80 }
-          ]
+          lowCut: 120,
+          highCut: 10000,
+          width: 80,
+          detune: 5,
+          linearPhase: true
         },
         chorus: {
-          name: 'Chorus',
+          name: 'CHORUS',
           on: false,
           amount: 15,
-          primary: [
-            { name: 'Velocidad LFO', unit: ' Hz', max: 5, val: 0.35 },
-            { name: 'Profundidad', unit: '%', max: 100, val: 50 }
-          ],
-          advanced: [
-            { name: 'Anchura Estéreo', unit: '%', max: 100, val: 80 },
-            { name: 'Color Cálido', unit: '%', max: 100, val: 40 }
-          ]
+          rate: 0.35,
+          depth: 50,
+          color: 40,
+          isStereo: true
         },
         delay: {
-          name: 'Delay',
+          name: 'DELAY',
           on: false,
           amount: 12,
-          primary: [
-            { name: 'Tiempo Sync', unit: ' ms', max: 1000, val: 250 },
-            { name: 'Feedback', unit: '%', max: 100, val: 25 }
-          ],
-          advanced: [
-            { name: 'Modo Ping-Pong', unit: '%', max: 100, val: 0 },
-            { name: 'Filtro Pasa Altos', unit: ' Hz', max: 600, val: 180 }
-          ]
+          tempo: '1/8',
+          wideStereo: true,
+          sidechain: true,
+          feedback: 25,
+          hpf: 180
         },
         reverb: {
-          name: 'Reverb',
+          name: 'REEVERB',
           on: false,
-          amount: 0,
-          primary: [
-            { name: 'Duración (Decay)', unit: ' s', max: 6, val: 1.8 },
-            { name: 'Oscuridad (Damp)', unit: '%', max: 100, val: 50 }
-          ],
-          advanced: [
-            { name: 'Pre-retardo', unit: ' ms', max: 100, val: 20 },
-            { name: 'Anchura Estéreo', unit: '%', max: 100, val: 80 }
-          ]
+          amount: 18,
+          sidechain: true,
+          lowCut: 300,
+          highCut: 8500,
+          decay: 2.2,
+          predelay: 20
         }
       }
     };
@@ -1925,27 +2116,25 @@
       state.creative = JSON.parse(JSON.stringify(snapshot.creative));
 
       // Routing
-      document.getElementById('btnRoutingInsert').classList.toggle('active', state.routing === 'insert');
-      document.getElementById('btnRoutingSend').classList.toggle('active', state.routing === 'send');
+      var bIns = document.getElementById('btnRoutingInsert');
+      var bSnd = document.getElementById('btnRoutingSend');
+      if (bIns) bIns.classList.toggle('active', state.routing === 'insert');
+      if (bSnd) bSnd.classList.toggle('active', state.routing === 'send');
       sendParamToJuce('global.routingMode', state.routing === 'send' ? 1.0 : 0.0);
 
       // Salida
       updateOutKnobUI(state.outGain);
-      sendParamToJuce('output.gainDb', state.outGain);
+      sendParamToJuce('global.outGain', state.outGain);
 
-      // Mix Chain
+      // Mix Macro
       updateMixMacroUI(state.mixMacro);
-      sendParamToJuce('mix.macro', state.mixChainOn ? state.mixMacro : 0.0);
-      for (var k in state.mixParams) {
-        sendParamToJuce('mix.' + k, state.mixParams[k].val);
-      }
+      sendParamToJuce('global.mixMacro', state.mixMacro);
 
-      // Creative
-      for (var fx in state.creative) {
-        sendParamToJuce(fx + '.enabled', state.creative[fx].on ? 1.0 : 0.0);
-        sendParamToJuce(fx + '.amount', state.creative[fx].amount);
-      }
+      // Mix Toggle
+      updateMixChainToggleUI();
+      sendParamToJuce('global.mixChainOn', state.mixChainOn ? 1.0 : 0.0);
 
+      // Render grids
       renderMixGrid();
       renderCreativeGrid();
       updateHistoryButtons();
@@ -1999,17 +2188,11 @@
           mixMacro: state.mixMacro,
           mixParams: state.mixParams,
           creative: state.creative,
-          settings: state.settings
+          settings: state.settings,
+          isUserSaved: true
         };
         localStorage.setItem('vocalpreset_state_v4', JSON.stringify(dataToSave));
-        var saveText = document.getElementById('saveBtnText');
-        if (saveText) {
-          saveText.textContent = '✓ Guardado';
-          setTimeout(function() { saveText.textContent = 'Guardar'; }, 1500);
-        }
-      } catch (err) {
-        console.warn('[Save error]', err);
-      }
+      } catch (e) {}
     }
 
     function loadSavedPreset() {
@@ -2021,28 +2204,34 @@
           if (p.outGain !== undefined) state.outGain = p.outGain;
           if (p.mixChainOn !== undefined) state.mixChainOn = p.mixChainOn;
           if (p.mixMacro !== undefined) state.mixMacro = p.mixMacro;
+          if (p.settings) state.settings = p.settings;
+
           if (p.mixParams) {
             for (var k in p.mixParams) {
-              if (state.mixParams[k]) state.mixParams[k].val = p.mixParams[k].val;
-            }
-          }
-          if (p.creative) {
-            for (var c in p.creative) {
-              if (state.creative[c]) {
-                state.creative[c].on = p.creative[c].on;
-                state.creative[c].amount = p.creative[c].amount;
+              if (state.mixParams[k]) {
+                state.mixParams[k].val = p.mixParams[k].val;
+                if (k === 'sat') state.mixParams[k].name = 'ARMÓNICOS';
               }
             }
           }
-          if (p.settings) Object.assign(state.settings, p.settings);
+
+          if (p.creative) {
+            for (var ck in p.creative) {
+              if (state.creative[ck]) {
+                for (var prop in p.creative[ck]) {
+                  if (prop !== 'name') state.creative[ck][prop] = p.creative[ck][prop];
+                }
+              }
+            }
+          }
+          return true;
         }
-      } catch (e) {
-        console.warn('[Load error]', e);
-      }
+      } catch (e) {}
+      return false;
     }
 
     function resetFactorySettings() {
-      if (confirm('¿Restablecer todos los valores de fábrica?')) {
+      if (confirm('¿Restablecer Vocal Preset a valores de fábrica?')) {
         localStorage.removeItem('vocalpreset_state_v4');
         location.reload();
       }
@@ -2053,44 +2242,50 @@
     // ==========================================
     function showMainScreen() {
       state.screen = 'hablar';
-      document.getElementById('screenHablar').style.display = 'flex';
-      document.getElementById('screenEfectos').style.display = 'none';
-      document.getElementById('headerBackGroup').style.display = 'none';
-      document.getElementById('btnOpenEffects').classList.remove('active');
+      var sH = document.getElementById('screenHablar');
+      var sE = document.getElementById('screenEfectos');
+      var bG = document.getElementById('headerBackGroup');
+      if (sH) sH.style.display = 'flex';
+      if (sE) sE.style.display = 'none';
+      if (bG) bG.style.display = 'none';
+      savePreset();
     }
 
     function showEffectsScreen() {
       state.screen = 'efectos';
-      document.getElementById('screenHablar').style.display = 'none';
-      document.getElementById('screenEfectos').style.display = 'flex';
-      document.getElementById('headerBackGroup').style.display = 'block';
-      document.getElementById('btnOpenEffects').classList.add('active');
-      renderMixGrid();
-      renderCreativeGrid();
+      var sH = document.getElementById('screenHablar');
+      var sE = document.getElementById('screenEfectos');
+      var bG = document.getElementById('headerBackGroup');
+      if (sH) sH.style.display = 'none';
+      if (sE) sE.style.display = 'flex';
+      if (bG) bG.style.display = 'block';
+
+      switchCategoryTab(state.categoryTab || 'mezcla');
+      savePreset();
     }
 
     function toggleEffectsScreen() {
-      if (state.screen === 'hablar') {
-        showEffectsScreen();
-      } else {
-        showMainScreen();
-      }
+      if (state.screen === 'hablar') showEffectsScreen();
+      else showMainScreen();
     }
 
     function switchCategoryTab(tab) {
       state.categoryTab = tab;
-      var tabs = ['mezcla', 'espacio', 'ajustes'];
-      tabs.forEach(function(t) {
-        var btn = document.getElementById('tabCat_' + t);
-        if (btn) btn.classList.toggle('active', t === tab);
+      ['tabCat_mezcla', 'tabCat_espacio', 'tabCat_ajustes'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.toggle('active', id === 'tabCat_' + tab);
       });
 
-      document.getElementById('viewMezcla').style.display = tab === 'mezcla' ? 'block' : 'none';
-      document.getElementById('viewEspacio').style.display = tab === 'espacio' ? 'block' : 'none';
-      document.getElementById('viewAjustes').style.display = tab === 'ajustes' ? 'block' : 'none';
+      var vM = document.getElementById('viewMezcla');
+      var vE = document.getElementById('viewEspacio');
+      var vA = document.getElementById('viewAjustes');
+      if (vM) vM.style.display = tab === 'mezcla' ? 'block' : 'none';
+      if (vE) vE.style.display = tab === 'espacio' ? 'block' : 'none';
+      if (vA) vA.style.display = tab === 'ajustes' ? 'block' : 'none';
 
       if (tab === 'mezcla') renderMixGrid();
       if (tab === 'espacio') renderCreativeGrid();
+      savePreset();
     }
 
     // ==========================================
@@ -2101,32 +2296,51 @@
       if (!grid) return;
       grid.innerHTML = '';
 
+      var paramColors = {
+        hpf:      '#38bdf8', // Sky Blue (Quitar Graves)
+        boxy:     '#2dd4bf', // Mint Teal (Quitar Cartón)
+        deesser:  '#818cf8', // Soft Indigo (De-Esser)
+        presMid:  '#fbbf24', // Warm Amber (Presencia Medios)
+        presHigh: '#fb7185', // Coral Rose (Presencia Altos)
+        sat:      '#f97316', // Warm Orange (ARMÓNICOS)
+        air:      '#34d399', // Emerald (Aire & Brillo)
+        comp:     '#c084fc'  // Violet (Compresión Vocal)
+      };
+
       for (var key in state.mixParams) {
         var p = state.mixParams[key];
+        var color = paramColors[key] || '#ffffff';
         var card = document.createElement('div');
         card.className = 'fx-card';
         card.id = 'mixCard_' + key;
+        card.setAttribute('data-canva-editable', 'true');
 
         var maxOffset = 176;
         var minOffset = 44;
         var offset = maxOffset - ((p.val / 100) * (maxOffset - minOffset));
+        var titleId = 'mixTitle_' + key;
+        var displayName = (canvaState && canvaState.customTexts && (canvaState.customTexts['#' + titleId] || canvaState.customTexts[titleId])) || p.name;
 
         card.innerHTML =
-          '<div class="fx-card-top">' +
-            '<span class="fx-card-title" title="' + p.name + '">' + p.name + '</span>' +
+          '<div class="fx-card-top" style="width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">' +
+            '<span class="fx-card-title" id="' + titleId + '" data-canva-editable="true" title="' + displayName + '" style="color: #ffffff; font-size: 11px; font-weight: 800; letter-spacing: 0.05em;">' + displayName + '</span>' +
+            '<span style="width: 7px; height: 7px; border-radius: 50%; background: ' + color + '; flex-shrink: 0; display: inline-block;"></span>' +
           '</div>' +
           '<div class="arc-gauge-container" onmousedown="startMixParamDrag(event, \'' + key + '\')" title="Arrastrar verticalmente">' +
             '<svg class="arc-gauge-svg" viewBox="0 0 80 80">' +
               '<circle class="arc-bg" cx="40" cy="40" r="28"></circle>' +
-              '<circle class="arc-fill" id="arc_mix_' + key + '" cx="40" cy="40" r="28" style="stroke-dashoffset: ' + offset + ';"></circle>' +
+              '<circle class="arc-fill" id="arc_mix_' + key + '" cx="40" cy="40" r="28" style="stroke: ' + color + '; stroke-dashoffset: ' + offset + ';"></circle>' +
             '</svg>' +
             '<div class="gauge-center-info">' +
-              '<span class="gauge-val" id="val_mix_' + key + '">' + p.val + '%</span>' +
+              '<span class="gauge-val" id="val_mix_' + key + '" style="color: #ffffff;">' + p.val + '%</span>' +
             '</div>' +
-          '</div>' +
-          '<span class="gauge-subtext" style="text-align: center; font-size: 9px; line-height: 1.2;">' + p.desc + '</span>';
+          '</div>';
 
         grid.appendChild(card);
+      }
+
+      if (typeof applyAllCanvaCustomizations === 'function') {
+        applyAllCanvaCustomizations();
       }
     }
 
@@ -2170,40 +2384,43 @@
       window.removeEventListener('mouseup', onMixParamMouseUp);
     }
 
-    // ==========================================
-    // MACRO MIX CONTROL (0 - 100%, DEFAULT 50%)
-    // ==========================================
-    function updateMixChainToggleUI() {
-      var toggle = document.getElementById('toggleMixChain');
-      var badge = document.getElementById('toggleMixChainBadge');
-      if (toggle) toggle.classList.toggle('on', !!state.mixChainOn);
-      if (badge) {
-        badge.textContent = state.mixChainOn ? 'ACTIVO' : 'BYPASS';
-        badge.style.color = state.mixChainOn ? '#ffffff' : '#757b89';
-        badge.style.background = state.mixChainOn ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.05)';
-      }
-    }
-
     function toggleMixChain(e) {
       if (e) e.stopPropagation();
       pushSnapshot();
       state.mixChainOn = !state.mixChainOn;
       updateMixChainToggleUI();
-      sendParamToJuce('mix.macro', state.mixChainOn ? state.mixMacro : 0.0);
-      setTemporaryTranscript(state.mixChainOn ? 'Easy Mix Activado' : 'Easy Mix en Bypass');
+      sendParamToJuce('global.mixChainOn', state.mixChainOn ? 1.0 : 0.0);
       savePreset();
     }
 
+    function updateMixChainToggleUI() {
+      var toggle = document.getElementById('toggleMixChain');
+      var badge = document.getElementById('toggleMixChainBadge');
+      if (toggle) toggle.classList.toggle('on', !!state.mixChainOn);
+      if (badge) {
+        var custom = canvaState && canvaState.customTexts && canvaState.customTexts['#toggleMixChainBadge'];
+        if (custom) {
+          badge.innerHTML = custom;
+        } else {
+          badge.textContent = state.mixChainOn ? 'PRENDIDO' : 'APAGADO';
+        }
+        badge.style.color = state.mixChainOn ? '#ffffff' : '#6b7280';
+      }
+    }
+
+    // ==========================================
+    // MACRO MIX CONTROL (0 - 100%, DEFAULT 100%)
+    // ==========================================
     var isDraggingMixMacro = false;
-    var macroStartY = 0;
-    var macroStartVal = 50;
+    var mixMacroStartY = 0;
+    var mixMacroStartVal = 0;
 
     function startMixMacroDrag(e) {
       e.preventDefault();
       pushSnapshot();
       isDraggingMixMacro = true;
-      macroStartY = e.clientY;
-      macroStartVal = state.mixMacro;
+      mixMacroStartY = e.clientY;
+      mixMacroStartVal = state.mixMacro;
 
       window.addEventListener('mousemove', onMixMacroMouseMove);
       window.addEventListener('mouseup', onMixMacroMouseUp);
@@ -2211,18 +2428,18 @@
 
     function onMixMacroMouseMove(e) {
       if (!isDraggingMixMacro) return;
-      var delta = macroStartY - e.clientY;
-      var newVal = Math.max(0, Math.min(100, Math.round(macroStartVal + delta * 0.7)));
+      var delta = mixMacroStartY - e.clientY;
+      var newVal = Math.max(0, Math.min(100, Math.round(mixMacroStartVal + delta * 0.6)));
       state.mixMacro = newVal;
       updateMixMacroUI(newVal);
-      if (state.mixChainOn) {
-        sendParamToJuce('mix.macro', newVal);
-      }
+      sendParamToJuce('global.mixMacro', newVal);
     }
 
     function onMixMacroMouseUp() {
+      if (isDraggingMixMacro) {
+        savePreset();
+      }
       isDraggingMixMacro = false;
-      savePreset();
       window.removeEventListener('mousemove', onMixMacroMouseMove);
       window.removeEventListener('mouseup', onMixMacroMouseUp);
     }
@@ -2253,6 +2470,89 @@
 
         var maxOffset = 176, minOffset = 44;
         var offset = maxOffset - ((fx.amount / 100) * (maxOffset - minOffset));
+        var specificControlsHtml = '';
+
+        if (fxKey === 'doubler') {
+          // STEREO A LA VOZ: EQ Gráfico Lineal (Low Cut y High Pass)
+          var lc = fx.lowCut || 120;
+          var hc = fx.highCut || 10000;
+          specificControlsHtml =
+            '<div class="card-mini-ctrl-block" title="Filtro Lineal sin problemas de fase">' +
+              '<div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 2px;">' +
+                '<span style="font-size: 8.5px; font-weight: 800; color: #38bdf8; letter-spacing: 0.06em;">EQ LINEAL</span>' +
+                '<span style="font-size: 8px; font-weight: 700; color: #94a3b8; background: rgba(255,255,255,0.06); padding: 1px 4px; border-radius: 3px;">0° FASE</span>' +
+              '</div>' +
+              '<svg viewBox="0 0 100 24" style="width: 100%; height: 22px;">' +
+                '<path d="M 0 20 Q 25 20 35 7 L 65 7 Q 75 20 100 20" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>' +
+                '<circle cx="35" cy="7" r="3" fill="#38bdf8" stroke="#000" stroke-width="1.2"/>' +
+                '<circle cx="65" cy="7" r="3" fill="#38bdf8" stroke="#000" stroke-width="1.2"/>' +
+              '</svg>' +
+              '<div style="display: flex; justify-content: space-between; font-size: 8.5px; color: #94a3b8; font-family: monospace;">' +
+                '<span>LC: ' + lc + 'Hz</span>' +
+                '<span>HP: ' + (hc >= 1000 ? (hc/1000).toFixed(0) + 'k' : hc) + '</span>' +
+              '</div>' +
+            '</div>';
+        } else if (fxKey === 'chorus') {
+          // CHORUS: Siempre en estéreo
+          specificControlsHtml =
+            '<div class="card-mini-ctrl-block">' +
+              '<div class="badge-stereo-always">' +
+                '<span class="stereo-dot"></span>' +
+                '<span>STEREO SIEMPRE</span>' +
+              '</div>' +
+              '<div style="display: flex; justify-content: space-between; font-size: 8.5px; color: #94a3b8; margin-top: 4px; font-family: monospace;">' +
+                '<span>RATE: ' + (fx.rate || 0.35) + 'Hz</span>' +
+                '<span>DEPTH: ' + (fx.depth || 50) + '%</span>' +
+              '</div>' +
+            '</div>';
+        } else if (fxKey === 'delay') {
+          // DELAY: Aumentar Stereo, Dropdown 1/4, 1/8, 1/16, Sidechain On/Off
+          var curTempo = fx.tempo || '1/8';
+          var isWide = fx.wideStereo !== false;
+          var isSc = fx.sidechain !== false;
+          specificControlsHtml =
+            '<div class="card-mini-ctrl-block">' +
+              '<div style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 4px;">' +
+                '<span style="font-size: 8.5px; font-weight: 800; color: #94a3b8;">TEMPO:</span>' +
+                '<select class="card-quick-select" onchange="updateDelayTempo(this.value)">' +
+                  '<option value="1/4"' + (curTempo === '1/4' ? ' selected' : '') + '>1/4</option>' +
+                  '<option value="1/8"' + (curTempo === '1/8' ? ' selected' : '') + '>1/8</option>' +
+                  '<option value="1/16"' + (curTempo === '1/16' ? ' selected' : '') + '>1/16</option>' +
+                '</select>' +
+              '</div>' +
+              '<div style="display: flex; gap: 4px; width: 100%;">' +
+                '<button class="card-pill-btn ' + (isWide ? 'active' : '') + '" onclick="toggleDelayStereo(event)" title="Aumentar Amplitud Estéreo">' +
+                  '+ STEREO' +
+                '</button>' +
+                '<button class="card-pill-btn ' + (isSc ? 'active' : '') + '" onclick="toggleDelaySidechain(event)" title="Sidechain con la voz principal">' +
+                  'SC: ' + (isSc ? 'ON' : 'OFF') +
+                '</button>' +
+              '</div>' +
+            '</div>';
+        } else if (fxKey === 'reverb') {
+          // REEVERB: Sidechain On/Off, EQ Gráfico de 2 Puntos (Low Cut & High Cut)
+          var isSc = fx.sidechain !== false;
+          var lc = fx.lowCut || 300;
+          var hc = fx.highCut || 8500;
+          specificControlsHtml =
+            '<div class="card-mini-ctrl-block">' +
+              '<div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 2px;">' +
+                '<span style="font-size: 8.5px; font-weight: 800; color: #c084fc; letter-spacing: 0.05em;">EQ 2 PUNTOS</span>' +
+                '<button class="card-pill-btn purple ' + (isSc ? 'active' : '') + '" style="flex: none; padding: 2px 5px; font-size: 8px;" onclick="toggleReverbSidechain(event)" title="Sidechain con la voz">' +
+                  'SC: ' + (isSc ? 'ON' : 'OFF') +
+                '</button>' +
+              '</div>' +
+              '<svg viewBox="0 0 100 24" style="width: 100%; height: 22px;">' +
+                '<path d="M 0 20 Q 20 20 30 7 L 70 7 Q 80 20 100 20" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round"/>' +
+                '<circle cx="30" cy="7" r="3" fill="#c084fc" stroke="#000" stroke-width="1.2"/>' +
+                '<circle cx="70" cy="7" r="3" fill="#c084fc" stroke="#000" stroke-width="1.2"/>' +
+              '</svg>' +
+              '<div style="display: flex; justify-content: space-between; font-size: 8.5px; color: #94a3b8; font-family: monospace;">' +
+                '<span>LC: ' + lc + 'Hz</span>' +
+                '<span>HC: ' + (hc >= 1000 ? (hc/1000).toFixed(1) + 'k' : hc) + '</span>' +
+              '</div>' +
+            '</div>';
+        }
 
         card.innerHTML =
           '<div class="fx-card-top">' +
@@ -2269,7 +2569,8 @@
             '</div>' +
           '</div>' +
           '<span class="gauge-subtext">Cantidad</span>' +
-          '<button class="btn-personalizar-card" onclick="openPersonalizarModal(\'' + fxKey + '\')">' +
+          specificControlsHtml +
+          '<button class="btn-personalizar-card" style="margin-top: auto;" onclick="openPersonalizarModal(\'' + fxKey + '\')">' +
             '<span>Personalizar</span>' +
             '<svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>' +
           '</button>';
@@ -2333,8 +2634,48 @@
       window.removeEventListener('mouseup', onCreativeGaugeMouseUp);
     }
 
+    // Handlers específicos de controles rápidos en tarjeta
+    function updateDelayTempo(val) {
+      if (!state.creative.delay) return;
+      pushSnapshot();
+      state.creative.delay.tempo = val;
+      sendParamToJuce('delay.tempo', val);
+      savePreset();
+      renderCreativeGrid();
+    }
+
+    function toggleDelayStereo(e) {
+      if (e) e.stopPropagation();
+      if (!state.creative.delay) return;
+      pushSnapshot();
+      state.creative.delay.wideStereo = !state.creative.delay.wideStereo;
+      sendParamToJuce('delay.wideStereo', state.creative.delay.wideStereo ? 1.0 : 0.0);
+      savePreset();
+      renderCreativeGrid();
+    }
+
+    function toggleDelaySidechain(e) {
+      if (e) e.stopPropagation();
+      if (!state.creative.delay) return;
+      pushSnapshot();
+      state.creative.delay.sidechain = !state.creative.delay.sidechain;
+      sendParamToJuce('delay.sidechain', state.creative.delay.sidechain ? 1.0 : 0.0);
+      savePreset();
+      renderCreativeGrid();
+    }
+
+    function toggleReverbSidechain(e) {
+      if (e) e.stopPropagation();
+      if (!state.creative.reverb) return;
+      pushSnapshot();
+      state.creative.reverb.sidechain = !state.creative.reverb.sidechain;
+      sendParamToJuce('reverb.sidechain', state.creative.reverb.sidechain ? 1.0 : 0.0);
+      savePreset();
+      renderCreativeGrid();
+    }
+
     // ==========================================
-    // MODAL DE PERSONALIZACIÓN AVANZADA (SLIDERS)
+    // MODAL DE PERSONALIZACIÓN AVANZADA (SLIDERS & EQ)
     // ==========================================
     var currentModalFxKey = null;
 
@@ -2343,6 +2684,7 @@
       var modal = document.getElementById('modalPersonalizar');
       var title = document.getElementById('modalFxTitle');
       var fx = state.creative[fxKey];
+      if (!modal || !fx) return;
 
       title.textContent = fx.name.toUpperCase();
       renderModalSliders(fxKey);
@@ -2350,89 +2692,328 @@
     }
 
     function closePersonalizarModal() {
-      document.getElementById('modalPersonalizar').classList.remove('open');
+      var modal = document.getElementById('modalPersonalizar');
+      if (modal) modal.classList.remove('open');
       currentModalFxKey = null;
+      renderCreativeGrid();
     }
 
     function renderModalSliders(fxKey) {
       var fx = state.creative[fxKey];
       var pGrid = document.getElementById('primaryGrid');
       var aGrid = document.getElementById('advancedGrid');
+      if (!pGrid || !aGrid) return;
       pGrid.innerHTML = '';
       aGrid.innerHTML = '';
 
-      if (fx.primary) {
-        fx.primary.forEach(function(item, idx) {
-          var pct = Math.round((item.val / item.max) * 100);
-          pGrid.appendChild(createSliderElement('primary', idx, item, pct));
-        });
-      }
-      if (fx.advanced) {
-        fx.advanced.forEach(function(item, idx) {
-          var pct = Math.round((item.val / item.max) * 100);
-          aGrid.appendChild(createSliderElement('advanced', idx, item, pct));
-        });
+      var advTitle = document.querySelector('#modalPersonalizar .modal-section-title:nth-of-type(2)');
+      if (advTitle) advTitle.textContent = 'Parámetros & Espacialidad';
+
+      if (fxKey === 'doubler') {
+        // ── STEREO A LA VOZ: EQ Gráfico Lineal (2 puntos: Low Cut y High Pass) ──
+        if (advTitle) advTitle.textContent = 'Filtro Lineal & Anchura Estéreo';
+        var lc = fx.lowCut || 120;
+        var hc = fx.highCut || 10000;
+
+        pGrid.innerHTML =
+          '<div class="eq-display-container" style="grid-column: 1 / -1;">' +
+            '<div class="eq-display-header">' +
+              '<span class="eq-mode-badge" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.08);">' +
+                'EQ LINEAL SIEMPRE · 0° DESFASE' +
+              '</span>' +
+              '<span style="font-size: 9px; color: #94a3b8; font-family: monospace;">' +
+                'LC: <strong id="eqValLc" style="color:#fff;">' + lc + 'Hz</strong> | HP: <strong id="eqValHc" style="color:#fff;">' + (hc >= 1000 ? (hc/1000).toFixed(1) + 'kHz' : hc + 'Hz') + '</strong>' +
+              '</span>' +
+            '</div>' +
+            '<svg id="svgLinearEq" viewBox="0 0 580 120" style="width: 100%; height: 100%;">' +
+              '<!-- Rejilla de frecuencias -->' +
+              '<line x1="80" y1="0" x2="80" y2="120" class="eq-grid-line"/>' +
+              '<text x="83" y="112" class="eq-grid-label">100Hz</text>' +
+              '<line x1="290" y1="0" x2="290" y2="120" class="eq-grid-line"/>' +
+              '<text x="293" y="112" class="eq-grid-label">1kHz</text>' +
+              '<line x1="500" y1="0" x2="500" y2="120" class="eq-grid-line"/>' +
+              '<text x="490" y="112" class="eq-grid-label">10kHz</text>' +
+              '<!-- Curva -->' +
+              '<path id="eqCurveLinear" class="eq-curve-path" stroke="#38bdf8" d="M 0 95 Q ' + (lc*0.4) + ' 95 ' + (lc*0.5 + 40) + ' 35 L ' + (580 - (20000-hc)*0.015 - 40) + ' 35 Q ' + (580 - (20000-hc)*0.015) + ' 95 580 95"/>' +
+              '<!-- Nodos interactivos -->' +
+              '<circle id="eqNodeLc" class="eq-interactive-node" cx="' + (lc*0.5 + 40) + '" cy="35" r="6.5" fill="#38bdf8" stroke="#ffffff" stroke-width="2" onmousedown="startEqNodeDrag(event, \'doubler\', \'lowCut\')" title="Arrastrar Low Cut"/>' +
+              '<circle id="eqNodeHc" class="eq-interactive-node" cx="' + (580 - (20000-hc)*0.015 - 40) + '" cy="35" r="6.5" fill="#38bdf8" stroke="#ffffff" stroke-width="2" onmousedown="startEqNodeDrag(event, \'doubler\', \'highCut\')" title="Arrastrar High Cut"/>' +
+            '</svg>' +
+          '</div>';
+
+        aGrid.appendChild(createGenericSlider('Low Cut (Corte Graves)', ' Hz', 20, 1000, lc, function(v){
+          fx.lowCut = v; updateEqDisplay('doubler');
+        }));
+        aGrid.appendChild(createGenericSlider('High Pass (Corte Altos)', ' Hz', 2000, 20000, hc, function(v){
+          fx.highCut = v; updateEqDisplay('doubler');
+        }));
+        aGrid.appendChild(createGenericSlider('Anchura Estéreo', ' %', 0, 100, fx.width || 80, function(v){
+          fx.width = v; sendParamToJuce('doubler.width', v);
+        }));
+        aGrid.appendChild(createGenericSlider('Desafinación Micro', ' ct', 0, 50, fx.detune || 5, function(v){
+          fx.detune = v; sendParamToJuce('doubler.detune', v);
+        }));
+
+      } else if (fxKey === 'chorus') {
+        // ── CHORUS: Siempre en estéreo ──
+        pGrid.innerHTML =
+          '<div class="modal-toggle-row" style="grid-column: 1 / -1;">' +
+            '<div class="modal-toggle-info">' +
+              '<div style="display: flex; align-items: center; gap: 8px;">' +
+                '<span class="modal-toggle-title">MODO TRUE STEREO 360°</span>' +
+                '<span class="stereo-dot" style="display: inline-block;"></span>' +
+              '</div>' +
+              '<span class="modal-toggle-desc">Modulación estéreo analógica siempre activa para no achicar la imagen de la voz</span>' +
+            '</div>' +
+            '<span class="eq-mode-badge" style="color: #2dd4bf; border-color: rgba(45, 212, 191, 0.35); background: rgba(45, 212, 191, 0.1);">SIEMPRE ACTIVO</span>' +
+          '</div>';
+
+        aGrid.appendChild(createGenericSlider('Velocidad LFO', ' Hz', 0.05, 5, fx.rate || 0.35, function(v){
+          fx.rate = v; sendParamToJuce('chorus.rate', v);
+        }, 0.01));
+        aGrid.appendChild(createGenericSlider('Profundidad (Depth)', ' %', 0, 100, fx.depth || 50, function(v){
+          fx.depth = v; sendParamToJuce('chorus.depth', v);
+        }));
+        aGrid.appendChild(createGenericSlider('Calidez / Tono', ' %', 0, 100, fx.color || 40, function(v){
+          fx.color = v; sendParamToJuce('chorus.color', v);
+        }));
+
+      } else if (fxKey === 'delay') {
+        // ── DELAY: Aumentar Stereo, Dropdown 1/4, 1/8, 1/16, Sidechain On/Off ──
+        var curTempo = fx.tempo || '1/8';
+        var isWide = fx.wideStereo !== false;
+        var isSc = fx.sidechain !== false;
+
+        pGrid.innerHTML =
+          '<div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px;">' +
+            '<div class="modal-toggle-row">' +
+              '<div class="modal-toggle-info">' +
+                '<span class="modal-toggle-title">TIEMPO SINCRONIZADO (TEMPO SYNC)</span>' +
+                '<span class="modal-toggle-desc">Métrica musical sincronizada al tempo de tu DAW</span>' +
+              '</div>' +
+              '<div style="display: flex; gap: 6px;">' +
+                ['1/4', '1/8', '1/16'].map(function(t){
+                  return '<button class="btn-pill-action ' + (curTempo === t ? 'active' : '') + '" onclick="setModalDelayTempo(\'' + t + '\')">' + t + '</button>';
+                }).join('') +
+              '</div>' +
+            '</div>' +
+            '<div class="modal-toggle-row">' +
+              '<div class="modal-toggle-info">' +
+                '<span class="modal-toggle-title">AUMENTAR STEREO</span>' +
+                '<span class="modal-toggle-desc">Apertura espacial y rebote Ping-Pong en los costados</span>' +
+              '</div>' +
+              '<button class="btn-pill-action ' + (isWide ? 'active' : '') + '" onclick="toggleModalDelayStereo()">' +
+                (isWide ? 'ACTIVADO' : 'DESACTIVADO') +
+              '</button>' +
+            '</div>' +
+            '<div class="modal-toggle-row">' +
+              '<div class="modal-toggle-info">' +
+                '<span class="modal-toggle-title">SIDECHAIN AUTOMÁTICO (DUCKING)</span>' +
+                '<span class="modal-toggle-desc">Atenúa las repeticiones mientras la voz canta para evitar choques</span>' +
+              '</div>' +
+              '<button class="btn-pill-action ' + (isSc ? 'active' : '') + '" onclick="toggleModalDelaySidechain()">' +
+                (isSc ? 'ACTIVADO' : 'DESACTIVADO') +
+              '</button>' +
+            '</div>' +
+          '</div>';
+
+        aGrid.appendChild(createGenericSlider('Feedback (Repeticiones)', ' %', 0, 100, fx.feedback || 25, function(v){
+          fx.feedback = v; sendParamToJuce('delay.feedback', v);
+        }));
+        aGrid.appendChild(createGenericSlider('Filtro Pasa Altos (HPF)', ' Hz', 20, 600, fx.hpf || 180, function(v){
+          fx.hpf = v; sendParamToJuce('delay.hpf', v);
+        }));
+
+      } else if (fxKey === 'reverb') {
+        // ── REEVERB: Sidechain On/Off, EQ Gráfico de 2 Puntos (Low Cut & High Cut) ──
+        if (advTitle) advTitle.textContent = 'Decay & Pre-retardo';
+        var isSc = fx.sidechain !== false;
+        var lc = fx.lowCut || 300;
+        var hc = fx.highCut || 8500;
+
+        pGrid.innerHTML =
+          '<div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px;">' +
+            '<div class="modal-toggle-row">' +
+              '<div class="modal-toggle-info">' +
+                '<span class="modal-toggle-title">SIDECHAIN VOCAL (DUCKING)</span>' +
+                '<span class="modal-toggle-desc">Mantiene la voz al frente y abre la reverb exuberante en los silencios</span>' +
+              '</div>' +
+              '<button class="btn-pill-action ' + (isSc ? 'active' : '') + '" onclick="toggleModalReverbSidechain()">' +
+                (isSc ? 'ACTIVADO' : 'DESACTIVADO') +
+              '</button>' +
+            '</div>' +
+            '<div class="eq-display-container">' +
+              '<div class="eq-display-header">' +
+                '<span class="eq-mode-badge" style="color: #c084fc; border-color: rgba(192, 132, 252, 0.35); background: rgba(192, 132, 252, 0.1);">' +
+                  'EQ GRÁFICO REVERB (2 PUNTOS)' +
+                '</span>' +
+                '<span style="font-size: 9px; color: #94a3b8; font-family: monospace;">' +
+                  'LC: <strong id="eqValLcReverb" style="color:#fff;">' + lc + 'Hz</strong> | HC: <strong id="eqValHcReverb" style="color:#fff;">' + (hc >= 1000 ? (hc/1000).toFixed(1) + 'kHz' : hc + 'Hz') + '</strong>' +
+                '</span>' +
+              '</div>' +
+              '<svg id="svgReverbEq" viewBox="0 0 580 120" style="width: 100%; height: 100%;">' +
+                '<line x1="80" y1="0" x2="80" y2="120" class="eq-grid-line"/>' +
+                '<text x="83" y="112" class="eq-grid-label">100Hz</text>' +
+                '<line x1="290" y1="0" x2="290" y2="120" class="eq-grid-line"/>' +
+                '<text x="293" y="112" class="eq-grid-label">1kHz</text>' +
+                '<line x1="500" y1="0" x2="500" y2="120" class="eq-grid-line"/>' +
+                '<text x="490" y="112" class="eq-grid-label">10kHz</text>' +
+                '<path id="eqCurveReverb" class="eq-curve-path" stroke="#c084fc" d="M 0 95 Q ' + (lc*0.35) + ' 95 ' + (lc*0.45 + 30) + ' 35 L ' + (580 - (20000-hc)*0.015 - 40) + ' 35 Q ' + (580 - (20000-hc)*0.015) + ' 95 580 95"/>' +
+                '<circle id="eqNodeLcReverb" class="eq-interactive-node" cx="' + (lc*0.45 + 30) + '" cy="35" r="6.5" fill="#c084fc" stroke="#ffffff" stroke-width="2" onmousedown="startEqNodeDrag(event, \'reverb\', \'lowCut\')" title="Arrastrar Low Cut Reverb"/>' +
+                '<circle id="eqNodeHcReverb" class="eq-interactive-node" cx="' + (580 - (20000-hc)*0.015 - 40) + '" cy="35" r="6.5" fill="#c084fc" stroke="#ffffff" stroke-width="2" onmousedown="startEqNodeDrag(event, \'reverb\', \'highCut\')" title="Arrastrar High Cut Reverb"/>' +
+              '</svg>' +
+            '</div>' +
+          '</div>';
+
+        aGrid.appendChild(createGenericSlider('Low Cut Reverb', ' Hz', 20, 1000, lc, function(v){
+          fx.lowCut = v; updateEqDisplay('reverb');
+        }));
+        aGrid.appendChild(createGenericSlider('High Cut Reverb', ' Hz', 2000, 20000, hc, function(v){
+          fx.highCut = v; updateEqDisplay('reverb');
+        }));
+        aGrid.appendChild(createGenericSlider('Duración (Decay)', ' s', 0.2, 8.0, fx.decay || 2.2, function(v){
+          fx.decay = v; sendParamToJuce('reverb.decay', v);
+        }, 0.1));
+        aGrid.appendChild(createGenericSlider('Pre-retardo', ' ms', 0, 150, fx.predelay || 20, function(v){
+          fx.predelay = v; sendParamToJuce('reverb.predelay', v);
+        }));
       }
     }
 
-    function createSliderElement(type, idx, item, pct) {
+    function setModalDelayTempo(tempo) {
+      updateDelayTempo(tempo);
+      renderModalSliders('delay');
+    }
+
+    function toggleModalDelayStereo() {
+      if (!state.creative.delay) return;
+      toggleDelayStereo();
+      renderModalSliders('delay');
+    }
+
+    function toggleModalDelaySidechain() {
+      if (!state.creative.delay) return;
+      toggleDelaySidechain();
+      renderModalSliders('delay');
+    }
+
+    function toggleModalReverbSidechain() {
+      if (!state.creative.reverb) return;
+      toggleReverbSidechain();
+      renderModalSliders('reverb');
+    }
+
+    function updateEqDisplay(fxKey) {
+      var fx = state.creative[fxKey];
+      if (!fx) return;
+      var lc = fx.lowCut || (fxKey === 'doubler' ? 120 : 300);
+      var hc = fx.highCut || (fxKey === 'doubler' ? 10000 : 8500);
+
+      var isDoubler = fxKey === 'doubler';
+      var valLcEl = document.getElementById(isDoubler ? 'eqValLc' : 'eqValLcReverb');
+      var valHcEl = document.getElementById(isDoubler ? 'eqValHc' : 'eqValHcReverb');
+      var pathEl = document.getElementById(isDoubler ? 'eqCurveLinear' : 'eqCurveReverb');
+      var nodeLc = document.getElementById(isDoubler ? 'eqNodeLc' : 'eqNodeLcReverb');
+      var nodeHc = document.getElementById(isDoubler ? 'eqNodeHc' : 'eqNodeHcReverb');
+
+      if (valLcEl) valLcEl.textContent = lc + 'Hz';
+      if (valHcEl) valHcEl.textContent = (hc >= 1000 ? (hc/1000).toFixed(1) + 'kHz' : hc + 'Hz');
+
+      var cx1 = Math.max(30, Math.min(260, isDoubler ? (lc*0.5 + 40) : (lc*0.45 + 30)));
+      var cx2 = Math.max(300, Math.min(550, 580 - (20000-hc)*0.015 - 40));
+
+      if (nodeLc) nodeLc.setAttribute('cx', cx1);
+      if (nodeHc) nodeHc.setAttribute('cx', cx2);
+      if (pathEl) {
+        pathEl.setAttribute('d', 'M 0 95 Q ' + (cx1*0.6) + ' 95 ' + cx1 + ' 35 L ' + cx2 + ' 35 Q ' + (cx2 + (580-cx2)*0.4) + ' 95 580 95');
+      }
+
+      sendParamToJuce(fxKey + '.lowCut', lc);
+      sendParamToJuce(fxKey + '.highCut', hc);
+      savePreset();
+    }
+
+    var activeEqDrag = null;
+
+    function startEqNodeDrag(e, fxKey, pointType) {
+      e.preventDefault();
+      e.stopPropagation();
+      pushSnapshot();
+      activeEqDrag = { fxKey: fxKey, pointType: pointType, startX: e.clientX, initVal: state.creative[fxKey][pointType] };
+      window.addEventListener('mousemove', onEqNodeMouseMove);
+      window.addEventListener('mouseup', onEqNodeMouseUp);
+    }
+
+    function onEqNodeMouseMove(e) {
+      if (!activeEqDrag) return;
+      var deltaX = e.clientX - activeEqDrag.startX;
+      var fx = state.creative[activeEqDrag.fxKey];
+      if (!fx) return;
+
+      if (activeEqDrag.pointType === 'lowCut') {
+        var newVal = Math.max(20, Math.min(1000, Math.round(activeEqDrag.initVal + deltaX * 3.5)));
+        fx.lowCut = newVal;
+      } else if (activeEqDrag.pointType === 'highCut') {
+        var newVal = Math.max(2000, Math.min(20000, Math.round(activeEqDrag.initVal + deltaX * 45)));
+        fx.highCut = newVal;
+      }
+
+      updateEqDisplay(activeEqDrag.fxKey);
+    }
+
+    function onEqNodeMouseUp() {
+      window.removeEventListener('mousemove', onEqNodeMouseMove);
+      window.removeEventListener('mouseup', onEqNodeMouseUp);
+      activeEqDrag = null;
+      renderCreativeGrid();
+    }
+
+    function createGenericSlider(label, unit, min, max, val, onInput, step) {
+      var s = step || 1;
       var div = document.createElement('div');
       div.className = 'adv-param-card';
+      var pct = Math.max(0, Math.min(100, Math.round(((val - min) / (max - min)) * 100)));
+
       div.innerHTML =
         '<div class="adv-param-header">' +
-          '<span>' + item.name + '</span>' +
-          '<span id="sliderVal_' + type + '_' + idx + '">' + item.val + item.unit + '</span>' +
+          '<span>' + label + '</span>' +
+          '<span class="slider-num-val">' + val + unit + '</span>' +
         '</div>' +
-        '<div class="slider-track" id="track_' + type + '_' + idx + '" onmousedown="startModalSliderDrag(event, \'' + type + '\', ' + idx + ')">' +
-          '<div class="slider-fill" id="fill_' + type + '_' + idx + '" style="width: ' + pct + '%;">' +
+        '<div class="slider-track">' +
+          '<div class="slider-fill" style="width: ' + pct + '%;">' +
             '<div class="slider-thumb"></div>' +
           '</div>' +
         '</div>';
-      return div;
-    }
 
-    var activeSliderTarget = null;
+      var track = div.querySelector('.slider-track');
+      var fill = div.querySelector('.slider-fill');
+      var valText = div.querySelector('.slider-num-val');
 
-    function startModalSliderDrag(e, type, idx) {
-      e.preventDefault();
-      activeSliderTarget = { type, idx };
-      updateModalSliderFromEvent(e, type, idx);
-      window.addEventListener('mousemove', onModalSliderMouseMove);
-      window.addEventListener('mouseup', onModalSliderMouseUp);
-    }
-
-    function onModalSliderMouseMove(e) {
-      if (activeSliderTarget) {
-        updateModalSliderFromEvent(e, activeSliderTarget.type, activeSliderTarget.idx);
+      function updateFromPos(clientX) {
+        var rect = track.getBoundingClientRect();
+        var p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        var raw = min + p * (max - min);
+        var snapped = s < 1 ? parseFloat(raw.toFixed(2)) : Math.round(raw / s) * s;
+        fill.style.width = (p * 100) + '%';
+        valText.textContent = snapped + unit;
+        onInput(snapped);
       }
-    }
 
-    function onModalSliderMouseUp() {
-      activeSliderTarget = null;
-      savePreset();
-      window.removeEventListener('mousemove', onModalSliderMouseMove);
-      window.removeEventListener('mouseup', onModalSliderMouseUp);
-    }
+      track.onmousedown = function(e) {
+        e.preventDefault();
+        pushSnapshot();
+        updateFromPos(e.clientX);
+        function onMove(ev) { updateFromPos(ev.clientX); }
+        function onUp() {
+          window.removeEventListener('mousemove', onMove);
+          window.removeEventListener('mouseup', onUp);
+          savePreset();
+        }
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      };
 
-    function updateModalSliderFromEvent(e, type, idx) {
-      if (!currentModalFxKey) return;
-      var track = document.getElementById("track_" + type + "_" + idx);
-      if (!track) return;
-      var rect = track.getBoundingClientRect();
-      var pct = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
-
-      var list = type === 'primary' ? state.creative[currentModalFxKey].primary : state.creative[currentModalFxKey].advanced;
-      var param = list[idx];
-      var realVal = (pct / 100) * param.max;
-      realVal = param.max <= 10 ? Math.round(realVal * 10) / 10 : Math.round(realVal);
-      param.val = realVal;
-
-      var fill = document.getElementById("fill_" + type + "_" + idx);
-      if (fill) fill.style.width = pct + '%';
-      var valLabel = document.getElementById("sliderVal_" + type + "_" + idx);
-      if (valLabel) valLabel.textContent = realVal + param.unit;
-
-      sendParamToJuce(currentModalFxKey + "." + type + "_" + idx, realVal);
+      return div;
     }
 
     // ==========================================
@@ -2442,42 +3023,36 @@
       var text = "--- PRESET VOCAL STARTER OFFSZN ---\n" +
                  "Mix Macro: " + state.mixMacro + "%\n" +
                  "HPF (Quitar Graves): " + state.mixParams.hpf.val + "%\n" +
-                 "Boxy Cut (Quitar Cartón): " + state.mixParams.boxy.val + "%\n" +
-                 "De-Esser (Quitar S): " + state.mixParams.deesser.val + "%\n" +
-                 "Presencia Medios: " + state.mixParams.presMid.val + "%\n" +
-                 "Presencia Altos: " + state.mixParams.presHigh.val + "%\n" +
-                 "Saturación Tape: " + state.mixParams.sat.val + "%\n" +
-                 "Aire & Brillo: " + state.mixParams.air.val + "%\n" +
-                 "Compresión Vocal: " + state.mixParams.comp.val + "%";
+                 "Moldear Voz: " + state.mixParams.boxy.val + "%\n" +
+                 "Quitar S: " + state.mixParams.deesser.val + "%\n" +
+                 "Aumentar Medios: " + state.mixParams.presMid.val + "%\n" +
+                 "Brillo de Voz: " + state.mixParams.presHigh.val + "%\n" +
+                 "Armónicos: " + state.mixParams.sat.val + "%\n" +
+                 "Aire a la Voz: " + state.mixParams.air.val + "%\n" +
+                 "Equilibrar Voz: " + state.mixParams.comp.val + "%";
 
-      document.getElementById('exportPresetText').textContent = text;
-      document.getElementById('btnCopyText').textContent = 'Copiar al Portapapeles';
-      document.getElementById('modalExport').classList.add('open');
+      var el = document.getElementById('exportPresetText');
+      if (el) el.textContent = text;
+      var btn = document.getElementById('btnCopyText');
+      if (btn) btn.textContent = 'Copiar al Portapapeles';
+      var m = document.getElementById('modalExport');
+      if (m) m.classList.add('open');
     }
 
     function closeExportModal() {
-      document.getElementById('modalExport').classList.remove('open');
+      var m = document.getElementById('modalExport');
+      if (m) m.classList.remove('open');
     }
 
     function copyPresetToClipboard() {
-      var text = document.getElementById('exportPresetText').textContent;
-      navigator.clipboard.writeText(text).then(function() {
-        var btn = document.getElementById('btnCopyText');
-        btn.textContent = '✓ ¡Copiado con Éxito!';
-        setTimeout(function() {
-          btn.textContent = 'Copiar al Portapapeles';
-        }, 2000);
-      }).catch(function() {
-        // Fallback
-        var el = document.getElementById('exportPresetText');
-        var range = document.createRange();
-        range.selectNodeContents(el);
-        var sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-        document.execCommand('copy');
-        document.getElementById('btnCopyText').textContent = '✓ ¡Copiado!';
-      });
+      var text = (document.getElementById('exportPresetText') || {}).textContent || '';
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+          var btn = document.getElementById('btnCopyText');
+          if (btn) btn.textContent = '✓ ¡Copiado con Éxito!';
+          setTimeout(function() { if (btn) btn.textContent = 'Copiar al Portapapeles'; }, 2000);
+        });
+      }
     }
 
     // ==========================================
@@ -2493,7 +3068,7 @@
       if (SR) {
         recognition = new SR();
         recognition.continuous = true;
-        recognition.lang = state.settings.lang || 'es-ES';
+        recognition.lang = (state.settings && state.settings.lang) || 'es-ES';
         recognition.interimResults = true;
 
         recognition.onstart = function() { updateRecordingUI(true); };
@@ -2507,19 +3082,16 @@
           var display = (accumulatedVoiceText + ' ' + interim).trim();
           if (display) setLiveTranscript(display, true);
 
-          // AUTO-STOP INTELIGENTE POR SILENCIO:
           clearTimeout(voiceSilenceTimer);
-          var timeoutSec = state.settings.silenceTimeoutSec || 2.0;
+          var timeoutSec = (state.settings && state.settings.silenceTimeoutSec) || 2.0;
 
-          // BUG FIX: sanitize FIRST so phonetic replacements apply before checking isKnownCommand
           var quickClean = sanitizeVoiceText(display);
-          var isKnownCommand = quickClean.includes('preset') || quickClean.includes('starter') ||
-                               quickClean.includes('reverb') || quickClean.includes('delay')  ||
-                               quickClean.includes('chorus') || quickClean.includes('doubler') ||
-                               quickClean.includes('slapback') || quickClean.includes('guardar') ||
-                               quickClean.includes('deshacer') || quickClean.includes('rehacer');
+          var isKnownCommand = quickClean.includes('preset') || quickClean.includes('reverb') ||
+                               quickClean.includes('delay')  || quickClean.includes('chorus') ||
+                               quickClean.includes('doubler') || quickClean.includes('slapback') ||
+                               quickClean.includes('stereo') || quickClean.includes('armonicos');
 
-          var waitMs = isKnownCommand ? 800 : (timeoutSec * 1000);
+          var waitMs = isKnownCommand ? 900 : (timeoutSec * 1000);
 
           voiceSilenceTimer = setTimeout(function() {
             if (state.isRecording) {
@@ -2528,7 +3100,18 @@
           }, waitMs);
         };
         recognition.onerror = function(event) {
-          if (event.error !== 'no-speech') stopVoiceRecording();
+          console.warn('[SpeechRecognition error]', event.error);
+          callNative('writeLog', 'SpeechRecognition error: ' + event.error);
+          if (event.error === 'not-allowed') {
+            setTemporaryTranscript('⚠ Permiso de micrófono no otorgado en Windows/FL Studio');
+          } else if (event.error === 'audio-capture') {
+            setTemporaryTranscript('⚠ Micrófono ocupado por el driver ASIO de FL Studio');
+          } else if (event.error === 'network') {
+            setTemporaryTranscript('⚠ Servicio de voz no disponible offline en WebView2. Usa los botones rápidos');
+          } else if (event.error !== 'no-speech') {
+            setTemporaryTranscript('⚠ Reconocimiento de voz: ' + event.error);
+          }
+          stopVoiceRecording();
         };
         recognition.onend = function() {
           if (state.isRecording) {
@@ -2539,6 +3122,14 @@
     }
 
     function toggleVoiceRecording() {
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        setTemporaryTranscript('Comandos de voz: escribe en la barra inferior o usa los presets.');
+        return;
+      }
+      if (!recognition) {
+        try { initSpeechRecognition(); } catch(e) {}
+      }
       if (!state.isRecording) startVoiceRecording();
       else stopVoiceRecording();
     }
@@ -2580,7 +3171,7 @@
       var cursor = document.getElementById('transcriptCursor');
       if (btn) {
         btn.classList.toggle('listening', isRec);
-        if (text) text.textContent = isRec ? 'Escuchando... (Pausa al hablar para procesar)' : 'Presionar para hablar';
+        if (text) text.textContent = isRec ? 'PAUSA PARA PROCESAR' : 'Presionar para hablar';
         if (cursor) cursor.classList.toggle('active', isRec);
       }
       var cMic = document.getElementById('compactMicEffects');
@@ -2623,10 +3214,12 @@
       // ==========================================================
       // 1. SANITIZACIÓN FONÉTICA ULTRA-ROBUSTA PARA "PRESET":
       // ==========================================================
-      // Palabras separadas: "pri set", "pre set", "pree set", "pre sett", "pro set", etc.
-      clean = clean.replace(/\b(pre|pri|pree|priz|free|pro|pres)\s*(set|sed|sep|sit|cet|sec|se|sets|sett|sat)\b/g, 'preset');
-      // Transcripciones fonéticas del motor es-ES:
-      clean = clean.replace(/\b(presett|prezet|preze|presset|prese|preser|preced|precept|precepto|present|prezan|presan|priset|pricet|prijset|preresat|presat|presatt|presas|premset|preseat|preasett|prece|precet|precen)\b/g, 'preset');
+      // Palabras separadas fonéticas: "pri set", "pre set", "pree set", "pre sett", "pro set", "pri sit", etc.
+      clean = clean.replace(/\b(pre|pri|pree|priz|free|pro|pres|pr|p)\s*(set|sed|sep|sit|cet|sec|se|sets|sett|sat|shet|ce)\b/gi, 'preset');
+      // Transcripciones fonéticas comunes en inglés y español:
+      clean = clean.replace(/\b(presett|prezet|preze|presset|prese|preser|preced|precept|precepto|present|prezan|presan|priset|pricet|prijset|preresat|presat|presatt|presas|premset|preseat|preasett|prece|precet|precen|presetts|presette)\b/gi, 'preset');
+      // Coincidencias aisladas de fonemas: "pri", "pre" acompañados de "dame", "pon", "quiero"
+      clean = clean.replace(/\b(dame|pon|ponme|quiero|aplica|usa|carga)\s+(un\s+)?(pri\s*set|pre\s*set|preset|priset|pre\s*sit|pri\s*sit)\b/gi, '$1 preset');
       // "dame un precio" / "dame un presente" / "quiero un presente"
       clean = clean.replace(/\b(dame|pon|ponme|quiero|aplica|usa|carga|meter)\s+(un\s+)?(precio|precios|presente|presion|presento|prescrito|prescrita|preci|predice|presi)\b/g, '$1 preset');
       // Variantes directas: "dame pres it", "da me un pre"
@@ -2779,32 +3372,30 @@
     }
 
     // APLICAR PRESET STARTER (EASY MIX 50%)
-    function applyStarterPreset() {
+        function applyStarterPreset() {
       pushSnapshot();
       state.mixChainOn = true;
-      state.mixMacro = 50; // MIX AL 50% TAL COMO PIDIÓ WILLIE
+      state.mixMacro = 100;
 
-      // Valores starter profesionales para voz limpia
-      state.mixParams.hpf.val = 30;
-      state.mixParams.boxy.val = 25;
-      state.mixParams.deesser.val = 40;
-      state.mixParams.presMid.val = 35;
-      state.mixParams.presHigh.val = 30;
-      state.mixParams.sat.val = 20;
-      state.mixParams.air.val = 35;
-      state.mixParams.comp.val = 45;
+      state.mixParams.hpf.val = 79;
+      state.mixParams.boxy.val = 16;
+      state.mixParams.deesser.val = 43;
+      state.mixParams.presMid.val = 100;
+      state.mixParams.presHigh.val = 100;
+      state.mixParams.sat.val = 0;
+      state.mixParams.air.val = 40;
+      state.mixParams.comp.val = 13;
 
-      // Enviar a JUCE C++
-      sendParamToJuce('mix.macro', 50.0);
+      sendParamToJuce('mix.macro', 100.0);
       for (var k in state.mixParams) {
         sendParamToJuce('mix.' + k, state.mixParams[k].val);
       }
 
       updateMixChainToggleUI();
-      updateMixMacroUI(50);
+      updateMixMacroUI(100);
       renderMixGrid();
       savePreset();
-      setTemporaryTranscript('✓ Preset Starter Aplicado (Mix 50%)');
+      setTemporaryTranscript('✓ Preset Starter Vocal Aplicado (100%)');
     }
 
     // ==========================================
@@ -2869,39 +3460,48 @@
       if (elR) elR.style.height = pctR + '%';
     };
 
-    // SINCRONIZACIÓN DE ESTADO NATIVO C++ JUCE -> JS
+    // SINCRONIZACIÓN DE ESTADO NATIVO C++ JUCE -> JS (Paridad con Easy Mix)
     window.applyNativeState = function(data) {
       if (!data) return;
       if (data.routingMode !== undefined) {
         state.routing = data.routingMode === 1 ? 'send' : 'insert';
-        document.getElementById('btnRoutingInsert').classList.toggle('active', state.routing === 'insert');
-        document.getElementById('btnRoutingSend').classList.toggle('active', state.routing === 'send');
+        var bIns = document.getElementById('btnRoutingInsert');
+        var bSnd = document.getElementById('btnRoutingSend');
+        if (bIns) bIns.classList.toggle('active', state.routing === 'insert');
+        if (bSnd) bSnd.classList.toggle('active', state.routing === 'send');
       }
       if (data.outputGainDb !== undefined) {
-        state.outGain = data.outputGainDb;
-        updateOutKnobUI(data.outputGainDb);
+        state.outGain = Number(data.outputGainDb);
+        updateOutKnobUI(state.outGain);
       }
       if (data.mixMacro !== undefined) {
-        state.mixMacro = data.mixMacro;
-        updateMixMacroUI(data.mixMacro);
+        var macroVal = Number(data.mixMacro);
+        if (macroVal > 0.001) {
+          state.mixMacro = macroVal;
+          state.mixChainOn = true;
+        } else if (macroVal <= 0.001 && data.isUserExplicitBypass) {
+          state.mixChainOn = false;
+        }
+        updateMixMacroUI(state.mixMacro);
+        updateMixChainToggleUI();
       }
-      if (data.mixHpf !== undefined) state.mixParams.hpf.val = data.mixHpf;
-      if (data.mixBoxy !== undefined) state.mixParams.boxy.val = data.mixBoxy;
-      if (data.mixDeesser !== undefined) state.mixParams.deesser.val = data.mixDeesser;
-      if (data.mixPresMid !== undefined) state.mixParams.presMid.val = data.mixPresMid;
-      if (data.mixPresHigh !== undefined) state.mixParams.presHigh.val = data.mixPresHigh;
-      if (data.mixSat !== undefined) state.mixParams.sat.val = data.mixSat;
-      if (data.mixAir !== undefined) state.mixParams.air.val = data.mixAir;
-      if (data.mixComp !== undefined) state.mixParams.comp.val = data.mixComp;
+      if (data.mixHpf !== undefined && Number(data.mixHpf) >= 0) state.mixParams.hpf.val = Number(data.mixHpf);
+      if (data.mixBoxy !== undefined && Number(data.mixBoxy) >= 0) state.mixParams.boxy.val = Number(data.mixBoxy);
+      if (data.mixDeesser !== undefined && Number(data.mixDeesser) >= 0) state.mixParams.deesser.val = Number(data.mixDeesser);
+      if (data.mixPresMid !== undefined && Number(data.mixPresMid) >= 0) state.mixParams.presMid.val = Number(data.mixPresMid);
+      if (data.mixPresHigh !== undefined && Number(data.mixPresHigh) >= 0) state.mixParams.presHigh.val = Number(data.mixPresHigh);
+      if (data.mixSat !== undefined && Number(data.mixSat) >= 0) state.mixParams.sat.val = Number(data.mixSat);
+      if (data.mixAir !== undefined && Number(data.mixAir) >= 0) state.mixParams.air.val = Number(data.mixAir);
+      if (data.mixComp !== undefined && Number(data.mixComp) >= 0) state.mixParams.comp.val = Number(data.mixComp);
 
-      if (data.doublerOn !== undefined) state.creative.doubler.on = data.doublerOn;
-      if (data.doublerAmount !== undefined) state.creative.doubler.amount = data.doublerAmount;
-      if (data.chorusOn !== undefined) state.creative.chorus.on = data.chorusOn;
-      if (data.chorusAmount !== undefined) state.creative.chorus.amount = data.chorusAmount;
-      if (data.delayOn !== undefined) state.creative.delay.on = data.delayOn;
-      if (data.delayAmount !== undefined) state.creative.delay.amount = data.delayAmount;
-      if (data.reverbOn !== undefined) state.creative.reverb.on = data.reverbOn;
-      if (data.reverbAmount !== undefined) state.creative.reverb.amount = data.reverbAmount;
+      if (data.doublerOn !== undefined) state.creative.doubler.on = !!data.doublerOn;
+      if (data.doublerAmount !== undefined) state.creative.doubler.amount = Number(data.doublerAmount);
+      if (data.chorusOn !== undefined) state.creative.chorus.on = !!data.chorusOn;
+      if (data.chorusAmount !== undefined) state.creative.chorus.amount = Number(data.chorusAmount);
+      if (data.delayOn !== undefined) state.creative.delay.on = !!data.delayOn;
+      if (data.delayAmount !== undefined) state.creative.delay.amount = Number(data.delayAmount);
+      if (data.reverbOn !== undefined) state.creative.reverb.on = !!data.reverbOn;
+      if (data.reverbAmount !== undefined) state.creative.reverb.amount = Number(data.reverbAmount);
 
       renderMixGrid();
       renderCreativeGrid();
@@ -2917,6 +3517,25 @@
           if (jucePromises.has(pid)) {
             jucePromises.get(pid).resolve(ev.result);
             jucePromises.delete(pid);
+          }
+        });
+
+        // Escuchar init-params desde C++ (Patrón Easy Mix robusto)
+        window.__JUCE__.backend.addEventListener('init-params', function(data) {
+          if (window.applyNativeState) {
+            window.applyNativeState(data);
+          }
+        });
+
+        // Escuchar audio-rms desde C++ (Patron Easy Mix robusto)
+        window.__JUCE__.backend.addEventListener('audio-rms', function(rms) {
+          var val = typeof rms === 'object' && rms !== null ? rms.value || rms.message || 0 : rms;
+          if (typeof val === 'number') {
+            var minDb = -60.0, maxDb = 0.0;
+            var rmsDb = val > 0.00001 ? 20.0 * Math.log10(val) : -60.0;
+            if (window.updateAudioMeters) {
+              window.updateAudioMeters(rmsDb, rmsDb);
+            }
           }
         });
       }
@@ -2993,6 +3612,26 @@
     // INICIALIZACIÓN GLOBAL
     // ==========================================
     (function init() {
+      // Auto-limpiar localStorage si todo quedó guardado en 100% de sesiones previas
+      try {
+        var rawSt = localStorage.getItem('vocalpreset_state_v4');
+        if (rawSt) {
+          var parsedSt = JSON.parse(rawSt);
+          if (parsedSt && parsedSt.mixParams) {
+            var count100 = 0;
+            var totalCount = 0;
+            for (var pk in parsedSt.mixParams) {
+              totalCount++;
+              if (parsedSt.mixParams[pk].val >= 99) count100++;
+            }
+            if (totalCount > 4 && count100 === totalCount) {
+              console.warn('[VocalPreset] Limpiando estado corrupto a 100% de localStorage...');
+              localStorage.removeItem('vocalpreset_state_v4');
+            }
+          }
+        }
+      } catch(e) {}
+
       loadSavedPreset();
       showMainScreen();
       renderMixGrid();
@@ -3002,16 +3641,20 @@
       updateMixChainToggleUI();
       updateHistoryButtons();
 
-      try { initSpeechRecognition(); } catch (e) {}
+      // initSpeechRecognition deferred to user action to prevent startup hang
 
+      // Enviar parámetros iniciales inmediatamente para sincronizar audio DSP sin delay
+      sendParamToJuce('mix.macro', state.mixChainOn ? state.mixMacro : 50.0);
+      for (var k in state.mixParams) {
+        sendParamToJuce('mix.' + k, state.mixParams[k].val);
+      }
       setTimeout(function() {
-        // Enviar parámetros iniciales para sincronizar audio DSP inmediatamente
-        sendParamToJuce('mix.macro', state.mixChainOn ? state.mixMacro : 0.0);
-        for (var k in state.mixParams) {
-          sendParamToJuce('mix.' + k, state.mixParams[k].val);
+        sendParamToJuce('mix.macro', state.mixChainOn ? state.mixMacro : 50.0);
+        for (var pk in state.mixParams) {
+          sendParamToJuce('mix.' + pk, state.mixParams[pk].val);
         }
         sendParamToJuce('ui-ready', 1.0);
-      }, 150);
+      }, 100);
     })();
   
   // ========================================================
@@ -3044,16 +3687,38 @@
     return Promise.resolve(getOrCreateDeviceId());
   }
 
+    function openExternalURL(url) {
+    try {
+      if (typeof hasJuceBridge === 'function' && hasJuceBridge()) {
+        callNative('openURLNative', url);
+      } else {
+        window.open(url, '_blank');
+      }
+    } catch(err) {
+      console.warn("[openExternalURL err]", err);
+      window.open(url, '_blank');
+    }
+  }
+
   function openActivationModal(cancellable) {
+    var isCan = (cancellable === true);
     var modal = document.getElementById('activation-modal');
     var closeBtn = document.getElementById('btn-close-activation');
-    if (modal) modal.classList.add('visible');
-    if (closeBtn) closeBtn.style.display = cancellable ? 'block' : 'none';
+    if (modal) {
+      modal.style.display = 'flex';
+      modal.classList.add('visible');
+    }
+    if (closeBtn) {
+      closeBtn.style.display = isCan ? 'block' : 'none';
+    }
   }
 
   function closeActivationModal() {
     var modal = document.getElementById('activation-modal');
-    if (modal) modal.classList.remove('visible');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('visible');
+    }
   }
 
   function closeWelcomeModal() {
@@ -3085,8 +3750,15 @@
     txt.textContent = label;
   }
 
+    function isLicenseUnlocked() {
+    var badge = document.getElementById('licenseBadge');
+    return badge && (badge.classList.contains('trial') || badge.classList.contains('full'));
+  }
+
   function onLicenseBadgeClick() {
-    openActivationModal(true);
+    // Si ya tiene prueba activa o full, se permite cerrar con la X. Si es demo / sin licencia, NO muestra la X.
+    var canClose = isLicenseUnlocked();
+    openActivationModal(canClose);
   }
 
   function submitSerial() {
@@ -3151,11 +3823,19 @@
     });
   }
 
+    function hasJuceBridge() {
+    if (window.__JUCE__ && window.__JUCE__.backend) return true;
+    if (window.chrome && window.chrome.webview) return true;
+    return false;
+  }
   function initLicenseBoot() {
-    if (typeof hasJuceBridge === 'function' && hasJuceBridge()) {
+    var storedSerial = '';
+    try { storedSerial = localStorage.getItem('offszn_serial') || ''; } catch(e) {}
+
+    if (hasJuceBridge()) {
       callNative("getLicenseState").then(function(state) {
         var isValid = state && state.isValid;
-        var rawSerial = ((state && state.serial) || "").trim();
+        var rawSerial = ((state && state.serial) || storedSerial || "").trim();
 
         if (rawSerial) {
           var isTrial = rawSerial.toUpperCase().indexOf("TRIAL") !== -1;
@@ -3171,28 +3851,18 @@
               } else {
                 updateLicenseBadge('trial', 'PRUEBA · 3 DÍAS');
               }
-              getHwidAsync().then(function(hwid) {
-                fetch(apiBase + "/api/plugin/activate", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ serial_key: tokens[0], hwid: hwid, plugin_name: OFFSZN_PLUGIN_NAME })
-                }).then(function(res){ return res.json(); }).then(function(resp){
-                  if (resp && !resp.success) {
-                    callNative("setLicenseStatus", false);
-                    updateLicenseBadge('demo', 'DEMO · ACTIVAR');
-                    openActivationModal(false);
-                  }
-                }).catch(function(){ });
-              });
+              closeActivationModal();
             } else {
               callNative("setLicenseStatus", false);
               updateLicenseBadge('demo', 'DEMO · ACTIVAR');
               openActivationModal(false);
             }
           } else {
+            // FULL KEY
             if (isValid) {
               try { localStorage.setItem('offszn_serial', rawSerial); } catch(e) {}
               updateLicenseBadge('full', 'FULL · OFFSZN');
+              closeActivationModal();
             } else {
               callNative("setLicenseStatus", false);
               updateLicenseBadge('demo', 'DEMO · ACTIVAR');
@@ -3200,25 +3870,34 @@
             }
           }
         } else {
+          // No serial -> Obligatorio abrir modal bloqueado
           callNative("setLicenseStatus", false);
           updateLicenseBadge('demo', 'DEMO · ACTIVAR');
           openActivationModal(false);
         }
+      }).catch(function(err) {
+        console.warn("[getLicenseState err]", err);
+        updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+        openActivationModal(false);
       });
     } else {
-      var storedSerial = '';
-      try { storedSerial = localStorage.getItem('offszn_serial') || ''; } catch(e) {}
+      // Fallback web sin puente C++
       if (storedSerial) {
         var isTrial = storedSerial.toUpperCase().indexOf("TRIAL") !== -1;
         updateLicenseBadge(isTrial ? 'trial' : 'full', isTrial ? 'PRUEBA · 3 DÍAS' : 'FULL · OFFSZN');
+        closeActivationModal();
       } else {
+        // Sin serial -> Obligatorio abrir modal bloqueado
         updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+        openActivationModal(false);
       }
     }
   }
 
   // Ejecutar boot al cargar
-  setTimeout(initLicenseBoot, 120);
+
+  setTimeout(initLicenseBoot, 50);
+  setTimeout(initLicenseBoot, 350);
 
   
   // ========================================================
@@ -3265,13 +3944,13 @@
   <!-- MODAL DE ACTIVACIÓN -->
   <div id="activation-modal" class="activation-modal">
     <div class="act-container">
-      <button class="act-btn-close" id="btn-close-activation" onclick="closeActivationModal()" style="display: none;" title="Cerrar">✕</button>
+      <button class="act-btn-close" id="btn-close-activation" onclick="closeActivationModal()" style="display: none;" title="Cerrar">&times;</button>
       <div style="font-size: 24px; margin-bottom: 8px;">🔑</div>
       <h3 class="act-title">Ingresa tu Serial Key</h3>
       <p class="act-sub">Activa tu plugin para siempre. Consigue tu licencia en OFFSZN.</p>
       <input type="text" class="act-input" placeholder="VOCA-FULL-XXXX-XXXX" id="serial-input" spellcheck="false" autocomplete="off" oninput="formatSerialInput(this)">
       <button class="act-btn act-btn-primary" id="act-submit-btn" onclick="submitSerial()">Activar Plugin</button>
-      <button class="act-btn act-btn-secondary" id="act-link-btn" onclick="openExternalURL('https://offszn.lat/plugins/vocal-preset');">Consigue tu Licencia</button>
+      <button class="act-btn act-btn-secondary" id="act-link-btn" onclick="openExternalURL('https://offszn.lat/plugins/vocal-preset#pricing-section');">Consigue tu Licencia</button>
     </div>
   </div>
 
