@@ -84,13 +84,15 @@ export const generateWebLicense = async (req, res) => {
         }
 
         // 2. Map plugin name to product IDs
+        const isVocalPlugin = (plugin_name === 'Vocal Preset' || plugin_name === 'VOCAL PRESET');
         const isCokePlugin = (plugin_name === 'COCA COLA' || plugin_name === 'Coca-Cola' || plugin_name === 'COCA-COLA');
         const isInkaPlugin = (plugin_name === 'INKA KOLA' || plugin_name === 'Inka Kola');
         const isMasterPlugin = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
         const isMixPlugin = (plugin_name === 'Easy Mix' || plugin_name === 'EASY MIX');
         
         let validProductIds = [];
-        if (isCokePlugin) validProductIds = [903];
+        if (isVocalPlugin) validProductIds = [905];
+        else if (isCokePlugin) validProductIds = [903];
         else if (isInkaPlugin) validProductIds = [902];
         else if (isMasterPlugin) validProductIds = [900];
         else if (isMixPlugin) validProductIds = [899, 901];
@@ -125,7 +127,7 @@ export const generateWebLicense = async (req, res) => {
         }
 
         // 4. Generate the new lifetime license
-        const basePrefix = isCokePlugin ? 'COKE' : (isInkaPlugin ? 'INKA' : (isMasterPlugin ? 'MASTER' : 'EASY'));
+        const basePrefix = isVocalPlugin ? 'VOCA' : (isCokePlugin ? 'COKE' : (isInkaPlugin ? 'INKA' : (isMasterPlugin ? 'MASTER' : 'EASY')));
         const serialKey = `${basePrefix}-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiresAt = null;
 
@@ -169,10 +171,11 @@ export const generateTrialWebLicense = async (req, res) => {
         }
 
         // Create new trial key with NO expiry set yet (starts countdown on first activation in DAW)
+        const isVocal  = (plugin_name === 'Vocal Preset' || plugin_name === 'VOCAL PRESET');
         const isCoke   = (plugin_name === 'COCA COLA'   || plugin_name === 'Coca-Cola' || plugin_name === 'COCA-COLA');
         const isMaster = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
         const isInka   = (plugin_name === 'INKA KOLA'   || plugin_name === 'Inka Kola');
-        const basePrefix = isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY'));
+        const basePrefix = isVocal ? 'VOCA' : (isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY')));
         const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
         const { data: newLic, error: licErr } = await supabase
@@ -237,10 +240,11 @@ export const requestTrial = async (req, res) => {
         }
 
         // ── 2. No previous trial → create one ────────────────────────────────
+        const isVocal = (activePluginName === 'Vocal Preset' || activePluginName === 'VOCAL PRESET');
         const isCoke = (activePluginName === 'COCA COLA' || activePluginName === 'Coca-Cola' || activePluginName === 'COCA-COLA');
         const isMaster = (activePluginName === 'EASY MASTER' || activePluginName === 'Easy Master');
         const isInka = (activePluginName === 'INKA KOLA' || activePluginName === 'Inka Kola');
-        const basePrefix = isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY'));
+        const basePrefix = isVocal ? 'VOCA' : (isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY')));
         const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiryDate = new Date();
         const trialDays = 3;
@@ -268,10 +272,11 @@ export const requestTrial = async (req, res) => {
 // ─── Helper: Generate plugin license after purchase ────────────────────────────
 // Called internally from PayPalController after a successful plugin purchase.
 export async function generatePluginLicense({ licenseType, userEmail, userId, pluginName = 'Easy Mix' }) {
+    const isVocal = (pluginName === 'Vocal Preset' || pluginName === 'VOCAL PRESET');
     const isCoke = (pluginName === 'COCA COLA' || pluginName === 'Coca-Cola' || pluginName === 'COCA-COLA');
     const isInka = (pluginName === 'INKA KOLA' || pluginName === 'Inka Kola');
     const isMaster = (pluginName === 'EASY MASTER' || pluginName === 'Easy Master');
-    let basePrefix = isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY'));
+    let basePrefix = isVocal ? 'VOCA' : (isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY')));
     const prefix = licenseType === 'subscription' ? `${basePrefix}-SUB` : `${basePrefix}-FULL`;
     const serialKey = `${prefix}-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
@@ -516,9 +521,10 @@ export const adminResetLicense = async (req, res) => {
         }
 
         // 4. Generate a new FULL lifetime key
+        const isVocalReset = (plugin_name === 'Vocal Preset' || plugin_name === 'VOCAL PRESET');
         const isInkaReset = (plugin_name === 'INKA KOLA' || plugin_name === 'Inka Kola');
         const isMasterReset = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
-        let basePrefix = isInkaReset ? 'INKA' : (isMasterReset ? 'MASTER' : 'EASY');
+        let basePrefix = isVocalReset ? 'VOCA' : (isInkaReset ? 'INKA' : (isMasterReset ? 'MASTER' : 'EASY'));
         const newSerial = `${basePrefix}-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const { data: newLic, error: insertErr } = await supabase
             .from('plugin_licenses')
