@@ -1199,11 +1199,11 @@
     }
 
     .modal-flank-arrow:hover {
-      background: rgba(22, 28, 40, 0.98);
-      border-color: rgba(56, 189, 248, 0.55);
-      color: #38bdf8;
-      transform: translateY(-50%) scale(1.1);
-      box-shadow: 0 12px 32px rgba(56, 189, 248, 0.25);
+      background: #181d28;
+      border-color: rgba(255, 255, 255, 0.28);
+      color: #ffffff;
+      transform: translateY(-50%);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
     }
 
     .modal-flank-arrow:active {
@@ -1386,7 +1386,7 @@
     }
 
     .customizer-select:hover, .customizer-select:focus {
-      border-color: rgba(56, 189, 248, 0.5);
+      border-color: rgba(255, 255, 255, 0.25);
       background: #1a202c;
     }
 
@@ -1412,14 +1412,14 @@
       background: rgba(56, 189, 248, 0.15);
       border-color: rgba(56, 189, 248, 0.6);
       color: #38bdf8;
-      box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
+      
     }
 
     .toggle-pill-btn.active.purple {
       background: rgba(192, 132, 252, 0.15);
       border-color: rgba(192, 132, 252, 0.6);
       color: #c084fc;
-      box-shadow: 0 0 8px rgba(192, 132, 252, 0.25);
+      
     }
 
     .adv-param-card {
@@ -1778,7 +1778,7 @@
     }
     .card-pill-btn.active {
       background: rgba(56, 189, 248, 0.14);
-      border-color: rgba(56, 189, 248, 0.5);
+      border-color: rgba(255, 255, 255, 0.25);
       color: #38bdf8;
       box-shadow: 0 0 10px rgba(56, 189, 248, 0.18);
     }
@@ -2164,7 +2164,6 @@
       <div class="modal-card customizer-card">
         <div class="customizer-header">
           <div class="customizer-title-wrap">
-            <span class="customizer-power-btn" id="modalFxPowerBtn" onclick="toggleCurrentModalFxPower()" title="Activar / Bypasear efecto">&#x23FB;</span>
             <span class="customizer-title" id="modalFxTitle">ECUALIZAR STEREO</span>
           </div>
           <button class="modal-close-btn" onclick="closePersonalizarModal()" title="Cerrar (Esc)">&times;</button>
@@ -2979,8 +2978,10 @@
     function getEqGainDb(f, lc, hc) {
       // Curva auténtica de estudio tipo FabFilter Pro-Q 4 / Parametric EQ 2:
       // Paso-banda plano a 0 dB entre LC y HC; pendiente empinada de 24 dB/oct con rodilla suave
-      var gHp = 1.0 / Math.sqrt(1.0 + Math.pow(lc / Math.max(1, f), 4.5));
-      var gLp = 1.0 / Math.sqrt(1.0 + Math.pow(f / Math.max(1, hc), 4.5));
+      // Curva auténtica de estudio con pendiente 48 dB/oct (8vo orden Butterworth) como en Pro-Q:
+      // Paso-banda plano a 0 dB, rodilla suave y corte vertical súper empinado de 48 dB/oct
+      var gHp = 1.0 / Math.sqrt(1.0 + Math.pow(lc / Math.max(1, f), 16));
+      var gLp = 1.0 / Math.sqrt(1.0 + Math.pow(f / Math.max(1, hc), 16));
       var linear = Math.max(0.0001, gHp * gLp);
       var db = 20.0 * Math.log10(linear);
       return Math.max(-36.0, Math.min(0.0, db));
@@ -3145,7 +3146,7 @@
         if (fxKey === 'doubler') titleEl.textContent = 'ECUALIZAR STEREO';
         else if (fxKey === 'chorus') titleEl.textContent = 'CHORUS';
         else if (fxKey === 'delay') titleEl.textContent = 'DELAY';
-        else if (fxKey === 'reverb') titleEl.textContent = 'ECUALIZAR REVERB';
+        else if (fxKey === 'reverb') titleEl.textContent = 'REVERB';
         else titleEl.textContent = fx.name.toUpperCase();
       }
 
@@ -3285,7 +3286,7 @@
           fx.lowCut = v; updateEqDisplay('doubler');
         }, 1, '#38bdf8', true);
 
-        var knobHc = createCircularKnob('doubler_hc', 'PUNTO 7: HIGH CUT', ' Hz', 2000, 20000, hc, function(v){
+        var knobHc = createCircularKnob('doubler_hc', 'PUNTO 7: HIGH CUT', ' Hz', 200, 20000, hc, function(v){
           fx.highCut = v; updateEqDisplay('doubler');
         }, 10, '#38bdf8', true);
 
@@ -3408,7 +3409,7 @@
               (isSc ? 'ON' : 'OFF') +
             '</button>' +
           '</div>' +
-          '<div style="font-size:10px; font-weight:700; color:#c084fc; font-family:JetBrains Mono,monospace;">FILTRO PRO-Q ACTIVO</div>';
+          '';
         body.appendChild(topBar);
 
         var eqDiv = document.createElement('div');
@@ -3422,7 +3423,7 @@
           fx.lowCut = v; updateEqDisplay('reverb');
         }, 1, '#c084fc', true);
 
-        var knobHc = createCircularKnob('reverb_hc', 'PUNTO 7: HIGH CUT', ' Hz', 2000, 20000, hc, function(v){
+        var knobHc = createCircularKnob('reverb_hc', 'PUNTO 7: HIGH CUT', ' Hz', 200, 20000, hc, function(v){
           fx.highCut = v; updateEqDisplay('reverb');
         }, 10, '#c084fc', true);
 
@@ -3543,9 +3544,9 @@
       if (!fx) return;
 
       if (activeEqDrag.pointType === 'lowCut') {
-        fx.lowCut = Math.max(20, Math.min(1000, Math.min(fx.highCut - 400, freq)));
+        fx.lowCut = Math.max(20, Math.min(2000, Math.min(fx.highCut - 30, freq)));
       } else if (activeEqDrag.pointType === 'highCut') {
-        fx.highCut = Math.max(2000, Math.max(fx.lowCut + 400, Math.min(20000, freq)));
+        fx.highCut = Math.max(200, Math.max(fx.lowCut + 30, Math.min(20000, freq)));
       }
 
       updateEqDisplay(activeEqDrag.fxKey);
