@@ -1990,13 +1990,18 @@
       <!-- BARRA DE COMANDOS REMOVIDA -->
 
       <!-- ACCESO RÁPIDO: PÍLDORAS DE COMANDOS DIRECTOS -->
-            <!-- CHIPS DE COMANDOS RÁPIDOS SUGERIDOS -->
-      <div class="voice-chips-container">
-        <button class="voice-chip-btn" onclick="executeVoiceQuickAction('Dame un preset')" title="Aplica mezcla vocal completa">🎤 Dame un preset</button>
-        <button class="voice-chip-btn" onclick="executeVoiceQuickAction('Más reverb')" title="Añade reverb">+ Reverb</button>
-        <button class="voice-chip-btn" onclick="executeVoiceQuickAction('Ponle estéreo')" title="Abre el estéreo">+ Estéreo</button>
-        <button class="voice-chip-btn" onclick="executeVoiceQuickAction('Ping pong delay')" title="Delay con rebote espacial">+ Ping-Pong</button>
-        <button class="voice-chip-btn" onclick="executeVoiceQuickAction('Chorus')" title="Modulación y cuerpo">+ Chorus</button>
+            <!-- RECOMENDACIONES DISCRETAS MÁS ABAJO -->
+      <div class="voice-recommendations-bar">
+        <span class="rec-prefix">Recomendaciones:</span>
+        <button class="rec-pill" onclick="executeVoiceQuickAction('Dame un preset')" title="Clic para aplicar mezcla Starter">"Dame un preset"</button>
+        <span class="rec-sep">·</span>
+        <button class="rec-pill" onclick="executeVoiceQuickAction('Más reverb')" title="Clic para añadir reverb">"Más reverb"</button>
+        <span class="rec-sep">·</span>
+        <button class="rec-pill" onclick="executeVoiceQuickAction('Ponle estéreo')" title="Clic para ensanchar estéreo">"Ponle estéreo"</button>
+        <span class="rec-sep">·</span>
+        <button class="rec-pill" onclick="executeVoiceQuickAction('Ping pong delay')" title="Clic para activar ping-pong">"Ping pong delay"</button>
+        <span class="rec-sep">·</span>
+        <button class="rec-pill" onclick="executeVoiceQuickAction('Chorus')" title="Clic para activar chorus">"Chorus"</button>
       </div>
     </section>
 
@@ -3648,15 +3653,13 @@
           console.warn('[SpeechRecognition error]', event.error);
           callNative('writeLog', 'SpeechRecognition error: ' + event.error);
           if (event.error === 'not-allowed') {
-            setTemporaryTranscript('⚠ Permiso de micrófono no otorgado en Windows/FL Studio');
+            setTemporaryTranscript('Permiso de micrófono no habilitado');
           } else if (event.error === 'audio-capture') {
-            setTemporaryTranscript('⚠ Micrófono ocupado por el driver ASIO de FL Studio');
+            setTemporaryTranscript('Micrófono ocupado por el driver de audio');
           } else if (event.error === 'network') {
-            setTemporaryTranscript('💡 Modo rápido activo: selecciona un botón de sugerencia');
-          } else if (event.error !== 'no-speech') {
-            setTemporaryTranscript('⚠ Reconocimiento de voz: ' + event.error);
+            setTemporaryTranscript('Usa las recomendaciones con un solo clic');
           }
-          stopVoiceRecording();
+          stopVoiceRecording(true);
         };
         recognition.onend = function() {
           if (state.isRecording) {
@@ -3667,16 +3670,11 @@
     }
 
     function toggleVoiceRecording() {
-      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) {
-        setTemporaryTranscript('Comandos de voz: escribe en la barra inferior o usa los presets.');
-        return;
+      if (state.isRecording) {
+        stopVoiceRecording(false);
+      } else {
+        startVoiceRecording();
       }
-      if (!recognition) {
-        try { initSpeechRecognition(); } catch(e) {}
-      }
-      if (!state.isRecording) startVoiceRecording();
-      else stopVoiceRecording();
     }
 
     function startVoiceRecording() {
@@ -3686,31 +3684,49 @@
       clearLiveTranscript();
       updateRecordingUI(true);
 
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        setTemporaryTranscript('Usa las recomendaciones con un solo clic');
+        state.isRecording = false;
+        updateRecordingUI(false);
+        return;
+      }
+
+      if (!recognition) {
+        try { initSpeechRecognition(); } catch(e) {}
+      }
+
       if (recognition) {
         recognition.lang = state.settings.lang || 'es-ES';
-        try { recognition.start(); } catch (e) {}
+        try { recognition.start(); } catch (e) {
+          console.warn('[Speech start]', e);
+        }
       }
     }
 
-    function stopVoiceRecording() {
+    function stopVoiceRecording(skipProcess) {
       clearTimeout(voiceSilenceTimer);
       if (!state.isRecording) return;
       state.isRecording = false;
+
       if (recognition) {
         try { recognition.stop(); } catch (e) {}
       }
       updateRecordingUI(false);
 
-      var txt = accumulatedVoiceText.trim();
-      var curDisp = document.getElementById('transcriptText');
-      if (!txt && curDisp && curDisp.textContent) txt = curDisp.textContent.trim();
+      if (skipProcess) {
+        accumulatedVoiceText = '';
+        return;
+      }
 
-      if (txt && txt.length >= 3) {
+      var txt = accumulatedVoiceText.trim();
+      accumulatedVoiceText = '';
+
+      if (txt && txt.length >= 2) {
         processVoiceCommand(txt);
       } else {
         clearLiveTranscript();
       }
-      accumulatedVoiceText = '';
     }
 
     function updateRecordingUI(isRec) {
@@ -3724,7 +3740,7 @@
       }
       if (btn) {
         btn.classList.toggle('listening', isRec);
-        if (text) text.textContent = isRec ? 'DETENER Y APLICAR' : 'Presionar para hablar';
+        if (text) text.textContent = isRec ? 'ESCUCHANDO... (CLIC PARA DETENER)' : 'Presionar para hablar';
         if (cursor) cursor.classList.toggle('active', isRec);
       }
       var cMic = document.getElementById('compactMicEffects');
@@ -4145,7 +4161,7 @@
         }
       }
 
-      setTemporaryTranscript('Prueba diciendo: "dame un preset" o "más reverb"', false);
+      setTemporaryTranscript('Comando no reconocido. Prueba con las recomendaciones.', false);
     }
 
     // APLICAR PRESET STARTER (EASY MIX 50%)
