@@ -1160,6 +1160,124 @@
       max-height: 540px;
     }
 
+    .modal-card.ozone-customizer {
+      width: 720px;
+      max-width: 95%;
+      max-height: 560px;
+      background: linear-gradient(180deg, #11141a 0%, #0a0c10 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-top: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 12px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+
+    .ozone-module-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #090b0f;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      gap: 12px;
+    }
+
+    .ozone-nav-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .ozone-nav-arrow {
+      background: #141820;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: #94a3b8;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .ozone-nav-arrow:hover {
+      background: #1e2430;
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .ozone-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #0d1015;
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .ozone-tab {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: #848a97;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .ozone-tab:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .ozone-tab.active {
+      background: #171c24;
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .ozone-power-icon {
+      width: 15px;
+      height: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 11px;
+      line-height: 1;
+      cursor: pointer;
+      color: #525866;
+      transition: all 0.15s ease;
+    }
+
+    .ozone-power-icon:hover {
+      transform: scale(1.18);
+    }
+
+    .ozone-power-icon.on {
+      color: #38bdf8;
+      text-shadow: 0 0 7px rgba(56, 189, 248, 0.7);
+    }
+
+    .ozone-power-icon.on.purple {
+      color: #c084fc;
+      text-shadow: 0 0 7px rgba(192, 132, 252, 0.7);
+    }
+
     @keyframes modalSlideUp {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -1605,47 +1723,66 @@
       border-color: #38bdf8;
     }
 
-    /* ── EQ GRÁFICO INTERACTIVO EN MODAL ── */
+    /* ── EQ GRÁFICO INTERACTIVO DE FASE LINEAL EN MODAL (AUTÉNTICO) ── */
     .eq-display-container {
       width: 100%;
-      height: 120px;
-      background: #080a0f;
+      height: 140px;
+      background: #06070a;
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 8px;
       position: relative;
       overflow: hidden;
       margin-bottom: 12px;
-      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.85);
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.9);
       user-select: none;
     }
-    .eq-display-header {
+
+    .eq-grid-line {
+      stroke: rgba(255, 255, 255, 0.05);
+      stroke-width: 1;
+    }
+
+    .eq-grid-line.major {
+      stroke: rgba(255, 255, 255, 0.12);
+    }
+
+    .eq-grid-label {
+      fill: #4b5262;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5px;
+      font-weight: 600;
+    }
+
+    .eq-readout {
       position: absolute;
       top: 8px;
-      left: 10px;
-      right: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      right: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: #848a97;
       pointer-events: none;
-      z-index: 10;
+      z-index: 5;
+      letter-spacing: 0.02em;
     }
-    .eq-mode-badge {
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+
+    .eq-readout strong {
       color: #ffffff;
     }
-    .eq-interactive-node {
-      cursor: ew-resize;
-      transition: r 0.15s ease;
+
+    .eq-curve-path {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
-    .eq-interactive-node:hover {
-      r: 8;
+
+    .eq-band-node {
+      cursor: ew-resize;
+      user-select: none;
+    }
+
+    .eq-band-node:hover circle.node-bg {
+      filter: drop-shadow(0 0 6px currentColor);
     }
     .modal-toggle-row {
       display: flex;
@@ -1984,21 +2121,26 @@
   </footer>
 
   <!-- ==========================================
-       MODAL DE PERSONALIZACIÓN AVANZADA (REVERB / DELAY / ETC)
+       MODAL DE PERSONALIZACIÓN AVANZADA (OZONE 12 STYLE)
        ========================================== -->
-  <div class="modal-overlay" id="modalPersonalizar" onclick="closePersonalizarModal(event)">
-    <div class="modal-card" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title">
-          <span>MÓDULO</span> — <span id="modalFxTitle">REVERB</span>
+  <div class="modal-overlay" id="modalPersonalizar">
+    <div class="modal-card ozone-customizer" onclick="event.stopPropagation()">
+      <!-- OZONE 12 MODULE STRIP HEADER -->
+      <div class="ozone-module-strip">
+        <div class="ozone-nav-group">
+          <button class="ozone-nav-arrow" onclick="navPrevModule()" title="Módulo anterior (❮)">❮</button>
+          <div class="ozone-tabs" id="ozoneModuleTabs">
+            <!-- Pestañas inyectadas dinámicamente con toggle de encendido ⏻ -->
+          </div>
+          <button class="ozone-nav-arrow" onclick="navNextModule()" title="Siguiente módulo (❯)">❯</button>
         </div>
-        <button class="modal-close-btn" onclick="closePersonalizarModal()">&times;</button>
+        <button class="modal-close-btn" onclick="closePersonalizarModal()" title="Cerrar (Esc)">&times;</button>
       </div>
 
       <div class="modal-body">
-        <div class="modal-section-title">Parámetros Principales</div>
+        <div class="modal-section-title" id="primarySectionTitle">Filtro Lineal & Espacialidad</div>
         <div class="advanced-params-grid" id="primaryGrid"></div>
-        <div class="modal-section-title" style="margin-top: 10px;">Filtros & Espacialidad</div>
+        <div class="modal-section-title" id="advancedSectionTitle" style="margin-top: 10px;">Filtros & Espacialidad</div>
         <div class="advanced-params-grid" id="advancedGrid"></div>
       </div>
     </div>
@@ -2670,85 +2812,25 @@
         var specificControlsHtml = '';
 
         if (fxKey === 'doubler') {
-          // STEREO A LA VOZ: EQ Gráfico Lineal (Low Cut y High Pass)
-          var lc = fx.lowCut || 120;
-          var hc = fx.highCut || 10000;
           specificControlsHtml =
-            '<div class="card-mini-ctrl-block" title="Filtro Lineal sin problemas de fase">' +
-              '<div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 2px;">' +
-                '<span style="font-size: 8.5px; font-weight: 800; color: #38bdf8; letter-spacing: 0.06em;">EQ LINEAL</span>' +
-                '<span style="font-size: 8px; font-weight: 700; color: #94a3b8; background: rgba(255,255,255,0.06); padding: 1px 4px; border-radius: 3px;">0° FASE</span>' +
-              '</div>' +
+            '<div class="card-mini-ctrl-block" style="padding: 4px 6px; display: flex; align-items: center; justify-content: center;" title="Filtro de Fase Lineal (Low Cut / High Cut)">' +
               '<svg viewBox="0 0 100 24" style="width: 100%; height: 22px;">' +
-                '<path d="M 0 20 Q 25 20 35 7 L 65 7 Q 75 20 100 20" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>' +
-                '<circle cx="35" cy="7" r="3" fill="#38bdf8" stroke="#000" stroke-width="1.2"/>' +
-                '<circle cx="65" cy="7" r="3" fill="#38bdf8" stroke="#000" stroke-width="1.2"/>' +
+                '<path d="M 0 20 Q 22 20 32 6 L 68 6 Q 78 20 100 20" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>' +
+                '<circle cx="32" cy="6" r="2.5" fill="#38bdf8"/>' +
+                '<circle cx="68" cy="6" r="2.5" fill="#38bdf8"/>' +
               '</svg>' +
-              '<div style="display: flex; justify-content: space-between; font-size: 8.5px; color: #94a3b8; font-family: monospace;">' +
-                '<span>LC: ' + lc + 'Hz</span>' +
-                '<span>HP: ' + (hc >= 1000 ? (hc/1000).toFixed(0) + 'k' : hc) + '</span>' +
-              '</div>' +
-            '</div>';
-        } else if (fxKey === 'chorus') {
-          // CHORUS: Siempre en estéreo
-          specificControlsHtml =
-            '<div class="card-mini-ctrl-block">' +
-              '<div class="badge-stereo-always">' +
-                '<span class="stereo-dot"></span>' +
-                '<span>STEREO SIEMPRE</span>' +
-              '</div>' +
-              '<div style="display: flex; justify-content: space-between; font-size: 8.5px; color: #94a3b8; margin-top: 4px; font-family: monospace;">' +
-                '<span>RATE: ' + (fx.rate || 0.35) + 'Hz</span>' +
-                '<span>DEPTH: ' + (fx.depth || 50) + '%</span>' +
-              '</div>' +
-            '</div>';
-        } else if (fxKey === 'delay') {
-          // DELAY: Aumentar Stereo, Dropdown 1/4, 1/8, 1/16, Sidechain On/Off
-          var curTempo = fx.tempo || '1/8';
-          var isWide = fx.wideStereo !== false;
-          var isSc = fx.sidechain !== false;
-          specificControlsHtml =
-            '<div class="card-mini-ctrl-block">' +
-              '<div style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 4px;">' +
-                '<span style="font-size: 8.5px; font-weight: 800; color: #94a3b8;">TEMPO:</span>' +
-                '<select class="card-quick-select" onchange="updateDelayTempo(this.value)">' +
-                  '<option value="1/4"' + (curTempo === '1/4' ? ' selected' : '') + '>1/4</option>' +
-                  '<option value="1/8"' + (curTempo === '1/8' ? ' selected' : '') + '>1/8</option>' +
-                  '<option value="1/16"' + (curTempo === '1/16' ? ' selected' : '') + '>1/16</option>' +
-                '</select>' +
-              '</div>' +
-              '<div style="display: flex; gap: 4px; width: 100%;">' +
-                '<button class="card-pill-btn ' + (isWide ? 'active' : '') + '" onclick="toggleDelayStereo(event)" title="Aumentar Amplitud Estéreo">' +
-                  '+ STEREO' +
-                '</button>' +
-                '<button class="card-pill-btn ' + (isSc ? 'active' : '') + '" onclick="toggleDelaySidechain(event)" title="Sidechain con la voz principal">' +
-                  'SC: ' + (isSc ? 'ON' : 'OFF') +
-                '</button>' +
-              '</div>' +
             '</div>';
         } else if (fxKey === 'reverb') {
-          // REEVERB: Sidechain On/Off, EQ Gráfico de 2 Puntos (Low Cut & High Cut)
-          var isSc = fx.sidechain !== false;
-          var lc = fx.lowCut || 300;
-          var hc = fx.highCut || 8500;
           specificControlsHtml =
-            '<div class="card-mini-ctrl-block">' +
-              '<div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 2px;">' +
-                '<span style="font-size: 8.5px; font-weight: 800; color: #c084fc; letter-spacing: 0.05em;">EQ 2 PUNTOS</span>' +
-                '<button class="card-pill-btn purple ' + (isSc ? 'active' : '') + '" style="flex: none; padding: 2px 5px; font-size: 8px;" onclick="toggleReverbSidechain(event)" title="Sidechain con la voz">' +
-                  'SC: ' + (isSc ? 'ON' : 'OFF') +
-                '</button>' +
-              '</div>' +
+            '<div class="card-mini-ctrl-block" style="padding: 4px 6px; display: flex; align-items: center; justify-content: center;" title="Filtro Reverb (Low Cut / High Cut)">' +
               '<svg viewBox="0 0 100 24" style="width: 100%; height: 22px;">' +
-                '<path d="M 0 20 Q 20 20 30 7 L 70 7 Q 80 20 100 20" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round"/>' +
-                '<circle cx="30" cy="7" r="3" fill="#c084fc" stroke="#000" stroke-width="1.2"/>' +
-                '<circle cx="70" cy="7" r="3" fill="#c084fc" stroke="#000" stroke-width="1.2"/>' +
+                '<path d="M 0 20 Q 22 20 32 6 L 68 6 Q 78 20 100 20" fill="none" stroke="#c084fc" stroke-width="1.8" stroke-linecap="round"/>' +
+                '<circle cx="32" cy="6" r="2.5" fill="#c084fc"/>' +
+                '<circle cx="68" cy="6" r="2.5" fill="#c084fc"/>' +
               '</svg>' +
-              '<div style="display: flex; justify-content: space-between; font-size: 8.5px; color: #94a3b8; font-family: monospace;">' +
-                '<span>LC: ' + lc + 'Hz</span>' +
-                '<span>HC: ' + (hc >= 1000 ? (hc/1000).toFixed(1) + 'k' : hc) + '</span>' +
-              '</div>' +
             '</div>';
+        } else {
+          specificControlsHtml = '<div style="height: 28px;"></div>';
         }
 
         card.innerHTML =
@@ -2872,18 +2954,215 @@
     }
 
     // ==========================================
-    // MODAL DE PERSONALIZACIÓN AVANZADA (SLIDERS & EQ)
+    // MOTOR DE EQ DE FASE LINEAL (ESCALA LOGARÍTMICA 20Hz - 20kHz)
+    // ==========================================
+    function freqToX(f) {
+      var fMin = 20, fMax = 20000;
+      var logMin = Math.log10(fMin), logMax = Math.log10(fMax);
+      var norm = (Math.log10(Math.max(fMin, Math.min(fMax, f))) - logMin) / (logMax - logMin);
+      return Math.max(0, Math.min(640, norm * 640));
+    }
+
+    function xToFreq(x) {
+      var fMin = 20, fMax = 20000;
+      var norm = Math.max(0, Math.min(1, x / 640));
+      var logMin = Math.log10(fMin), logMax = Math.log10(fMax);
+      return Math.round(Math.pow(10, logMin + norm * (logMax - logMin)));
+    }
+
+    function getEqGainDb(f, lc, hc) {
+      // Filtro Pasa-Altos 2° Orden Resonante (Butterworth Q = 0.76 con rodilla suave)
+      var ratioHp = f / lc;
+      var gHp = (ratioHp * ratioHp) / Math.sqrt(Math.pow(1 - ratioHp * ratioHp, 2) + Math.pow(ratioHp / 0.76, 2));
+      // Filtro Pasa-Bajos 2° Orden Resonante (Butterworth Q = 0.76 con caída suave)
+      var ratioLp = f / hc;
+      var gLp = 1 / Math.sqrt(Math.pow(1 - ratioLp * ratioLp, 2) + Math.pow(ratioLp / 0.76, 2));
+
+      var totalLinear = Math.max(0.00001, gHp * gLp);
+      var db = 20 * Math.log10(totalLinear);
+      return Math.max(-40, Math.min(1.5, db));
+    }
+
+    function dbToY(db) {
+      // 0 dB en y = 30; -36 dB en y = 130
+      var yZero = 30;
+      var yFloor = 130;
+      var clamped = Math.max(-36, Math.min(0, db));
+      return yZero + (clamped / -36) * (yFloor - yZero);
+    }
+
+    function generateEqPathD(lc, hc) {
+      var points = [];
+      var N = 70;
+      for (var i = 0; i <= N; i++) {
+        var x = (i / N) * 640;
+        var f = xToFreq(x);
+        var db = getEqGainDb(f, lc, hc);
+        var y = dbToY(db);
+        points.push({ x: x.toFixed(1), y: y.toFixed(1) });
+      }
+      var d = 'M ' + points[0].x + ' ' + points[0].y;
+      for (var j = 1; j < points.length; j++) {
+        d += ' L ' + points[j].x + ' ' + points[j].y;
+      }
+      return d;
+    }
+
+    function buildEqSvgHtml(fxKey, lc, hc, colorHex) {
+      var d = generateEqPathD(lc, hc);
+      var dFill = d + ' L 640 140 L 0 140 Z';
+      var x1 = freqToX(lc).toFixed(1);
+      var y1 = dbToY(getEqGainDb(lc, lc, hc)).toFixed(1);
+      var x7 = freqToX(hc).toFixed(1);
+      var y7 = dbToY(getEqGainDb(hc, lc, hc)).toFixed(1);
+
+      // Puntos de referencia 2, 3, 4, 5, 6 a 0dB (y=30) estilo Parametric EQ 2
+      var ghosts = [
+        { num: 2, f: 120 },
+        { num: 3, f: 380 },
+        { num: 4, f: 1000 },
+        { num: 5, f: 3200 },
+        { num: 6, f: 7200 }
+      ];
+
+      var ghostSvg = ghosts.map(function(g) {
+        var gx = freqToX(g.f).toFixed(1);
+        return '<g transform="translate(' + gx + ', 30)" opacity="0.32" pointer-events="none">' +
+          '<circle r="6.5" fill="#0c0e14" stroke="rgba(255,255,255,0.22)" stroke-width="1.2"/>' +
+          '<text y="2.8" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="7.5" font-weight="700" fill="rgba(255,255,255,0.4)">' + g.num + '</text>' +
+        '</g>';
+      }).join('');
+
+      var gridFreqs = [
+        { f: 50, label: '50' },
+        { f: 100, label: '100', major: true },
+        { f: 200, label: '200' },
+        { f: 500, label: '500' },
+        { f: 1000, label: '1k', major: true },
+        { f: 2000, label: '2k' },
+        { f: 5000, label: '5k' },
+        { f: 10000, label: '10k', major: true },
+        { f: 20000, label: '20k' }
+      ];
+
+      var gridLinesSvg = gridFreqs.map(function(gf) {
+        var gx = freqToX(gf.f).toFixed(1);
+        return '<line x1="' + gx + '" y1="0" x2="' + gx + '" y2="140" class="eq-grid-line' + (gf.major ? ' major' : '') + '"/>' +
+          '<text x="' + (parseFloat(gx) + 2) + '" y="135" class="eq-grid-label">' + gf.label + '</text>';
+      }).join('');
+
+      var hLinesSvg = [
+        '<line x1="0" y1="30" x2="640" y2="30" class="eq-grid-line major"/>',
+        '<line x1="0" y1="63" x2="640" y2="63" class="eq-grid-line"/>',
+        '<line x1="0" y1="97" x2="640" y2="97" class="eq-grid-line"/>'
+      ].join('');
+
+      return '<div class="eq-display-container" style="grid-column: 1 / -1;">' +
+        '<div class="eq-readout">' +
+          '1: <strong id="eqValLc_' + fxKey + '">' + lc + ' Hz</strong> &nbsp;|&nbsp; 7: <strong id="eqValHc_' + fxKey + '">' + (hc >= 1000 ? (hc/1000).toFixed(1) + ' kHz' : hc + ' Hz') + '</strong>' +
+        '</div>' +
+        '<svg id="svgEq_' + fxKey + '" viewBox="0 0 640 140" style="width: 100%; height: 100%;">' +
+          '<defs>' +
+            '<linearGradient id="eqGrad_' + fxKey + '" x1="0" y1="0" x2="0" y2="1">' +
+              '<stop offset="0%" stop-color="' + colorHex + '" stop-opacity="0.25"/>' +
+              '<stop offset="100%" stop-color="' + colorHex + '" stop-opacity="0.0"/>' +
+            '</linearGradient>' +
+          '</defs>' +
+          hLinesSvg +
+          gridLinesSvg +
+          ghostSvg +
+          '<path id="eqPathFill_' + fxKey + '" d="' + dFill + '" fill="url(#eqGrad_' + fxKey + ')"/>' +
+          '<path id="eqPathLine_' + fxKey + '" d="' + d + '" class="eq-curve-path" stroke="' + colorHex + '" stroke-width="2.4"/>' +
+          '<!-- NODO 1: LOW CUT -->' +
+          '<g id="nodeLcGroup_' + fxKey + '" class="eq-band-node" transform="translate(' + x1 + ', ' + y1 + ')" onmousedown="startEqNodeDrag(event, \'' + fxKey + '\', \'lowCut\')" title="Punto 1: Corte de Graves (Arrastrar)">' +
+            '<circle r="14" fill="transparent"/>' +
+            '<circle r="9.5" class="node-bg" fill="#0b0e14" stroke="' + colorHex + '" stroke-width="2" style="color:' + colorHex + ';"/>' +
+            '<text y="3.2" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="800" fill="' + colorHex + '">1</text>' +
+          '</g>' +
+          '<!-- NODO 7: HIGH CUT -->' +
+          '<g id="nodeHcGroup_' + fxKey + '" class="eq-band-node" transform="translate(' + x7 + ', ' + y7 + ')" onmousedown="startEqNodeDrag(event, \'' + fxKey + '\', \'highCut\')" title="Punto 7: Corte de Agudos (Arrastrar)">' +
+            '<circle r="14" fill="transparent"/>' +
+            '<circle r="9.5" class="node-bg" fill="#0b0e14" stroke="' + colorHex + '" stroke-width="2" style="color:' + colorHex + ';"/>' +
+            '<text y="3.2" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9.5" font-weight="800" fill="' + colorHex + '">7</text>' +
+          '</g>' +
+        '</svg>' +
+      '</div>';
+    }
+
+    // ==========================================
+    // MODAL DE PERSONALIZACIÓN AVANZADA (ESTILO OZONE 12)
     // ==========================================
     var currentModalFxKey = null;
+
+    function navPrevModule() {
+      var order = ['doubler', 'chorus', 'delay', 'reverb'];
+      var idx = order.indexOf(currentModalFxKey);
+      if (idx === -1) idx = 0;
+      var prevIdx = (idx - 1 + order.length) % order.length;
+      openPersonalizarModal(order[prevIdx]);
+    }
+
+    function navNextModule() {
+      var order = ['doubler', 'chorus', 'delay', 'reverb'];
+      var idx = order.indexOf(currentModalFxKey);
+      if (idx === -1) idx = 0;
+      var nextIdx = (idx + 1) % order.length;
+      openPersonalizarModal(order[nextIdx]);
+    }
+
+    function toggleFxPowerFromModal(fxKey, event) {
+      if (event) event.stopPropagation();
+      var fx = state.creative[fxKey];
+      if (!fx) return;
+      pushSnapshot();
+      fx.on = !fx.on;
+      sendParamToJuce(fxKey + '.enabled', fx.on ? 1.0 : 0.0);
+      savePreset();
+      renderOzoneTabs();
+      renderCreativeGrid();
+    }
+
+    function renderOzoneTabs() {
+      var container = document.getElementById('ozoneModuleTabs');
+      if (!container) return;
+      container.innerHTML = '';
+
+      var order = [
+        { key: 'doubler', label: 'STEREO' },
+        { key: 'chorus', label: 'CHORUS' },
+        { key: 'delay', label: 'DELAY' },
+        { key: 'reverb', label: 'REVERB' }
+      ];
+
+      order.forEach(function(item) {
+        var fx = state.creative[item.key];
+        var isCurrent = item.key === currentModalFxKey;
+        var btn = document.createElement('div');
+        btn.className = 'ozone-tab' + (isCurrent ? ' active' : '');
+        btn.onclick = function() { openPersonalizarModal(item.key); };
+
+        var pwr = document.createElement('span');
+        pwr.className = 'ozone-power-icon' + (fx && fx.on ? ' on' + (item.key === 'reverb' ? ' purple' : '') : '');
+        pwr.innerHTML = '&#x23FB;';
+        pwr.title = (fx && fx.on ? 'Apagar ' : 'Encender ') + item.label;
+        pwr.onclick = function(e) { toggleFxPowerFromModal(item.key, e); };
+
+        var lbl = document.createElement('span');
+        lbl.textContent = item.label;
+
+        btn.appendChild(pwr);
+        btn.appendChild(lbl);
+        container.appendChild(btn);
+      });
+    }
 
     function openPersonalizarModal(fxKey) {
       currentModalFxKey = fxKey;
       var modal = document.getElementById('modalPersonalizar');
-      var title = document.getElementById('modalFxTitle');
       var fx = state.creative[fxKey];
       if (!modal || !fx) return;
 
-      title.textContent = fx.name.toUpperCase();
+      renderOzoneTabs();
       renderModalSliders(fxKey);
       modal.classList.add('open');
     }
@@ -2899,51 +3178,26 @@
       var fx = state.creative[fxKey];
       var pGrid = document.getElementById('primaryGrid');
       var aGrid = document.getElementById('advancedGrid');
+      var pTitle = document.getElementById('primarySectionTitle');
+      var aTitle = document.getElementById('advancedSectionTitle');
       if (!pGrid || !aGrid) return;
       pGrid.innerHTML = '';
       aGrid.innerHTML = '';
 
-      var advTitle = document.querySelector('#modalPersonalizar .modal-section-title:nth-of-type(2)');
-      if (advTitle) advTitle.textContent = 'Parámetros & Espacialidad';
-
       if (fxKey === 'doubler') {
-        // ── STEREO A LA VOZ: EQ Gráfico Lineal (2 puntos: Low Cut y High Pass) ──
-        if (advTitle) advTitle.textContent = 'Filtro Lineal & Anchura Estéreo';
+        if (pTitle) pTitle.textContent = 'Filtro de Fase Lineal (Punto 1 y 7)';
+        if (aTitle) aTitle.textContent = 'Espacialidad & Micro-Desafinación';
         var lc = fx.lowCut || 120;
         var hc = fx.highCut || 10000;
 
-        pGrid.innerHTML =
-          '<div class="eq-display-container" style="grid-column: 1 / -1;">' +
-            '<div class="eq-display-header">' +
-              '<span class="eq-mode-badge" style="color: #38bdf8; border-color: rgba(56, 189, 248, 0.3); background: rgba(56, 189, 248, 0.08);">' +
-                'EQ LINEAL SIEMPRE · 0° DESFASE' +
-              '</span>' +
-              '<span style="font-size: 9px; color: #94a3b8; font-family: monospace;">' +
-                'LC: <strong id="eqValLc" style="color:#fff;">' + lc + 'Hz</strong> | HP: <strong id="eqValHc" style="color:#fff;">' + (hc >= 1000 ? (hc/1000).toFixed(1) + 'kHz' : hc + 'Hz') + '</strong>' +
-              '</span>' +
-            '</div>' +
-            '<svg id="svgLinearEq" viewBox="0 0 580 120" style="width: 100%; height: 100%;">' +
-              '<!-- Rejilla de frecuencias -->' +
-              '<line x1="80" y1="0" x2="80" y2="120" class="eq-grid-line"/>' +
-              '<text x="83" y="112" class="eq-grid-label">100Hz</text>' +
-              '<line x1="290" y1="0" x2="290" y2="120" class="eq-grid-line"/>' +
-              '<text x="293" y="112" class="eq-grid-label">1kHz</text>' +
-              '<line x1="500" y1="0" x2="500" y2="120" class="eq-grid-line"/>' +
-              '<text x="490" y="112" class="eq-grid-label">10kHz</text>' +
-              '<!-- Curva -->' +
-              '<path id="eqCurveLinear" class="eq-curve-path" stroke="#38bdf8" d="M 0 95 Q ' + (lc*0.4) + ' 95 ' + (lc*0.5 + 40) + ' 35 L ' + (580 - (20000-hc)*0.015 - 40) + ' 35 Q ' + (580 - (20000-hc)*0.015) + ' 95 580 95"/>' +
-              '<!-- Nodos interactivos -->' +
-              '<circle id="eqNodeLc" class="eq-interactive-node" cx="' + (lc*0.5 + 40) + '" cy="35" r="6.5" fill="#38bdf8" stroke="#ffffff" stroke-width="2" onmousedown="startEqNodeDrag(event, \'doubler\', \'lowCut\')" title="Arrastrar Low Cut"/>' +
-              '<circle id="eqNodeHc" class="eq-interactive-node" cx="' + (580 - (20000-hc)*0.015 - 40) + '" cy="35" r="6.5" fill="#38bdf8" stroke="#ffffff" stroke-width="2" onmousedown="startEqNodeDrag(event, \'doubler\', \'highCut\')" title="Arrastrar High Cut"/>' +
-            '</svg>' +
-          '</div>';
+        pGrid.innerHTML = buildEqSvgHtml('doubler', lc, hc, '#38bdf8');
 
-        aGrid.appendChild(createGenericSlider('Low Cut (Corte Graves)', ' Hz', 20, 1000, lc, function(v){
+        aGrid.appendChild(createGenericSlider('Punto 1: Low Cut (Corte Graves)', ' Hz', 20, 1000, lc, function(v){
           fx.lowCut = v; updateEqDisplay('doubler');
-        }));
-        aGrid.appendChild(createGenericSlider('High Pass (Corte Altos)', ' Hz', 2000, 20000, hc, function(v){
+        }, 1, 'slider_doubler_lc'));
+        aGrid.appendChild(createGenericSlider('Punto 7: High Cut (Corte Agudos)', ' Hz', 2000, 20000, hc, function(v){
           fx.highCut = v; updateEqDisplay('doubler');
-        }));
+        }, 10, 'slider_doubler_hc'));
         aGrid.appendChild(createGenericSlider('Anchura Estéreo', ' %', 0, 100, fx.width || 80, function(v){
           fx.width = v; sendParamToJuce('doubler.width', v);
         }));
@@ -2952,20 +3206,19 @@
         }));
 
       } else if (fxKey === 'chorus') {
-        // ── CHORUS: Siempre en estéreo ──
+        if (pTitle) pTitle.textContent = 'Modo Estéreo';
+        if (aTitle) aTitle.textContent = 'Parámetros de Modulación';
+
         pGrid.innerHTML =
           '<div class="modal-toggle-row" style="grid-column: 1 / -1;">' +
             '<div class="modal-toggle-info">' +
-              '<div style="display: flex; align-items: center; gap: 8px;">' +
-                '<span class="modal-toggle-title">MODO TRUE STEREO 360°</span>' +
-                '<span class="stereo-dot" style="display: inline-block;"></span>' +
-              '</div>' +
-              '<span class="modal-toggle-desc">Modulación estéreo analógica siempre activa para no achicar la imagen de la voz</span>' +
+              '<span class="modal-toggle-title">MODO TRUE STEREO 360°</span>' +
+              '<span class="modal-toggle-desc">Modulación balanceada para no desfasar la voz principal</span>' +
             '</div>' +
-            '<span class="eq-mode-badge" style="color: #2dd4bf; border-color: rgba(45, 212, 191, 0.35); background: rgba(45, 212, 191, 0.1);">SIEMPRE ACTIVO</span>' +
+            '<span class="btn-pill-action active" style="pointer-events: none;">ACTIVO</span>' +
           '</div>';
 
-        aGrid.appendChild(createGenericSlider('Velocidad LFO', ' Hz', 0.05, 5, fx.rate || 0.35, function(v){
+        aGrid.appendChild(createGenericSlider('Velocidad LFO', ' Hz', 0.05, 5.0, fx.rate || 0.35, function(v){
           fx.rate = v; sendParamToJuce('chorus.rate', v);
         }, 0.01));
         aGrid.appendChild(createGenericSlider('Profundidad (Depth)', ' %', 0, 100, fx.depth || 50, function(v){
@@ -2974,9 +3227,14 @@
         aGrid.appendChild(createGenericSlider('Calidez / Tono', ' %', 0, 100, fx.color || 40, function(v){
           fx.color = v; sendParamToJuce('chorus.color', v);
         }));
+        aGrid.appendChild(createGenericSlider('Cantidad de Mezcla', ' %', 0, 100, fx.amount, function(v){
+          fx.amount = v; sendParamToJuce('chorus.amount', v); renderCreativeGrid();
+        }));
 
       } else if (fxKey === 'delay') {
-        // ── DELAY: Aumentar Stereo, Dropdown 1/4, 1/8, 1/16, Sidechain On/Off ──
+        if (pTitle) pTitle.textContent = 'Tiempo Sync & Espacialidad';
+        if (aTitle) aTitle.textContent = 'Filtros & Repeticiones';
+
         var curTempo = fx.tempo || '1/8';
         var isWide = fx.wideStereo !== false;
         var isSc = fx.sidechain !== false;
@@ -2985,8 +3243,8 @@
           '<div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px;">' +
             '<div class="modal-toggle-row">' +
               '<div class="modal-toggle-info">' +
-                '<span class="modal-toggle-title">TIEMPO SINCRONIZADO (TEMPO SYNC)</span>' +
-                '<span class="modal-toggle-desc">Métrica musical sincronizada al tempo de tu DAW</span>' +
+                '<span class="modal-toggle-title">MÉTRICA MUSICAL (TEMPO SYNC)</span>' +
+                '<span class="modal-toggle-desc">Sincronizado al BPM de tu DAW</span>' +
               '</div>' +
               '<div style="display: flex; gap: 6px;">' +
                 ['1/4', '1/8', '1/16'].map(function(t){
@@ -2996,8 +3254,8 @@
             '</div>' +
             '<div class="modal-toggle-row">' +
               '<div class="modal-toggle-info">' +
-                '<span class="modal-toggle-title">AUMENTAR STEREO</span>' +
-                '<span class="modal-toggle-desc">Apertura espacial y rebote Ping-Pong en los costados</span>' +
+                '<span class="modal-toggle-title">APERTURA ESTÉREO (PING-PONG)</span>' +
+                '<span class="modal-toggle-desc">Rebote espacial en los extremos L/R</span>' +
               '</div>' +
               '<button class="btn-pill-action ' + (isWide ? 'active' : '') + '" onclick="toggleModalDelayStereo()">' +
                 (isWide ? 'ACTIVADO' : 'DESACTIVADO') +
@@ -3006,7 +3264,7 @@
             '<div class="modal-toggle-row">' +
               '<div class="modal-toggle-info">' +
                 '<span class="modal-toggle-title">SIDECHAIN AUTOMÁTICO (DUCKING)</span>' +
-                '<span class="modal-toggle-desc">Atenúa las repeticiones mientras la voz canta para evitar choques</span>' +
+                '<span class="modal-toggle-desc">Atenúa las repeticiones mientras la voz canta</span>' +
               '</div>' +
               '<button class="btn-pill-action ' + (isSc ? 'active' : '') + '" onclick="toggleModalDelaySidechain()">' +
                 (isSc ? 'ACTIVADO' : 'DESACTIVADO') +
@@ -3020,10 +3278,14 @@
         aGrid.appendChild(createGenericSlider('Filtro Pasa Altos (HPF)', ' Hz', 20, 600, fx.hpf || 180, function(v){
           fx.hpf = v; sendParamToJuce('delay.hpf', v);
         }));
+        aGrid.appendChild(createGenericSlider('Nivel del Delay', ' %', 0, 100, fx.amount, function(v){
+          fx.amount = v; sendParamToJuce('delay.amount', v); renderCreativeGrid();
+        }));
 
       } else if (fxKey === 'reverb') {
-        // ── REEVERB: Sidechain On/Off, EQ Gráfico de 2 Puntos (Low Cut & High Cut) ──
-        if (advTitle) advTitle.textContent = 'Decay & Pre-retardo';
+        if (pTitle) pTitle.textContent = 'Filtros Reverb (Punto 1 y 7)';
+        if (aTitle) aTitle.textContent = 'Decay & Pre-retardo';
+
         var isSc = fx.sidechain !== false;
         var lc = fx.lowCut || 300;
         var hc = fx.highCut || 8500;
@@ -3033,41 +3295,21 @@
             '<div class="modal-toggle-row">' +
               '<div class="modal-toggle-info">' +
                 '<span class="modal-toggle-title">SIDECHAIN VOCAL (DUCKING)</span>' +
-                '<span class="modal-toggle-desc">Mantiene la voz al frente y abre la reverb exuberante en los silencios</span>' +
+                '<span class="modal-toggle-desc">Mantiene la voz al frente y abre la reverb en las pausas</span>' +
               '</div>' +
               '<button class="btn-pill-action ' + (isSc ? 'active' : '') + '" onclick="toggleModalReverbSidechain()">' +
                 (isSc ? 'ACTIVADO' : 'DESACTIVADO') +
               '</button>' +
             '</div>' +
-            '<div class="eq-display-container">' +
-              '<div class="eq-display-header">' +
-                '<span class="eq-mode-badge" style="color: #c084fc; border-color: rgba(192, 132, 252, 0.35); background: rgba(192, 132, 252, 0.1);">' +
-                  'EQ GRÁFICO REVERB (2 PUNTOS)' +
-                '</span>' +
-                '<span style="font-size: 9px; color: #94a3b8; font-family: monospace;">' +
-                  'LC: <strong id="eqValLcReverb" style="color:#fff;">' + lc + 'Hz</strong> | HC: <strong id="eqValHcReverb" style="color:#fff;">' + (hc >= 1000 ? (hc/1000).toFixed(1) + 'kHz' : hc + 'Hz') + '</strong>' +
-                '</span>' +
-              '</div>' +
-              '<svg id="svgReverbEq" viewBox="0 0 580 120" style="width: 100%; height: 100%;">' +
-                '<line x1="80" y1="0" x2="80" y2="120" class="eq-grid-line"/>' +
-                '<text x="83" y="112" class="eq-grid-label">100Hz</text>' +
-                '<line x1="290" y1="0" x2="290" y2="120" class="eq-grid-line"/>' +
-                '<text x="293" y="112" class="eq-grid-label">1kHz</text>' +
-                '<line x1="500" y1="0" x2="500" y2="120" class="eq-grid-line"/>' +
-                '<text x="490" y="112" class="eq-grid-label">10kHz</text>' +
-                '<path id="eqCurveReverb" class="eq-curve-path" stroke="#c084fc" d="M 0 95 Q ' + (lc*0.35) + ' 95 ' + (lc*0.45 + 30) + ' 35 L ' + (580 - (20000-hc)*0.015 - 40) + ' 35 Q ' + (580 - (20000-hc)*0.015) + ' 95 580 95"/>' +
-                '<circle id="eqNodeLcReverb" class="eq-interactive-node" cx="' + (lc*0.45 + 30) + '" cy="35" r="6.5" fill="#c084fc" stroke="#ffffff" stroke-width="2" onmousedown="startEqNodeDrag(event, \'reverb\', \'lowCut\')" title="Arrastrar Low Cut Reverb"/>' +
-                '<circle id="eqNodeHcReverb" class="eq-interactive-node" cx="' + (580 - (20000-hc)*0.015 - 40) + '" cy="35" r="6.5" fill="#c084fc" stroke="#ffffff" stroke-width="2" onmousedown="startEqNodeDrag(event, \'reverb\', \'highCut\')" title="Arrastrar High Cut Reverb"/>' +
-              '</svg>' +
-            '</div>' +
+            buildEqSvgHtml('reverb', lc, hc, '#c084fc') +
           '</div>';
 
-        aGrid.appendChild(createGenericSlider('Low Cut Reverb', ' Hz', 20, 1000, lc, function(v){
+        aGrid.appendChild(createGenericSlider('Punto 1: Low Cut Reverb', ' Hz', 20, 1000, lc, function(v){
           fx.lowCut = v; updateEqDisplay('reverb');
-        }));
-        aGrid.appendChild(createGenericSlider('High Cut Reverb', ' Hz', 2000, 20000, hc, function(v){
+        }, 1, 'slider_reverb_lc'));
+        aGrid.appendChild(createGenericSlider('Punto 7: High Cut Reverb', ' Hz', 2000, 20000, hc, function(v){
           fx.highCut = v; updateEqDisplay('reverb');
-        }));
+        }, 10, 'slider_reverb_hc'));
         aGrid.appendChild(createGenericSlider('Duración (Decay)', ' s', 0.2, 8.0, fx.decay || 2.2, function(v){
           fx.decay = v; sendParamToJuce('reverb.decay', v);
         }, 0.1));
@@ -3106,23 +3348,43 @@
       var lc = fx.lowCut || (fxKey === 'doubler' ? 120 : 300);
       var hc = fx.highCut || (fxKey === 'doubler' ? 10000 : 8500);
 
-      var isDoubler = fxKey === 'doubler';
-      var valLcEl = document.getElementById(isDoubler ? 'eqValLc' : 'eqValLcReverb');
-      var valHcEl = document.getElementById(isDoubler ? 'eqValHc' : 'eqValHcReverb');
-      var pathEl = document.getElementById(isDoubler ? 'eqCurveLinear' : 'eqCurveReverb');
-      var nodeLc = document.getElementById(isDoubler ? 'eqNodeLc' : 'eqNodeLcReverb');
-      var nodeHc = document.getElementById(isDoubler ? 'eqNodeHc' : 'eqNodeHcReverb');
+      var d = generateEqPathD(lc, hc);
+      var dFill = d + ' L 640 140 L 0 140 Z';
+      var pathLine = document.getElementById('eqPathLine_' + fxKey);
+      var pathFill = document.getElementById('eqPathFill_' + fxKey);
+      if (pathLine) pathLine.setAttribute('d', d);
+      if (pathFill) pathFill.setAttribute('d', dFill);
 
-      if (valLcEl) valLcEl.textContent = lc + 'Hz';
-      if (valHcEl) valHcEl.textContent = (hc >= 1000 ? (hc/1000).toFixed(1) + 'kHz' : hc + 'Hz');
+      var x1 = freqToX(lc).toFixed(1);
+      var y1 = dbToY(getEqGainDb(lc, lc, hc)).toFixed(1);
+      var x7 = freqToX(hc).toFixed(1);
+      var y7 = dbToY(getEqGainDb(hc, lc, hc)).toFixed(1);
 
-      var cx1 = Math.max(30, Math.min(260, isDoubler ? (lc*0.5 + 40) : (lc*0.45 + 30)));
-      var cx2 = Math.max(300, Math.min(550, 580 - (20000-hc)*0.015 - 40));
+      var node1 = document.getElementById('nodeLcGroup_' + fxKey);
+      var node7 = document.getElementById('nodeHcGroup_' + fxKey);
+      if (node1) node1.setAttribute('transform', 'translate(' + x1 + ', ' + y1 + ')');
+      if (node7) node7.setAttribute('transform', 'translate(' + x7 + ', ' + y7 + ')');
 
-      if (nodeLc) nodeLc.setAttribute('cx', cx1);
-      if (nodeHc) nodeHc.setAttribute('cx', cx2);
-      if (pathEl) {
-        pathEl.setAttribute('d', 'M 0 95 Q ' + (cx1*0.6) + ' 95 ' + cx1 + ' 35 L ' + cx2 + ' 35 Q ' + (cx2 + (580-cx2)*0.4) + ' 95 580 95');
+      var readoutLc = document.getElementById('eqValLc_' + fxKey);
+      var readoutHc = document.getElementById('eqValHc_' + fxKey);
+      if (readoutLc) readoutLc.textContent = lc + ' Hz';
+      if (readoutHc) readoutHc.textContent = (hc >= 1000 ? (hc/1000).toFixed(1) + ' kHz' : hc + ' Hz');
+
+      // Sincronizar sliders en el modal si están presentes
+      var sFillLc = document.getElementById('slider_' + fxKey + '_lc_fill');
+      var sValLc = document.getElementById('slider_' + fxKey + '_lc');
+      if (sFillLc && sValLc) {
+        var pLc = Math.max(0, Math.min(1, (lc - 20) / (1000 - 20)));
+        sFillLc.style.width = (pLc * 100) + '%';
+        sValLc.textContent = lc + ' Hz';
+      }
+
+      var sFillHc = document.getElementById('slider_' + fxKey + '_hc_fill');
+      var sValHc = document.getElementById('slider_' + fxKey + '_hc');
+      if (sFillHc && sValHc) {
+        var pHc = Math.max(0, Math.min(1, (hc - 2000) / (20000 - 2000)));
+        sFillHc.style.width = (pHc * 100) + '%';
+        sValHc.textContent = (hc >= 1000 ? (hc/1000).toFixed(1) + ' kHz' : hc + ' Hz');
       }
 
       sendParamToJuce(fxKey + '.lowCut', lc);
@@ -3136,23 +3398,27 @@
       e.preventDefault();
       e.stopPropagation();
       pushSnapshot();
-      activeEqDrag = { fxKey: fxKey, pointType: pointType, startX: e.clientX, initVal: state.creative[fxKey][pointType] };
+      var svgId = 'svgEq_' + fxKey;
+      activeEqDrag = { fxKey: fxKey, pointType: pointType, svgId: svgId };
       window.addEventListener('mousemove', onEqNodeMouseMove);
       window.addEventListener('mouseup', onEqNodeMouseUp);
     }
 
     function onEqNodeMouseMove(e) {
       if (!activeEqDrag) return;
-      var deltaX = e.clientX - activeEqDrag.startX;
+      var svgEl = document.getElementById(activeEqDrag.svgId);
+      if (!svgEl) return;
+      var rect = svgEl.getBoundingClientRect();
+      var mouseX = e.clientX - rect.left;
+      var normX = Math.max(0, Math.min(640, (mouseX / rect.width) * 640));
+      var freq = xToFreq(normX);
       var fx = state.creative[activeEqDrag.fxKey];
       if (!fx) return;
 
       if (activeEqDrag.pointType === 'lowCut') {
-        var newVal = Math.max(20, Math.min(1000, Math.round(activeEqDrag.initVal + deltaX * 3.5)));
-        fx.lowCut = newVal;
+        fx.lowCut = Math.max(20, Math.min(1000, Math.min(fx.highCut - 400, freq)));
       } else if (activeEqDrag.pointType === 'highCut') {
-        var newVal = Math.max(2000, Math.min(20000, Math.round(activeEqDrag.initVal + deltaX * 45)));
-        fx.highCut = newVal;
+        fx.highCut = Math.max(2000, Math.max(fx.lowCut + 400, Math.min(20000, freq)));
       }
 
       updateEqDisplay(activeEqDrag.fxKey);
