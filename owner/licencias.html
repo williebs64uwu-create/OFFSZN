@@ -1306,6 +1306,9 @@
                             <button type="button" class="product-chip" data-value="inka-kola" onclick="selectProductChip('inka-kola')">
                                 🟡 Inka Kola
                             </button>
+                            <button type="button" class="product-chip" data-value="vocal-preset" onclick="selectProductChip('vocal-preset')">
+                                🎙️ Vocal Preset
+                            </button>
                         </div>
                         <input type="hidden" id="gen-product" value="easy-mix">
                     </div>
@@ -1433,6 +1436,9 @@
                             </button>
                             <button type="button" class="product-chip" data-value="Inka Kola" onclick="selectGenChip('Inka Kola')">
                                 🟡 Inka Kola
+                            </button>
+                            <button type="button" class="product-chip" data-value="Vocal Preset" onclick="selectGenChip('Vocal Preset')">
+                                🎙️ Vocal Preset
                             </button>
                         </div>
                         <input type="hidden" id="new-plugin-select" value="Easy Mix">
@@ -1644,7 +1650,19 @@
             { id: 'inka-7', plugin: 'Inka Kola', serial: 'INKA-FULL-C55B4113-AF7EE7A1', used: false, note: '', date: '', devices: 2 },
             { id: 'inka-8', plugin: 'Inka Kola', serial: 'INKA-FULL-DC4C1A9B-6CDFE2E7', used: false, note: '', date: '', devices: 2 },
             { id: 'inka-9', plugin: 'Inka Kola', serial: 'INKA-FULL-7E5D41AA-C9603A72', used: false, note: '', date: '', devices: 2 },
-            { id: 'inka-10', plugin: 'Inka Kola', serial: 'INKA-FULL-A8C8876F-451BA437', used: false, note: '', date: '', devices: 2 }
+            { id: 'inka-10', plugin: 'Inka Kola', serial: 'INKA-FULL-A8C8876F-451BA437', used: false, note: '', date: '', devices: 2 },
+            
+            // VOCAL PRESET (10 keys)
+            { id: 'voca-1', plugin: 'Vocal Preset', serial: 'VOCA-FULL-392F4A91-8D9217CA', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-2', plugin: 'Vocal Preset', serial: 'VOCA-FULL-7C91B48E-56FA13D0', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-3', plugin: 'Vocal Preset', serial: 'VOCA-FULL-1E48A2D9-40BC781F', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-4', plugin: 'Vocal Preset', serial: 'VOCA-FULL-92AD58F1-2B8A449C', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-5', plugin: 'Vocal Preset', serial: 'VOCA-FULL-5F109BC4-82DA66E3', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-6', plugin: 'Vocal Preset', serial: 'VOCA-FULL-A38C29E7-19DF885B', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-7', plugin: 'Vocal Preset', serial: 'VOCA-FULL-D48102BA-77C5331E', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-8', plugin: 'Vocal Preset', serial: 'VOCA-FULL-8B2E490D-66FE91C2', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-9', plugin: 'Vocal Preset', serial: 'VOCA-FULL-2A94F16C-33BA528D', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-10', plugin: 'Vocal Preset', serial: 'VOCA-FULL-61C8B490-E5FA1247', used: false, note: '', date: '', devices: 2 }
         ];
 
         const STORAGE_KEY = 'offszn_dispatch_licenses_v10_lifetime_realtime';
@@ -1663,6 +1681,7 @@
             if (clean.includes('master')) return 'Easy Master';
             if (clean.includes('coca') || clean.includes('coke')) return 'Coca Cola';
             if (clean.includes('inka')) return 'Inka Kola';
+            if (clean.includes('vocal')) return 'Vocal Preset';
             return p;
         }
 
@@ -1983,7 +2002,8 @@
             } else {
                 targetPlugin = product === 'easy-mix' ? 'Easy Mix' :
                                product === 'easy-master' ? 'Easy Master' :
-                               product === 'coca-cola' ? 'Coca Cola' : 'Inka Kola';
+                               product === 'coca-cola' ? 'Coca Cola' :
+                               product === 'vocal-preset' ? 'Vocal Preset' : 'Inka Kola';
             }
 
             const slotLabel = product === 'promo-2x1' ? `(Slot ${slot}/2 - ${targetPlugin})` : `(${targetPlugin})`;
@@ -2090,7 +2110,7 @@
 
                 // Fallback client generation if server unreachable
                 if (!generatedSerial) {
-                    const prefixes = { 'Easy Mix': 'EASY', 'Easy Master': 'MASTER', 'Coca Cola': 'COKE', 'Inka Kola': 'INKA' };
+                    const prefixes = { 'Easy Mix': 'EASY', 'Easy Master': 'MASTER', 'Coca Cola': 'COKE', 'Inka Kola': 'INKA', 'Vocal Preset': 'VOCA' };
                     const pfx = prefixes[plugin] || 'OFFSZN';
                     const randHex = () => Math.floor(Math.random() * 0xFFFFFFFF).toString(16).padStart(8, '0').toUpperCase();
                     generatedSerial = `${pfx}-FULL-${randHex()}-${randHex()}`;
@@ -2141,6 +2161,7 @@
             else if (plugin === 'Easy Master') select.value = 'easy-master';
             else if (plugin === 'Coca Cola') select.value = 'coca-cola';
             else if (plugin === 'Inka Kola') select.value = 'inka-kola';
+            else if (plugin === 'Vocal Preset') select.value = 'vocal-preset';
 
             syncProductChips();
             onProductChange();
@@ -2191,6 +2212,9 @@
                 k1.value = f ? f.serial : '';
             } else if (product === 'inka-kola') {
                 const f = licenses.find(l => normalizePluginName(l.plugin) === 'Inka Kola' && isAvail(l));
+                k1.value = f ? f.serial : '';
+            } else if (product === 'vocal-preset') {
+                const f = licenses.find(l => normalizePluginName(l.plugin) === 'Vocal Preset' && isAvail(l));
                 k1.value = f ? f.serial : '';
             } else if (product === 'promo-2x1') {
                 const fMix = licenses.find(l => normalizePluginName(l.plugin) === 'Easy Mix' && isAvail(l));
@@ -2261,7 +2285,8 @@ Willie / OFFSZN`;
             } else {
                 const pName = product === 'easy-mix' ? 'Easy Mix' :
                               product === 'easy-master' ? 'Easy Master' :
-                              product === 'coca-cola' ? 'Coca Cola' : 'Inka Kola';
+                              product === 'coca-cola' ? 'Coca Cola' :
+                              product === 'vocal-preset' ? 'Vocal Preset' : 'Inka Kola';
                 subject = `🔑 Tu licencia oficial de ${pName} — OFFSZN`;
                 plain = 
 `¡Hola ${buyer}! 👋
@@ -2471,7 +2496,7 @@ Willie / OFFSZN`;
                 return lic.plugin === activeFilter;
             });
 
-            const plugins = ['Easy Mix', 'Easy Master', 'Coca Cola', 'Inka Kola'];
+            const plugins = ['Easy Mix', 'Easy Master', 'Coca Cola', 'Inka Kola', 'Vocal Preset'];
             licenses.forEach(l => {
                 const norm = normalizePluginName(l.plugin);
                 if (!plugins.includes(norm)) plugins.push(norm);
