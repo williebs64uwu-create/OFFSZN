@@ -55,10 +55,12 @@ const WILLIE_CATALOG = {
     'plugin-easy-mix':    { name: 'Easy Mix VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     'plugin-easy-master': { name: 'Easy Master VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     'plugin-inka-kola':   { name: 'INKA KOLA VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
+    'plugin-vocal-preset': { name: 'Vocal Preset VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     // Legacy numeric IDs (from offszn_cart compatibility)
     '899': { name: 'Easy Mix VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     '900': { name: 'Easy Master VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
-    '902': { name: 'INKA KOLA VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' }
+    '902': { name: 'INKA KOLA VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
+    '905': { name: 'Vocal Preset VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' }
 };
 
 /**
@@ -314,7 +316,7 @@ export const captureWilliePayPalOrder = async (req, res) => {
         const pluginLicensesGenerated = [];
         for (const i of resolvedItems) {
             if (i.type === 'plugin') {
-                const pName = (i.name.toLowerCase().includes('master')) ? 'Easy Master' : ((i.name.toLowerCase().includes('inka')) ? 'Inka Kola' : 'Easy Mix');
+                const pName = (i.name.toLowerCase().includes('master')) ? 'Easy Master' : ((i.name.toLowerCase().includes('inka')) ? 'Inka Kola' : ((i.name.toLowerCase().includes('vocal')) ? 'Vocal Preset' : 'Easy Mix'));
                 try {
                     const licRes = await generatePluginLicense({
                         licenseType: 'lifetime',

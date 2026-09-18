@@ -597,7 +597,7 @@ export const adminGetABStats = async (req, res) => {
                 orders ( id, total_price, status, created_at, guest_email, user_id ),
                 products ( id, name )
             `)
-            .in('product_id', [899, 900, 902])
+            .in('product_id', [899, 900, 902, 905])
             .order('created_at', { ascending: false });
 
         if (itemsErr) throw itemsErr;
@@ -606,16 +606,18 @@ export const adminGetABStats = async (req, res) => {
             easy_mix: { name: 'Easy Mix', count_5: 0, rev_5: 0, count_10: 0, rev_10: 0, total_sales: 0, total_rev: 0 },
             easy_master: { name: 'Easy Master', count_5: 0, rev_5: 0, count_10: 0, rev_10: 0, total_sales: 0, total_rev: 0 },
             inka_kola: { name: 'Inka Kola', count_5: 0, rev_5: 0, count_10: 0, rev_10: 0, total_sales: 0, total_rev: 0 },
+            vocal_preset: { name: 'Vocal Preset', count_5: 0, rev_5: 0, count_10: 0, rev_10: 0, total_sales: 0, total_rev: 0 },
             global: { count_5: 0, rev_5: 0, count_10: 0, rev_10: 0, total_sales: 0, total_rev: 0 }
         };
 
         const recentPurchases = [];
 
         (orderItems || []).forEach(item => {
-            const prodName = item.products?.name || (item.product_id === 902 ? 'Inka Kola' : (item.product_id === 900 ? 'Easy Master' : 'Easy Mix'));
+            const prodName = item.products?.name || (item.product_id === 905 ? 'Vocal Preset' : (item.product_id === 902 ? 'Inka Kola' : (item.product_id === 900 ? 'Easy Master' : 'Easy Mix')));
             let key = 'easy_mix';
             if (prodName.toLowerCase().includes('master')) key = 'easy_master';
             if (prodName.toLowerCase().includes('inka')) key = 'inka_kola';
+            if (prodName.toLowerCase().includes('vocal')) key = 'vocal_preset';
 
             const price = parseFloat(item.price_at_purchase || item.orders?.total_price || 0);
 

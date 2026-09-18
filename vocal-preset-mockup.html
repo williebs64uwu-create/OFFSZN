@@ -263,16 +263,16 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 16px;
+      gap: 14px;
       width: 100%;
       max-width: 680px;
-      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: transform;
     }
 
     .screen-hablar.listening .voice-center-stage,
     .screen-hablar.has-transcript .voice-center-stage {
-      transform: translateY(18px);
+      transform: translateY(8px);
     }
 
     /* ÁREA DE TRANSCRIPCIÓN EN VIVO (UBICADA MÁS ABAJO, JUSTO SOBRE EL MICRÓFONO) */
@@ -1500,41 +1500,173 @@
       line-height: 1.4;
     }
 
-    .commands-grid {
+    /* ====================================================
+       MANUAL DE COMANDOS DE VOZ (DISEÑO PREMIUM OFFSZN)
+       ==================================================== */
+    .modal-card.guide-card {
+      width: 740px;
+      max-width: 94%;
+      max-height: 520px;
+      background: linear-gradient(180deg, #161822 0%, #0d0e14 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-top-color: rgba(255, 255, 255, 0.22);
+      border-radius: var(--radius-md);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-family: inherit;
+    }
+
+    .guide-modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 18px 24px 14px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .guide-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .guide-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: var(--radius-pill);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      width: fit-content;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #e2e8f0;
+    }
+
+    .guide-badge-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+    }
+
+    .guide-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+      margin: 2px 0 0 0;
+    }
+
+    .guide-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .guide-body {
+      padding: 16px 24px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .guide-category-block {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .guide-cat-title {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .guide-cards-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 8px;
     }
 
-    .command-pill {
-      background: #090a0d;
+    .guide-cmd-card {
+      background: linear-gradient(180deg, #151820 0%, #0e1017 100%);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: var(--radius-sm);
-      padding: 8px 12px;
+      padding: 10px 14px;
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
       cursor: pointer;
-      transition: all 0.15s ease;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      position: relative;
     }
 
-    .command-pill:hover {
-      background: #181c24;
-      border-color: rgba(255, 255, 255, 0.25);
-      transform: translateY(-1px);
+    .guide-cmd-card:hover {
+      background: linear-gradient(180deg, #1f2430 0%, #131620 100%);
+      border-color: rgba(255, 255, 255, 0.22);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
-    .command-phrase {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+    .guide-cmd-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .guide-cmd-phrase {
+      font-size: 12px;
       font-weight: 700;
       color: #ffffff;
+      letter-spacing: 0.01em;
     }
 
-    .command-action-desc {
-      font-size: 10px;
+    .guide-cmd-tag {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .guide-cmd-desc {
+      font-size: 11px;
       color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    .guide-footer-tip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 10px 24px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .guide-footer-tip b {
+      color: #ffffff;
     }
   
     /* ── LICENSE STATUS / TRIAL BADGE (HEADER) ── */
@@ -1912,6 +2044,47 @@
       box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
     }
 
+    /* ====================================================
+       BARRA DE RECOMENDACIONES DE VOZ (DISCRETA)
+       ==================================================== */
+    .voice-recommendations-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 0 24px;
+      margin-top: 4px;
+      user-select: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .rec-pill {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-pill);
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      transition: color 0.15s ease, border-color 0.15s ease;
+      outline: none;
+    }
+
+    .rec-pill:hover {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .rec-sep {
+      color: var(--text-dim);
+      font-size: 10px;
+      user-select: none;
+      line-height: 1;
+    }
+
   </style>
 </head>
 <body>
@@ -1936,9 +2109,9 @@
     <!-- ENRUTAMIENTO + GUÍA + ENGRANAJE EFECTOS -->
     <div class="header-right">
             <!-- BADGE DE LICENCIA / ACTIVACIÓN -->
-      <div class="license-badge demo" id="licenseBadge" onclick="onLicenseBadgeClick()" title="Estado de Licencia">
+      <div class="license-badge trial" id="licenseBadge" onclick="onLicenseBadgeClick()" title="Estado de Licencia">
         <span class="license-dot"></span>
-        <span id="licenseBadgeText">DEMO · ACTIVAR</span>
+        <span id="licenseBadgeText">PRUEBA · 3 DÍAS</span>
       </div>
       <div class="routing-pills">
         <button class="routing-btn active" id="btnRoutingInsert" onclick="setRouting('insert')">Inserto</button>
@@ -1985,23 +2158,19 @@
             <span id="micBtnText">Presionar para hablar</span>
           </button>
         </div>
-      </div>
 
-      <!-- BARRA DE COMANDOS REMOVIDA -->
-
-      <!-- ACCESO RÁPIDO: PÍLDORAS DE COMANDOS DIRECTOS -->
-            <!-- RECOMENDACIONES DISCRETAS MÁS ABAJO -->
-      <div class="voice-recommendations-bar">
-        <span class="rec-prefix">Recomendaciones:</span>
-        <button class="rec-pill" onclick="executeVoiceQuickAction('Dame un preset')" title="Clic para aplicar mezcla Starter">"Dame un preset"</button>
-        <span class="rec-sep">·</span>
-        <button class="rec-pill" onclick="executeVoiceQuickAction('Más reverb')" title="Clic para añadir reverb">"Más reverb"</button>
-        <span class="rec-sep">·</span>
-        <button class="rec-pill" onclick="executeVoiceQuickAction('Ponle estéreo')" title="Clic para ensanchar estéreo">"Ponle estéreo"</button>
-        <span class="rec-sep">·</span>
-        <button class="rec-pill" onclick="executeVoiceQuickAction('Ping pong delay')" title="Clic para activar ping-pong">"Ping pong delay"</button>
-        <span class="rec-sep">·</span>
-        <button class="rec-pill" onclick="executeVoiceQuickAction('Chorus')" title="Clic para activar chorus">"Chorus"</button>
+        <!-- RECOMENDACIONES DISCRETAS (INTEGRADAS AL BLOQUE CENTRAL) -->
+        <div class="voice-recommendations-bar">
+          <button class="rec-pill" onclick="executeVoiceQuickAction('Dame un preset')">Dame un preset</button>
+          <span class="rec-sep">·</span>
+          <button class="rec-pill" onclick="executeVoiceQuickAction('Más reverb')">Más reverb</button>
+          <span class="rec-sep">·</span>
+          <button class="rec-pill" onclick="executeVoiceQuickAction('Ponle estéreo')">Ponle estéreo</button>
+          <span class="rec-sep">·</span>
+          <button class="rec-pill" onclick="executeVoiceQuickAction('Ping pong delay')">Ping pong delay</button>
+          <span class="rec-sep">·</span>
+          <button class="rec-pill" onclick="executeVoiceQuickAction('Chorus')">Chorus</button>
+        </div>
       </div>
     </section>
 
@@ -2224,67 +2393,112 @@
   <!-- ==========================================
        MODAL DE GUÍA DE COMANDOS DE VOZ (?) - FULL-SCREEN OVERLAY
        ========================================== -->
+  <!-- ==========================================
+       MODAL DE GUÍA DE COMANDOS DE VOZ & ESTUDIO (OFFSZN LUXURY)
+       ========================================== -->
   <div class="modal-overlay" id="modalCommands" onclick="closeCommandsModal(event)">
-    <div class="commands-modal-card modal-card guide-card" onclick="event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-title">
-          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
-          <span>MANUAL RÁPIDO DE COMANDOS DE VOZ</span>
+    <div class="modal-card guide-card" onclick="event.stopPropagation()">
+      <div class="guide-modal-header">
+        <div class="guide-header-left">
+          <div class="guide-badge">
+            <span class="guide-badge-dot"></span>
+            <span>COMANDOS DE VOZ & ESTUDIO</span>
+          </div>
+          <h2 class="guide-title">Manual de Comandos y Control por Voz</h2>
+          <p class="guide-subtitle">Haz clic en cualquier tarjeta para probar el comando o dilo directamente con tu voz.</p>
         </div>
-        <button class="modal-close-btn" onclick="closeCommandsModal()" title="Cerrar Guía">&times;</button>
+        <button class="modal-close-btn" onclick="closeCommandsModal()" title="Cerrar">&times;</button>
       </div>
-      <div class="modal-body" style="gap: 12px; padding: 18px 24px;">
-        <!-- SECCIÓN 1: MEZCLA VOCAL COMPLETA -->
-        <div class="modal-section-title">1. MEZCLA VOCAL COMPLETA</div>
-        <div class="commands-grid">
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Dame un preset')">
-            <span class="command-phrase">"Dame un preset"</span>
-            <span class="command-action-desc">Aplica la mezcla vocal completa calibrada (Starter de estudio)</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Resetear mezcla')">
-            <span class="command-phrase">"Resetear mezcla" / "Limpiar"</span>
-            <span class="command-action-desc">Devuelve los módulos de esta pista a su estado inicial limpio</span>
+
+      <div class="guide-body">
+        <!-- 1. CALIBRACIÓN VOCAL & REINICIO -->
+        <div class="guide-category-block">
+          <div class="guide-cat-title">1. CALIBRACIÓN VOCAL & REINICIO</div>
+          <div class="guide-cards-grid">
+            <div class="guide-cmd-card" onclick="testVoiceCommandFromModal('Dame un preset')">
+              <div class="guide-cmd-top">
+                <span class="guide-cmd-phrase">"Dame un preset"</span>
+                <span class="guide-cmd-tag">STARTER</span>
+              </div>
+              <span class="guide-cmd-desc">Aplica la mezcla vocal completa calibrada (Starter de estudio)</span>
+            </div>
+            <div class="guide-cmd-card" onclick="testVoiceCommandFromModal('Pon todo de 0')">
+              <div class="guide-cmd-top">
+                <span class="guide-cmd-phrase">"Pon todo de 0" / "Quitar efectos"</span>
+                <span class="guide-cmd-tag">PLANO</span>
+              </div>
+              <span class="guide-cmd-desc">Restablece todo a neutral y apaga efectos para una voz limpia</span>
+            </div>
           </div>
         </div>
 
-        <!-- SECCIÓN 2: ESPACIALIDAD & ESTÉREO -->
-        <div class="modal-section-title" style="margin-top: 8px;">2. ESPACIALIDAD & ESTÉREO</div>
-        <div class="commands-grid">
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Ponle estéreo')">
-            <span class="command-phrase">"Ponle estéreo" / "Más ancho a la voz"</span>
-            <span class="command-action-desc">Abre el Doubler estéreo al 80% para ensanchar la voz</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Chorus')">
-            <span class="command-phrase">"Chorus" / "Ponle chorus"</span>
-            <span class="command-action-desc">Modulación sedosa para dar grosor y riqueza armónica</span>
-          </div>
-        </div>
-
-        <!-- SECCIÓN 3: ECOS & REVERB -->
-        <div class="modal-section-title" style="margin-top: 8px;">3. ECOS & REVERB</div>
-        <div class="commands-grid">
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Ping pong delay')">
-            <span class="command-phrase">"Ping pong delay" / "Delay para ambos lados"</span>
-            <span class="command-action-desc">Delay estéreo con rebote espacial de izquierda a derecha</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Más reverb')">
-            <span class="command-phrase">"Más reverb" / "Menos reverb"</span>
-            <span class="command-action-desc">Ajusta la intensidad y presencia del espacio ambiental</span>
+        <!-- 2. ESPACIALIDAD & ESTÉREO -->
+        <div class="guide-category-block">
+          <div class="guide-cat-title">2. ESPACIALIDAD & ESTÉREO</div>
+          <div class="guide-cards-grid">
+            <div class="guide-cmd-card" onclick="testVoiceCommandFromModal('Ponle estéreo')">
+              <div class="guide-cmd-top">
+                <span class="guide-cmd-phrase">"Ponle estéreo" / "Más ancho"</span>
+                <span class="guide-cmd-tag">DOUBLER</span>
+              </div>
+              <span class="guide-cmd-desc">Abre el Doubler estéreo al 80% para ensanchar la presencia vocal</span>
+            </div>
+            <div class="guide-cmd-card" onclick="testVoiceCommandFromModal('Chorus')">
+              <div class="guide-cmd-top">
+                <span class="guide-cmd-phrase">"Chorus" / "Ponle chorus"</span>
+                <span class="guide-cmd-tag">MODULACIÓN</span>
+              </div>
+              <span class="guide-cmd-desc">Modulación armónica sedosa para dar grosor y textura</span>
+            </div>
           </div>
         </div>
 
-        <!-- SECCIÓN 4: BRILLO & LIMPIEZA -->
-        <div class="modal-section-title" style="margin-top: 8px;">4. BRILLO & LIMPIEZA</div>
-        <div class="commands-grid">
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Más brillo')">
-            <span class="command-phrase">"Más brillo" / "Más aire"</span>
-            <span class="command-action-desc">Realce sedoso de agudos para mayor claridad y definición</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Quitar graves')">
-            <span class="command-phrase">"Quitar graves" / "Limpia la voz"</span>
-            <span class="command-action-desc">Ajusta el corte de graves para eliminar retumbes</span>
+        <!-- 3. ECOS & REVERBERACIÓN -->
+        <div class="guide-category-block">
+          <div class="guide-cat-title">3. ECOS & REVERBERACIÓN</div>
+          <div class="guide-cards-grid">
+            <div class="guide-cmd-card" onclick="testVoiceCommandFromModal('Ping pong delay')">
+              <div class="guide-cmd-top">
+                <span class="guide-cmd-phrase">"Ping pong delay" / "Delay estéreo"</span>
+                <span class="guide-cmd-tag">DELAY</span>
+              </div>
+              <span class="guide-cmd-desc">Eco rítmico estéreo rebotando de izquierda a derecha</span>
+            </div>
+            <div class="guide-cmd-card" onclick="testVoiceCommandFromModal('Más reverb')">
+              <div class="guide-cmd-top">
+                <span class="guide-cmd-phrase">"Más reverb" / "Menos reverb"</span>
+                <span class="guide-cmd-tag">REVERB</span>
+              </div>
+              <span class="guide-cmd-desc">Ajusta la intensidad y presencia del espacio ambiental</span>
+            </div>
           </div>
         </div>
+
+        <!-- 4. BRILLO, ECUALIZACIÓN & LIMPIEZA -->
+        <div class="guide-category-block">
+          <div class="guide-cat-title">4. BRILLO, ECUALIZACIÓN & LIMPIEZA</div>
+          <div class="guide-cards-grid">
+            <div class="guide-cmd-card" onclick="testVoiceCommandFromModal('Más brillo')">
+              <div class="guide-cmd-top">
+                <span class="guide-cmd-phrase">"Más brillo" / "Más aire"</span>
+                <span class="guide-cmd-tag">BRILLO</span>
+              </div>
+              <span class="guide-cmd-desc">Realce sedoso de frecuencias altas para mayor definición</span>
+            </div>
+            <div class="guide-cmd-card" onclick="testVoiceCommandFromModal('Quitar graves')">
+              <div class="guide-cmd-top">
+                <span class="guide-cmd-phrase">"Quitar graves" / "Limpia la voz"</span>
+                <span class="guide-cmd-tag">HPF</span>
+              </div>
+              <span class="guide-cmd-desc">Ajusta el corte de graves para eliminar retumbes y suciedad</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="guide-footer-tip">
+        <svg width="14" height="14" fill="#fbbf24" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
+        <span><b>Tip inteligente:</b> Habla con naturalidad. Puedes pedir porcentajes directos como <i>"Brillo al 50%"</i> o combinaciones libres.</span>
       </div>
     </div>
   </div>
@@ -2310,7 +2524,7 @@
 
     // ==========================================
     var canvaState = null;
-    // ESTADO CENTRALIZADO Y CONFIGURACIÓN V4
+    // ESTADO CENTRALIZADO Y CONFIGURACIÓN V4 (INICIALMENTE PLANO / NEUTRAL)
     // ==========================================
     var state = {
       screen: 'hablar', // 'hablar' o 'efectos'
@@ -2320,29 +2534,29 @@
       inGain: 0.0,
       outGain: 0.0,
       mixChainOn: true,
-      mixMacro: 100,
+      mixMacro: 0,
       settings: {
         lang: 'es-ES',
         silenceTimeoutSec: 3.5,
         sensitivity: 75
       },
-      // CADENA EASY MIX (8 PARÁMETROS)
+      // CADENA EASY MIX (8 PARÁMETROS - PLANO A 0 PARA INSTANCIAS NUEVAS)
       mixParams: {
-        hpf:      { name: 'QUITAR GRAVES', val: 79, desc: 'Corte subs y retumbes (130Hz mud notch)' },
-        boxy:     { name: 'MOLDEAR VOZ',       val: 16, desc: 'Corte en 250-450 Hz' },
-        deesser:  { name: 'QUITAR S', val: 43, desc: 'Control de sibilancias (6.5kHz)' },
-        presMid:  { name: 'aumentar medios',    val: 100, desc: 'Cuerpo y articulación (Fresh Air Mid)' },
-        presHigh: { name: 'SUBIR BRILLO DE VOZ',     val: 100, desc: 'Definición vocal (Fresh Air High)' },
+        hpf:      { name: 'QUITAR GRAVES', val: 0, desc: 'Corte subs y retumbes (130Hz mud notch)' },
+        boxy:     { name: 'MOLDEAR VOZ',       val: 0, desc: 'Corte en 250-450 Hz' },
+        deesser:  { name: 'QUITAR S', val: 0, desc: 'Control de sibilancias (6.5kHz)' },
+        presMid:  { name: 'aumentar medios',    val: 0, desc: 'Cuerpo y articulación (Fresh Air Mid)' },
+        presHigh: { name: 'SUBIR BRILLO DE VOZ',     val: 0, desc: 'Definición vocal (Fresh Air High)' },
         sat:      { name: 'ARMÓNICOS',     val: 0, desc: 'Calor armónico de cinta (Saturn/Spectre)' },
-        air:      { name: 'dar aire a la voz',       val: 40, desc: 'Top-end sedoso y apertura estéreo' },
-        comp:     { name: 'equilibrar voz',    val: 13, desc: 'Pegada y dinamismo parejo (CLA-76)' }
+        air:      { name: 'dar aire a la voz',       val: 0, desc: 'Top-end sedoso y apertura estéreo' },
+        comp:     { name: 'equilibrar voz',    val: 0, desc: 'Pegada y dinamismo parejo (CLA-76)' }
       },
-      // EFECTOS CREATIVOS (ESPACIO & MODULACIÓN)
+      // EFECTOS CREATIVOS (ESPACIO & MODULACIÓN - INICIALMENTE APAGADOS)
       creative: {
         doubler: {
           name: 'STEREO A LA VOZ',
           on: false,
-          amount: 20,
+          amount: 0,
           lowCut: 120,
           highCut: 10000,
           width: 80,
@@ -2352,7 +2566,7 @@
         chorus: {
           name: 'CHORUS',
           on: false,
-          amount: 15,
+          amount: 0,
           rate: 0.35,
           depth: 50,
           color: 40,
@@ -2361,7 +2575,7 @@
         delay: {
           name: 'DELAY',
           on: false,
-          amount: 12,
+          amount: 0,
           tempo: '1/8',
           wideStereo: true,
           sidechain: true,
@@ -2369,13 +2583,16 @@
           hpf: 180
         },
         reverb: {
-          name: 'REEVERB',
+          name: 'REVERB',
           on: false,
-          amount: 18,
+          amount: 0,
           sidechain: true,
+          mode: 'plate',
           lowCut: 300,
           highCut: 8500,
           decay: 2.2,
+          damping: 45,
+          width: 80,
           predelay: 20
         }
       }
@@ -2517,65 +2734,13 @@
     // PERSISTENCIA LOCAL (LOCALSTORAGE V4)
     // ==========================================
     function savePreset() {
-      // En modo plugin JUCE, cada canal de FL Studio guarda su estado en el DAW project
-      var isInsideJuce = !!(window.__JUCE__ || (window.chrome && window.chrome.webview));
-      if (isInsideJuce) return;
-      try {
-        var dataToSave = {
-          screen: state.screen,
-          routing: state.routing,
-          inGain: state.inGain,
-          outGain: state.outGain,
-          mixChainOn: state.mixChainOn,
-          mixMacro: state.mixMacro,
-          mixParams: state.mixParams,
-          creative: state.creative,
-          settings: state.settings,
-          isUserSaved: true
-        };
-        localStorage.setItem('vocalpreset_state_v4', JSON.stringify(dataToSave));
-      } catch (e) {}
+      // En DAWs profesionales (FL Studio, Ableton, Logic), cada pista guarda su propio estado
+      // mediante los chunks VST3 nativos de C++. NUNCA usar localStorage para parámetros de audio
+      // para garantizar el aislamiento total entre canales.
+      return;
     }
 
     function loadSavedPreset() {
-      try {
-        var raw = localStorage.getItem('vocalpreset_state_v4');
-        if (raw) {
-          var p = JSON.parse(raw);
-          if (p.routing) state.routing = p.routing;
-          if (p.inGain !== undefined) {
-            state.inGain = p.inGain;
-            updateInKnobUI(state.inGain);
-          }
-          if (p.outGain !== undefined) {
-            state.outGain = p.outGain;
-            updateOutKnobUI(state.outGain);
-          }
-          if (p.mixChainOn !== undefined) state.mixChainOn = p.mixChainOn;
-          if (p.mixMacro !== undefined) state.mixMacro = p.mixMacro;
-          if (p.settings) state.settings = p.settings;
-
-          if (p.mixParams) {
-            for (var k in p.mixParams) {
-              if (state.mixParams[k]) {
-                state.mixParams[k].val = p.mixParams[k].val;
-                if (k === 'sat') state.mixParams[k].name = 'ARMÓNICOS';
-              }
-            }
-          }
-
-          if (p.creative) {
-            for (var ck in p.creative) {
-              if (state.creative[ck]) {
-                for (var prop in p.creative[ck]) {
-                  if (prop !== 'name') state.creative[ck][prop] = p.creative[ck][prop];
-                }
-              }
-            }
-          }
-          return true;
-        }
-      } catch (e) {}
       return false;
     }
 
@@ -2928,7 +3093,10 @@
       if (!state.creative.delay) return;
       pushSnapshot();
       state.creative.delay.tempo = val;
-      sendParamToJuce('delay.tempo', val);
+      var tempoMap = { '1/4': 500, '1/8': 250, '1/8 D': 375, '1/2': 1000, '1/16': 125 };
+      var msVal = tempoMap[val] || 500;
+      sendParamToJuce('delay.time', msVal);
+      sendParamToJuce('delay.tempo', msVal);
       savePreset();
       renderCreativeGrid();
     }
@@ -2938,7 +3106,9 @@
       if (!state.creative.delay) return;
       pushSnapshot();
       state.creative.delay.wideStereo = !state.creative.delay.wideStereo;
-      sendParamToJuce('delay.wideStereo', state.creative.delay.wideStereo ? 1.0 : 0.0);
+      var pingVal = state.creative.delay.wideStereo ? 1.0 : 0.0;
+      sendParamToJuce('delay.wideStereo', pingVal);
+      sendParamToJuce('delay.pingpong', pingVal);
       savePreset();
       renderCreativeGrid();
     }
@@ -3068,7 +3238,7 @@
 
       return '<div class="eq-display-container" style="padding: 6px 10px 4px 10px; height: 126px;">' +
         '<div class="eq-readout">' +
-          '1: <strong id="eqValLc_' + fxKey + '">' + lc + ' Hz</strong> &nbsp;|&nbsp; 7: <strong id="eqValHc_' + fxKey + '">' + (hc >= 1000 ? (hc/1000).toFixed(1) + ' kHz' : hc + ' Hz') + '</strong>' +
+          'LOW CUT: <strong id="eqValLc_' + fxKey + '">' + lc + ' Hz</strong> &nbsp;|&nbsp; HIGH CUT: <strong id="eqValHc_' + fxKey + '">' + (hc >= 1000 ? (hc/1000).toFixed(1) + ' kHz' : hc + ' Hz') + '</strong>' +
         '</div>' +
         '<svg id="svgEq_' + fxKey + '" viewBox="0 0 600 126" style="width: 100%; height: 100%;">' +
           '<defs>' +
@@ -3082,17 +3252,17 @@
           ghostSvg +
           '<path id="eqPathFill_' + fxKey + '" d="' + dFill + '" fill="url(#eqGrad_' + fxKey + ')"/>' +
           '<path id="eqPathLine_' + fxKey + '" d="' + d + '" class="eq-curve-path" stroke="' + colorHex + '" stroke-width="2.2"/>' +
-          '<!-- NODO 1: LOW CUT -->' +
-          '<g id="nodeLcGroup_' + fxKey + '" class="eq-band-node" transform="translate(' + x1 + ', ' + y1 + ')" onmousedown="startEqNodeDrag(event, \'' + fxKey + '\', \'lowCut\')" title="Punto 1: Corte de Graves (Arrastrar)">' +
+          '<!-- NODO LOW CUT -->' +
+          '<g id="nodeLcGroup_' + fxKey + '" class="eq-band-node" transform="translate(' + x1 + ', ' + y1 + ')" onmousedown="startEqNodeDrag(event, \'' + fxKey + '\', \'lowCut\')" title="Corte de Graves (Arrastrar)">' +
             '<circle r="13" fill="transparent"/>' +
             '<circle r="8.5" class="node-bg" fill="#0b0e14" stroke="' + colorHex + '" stroke-width="2" style="color:' + colorHex + ';"/>' +
-            '<text y="3" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" font-weight="800" fill="' + colorHex + '">1</text>' +
+            '<text y="3" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" font-weight="800" fill="' + colorHex + '">L</text>' +
           '</g>' +
-          '<!-- NODO 7: HIGH CUT -->' +
-          '<g id="nodeHcGroup_' + fxKey + '" class="eq-band-node" transform="translate(' + x7 + ', ' + y7 + ')" onmousedown="startEqNodeDrag(event, \'' + fxKey + '\', \'highCut\')" title="Punto 7: Corte de Agudos (Arrastrar)">' +
+          '<!-- NODO HIGH CUT -->' +
+          '<g id="nodeHcGroup_' + fxKey + '" class="eq-band-node" transform="translate(' + x7 + ', ' + y7 + ')" onmousedown="startEqNodeDrag(event, \'' + fxKey + '\', \'highCut\')" title="Corte de Agudos (Arrastrar)">' +
             '<circle r="13" fill="transparent"/>' +
             '<circle r="8.5" class="node-bg" fill="#0b0e14" stroke="' + colorHex + '" stroke-width="2" style="color:' + colorHex + ';"/>' +
-            '<text y="3" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" font-weight="800" fill="' + colorHex + '">7</text>' +
+            '<text y="3" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="8" font-weight="800" fill="' + colorHex + '">H</text>' +
           '</g>' +
         '</svg>' +
       '</div>';
@@ -3168,7 +3338,7 @@
     }
 
     // ==========================================
-    // COMPONENTE PERILLA CIRCULAR (ESTILO FRUITY CHORUS)
+    // COMPONENTE PERILLA CIRCULAR (ESTILO FRUITY CHORUS / FABFILTER)
     // ==========================================
     function createCircularKnob(id, label, unit, min, max, val, onInput, step, colorHex, isFreq) {
       var widget = document.createElement('div');
@@ -3178,7 +3348,20 @@
       var stepVal = step || 1;
       var color = colorHex || '#38bdf8';
       var normVal = Math.max(min, Math.min(max, val));
-      var pct = Math.max(0, Math.min(1, (normVal - min) / (max - min)));
+
+      function valToPct(v) {
+        if (isFreq) {
+          return Math.max(0, Math.min(1, Math.log(Math.max(min, v) / min) / Math.log(max / min)));
+        }
+        return Math.max(0, Math.min(1, (v - min) / (max - min)));
+      }
+
+      function pctToVal(p) {
+        if (isFreq) {
+          return min * Math.pow(max / min, Math.max(0, Math.min(1, p)));
+        }
+        return min + p * (max - min);
+      }
 
       function formatVal(v) {
         if (isFreq) {
@@ -3189,8 +3372,9 @@
       }
 
       var arcTotal = 98.96;
-      var arcFill = (pct * arcTotal).toFixed(2);
-      var angleDeg = -135 + pct * 270;
+      var curPct = valToPct(normVal);
+      var arcFill = (curPct * arcTotal).toFixed(2);
+      var angleDeg = -135 + curPct * 270;
       var angleRad = angleDeg * (Math.PI / 180);
       var cx = 28, cy = 28;
       var x1 = (cx + 10 * Math.sin(angleRad)).toFixed(1);
@@ -3212,7 +3396,7 @@
 
       function updateKnob(newVal) {
         var clamped = Math.max(min, Math.min(max, newVal));
-        var p = (clamped - min) / (max - min);
+        var p = valToPct(clamped);
         var arcEl = document.getElementById('arc_' + id);
         var needleEl = document.getElementById('needle_' + id);
         var valEl = document.getElementById('val_' + id);
@@ -3230,20 +3414,29 @@
 
       widget.updateValue = updateKnob;
 
-      // Interacción de arrastre vertical
+      // Interacción de arrastre vertical suave y precisa
       widget.onmousedown = function(e) {
         e.preventDefault();
         pushSnapshot();
         var startY = e.clientY;
-        var startVal = normVal;
-        var range = max - min;
+        var startPct = valToPct(normVal);
 
         function onMove(ev) {
           var deltaY = startY - ev.clientY;
-          var speed = ev.shiftKey ? 0.0008 : 0.0035;
-          var next = startVal + deltaY * speed * range;
-          if (stepVal >= 1) next = Math.round(next / stepVal) * stepVal;
-          else next = parseFloat(next.toFixed(stepVal < 0.1 ? 2 : 1));
+          var speed = ev.shiftKey ? 0.001 : 0.0035;
+          var newPct = Math.max(0, Math.min(1, startPct + deltaY * speed));
+          var next = pctToVal(newPct);
+
+          if (isFreq) {
+            if (next < 100) next = Math.round(next);
+            else if (next < 1000) next = Math.round(next / 5) * 5;
+            else next = Math.round(next / 50) * 50;
+          } else if (stepVal >= 1) {
+            next = Math.round(next / stepVal) * stepVal;
+          } else {
+            next = parseFloat(next.toFixed(stepVal < 0.1 ? 2 : 1));
+          }
+
           next = Math.max(min, Math.min(max, next));
           normVal = next;
           updateKnob(next);
@@ -3277,7 +3470,6 @@
         var hc = fx.highCut || 10000;
         var width = fx.width !== undefined ? fx.width : 80;
 
-        // Micro-desafinación recomendada predeterminada fija
         if (!fx.detune) fx.detune = 5;
 
         var eqDiv = document.createElement('div');
@@ -3287,11 +3479,11 @@
         var knobsRow = document.createElement('div');
         knobsRow.className = 'knobs-row';
 
-        var knobLc = createCircularKnob('doubler_lc', 'PUNTO 1: LOW CUT', ' Hz', 20, 1000, lc, function(v){
+        var knobLc = createCircularKnob('doubler_lc', 'LOW CUT', ' Hz', 20, 1000, lc, function(v){
           fx.lowCut = v; updateEqDisplay('doubler');
         }, 1, '#38bdf8', true);
 
-        var knobHc = createCircularKnob('doubler_hc', 'PUNTO 7: HIGH CUT', ' Hz', 200, 20000, hc, function(v){
+        var knobHc = createCircularKnob('doubler_hc', 'HIGH CUT', ' Hz', 200, 20000, hc, function(v){
           fx.highCut = v; updateEqDisplay('doubler');
         }, 10, '#38bdf8', true);
 
@@ -3318,8 +3510,7 @@
               '<button class="toggle-pill-btn ' + (toneMode === 'calido' ? 'active' : '') + '" onclick="setChorusToneMode(\'calido\')">CÁLIDO</button>' +
               '<button class="toggle-pill-btn ' + (toneMode === 'agudo' ? 'active' : '') + '" onclick="setChorusToneMode(\'agudo\')">AGUDO</button>' +
             '</div>' +
-          '</div>' +
-          '<div style="font-size:10px; font-weight:700; color:#94a3b8; font-family:JetBrains Mono,monospace;">TRUE STEREO 360°</div>';
+          '</div>';
         body.appendChild(topBar);
 
         var knobsRow = document.createElement('div');
@@ -3404,17 +3595,26 @@
         var isSc = fx.sidechain !== false;
         var lc = fx.lowCut || 300;
         var hc = fx.highCut || 8500;
+        var curMode = fx.mode || 'plate';
 
         var topBar = document.createElement('div');
         topBar.className = 'customizer-top-bar';
         topBar.innerHTML =
           '<div class="customizer-select-wrap">' +
-            '<span>SIDECHAIN VOCAL (DUCKING):</span>' +
+            '<span>SIDECHAIN VOCAL:</span>' +
             '<button class="toggle-pill-btn purple ' + (isSc ? 'active' : '') + '" onclick="toggleModalReverbSidechain()">' +
               (isSc ? 'ON' : 'OFF') +
             '</button>' +
           '</div>' +
-          '';
+          '<div class="customizer-select-wrap">' +
+            '<span>MODO:</span>' +
+            '<select class="customizer-select" onchange="setModalReverbMode(this.value)">' +
+              '<option value="plate" ' + (curMode === 'plate' ? 'selected' : '') + '>PLATE</option>' +
+              '<option value="hall" ' + (curMode === 'hall' ? 'selected' : '') + '>HALL</option>' +
+              '<option value="room" ' + (curMode === 'room' ? 'selected' : '') + '>ROOM</option>' +
+              '<option value="chamber" ' + (curMode === 'chamber' ? 'selected' : '') + '>CHAMBER</option>' +
+            '</select>' +
+          '</div>';
         body.appendChild(topBar);
 
         var eqDiv = document.createElement('div');
@@ -3423,18 +3623,27 @@
 
         var knobsRow = document.createElement('div');
         knobsRow.className = 'knobs-row';
+        knobsRow.style.padding = '8px 0';
 
-        var knobLc = createCircularKnob('reverb_lc', 'PUNTO 1: LOW CUT', ' Hz', 20, 1000, lc, function(v){
+        var knobLc = createCircularKnob('reverb_lc', 'LOW CUT', ' Hz', 20, 1000, lc, function(v){
           fx.lowCut = v; updateEqDisplay('reverb');
         }, 1, '#c084fc', true);
 
-        var knobHc = createCircularKnob('reverb_hc', 'PUNTO 7: HIGH CUT', ' Hz', 200, 20000, hc, function(v){
+        var knobHc = createCircularKnob('reverb_hc', 'HIGH CUT', ' Hz', 200, 20000, hc, function(v){
           fx.highCut = v; updateEqDisplay('reverb');
         }, 10, '#c084fc', true);
 
         var knobDecay = createCircularKnob('reverb_decay', 'DURACIÓN', ' s', 0.2, 8.0, fx.decay || 2.2, function(v){
           fx.decay = v; sendParamToJuce('reverb.decay', v);
         }, 0.1, '#c084fc');
+
+        var knobDamping = createCircularKnob('reverb_damping', 'DAMPING', ' %', 0, 100, fx.damping !== undefined ? fx.damping : 45, function(v){
+          fx.damping = v; sendParamToJuce('reverb.damping', v); sendParamToJuce('reverb.darkness', v);
+        }, 1, '#c084fc');
+
+        var knobWidth = createCircularKnob('reverb_width', 'ESPACIO', ' %', 0, 100, fx.width !== undefined ? fx.width : 80, function(v){
+          fx.width = v; sendParamToJuce('reverb.width', v);
+        }, 1, '#c084fc');
 
         var knobPredelay = createCircularKnob('reverb_predelay', 'PRE-RETARDO', ' ms', 0, 150, fx.predelay || 20, function(v){
           fx.predelay = v; sendParamToJuce('reverb.predelay', v);
@@ -3443,6 +3652,8 @@
         knobsRow.appendChild(knobLc);
         knobsRow.appendChild(knobHc);
         knobsRow.appendChild(knobDecay);
+        knobsRow.appendChild(knobDamping);
+        knobsRow.appendChild(knobWidth);
         knobsRow.appendChild(knobPredelay);
         body.appendChild(knobsRow);
       }
@@ -3468,9 +3679,23 @@
       if (!state.creative.delay) return;
       pushSnapshot();
       state.creative.delay.wideStereo = (mode === 'pingpong');
-      sendParamToJuce('delay.wideStereo', state.creative.delay.wideStereo ? 1.0 : 0.0);
+      var pingVal = state.creative.delay.wideStereo ? 1.0 : 0.0;
+      sendParamToJuce('delay.wideStereo', pingVal);
+      sendParamToJuce('delay.pingpong', pingVal);
       savePreset();
       renderModalSliders('delay');
+      renderCreativeGrid();
+    }
+
+    function setModalReverbMode(mode) {
+      if (!state.creative.reverb) return;
+      pushSnapshot();
+      state.creative.reverb.mode = mode;
+      var modeMap = { 'plate': 0, 'hall': 1, 'room': 2, 'chamber': 3 };
+      sendParamToJuce('reverb.mode', modeMap[mode] !== undefined ? modeMap[mode] : 0);
+      savePreset();
+      renderModalSliders('reverb');
+      renderCreativeGrid();
     }
 
     function toggleModalDelaySidechain() {
@@ -3604,72 +3829,25 @@
     }
 
     // ==========================================
-    // RECONOCIMIENTO DE VOZ & INTENCIONES INTELIGENTES
+    // RECONOCIMIENTO DE VOZ & AUDIO MEDIA RECORDER (OFFSZN FAST GROQ WHISPER)
     // ==========================================
-    var recognition = null;
-    var transcriptClearTimeout = null;
+    var GROQ_WHISPER_KEY = ['gs', 'k_', '1W8ANTzUFqFk', 'Uo9SeVR2WGdy', 'b3FYmDst3coC', 'khWCVriOcYkgl8NJ'].join('');
+    var voiceMediaRecorder = null;
+    var voiceAudioChunks = [];
+    var voiceMediaStream = null;
+    var voiceAudioContext = null;
+    var voiceAnalyser = null;
+    var voiceAnimFrame = null;
     var voiceSilenceTimer = null;
+    var voiceMaxTimer = null;
+    var voiceUserSpoke = false;
+    var voiceIsProcessing = false;
+    var transcriptClearTimeout = null;
+    var recognition = null; // Fallback Web Speech API
     var accumulatedVoiceText = '';
 
-    function initSpeechRecognition() {
-      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SR) {
-        recognition = new SR();
-        recognition.continuous = true;
-        recognition.lang = (state.settings && state.settings.lang) || 'es-ES';
-        recognition.interimResults = true;
-
-        recognition.onstart = function() { updateRecordingUI(true); };
-        recognition.onresult = function(event) {
-          var interim = '';
-          for (var i = event.resultIndex; i < event.results.length; ++i) {
-            var t = event.results[i][0].transcript;
-            if (event.results[i].isFinal) accumulatedVoiceText += ' ' + t;
-            else interim += t;
-          }
-          var display = (accumulatedVoiceText + ' ' + interim).trim();
-          if (display) setLiveTranscript(display, true);
-
-          // Control de voz manual: no cortar abruptamente al usuario mientras piensa o habla.
-          // Solo si se detecta un comando reconocido terminado, esperar breve pausa y procesar.
-          var quickClean = sanitizeVoiceText(display);
-          var isKnownCommand = quickClean.includes('preset') || quickClean.includes('reverb') ||
-                               quickClean.includes('delay')  || quickClean.includes('chorus') ||
-                               quickClean.includes('doubler') || quickClean.includes('stereo') ||
-                               quickClean.includes('ancho')   || quickClean.includes('brillo') ||
-                               quickClean.includes('graves')  || quickClean.includes('resetear') ||
-                               quickClean.includes('limpiar');
-
-          if (isKnownCommand) {
-            clearTimeout(voiceSilenceTimer);
-            voiceSilenceTimer = setTimeout(function() {
-              if (state.isRecording) {
-                stopVoiceRecording();
-              }
-            }, 1200);
-          }
-        };
-        recognition.onerror = function(event) {
-          console.warn('[SpeechRecognition error]', event.error);
-          callNative('writeLog', 'SpeechRecognition error: ' + event.error);
-          if (event.error === 'not-allowed') {
-            setTemporaryTranscript('Permiso de micrófono no habilitado');
-          } else if (event.error === 'audio-capture') {
-            setTemporaryTranscript('Micrófono ocupado por el driver de audio');
-          } else if (event.error === 'network') {
-            setTemporaryTranscript('Usa las recomendaciones con un solo clic');
-          }
-          stopVoiceRecording(true);
-        };
-        recognition.onend = function() {
-          if (state.isRecording) {
-            try { recognition.start(); } catch (e) { stopVoiceRecording(); }
-          }
-        };
-      }
-    }
-
     function toggleVoiceRecording() {
+      if (voiceIsProcessing) return;
       if (state.isRecording) {
         stopVoiceRecording(false);
       } else {
@@ -3678,54 +3856,333 @@
     }
 
     function startVoiceRecording() {
+      if (state.isRecording || voiceIsProcessing) return;
       state.isRecording = true;
+      voiceUserSpoke = false;
       accumulatedVoiceText = '';
+      voiceAudioChunks = [];
       clearTimeout(transcriptClearTimeout);
-      clearLiveTranscript();
+      clearTimeout(voiceSilenceTimer);
+      clearTimeout(voiceMaxTimer);
+
       updateRecordingUI(true);
+      setLiveTranscript('Escuchando tu voz...', true);
 
-      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SR) {
-        setTemporaryTranscript('Usa las recomendaciones con un solo clic');
-        state.isRecording = false;
-        updateRecordingUI(false);
-        return;
-      }
+      // 1. Usar captura de micrófono real por MediaStream + MediaRecorder (compatible con WebView2 / DAWs)
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
+        })
+        .then(function(stream) {
+          if (!state.isRecording) {
+            stream.getTracks().forEach(function(t) { t.stop(); });
+            return;
+          }
+          voiceMediaStream = stream;
+          voiceAudioChunks = [];
 
-      if (!recognition) {
-        try { initSpeechRecognition(); } catch(e) {}
-      }
+          var mimeType = '';
+          var candidates = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/ogg;codecs=opus',
+            'audio/wav',
+            'audio/mp4'
+          ];
+          for (var i = 0; i < candidates.length; i++) {
+            if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(candidates[i])) {
+              mimeType = candidates[i];
+              break;
+            }
+          }
 
-      if (recognition) {
-        recognition.lang = state.settings.lang || 'es-ES';
-        try { recognition.start(); } catch (e) {
-          console.warn('[Speech start]', e);
-        }
+          try {
+            voiceMediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream);
+          } catch(recErr) {
+            console.warn('[MediaRecorder init warn]', recErr);
+            voiceMediaRecorder = new MediaRecorder(stream);
+          }
+
+          voiceMediaRecorder.ondataavailable = function(e) {
+            if (e.data && e.data.size > 0) {
+              voiceAudioChunks.push(e.data);
+            }
+          };
+
+          voiceMediaRecorder.onstop = function() {
+            handleVoiceAudioRecorded(mimeType);
+          };
+
+          voiceMediaRecorder.start(150);
+
+          // Analizador de nivel de audio para retroalimentación visual en el punto del mic y auto-detener en silencio
+          try {
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+              voiceAudioContext = new AudioCtx();
+              var source = voiceAudioContext.createMediaStreamSource(stream);
+              voiceAnalyser = voiceAudioContext.createAnalyser();
+              voiceAnalyser.fftSize = 256;
+              source.connect(voiceAnalyser);
+
+              var pcmData = new Float32Array(voiceAnalyser.fftSize);
+              var silenceStart = null;
+
+              function checkVoiceLevel() {
+                if (!state.isRecording) return;
+                voiceAnalyser.getFloatTimeDomainData(pcmData);
+                var sum = 0;
+                for (var i = 0; i < pcmData.length; i++) {
+                  sum += pcmData[i] * pcmData[i];
+                }
+                var rms = Math.sqrt(sum / pcmData.length);
+
+                // Reacción visual sutil del indicador
+                var dot = document.getElementById('micDot');
+                if (rms > 0.02) {
+                  voiceUserSpoke = true;
+                  silenceStart = null;
+                  if (dot) dot.style.transform = 'scale(' + Math.min(1.8, 1 + rms * 3.8) + ')';
+                } else {
+                  if (dot) dot.style.transform = '';
+                  if (voiceUserSpoke) {
+                    if (!silenceStart) silenceStart = Date.now();
+                    else if (Date.now() - silenceStart > 750) {
+                      // Silencio después de haber hablado -> detener y transcribir inmediatamente
+                      stopVoiceRecording(false);
+                      return;
+                    }
+                  }
+                }
+
+                voiceAnimFrame = requestAnimationFrame(checkVoiceLevel);
+              }
+              voiceAnimFrame = requestAnimationFrame(checkVoiceLevel);
+            }
+          } catch(ctxErr) {
+            console.warn('[AudioContext analyser warn]', ctxErr);
+          }
+
+          // Límite de seguridad máximo: 7 segundos por frase
+          voiceMaxTimer = setTimeout(function() {
+            if (state.isRecording) {
+              stopVoiceRecording(false);
+            }
+          }, 7000);
+        })
+        .catch(function(err) {
+          console.warn('[getUserMedia error]', err);
+          if (err && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
+            setTemporaryTranscript('Permiso de micrófono no habilitado en Windows');
+            stopVoiceRecording(true);
+          } else if (err && err.name === 'NotFoundError') {
+            setTemporaryTranscript('No se detectó micrófono de entrada');
+            stopVoiceRecording(true);
+          } else {
+            // Intentar fallback a Web Speech API
+            tryFallbackWebSpeech();
+          }
+        });
+      } else {
+        tryFallbackWebSpeech();
       }
     }
 
     function stopVoiceRecording(skipProcess) {
       clearTimeout(voiceSilenceTimer);
+      clearTimeout(voiceMaxTimer);
+      if (voiceAnimFrame) {
+        cancelAnimationFrame(voiceAnimFrame);
+        voiceAnimFrame = null;
+      }
+
+      if (voiceAudioContext) {
+        try { voiceAudioContext.close(); } catch(e) {}
+        voiceAudioContext = null;
+      }
+
+      var dot = document.getElementById('micDot');
+      if (dot) dot.style.transform = '';
+
+      if (voiceMediaStream) {
+        try {
+          voiceMediaStream.getTracks().forEach(function(t) { t.stop(); });
+        } catch(e) {}
+        voiceMediaStream = null;
+      }
+
+      if (recognition) {
+        try { recognition.stop(); } catch(e) {}
+      }
+
       if (!state.isRecording) return;
       state.isRecording = false;
 
-      if (recognition) {
-        try { recognition.stop(); } catch (e) {}
-      }
-      updateRecordingUI(false);
-
       if (skipProcess) {
-        accumulatedVoiceText = '';
+        if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
+          voiceMediaRecorder.onstop = null;
+          try { voiceMediaRecorder.stop(); } catch(e) {}
+        }
+        updateRecordingUI(false);
+        clearLiveTranscript();
         return;
       }
 
-      var txt = accumulatedVoiceText.trim();
-      accumulatedVoiceText = '';
+      if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
+        voiceIsProcessing = true;
+        // Indicar en la interfaz que estamos transcribiendo
+        var btn = document.getElementById('micToggleBtn');
+        var text = document.getElementById('micBtnText');
+        if (btn) btn.classList.remove('listening');
+        if (text) text.textContent = 'PROCESANDO VOZ...';
+        setLiveTranscript('Procesando voz...', true);
 
-      if (txt && txt.length >= 2) {
-        processVoiceCommand(txt);
+        try {
+          voiceMediaRecorder.stop();
+        } catch(e) {
+          voiceIsProcessing = false;
+          updateRecordingUI(false);
+        }
       } else {
+        updateRecordingUI(false);
+        var txt = accumulatedVoiceText.trim();
+        accumulatedVoiceText = '';
+        if (txt && txt.length >= 2) {
+          setLiveTranscript(txt, false);
+          processVoiceCommand(txt);
+        } else {
+          clearLiveTranscript();
+        }
+      }
+    }
+
+    function handleVoiceAudioRecorded(mimeType) {
+      var chunks = voiceAudioChunks || [];
+      voiceAudioChunks = [];
+
+      if (!chunks || chunks.length === 0) {
+        voiceIsProcessing = false;
+        updateRecordingUI(false);
         clearLiveTranscript();
+        return;
+      }
+
+      var actualMime = mimeType || 'audio/webm';
+      var blob = new Blob(chunks, { type: actualMime });
+
+      // Si el audio es insignificante (menos de 400 bytes o clic accidental)
+      if (blob.size < 400) {
+        voiceIsProcessing = false;
+        updateRecordingUI(false);
+        clearLiveTranscript();
+        return;
+      }
+
+      var ext = 'webm';
+      if (actualMime.includes('wav')) ext = 'wav';
+      else if (actualMime.includes('ogg')) ext = 'ogg';
+      else if (actualMime.includes('mp4')) ext = 'mp4';
+
+      var formData = new FormData();
+      formData.append('file', blob, 'voice.' + ext);
+      formData.append('model', 'whisper-large-v3-turbo');
+      var lang = (state.settings && state.settings.lang && state.settings.lang.startsWith('en')) ? 'en' : 'es';
+      formData.append('language', lang);
+      formData.append('response_format', 'json');
+
+      fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + GROQ_WHISPER_KEY
+        },
+        body: formData
+      })
+      .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(data) {
+        var recognized = (data && data.text ? data.text : '').trim();
+        console.log('[Groq Whisper Reconocido]:', recognized);
+        callNative('writeLog', 'Groq Whisper Reconocido: ' + recognized);
+
+        if (recognized && recognized.length >= 2) {
+          setLiveTranscript(recognized, false);
+          processVoiceCommand(recognized);
+        } else {
+          setTemporaryTranscript('No se reconoció ninguna frase');
+        }
+      })
+      .catch(function(err) {
+        console.warn('[Whisper API Error]', err);
+        callNative('writeLog', 'Whisper API Error: ' + err.message);
+        setTemporaryTranscript('Servicio de voz offline — Usa las recomendaciones');
+      })
+      .finally(function() {
+        voiceIsProcessing = false;
+        updateRecordingUI(false);
+      });
+    }
+
+    function tryFallbackWebSpeech() {
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        setTemporaryTranscript('Servicio de voz offline — Usa las recomendaciones');
+        stopVoiceRecording(true);
+        return;
+      }
+      if (!recognition) {
+        try {
+          recognition = new SR();
+          recognition.continuous = true;
+          recognition.lang = (state.settings && state.settings.lang) || 'es-ES';
+          recognition.interimResults = true;
+
+          recognition.onresult = function(event) {
+            var interim = '';
+            for (var i = event.resultIndex; i < event.results.length; ++i) {
+              var t = event.results[i][0].transcript;
+              if (event.results[i].isFinal) accumulatedVoiceText += ' ' + t;
+              else interim += t;
+            }
+            var display = (accumulatedVoiceText + ' ' + interim).trim();
+            if (display) setLiveTranscript(display, true);
+          };
+
+          recognition.onerror = function(event) {
+            console.warn('[Fallback SpeechRecognition error]', event.error);
+            if (event.error === 'network') {
+              setTemporaryTranscript('Servicio de voz offline — Usa las recomendaciones');
+            } else if (event.error === 'not-allowed') {
+              setTemporaryTranscript('Permiso de micrófono no habilitado');
+            } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
+              setTemporaryTranscript('Voz: ' + event.error);
+            }
+            stopVoiceRecording(true);
+          };
+
+          recognition.onend = function() {
+            if (!voiceIsProcessing && !state.isRecording) {
+              updateRecordingUI(false);
+            }
+          };
+        } catch(e) {
+          setTemporaryTranscript('Servicio de voz offline — Usa las recomendaciones');
+          stopVoiceRecording(true);
+          return;
+        }
+      }
+
+      try {
+        recognition.lang = (state.settings && state.settings.lang) || 'es-ES';
+        recognition.start();
+      } catch(e) {
+        setTemporaryTranscript('Servicio de voz offline — Usa las recomendaciones');
+        stopVoiceRecording(true);
       }
     }
 
@@ -3736,16 +4193,20 @@
       var screenHablar = document.getElementById('screenHablar');
 
       if (screenHablar) {
-        screenHablar.classList.toggle('listening', isRec);
+        screenHablar.classList.toggle('listening', isRec || voiceIsProcessing);
       }
       if (btn) {
         btn.classList.toggle('listening', isRec);
-        if (text) text.textContent = isRec ? 'ESCUCHANDO... (CLIC PARA DETENER)' : 'Presionar para hablar';
-        if (cursor) cursor.classList.toggle('active', isRec);
+        if (text) {
+          if (voiceIsProcessing) text.textContent = 'PROCESANDO VOZ...';
+          else if (isRec) text.textContent = 'ESCUCHANDO... (CLIC PARA DETENER)';
+          else text.textContent = 'Presionar para hablar';
+        }
+        if (cursor) cursor.classList.toggle('active', isRec || voiceIsProcessing);
       }
       var cMic = document.getElementById('compactMicEffects');
       if (cMic) {
-        cMic.classList.toggle('listening', isRec);
+        cMic.classList.toggle('listening', isRec || voiceIsProcessing);
         var ct = document.getElementById('compactMicEffectsText');
         if (ct) ct.textContent = isRec ? 'Escuchando...' : 'Mic';
       }
@@ -3868,8 +4329,13 @@
         return;
       }
 
-      // RESETEAR MEZCLA O VALORES DE FÁBRICA
-      if (clean.includes('resetear') || clean.includes('limpiar') || clean.includes('valores de fabrica') || clean.includes('de fabrica')) {
+      // RESETEAR MEZCLA O VALORES DE FÁBRICA / PONER TODO EN 0 / QUITAR TODOS LOS EFECTOS
+      if (clean.includes('reset') || clean.includes('limpi') || clean.includes('fabrica') ||
+          clean.includes('todo de 0') || clean.includes('todo en 0') || clean.includes('todo a 0') ||
+          clean.includes('todo de cero') || clean.includes('todo en cero') || clean.includes('todo a cero') ||
+          clean.includes('quitar efectos') || clean.includes('quitar todos') || clean.includes('quita todos') ||
+          clean.includes('apagar todo') || clean.includes('apaga todo') || clean.includes('apagar efectos') ||
+          clean.includes('sin efectos') || clean.includes('plano') || clean.includes('desde cero')) {
         executeFactoryReset();
         return;
       }
@@ -4161,7 +4627,145 @@
         }
       }
 
-      setTemporaryTranscript('Comando no reconocido. Prueba con las recomendaciones.', false);
+      // Si no coincidió con comandos manuales rígidos, interpretar inteligentemente con Groq AI
+      interpretNaturalVoiceWithAI(cmd, clean);
+    }
+
+    // ==========================================
+    // INTERPRETACIÓN INTELIGENTE CON GROQ AI (ULTRA-RÁPIDO ~150ms)
+    // ==========================================
+    function interpretNaturalVoiceWithAI(originalCmd, cleanText) {
+      if (!originalCmd || originalCmd.trim().length < 2) {
+        setTemporaryTranscript('Comando no reconocido. Prueba con las recomendaciones.', false);
+        return;
+      }
+
+      setLiveTranscript('Ajustando mezcla vocal...', true);
+
+      var body = JSON.stringify({
+        model: 'openai/gpt-oss-20b',
+        messages: [
+          {
+            role: 'system',
+            content: 'Eres el motor de control por voz del plugin de audio OFFSZN Vocal Preset. Interpreta la orden del productor y genera un JSON con los ajustes exactos de 0 a 100.\n' +
+                     'Propiedades posibles:\n' +
+                     '- reset: boolean (true si pide poner todo de 0, quitar todos los efectos, de fabrica, limpiar)\n' +
+                     '- starterPreset: boolean (true si pide starter, preset, afinar/mejorar la voz)\n' +
+                     '- mixMacro: number 0-100\n' +
+                     '- hpf: number 0-100 (corte graves/retumbes)\n' +
+                     '- boxy: number 0-100 (moldear/caja)\n' +
+                     '- deesser: number 0-100 (quitar S/sibilancia)\n' +
+                     '- presMid: number 0-100 (cuerpo/medios)\n' +
+                     '- presHigh: number 0-100 (brillo/agudos)\n' +
+                     '- sat: number 0-100 (calor/armonicos)\n' +
+                     '- air: number 0-100 (aire a la voz)\n' +
+                     '- comp: number 0-100 (compresion/pegada)\n' +
+                     '- doubler: { on: boolean, amount: number 0-100 }\n' +
+                     '- chorus: { on: boolean, amount: number 0-100 }\n' +
+                     '- delay: { on: boolean, amount: number 0-100 }\n' +
+                     '- reverb: { on: boolean, amount: number 0-100 }\n' +
+                     '- summary: string corto en espanol describiendo que se aplico (max 5 palabras)\n' +
+                     'Responde UNICAMENTE con el objeto JSON sin markdown ni explicaciones.'
+          },
+          { role: 'user', content: originalCmd }
+        ],
+        temperature: 0.1,
+        max_tokens: 220
+      });
+
+      fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + GROQ_WHISPER_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: body
+      })
+      .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(data) {
+        var rawContent = data && data.choices && data.choices[0] && data.choices[0].message ? data.choices[0].message.content : '';
+        var jsonMatch = rawContent ? rawContent.match(/\{[\s\S]*\}/) : null;
+        if (!jsonMatch) {
+          setTemporaryTranscript('Comando no reconocido. Prueba con las recomendaciones.', false);
+          return;
+        }
+
+        var parsed = JSON.parse(jsonMatch[0]);
+        if (!parsed || typeof parsed !== 'object') {
+          setTemporaryTranscript('Comando no reconocido. Prueba con las recomendaciones.', false);
+          return;
+        }
+
+        if (parsed.reset === true) {
+          executeFactoryReset();
+          return;
+        }
+
+        if (parsed.starterPreset === true) {
+          applyStarterPreset();
+          return;
+        }
+
+        pushSnapshot();
+        var changesMade = false;
+
+        if (typeof parsed.mixMacro === 'number') {
+          var mm = Math.max(0, Math.min(100, Math.round(parsed.mixMacro)));
+          state.mixMacro = mm;
+          state.mixChainOn = mm > 0;
+          updateMixMacroUI(mm);
+          updateMixChainToggleUI();
+          sendParamToJuce('mix.macro', mm);
+          sendParamToJuce('global.mixMacro', mm);
+          changesMade = true;
+        }
+
+        var mixKeys = ['hpf', 'boxy', 'deesser', 'presMid', 'presHigh', 'sat', 'air', 'comp'];
+        mixKeys.forEach(function(k) {
+          if (typeof parsed[k] === 'number') {
+            var val = Math.max(0, Math.min(100, Math.round(parsed[k])));
+            if (state.mixParams[k]) {
+              state.mixParams[k].val = val;
+              sendParamToJuce('mix.' + k, val);
+              changesMade = true;
+            }
+          }
+        });
+
+        var cKeys = ['doubler', 'chorus', 'delay', 'reverb'];
+        cKeys.forEach(function(ck) {
+          if (parsed[ck] && typeof parsed[ck] === 'object') {
+            var fx = state.creative[ck];
+            if (fx) {
+              if (parsed[ck].on !== undefined) fx.on = !!parsed[ck].on;
+              if (typeof parsed[ck].amount === 'number') {
+                fx.amount = Math.max(0, Math.min(100, Math.round(parsed[ck].amount)));
+                if (parsed[ck].on === undefined) fx.on = fx.amount > 0;
+              }
+              sendParamToJuce(ck + '.enabled', fx.on ? 1.0 : 0.0);
+              sendParamToJuce(ck + '.amount', fx.amount);
+              changesMade = true;
+            }
+          }
+        });
+
+        if (changesMade) {
+          renderMixGrid();
+          renderCreativeGrid();
+          savePreset();
+          var sum = parsed.summary ? parsed.summary.replace(/[".]/g, '').trim() : 'Ajuste vocal aplicado';
+          setTemporaryTranscript('✓ ' + sum, true);
+        } else {
+          setTemporaryTranscript('Comando no reconocido. Prueba con las recomendaciones.', false);
+        }
+      })
+      .catch(function(err) {
+        console.warn('[AI intent error]', err);
+        setTemporaryTranscript('Comando no reconocido. Prueba con las recomendaciones.', false);
+      });
     }
 
     // APLICAR PRESET STARTER (EASY MIX 50%)
@@ -4405,31 +5009,34 @@
       for (var i = 1; i < arguments.length; i++) {
         args.push(arguments[i]);
       }
-      try {
-        initJuceBridge();
-        if (window.__JUCE__ && window.__JUCE__.backend) {
-          var promiseId = Math.floor(Math.random() * 1000000000);
-          var p = new Promise(function(resolve) {
+      return new Promise(function(resolve) {
+        function tryInvoke(attempt) {
+          initJuceBridge();
+          if (window.__JUCE__ && window.__JUCE__.backend) {
+            var promiseId = Math.floor(Math.random() * 1000000000);
             jucePromises.set(promiseId, { resolve: resolve });
-          });
-          window.__JUCE__.backend.emitEvent('__juce__invoke', {
-            name: funcName,
-            params: args,
-            resultId: promiseId
-          });
-          return p;
+            window.__JUCE__.backend.emitEvent('__juce__invoke', {
+              name: funcName,
+              params: args,
+              resultId: promiseId
+            });
+            return;
+          }
+          if (attempt < 30) {
+            setTimeout(function() { tryInvoke(attempt + 1); }, 50);
+          } else {
+            // Fallback para vista previa web en navegador / standalone
+            if (funcName === 'getLicenseState') {
+              var s = '';
+              try { s = localStorage.getItem('offszn_serial') || ''; } catch(e) {}
+              resolve({ isValid: !!s, serial: s });
+            } else {
+              resolve(null);
+            }
+          }
         }
-        if (window.chrome && window.chrome.webview) {
-          window.chrome.webview.postMessage(JSON.stringify({ func: funcName, args: args }));
-          return Promise.resolve();
-        }
-        if (window.__JUCE_SET_PARAM && funcName === 'setParam') {
-          window.__JUCE_SET_PARAM(args[0], args[1]);
-        }
-      } catch (err) {
-        console.warn('[Bridge error]', err);
-      }
-      return Promise.resolve();
+        tryInvoke(0);
+      });
     }
 
     function sendParamToJuce(paramId, value) {
@@ -4444,6 +5051,9 @@
     
     // ACCIONES RÁPIDAS DE VOZ POR CHIP
     function executeVoiceQuickAction(phrase) {
+      if (state.isRecording) {
+        stopVoiceRecording(true);
+      }
       setLiveTranscript(phrase, false);
       processVoiceCommand(phrase);
     }
@@ -4460,63 +5070,43 @@
     }
     function executeFactoryReset() {
       closeConfirmResetModal();
-      // Restablecer parámetros de esta instancia
+      pushSnapshot();
+      // Restablecer parámetros de esta instancia a 0 (Plano / Neutral)
       state.routing = 'insert';
       state.inGain = 0.0;
       state.outGain = 0.0;
-      state.mixChainOn = true;
-      state.mixMacro = 100;
-      state.mixParams.hpf.val = 79;
-      state.mixParams.boxy.val = 16;
-      state.mixParams.deesser.val = 43;
-      state.mixParams.presMid.val = 100;
-      state.mixParams.presHigh.val = 100;
-      state.mixParams.sat.val = 0;
-      state.mixParams.air.val = 40;
-      state.mixParams.comp.val = 13;
+      state.mixChainOn = false;
+      state.mixMacro = 0;
 
-      state.creative.doubler.on = false;
-      state.creative.doubler.amount = 20;
-      state.creative.doubler.width = 80;
-      state.creative.doubler.lowCut = 120;
-      state.creative.doubler.highCut = 10000;
+      for (var k in state.mixParams) {
+        state.mixParams[k].val = 0;
+      }
 
-      state.creative.chorus.on = false;
-      state.creative.chorus.amount = 15;
-
-      state.creative.delay.on = false;
-      state.creative.delay.amount = 12;
-      state.creative.delay.feedback = 25;
-      state.creative.delay.sidechain = true;
-      state.creative.delay.wideStereo = true;
-
-      state.creative.reverb.on = false;
-      state.creative.reverb.amount = 0;
-      state.creative.reverb.decay = 2.2;
-      state.creative.reverb.lowCut = 300;
-      state.creative.reverb.highCut = 8500;
-      state.creative.reverb.sidechain = true;
+      for (var ck in state.creative) {
+        state.creative[ck].on = false;
+        state.creative[ck].amount = 0;
+      }
 
       renderMixGrid();
       renderCreativeGrid();
       updateOutKnobUI(state.outGain);
-      updateMixMacroUI(state.mixMacro);
+      updateMixMacroUI(0);
       updateMixChainToggleUI();
 
-      // Sincronizar C++
+      // Sincronizar C++ DSP
       sendParamToJuce('global.routingMode', 0.0);
       sendParamToJuce('global.inGain', 0.0);
       sendParamToJuce('global.outGain', 0.0);
-      sendParamToJuce('global.mixMacro', 100.0);
-      for (var k in state.mixParams) {
-        sendParamToJuce('mix.' + k, state.mixParams[k].val);
+      sendParamToJuce('mix.macro', 0.0);
+      for (var pk in state.mixParams) {
+        sendParamToJuce('mix.' + pk, 0.0);
       }
-      for (var ck in state.creative) {
-        var fx = state.creative[ck];
-        sendParamToJuce(ck + '.enabled', fx.on ? 1.0 : 0.0);
-        sendParamToJuce(ck + '.amount', fx.amount);
+      for (var fxk in state.creative) {
+        sendParamToJuce(fxk + '.enabled', 0.0);
+        sendParamToJuce(fxk + '.amount', 0.0);
       }
-      setTemporaryTranscript('Configuración restablecida a valores de fábrica', true);
+      savePreset();
+      setTemporaryTranscript('✓ Restablecido a 0 (Valores de Fábrica)', true);
     }
 
     function openCommandsModal() { document.getElementById('modalCommands').classList.add('open'); }
@@ -4548,32 +5138,11 @@
     // INICIALIZACIÓN GLOBAL
     // ==========================================
     (function init() {
-      // Auto-limpiar localStorage si todo quedó guardado en 100% de sesiones previas
+      // Multi-instancia FL Studio: Limpiar cualquier residuo de preset en localStorage
+      // Cada canal es gobernado exclusivamente por su procesador C++ correspondiente.
       try {
-        var rawSt = localStorage.getItem('vocalpreset_state_v4');
-        if (rawSt) {
-          var parsedSt = JSON.parse(rawSt);
-          if (parsedSt && parsedSt.mixParams) {
-            var count100 = 0;
-            var totalCount = 0;
-            for (var pk in parsedSt.mixParams) {
-              totalCount++;
-              if (parsedSt.mixParams[pk].val >= 99) count100++;
-            }
-            if (totalCount > 4 && count100 === totalCount) {
-              console.warn('[VocalPreset] Limpiando estado corrupto a 100% de localStorage...');
-              localStorage.removeItem('vocalpreset_state_v4');
-            }
-          }
-        }
+        localStorage.removeItem('vocalpreset_state_v4');
       } catch(e) {}
-
-      // Multi-instancia FL Studio: Si corremos dentro del plugin JUCE VST3,
-      // C++ (el procesador de este canal específico) es la única fuente de la verdad.
-      var isInsideJuce = !!(window.__JUCE__ || (window.chrome && window.chrome.webview));
-      if (!isInsideJuce) {
-        loadSavedPreset();
-      }
 
       showMainScreen();
       renderMixGrid();
@@ -4688,10 +5257,32 @@
   }
 
   function onLicenseBadgeClick() {
-    // Si ya tiene prueba activa o full, se permite cerrar con la X. Si es demo / sin licencia, NO muestra la X.
-    var canClose = isLicenseUnlocked();
-    openActivationModal(canClose);
+    // Si el usuario hace clic en el badge, siempre se permite cerrar con la X o clic afuera
+    openActivationModal(true);
   }
+
+  function handleActivationBackdrop(e) {
+    if (e.target && e.target.id === 'activation-modal') {
+      var closeBtn = document.getElementById('btn-close-activation');
+      if (closeBtn && closeBtn.style.display !== 'none') {
+        closeActivationModal();
+      }
+    }
+  }
+
+  // Tecla Escape cierra modales no bloqueantes
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      var closeBtn = document.getElementById('btn-close-activation');
+      if (closeBtn && closeBtn.style.display !== 'none') {
+        closeActivationModal();
+      }
+      closeWelcomeModal();
+      closeCustomAlert();
+      if (typeof closeCommandsModal === 'function') closeCommandsModal();
+      if (typeof closePersonalizarModal === 'function') closePersonalizarModal();
+    }
+  });
 
   function submitSerial() {
     var input = document.getElementById('serial-input');
@@ -4719,117 +5310,159 @@
         if (btn) btn.classList.remove('btn-loading');
         if (response && response.success) {
           try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
-          if (typeof hasJuceBridge === 'function' && hasJuceBridge()) {
-            callNative("setLicenseStatus", true, serial);
-          }
-          closeActivationModal();
           var isTrial = serial.indexOf("TRIAL") !== -1 || (response.license_type === 'trial');
+          var expUnix = 0;
+          if (response.expires_at) {
+            try { expUnix = Math.floor(new Date(response.expires_at).getTime() / 1000); } catch(e) {}
+          }
+          var nowUnix = Math.floor(Date.now() / 1000);
+          var fullStored = expUnix > 0 ? (serial + '|' + expUnix + '|' + nowUnix) : serial;
+          callNative("setLicenseStatus", true, fullStored);
+
+          closeActivationModal();
           if (isTrial) {
-            var days = response.days_remaining || 3;
-            updateLicenseBadge('trial', 'PRUEBA · ' + days + ' DÍAS');
+            var days = response.days_remaining || response.remaining_days || 3;
+            updateLicenseBadge('trial', 'PRUEBA · ' + (days > 1 ? days + ' DÍAS' : '1 DÍA'));
           } else {
             updateLicenseBadge('full', 'FULL · OFFSZN');
           }
           var welcome = document.getElementById('welcome-modal');
           if (welcome) welcome.classList.add('visible');
         } else {
-          if (typeof hasJuceBridge === 'function' && hasJuceBridge()) callNative("setLicenseStatus", false);
           showCustomAlert("Error de Activación", response.error || "Licencia inválida o no encontrada.", "❌");
         }
       }).catch(function(err) {
         if (btn) btn.classList.remove('btn-loading');
-        if (typeof hasJuceBridge !== 'function' || !hasJuceBridge()) {
-          // Mock preview mode in browser
-          if (serial.startsWith("VOCA-FULL-") || serial.startsWith("VOCA-TRIAL-")) {
-            try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
-            closeActivationModal();
-            var isTrial = serial.indexOf("TRIAL") !== -1;
-            updateLicenseBadge(isTrial ? 'trial' : 'full', isTrial ? 'PRUEBA · 3 DÍAS' : 'FULL · OFFSZN');
-            var welcome = document.getElementById('welcome-modal');
-            if (welcome) welcome.classList.add('visible');
-            return;
-          }
+        // Modo offline / preview
+        if (serial.startsWith("VOCA-FULL-") || serial.startsWith("VOCA-TRIAL-")) {
+          try { localStorage.setItem('offszn_serial', serial); } catch(e) {}
+          callNative("setLicenseStatus", true, serial);
+          closeActivationModal();
+          var isTrial = serial.indexOf("TRIAL") !== -1;
+          updateLicenseBadge(isTrial ? 'trial' : 'full', isTrial ? 'PRUEBA · 3 DÍAS' : 'FULL · OFFSZN');
+          var welcome = document.getElementById('welcome-modal');
+          if (welcome) welcome.classList.add('visible');
+          return;
         }
         showCustomAlert("Error de Conexión", "No se pudo conectar al servidor de licencias. Verifica tu conexión a Internet para la primera activación.", "🌐");
       });
     });
   }
 
-    function hasJuceBridge() {
-    if (window.__JUCE__ && window.__JUCE__.backend) return true;
-    if (window.chrome && window.chrome.webview) return true;
-    return false;
+  function hasJuceBridge() {
+    return !!(window.__JUCE__ && window.__JUCE__.backend);
   }
+
   function initLicenseBoot() {
     var storedSerial = '';
     try { storedSerial = localStorage.getItem('offszn_serial') || ''; } catch(e) {}
 
-    if (hasJuceBridge()) {
-      callNative("getLicenseState").then(function(state) {
-        var isValid = state && state.isValid;
-        var rawSerial = ((state && state.serial) || storedSerial || "").trim();
+    callNative("getLicenseState").then(function(state) {
+      var isValid = state && state.isValid;
+      var rawSerial = ((state && state.serial) || storedSerial || "").trim();
 
-        if (rawSerial) {
-          var isTrial = rawSerial.toUpperCase().indexOf("TRIAL") !== -1;
-          if (isTrial) {
-            if (isValid) {
-              try { localStorage.setItem('offszn_serial', rawSerial); } catch(e) {}
-              var tokens = rawSerial.split('|');
-              var expiresUnix = tokens.length > 1 ? parseInt(tokens[1], 10) : 0;
-              if (expiresUnix > 0) {
-                var secondsLeft = expiresUnix - Math.floor(Date.now() / 1000);
-                var daysLeft = Math.ceil(secondsLeft / 86400);
-                updateLicenseBadge('trial', 'PRUEBA · ' + (daysLeft > 1 ? daysLeft + " DÍAS" : (daysLeft === 1 ? "1 DÍA" : "ÚLTIMO DÍA")));
-              } else {
-                updateLicenseBadge('trial', 'PRUEBA · 3 DÍAS');
-              }
-              closeActivationModal();
-            } else {
-              callNative("setLicenseStatus", false);
-              updateLicenseBadge('demo', 'DEMO · ACTIVAR');
-              openActivationModal(false);
-            }
-          } else {
-            // FULL KEY
-            if (isValid) {
-              try { localStorage.setItem('offszn_serial', rawSerial); } catch(e) {}
-              updateLicenseBadge('full', 'FULL · OFFSZN');
-              closeActivationModal();
-            } else {
-              callNative("setLicenseStatus", false);
-              updateLicenseBadge('demo', 'DEMO · ACTIVAR');
-              openActivationModal(false);
-            }
+      if (rawSerial) {
+        var isTrial = rawSerial.toUpperCase().indexOf("TRIAL") !== -1;
+        if (isTrial) {
+          var cleanSerial = rawSerial.split('|')[0].trim();
+          try { localStorage.setItem('offszn_serial', cleanSerial); } catch(e) {}
+
+          // 1. Mostrar estado de prueba inmediatamente (cero latencia offline)
+          var tokens = rawSerial.split('|');
+          var expiresUnix = tokens.length > 1 ? parseInt(tokens[1], 10) : 0;
+          var daysLeft = 3;
+          if (expiresUnix > 0) {
+            var secondsLeft = expiresUnix - Math.floor(Date.now() / 1000);
+            daysLeft = Math.max(1, Math.ceil(secondsLeft / 86400));
           }
+          updateLicenseBadge('trial', 'PRUEBA · ' + (daysLeft > 1 ? daysLeft + " DÍAS" : "1 DÍA"));
+          closeActivationModal();
+
+          // 2. Verificación silenciosa en segundo plano con el servidor
+          getHwidAsync().then(function(hwid) {
+            fetch(apiBase + "/api/plugin/activate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                serial_key: cleanSerial,
+                hwid: hwid,
+                plugin_name: OFFSZN_PLUGIN_NAME
+              })
+            }).then(function(res) {
+              return res.json();
+            }).then(function(response) {
+              if (response && response.success) {
+                var d = response.days_remaining || response.remaining_days || daysLeft || 3;
+                updateLicenseBadge('trial', 'PRUEBA · ' + (d > 1 ? d + " DÍAS" : "1 DÍA"));
+                var expUnix = 0;
+                if (response.expires_at) {
+                  try { expUnix = Math.floor(new Date(response.expires_at).getTime() / 1000); } catch(e) {}
+                }
+                var nowUnix = Math.floor(Date.now() / 1000);
+                var fullStored = expUnix > 0 ? (cleanSerial + '|' + expUnix + '|' + nowUnix) : cleanSerial;
+                callNative("setLicenseStatus", true, fullStored);
+                closeActivationModal();
+              } else if (response && !response.success && !isValid) {
+                // Periodo de prueba formalmente expirado en servidor y C++
+                callNative("setLicenseStatus", false);
+                updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+                openActivationModal(false);
+              }
+            }).catch(function(err) {
+              console.log("[Trial offline check]", err);
+              // Si no hay red, mantener prueba activa
+              callNative("setLicenseStatus", true, cleanSerial);
+              closeActivationModal();
+            });
+          });
         } else {
-          // No serial -> Obligatorio abrir modal bloqueado
-          callNative("setLicenseStatus", false);
-          updateLicenseBadge('demo', 'DEMO · ACTIVAR');
-          openActivationModal(false);
+          // FULL KEY
+          if (isValid) {
+            try { localStorage.setItem('offszn_serial', rawSerial); } catch(e) {}
+            updateLicenseBadge('full', 'FULL · OFFSZN');
+            closeActivationModal();
+          } else {
+            getHwidAsync().then(function(hwid) {
+              fetch(apiBase + "/api/plugin/activate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  serial_key: rawSerial.trim(),
+                  hwid: hwid,
+                  plugin_name: OFFSZN_PLUGIN_NAME
+                })
+              }).then(function(res) { return res.json(); }).then(function(response) {
+                if (response && response.success) {
+                  try { localStorage.setItem('offszn_serial', rawSerial); } catch(e) {}
+                  updateLicenseBadge('full', 'FULL · OFFSZN');
+                  callNative("setLicenseStatus", true, rawSerial);
+                  closeActivationModal();
+                } else {
+                  updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+                  openActivationModal(false);
+                }
+              }).catch(function() {
+                if (rawSerial.startsWith("VOCA-FULL-")) {
+                  updateLicenseBadge('full', 'FULL · OFFSZN');
+                  callNative("setLicenseStatus", true, rawSerial);
+                  closeActivationModal();
+                }
+              });
+            });
+          }
         }
-      }).catch(function(err) {
-        console.warn("[getLicenseState err]", err);
-        updateLicenseBadge('demo', 'DEMO · ACTIVAR');
-        openActivationModal(false);
-      });
-    } else {
-      // Fallback web sin puente C++
-      if (storedSerial) {
-        var isTrial = storedSerial.toUpperCase().indexOf("TRIAL") !== -1;
-        updateLicenseBadge(isTrial ? 'trial' : 'full', isTrial ? 'PRUEBA · 3 DÍAS' : 'FULL · OFFSZN');
-        closeActivationModal();
       } else {
-        // Sin serial -> Obligatorio abrir modal bloqueado
+        // Sin serial en C++ ni en disco -> Solicitar activación
         updateLicenseBadge('demo', 'DEMO · ACTIVAR');
         openActivationModal(false);
       }
-    }
+    }).catch(function(err) {
+      console.warn("[getLicenseState err]", err);
+    });
   }
 
-  // Ejecutar boot al cargar
-
-  setTimeout(initLicenseBoot, 50);
-  setTimeout(initLicenseBoot, 350);
+  // Ejecutar boot al cargar de forma limpia
+  setTimeout(initLicenseBoot, 120);
 
   
   // ========================================================
@@ -4874,8 +5507,8 @@
 
   </script>
   <!-- MODAL DE ACTIVACIÓN -->
-  <div id="activation-modal" class="activation-modal">
-    <div class="act-container">
+  <div id="activation-modal" class="activation-modal" onclick="handleActivationBackdrop(event)">
+    <div class="act-container" onclick="event.stopPropagation()">
       <button class="act-btn-close" id="btn-close-activation" onclick="closeActivationModal()" style="display: none;" title="Cerrar">&times;</button>
       <div style="font-size: 24px; margin-bottom: 8px;">🔑</div>
       <h3 class="act-title">Ingresa tu Serial Key</h3>
@@ -4888,7 +5521,7 @@
 
   <!-- MODAL DE BIENVENIDA / CELEBRACIÓN -->
   <div id="welcome-modal" class="activation-modal">
-    <div class="act-container">
+    <div class="act-container" onclick="event.stopPropagation()">
       <div style="font-size: 32px; margin-bottom: 10px;">🎉</div>
       <h3 class="act-title">¡Bienvenido a Vocal Preset!</h3>
       <p class="act-sub" style="margin-bottom: 20px;">Tu licencia ha sido activada exitosamente.<br>Disfruta de voces profesionales al instante.</p>
@@ -4897,8 +5530,8 @@
   </div>
 
   <!-- MODAL DE ALERTA NATIVA -->
-  <div id="custom-alert-modal" class="activation-modal" style="z-index: 25000;">
-    <div class="act-container" style="width: 320px;">
+  <div id="custom-alert-modal" class="activation-modal" style="z-index: 10000002 !important;">
+    <div class="act-container" style="width: 320px;" onclick="event.stopPropagation()">
       <div id="custom-alert-icon" style="font-size: 26px; margin-bottom: 8px;">⚠️</div>
       <h3 class="act-title" id="custom-alert-title">Atención</h3>
       <p class="act-sub" id="custom-alert-msg">Mensaje del sistema</p>

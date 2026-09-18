@@ -48,6 +48,13 @@ const PLUGIN_INFO_MAP = {
             win: '/downloads/OFFSZN_COCA_COLA_Setup.exe',
             mac: 'https://drive.google.com/file/d/1741Z3uG8amQ5boK1il5Ffj136sW2WHPY/view?usp=sharing'
         }
+    },
+    '905': {
+        name: 'Vocal Preset',
+        downloads: {
+            win: 'https://drive.google.com/file/d/11Zw_4w-vWUjq3b2bImlyQjO2rzXitqLO/view?usp=sharing',
+            mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
+        }
     }
 };
 

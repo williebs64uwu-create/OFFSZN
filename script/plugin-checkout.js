@@ -37,8 +37,8 @@ class PluginDirectCheckout {
         } else if (isVocalPreset) {
             this.downloads = {
                 name: 'Vocal Preset',
-                win: 'https://drive.google.com/file/d/1JSArLjFypFYkcGJV3DIu67hxSFU4kG6q/view?usp=sharing',
-                mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
+                win: 'https://drive.google.com/file/d/11Zw_4w-vWUjq3b2bImlyQjO2rzXitqLO/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
             };
         } else {
             this.downloads = {
@@ -141,6 +141,7 @@ class PluginDirectCheckout {
                     const isCoke = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola';
                     const isInka = this.productId === 902 || window.PLUGIN_NAME === 'INKA KOLA' || window.PLUGIN_NAME === 'Inka Kola';
                     const isMaster = this.productId === 900 || window.PLUGIN_NAME === 'Easy Master';
+                    const isVocal = this.productId === 905 || window.PLUGIN_NAME === 'Vocal Preset';
                     const createUrl = isCoke 
                         ? '/api/orders/coke/create' 
                         : (isPromo2x1 ? '/api/orders/promo-2x1/create' : '/api/orders/paypal/create');
@@ -160,7 +161,7 @@ class PluginDirectCheckout {
 
                     // --- META PIXEL: INITIATE CHECKOUT ---
                     if (window.MetaPixel) {
-                        const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : 'easy_mix')));
+                        const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : 'easy_mix'))));
                         window.MetaPixel.trackInitiateCheckout({
                             content_ids: [pluginCode],
                             content_name: isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : this.downloads.name,
@@ -216,6 +217,7 @@ class PluginDirectCheckout {
                     const isCoke = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola';
                     const isInka = this.productId === 902 || window.PLUGIN_NAME === 'INKA KOLA' || window.PLUGIN_NAME === 'Inka Kola';
                     const isMaster = this.productId === 900 || window.PLUGIN_NAME === 'Easy Master';
+                    const isVocal = this.productId === 905 || window.PLUGIN_NAME === 'Vocal Preset';
                     const captureUrl = isCoke 
                         ? '/api/orders/coke/capture' 
                         : (isPromo2x1 ? '/api/orders/promo-2x1/capture' : '/api/orders/paypal/capture');
@@ -236,7 +238,7 @@ class PluginDirectCheckout {
                     if (result.status === 'COMPLETED' || result.status === 'APPROVED' || result.id) {
                         // --- META PIXEL: PURCHASE (DEDUPLICATED WITH SERVER CAPI) ---
                         if (window.MetaPixel) {
-                            const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : 'easy_mix')));
+                            const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : 'easy_mix'))));
                             const paidAmount = result.total_price || result.amount || window.CURRENT_PROMO_PRICE || 10;
                             window.MetaPixel.trackPurchase({
                                 content_ids: [pluginCode],

@@ -199,6 +199,8 @@ export const createPayPalOrder = async (req, res) => {
             // Intercept special plugin IDs first
             if (String(directProductId) === '903') {
                 productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' };
+            } else if (String(directProductId) === '905') {
+                productObj = { id: 905, name: 'Vocal Preset', price_basic: 10, producer_id: null };
             } else if (String(directProductId) === '902') {
                 productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
             } else if (String(directProductId) === '900') {
@@ -309,10 +311,10 @@ export const createPayPalOrder = async (req, res) => {
         console.log('[PayPalOrder] Producer Map entries:', Array.from(producerMap.entries()).map(([id, p]) => ({ id, email: p.email, nickname: p.nickname })));
 
         // --- NEW: Identify Producers without PayPal ---
-        // Plugin IDs 899-903 are OFFSZN-owned plugins (Easy Mix, Easy Master, Inka Kola, Coca-Cola).
+        // Plugin IDs 899-905 are OFFSZN-owned plugins (Easy Mix, Easy Master, Inka Kola, Coca-Cola, Vocal Preset).
         // They have producer_id = null or are owned by OFFSZN and are handled by the plugin override
         // logic below — they don't require a third-party producer PayPal email.
-        const OFFSZN_PLUGIN_IDS = new Set(['899', '900', '901', '902', '903']);
+        const OFFSZN_PLUGIN_IDS = new Set(['899', '900', '901', '902', '903', '905']);
         const missingPaymentProducers = [];
         cartItems.forEach(item => {
             const prodId = String(item.product?.id || '');
@@ -398,12 +400,12 @@ export const createPayPalOrder = async (req, res) => {
                 return; // Skip regular DB price logic for this product
             }
 
-            // EASY MIX / EASY MASTER / INKA KOLA OVERRIDE (IDs 899/900/901/902):
+            // EASY MIX / EASY MASTER / INKA KOLA / VOCAL PRESET OVERRIDE (IDs 899/900/901/902/905):
             // 100% goes to OFFSZN — no split, no partner. Price comes from A/B test (variant_price).
             // Do NOT use DB price_basic — it may be wrong or outdated.
-            if (['899', '900', '901', '902'].includes(prodIdToFind)) {
-                const pluginPrice = parseFloat(item.variant_price) || 5;
-                const validPluginPrice = [5, 10, 15].includes(pluginPrice) ? pluginPrice : 5;
+            if (['899', '900', '901', '902', '905'].includes(prodIdToFind)) {
+                const pluginPrice = parseFloat(item.variant_price) || 10;
+                const validPluginPrice = [5, 10, 15, 20].includes(pluginPrice) ? pluginPrice : 10;
 
                 subtotal += validPluginPrice;    // 100% to OFFSZN
                 verifiedCartItems.push({ ...item, variant_price: validPluginPrice });
@@ -613,11 +615,11 @@ export const createPayPalOrder = async (req, res) => {
 
         verifiedCartItems.forEach(item => {
             const prodIdStr = String(item.product?.id || '');
-            const OFFSZN_PLUGIN_IDS_SET = new Set(['899', '900', '901', '902', '903']);
+            const OFFSZN_PLUGIN_IDS_SET = new Set(['899', '900', '901', '902', '903', '905']);
 
-            // OFFSZN Plugins (899-903): producer_id is null — assign directly to OFFSZN merchant ID.
+            // OFFSZN Plugins (899-905): producer_id is null — assign directly to OFFSZN merchant ID.
             // Coca-Cola (903) split was already resolved above (subtotal=partnerShare, serviceFee=offsznShare).
-            // For 899/900/901/902 the full variant_price goes to OFFSZN.
+            // For 899/900/901/902/905 the full variant_price goes to OFFSZN.
             if (OFFSZN_PLUGIN_IDS_SET.has(prodIdStr)) {
                 const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
                 const current = payeeGroups.get(MAIN_MERCHANT_ID) || { amount: 0, type: 'id', nickname: 'OFFSZN' };
@@ -715,6 +717,7 @@ export const createPayPalOrder = async (req, res) => {
             if (idStr === '900' || (item.product?.name || '').toLowerCase().includes('easy master')) return 'easy_master';
             if (idStr === '902' || (item.product?.name || '').toLowerCase().includes('inka kola')) return 'inka_kola';
             if (idStr === '903' || (item.product?.name || '').toLowerCase().includes('coca')) return 'coca_cola';
+            if (idStr === '905' || (item.product?.name || '').toLowerCase().includes('vocal')) return 'vocal_preset';
             return `product_${idStr}`;
         });
 
@@ -776,6 +779,8 @@ export const capturePayPalOrder = async (req, res) => {
                 // Intercept special plugin IDs first
                 if (String(directProductId) === '903') {
                     productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' };
+                } else if (String(directProductId) === '905') {
+                    productObj = { id: 905, name: 'Vocal Preset', price_basic: 10, producer_id: null };
                 } else if (String(directProductId) === '902') {
                     productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
                 } else if (String(directProductId) === '900') {
@@ -1113,14 +1118,15 @@ export const capturePayPalOrder = async (req, res) => {
                 const prodName = item.product?.name || '';
                 const prodId = String(item.product?.id || '');
                 const isCoke = prodName.toLowerCase().includes('coca') || prodName.toLowerCase().includes('coke') || prodId === '903';
-                const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix') || prodId === '899' || prodId === '901';
+                const isEasyMix = (prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix') || prodId === '899' || prodId === '901') && !prodName.toLowerCase().includes('master');
                 const isEasyMaster = (prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster') || prodId === '900') && !prodName.toLowerCase().includes('2x1');
                 const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola') || prodId === '902';
+                const isVocalPreset = prodName.toLowerCase().includes('vocal') || prodId === '905';
                 const isPromo2x1 = item.is_promo_2x1 === true || item.product?.is_promo_2x1 === true || prodName.toLowerCase().includes('2x1') || (item.license_name || '').toLowerCase().includes('2x1') || req.body.isPromo2x1 === true;
                 
-                if (isCoke || isEasyMix || isEasyMaster || isInkaKola) {
+                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset) {
                     try {
-                        const pluginName = isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix'));
+                        const pluginName = isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix')));
                         const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
                                                (item.product?.product_type && item.product.product_type === 'subscription');
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';
@@ -1273,10 +1279,11 @@ export const capturePayPalOrder = async (req, res) => {
                         const prodName = item.product?.name || '';
                         const prodId = String(item.product?.id || '');
                         const isCoke = prodName.toLowerCase().includes('coca') || prodName.toLowerCase().includes('coke') || prodId === '903';
-                        const isEasyMix = prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix') || prodId === '899' || prodId === '901';
+                        const isEasyMix = (prodName.toLowerCase().includes('easy mix') || prodName.toLowerCase().includes('easymix') || prodId === '899' || prodId === '901') && !prodName.toLowerCase().includes('master');
                         const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster') || prodId === '900';
                         const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola') || prodId === '902';
-                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola;
+                        const isVocalPreset = prodName.toLowerCase().includes('vocal') || prodId === '905';
+                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset;
 
                         // A. Notify Client (Receipt) — includes serial key for plugin purchases
                         const serialKeySection = (isPlugin && keysGenerated.length > 0) ? `
@@ -1302,10 +1309,13 @@ export const capturePayPalOrder = async (req, res) => {
                             } : (isEasyMaster ? {
                                 win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
                                 mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+                            } : (isVocalPreset ? {
+                                win: 'https://drive.google.com/file/d/11Zw_4w-vWUjq3b2bImlyQjO2rzXitqLO/view?usp=sharing',
+                                mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
                             } : {
                                 win: 'https://drive.google.com/file/d/1JSArLjFypFYkcGJV3DIu67hxSFU4kG6q/view?usp=sharing',
                                 mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
-                            }))
+                            })))
                         ) : null;
 
                         const downloadSection = (isPlugin && downloadLinks) ? `
@@ -1481,6 +1491,7 @@ export const capturePayPalOrder = async (req, res) => {
                         if (idStr === '900' || (item.product?.name || '').toLowerCase().includes('easy master')) return 'easy_master';
                         if (idStr === '902' || (item.product?.name || '').toLowerCase().includes('inka kola')) return 'inka_kola';
                         if (idStr === '903' || (item.product?.name || '').toLowerCase().includes('coca')) return 'coca_cola';
+                        if (idStr === '905' || (item.product?.name || '').toLowerCase().includes('vocal')) return 'vocal_preset';
                         return `product_${idStr}`;
                     });
 
@@ -2193,9 +2204,14 @@ export const handlePayPalWebhook = async (req, res) => {
                             item.name?.toLowerCase().includes('easy master') || 
                             item.name?.toLowerCase().includes('easymaster')
                         );
+                        const hasVocalInItems = items.some(item => 
+                            item.name?.toLowerCase().includes('vocal')
+                        );
                         
                         if (description.toLowerCase().includes('easy master') || description.toLowerCase().includes('easymaster') || hasEasyMasterInItems) {
                             pluginToGenerate = 'Easy Master';
+                        } else if (description.toLowerCase().includes('vocal') || hasVocalInItems) {
+                            pluginToGenerate = 'Vocal Preset';
                         } else if (description.toLowerCase().includes('easy mix') || description.toLowerCase().includes('easymix') || hasEasyMixInItems) {
                             pluginToGenerate = 'Easy Mix';
                         }
@@ -2221,9 +2237,14 @@ export const handlePayPalWebhook = async (req, res) => {
                 item.name?.toLowerCase().includes('easy master') || 
                 item.name?.toLowerCase().includes('easymaster')
             );
+            const hasVocalInItems = items.some(item => 
+                item.name?.toLowerCase().includes('vocal')
+            );
             
             if (description.toLowerCase().includes('easy master') || description.toLowerCase().includes('easymaster') || hasEasyMasterInItems) {
                 pluginToGenerate = 'Easy Master';
+            } else if (description.toLowerCase().includes('vocal') || hasVocalInItems) {
+                pluginToGenerate = 'Vocal Preset';
             } else if (description.toLowerCase().includes('easy mix') || description.toLowerCase().includes('easymix') || hasEasyMixInItems) {
                 pluginToGenerate = 'Easy Mix';
             }
@@ -2249,7 +2270,7 @@ export const handlePayPalWebhook = async (req, res) => {
                 matchedUserId = matchedUser.id;
             }
 
-            const productId = pluginToGenerate === 'Easy Master' ? 900 : 899;
+            const productId = pluginToGenerate === 'Easy Master' ? 900 : (pluginToGenerate === 'Vocal Preset' ? 905 : 899);
 
             // Create Order Record to prevent double-processing and show in "Mis Compras"
             const { data: newOrder, error: orderError } = await supabase
