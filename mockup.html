@@ -1990,30 +1990,13 @@
       <!-- BARRA DE COMANDOS REMOVIDA -->
 
       <!-- ACCESO RÁPIDO: PÍLDORAS DE COMANDOS DIRECTOS -->
-      <div class="quick-voice-prompts" style="display: none;">
-        <button class="quick-prompt-btn" onclick="executeVoiceCommandDirect('dame un preset')" title="Aplica mezcla starter limpia y calibrada">
-          <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          <span>"Starter Vocal" (100%)</span>
-        </button>
-        <button class="quick-prompt-btn" onclick="executeVoiceCommandDirect('voz al frente')" title="Compresión y presencia vocal">
-          <span>🎙 "Voz al frente"</span>
-        </button>
-        <button class="quick-prompt-btn" onclick="executeVoiceCommandDirect('más brillo')" title="Top-end sedoso y aire">
-          <span>✨ "Más brillo"</span>
-        </button>
-        <button class="quick-prompt-btn" onclick="executeVoiceCommandDirect('limpiar graves')" title="Corte de graves y cartón">
-          <span>🧼 "Limpiar graves"</span>
-        </button>
-        <button class="quick-prompt-btn" onclick="executeVoiceCommandDirect('espacio')" title="Añade reverb y delay">
-          <span>🌊 "Espacio"</span>
-        </button>
-        <button class="quick-prompt-btn" onclick="resetVocalPresetState()" title="Borra caché y restablece a fábrica">
-          <span>↺ Reset Factory</span>
-        </button>
-        <button class="quick-prompt-btn" onclick="showEffectsScreen()">
-          <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-          <span>Ajustar Perillas & Efectos</span>
-        </button>
+            <!-- CHIPS DE COMANDOS RÁPIDOS SUGERIDOS -->
+      <div class="voice-chips-container">
+        <button class="voice-chip-btn" onclick="executeVoiceQuickAction('Dame un preset')" title="Aplica mezcla vocal completa">🎤 Dame un preset</button>
+        <button class="voice-chip-btn" onclick="executeVoiceQuickAction('Más reverb')" title="Añade reverb">+ Reverb</button>
+        <button class="voice-chip-btn" onclick="executeVoiceQuickAction('Ponle estéreo')" title="Abre el estéreo">+ Estéreo</button>
+        <button class="voice-chip-btn" onclick="executeVoiceQuickAction('Ping pong delay')" title="Delay con rebote espacial">+ Ping-Pong</button>
+        <button class="voice-chip-btn" onclick="executeVoiceQuickAction('Chorus')" title="Modulación y cuerpo">+ Chorus</button>
       </div>
     </section>
 
@@ -2031,15 +2014,7 @@
           <button class="category-tab-btn" id="tabCat_ajustes" onclick="switchCategoryTab('ajustes')">Ajustes</button>
         </div>
 
-        <!-- BOTÓN MICRÓFONO COMPACTO -->
-        <button class="compact-mic-btn" id="compactMicEffects" onclick="toggleVoiceRecording()" title="Hablar comando sin salir">
-          <span class="compact-mic-dot"></span>
-          <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-          </svg>
-          <span id="compactMicEffectsText">Mic</span>
-        </button>
+
       </div>
 
       <!-- VISTA MEZCLA (EASY MIX HERO + KNOBS) -->
@@ -2101,32 +2076,10 @@
 
           <div class="settings-item">
             <div class="settings-info">
-              <span class="settings-title">Auto-detener por Silencio</span>
-              <span class="settings-desc">Tiempo de espera tras dejar de hablar</span>
-            </div>
-            <div class="settings-slider-wrapper">
-              <input type="range" class="settings-range-input" id="settingsSilenceSlider" min="1" max="5" step="0.5" value="3.5" oninput="updateSettingsSilence(this.value)">
-              <span class="settings-val-badge" id="settingsSilenceVal">3.5s</span>
-            </div>
-          </div>
-
-          <div class="settings-item">
-            <div class="settings-info">
-              <span class="settings-title">Sensibilidad del Micrófono</span>
-              <span class="settings-desc">Umbral para evitar ruidos de fondo</span>
-            </div>
-            <div class="settings-slider-wrapper">
-              <input type="range" class="settings-range-input" id="settingsSensSlider" min="0" max="100" step="1" value="75" oninput="updateSettingsSens(this.value)">
-              <span class="settings-val-badge" id="settingsSensVal">75%</span>
-            </div>
-          </div>
-
-          <div class="settings-item">
-            <div class="settings-info">
               <span class="settings-title">Restablecer Valores de Fábrica</span>
-              <span class="settings-desc">Limpia la caché de presets locales si deseas reiniciar</span>
+              <span class="settings-desc">Devuelve la mezcla y efectos de esta pista a su configuración inicial</span>
             </div>
-            <button class="history-btn" style="border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; padding: 6px 14px;" onclick="resetFactorySettings()">
+            <button class="btn-pill-action" style="padding: 6px 16px; font-size: 11px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #fca5a5;" onclick="openConfirmResetModal()">
               <span>Restablecer</span>
             </button>
           </div>
@@ -2247,6 +2200,23 @@
     </div>
   </div>
 
+    <!-- ==========================================
+       MODAL DE CONFIRMACIÓN RESTABLECER FÁBRICA
+       ========================================== -->
+  <div class="modal-overlay" id="modalConfirmReset" onclick="closeConfirmResetModal(event)">
+    <div class="modal-card" style="width: 440px; padding: 26px; text-align: center; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
+      <div style="font-size: 32px; color: #f59e0b; margin-bottom: 12px;">⚠</div>
+      <div style="font-size: 14px; font-weight: 800; color: #ffffff; letter-spacing: 0.05em; margin-bottom: 8px;">¿RESTABLECER A VALORES DE FÁBRICA?</div>
+      <div style="font-size: 12px; color: #94a3b8; line-height: 1.5; margin-bottom: 22px; max-width: 380px;">
+        Esta acción devolverá la mezcla vocal y los módulos de efectos de esta pista a su estado inicial de estudio.
+      </div>
+      <div style="display: flex; gap: 12px; justify-content: center; width: 100%;">
+        <button class="btn-pill-action" style="padding: 8px 20px; font-size: 11px; border: 1px solid rgba(255,255,255,0.15);" onclick="closeConfirmResetModal()">Cancelar</button>
+        <button class="btn-pill-action active" style="padding: 8px 20px; font-size: 11px; background: #dc2626; border-color: #ef4444; color: #ffffff;" onclick="executeFactoryReset()">Sí, Restablecer</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ==========================================
        MODAL DE GUÍA DE COMANDOS DE VOZ (?) - FULL-SCREEN OVERLAY
        ========================================== -->
@@ -2255,110 +2225,65 @@
       <div class="modal-header">
         <div class="modal-title">
           <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm1.07-7.75l-.9.92C12.45 11.9 12 12.5 12 14h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/></svg>
-          <span>GLOSARIO DE COMANDOS DE VOZ</span>
+          <span>MANUAL RÁPIDO DE COMANDOS DE VOZ</span>
         </div>
         <button class="modal-close-btn" onclick="closeCommandsModal()" title="Cerrar Guía">&times;</button>
       </div>
-      <div class="modal-body">
-        <!-- SECCIÓN 1: RECETAS Y PRESETS CON FONÉTICA -->
-        <div class="modal-section-title">1. RECETAS Y PRESETS (RECONOCE VARIACIONES FONÉTICAS)</div>
+      <div class="modal-body" style="gap: 12px; padding: 18px 24px;">
+        <!-- SECCIÓN 1: MEZCLA VOCAL COMPLETA -->
+        <div class="modal-section-title">1. MEZCLA VOCAL COMPLETA</div>
         <div class="commands-grid">
           <div class="command-pill" onclick="testVoiceCommandFromModal('Dame un preset')">
-            <span class="command-phrase">"Dame un preset" / "Starter" / "Priset"</span>
-            <span class="command-action-desc">Aplica el Preset Starter calibrado (Voz al frente)</span>
+            <span class="command-phrase">"Dame un preset"</span>
+            <span class="command-action-desc">Aplica la mezcla vocal completa calibrada (Starter de estudio)</span>
           </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Slapback')">
-            <span class="command-phrase">"Slapback"</span>
-            <span class="command-action-desc">Delay ultra rápido 100ms estilo vintage</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Reverb oscura')">
-            <span class="command-phrase">"Reverb oscura"</span>
-            <span class="command-action-desc">Reverb amplia con decay largo y damping cálido</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Eco ping-pong')">
-            <span class="command-phrase">"Eco ping-pong"</span>
-            <span class="command-action-desc">Delay estéreo con rebote espacial</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Dobles anchos')">
-            <span class="command-phrase">"Dobles anchos"</span>
-            <span class="command-action-desc">Abre el Stereo a la voz (Doubler 90%)</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Chorus suave')">
-            <span class="command-phrase">"Chorus suave"</span>
-            <span class="command-action-desc">Modulación sedosa sutil para dar grosor</span>
+          <div class="command-pill" onclick="testVoiceCommandFromModal('Resetear mezcla')">
+            <span class="command-phrase">"Resetear mezcla" / "Limpiar"</span>
+            <span class="command-action-desc">Devuelve los módulos de esta pista a su estado inicial limpio</span>
           </div>
         </div>
 
-        <!-- SECCIÓN 2: CONTROL DE PORCENTAJES Y NIVELES -->
-        <div class="modal-section-title" style="margin-top: 10px;">2. CONTROL DE PORCENTAJES Y NIVELES</div>
+        <!-- SECCIÓN 2: ESPACIALIDAD & ESTÉREO -->
+        <div class="modal-section-title" style="margin-top: 8px;">2. ESPACIALIDAD & ESTÉREO</div>
         <div class="commands-grid">
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Sube 30 porciento')">
-            <span class="command-phrase">"Sube [30] porciento" / "Baja [20]%"</span>
-            <span class="command-action-desc">Ajusta el valor relativo del efecto o mezcla</span>
+          <div class="command-pill" onclick="testVoiceCommandFromModal('Ponle estéreo')">
+            <span class="command-phrase">"Ponle estéreo" / "Más ancho a la voz"</span>
+            <span class="command-action-desc">Abre el Doubler estéreo al 80% para ensanchar la voz</span>
           </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Baja un poco')">
-            <span class="command-phrase">"Baja un poco"</span>
-            <span class="command-action-desc">Disminuye sutilmente la intensidad (~15%)</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Sube un poco')">
-            <span class="command-phrase">"Sube un poco"</span>
-            <span class="command-action-desc">Aumenta sutilmente la intensidad (~15%)</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Al máximo')">
-            <span class="command-phrase">"Al máximo" / "Súbele al máximo"</span>
-            <span class="command-action-desc">Lleva el efecto o mezcla al 100%</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Al mínimo pero que se sienta')">
-            <span class="command-phrase">"Al mínimo pero que se sienta"</span>
-            <span class="command-action-desc">Ajusta al 10% para dar presencia sutil</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Pon mezcla al 50%')">
-            <span class="command-phrase">"Pon mezcla al [50]%"</span>
-            <span class="command-action-desc">Ajusta la perilla principal al porcentaje exacto</span>
+          <div class="command-pill" onclick="testVoiceCommandFromModal('Chorus')">
+            <span class="command-phrase">"Chorus" / "Ponle chorus"</span>
+            <span class="command-action-desc">Modulación sedosa para dar grosor y riqueza armónica</span>
           </div>
         </div>
 
-        <!-- SECCIÓN 3: CONTROL DIRECTO DE EFECTOS -->
-        <div class="modal-section-title" style="margin-top: 10px;">3. CONTROL DIRECTO DE EFECTOS</div>
+        <!-- SECCIÓN 3: ECOS & REVERB -->
+        <div class="modal-section-title" style="margin-top: 8px;">3. ECOS & REVERB</div>
         <div class="commands-grid">
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Activar armónicos')">
-            <span class="command-phrase">"Activar [efecto]" / "Prender [efecto]"</span>
-            <span class="command-action-desc">Enciende Armónicos, Stereo, Chorus, Delay o Reverb</span>
+          <div class="command-pill" onclick="testVoiceCommandFromModal('Ping pong delay')">
+            <span class="command-phrase">"Ping pong delay" / "Delay para ambos lados"</span>
+            <span class="command-action-desc">Delay estéreo con rebote espacial de izquierda a derecha</span>
           </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Desactivar reverb')">
-            <span class="command-phrase">"Desactivar [efecto]" / "Apagar [efecto]"</span>
-            <span class="command-action-desc">Silencia o apaga el módulo instantáneamente</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Más delay')">
-            <span class="command-phrase">"Más [efecto]" / "Menos [efecto]"</span>
-            <span class="command-action-desc">Ajuste fino de 5% sobre el módulo activo</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Armónicos al 40%')">
-            <span class="command-phrase">"[Efecto] al [X]%"</span>
-            <span class="command-action-desc">Ej: "Reverb al 25%", "Armónicos al 40%"</span>
+          <div class="command-pill" onclick="testVoiceCommandFromModal('Más reverb')">
+            <span class="command-phrase">"Más reverb" / "Menos reverb"</span>
+            <span class="command-action-desc">Ajusta la intensidad y presencia del espacio ambiental</span>
           </div>
         </div>
 
-        <!-- SECCIÓN 4: NAVEGACIÓN Y HISTORIAL -->
-        <div class="modal-section-title" style="margin-top: 10px;">4. NAVEGACIÓN Y HISTORIAL</div>
+        <!-- SECCIÓN 4: BRILLO & LIMPIEZA -->
+        <div class="modal-section-title" style="margin-top: 8px;">4. BRILLO & LIMPIEZA</div>
         <div class="commands-grid">
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Ver efectos')">
-            <span class="command-phrase">"Ver efectos"</span>
-            <span class="command-action-desc">Abre la pantalla de rack de mezcla y ajustes</span>
+          <div class="command-pill" onclick="testVoiceCommandFromModal('Más brillo')">
+            <span class="command-phrase">"Más brillo" / "Más aire"</span>
+            <span class="command-action-desc">Realce sedoso de agudos para mayor claridad y definición</span>
           </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Volver')">
-            <span class="command-phrase">"Volver" / "Micrófono"</span>
-            <span class="command-action-desc">Regresa a la pantalla principal para hablar</span>
-          </div>
-          <div class="command-pill" onclick="testVoiceCommandFromModal('Deshacer')">
-            <span class="command-phrase">"Deshacer" / "Rehacer"</span>
-            <span class="command-action-desc">Revierte o repite tu última acción de audio</span>
+          <div class="command-pill" onclick="testVoiceCommandFromModal('Quitar graves')">
+            <span class="command-phrase">"Quitar graves" / "Limpia la voz"</span>
+            <span class="command-action-desc">Ajusta el corte de graves para eliminar retumbes</span>
           </div>
         </div>
       </div>
     </div>
   </div>
-
   <script>
     // ==========================================
     // PREVENCIÓN DE ZOOM ACCIDENTAL EN WEBVIEW2
@@ -2588,6 +2513,9 @@
     // PERSISTENCIA LOCAL (LOCALSTORAGE V4)
     // ==========================================
     function savePreset() {
+      // En modo plugin JUCE, cada canal de FL Studio guarda su estado en el DAW project
+      var isInsideJuce = !!(window.__JUCE__ || (window.chrome && window.chrome.webview));
+      if (isInsideJuce) return;
       try {
         var dataToSave = {
           screen: state.screen,
@@ -3696,22 +3624,24 @@
           var display = (accumulatedVoiceText + ' ' + interim).trim();
           if (display) setLiveTranscript(display, true);
 
-          clearTimeout(voiceSilenceTimer);
-          var timeoutSec = (state.settings && state.settings.silenceTimeoutSec) || 2.0;
-
+          // Control de voz manual: no cortar abruptamente al usuario mientras piensa o habla.
+          // Solo si se detecta un comando reconocido terminado, esperar breve pausa y procesar.
           var quickClean = sanitizeVoiceText(display);
           var isKnownCommand = quickClean.includes('preset') || quickClean.includes('reverb') ||
                                quickClean.includes('delay')  || quickClean.includes('chorus') ||
-                               quickClean.includes('doubler') || quickClean.includes('slapback') ||
-                               quickClean.includes('stereo') || quickClean.includes('armonicos');
+                               quickClean.includes('doubler') || quickClean.includes('stereo') ||
+                               quickClean.includes('ancho')   || quickClean.includes('brillo') ||
+                               quickClean.includes('graves')  || quickClean.includes('resetear') ||
+                               quickClean.includes('limpiar');
 
-          var waitMs = isKnownCommand ? 900 : (timeoutSec * 1000);
-
-          voiceSilenceTimer = setTimeout(function() {
-            if (state.isRecording) {
-              stopVoiceRecording();
-            }
-          }, waitMs);
+          if (isKnownCommand) {
+            clearTimeout(voiceSilenceTimer);
+            voiceSilenceTimer = setTimeout(function() {
+              if (state.isRecording) {
+                stopVoiceRecording();
+              }
+            }, 1200);
+          }
         };
         recognition.onerror = function(event) {
           console.warn('[SpeechRecognition error]', event.error);
@@ -3721,7 +3651,7 @@
           } else if (event.error === 'audio-capture') {
             setTemporaryTranscript('⚠ Micrófono ocupado por el driver ASIO de FL Studio');
           } else if (event.error === 'network') {
-            setTemporaryTranscript('⚠ Servicio de voz no disponible offline en WebView2. Usa los botones rápidos');
+            setTemporaryTranscript('💡 Modo rápido activo: selecciona un botón de sugerencia');
           } else if (event.error !== 'no-speech') {
             setTemporaryTranscript('⚠ Reconocimiento de voz: ' + event.error);
           }
@@ -3793,7 +3723,7 @@
       }
       if (btn) {
         btn.classList.toggle('listening', isRec);
-        if (text) text.textContent = isRec ? 'PAUSA PARA PROCESAR' : 'Presionar para hablar';
+        if (text) text.textContent = isRec ? 'DETENER Y APLICAR' : 'Presionar para hablar';
         if (cursor) cursor.classList.toggle('active', isRec);
       }
       var cMic = document.getElementById('compactMicEffects');
@@ -3918,6 +3848,54 @@
       // 1. RECETA ESTRELLA: "DAME UN PRESET" / "MEJORA MI VOZ" / "STARTER"
       if (clean.includes('preset') || clean.includes('starter') || clean.includes('estarter')) {
         applyStarterPreset();
+        return;
+      }
+
+      // RESETEAR MEZCLA O VALORES DE FÁBRICA
+      if (clean.includes('resetear') || clean.includes('limpiar') || clean.includes('valores de fabrica') || clean.includes('de fabrica')) {
+        executeFactoryReset();
+        return;
+      }
+
+      // ESTÉREO / MÁS ANCHO A LA VOZ
+      if (clean.includes('ponle estereo') || clean.includes('ponle stereo') || clean.includes('mas ancho') || clean.includes('ancho a la voz')) {
+        pushSnapshot();
+        state.creative.doubler.on = true;
+        state.creative.doubler.amount = 25;
+        state.creative.doubler.width = 80;
+        sendParamToJuce('doubler.enabled', 1.0);
+        sendParamToJuce('doubler.amount', 25);
+        sendParamToJuce('doubler.width', 80);
+        renderCreativeGrid();
+        setTemporaryTranscript('Estéreo ensanchado (Doubler 80%)', true);
+        return;
+      }
+
+      // PING PONG DELAY / DELAY PARA AMBOS LADOS
+      if (clean.includes('ping pong') || clean.includes('ambos lados')) {
+        pushSnapshot();
+        state.creative.delay.on = true;
+        state.creative.delay.amount = 16;
+        state.creative.delay.feedback = 25;
+        state.creative.delay.wideStereo = true;
+        sendParamToJuce('delay.enabled', 1.0);
+        sendParamToJuce('delay.amount', 16);
+        sendParamToJuce('delay.feedback', 25);
+        sendParamToJuce('delay.pingPong', 1.0);
+        renderCreativeGrid();
+        setTemporaryTranscript('Ping-Pong delay estéreo activado', true);
+        return;
+      }
+
+      // CHORUS
+      if (clean === 'chorus' || clean === 'ponle chorus' || clean.includes('activar chorus')) {
+        pushSnapshot();
+        state.creative.chorus.on = true;
+        state.creative.chorus.amount = 18;
+        sendParamToJuce('chorus.enabled', 1.0);
+        sendParamToJuce('chorus.amount', 18);
+        renderCreativeGrid();
+        setTemporaryTranscript('Chorus armónico activado (18%)', true);
         return;
       }
 
@@ -4352,6 +4330,19 @@
       if (data.delayAmount !== undefined) state.creative.delay.amount = Number(data.delayAmount);
       if (data.reverbOn !== undefined) state.creative.reverb.on = !!data.reverbOn;
       if (data.reverbAmount !== undefined) state.creative.reverb.amount = Number(data.reverbAmount);
+      if (data.reverbDecay !== undefined) state.creative.reverb.decay = Number(data.reverbDecay);
+      if (data.reverbLowCut !== undefined) state.creative.reverb.lowCut = Number(data.reverbLowCut);
+      if (data.reverbHighCut !== undefined) state.creative.reverb.highCut = Number(data.reverbHighCut);
+      if (data.reverbSidechain !== undefined) state.creative.reverb.sidechain = !!data.reverbSidechain;
+
+      if (data.doublerWidth !== undefined) state.creative.doubler.width = Number(data.doublerWidth);
+      if (data.doublerLowCut !== undefined) state.creative.doubler.lowCut = Number(data.doublerLowCut);
+      if (data.doublerHighCut !== undefined) state.creative.doubler.highCut = Number(data.doublerHighCut);
+
+      if (data.delayFeedback !== undefined) state.creative.delay.feedback = Number(data.delayFeedback);
+      if (data.delayLowCut !== undefined) state.creative.delay.hpf = Number(data.delayLowCut);
+      if (data.delaySidechain !== undefined) state.creative.delay.sidechain = !!data.delaySidechain;
+      if (data.delayPingPong !== undefined) state.creative.delay.wideStereo = !!data.delayPingPong;
 
       renderMixGrid();
       renderCreativeGrid();
@@ -4433,6 +4424,84 @@
     }
 
     // MODAL COMANDOS
+    
+    // ACCIONES RÁPIDAS DE VOZ POR CHIP
+    function executeVoiceQuickAction(phrase) {
+      setLiveTranscript(phrase, false);
+      processVoiceCommand(phrase);
+    }
+
+    // MODAL DE CONFIRMACIÓN RESTABLECER
+    function openConfirmResetModal() {
+      var m = document.getElementById('modalConfirmReset');
+      if (m) m.classList.add('open');
+    }
+    function closeConfirmResetModal(e) {
+      if (e) e.stopPropagation();
+      var m = document.getElementById('modalConfirmReset');
+      if (m) m.classList.remove('open');
+    }
+    function executeFactoryReset() {
+      closeConfirmResetModal();
+      // Restablecer parámetros de esta instancia
+      state.routing = 'insert';
+      state.inGain = 0.0;
+      state.outGain = 0.0;
+      state.mixChainOn = true;
+      state.mixMacro = 100;
+      state.mixParams.hpf.val = 79;
+      state.mixParams.boxy.val = 16;
+      state.mixParams.deesser.val = 43;
+      state.mixParams.presMid.val = 100;
+      state.mixParams.presHigh.val = 100;
+      state.mixParams.sat.val = 0;
+      state.mixParams.air.val = 40;
+      state.mixParams.comp.val = 13;
+
+      state.creative.doubler.on = false;
+      state.creative.doubler.amount = 20;
+      state.creative.doubler.width = 80;
+      state.creative.doubler.lowCut = 120;
+      state.creative.doubler.highCut = 10000;
+
+      state.creative.chorus.on = false;
+      state.creative.chorus.amount = 15;
+
+      state.creative.delay.on = false;
+      state.creative.delay.amount = 12;
+      state.creative.delay.feedback = 25;
+      state.creative.delay.sidechain = true;
+      state.creative.delay.wideStereo = true;
+
+      state.creative.reverb.on = false;
+      state.creative.reverb.amount = 0;
+      state.creative.reverb.decay = 2.2;
+      state.creative.reverb.lowCut = 300;
+      state.creative.reverb.highCut = 8500;
+      state.creative.reverb.sidechain = true;
+
+      renderMixGrid();
+      renderCreativeGrid();
+      updateOutKnobUI(state.outGain);
+      updateMixMacroUI(state.mixMacro);
+      updateMixChainToggleUI();
+
+      // Sincronizar C++
+      sendParamToJuce('global.routingMode', 0.0);
+      sendParamToJuce('global.inGain', 0.0);
+      sendParamToJuce('global.outGain', 0.0);
+      sendParamToJuce('global.mixMacro', 100.0);
+      for (var k in state.mixParams) {
+        sendParamToJuce('mix.' + k, state.mixParams[k].val);
+      }
+      for (var ck in state.creative) {
+        var fx = state.creative[ck];
+        sendParamToJuce(ck + '.enabled', fx.on ? 1.0 : 0.0);
+        sendParamToJuce(ck + '.amount', fx.amount);
+      }
+      setTemporaryTranscript('Configuración restablecida a valores de fábrica', true);
+    }
+
     function openCommandsModal() { document.getElementById('modalCommands').classList.add('open'); }
     function closeCommandsModal() { document.getElementById('modalCommands').classList.remove('open'); }
     function testVoiceCommandFromModal(cmd) {
@@ -4482,7 +4551,13 @@
         }
       } catch(e) {}
 
-      loadSavedPreset();
+      // Multi-instancia FL Studio: Si corremos dentro del plugin JUCE VST3,
+      // C++ (el procesador de este canal específico) es la única fuente de la verdad.
+      var isInsideJuce = !!(window.__JUCE__ || (window.chrome && window.chrome.webview));
+      if (!isInsideJuce) {
+        loadSavedPreset();
+      }
+
       showMainScreen();
       renderMixGrid();
       renderCreativeGrid();
@@ -4491,20 +4566,10 @@
       updateMixChainToggleUI();
       updateHistoryButtons();
 
-      // initSpeechRecognition deferred to user action to prevent startup hang
-
-      // Enviar parámetros iniciales inmediatamente para sincronizar audio DSP sin delay
-      sendParamToJuce('mix.macro', state.mixChainOn ? state.mixMacro : 50.0);
-      for (var k in state.mixParams) {
-        sendParamToJuce('mix.' + k, state.mixParams[k].val);
-      }
+      // Solicitar parámetros de esta instancia exacta a C++
       setTimeout(function() {
-        sendParamToJuce('mix.macro', state.mixChainOn ? state.mixMacro : 50.0);
-        for (var pk in state.mixParams) {
-          sendParamToJuce('mix.' + pk, state.mixParams[pk].val);
-        }
         sendParamToJuce('ui-ready', 1.0);
-      }, 100);
+      }, 60);
     })();
   
   // ========================================================
