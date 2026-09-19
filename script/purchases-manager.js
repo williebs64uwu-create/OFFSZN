@@ -90,7 +90,6 @@ window.PurchasesManager = (function () {
                                 users!products_producer_id_fkey (
                                     id,
                                     nickname,
-                                    email,
                                     socials,
                                     license_settings
                                 ),
