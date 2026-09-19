@@ -77,7 +77,25 @@ INKA-FULL-A8C8876F-451BA437
 
 ---
 
-## 🎙️ 5. VOCAL PRESET (10 Claves Lifetime)
+## 🎙️ 5. VOCAL PRESET (10 Claves Lifetime — 2 Dispositivos Nuevas)
+**Plugin:** `Vocal Preset` | **Tipo:** `lifetime` | **Dispositivos:** 2 | **Expiración:** NUNCA
+
+```text
+VOCA-FULL-F87E6A6A-8B4BC758
+VOCA-FULL-7908334D-AD464F4E
+VOCA-FULL-010B051C-DBA6CFC7
+VOCA-FULL-B71CE7DF-E8FC7A37
+VOCA-FULL-24CABF1C-F7FD1F76
+VOCA-FULL-B9504686-614446F4
+VOCA-FULL-FA7C33C2-72213D25
+VOCA-FULL-C7A14817-EEB7C097
+VOCA-FULL-8354A324-03B50708
+VOCA-FULL-5F9C5C2A-A4310C62
+```
+
+---
+
+## 🎙️ 5.1 VOCAL PRESET (Lote Anterior — 3 Dispositivos)
 **Plugin:** `Vocal Preset` | **Tipo:** `lifetime` | **Dispositivos:** 3 | **Expiración:** NUNCA
 
 ```text
@@ -103,5 +121,6 @@ VOCA-FULL-E2B24319-AB256805
 | **Easy Master** | 10 | `lifetime` | `active` | NUNCA | 3 por clave |
 | **Coca Cola** | 10 | `lifetime` | `active` | NUNCA | 3 por clave |
 | **Inka Kola** | 10 | `lifetime` | `active` | NUNCA | 3 por clave |
-| **Vocal Preset** | 10 | `lifetime` | `active` | NUNCA | 3 por clave |
-| **TOTAL** | **50** | | | | |
+| **Vocal Preset (Nuevo)** | 10 | `lifetime` | `active` | NUNCA | 2 por clave |
+| **Vocal Preset (Lote 1)** | 10 | `lifetime` | `active` | NUNCA | 3 por clave |
+| **TOTAL** | **60** | | | | |

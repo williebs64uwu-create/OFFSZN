@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>EASY PITCH</title>
+  <script>
+    // Silencia cualquier ventana emergente de error de script en motores antiguos
+    window.onerror = function() { return true; };
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-deep: #0a0c0f;
+      --bg-panel: #12151c;
+      --bg-surface: #181c25;
+      --bg-surface-hover: #202532;
+      --bg-control: #242936;
+      --bg-control-active: #2f3647;
+
+      --border-panel: rgba(255, 255, 255, 0.08);
+      --border-subtle: rgba(255, 255, 255, 0.05);
+      --border-highlight: rgba(255, 255, 255, 0.16);
+
+      --text-pure: #ffffff;
+      --text-secondary: #c2c7d0;
+      --text-muted: #747b88;
+      --text-dim: #454b57;
+
+      --accent-green: #10b981;
+      --accent-green-glow: rgba(16, 185, 129, 0.28);
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-cyan: #06b6d4;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-pill: 9999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    html, body {
+      width: 860px;
+      height: 540px;
+      overflow: hidden;
+      background: var(--bg-deep);
+      color: var(--text-pure);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      position: relative;
+    }
+
+    /* Contenedor Principal */
+    .plugin-window {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--border-panel);
+      background: radial-gradient(circle at 50% 0%, #181c26 0%, #0a0c0f 75%);
+      position: relative;
+    }
+
+    /* Textura de Hardware */
+    .texture-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.035;
+      background-image: radial-gradient(#ffffff 0.75px, transparent 0.75px);
+      background-size: 4px 4px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      height: 58px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, #161922 0%, #10131a 100%);
+      border-bottom: 1px solid var(--border-panel);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      z-index: 10;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 2.5px;
+      color: var(--text-pure);
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title .title-accent {
+      color: var(--accent-green);
+    }
+
+    .header-center {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .preset-selector-wrap {
+      display: flex;
+      align-items: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-panel);
+      border-radius: var(--radius-sm);
+      padding: 2px 4px;
+    }
+
+    .preset-select {
+      background: transparent;
+      border: none;
+      color: var(--text-pure);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .preset-select option {
+      background: var(--bg-panel);
+      color: var(--text-pure);
+    }
+
+    .btn-header {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-panel);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-header:hover {
+      background: var(--bg-surface-hover);
+      color: var(--text-pure);
+      border-color: var(--border-highlight);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* License Badge */
+    .license-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+    }
+
+    .license-badge.demo {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+
+    .license-badge.trial {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #fcd34d;
+    }
+
+    .license-badge.full {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ── MAIN CONTENT ── */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 28px;
+      gap: 16px;
+      z-index: 5;
+    }
+
+    /* Fila 1: Selectores de Key y Escala */
+    .selectors-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .selector-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-panel);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    .selector-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-muted);
+    }
+
+    .dropdown-control {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-panel);
+      border-radius: var(--radius-sm);
+      color: var(--text-pure);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 16px;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+      min-width: 140px;
+      transition: border-color 0.15s ease;
+    }
+
+    .dropdown-control:hover, .dropdown-control:focus {
+      border-color: var(--border-highlight);
+    }
+
+    .dropdown-control option {
+      background: var(--bg-panel);
+      color: var(--text-pure);
+    }
+
+    /* Fila 2: Unidad Central */
+    .center-unit {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 200px 1fr 200px;
+      gap: 20px;
+      align-items: center;
+    }
+
+    /* Perillas de Hardware */
+    .knob-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-panel);
+      border-radius: var(--radius-lg);
+      padding: 18px 12px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      position: relative;
+    }
+
+    .knob-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .knob-track {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .knob-svg-ring {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+      pointer-events: none;
+    }
+
+    .ring-bg {
+      fill: none;
+      stroke: #1e2430;
+      stroke-width: 6;
+      stroke-linecap: round;
+    }
+
+    .ring-val {
+      fill: none;
+      stroke: var(--accent-green);
+      stroke-width: 6;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 6px var(--accent-green-glow));
+    }
+
+    .knob-element {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #2c3242 0%, #151821 70%, #0d0f14 100%);
+      border: 2px solid #232836;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6), inset 0 2px 3px rgba(255, 255, 255, 0.15);
+      position: relative;
+      cursor: ns-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .knob-indicator {
+      position: absolute;
+      width: 3px;
+      height: 14px;
+      background: var(--accent-green);
+      border-radius: 2px;
+      top: 8px;
+      left: 50%;
+      margin-left: -1.5px;
+      transform-origin: center 37px;
+      box-shadow: 0 0 8px var(--accent-green);
+      pointer-events: none;
+    }
+
+    .knob-value-badge {
+      margin-top: 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-panel);
+      border-radius: var(--radius-sm);
+      padding: 4px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-pure);
+      min-width: 65px;
+      text-align: center;
+    }
+
+    /* Consola Central de Pitch */
+    .pitch-console {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-panel);
+      border-radius: var(--radius-lg);
+      padding: 20px 24px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      position: relative;
+    }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .note-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .note-box-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .note-box-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-pure);
+      line-height: 1;
+    }
+
+    .note-box.target .note-box-val {
+      color: var(--accent-green);
+      text-shadow: 0 0 12px var(--accent-green-glow);
+    }
+
+    /* Medidor de Cents */
+    .meter-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .meter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .meter-cents-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--text-pure);
+    }
+
+    .cents-track {
+      height: 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-panel);
+      border-radius: var(--radius-pill);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+    }
+
+    .cents-center-line {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.4);
+      margin-left: -1px;
+      z-index: 2;
+    }
+
+    .cents-bar {
+      position: absolute;
+      top: 2px;
+      bottom: 2px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #10b981, #06b6d4);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+      z-index: 1;
+    }
+
+    .cents-scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      padding: 0 4px;
+    }
+
+    .status-badge-text {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      height: 16px;
+    }
+
+    /* ── BARRA INFERIOR ── */
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 4px;
+    }
+
+    .bottom-status-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .bottom-status-info .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green-glow);
+    }
+
+    .power-toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .power-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+    }
+
+    .power-toggle {
+      width: 44px;
+      height: 24px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-control);
+      border: 1px solid var(--border-panel);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .power-toggle.on {
+      background: var(--accent-green);
+      border-color: var(--accent-green);
+      box-shadow: 0 0 12px var(--accent-green-glow);
+    }
+
+    .power-handle {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    .power-toggle.on .power-handle {
+      transform: translateX(20px);
+    }
+
+    /* ── MODALES ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 440px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-pure);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--text-pure);
+    }
+
+    .modal-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .modal-input {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-panel);
+      border-radius: var(--radius-sm);
+      color: var(--text-pure);
+      font-size: 12px;
+      padding: 8px 12px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .modal-input:focus {
+      border-color: var(--accent-green);
+    }
+
+    .btn-action-primary {
+      background: #ffffff;
+      color: #000000;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 10px 18px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action-primary:hover {
+      background: #f0f0f0;
+    }
+
+    .modal-status-msg {
+      font-size: 11px;
+      text-align: center;
+      line-height: 1.4;
+      min-height: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="plugin-window">
+    <div class="texture-overlay"></div>
+
+    <!-- ── HEADER ── -->
+    <header class="header">
+      <div class="brand-title">
+        EASY <span class="title-accent">PITCH</span>
+      </div>
+
+      <div class="header-center">
+        <div class="preset-selector-wrap">
+          <select class="preset-select" id="presetSelect" onchange="onPresetChange(this.value)">
+            <option value="0">Suave</option>
+            <option value="1" selected>Firme</option>
+            <option value="2">Marcado</option>
+          </select>
+        </div>
+        <button class="btn-header" onclick="saveCurrentPreset()">Guardar</button>
+      </div>
+
+      <div class="header-right">
+        <div class="license-badge trial" id="licenseBadge" onclick="openLicenseModal()">
+          <span class="badge-dot"></span>
+          <span id="licenseBadgeText">PRUEBA · 3 DÍAS</span>
+        </div>
+        <button class="btn-header" onclick="openSettingsModal()">Personalizar</button>
+      </div>
+    </header>
+
+    <!-- ── MAIN CONTENT ── -->
+    <main class="main-content">
+      <!-- Selectores: Key y Escala -->
+      <div class="selectors-row">
+        <div class="selector-card">
+          <span class="selector-label">Key (Tonalidad)</span>
+          <select class="dropdown-control" id="keySelect" onchange="onParamChange('key', this.value)">
+            <option value="0" selected>C / Do</option>
+            <option value="1">C♯ / Re♭</option>
+            <option value="2">D / Re</option>
+            <option value="3">D♯ / Mi♭</option>
+            <option value="4">E / Mi</option>
+            <option value="5">F / Fa</option>
+            <option value="6">F♯ / Sol♭</option>
+            <option value="7">G / Sol</option>
+            <option value="8">G♯ / La♭</option>
+            <option value="9">A / La</option>
+            <option value="10">A♯ / Si♭</option>
+            <option value="11">B / Si</option>
+          </select>
+        </div>
+
+        <div class="selector-card">
+          <span class="selector-label">Escala</span>
+          <select class="dropdown-control" id="scaleSelect" onchange="onParamChange('scale', this.value)">
+            <option value="0" selected>Mayor</option>
+            <option value="1">Menor natural</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Centro: Rapidez, Display, Cantidad -->
+      <div class="center-unit">
+        <!-- Knob 1: Rapidez -->
+        <div class="knob-card">
+          <span class="knob-title">Rapidez</span>
+          <div class="knob-track">
+            <svg class="knob-svg-ring" viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+              <circle class="ring-val" id="ringSpeed" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="114"></circle>
+            </svg>
+            <div class="knob-element" id="knobSpeed" data-param="speed" data-min="0" data-max="100" data-val="65">
+              <div class="knob-indicator" id="indicatorSpeed"></div>
+            </div>
+          </div>
+          <div class="knob-value-badge" id="valBadgeSpeed">65%</div>
+        </div>
+
+        <!-- Consola Central -->
+        <div class="pitch-console">
+          <div class="notes-grid">
+            <div class="note-box">
+              <span class="note-box-title">Entrada</span>
+              <span class="note-box-val" id="inputNoteText">--</span>
+            </div>
+            <div class="note-box target">
+              <span class="note-box-title">Objetivo</span>
+              <span class="note-box-val" id="targetNoteText">--</span>
+            </div>
+          </div>
+
+          <!-- Medidor de Cents en tiempo real -->
+          <div class="meter-section">
+            <div class="meter-header">
+              <span>Ajuste</span>
+              <span class="meter-cents-text" id="centsValText">0 cents</span>
+            </div>
+            <div class="cents-track">
+              <div class="cents-center-line"></div>
+              <div class="cents-bar" id="centsBar" style="left: 50%; width: 0%;"></div>
+            </div>
+            <div class="cents-scale-labels">
+              <span>-50</span>
+              <span>-25</span>
+              <span>0</span>
+              <span>+25</span>
+              <span>+50</span>
+            </div>
+          </div>
+
+          <div class="status-badge-text" id="statusHelpText">Elige la tonalidad</div>
+        </div>
+
+        <!-- Knob 2: Cantidad -->
+        <div class="knob-card">
+          <span class="knob-title">Cantidad</span>
+          <div class="knob-track">
+            <svg class="knob-svg-ring" viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+              <circle class="ring-val" id="ringAmount" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="0"></circle>
+            </svg>
+            <div class="knob-element" id="knobAmount" data-param="amount" data-min="0" data-max="100" data-val="100">
+              <div class="knob-indicator" id="indicatorAmount"></div>
+            </div>
+          </div>
+          <div class="knob-value-badge" id="valBadgeAmount">100%</div>
+        </div>
+      </div>
+
+      <!-- Barra Inferior -->
+      <footer class="bottom-bar">
+        <div class="bottom-status-info">
+          <span class="dot"></span>
+          <span>MOTOR DE AFINACIÓN DSP</span>
+        </div>
+
+        <div class="power-toggle-wrap">
+          <span class="power-label">Activar</span>
+          <div class="power-toggle on" id="powerToggle" onclick="togglePower()">
+            <div class="power-handle"></div>
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <!-- ── MODAL PERSONALIZAR ── -->
+    <div class="modal-backdrop" id="settingsModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <span class="modal-title">Personalizar</span>
+          <button class="modal-close" onclick="closeSettingsModal()">✕</button>
+        </div>
+
+        <div class="modal-row">
+          <span class="modal-label">Rango de voz</span>
+          <select class="dropdown-control" id="voiceRangeSelect" onchange="onParamChange('voiceRange', this.value)">
+            <option value="0">General (65 - 1000 Hz)</option>
+            <option value="1">Grave (65 - 450 Hz)</option>
+            <option value="2">Aguda (130 - 1000 Hz)</option>
+          </select>
+        </div>
+
+        <div class="modal-row">
+          <span class="modal-label">Conservar timbre</span>
+          <select class="dropdown-control" id="preserveTimbreSelect" onchange="onParamChange('preserveTimbre', this.value)">
+            <option value="1" selected>Activado</option>
+            <option value="0">Desactivado</option>
+          </select>
+        </div>
+
+        <div class="modal-row">
+          <span class="modal-label">Referencia A4 (Hz)</span>
+          <input type="number" class="modal-input" id="referenceHzInput" min="430" max="450" value="440" style="width: 80px; text-align: center;" onchange="onParamChange('referenceHz', this.value)">
+        </div>
+
+        <button class="btn-action-primary" onclick="resetSettingsDefaults()">Restablecer ajustes</button>
+      </div>
+    </div>
+
+    <!-- ── MODAL LICENCIA ── -->
+    <div class="modal-backdrop" id="licenseModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <span class="modal-title">Activación de Licencia</span>
+          <button class="modal-close" id="licenseCloseBtn" onclick="closeLicenseModal()">✕</button>
+        </div>
+
+        <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+          Ingresa tu clave de licencia para activar EASY PITCH de por vida o periodo de prueba.
+        </div>
+
+        <input type="text" class="modal-input" id="licenseInput" placeholder="EASY-FULL-XXXX-XXXX o EASY-TRIAL-XXXX" style="width: 100%; text-transform: uppercase;">
+
+        <button class="btn-action-primary" id="btnActivateLicense" onclick="submitLicenseActivation()">Activar Licencia</button>
+
+        <div class="modal-status-msg" id="licenseStatusMsg" style="color: var(--text-muted);"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── Puente Nativo JUCE 8 Bidireccional ──
+    var jucePromiseId = 1;
+    var jucePromises = {};
+
+    function initJuceBridge() {
+      try {
+        if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.addEventListener === 'function') {
+          window.__JUCE__.backend.addEventListener('__juce__complete', function(object) {
+            if (!object) return;
+            var p = jucePromises[object.resultId];
+            if (p) {
+              delete jucePromises[object.resultId];
+              if (object.error && object.error.length > 0) {
+                if (p.reject) p.reject(object.error);
+              } else {
+                if (p.resolve) p.resolve(object.result);
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Error initJuceBridge', e);
+      }
+    }
+
+    function callNative(funcName) {
+      var args = [];
+      for (var i = 1; i < arguments.length; i++) {
+        args.push(arguments[i]);
+      }
+
+      var pid = jucePromiseId++;
+      var p = new Promise(function(resolve, reject) {
+        jucePromises[pid] = { resolve: resolve, reject: reject };
+      });
+
+      try {
+        // 1. Si existe getNativeFunction en scope
+        if (typeof window.getNativeFunction === 'function') {
+          return window.getNativeFunction(funcName).apply(null, args);
+        }
+        if (window.__JUCE__ && typeof window.__JUCE__.getNativeFunction === 'function') {
+          return window.__JUCE__.getNativeFunction(funcName).apply(null, args);
+        }
+        // 2. JUCE 8 backend event emission (__juce__invoke)
+        if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.emitEvent === 'function') {
+          window.__JUCE__.backend.emitEvent('__juce__invoke', {
+            name: funcName,
+            params: args,
+            resultId: pid
+          });
+          return p;
+        }
+        // 3. Fallback directo postMessage con protocolo JUCE
+        if (window.chrome && window.chrome.webview && typeof window.chrome.webview.postMessage === 'function') {
+          window.chrome.webview.postMessage(JSON.stringify({
+            eventId: '__juce__invoke',
+            payload: {
+              name: funcName,
+              params: args,
+              resultId: pid
+            }
+          }));
+          return p;
+        }
+      } catch (e) {
+        console.error('Error callNative (' + funcName + '):', e);
+      }
+
+      return Promise.resolve();
+    }
+
+    // Inicialización inmediata del puente
+    initJuceBridge();
+
+    // ── Cola de Cambios Pendientes (Canal Bidireccional de Respaldo) ──
+    window.pendingChanges = [];
+
+    function queueParamChange(paramId, numVal) {
+      if (!window.pendingChanges) window.pendingChanges = [];
+      window.pendingChanges.push({ id: paramId, val: numVal });
+      callNative("setParam", paramId, numVal);
+    }
+
+    window.flushPendingChanges = function() {
+      if (!window.pendingChanges || window.pendingChanges.length === 0) return null;
+      var list = window.pendingChanges.slice();
+      window.pendingChanges = [];
+      return list;
+    };
+
+    window.syncFromHost = function(hostParams) {
+      if (!hostParams) return;
+      for (var k in hostParams) {
+        params[k] = hostParams[k];
+      }
+      if (document.getElementById('keySelect')) document.getElementById('keySelect').value = params.key;
+      if (document.getElementById('scaleSelect')) document.getElementById('scaleSelect').value = params.scale;
+      if (document.getElementById('voiceRangeSelect')) document.getElementById('voiceRangeSelect').value = params.voiceRange;
+      if (document.getElementById('preserveTimbreSelect')) document.getElementById('preserveTimbreSelect').value = params.preserveTimbre ? "1" : "0";
+      if (document.getElementById('referenceHzInput')) document.getElementById('referenceHzInput').value = params.referenceHz;
+      updateKnobVisual('speed', params.speed);
+      updateKnobVisual('amount', params.amount);
+      var toggle = document.getElementById('powerToggle');
+      if (toggle) toggle.className = (params.enabled > 0.5) ? 'power-toggle on' : 'power-toggle';
+      updateStatusHelpText();
+    };
+
+    // ── Estado Local de Parámetros ──
+    var params = {
+      enabled: 1,
+      key: 0, // 0 = C / Do (activo)
+      scale: 0, // 0 = Mayor
+      speed: 65,
+      amount: 100,
+      voiceRange: 0,
+      preserveTimbre: 1,
+      referenceHz: 440
+    };
+
+    var licenseState = {
+      isValid: true,
+      isTrial: true,
+      daysLeft: 3,
+      serial: ""
+    };
+
+    function onParamChange(paramId, value) {
+      var numVal = parseFloat(value);
+      params[paramId] = numVal;
+      queueParamChange(paramId, numVal);
+
+      if (paramId === 'key' || paramId === 'enabled') {
+        updateStatusHelpText();
+      }
+    }
+
+    function togglePower() {
+      params.enabled = (params.enabled > 0.5) ? 0 : 1;
+      var toggle = document.getElementById('powerToggle');
+      if (params.enabled > 0.5) {
+        toggle.className = 'power-toggle on';
+      } else {
+        toggle.className = 'power-toggle';
+      }
+      queueParamChange("enabled", params.enabled);
+      updateStatusHelpText();
+    }
+
+    function updateStatusHelpText() {
+      var help = document.getElementById('statusHelpText');
+      if (!help) return;
+      if (params.enabled < 0.5) {
+        help.innerText = "Plugin desactivado (Bypass)";
+        help.style.color = "var(--text-muted)";
+      } else {
+        help.innerText = "Afinación activa";
+        help.style.color = "var(--accent-green)";
+      }
+    }
+
+    // ── Perillas Táctiles con Anillo SVG y Arrastre Vertical ──
+    var CIRCUMFERENCE = 326.7; // 2 * PI * 52
+
+    function updateKnobVisual(paramName, val) {
+      var angle = -135 + (val / 100) * 270;
+      var badge = document.getElementById(paramName === 'speed' ? 'valBadgeSpeed' : 'valBadgeAmount');
+      var indicator = document.getElementById(paramName === 'speed' ? 'indicatorSpeed' : 'indicatorAmount');
+      var ring = document.getElementById(paramName === 'speed' ? 'ringSpeed' : 'ringAmount');
+
+      if (indicator) {
+        indicator.style.transform = 'rotate(' + angle + 'deg)';
+      }
+      if (badge) {
+        badge.innerText = Math.round(val) + "%";
+      }
+      if (ring) {
+        // Arco proporcional al porcentaje
+        var offset = CIRCUMFERENCE * (1 - (val / 100));
+        ring.style.strokeDashoffset = offset;
+      }
+    }
+
+    function initKnob(knobId) {
+      var knob = document.getElementById(knobId);
+      if (!knob) return;
+
+      var paramName = knob.getAttribute('data-param');
+      var isDragging = false;
+      var startY = 0;
+      var startVal = 0;
+
+      updateKnobVisual(paramName, params[paramName]);
+
+      knob.onmousedown = function(e) {
+        isDragging = true;
+        startY = e.clientY;
+        startVal = params[paramName];
+        document.body.style.cursor = 'ns-resize';
+
+        var onMouseMove = function(ev) {
+          if (!isDragging) return;
+          var deltaY = startY - ev.clientY;
+          var newVal = startVal + (deltaY / 150) * 100;
+          if (newVal < 0) newVal = 0;
+          if (newVal > 100) newVal = 100;
+
+          params[paramName] = newVal;
+          updateKnobVisual(paramName, newVal);
+          queueParamChange(paramName, newVal);
+        };
+
+        var onMouseUp = function() {
+          isDragging = false;
+          document.body.style.cursor = 'default';
+          window.removeEventListener('mousemove', onMouseMove);
+          window.removeEventListener('mouseup', onMouseUp);
+        };
+
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+      };
+    }
+
+    // ── Presets ──
+    function onPresetChange(index) {
+      var idx = parseInt(index, 10);
+      callNative("loadPreset", idx);
+
+      if (idx === 0) { // Suave
+        setKnobValue('speed', 35);
+        setKnobValue('amount', 80);
+      } else if (idx === 1) { // Firme
+        setKnobValue('speed', 65);
+        setKnobValue('amount', 100);
+      } else if (idx === 2) { // Marcado
+        setKnobValue('speed', 100);
+        setKnobValue('amount', 100);
+      }
+    }
+
+    function setKnobValue(paramName, val) {
+      params[paramName] = val;
+      updateKnobVisual(paramName, val);
+      queueParamChange(paramName, val);
+    }
+
+    function saveCurrentPreset() {
+      var msg = document.getElementById('statusHelpText');
+      if (msg) {
+        msg.innerText = "Ajustes guardados en la sesión";
+        setTimeout(updateStatusHelpText, 2000);
+      }
+    }
+
+    // ── Medidor de Cents y Notas en Tiempo Real (30 Hz) ──
+    window.onLiveMetersUpdate = function(data) {
+      if (!data) return;
+
+      var inputTxt = document.getElementById('inputNoteText');
+      var targetTxt = document.getElementById('targetNoteText');
+      var centsTxt = document.getElementById('centsValText');
+      var centsBar = document.getElementById('centsBar');
+
+      if (data.isVoiced && data.inputNote && data.inputNote !== '--') {
+        if (inputTxt) inputTxt.innerText = data.inputNote;
+        if (targetTxt) targetTxt.innerText = data.targetNote || data.inputNote;
+
+        var cents = data.centsShift || 0;
+        if (centsTxt) {
+          centsTxt.innerText = (cents >= 0 ? "+" : "") + Math.round(cents) + " cents";
+        }
+
+        if (centsBar) {
+          var clamped = cents;
+          if (clamped < -50) clamped = -50;
+          if (clamped > 50) clamped = 50;
+
+          if (clamped >= 0) {
+            var widthPct = (clamped / 50) * 50;
+            centsBar.style.left = "50%";
+            centsBar.style.width = widthPct + "%";
+          } else {
+            var widthPct = (Math.abs(clamped) / 50) * 50;
+            centsBar.style.left = (50 - widthPct) + "%";
+            centsBar.style.width = widthPct + "%";
+          }
+        }
+      } else {
+        if (inputTxt) inputTxt.innerText = "--";
+        if (targetTxt) targetTxt.innerText = "--";
+        if (centsTxt) centsTxt.innerText = "0 cents";
+        if (centsBar) {
+          centsBar.style.left = "50%";
+          centsBar.style.width = "0%";
+        }
+      }
+    };
+
+    // ── Modales ──
+    function openSettingsModal() {
+      var modal = document.getElementById('settingsModal');
+      if (modal) modal.className = 'modal-backdrop open';
+    }
+
+    function closeSettingsModal() {
+      var modal = document.getElementById('settingsModal');
+      if (modal) modal.className = 'modal-backdrop';
+    }
+
+    function resetSettingsDefaults() {
+      if (document.getElementById('voiceRangeSelect')) document.getElementById('voiceRangeSelect').value = "0";
+      if (document.getElementById('preserveTimbreSelect')) document.getElementById('preserveTimbreSelect').value = "1";
+      if (document.getElementById('referenceHzInput')) document.getElementById('referenceHzInput').value = "440";
+
+      onParamChange('voiceRange', 0);
+      onParamChange('preserveTimbre', 1);
+      onParamChange('referenceHz', 440);
+      closeSettingsModal();
+    }
+
+    function openLicenseModal() {
+      var modal = document.getElementById('licenseModal');
+      if (modal) modal.className = 'modal-backdrop open';
+      var msg = document.getElementById('licenseStatusMsg');
+      if (msg) msg.innerText = "";
+    }
+
+    function closeLicenseModal() {
+      if (licenseState.isValid) {
+        var modal = document.getElementById('licenseModal');
+        if (modal) modal.className = 'modal-backdrop';
+      }
+    }
+
+    function updateLicenseBadge(isValid, isTrial, daysLeft) {
+      var badge = document.getElementById('licenseBadge');
+      var badgeText = document.getElementById('licenseBadgeText');
+      var closeBtn = document.getElementById('licenseCloseBtn');
+      if (!badge || !badgeText) return;
+
+      if (isValid) {
+        if (isTrial) {
+          badge.className = 'license-badge trial';
+          badgeText.innerText = "PRUEBA · " + daysLeft + " DÍAS";
+        } else {
+          badge.className = 'license-badge full';
+          badgeText.innerText = "FULL";
+        }
+        if (closeBtn) closeBtn.style.display = 'block';
+      } else {
+        badge.className = 'license-badge demo';
+        badgeText.innerText = "DEMO · ACTIVAR";
+        if (closeBtn) closeBtn.style.display = 'none';
+        openLicenseModal();
+      }
+    }
+
+    function submitLicenseActivation() {
+      var input = document.getElementById('licenseInput');
+      var statusMsg = document.getElementById('licenseStatusMsg');
+      var btn = document.getElementById('btnActivateLicense');
+      var serial = (input && input.value ? input.value : "").trim().toUpperCase();
+
+      if (!serial) {
+        if (statusMsg) {
+          statusMsg.innerText = "Por favor ingresa una clave.";
+          statusMsg.style.color = "var(--accent-red)";
+        }
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = "Verificando...";
+      }
+      if (statusMsg) {
+        statusMsg.innerText = "Conectando con el servidor...";
+        statusMsg.style.color = "var(--text-secondary)";
+      }
+
+      try {
+        var promise = callNative("activateLicense", serial);
+        if (promise && promise.then) {
+          promise.then(function(res) {
+            if (btn) {
+              btn.disabled = false;
+              btn.innerText = "Activar Licencia";
+            }
+            if (res && res.success) {
+              if (statusMsg) {
+                statusMsg.innerText = res.message || "¡Activado con éxito!";
+                statusMsg.style.color = "var(--accent-green)";
+              }
+              setTimeout(function() {
+                initStartupLicense();
+                closeLicenseModal();
+              }, 1200);
+            } else {
+              if (statusMsg) {
+                statusMsg.innerText = (res && res.message) || "Clave no válida o servidor inaccesible.";
+                statusMsg.style.color = "var(--accent-red)";
+              }
+            }
+          });
+        }
+      } catch (e) {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = "Activar Licencia";
+        }
+      }
+    }
+
+    // ── Carga Inicial ──
+    function initStartupLicense() {
+      try {
+        var p = callNative("getLicenseState");
+        if (p && p.then) {
+          p.then(function(state) {
+            if (state) {
+              licenseState = state;
+              updateLicenseBadge(state.isValid, state.isTrial, state.daysLeft);
+              if (state.serial && document.getElementById('licenseInput')) {
+                document.getElementById('licenseInput').value = state.serial;
+              }
+            }
+          });
+        }
+      } catch (e) {}
+    }
+
+    function initStartupParams() {
+      try {
+        var p = callNative("getAllParams");
+        if (p && p.then) {
+          p.then(function(data) {
+            if (data) {
+              for (var k in data) {
+                params[k] = data[k];
+              }
+              if (document.getElementById('keySelect')) document.getElementById('keySelect').value = params.key;
+              if (document.getElementById('scaleSelect')) document.getElementById('scaleSelect').value = params.scale;
+              if (document.getElementById('voiceRangeSelect')) document.getElementById('voiceRangeSelect').value = params.voiceRange;
+              if (document.getElementById('preserveTimbreSelect')) document.getElementById('preserveTimbreSelect').value = params.preserveTimbre ? "1" : "0";
+              if (document.getElementById('referenceHzInput')) document.getElementById('referenceHzInput').value = params.referenceHz;
+
+              updateKnobVisual('speed', params.speed);
+              updateKnobVisual('amount', params.amount);
+
+              var toggle = document.getElementById('powerToggle');
+              if (toggle) {
+                toggle.className = (params.enabled > 0.5) ? 'power-toggle on' : 'power-toggle';
+              }
+              updateStatusHelpText();
+            }
+          });
+        }
+      } catch (e) {}
+    }
+
+    // Inicializar al cargar el DOM
+    window.onload = function() {
+      initKnob('knobSpeed');
+      initKnob('knobAmount');
+      initJuceBridge();
+      initStartupLicense();
+      initStartupParams();
+      updateStatusHelpText();
+    };
+
+    // Tecla Escape para cerrar modales
+    window.onkeydown = function(e) {
+      if (e.keyCode === 27) { // 27 = Escape
+        closeSettingsModal();
+        if (licenseState.isValid) {
+          closeLicenseModal();
+        }
+      }
+    };
+  </script>
+</body>
+</html>

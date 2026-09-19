@@ -4,19 +4,34 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <script>
+    (function() {
+      try {
+        var s = localStorage.getItem('offszn_vocalpreset_skin') || 'obsidian';
+        document.documentElement.setAttribute('data-theme', s);
+      } catch(e) {}
+    })();
+  </script>
   <title>OFFSZN Vocal Preset</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      /* PALETA PRO BLACK & WHITE / MONOCROMÁTICA */
+    :root, [data-theme="obsidian"] {
+      /* PALETA 1: OBSIDIAN STEALTH (PREDETERMINADA / MONOCROMO ESTUDIO) */
       --bg-deep: #08090a;
       --bg-panel: #0f1115;
       --bg-surface: #14171d;
       --bg-control: #1a1d24;
       --bg-control-active: #242832;
-      
+
+      --header-bg: linear-gradient(180deg, #13161c 0%, #0d0f14 100%);
+      --footer-bg: linear-gradient(180deg, #111318 0%, #0a0b0e 100%);
+      --card-bg: linear-gradient(180deg, #14171e 0%, #0d0f14 100%);
+      --hero-card-bg: linear-gradient(180deg, #161922 0%, #0d0f15 100%);
+      --active-btn-bg: linear-gradient(180deg, #252a35 0%, #171a21 100%);
+      --modal-bg: linear-gradient(180deg, #13161c 0%, #0d0f14 100%);
+
       --border-outer: #000000;
       --border-panel: rgba(255, 255, 255, 0.08);
       --border-highlight: rgba(255, 255, 255, 0.16);
@@ -27,11 +42,107 @@
       --text-muted: #757b89;
       --text-dim: #444a56;
 
+      --accent: #ffffff;
+      --accent-glow: rgba(255, 255, 255, 0.16);
+      --accent-border: rgba(255, 255, 255, 0.28);
+
       --white-glow: rgba(255, 255, 255, 0.15);
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 14px;
       --radius-pill: 9999px;
+    }
+
+    [data-theme="cobalt"] {
+      /* PALETA 2: COBALT CYBER / ICE BLUE */
+      --bg-deep: #060910;
+      --bg-panel: #0a0f1c;
+      --bg-surface: #0e1526;
+      --bg-control: #121c32;
+      --bg-control-active: #172644;
+
+      --header-bg: linear-gradient(180deg, #0e1728 0%, #080d17 100%);
+      --footer-bg: linear-gradient(180deg, #0b1220 0%, #060911 100%);
+      --card-bg: linear-gradient(180deg, #0e1829 0%, #080d16 100%);
+      --hero-card-bg: linear-gradient(180deg, #101c30 0%, #09101d 100%);
+      --active-btn-bg: linear-gradient(180deg, #14304f 0%, #0a1b2d 100%);
+      --modal-bg: linear-gradient(180deg, #0d1627 0%, #070c16 100%);
+
+      --border-panel: rgba(56, 189, 248, 0.12);
+      --border-highlight: rgba(56, 189, 248, 0.26);
+
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.28);
+      --accent-border: rgba(56, 189, 248, 0.38);
+    }
+
+    [data-theme="violet"] {
+      /* PALETA 3: MIDNIGHT VIOLET / TRAP & PLUGG */
+      --bg-deep: #090710;
+      --bg-panel: #110d1e;
+      --bg-surface: #171128;
+      --bg-control: #201738;
+      --bg-control-active: #2b1f4a;
+
+      --header-bg: linear-gradient(180deg, #161026 0%, #0c0816 100%);
+      --footer-bg: linear-gradient(180deg, #130d22 0%, #090612 100%);
+      --card-bg: linear-gradient(180deg, #171029 0%, #0c0817 100%);
+      --hero-card-bg: linear-gradient(180deg, #1c1333 0%, #0e091b 100%);
+      --active-btn-bg: linear-gradient(180deg, #321958 0%, #1c0d33 100%);
+      --modal-bg: linear-gradient(180deg, #150f27 0%, #0b0716 100%);
+
+      --border-panel: rgba(168, 85, 247, 0.12);
+      --border-highlight: rgba(168, 85, 247, 0.26);
+
+      --accent: #c084fc;
+      --accent-glow: rgba(192, 132, 252, 0.28);
+      --accent-border: rgba(192, 132, 252, 0.38);
+    }
+
+    [data-theme="gold"] {
+      /* PALETA 4: CHAMPAGNE GOLD / ANALOG LUXURY */
+      --bg-deep: #0a0907;
+      --bg-panel: #14110d;
+      --bg-surface: #1a1711;
+      --bg-control: #241f17;
+      --bg-control-active: #322b1f;
+
+      --header-bg: linear-gradient(180deg, #19150f 0%, #0f0d09 100%);
+      --footer-bg: linear-gradient(180deg, #15110c 0%, #0b0906 100%);
+      --card-bg: linear-gradient(180deg, #1b1711 0%, #0f0d09 100%);
+      --hero-card-bg: linear-gradient(180deg, #201b13 0%, #120f0a 100%);
+      --active-btn-bg: linear-gradient(180deg, #3d2f13 0%, #241a08 100%);
+      --modal-bg: linear-gradient(180deg, #1a150e 0%, #0e0b07 100%);
+
+      --border-panel: rgba(245, 158, 11, 0.12);
+      --border-highlight: rgba(245, 158, 11, 0.26);
+
+      --accent: #fbbf24;
+      --accent-glow: rgba(251, 191, 36, 0.28);
+      --accent-border: rgba(251, 191, 36, 0.38);
+    }
+
+    [data-theme="titanium"] {
+      /* PALETA 5: APOLLO TITANIUM / ESTUDIO MINT */
+      --bg-deep: #080b09;
+      --bg-panel: #0e1411;
+      --bg-surface: #131b17;
+      --bg-control: #1a2520;
+      --bg-control-active: #23342d;
+
+      --header-bg: linear-gradient(180deg, #121915 0%, #0a0e0c 100%);
+      --footer-bg: linear-gradient(180deg, #0f1512 0%, #080b09 100%);
+      --card-bg: linear-gradient(180deg, #121b16 0%, #0a0f0c 100%);
+      --hero-card-bg: linear-gradient(180deg, #15211b 0%, #0c1410 100%);
+      --active-btn-bg: linear-gradient(180deg, #143b2a 0%, #0b2218 100%);
+      --modal-bg: linear-gradient(180deg, #121915 0%, #090e0b 100%);
+
+      --border-panel: rgba(52, 211, 153, 0.12);
+      --border-highlight: rgba(52, 211, 153, 0.26);
+
+      --accent: #34d399;
+      --accent-glow: rgba(52, 211, 153, 0.28);
+      --accent-border: rgba(52, 211, 153, 0.38);
     }
 
     * {
@@ -78,8 +189,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: linear-gradient(180deg, #13161c 0%, #0d0f14 100%);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border-panel);
       box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       z-index: 10;
     }
@@ -166,9 +277,9 @@
     }
 
     .routing-btn.active {
-      background: linear-gradient(180deg, #252a35 0%, #171a21 100%);
-      color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.18);
+      background: var(--active-btn-bg);
+      color: var(--accent);
+      border-color: var(--accent-border);
       box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
     }
 
@@ -495,9 +606,9 @@
     }
 
     .category-tab-btn.active {
-      background: linear-gradient(180deg, #252a35 0%, #171a21 100%);
-      color: #ffffff;
-      border-color: rgba(255, 255, 255, 0.18);
+      background: var(--active-btn-bg);
+      color: var(--accent);
+      border-color: var(--accent-border);
       box-shadow: 0 2px 6px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
     }
 
@@ -546,8 +657,8 @@
 
     /* HERO MACRO BAR (MEZCLA / EASY MIX) */
     .mix-hero-card {
-      background: linear-gradient(180deg, #161922 0%, #0d0f15 100%);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: var(--hero-card-bg);
+      border: 1px solid var(--border-panel);
       border-top-color: rgba(255, 255, 255, 0.2);
       border-radius: var(--radius-md);
       padding: 10px 18px;
@@ -653,8 +764,8 @@
     }
 
     .fx-card {
-      background: linear-gradient(180deg, #14171e 0%, #0d0f14 100%);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--card-bg);
+      border: 1px solid var(--border-panel);
       border-top-color: rgba(255, 255, 255, 0.16);
       border-bottom-color: rgba(0, 0, 0, 0.85);
       border-radius: var(--radius-md);
@@ -702,9 +813,9 @@
     }
 
     .switch-toggle.on {
-      background: #ffffff;
-      border-color: #ffffff;
-      box-shadow: none;
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
     }
 
     .switch-toggle::after {
@@ -754,7 +865,7 @@
 
     .arc-fill {
       fill: none;
-      stroke: #ffffff;
+      stroke: var(--accent);
       stroke-width: 5.5;
       stroke-linecap: round;
       stroke-dasharray: 176;
@@ -814,7 +925,60 @@
       color: #ffffff;
     }
 
-    /* PANTALLA AJUSTES INTEGRADA */
+  
+    /* ====================================================
+       CHIPS SELECTOR DE SKINS / TEMAS MINIMALISTAS (V1.5)
+       ==================================================== */
+    .theme-chips-container {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .theme-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: all 0.16s ease;
+      user-select: none;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .theme-chip:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .theme-chip.active {
+      background: var(--active-btn-bg);
+      border-color: var(--accent-border);
+      color: var(--accent);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), 0 0 10px var(--accent-glow);
+    }
+
+    .theme-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+  /* PANTALLA AJUSTES INTEGRADA */
     .settings-panel {
       display: flex;
       flex-direction: column;
@@ -916,8 +1080,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-top: 1px solid rgba(255, 255, 255, 0.07);
-      background: linear-gradient(180deg, #111318 0%, #0a0b0e 100%);
+      border-top: 1px solid var(--border-panel);
+      background: var(--footer-bg);
       box-shadow: 0 -2px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
       margin-top: auto;
       z-index: 10;
@@ -1143,8 +1307,8 @@
     .modal-card {
       width: 620px;
       max-height: 520px;
-      background: linear-gradient(180deg, #13161c 0%, #0d0f14 100%);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: var(--modal-bg);
+      border: 1px solid var(--border-panel);
       border-top-color: rgba(255, 255, 255, 0.22);
       border-radius: var(--radius-md);
       box-shadow: 0 24px 60px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.1);
@@ -2095,7 +2259,7 @@
   <!-- BARRA SUPERIOR -->
   <header class="header">
     <div class="brand-group">
-      <div class="brand-title" style="font-size: 15px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #ffffff;">VOCAL PRESET</div>
+      <div class="brand-title" style="font-size: 15px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #ffffff; display: flex; align-items: center; gap: 8px;"><span>VOCAL PRESET</span></div>
     </div>
 
     <!-- BOTÓN VOLVER AL MICRÓFONO (Visible en pantalla de efectos) -->
@@ -2181,10 +2345,11 @@
       <div class="effects-header-bar">
         
         
-        <!-- PESTAÑAS: MEZCLA / ESPACIO & MODULACIÓN / AJUSTES -->
+        <!-- PESTAÑAS: CADENA / EFECTOS / CREATIVOS / AJUSTES -->
         <div class="category-pills-bar">
           <button class="category-tab-btn active" id="tabCat_mezcla" onclick="switchCategoryTab('mezcla')">Cadena</button>
           <button class="category-tab-btn" id="tabCat_espacio" onclick="switchCategoryTab('espacio')">Efectos</button>
+          <button class="category-tab-btn" id="tabCat_creativos" onclick="switchCategoryTab('creativos')">Creativos</button>
           <button class="category-tab-btn" id="tabCat_ajustes" onclick="switchCategoryTab('ajustes')">Ajustes</button>
         </div>
 
@@ -2234,9 +2399,45 @@
         </div>
       </div>
 
+      <!-- VISTA CREATIVOS (FILTRO, CALOR, LO-FI, STUTTER) -->
+      <div id="viewCreativos" style="display: none;">
+        <div class="fx-grid" id="creativosGrid">
+          <!-- Generado dinámicamente -->
+        </div>
+      </div>
+
       <!-- VISTA AJUSTES -->
       <div id="viewAjustes" style="display: none;">
         <div class="settings-panel">
+                    <div class="settings-item">
+            <div class="settings-info">
+              <span class="settings-title">Apariencia / Skin</span>
+              <span class="settings-desc">Paleta visual minimalista de estudio</span>
+            </div>
+            <div class="theme-chips-container" id="themeChipsContainer">
+              <button type="button" class="theme-chip" data-theme-id="obsidian" onclick="setSkinTheme('obsidian')" title="Obsidian Stealth (Predeterminado)">
+                <span class="theme-dot" style="background: #ffffff; box-shadow: 0 0 6px rgba(255,255,255,0.4);"></span>
+                <span>Obsidian</span>
+              </button>
+              <button type="button" class="theme-chip" data-theme-id="cobalt" onclick="setSkinTheme('cobalt')" title="Cobalt Cyber (Ice Blue)">
+                <span class="theme-dot" style="background: #38bdf8; box-shadow: 0 0 6px rgba(56,189,248,0.4);"></span>
+                <span>Cobalt</span>
+              </button>
+              <button type="button" class="theme-chip" data-theme-id="violet" onclick="setSkinTheme('violet')" title="Midnight Violet (Trap & Plugg)">
+                <span class="theme-dot" style="background: #c084fc; box-shadow: 0 0 6px rgba(192,132,252,0.4);"></span>
+                <span>Violet</span>
+              </button>
+              <button type="button" class="theme-chip" data-theme-id="gold" onclick="setSkinTheme('gold')" title="Champagne Gold (Vintage Neve)">
+                <span class="theme-dot" style="background: #fbbf24; box-shadow: 0 0 6px rgba(251,191,36,0.4);"></span>
+                <span>Gold</span>
+              </button>
+              <button type="button" class="theme-chip" data-theme-id="titanium" onclick="setSkinTheme('titanium')" title="Apollo Titanium (Estudio Mint)">
+                <span class="theme-dot" style="background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.4);"></span>
+                <span>Titanium</span>
+              </button>
+            </div>
+          </div>
+
           <div class="settings-item">
             <div class="settings-info">
               <span class="settings-title">Idioma de Reconocimiento de Voz</span>
@@ -2595,6 +2796,46 @@
           width: 80,
           predelay: 20
         }
+      },
+      // EFECTOS CREATIVOS DSP (FILTRO, CALOR, LO-FI, STUTTER)
+      creativos: {
+        filtro: {
+          name: 'FILTRO',
+          on: false,
+          amount: 0,
+          lowCut: 200,
+          highCut: 7500,
+          mode: 'radio',
+          cutoff: 1800,
+          resonance: 2.5,
+          drive: 15
+        },
+        calor: {
+          name: 'CALOR',
+          on: false,
+          amount: 0,
+          profile: 'tubo',
+          drive: 35,
+          tone: 50,
+          dynamics: 20
+        },
+        lofi: {
+          name: 'LO-FI',
+          on: false,
+          amount: 0,
+          resolution: '8bit',
+          bits: 8,
+          sampleRate: 12000,
+          noise: 10
+        },
+        stutter: {
+          name: 'STUTTER',
+          on: false,
+          amount: 0,
+          grid: '1/16',
+          smooth: 3,
+          mix: 100
+        }
       }
     };
 
@@ -2785,20 +3026,23 @@
 
     function switchCategoryTab(tab) {
       state.categoryTab = tab;
-      ['tabCat_mezcla', 'tabCat_espacio', 'tabCat_ajustes'].forEach(function(id) {
+      ['tabCat_mezcla', 'tabCat_espacio', 'tabCat_creativos', 'tabCat_ajustes'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.classList.toggle('active', id === 'tabCat_' + tab);
       });
 
       var vM = document.getElementById('viewMezcla');
       var vE = document.getElementById('viewEspacio');
+      var vC = document.getElementById('viewCreativos');
       var vA = document.getElementById('viewAjustes');
       if (vM) vM.style.display = tab === 'mezcla' ? 'block' : 'none';
       if (vE) vE.style.display = tab === 'espacio' ? 'block' : 'none';
+      if (vC) vC.style.display = tab === 'creativos' ? 'block' : 'none';
       if (vA) vA.style.display = tab === 'ajustes' ? 'block' : 'none';
 
       if (tab === 'mezcla') renderMixGrid();
       if (tab === 'espacio') renderCreativeGrid();
+      if (tab === 'creativos') renderCreativosGrid();
       savePreset();
     }
 
@@ -2976,8 +3220,11 @@
       if (!grid) return;
       grid.innerHTML = '';
 
-      for (var fxKey in state.creative) {
-        var fx = state.creative[fxKey];
+      var creativeKeys = ['doubler', 'chorus', 'delay', 'reverb'];
+      for (var kIdx = 0; kIdx < creativeKeys.length; kIdx++) {
+        var fxKey = creativeKeys[kIdx];
+        var fx = state.creative && state.creative[fxKey];
+        if (!fx) continue;
         var card = document.createElement('div');
         card.className = 'fx-card';
         card.id = 'card_' + fxKey;
@@ -3035,7 +3282,7 @@
 
     function toggleCreativeFx(fxKey, event) {
       if (event) event.stopPropagation();
-      var fx = state.creative[fxKey];
+      var fx = (state.creative && state.creative[fxKey]) || (state.creativos && state.creativos[fxKey]);
       if (!fx) return;
 
       pushSnapshot();
@@ -3268,13 +3515,156 @@
       '</div>';
     }
 
+
+    // ==========================================
+    // RENDERIZADO: EFECTOS CREATIVOS DSP (FILTRO, CALOR, LO-FI, STUTTER)
+    // ==========================================
+    function renderCreativosGrid() {
+      var grid = document.getElementById('creativosGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      if (!state.creativos) {
+        state.creativos = {
+          filtro:  { name: 'FILTRO', on: false, amount: 0, mode: 'radio', cutoff: 1800, resonance: 2.5, drive: 15 },
+          calor:   { name: 'CALOR', on: false, amount: 0, profile: 'tubo', drive: 35, tone: 50, dynamics: 20 },
+          lofi:    { name: 'LO-FI', on: false, amount: 0, resolution: '8bit', bits: 8, sampleRate: 12000, noise: 10 },
+          stutter: { name: 'STUTTER', on: false, amount: 0, grid: '1/16', smooth: 3, mix: 100 }
+        };
+      }
+
+      for (var fxKey in state.creativos) {
+        var fx = state.creativos[fxKey];
+        var card = document.createElement('div');
+        card.className = 'fx-card';
+        card.id = 'card_creativo_' + fxKey;
+
+        var maxOffset = 176, minOffset = 44;
+        var offset = maxOffset - ((fx.amount / 100) * (maxOffset - minOffset));
+        var specificControlsHtml = '';
+
+        if (fxKey === 'filtro') {
+          specificControlsHtml =
+            '<div class="card-mini-ctrl-block" style="padding: 4px 6px; display: flex; align-items: center; justify-content: center;" title="Filtro SVF (Radio / Teléfono / Underwater)">' +
+              '<svg viewBox="0 0 100 24" style="width: 100%; height: 22px;">' +
+                '<path d="M 0 20 Q 30 20 44 6 L 56 6 Q 70 20 100 20" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>' +
+                '<circle cx="50" cy="6" r="2.5" fill="#38bdf8"/>' +
+              '</svg>' +
+            '</div>';
+        } else if (fxKey === 'calor') {
+          specificControlsHtml =
+            '<div class="card-mini-ctrl-block" style="padding: 4px 6px; display: flex; align-items: center; justify-content: center;" title="Saturación Armónica Cálida">' +
+              '<svg viewBox="0 0 100 24" style="width: 100%; height: 22px;">' +
+                '<path d="M 0 12 Q 15 2 25 2 Q 35 2 50 12 Q 65 22 75 22 Q 85 22 100 12" fill="none" stroke="#f97316" stroke-width="1.8" stroke-linecap="round"/>' +
+              '</svg>' +
+            '</div>';
+        } else if (fxKey === 'lofi') {
+          specificControlsHtml =
+            '<div class="card-mini-ctrl-block" style="padding: 4px 6px; display: flex; align-items: center; justify-content: center;" title="Bitcrusher / Sample Rate Reducer">' +
+              '<svg viewBox="0 0 100 24" style="width: 100%; height: 22px;">' +
+                '<path d="M 0 12 L 15 12 L 15 4 L 35 4 L 35 12 L 50 12 L 50 20 L 70 20 L 70 12 L 100 12" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linecap="round"/>' +
+              '</svg>' +
+            '</div>';
+        } else if (fxKey === 'stutter') {
+          specificControlsHtml =
+            '<div class="card-mini-ctrl-block" style="padding: 4px 6px; display: flex; align-items: center; justify-content: center;" title="Glitch / Beat-Repeat Rítmico">' +
+              '<svg viewBox="0 0 100 24" style="width: 100%; height: 22px;">' +
+                '<rect x="8" y="5" width="8" height="14" rx="2" fill="#c084fc"/>' +
+                '<rect x="22" y="5" width="8" height="14" rx="2" fill="#c084fc"/>' +
+                '<rect x="36" y="5" width="8" height="14" rx="2" fill="#c084fc"/>' +
+                '<rect x="50" y="5" width="8" height="14" rx="2" fill="#c084fc"/>' +
+                '<rect x="64" y="5" width="8" height="14" rx="2" fill="#c084fc"/>' +
+                '<rect x="78" y="5" width="8" height="14" rx="2" fill="#c084fc"/>' +
+              '</svg>' +
+            '</div>';
+        }
+
+        card.innerHTML =
+          '<div class="fx-card-top">' +
+            '<span class="fx-card-title">' + fx.name + '</span>' +
+            '<div class="switch-toggle ' + (fx.on ? 'on' : '') + '" id="toggle_creativo_' + fxKey + '" onclick="toggleCreativoFx(\'' + fxKey + '\', event)"></div>' +
+          '</div>' +
+          '<div class="arc-gauge-container" onmousedown="startCreativoGaugeDrag(event, \'' + fxKey + '\')" title="Ajustar cantidad">' +
+            '<svg class="arc-gauge-svg" viewBox="0 0 80 80">' +
+              '<circle class="arc-bg" cx="40" cy="40" r="28"></circle>' +
+              '<circle class="arc-fill" id="arc_creativo_' + fxKey + '" cx="40" cy="40" r="28" style="stroke-dashoffset: ' + offset + ';"></circle>' +
+            '</svg>' +
+            '<div class="gauge-center-info">' +
+              '<span class="gauge-val" id="val_creativo_' + fxKey + '">' + fx.amount + '%</span>' +
+            '</div>' +
+          '</div>' +
+          '<span class="gauge-subtext">Cantidad</span>' +
+          specificControlsHtml +
+          '<button class="btn-personalizar-card" style="margin-top: auto;" onclick="openPersonalizarModal(\'' + fxKey + '\')">' +
+            '<span>Personalizar</span>' +
+            '<svg width="10" height="10" fill="currentColor" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>' +
+          '</button>';
+
+        grid.appendChild(card);
+      }
+    }
+
+    function toggleCreativoFx(fxKey, event) {
+      if (event) event.stopPropagation();
+      if (!state.creativos || !state.creativos[fxKey]) return;
+      var fx = state.creativos[fxKey];
+
+      pushSnapshot();
+      fx.on = !fx.on;
+      var toggle = document.getElementById('toggle_creativo_' + fxKey);
+      if (toggle) toggle.classList.toggle('on', fx.on);
+
+      setTemporaryTranscript(fx.name + (fx.on ? ' activado' : ' desactivado'));
+      sendParamToJuce(fxKey + '.enabled', fx.on ? 1.0 : 0.0);
+      savePreset();
+    }
+
+    var activeCreativoDrag = null;
+    var creativoStartY = 0;
+    var creativoStartVal = 0;
+
+    function startCreativoGaugeDrag(e, fxKey) {
+      e.preventDefault();
+      pushSnapshot();
+      activeCreativoDrag = fxKey;
+      creativoStartY = e.clientY;
+      creativoStartVal = state.creativos[fxKey].amount;
+
+      window.addEventListener('mousemove', onCreativoGaugeMouseMove);
+      window.addEventListener('mouseup', onCreativoGaugeMouseUp);
+    }
+
+    function onCreativoGaugeMouseMove(e) {
+      if (!activeCreativoDrag) return;
+      var delta = creativoStartY - e.clientY;
+      var newVal = Math.max(0, Math.min(100, Math.round(creativoStartVal + delta * 0.7)));
+      state.creativos[activeCreativoDrag].amount = newVal;
+
+      var arc = document.getElementById('arc_creativo_' + activeCreativoDrag);
+      var valEl = document.getElementById('val_creativo_' + activeCreativoDrag);
+      var maxOffset = 176, minOffset = 44;
+      var offset = maxOffset - ((newVal / 100) * (maxOffset - minOffset));
+      if (arc) arc.style.strokeDashoffset = offset;
+      if (valEl) valEl.textContent = newVal + '%';
+      sendParamToJuce(activeCreativoDrag + '.amount', newVal);
+    }
+
+    function onCreativoGaugeMouseUp() {
+      if (activeCreativoDrag) {
+        savePreset();
+      }
+      activeCreativoDrag = null;
+      window.removeEventListener('mousemove', onCreativoGaugeMouseMove);
+      window.removeEventListener('mouseup', onCreativoGaugeMouseUp);
+    }
+
     // ==========================================
     // NAVEGACIÓN Y ESTADO DEL MODAL CUSTOMIZER
     // ==========================================
     var currentModalFxKey = null;
 
     function navPrevModule() {
-      var order = ['doubler', 'chorus', 'delay', 'reverb'];
+      var order = ['doubler', 'chorus', 'delay', 'reverb', 'filtro', 'calor', 'lofi', 'stutter'];
       var idx = order.indexOf(currentModalFxKey);
       if (idx === -1) idx = 0;
       var prevIdx = (idx - 1 + order.length) % order.length;
@@ -3282,7 +3672,7 @@
     }
 
     function navNextModule() {
-      var order = ['doubler', 'chorus', 'delay', 'reverb'];
+      var order = ['doubler', 'chorus', 'delay', 'reverb', 'filtro', 'calor', 'lofi', 'stutter'];
       var idx = order.indexOf(currentModalFxKey);
       if (idx === -1) idx = 0;
       var nextIdx = (idx + 1) % order.length;
@@ -3291,7 +3681,7 @@
 
     function toggleCurrentModalFxPower() {
       if (!currentModalFxKey) return;
-      var fx = state.creative[currentModalFxKey];
+      var fx = (state.creative && state.creative[currentModalFxKey]) || (state.creativos && state.creativos[currentModalFxKey]);
       if (!fx) return;
       pushSnapshot();
       fx.on = !fx.on;
@@ -3304,7 +3694,7 @@
     function updateModalHeaderPower() {
       var btn = document.getElementById('modalFxPowerBtn');
       if (!btn || !currentModalFxKey) return;
-      var fx = state.creative[currentModalFxKey];
+      var fx = (state.creative && state.creative[currentModalFxKey]) || (state.creativos && state.creativos[currentModalFxKey]);
       var isOn = fx && fx.on;
       btn.className = 'customizer-power-btn' + (isOn ? ' on' + (currentModalFxKey === 'reverb' ? ' purple' : '') : '');
       btn.title = (isOn ? 'Apagar ' : 'Encender ') + (fx ? fx.name : 'efecto');
@@ -3313,7 +3703,7 @@
     function openPersonalizarModal(fxKey) {
       currentModalFxKey = fxKey;
       var modal = document.getElementById('modalPersonalizar');
-      var fx = state.creative[fxKey];
+      var fx = (state.creative && state.creative[fxKey]) || (state.creativos && state.creativos[fxKey]);
       if (!modal || !fx) return;
 
       var titleEl = document.getElementById('modalFxTitle');
@@ -3322,12 +3712,64 @@
         else if (fxKey === 'chorus') titleEl.textContent = 'CHORUS';
         else if (fxKey === 'delay') titleEl.textContent = 'DELAY';
         else if (fxKey === 'reverb') titleEl.textContent = 'REVERB';
+        else if (fxKey === 'filtro') titleEl.textContent = 'FILTRO';
+        else if (fxKey === 'calor') titleEl.textContent = 'CALOR';
+        else if (fxKey === 'lofi') titleEl.textContent = 'LO-FI';
+        else if (fxKey === 'stutter') titleEl.textContent = 'STUTTER';
         else titleEl.textContent = fx.name.toUpperCase();
       }
 
       updateModalHeaderPower();
       renderModalSliders(fxKey);
       modal.classList.add('open');
+    }
+
+
+    function setFiltroMode(mode) {
+      if (!state.creativos || !state.creativos.filtro) return;
+      pushSnapshot();
+      state.creativos.filtro.mode = mode;
+      if (mode === 'radio') state.creativos.filtro.cutoff = 1800;
+      else if (mode === 'telefono') state.creativos.filtro.cutoff = 2400;
+      else if (mode === 'underwater') state.creativos.filtro.cutoff = 850;
+      else if (mode === 'sweep') state.creativos.filtro.cutoff = 4000;
+      sendParamToJuce('filtro.mode', mode === 'radio' ? 0 : (mode === 'telefono' ? 1 : (mode === 'underwater' ? 2 : 3)));
+      savePreset();
+      renderModalSliders('filtro');
+      renderCreativosGrid();
+    }
+
+    function setCalorProfile(profile) {
+      if (!state.creativos || !state.creativos.calor) return;
+      pushSnapshot();
+      state.creativos.calor.profile = profile;
+      sendParamToJuce('calor.profile', profile === 'cinta' ? 0 : (profile === 'tubo' ? 1 : 2));
+      savePreset();
+      renderModalSliders('calor');
+      renderCreativosGrid();
+    }
+
+    function setLofiRes(res) {
+      if (!state.creativos || !state.creativos.lofi) return;
+      pushSnapshot();
+      state.creativos.lofi.resolution = res;
+      if (res === '12bit') { state.creativos.lofi.bits = 12; state.creativos.lofi.sampleRate = 22050; }
+      else if (res === '8bit') { state.creativos.lofi.bits = 8; state.creativos.lofi.sampleRate = 12000; }
+      else if (res === 'crush') { state.creativos.lofi.bits = 4; state.creativos.lofi.sampleRate = 6000; }
+      sendParamToJuce('lofi.bits', state.creativos.lofi.bits);
+      savePreset();
+      renderModalSliders('lofi');
+      renderCreativosGrid();
+    }
+
+    function setStutterGrid(grid) {
+      if (!state.creativos || !state.creativos.stutter) return;
+      pushSnapshot();
+      state.creativos.stutter.grid = grid;
+      sendParamToJuce('stutter.grid', grid === '1/4' ? 0 : (grid === '1/8' ? 1 : (grid === '1/16' ? 2 : (grid === '1/32' ? 3 : 4))));
+      savePreset();
+      renderModalSliders('stutter');
+      renderCreativosGrid();
     }
 
     function closePersonalizarModal() {
@@ -3460,7 +3902,7 @@
     // RENDERIZADO DE MÓDULOS DE PERSONALIZACIÓN
     // ==========================================
     function renderModalSliders(fxKey) {
-      var fx = state.creative[fxKey];
+      var fx = (state.creative && state.creative[fxKey]) || (state.creativos && state.creativos[fxKey]);
       var body = document.getElementById('customizerBody');
       if (!body || !fx) return;
       body.innerHTML = '';
@@ -3656,6 +4098,148 @@
         knobsRow.appendChild(knobWidth);
         knobsRow.appendChild(knobPredelay);
         body.appendChild(knobsRow);
+
+      } else if (fxKey === 'filtro') {
+        var fMode = fx.mode || 'radio';
+        var topBar = document.createElement('div');
+        topBar.className = 'customizer-top-bar';
+        topBar.innerHTML =
+          '<div class="customizer-select-wrap">' +
+            '<span>PERFIL DE FILTRO:</span>' +
+            '<div style="display:flex; gap:6px;">' +
+              '<button class="toggle-pill-btn ' + (fMode === 'radio' ? 'active' : '') + '" onclick="setFiltroMode(\'radio\')">RADIO</button>' +
+              '<button class="toggle-pill-btn ' + (fMode === 'telefono' ? 'active' : '') + '" onclick="setFiltroMode(\'telefono\')">TELÉFONO</button>' +
+              '<button class="toggle-pill-btn ' + (fMode === 'underwater' ? 'active' : '') + '" onclick="setFiltroMode(\'underwater\')">UNDERWATER</button>' +
+              '<button class="toggle-pill-btn ' + (fMode === 'sweep' ? 'active' : '') + '" onclick="setFiltroMode(\'sweep\')">SWEEP</button>' +
+            '</div>' +
+          '</div>';
+        body.appendChild(topBar);
+
+        var knobsRow = document.createElement('div');
+        knobsRow.className = 'knobs-row';
+        knobsRow.style.padding = '14px 0';
+
+        var knobCutoff = createCircularKnob('filtro_cutoff', 'CORTE', ' Hz', 100, 16000, fx.cutoff || 1800, function(v){
+          fx.cutoff = v; sendParamToJuce('filtro.cutoff', v);
+        }, 10, '#38bdf8', true);
+
+        var knobQ = createCircularKnob('filtro_q', 'RESONANCIA', ' Q', 0.5, 10.0, fx.resonance || 2.5, function(v){
+          fx.resonance = v; sendParamToJuce('filtro.resonance', v);
+        }, 0.1, '#38bdf8');
+
+        var knobDrive = createCircularKnob('filtro_drive', 'DRIVE', ' %', 0, 100, fx.drive || 15, function(v){
+          fx.drive = v; sendParamToJuce('filtro.drive', v);
+        }, 1, '#38bdf8');
+
+        knobsRow.appendChild(knobCutoff);
+        knobsRow.appendChild(knobQ);
+        knobsRow.appendChild(knobDrive);
+        body.appendChild(knobsRow);
+
+      } else if (fxKey === 'calor') {
+        var cProfile = fx.profile || 'tubo';
+        var topBar = document.createElement('div');
+        topBar.className = 'customizer-top-bar';
+        topBar.innerHTML =
+          '<div class="customizer-select-wrap">' +
+            '<span>TIPO DE SATURACIÓN:</span>' +
+            '<div style="display:flex; gap:6px;">' +
+              '<button class="toggle-pill-btn ' + (cProfile === 'cinta' ? 'active' : '') + '" onclick="setCalorProfile(\'cinta\')">CINTA</button>' +
+              '<button class="toggle-pill-btn ' + (cProfile === 'tubo' ? 'active' : '') + '" onclick="setCalorProfile(\'tubo\')">TUBO</button>' +
+              '<button class="toggle-pill-btn ' + (cProfile === 'agresivo' ? 'active' : '') + '" onclick="setCalorProfile(\'agresivo\')">AGRESIVO</button>' +
+            '</div>' +
+          '</div>';
+        body.appendChild(topBar);
+
+        var knobsRow = document.createElement('div');
+        knobsRow.className = 'knobs-row';
+        knobsRow.style.padding = '14px 0';
+
+        var knobDrive = createCircularKnob('calor_drive', 'CALOR', ' %', 0, 100, fx.drive || 35, function(v){
+          fx.drive = v; sendParamToJuce('calor.drive', v);
+        }, 1, '#f97316');
+
+        var knobTone = createCircularKnob('calor_tone', 'TONO', ' %', 0, 100, fx.tone || 50, function(v){
+          fx.tone = v; sendParamToJuce('calor.tone', v);
+        }, 1, '#f97316');
+
+        var knobDyn = createCircularKnob('calor_dyn', 'DINÁMICA', ' %', 0, 100, fx.dynamics || 20, function(v){
+          fx.dynamics = v; sendParamToJuce('calor.dynamics', v);
+        }, 1, '#f97316');
+
+        knobsRow.appendChild(knobDrive);
+        knobsRow.appendChild(knobTone);
+        knobsRow.appendChild(knobDyn);
+        body.appendChild(knobsRow);
+
+      } else if (fxKey === 'lofi') {
+        var lRes = fx.resolution || '8bit';
+        var topBar = document.createElement('div');
+        topBar.className = 'customizer-top-bar';
+        topBar.innerHTML =
+          '<div class="customizer-select-wrap">' +
+            '<span>RESOLUCIÓN DIGITAL:</span>' +
+            '<div style="display:flex; gap:6px;">' +
+              '<button class="toggle-pill-btn ' + (lRes === '12bit' ? 'active' : '') + '" onclick="setLofiRes(\'12bit\')">12 BITS</button>' +
+              '<button class="toggle-pill-btn ' + (lRes === '8bit' ? 'active' : '') + '" onclick="setLofiRes(\'8bit\')">8 BITS</button>' +
+              '<button class="toggle-pill-btn ' + (lRes === 'crush' ? 'active' : '') + '" onclick="setLofiRes(\'crush\')">CRUSH 4B</button>' +
+            '</div>' +
+          '</div>';
+        body.appendChild(topBar);
+
+        var knobsRow = document.createElement('div');
+        knobsRow.className = 'knobs-row';
+        knobsRow.style.padding = '14px 0';
+
+        var knobBits = createCircularKnob('lofi_bits', 'BITS', ' bit', 4, 16, fx.bits || 8, function(v){
+          fx.bits = v; sendParamToJuce('lofi.bits', v);
+        }, 1, '#fbbf24');
+
+        var knobRate = createCircularKnob('lofi_rate', 'MUESTREO', ' Hz', 1000, 44100, fx.sampleRate || 12000, function(v){
+          fx.sampleRate = v; sendParamToJuce('lofi.sampleRate', v);
+        }, 500, '#fbbf24', true);
+
+        var knobNoise = createCircularKnob('lofi_noise', 'RUIDO', ' %', 0, 100, fx.noise || 10, function(v){
+          fx.noise = v; sendParamToJuce('lofi.noise', v);
+        }, 1, '#fbbf24');
+
+        knobsRow.appendChild(knobBits);
+        knobsRow.appendChild(knobRate);
+        knobsRow.appendChild(knobNoise);
+        body.appendChild(knobsRow);
+
+      } else if (fxKey === 'stutter') {
+        var sGrid = fx.grid || '1/16';
+        var topBar = document.createElement('div');
+        topBar.className = 'customizer-top-bar';
+        topBar.innerHTML =
+          '<div class="customizer-select-wrap">' +
+            '<span>DIVISIÓN RÍTMICA:</span>' +
+            '<div style="display:flex; gap:6px;">' +
+              '<button class="toggle-pill-btn ' + (sGrid === '1/4' ? 'active' : '') + '" onclick="setStutterGrid(\'1/4\')">1/4</button>' +
+              '<button class="toggle-pill-btn ' + (sGrid === '1/8' ? 'active' : '') + '" onclick="setStutterGrid(\'1/8\')">1/8</button>' +
+              '<button class="toggle-pill-btn ' + (sGrid === '1/16' ? 'active' : '') + '" onclick="setStutterGrid(\'1/16\')">1/16</button>' +
+              '<button class="toggle-pill-btn ' + (sGrid === '1/32' ? 'active' : '') + '" onclick="setStutterGrid(\'1/32\')">1/32</button>' +
+              '<button class="toggle-pill-btn ' + (sGrid === 'tresillo' ? 'active' : '') + '" onclick="setStutterGrid(\'tresillo\')">3SILLO</button>' +
+            '</div>' +
+          '</div>';
+        body.appendChild(topBar);
+
+        var knobsRow = document.createElement('div');
+        knobsRow.className = 'knobs-row';
+        knobsRow.style.padding = '14px 0';
+
+        var knobMix = createCircularKnob('stutter_mix', 'MEZCLA', ' %', 0, 100, fx.mix !== undefined ? fx.mix : 100, function(v){
+          fx.mix = v; sendParamToJuce('stutter.mix', v);
+        }, 1, '#c084fc');
+
+        var knobSmooth = createCircularKnob('stutter_smooth', 'SUAVIDAD', ' ms', 1, 10, fx.smooth || 3, function(v){
+          fx.smooth = v; sendParamToJuce('stutter.smooth', v);
+        }, 0.5, '#c084fc');
+
+        knobsRow.appendChild(knobMix);
+        knobsRow.appendChild(knobSmooth);
+        body.appendChild(knobsRow);
       }
     }
 
@@ -3711,7 +4295,7 @@
     }
 
     function updateEqDisplay(fxKey) {
-      var fx = state.creative[fxKey];
+      var fx = (state.creative && state.creative[fxKey]) || (state.creativos && state.creativos[fxKey]);
       if (!fx) return;
       var lc = fx.lowCut || (fxKey === 'doubler' ? 120 : 300);
       var hc = fx.highCut || (fxKey === 'doubler' ? 10000 : 8500);
@@ -3770,7 +4354,7 @@
       var mouseX = e.clientX - rect.left;
       var normX = Math.max(0, Math.min(600, (mouseX / rect.width) * 600));
       var freq = xToFreq(normX);
-      var fx = state.creative[activeEqDrag.fxKey];
+      var fx = (state.creative && state.creative[activeEqDrag.fxKey]) || (state.creativos && state.creativos[activeEqDrag.fxKey]);
       if (!fx) return;
 
       if (activeEqDrag.pointType === 'lowCut') {
@@ -4093,6 +4677,7 @@
       var lang = (state.settings && state.settings.lang && state.settings.lang.startsWith('en')) ? 'en' : 'es';
       formData.append('language', lang);
       formData.append('response_format', 'json');
+      formData.append('prompt', 'reverb, river, riiver, reeverb, delay, dilei, chorus, doubler, estereo, agudos, graves, de-esser, compresion, saturacion, calor, filtro, radio, telefono, stutter, lofi, starter, preset, sibilancia, limpio, slapback');
 
       fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
         method: 'POST',
@@ -4303,16 +4888,39 @@
       clean = clean.replace(/\b(voz\s+pro|voz\s+limpia|cadena\s+vocal|starter|estarter|iniciar|da\s+me\s+un\s+pre|dame\s+un\s+pre)\b/g, 'preset');
 
       // ==========================================================
-      // 2. EFECTOS CREATIVOS:
+      // 2. EFECTOS ESPACIALES & CREATIVOS (FONÉTICA LATINA / PRODUCTOR):
       // ==========================================================
-      // Reverb:
-      clean = clean.replace(/\b(river|rever|reber|reverberacion|reberberacion|riber|revel|reverbe|rebert|reverve)\b/g, 'reverb');
-      // Delay:
-      clean = clean.replace(/\b(diley|deley|dilei|dilae|delei|deleis|delai|di\s*lei|de\s*ley|de\s*lay)\b/g, 'delay');
+      // Reverb (soporta river, riiver, reeverb, reeber, rever, reber, riber, etc.):
+      clean = clean.replace(/\br+e*i+v+e*r*b*\b/gi, 'reverb');
+      clean = clean.replace(/\br+e+e+v+e*r*b*\b/gi, 'reverb');
+      clean = clean.replace(/\br+e+v+e*r*b*\b/gi, 'reverb');
+      clean = clean.replace(/\br+i+b+e*r*\b/gi, 'reverb');
+      clean = clean.replace(/\br+e+b+e*r*\b/gi, 'reverb');
+      clean = clean.replace(/\b(reverberacion|reberberacion|revel|reverbe|rebert|reverve)\b/gi, 'reverb');
+
+      // Delay (soporta dilei, diilei, diley, deley, delai, etc.):
+      clean = clean.replace(/\bd+[ie]+l+[aeiy]+\b/gi, 'delay');
+      clean = clean.replace(/\b(dilae|deleis|di\s*lei|de\s*ley|de\s*lay)\b/gi, 'delay');
+
       // Chorus:
-      clean = clean.replace(/\b(corus|choro|choros|curo|coros|coro|chorous)\b/g, 'chorus');
-      // Doubler:
-      clean = clean.replace(/\b(dobler|dabler|doblador|dobles|doble|daubler)\b/g, 'doubler');
+      clean = clean.replace(/\b(corus|choro|choros|curo|coros|coro|chorous)\b/gi, 'chorus');
+
+      // Doubler / Estéreo:
+      clean = clean.replace(/\b(dobler|dabler|doblador|dobles|doble|daubler|estereo|stereo)\b/gi, 'doubler');
+
+      // Filtro / Radio / Teléfono:
+      clean = clean.replace(/\b(filtro|filtrar|filtrame|filtrada|filtrado)\b/gi, 'filtro');
+      clean = clean.replace(/\b(radio|telefono|megafono|walkie|transistor)\b/gi, 'filtro radio');
+      clean = clean.replace(/\b(underwater|bajo\s+el\s+agua|sumergida|acuatico)\b/gi, 'filtro underwater');
+
+      // Calor / Saturación:
+      clean = clean.replace(/\b(calor|saturacion|distorsion|overdrive|crujiente|fuego|agresiva|valvula|tubo|cinta)\b/gi, 'calor');
+
+      // Lo-Fi / 8-Bit:
+      clean = clean.replace(/\b(lofi|lo\s*fi|lowfi|8\s*bits?|ocho\s*bits?|vintage|retro|bitcrush)\b/gi, 'lofi');
+
+      // Stutter / Cortes:
+      clean = clean.replace(/\b(stutter|stuter|estater|cortes|corte|tartamudeo|glitch|repeticion|repite)\b/gi, 'stutter');
 
       return clean.trim();
     }
@@ -4398,7 +5006,119 @@
       if (clean.includes('deshacer')) { triggerUndo(); return; }
       if (clean.includes('rehacer')) { triggerRedo(); return; }
 
-      // 4. RECETAS CREATIVAS ESPECÍFICAS
+      // 4. RECETAS CREATIVAS ESPECÍFICAS (ESPACIO & CREATIVOS)
+      // REVERB LARGO / ESPACIAL / GIGANTE / CATEDRAL
+      if (clean.includes('reverb') && (clean.includes('largo') || clean.includes('gigante') || clean.includes('espacial') || clean.includes('profundo') || clean.includes('catedral') || clean.includes('iglesia') || clean.includes('hall') || clean.includes('eterno'))) {
+        pushSnapshot();
+        state.creative.reverb.on = true;
+        state.creative.reverb.amount = 28;
+        state.creative.reverb.decay = 4.5;
+        state.creative.reverb.width = 90;
+        sendParamToJuce('reverb.enabled', 1.0);
+        sendParamToJuce('reverb.amount', 28);
+        sendParamToJuce('reverb.decay', 4.5);
+        renderCreativeGrid();
+        savePreset();
+        setTemporaryTranscript('Reverb largo espacial activado (28%)', true);
+        return;
+      }
+
+      // REVERB CORTO / SECO / SUTIL / ROOM
+      if (clean.includes('reverb') && (clean.includes('corto') || clean.includes('seco') || clean.includes('peque') || clean.includes('sutil') || clean.includes('room') || clean.includes('ambience'))) {
+        pushSnapshot();
+        state.creative.reverb.on = true;
+        state.creative.reverb.amount = 12;
+        state.creative.reverb.decay = 1.2;
+        state.creative.reverb.width = 65;
+        sendParamToJuce('reverb.enabled', 1.0);
+        sendParamToJuce('reverb.amount', 12);
+        sendParamToJuce('reverb.decay', 1.2);
+        renderCreativeGrid();
+        savePreset();
+        setTemporaryTranscript('Reverb corto de estudio activado (12%)', true);
+        return;
+      }
+
+      // DELAY LARGO / CON ECO PROFUNDO
+      if (clean.includes('delay') && (clean.includes('largo') || clean.includes('grande') || clean.includes('espacio'))) {
+        pushSnapshot();
+        state.creative.delay.on = true;
+        state.creative.delay.amount = 22;
+        state.creative.delay.feedback = 45;
+        state.creative.delay.tempo = '1/4';
+        sendParamToJuce('delay.enabled', 1.0);
+        sendParamToJuce('delay.amount', 22);
+        sendParamToJuce('delay.feedback', 45);
+        renderCreativeGrid();
+        savePreset();
+        setTemporaryTranscript('Delay largo 1/4 activado (22%)', true);
+        return;
+      }
+
+      // FILTRO RADIO / TELÉFONO / UNDERWATER
+      if (clean.includes('filtro') || clean.includes('radio') || clean.includes('telefono') || clean.includes('underwater')) {
+        pushSnapshot();
+        if (!state.creativos) state.creativos = {};
+        if (!state.creativos.filtro) state.creativos.filtro = { name: 'FILTRO', on: false, amount: 0, mode: 'radio', cutoff: 1800, resonance: 2.5, drive: 15 };
+        var isUnder = clean.includes('underwater') || clean.includes('bajo el agua');
+        state.creativos.filtro.on = true;
+        state.creativos.filtro.amount = 100;
+        state.creativos.filtro.mode = isUnder ? 'underwater' : (clean.includes('telefono') ? 'telefono' : 'radio');
+        state.creativos.filtro.cutoff = isUnder ? 850 : (clean.includes('telefono') ? 2200 : 1800);
+        sendParamToJuce('filtro.enabled', 1.0);
+        sendParamToJuce('filtro.amount', 100);
+        renderCreativosGrid();
+        savePreset();
+        setTemporaryTranscript(isUnder ? 'Filtro Underwater activado' : (clean.includes('telefono') ? 'Filtro Teléfono activado' : 'Filtro Radio activado'), true);
+        return;
+      }
+
+      // CALOR / SATURACIÓN / DISTORSIÓN ARMÓNICA
+      if (clean.includes('calor') || clean.includes('saturacion') || clean.includes('distorsion') || clean.includes('fuego') || clean.includes('agresiv')) {
+        pushSnapshot();
+        if (!state.creativos) state.creativos = {};
+        if (!state.creativos.calor) state.creativos.calor = { name: 'CALOR', on: false, amount: 0, profile: 'tubo', drive: 35, tone: 50, dynamics: 20 };
+        state.creativos.calor.on = true;
+        state.creativos.calor.amount = 35;
+        state.creativos.calor.profile = clean.includes('cinta') ? 'cinta' : (clean.includes('agresiv') || clean.includes('distorsion') ? 'agresivo' : 'tubo');
+        sendParamToJuce('calor.enabled', 1.0);
+        sendParamToJuce('calor.amount', 35);
+        renderCreativosGrid();
+        savePreset();
+        setTemporaryTranscript('Calor armónico activado (35%)', true);
+        return;
+      }
+
+      // LO-FI RETRO / 8 BITS
+      if (clean.includes('lofi') || clean.includes('8 bits') || clean.includes('vintage') || clean.includes('retro')) {
+        pushSnapshot();
+        if (!state.creativos) state.creativos = {};
+        if (!state.creativos.lofi) state.creativos.lofi = { name: 'LO-FI', on: false, amount: 0, resolution: '8bit', bits: 8, sampleRate: 12000, noise: 10 };
+        state.creativos.lofi.on = true;
+        state.creativos.lofi.amount = 40;
+        sendParamToJuce('lofi.enabled', 1.0);
+        sendParamToJuce('lofi.amount', 40);
+        renderCreativosGrid();
+        savePreset();
+        setTemporaryTranscript('Efecto Lo-Fi 8-bit activado (40%)', true);
+        return;
+      }
+
+      // STUTTER GLITCH / CORTES RÍTMICOS
+      if (clean.includes('stutter') || clean.includes('cortes') || clean.includes('tartamudeo') || clean.includes('glitch')) {
+        pushSnapshot();
+        if (!state.creativos) state.creativos = {};
+        if (!state.creativos.stutter) state.creativos.stutter = { name: 'STUTTER', on: false, amount: 0, grid: '1/16', smooth: 3, mix: 100 };
+        state.creativos.stutter.on = true;
+        state.creativos.stutter.amount = 100;
+        sendParamToJuce('stutter.enabled', 1.0);
+        sendParamToJuce('stutter.amount', 100);
+        renderCreativosGrid();
+        savePreset();
+        setTemporaryTranscript('Stutter rítmico 1/16 activado', true);
+        return;
+      }
+
       if (clean.includes('slapback')) {
         pushSnapshot();
         state.creative.delay.on = true;
@@ -4543,6 +5263,7 @@
           sendParamToJuce(target + '.enabled', cfx.on ? 1.0 : 0.0);
           sendParamToJuce(target + '.amount', cfx.amount);
           renderCreativeGrid();
+          renderCreativosGrid();
           savePreset();
           setTemporaryTranscript(cfx.name + ': ' + cfx.amount + '%');
           return;
@@ -4643,7 +5364,7 @@
       setLiveTranscript('Ajustando mezcla vocal...', true);
 
       var body = JSON.stringify({
-        model: 'openai/gpt-oss-20b',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           {
             role: 'system',
@@ -4664,6 +5385,10 @@
                      '- chorus: { on: boolean, amount: number 0-100 }\n' +
                      '- delay: { on: boolean, amount: number 0-100 }\n' +
                      '- reverb: { on: boolean, amount: number 0-100 }\n' +
+                     '- filtro: { on: boolean, amount: number 0-100, mode: "radio"|"telefono"|"underwater"|"sweep" }\n' +
+                     '- calor: { on: boolean, amount: number 0-100, profile: "cinta"|"tubo"|"agresivo" }\n' +
+                     '- lofi: { on: boolean, amount: number 0-100, resolution: "12bit"|"8bit"|"crush" }\n' +
+                     '- stutter: { on: boolean, amount: number 0-100, grid: "1/4"|"1/8"|"1/16"|"1/32"|"tresillo" }\n' +
                      '- summary: string corto en espanol describiendo que se aplico (max 5 palabras)\n' +
                      'Responde UNICAMENTE con el objeto JSON sin markdown ni explicaciones.'
           },
@@ -4752,9 +5477,29 @@
           }
         });
 
+        var crKeys = ['filtro', 'calor', 'lofi', 'stutter'];
+        crKeys.forEach(function(crk) {
+          if (parsed[crk] && typeof parsed[crk] === 'object' && state.creativos && state.creativos[crk]) {
+            var fx = state.creativos[crk];
+            if (parsed[crk].on !== undefined) fx.on = !!parsed[crk].on;
+            if (typeof parsed[crk].amount === 'number') {
+              fx.amount = Math.max(0, Math.min(100, Math.round(parsed[crk].amount)));
+              if (parsed[crk].on === undefined) fx.on = fx.amount > 0;
+            }
+            if (parsed[crk].mode) fx.mode = parsed[crk].mode;
+            if (parsed[crk].profile) fx.profile = parsed[crk].profile;
+            if (parsed[crk].resolution) fx.resolution = parsed[crk].resolution;
+            if (parsed[crk].grid) fx.grid = parsed[crk].grid;
+            sendParamToJuce(crk + '.enabled', fx.on ? 1.0 : 0.0);
+            sendParamToJuce(crk + '.amount', fx.amount);
+            changesMade = true;
+          }
+        });
+
         if (changesMade) {
           renderMixGrid();
           renderCreativeGrid();
+          renderCreativosGrid();
           savePreset();
           var sum = parsed.summary ? parsed.summary.replace(/[".]/g, '').trim() : 'Ajuste vocal aplicado';
           setTemporaryTranscript('✓ ' + sum, true);
@@ -5086,9 +5831,16 @@
         state.creative[ck].on = false;
         state.creative[ck].amount = 0;
       }
+      if (state.creativos) {
+        for (var crk in state.creativos) {
+          state.creativos[crk].on = false;
+          state.creativos[crk].amount = 0;
+        }
+      }
 
       renderMixGrid();
       renderCreativeGrid();
+      renderCreativosGrid();
       updateOutKnobUI(state.outGain);
       updateMixMacroUI(0);
       updateMixChainToggleUI();
@@ -5134,6 +5886,44 @@
       savePreset();
     }
 
+
+    // ========================================================
+    // SISTEMA DE SKINS / TEMAS PERSISTENTES (OFFSZN V1.5)
+    // ========================================================
+    function setSkinTheme(themeId, shouldSave) {
+      var validThemes = ['obsidian', 'cobalt', 'violet', 'gold', 'titanium'];
+      if (validThemes.indexOf(themeId) === -1) themeId = 'obsidian';
+
+      document.documentElement.setAttribute('data-theme', themeId);
+      if (document.body) document.body.setAttribute('data-theme', themeId);
+
+      if (shouldSave !== false) {
+        try {
+          localStorage.setItem('offszn_vocalpreset_skin', themeId);
+        } catch(e) {}
+        if (typeof hasJuceBridge === 'function' && hasJuceBridge()) {
+          callNative("writeLog", "Theme skin changed to: " + themeId);
+        }
+      }
+
+      var chips = document.querySelectorAll('.theme-chip');
+      chips.forEach(function(chip) {
+        if (chip.getAttribute('data-theme-id') === themeId) {
+          chip.classList.add('active');
+        } else {
+          chip.classList.remove('active');
+        }
+      });
+    }
+
+    function initSkinTheme() {
+      var saved = 'obsidian';
+      try {
+        saved = localStorage.getItem('offszn_vocalpreset_skin') || 'obsidian';
+      } catch(e) {}
+      setSkinTheme(saved, false);
+    }
+
     // ==========================================
     // INICIALIZACIÓN GLOBAL
     // ==========================================
@@ -5144,6 +5934,7 @@
         localStorage.removeItem('vocalpreset_state_v4');
       } catch(e) {}
 
+      initSkinTheme();
       showMainScreen();
       renderMixGrid();
       renderCreativeGrid();

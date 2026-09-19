@@ -1497,6 +1497,7 @@
                     <button class="pill-filter" onclick="setFilter('Easy Master', this)">Easy Master</button>
                     <button class="pill-filter" onclick="setFilter('Coca Cola', this)">Coca Cola</button>
                     <button class="pill-filter" onclick="setFilter('Inka Kola', this)">Inka Kola</button>
+                    <button class="pill-filter" onclick="setFilter('Vocal Preset', this)">Vocal Preset</button>
                 </div>
 
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-left: auto;">
@@ -1652,17 +1653,17 @@
             { id: 'inka-9', plugin: 'Inka Kola', serial: 'INKA-FULL-7E5D41AA-C9603A72', used: false, note: '', date: '', devices: 2 },
             { id: 'inka-10', plugin: 'Inka Kola', serial: 'INKA-FULL-A8C8876F-451BA437', used: false, note: '', date: '', devices: 2 },
             
-            // VOCAL PRESET (10 keys)
-            { id: 'voca-1', plugin: 'Vocal Preset', serial: 'VOCA-FULL-392F4A91-8D9217CA', used: false, note: '', date: '', devices: 2 },
-            { id: 'voca-2', plugin: 'Vocal Preset', serial: 'VOCA-FULL-7C91B48E-56FA13D0', used: false, note: '', date: '', devices: 2 },
-            { id: 'voca-3', plugin: 'Vocal Preset', serial: 'VOCA-FULL-1E48A2D9-40BC781F', used: false, note: '', date: '', devices: 2 },
-            { id: 'voca-4', plugin: 'Vocal Preset', serial: 'VOCA-FULL-92AD58F1-2B8A449C', used: false, note: '', date: '', devices: 2 },
-            { id: 'voca-5', plugin: 'Vocal Preset', serial: 'VOCA-FULL-5F109BC4-82DA66E3', used: false, note: '', date: '', devices: 2 },
-            { id: 'voca-6', plugin: 'Vocal Preset', serial: 'VOCA-FULL-A38C29E7-19DF885B', used: false, note: '', date: '', devices: 2 },
-            { id: 'voca-7', plugin: 'Vocal Preset', serial: 'VOCA-FULL-D48102BA-77C5331E', used: false, note: '', date: '', devices: 2 },
-            { id: 'voca-8', plugin: 'Vocal Preset', serial: 'VOCA-FULL-8B2E490D-66FE91C2', used: false, note: '', date: '', devices: 2 },
-            { id: 'voca-9', plugin: 'Vocal Preset', serial: 'VOCA-FULL-2A94F16C-33BA528D', used: false, note: '', date: '', devices: 2 },
-            { id: 'voca-10', plugin: 'Vocal Preset', serial: 'VOCA-FULL-61C8B490-E5FA1247', used: false, note: '', date: '', devices: 2 }
+            // VOCAL PRESET (10 keys - 2 dispositivos)
+            { id: 'voca-1', plugin: 'Vocal Preset', serial: 'VOCA-FULL-F87E6A6A-8B4BC758', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-2', plugin: 'Vocal Preset', serial: 'VOCA-FULL-7908334D-AD464F4E', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-3', plugin: 'Vocal Preset', serial: 'VOCA-FULL-010B051C-DBA6CFC7', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-4', plugin: 'Vocal Preset', serial: 'VOCA-FULL-B71CE7DF-E8FC7A37', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-5', plugin: 'Vocal Preset', serial: 'VOCA-FULL-24CABF1C-F7FD1F76', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-6', plugin: 'Vocal Preset', serial: 'VOCA-FULL-B9504686-614446F4', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-7', plugin: 'Vocal Preset', serial: 'VOCA-FULL-FA7C33C2-72213D25', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-8', plugin: 'Vocal Preset', serial: 'VOCA-FULL-C7A14817-EEB7C097', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-9', plugin: 'Vocal Preset', serial: 'VOCA-FULL-8354A324-03B50708', used: false, note: '', date: '', devices: 2 },
+            { id: 'voca-10', plugin: 'Vocal Preset', serial: 'VOCA-FULL-5F9C5C2A-A4310C62', used: false, note: '', date: '', devices: 2 }
         ];
 
         const STORAGE_KEY = 'offszn_dispatch_licenses_v10_lifetime_realtime';
@@ -1807,7 +1808,7 @@
                     // Reconstruir lista limpia desde Supabase (Fuente Única de Verdad)
                     licenses = dbFullOnly.map(dbLic => {
                         const serial = (dbLic.serial_key || '').trim().toUpperCase();
-                        const isUsed = dbLic.status === 'used' || dbLic.status === 'sold' || (dbLic.plugin_activations && dbLic.plugin_activations.length > 0);
+                        const isUsed = dbLic.status === 'used' || dbLic.status === 'sold' || (dbLic.plugin_activations && dbLic.plugin_activations.length > 0) || Boolean(dbLic.user_id);
                         const savedNote = prevNotes.get(serial);
                         const buyerNote = savedNote || (dbLic.user_id ? 'Vendido online' : '');
 
@@ -2624,6 +2625,7 @@ Willie / OFFSZN`;
             else if (norm === 'Easy Master') select.value = 'easy-master';
             else if (norm === 'Coca Cola') select.value = 'coca-cola';
             else if (norm === 'Inka Kola') select.value = 'inka-kola';
+            else if (norm === 'Vocal Preset') select.value = 'vocal-preset';
 
             syncProductChips();
             onProductChange();

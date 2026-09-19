@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview DAWs - Variante 1 & Variante 2</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #000000;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 40px 20px;
+    }
+    .daw-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 20px;
+      background: #000000;
+      position: relative;
+    }
+
+    /* Header */
+    .daw-header {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+    .daw-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #aaa;
+      margin-bottom: 14px;
+    }
+    .daw-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      text-transform: uppercase;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .daw-subtitle {
+      font-size: 0.95rem;
+      color: #888;
+      max-width: 600px;
+      margin: 0 auto 26px;
+      line-height: 1.5;
+    }
+
+    /* Switcher Pill */
+    .daw-view-switcher {
+      display: inline-flex;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 4px;
+      border-radius: 999px;
+      margin-bottom: 40px;
+      backdrop-filter: blur(12px);
+    }
+    .daw-switch-btn {
+      background: transparent;
+      border: none;
+      color: #888;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+    }
+    .daw-switch-btn.active {
+      background: #ffffff;
+      color: #000000;
+      box-shadow: 0 4px 14px rgba(255, 255, 255, 0.18);
+    }
+
+    /* =========================================
+       VARIANTE 1: ACORDEÓN / CURVADO EN "U"
+       ========================================= */
+    .daw-variant-accordion {
+      display: block;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .daw-u-deck-container {
+      perspective: 1200px;
+      padding: 10px 0 30px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .daw-u-deck-container::-webkit-scrollbar { display: none; }
+    
+    .daw-u-deck {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: stretch;
+      min-width: 900px;
+      padding: 10px 20px;
+      transform-style: preserve-3d;
+    }
+
+    /* Accordion Card */
+    .daw-acc-card {
+      position: relative;
+      flex: 1;
+      min-width: 80px;
+      height: 380px;
+      background: rgba(18, 18, 22, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      overflow: hidden;
+      cursor: pointer;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      transition: flex 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-color 0.3s ease,
+                  background 0.3s ease;
+      backdrop-filter: blur(16px);
+    }
+
+    /* U-Shape 3D Tilt calculation based on position */
+    .daw-acc-card:nth-child(1) { transform: rotateY(14deg) translateZ(-15px); }
+    .daw-acc-card:nth-child(2) { transform: rotateY(10deg) translateZ(-10px); }
+    .daw-acc-card:nth-child(3) { transform: rotateY(6deg) translateZ(-5px); }
+    .daw-acc-card:nth-child(4) { transform: rotateY(3deg) translateZ(-2px); }
+    .daw-acc-card:nth-child(5) { transform: rotateY(0deg) translateZ(0px); }
+    .daw-acc-card:nth-child(6) { transform: rotateY(-3deg) translateZ(-2px); }
+    .daw-acc-card:nth-child(7) { transform: rotateY(-6deg) translateZ(-5px); }
+    .daw-acc-card:nth-child(8) { transform: rotateY(-10deg) translateZ(-10px); }
+    .daw-acc-card:nth-child(9) { transform: rotateY(-14deg) translateZ(-15px); }
+
+    /* Hover & Active Expanded States */
+    .daw-acc-card:hover,
+    .daw-acc-card.active {
+      flex: 3.2;
+      transform: rotateY(0deg) translateZ(15px) scale(1.02);
+      border-color: rgba(255, 255, 255, 0.22);
+      background: rgba(25, 25, 32, 0.88);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 35px var(--daw-glow, rgba(255,255,255,0.06));
+      z-index: 10;
+    }
+
+    /* Card Ambient Brand Gradient */
+    .daw-acc-card::before {
+      content: "";
+      position: absolute;
+      top: -30%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: var(--daw-glow, rgba(255,255,255,0.1));
+      filter: blur(50px);
+      opacity: 0.15;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .daw-acc-card:hover::before,
+    .daw-acc-card.active::before {
+      opacity: 0.45;
+    }
+
+    /* Card Top Logo */
+    .daw-acc-logo-box {
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 6px;
+      transition: transform 0.3s ease;
+    }
+    .daw-acc-card:hover .daw-acc-logo-box,
+    .daw-acc-card.active .daw-acc-logo-box {
+      transform: scale(1.18);
+    }
+    .daw-acc-logo-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+    }
+
+    /* Card Collapsed Label (Rotated on vertical cards) */
+    .daw-acc-collapsed-label {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #999;
+      margin: auto 0;
+      white-space: nowrap;
+      transition: opacity 0.2s ease;
+    }
+    .daw-acc-card:hover .daw-acc-collapsed-label,
+    .daw-acc-card.active .daw-acc-collapsed-label {
+      opacity: 0;
+      display: none;
+    }
+
+    /* Card Expanded Content */
+    .daw-acc-expanded-content {
+      display: none;
+      opacity: 0;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      margin-top: 15px;
+      animation: fadeInExpanded 0.35s 0.1s forwards;
+    }
+    .daw-acc-card:hover .daw-acc-expanded-content,
+    .daw-acc-card.active .daw-acc-expanded-content {
+      display: flex;
+    }
+    @keyframes fadeInExpanded {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .daw-acc-name {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 4px;
+      white-space: nowrap;
+    }
+    .daw-acc-vendor {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--daw-accent, #aaa);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .daw-acc-desc {
+      font-size: 0.8rem;
+      color: #888;
+      line-height: 1.4;
+      margin-bottom: 14px;
+      max-width: 220px;
+    }
+    .daw-acc-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .daw-pill {
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #ddd;
+    }
+    .daw-acc-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #00ffaa;
+      background: rgba(0, 255, 170, 0.08);
+      border: 1px solid rgba(0, 255, 170, 0.2);
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-top: auto;
+    }
+    .daw-acc-status i {
+      font-size: 0.5rem;
+    }
+
+    /* Small Indicator Dot when collapsed */
+    .daw-acc-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--daw-accent, #555);
+      margin-bottom: 4px;
+      transition: transform 0.2s ease;
+    }
+    .daw-acc-card:hover .daw-acc-dot,
+    .daw-acc-card.active .daw-acc-dot {
+      display: none;
+    }
+
+
+    /* =========================================
+       VARIANTE 2: LISTA / GRID PREMIUM
+       ========================================= */
+    .daw-variant-grid {
+      display: none;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .daw-grid-layout {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 992px) {
+      .daw-grid-layout { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .daw-grid-layout { grid-template-columns: 1fr; }
+    }
+
+    .daw-grid-card {
+      background: rgba(18, 18, 22, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 20px 22px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+      backdrop-filter: blur(14px);
+    }
+    .daw-grid-card:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(28, 28, 36, 0.85);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 25px var(--daw-glow, rgba(255,255,255,0.05));
+      transform: translateY(-2px);
+    }
+    .daw-grid-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--daw-accent, #ffffff);
+      opacity: 0.6;
+      border-radius: 4px 0 0 4px;
+      transition: opacity 0.2s ease;
+    }
+    .daw-grid-card:hover::before {
+      opacity: 1;
+    }
+
+    .daw-grid-icon-box {
+      width: 54px;
+      height: 54px;
+      min-width: 54px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+    }
+    .daw-grid-icon-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .daw-grid-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .daw-grid-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 3px;
+    }
+    .daw-grid-title span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .daw-grid-vendor {
+      font-size: 0.75rem;
+      color: #777;
+      margin-bottom: 8px;
+    }
+    .daw-grid-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .daw-grid-tag {
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #bbb;
+    }
+
+    .daw-grid-check {
+      color: #00ffaa;
+      font-size: 1.1rem;
+      opacity: 0.8;
+      padding-left: 6px;
+    }
+
+    /* Specs Bar at bottom */
+    .daw-specs-bar {
+      margin-top: 36px;
+      padding: 16px 24px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+      color: #888;
+      font-size: 0.84rem;
+    }
+    .daw-spec-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .daw-spec-divider {
+      width: 1px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+    @media (max-width: 768px) {
+      .daw-spec-divider { display: none; }
+      .daw-specs-bar { flex-direction: column; gap: 10px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <section class="daw-section">
+    <!-- Header -->
+    <div class="daw-header">
+      <div class="daw-badge"><i class="bi bi-shield-check"></i> Compatibilidad Oficial</div>
+      <h2 class="daw-title">Disponible en tus DAWs Favoritos</h2>
+      <p class="daw-subtitle">Logos oficiales y soporte nativo al 100%. Latencia cero con motor DSP multi-núcleo ultra optimizado.</p>
+
+      <!-- View Switcher -->
+      <div class="daw-view-switcher">
+        <button class="daw-switch-btn active" id="btnAccordion" onclick="switchDawView('accordion')">
+          <i class="bi bi-collection-play-fill"></i> Variante 1: Acordeón en "U"
+        </button>
+        <button class="daw-switch-btn" id="btnGrid" onclick="switchDawView('grid')">
+          <i class="bi bi-grid-3x3-gap-fill"></i> Variante 2: Grid / Lista
+        </button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         VARIANTE 1: ACORDEÓN INTERACTIVO / CURVADO EN FORMA DE U
+         ============================================================ -->
+    <div class="daw-variant-accordion" id="dawAccordionView">
+      <div class="daw-u-deck-container">
+        <div class="daw-u-deck">
+
+          <!-- 1. FL Studio (Default Active) -->
+          <div class="daw-acc-card active" style="--daw-accent: #FF8400; --daw-glow: rgba(255, 132, 0, 0.35);" onclick="setActiveCard(this)">
+            <div class="daw-acc-logo-box">
+              <img src="./flstudio.png" alt="FL Studio">
+            </div>
+            <div class="daw-acc-collapsed-label">FL Studio</div>
+            <div class="daw-acc-dot"></div>
+            <div class="daw-acc-expanded-content">
+              <h3 class="daw-acc-name">FL Studio</h3>
+              <div class="daw-acc-vendor">Image-Line</div>
+              <p class="daw-acc-desc">Compatibilidad total con Mixer Tracks, Patcher y renderizado rápido.</p>
+              <div class="daw-acc-badges">
+                <span class="daw-pill">FL 20 / 21 / 2024</span>
+                <span class="daw-pill">VST3 64-Bit</span>
+              </div>
+              <div class="daw-acc-status"><i class="bi bi-circle-fill"></i> Nativo 100%</div>
+            </div>
+          </div>
+
+          <!-- 2. Ableton Live -->
+          <div class="daw-acc-card" style="--daw-accent: #00D2FF; --daw-glow: rgba(0, 210, 255, 0.3);" onclick="setActiveCard(this)">
+            <div class="daw-acc-logo-box">
+              <img src="./ableton_icon.svg" alt="Ableton Live">
+            </div>
+            <div class="daw-acc-collapsed-label">Ableton Live</div>
+            <div class="daw-acc-dot"></div>
+            <div class="daw-acc-expanded-content">
+              <h3 class="daw-acc-name">Ableton Live</h3>
+              <div class="daw-acc-vendor">Ableton AG</div>
+              <p class="daw-acc-desc">Audio Effect Rack, automatizaciones precisas y carga instantánea.</p>
+              <div class="daw-acc-badges">
+                <span class="daw-pill">Live 10 / 11 / 12</span>
+                <span class="daw-pill">VST3 & AU</span>
+              </div>
+              <div class="daw-acc-status"><i class="bi bi-circle-fill"></i> Nativo 100%</div>
+            </div>
+          </div>
+
+          <!-- 3. Logic Pro -->
+          <div class="daw-acc-card" style="--daw-accent: #38EF7D; --daw-glow: rgba(56, 239, 125, 0.3);" onclick="setActiveCard(this)">
+            <div class="daw-acc-logo-box">
+              <img src="./logic.png" alt="Logic Pro">
+            </div>
+            <div class="daw-acc-collapsed-label">Logic Pro</div>
+            <div class="daw-acc-dot"></div>
+            <div class="daw-acc-expanded-content">
+              <h3 class="daw-acc-name">Logic Pro</h3>
+              <div class="daw-acc-vendor">Apple</div>
+              <p class="daw-acc-desc">Audio Units v2 validado por AUVal sin advertencias de memoria.</p>
+              <div class="daw-acc-badges">
+                <span class="daw-pill">Logic Pro X / 11</span>
+                <span class="daw-pill">AU Component</span>
+              </div>
+              <div class="daw-acc-status"><i class="bi bi-circle-fill"></i> Apple Silicon</div>
+            </div>
+          </div>
+
+          <!-- 4. Pro Tools -->
+          <div class="daw-acc-card" style="--daw-accent: #9D4EDD; --daw-glow: rgba(157, 78, 221, 0.35);" onclick="setActiveCard(this)">
+            <div class="daw-acc-logo-box">
+              <img src="./protools.svg" alt="Pro Tools">
+            </div>
+            <div class="daw-acc-collapsed-label">Pro Tools</div>
+            <div class="daw-acc-dot"></div>
+            <div class="daw-acc-expanded-content">
+              <h3 class="daw-acc-name">Pro Tools</h3>
+              <div class="daw-acc-vendor">Avid Technology</div>
+              <p class="daw-acc-desc">Preparado para sesiones comerciales de alta exigencia e insert tracks.</p>
+              <div class="daw-acc-badges">
+                <span class="daw-pill">Pro Tools 2022+</span>
+                <span class="daw-pill">VST3 Wrapper / AAX</span>
+              </div>
+              <div class="daw-acc-status"><i class="bi bi-circle-fill"></i> Pro Audio</div>
+            </div>
+          </div>
+
+          <!-- 5. Studio One -->
+          <div class="daw-acc-card" style="--daw-accent: #00A3FF; --daw-glow: rgba(0, 163, 255, 0.35);" onclick="setActiveCard(this)">
+            <div class="daw-acc-logo-box">
+              <img src="./studioone_icon.svg" alt="Studio One">
+            </div>
+            <div class="daw-acc-collapsed-label">Studio One</div>
+            <div class="daw-acc-dot"></div>
+            <div class="daw-acc-expanded-content">
+              <h3 class="daw-acc-name">Studio One</h3>
+              <div class="daw-acc-vendor">PreSonus</div>
+              <p class="daw-acc-desc">Integración drag-and-drop con baja latencia y Mix Engine FX.</p>
+              <div class="daw-acc-badges">
+                <span class="daw-pill">Studio One 5 / 6 / 7</span>
+                <span class="daw-pill">VST3 64-Bit</span>
+              </div>
+              <div class="daw-acc-status"><i class="bi bi-circle-fill"></i> Verificado</div>
+            </div>
+          </div>
+
+          <!-- 6. Cockos REAPER -->
+          <div class="daw-acc-card" style="--daw-accent: #00E5FF; --daw-glow: rgba(0, 229, 255, 0.3);" onclick="setActiveCard(this)">
+            <div class="daw-acc-logo-box">
+              <img src="./reaper.svg" alt="REAPER">
+            </div>
+            <div class="daw-acc-collapsed-label">REAPER</div>
+            <div class="daw-acc-dot"></div>
+            <div class="daw-acc-expanded-content">
+              <h3 class="daw-acc-name">REAPER</h3>
+              <div class="daw-acc-vendor">Cockos Inc.</div>
+              <p class="daw-acc-desc">Motor ultra veloz sin consumo de CPU. Enrutamiento multicanal.</p>
+              <div class="daw-acc-badges">
+                <span class="daw-pill">REAPER 6 & 7+</span>
+                <span class="daw-pill">VST3 & AU</span>
+              </div>
+              <div class="daw-acc-status"><i class="bi bi-circle-fill"></i> Ultra Ligero</div>
+            </div>
+          </div>
+
+          <!-- 7. Steinberg Cubase -->
+          <div class="daw-acc-card" style="--daw-accent: #E6002B; --daw-glow: rgba(230, 0, 43, 0.35);" onclick="setActiveCard(this)">
+            <div class="daw-acc-logo-box">
+              <img src="./cubase_icon.svg" alt="Cubase">
+            </div>
+            <div class="daw-acc-collapsed-label">Cubase</div>
+            <div class="daw-acc-dot"></div>
+            <div class="daw-acc-expanded-content">
+              <h3 class="daw-acc-name">Cubase / Nuendo</h3>
+              <div class="daw-acc-vendor">Steinberg</div>
+              <p class="daw-acc-desc">Creadores del estándar VST. Integración perfecta con Channel Strip.</p>
+              <div class="daw-acc-badges">
+                <span class="daw-pill">Cubase 11 / 12 / 13</span>
+                <span class="daw-pill">VST3 Nativo</span>
+              </div>
+              <div class="daw-acc-status"><i class="bi bi-circle-fill"></i> VST3 Pionero</div>
+            </div>
+          </div>
+
+          <!-- 8. Apple GarageBand -->
+          <div class="daw-acc-card" style="--daw-accent: #FF9500; --daw-glow: rgba(255, 149, 0, 0.3);" onclick="setActiveCard(this)">
+            <div class="daw-acc-logo-box">
+              <img src="./garageband.png" alt="GarageBand">
+            </div>
+            <div class="daw-acc-collapsed-label">GarageBand</div>
+            <div class="daw-acc-dot"></div>
+            <div class="daw-acc-expanded-content">
+              <h3 class="daw-acc-name">GarageBand</h3>
+              <div class="daw-acc-vendor">Apple</div>
+              <p class="daw-acc-desc">Carga directa en pistas de audio sin configuraciones adicionales.</p>
+              <div class="daw-acc-badges">
+                <span class="daw-pill">macOS 10.15+</span>
+                <span class="daw-pill">Audio Unit (AU)</span>
+              </div>
+              <div class="daw-acc-status"><i class="bi bi-circle-fill"></i> Plug & Play</div>
+            </div>
+          </div>
+
+          <!-- 9. Bitwig Studio -->
+          <div class="daw-acc-card" style="--daw-accent: #FF610C; --daw-glow: rgba(255, 97, 12, 0.35);" onclick="setActiveCard(this)">
+            <div class="daw-acc-logo-box">
+              <img src="./bitwig.svg" alt="Bitwig Studio">
+            </div>
+            <div class="daw-acc-collapsed-label">Bitwig Studio</div>
+            <div class="daw-acc-dot"></div>
+            <div class="daw-acc-expanded-content">
+              <h3 class="daw-acc-name">Bitwig Studio</h3>
+              <div class="daw-acc-vendor">Bitwig GmbH</div>
+              <p class="daw-acc-desc">Sandboxing con protección contra crashes del DAW e hiper-modulación.</p>
+              <div class="daw-acc-badges">
+                <span class="daw-pill">Bitwig 4 & 5+</span>
+                <span class="daw-pill">VST3 Sandboxed</span>
+              </div>
+              <div class="daw-acc-status"><i class="bi bi-circle-fill"></i> Crash Proof</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         VARIANTE 2: LISTA / GRID PREMIUM SHOWCASE
+         ============================================================ -->
+    <div class="daw-variant-grid" id="dawGridView">
+      <div class="daw-grid-layout">
+
+        <!-- 1. FL Studio -->
+        <div class="daw-grid-card" style="--daw-accent: #FF8400; --daw-glow: rgba(255, 132, 0, 0.25);">
+          <div class="daw-grid-icon-box">
+            <img src="./flstudio.png" alt="FL Studio">
+          </div>
+          <div class="daw-grid-info">
+            <div class="daw-grid-title"><span>FL Studio</span></div>
+            <div class="daw-grid-vendor">Image-Line · v20, v21, v2024+</div>
+            <div class="daw-grid-tags">
+              <span class="daw-grid-tag">VST3</span>
+              <span class="daw-grid-tag">64-Bit</span>
+              <span class="daw-grid-tag">Win / Mac</span>
+            </div>
+          </div>
+          <i class="bi bi-patch-check-fill daw-grid-check"></i>
+        </div>
+
+        <!-- 2. Ableton Live -->
+        <div class="daw-grid-card" style="--daw-accent: #00D2FF; --daw-glow: rgba(0, 210, 255, 0.25);">
+          <div class="daw-grid-icon-box">
+            <img src="./ableton_icon.svg" alt="Ableton Live">
+          </div>
+          <div class="daw-grid-info">
+            <div class="daw-grid-title"><span>Ableton Live</span></div>
+            <div class="daw-grid-vendor">Ableton · v10, v11, v12+</div>
+            <div class="daw-grid-tags">
+              <span class="daw-grid-tag">VST3</span>
+              <span class="daw-grid-tag">AU</span>
+              <span class="daw-grid-tag">Rack Ready</span>
+            </div>
+          </div>
+          <i class="bi bi-patch-check-fill daw-grid-check"></i>
+        </div>
+
+        <!-- 3. Logic Pro -->
+        <div class="daw-grid-card" style="--daw-accent: #38EF7D; --daw-glow: rgba(56, 239, 125, 0.25);">
+          <div class="daw-grid-icon-box">
+            <img src="./logic.png" alt="Logic Pro">
+          </div>
+          <div class="daw-grid-info">
+            <div class="daw-grid-title"><span>Logic Pro</span></div>
+            <div class="daw-grid-vendor">Apple Inc. · Logic Pro X / 11</div>
+            <div class="daw-grid-tags">
+              <span class="daw-grid-tag">AU v2</span>
+              <span class="daw-grid-tag">Apple Silicon</span>
+              <span class="daw-grid-tag">Intel</span>
+            </div>
+          </div>
+          <i class="bi bi-patch-check-fill daw-grid-check"></i>
+        </div>
+
+        <!-- 4. Pro Tools -->
+        <div class="daw-grid-card" style="--daw-accent: #9D4EDD; --daw-glow: rgba(157, 78, 221, 0.25);">
+          <div class="daw-grid-icon-box">
+            <img src="./protools.svg" alt="Pro Tools">
+          </div>
+          <div class="daw-grid-info">
+            <div class="daw-grid-title"><span>Pro Tools</span></div>
+            <div class="daw-grid-vendor">Avid Technology · Pro Tools 12+</div>
+            <div class="daw-grid-tags">
+              <span class="daw-grid-tag">VST3 Bridge</span>
+              <span class="daw-grid-tag">64-Bit</span>
+              <span class="daw-grid-tag">Pro Audio</span>
+            </div>
+          </div>
+          <i class="bi bi-patch-check-fill daw-grid-check"></i>
+        </div>
+
+        <!-- 5. Studio One -->
+        <div class="daw-grid-card" style="--daw-accent: #00A3FF; --daw-glow: rgba(0, 163, 255, 0.25);">
+          <div class="daw-grid-icon-box">
+            <img src="./studioone_icon.svg" alt="Studio One">
+          </div>
+          <div class="daw-grid-info">
+            <div class="daw-grid-title"><span>Studio One</span></div>
+            <div class="daw-grid-vendor">PreSonus · v5, v6, v7+</div>
+            <div class="daw-grid-tags">
+              <span class="daw-grid-tag">VST3</span>
+              <span class="daw-grid-tag">AU</span>
+              <span class="daw-grid-tag">64-Bit</span>
+            </div>
+          </div>
+          <i class="bi bi-patch-check-fill daw-grid-check"></i>
+        </div>
+
+        <!-- 6. Cockos REAPER -->
+        <div class="daw-grid-card" style="--daw-accent: #00E5FF; --daw-glow: rgba(0, 229, 255, 0.25);">
+          <div class="daw-grid-icon-box">
+            <img src="./reaper.svg" alt="REAPER">
+          </div>
+          <div class="daw-grid-info">
+            <div class="daw-grid-title"><span>Cockos REAPER</span></div>
+            <div class="daw-grid-vendor">Cockos · REAPER 6, 7+</div>
+            <div class="daw-grid-tags">
+              <span class="daw-grid-tag">VST3</span>
+              <span class="daw-grid-tag">AU</span>
+              <span class="daw-grid-tag">Cero Latencia</span>
+            </div>
+          </div>
+          <i class="bi bi-patch-check-fill daw-grid-check"></i>
+        </div>
+
+        <!-- 7. Steinberg Cubase -->
+        <div class="daw-grid-card" style="--daw-accent: #E6002B; --daw-glow: rgba(230, 0, 43, 0.25);">
+          <div class="daw-grid-icon-box">
+            <img src="./cubase_icon.svg" alt="Cubase">
+          </div>
+          <div class="daw-grid-info">
+            <div class="daw-grid-title"><span>Cubase & Nuendo</span></div>
+            <div class="daw-grid-vendor">Steinberg · v11, v12, v13+</div>
+            <div class="daw-grid-tags">
+              <span class="daw-grid-tag">VST3 Nativo</span>
+              <span class="daw-grid-tag">ASIO Ready</span>
+            </div>
+          </div>
+          <i class="bi bi-patch-check-fill daw-grid-check"></i>
+        </div>
+
+        <!-- 8. Apple GarageBand -->
+        <div class="daw-grid-card" style="--daw-accent: #FF9500; --daw-glow: rgba(255, 149, 0, 0.25);">
+          <div class="daw-grid-icon-box">
+            <img src="./garageband.png" alt="GarageBand">
+          </div>
+          <div class="daw-grid-info">
+            <div class="daw-grid-title"><span>GarageBand</span></div>
+            <div class="daw-grid-vendor">Apple Inc. · GarageBand 10.4+</div>
+            <div class="daw-grid-tags">
+              <span class="daw-grid-tag">Audio Unit</span>
+              <span class="daw-grid-tag">macOS Nativo</span>
+            </div>
+          </div>
+          <i class="bi bi-patch-check-fill daw-grid-check"></i>
+        </div>
+
+        <!-- 9. Bitwig Studio -->
+        <div class="daw-grid-card" style="--daw-accent: #FF610C; --daw-glow: rgba(255, 97, 12, 0.25);">
+          <div class="daw-grid-icon-box">
+            <img src="./bitwig.svg" alt="Bitwig Studio">
+          </div>
+          <div class="daw-grid-info">
+            <div class="daw-grid-title"><span>Bitwig Studio</span></div>
+            <div class="daw-grid-vendor">Bitwig · Studio 4 & 5+</div>
+            <div class="daw-grid-tags">
+              <span class="daw-grid-tag">VST3 Sandboxed</span>
+              <span class="daw-grid-tag">Multi-out</span>
+            </div>
+          </div>
+          <i class="bi bi-patch-check-fill daw-grid-check"></i>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- System Specs Bar -->
+    <div class="daw-specs-bar">
+      <div class="daw-spec-item">
+        <i class="fa-brands fa-windows" style="color: #0078d4; font-size: 1rem;"></i>
+        <span><strong>Windows:</strong> VST3 de 64 bits (Windows 10 / 11)</span>
+      </div>
+      <div class="daw-spec-divider"></div>
+      <div class="daw-spec-item">
+        <i class="fa-brands fa-apple" style="color: #ffffff; font-size: 1.1rem;"></i>
+        <span><strong>macOS:</strong> VST3 / AU (Apple Silicon M1/M2/M3/M4 & Intel)</span>
+      </div>
+      <div class="daw-spec-divider"></div>
+      <div class="daw-spec-item">
+        <i class="bi bi-cpu-fill" style="color: #00ffaa; font-size: 1rem;"></i>
+        <span><strong>Rendimiento:</strong> 0 Samples Latencia · DSP Multi-hilo</span>
+      </div>
+    </div>
+
+  </section>
+
+  <script>
+    function switchDawView(variant) {
+      const btnAcc = document.getElementById('btnAccordion');
+      const btnGrid = document.getElementById('btnGrid');
+      const viewAcc = document.getElementById('dawAccordionView');
+      const viewGrid = document.getElementById('dawGridView');
+
+      if (variant === 'accordion') {
+        btnAcc.classList.add('active');
+        btnGrid.classList.remove('active');
+        viewAcc.style.display = 'block';
+        viewGrid.style.display = 'none';
+      } else {
+        btnGrid.classList.add('active');
+        btnAcc.classList.remove('active');
+        viewAcc.style.display = 'none';
+        viewGrid.style.display = 'block';
+      }
+    }
+
+    function setActiveCard(card) {
+      document.querySelectorAll('.daw-acc-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+    }
+  </script>
+
+</body>
+</html>

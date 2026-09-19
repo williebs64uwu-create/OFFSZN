@@ -1248,61 +1248,45 @@
             text-transform: uppercase;
         }
 
+        /* ==================== SEGMENTED CONTROL PILL (Estilo Apple / Imagen 2) ==================== */
         .em-nav-menu {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 4px;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 999px;
-            padding: 4px 6px;
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            padding: 4px;
+            gap: 4px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            user-select: none;
         }
 
         .em-nav-link {
-            color: #d1d5db;
+            color: #9ca3af;
             text-decoration: none;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 5px 14px;
+            padding: 6px 18px;
             border-radius: 999px;
-            transition: all 0.22s ease;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            letter-spacing: -0.2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .em-nav-link:hover {
             color: #ffffff;
-            background: rgba(255, 255, 255, 0.12);
         }
 
-        .em-nav-pulse-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #10b981;
-            box-shadow: 0 0 8px #10b981;
-            display: inline-block;
-            animation: emNavPulseDot 2s infinite ease-in-out;
-            flex-shrink: 0;
-        }
-
-        @keyframes emNavPulseDot {
-
-            0%,
-            100% {
-                opacity: 0.6;
-                transform: scale(0.9);
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1.2);
-                box-shadow: 0 0 10px #10b981;
-            }
+        .em-nav-link.active {
+            background: #ffffff;
+            color: #000000 !important;
+            font-weight: 700;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         .em-nav-actions {
@@ -1601,11 +1585,53 @@
         }
 
         .testimonios-section {
-            padding: 90px 0 75px;
-            background: #050505;
-            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding: 110px 0 95px;
+            background: radial-gradient(ellipse 85% 65% at 50% 50%, #0d1629 0%, #080e1a 45%, #030508 100%);
+            border-top: none;
+            border-bottom: none;
             overflow: hidden;
             position: relative;
+        }
+
+        /* Suave difuminado superior e inferior para integrarse fluidamente a la web (sin líneas de corte) */
+        .testimonios-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 140px;
+            background: linear-gradient(to bottom, #000000 0%, rgba(0, 0, 0, 0.7) 40%, transparent 100%);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .testimonios-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 140px;
+            background: linear-gradient(to top, #000000 0%, rgba(0, 0, 0, 0.7) 40%, transparent 100%);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .testimonios-stars-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .testimonios-section .container,
+        .testimonios-section .testi-carousel-wrapper {
+            position: relative;
+            z-index: 3;
         }
 
         .testimonios-badge {
@@ -1631,10 +1657,11 @@
             margin-bottom: 12px;
             letter-spacing: -0.5px;
             line-height: 1.15;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
         }
 
         .testimonios-subtitle {
-            color: #888;
+            color: #9aa0a6;
             font-size: 1rem;
             max-width: 580px;
             margin: 0 auto;
@@ -1646,28 +1673,13 @@
             width: 100%;
             overflow: hidden;
             padding: 20px 0;
-            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
-            mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%);
+            mask-image: linear-gradient(to right, transparent 0%, black 7%, black 93%, transparent 100%);
         }
 
         .testi-carousel-fade-left,
         .testi-carousel-fade-right {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 150px;
-            z-index: 4;
-            pointer-events: none;
-        }
-
-        .testi-carousel-fade-left {
-            left: 0;
-            background: linear-gradient(to right, #050505 20%, rgba(5, 5, 5, 0) 100%);
-        }
-
-        .testi-carousel-fade-right {
-            right: 0;
-            background: linear-gradient(to left, #050505 20%, rgba(5, 5, 5, 0) 100%);
+            display: none; /* Mask-image realiza el difuminado lateral sin tapar el fondo estrellado */
         }
 
         .testi-marquee-row {
@@ -1716,11 +1728,13 @@
         .testi-card {
             width: 280px;
             height: 200px;
-            background: #000000;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(13, 16, 23, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -1735,7 +1749,7 @@
         }
 
         .testi-card:hover {
-            border-color: rgba(255, 255, 255, 0.22);
+            border-color: rgba(255, 255, 255, 0.18);
             transform: none !important;
         }
 
@@ -1924,18 +1938,10 @@
                 <span class="em-nav-badge">EASY MIX</span>
             </a>
 
-            <!-- 2. Nav Links (Cómo Suena + Resultados) -->
-            <nav class="em-nav-menu">
-                <a href="#audio-comparison" class="em-nav-link">
-                    <span class="em-nav-pulse-dot"></span>
-                    <i class="bi bi-soundwave" style="color: #6ee7b7; font-size: 0.95rem;"></i>
-                    <span>Cómo Suena</span>
-                </a>
-                <span class="em-nav-divider"></span>
-                <a href="#testimonios" class="em-nav-link">
-                    <i class="bi bi-star-fill" style="color: #ff9f0a; font-size: 0.8rem;"></i>
-                    <span>Resultados</span>
-                </a>
+            <!-- 2. Nav Links Segmented Control (Cómo Suena + Resultados) -->
+            <nav class="em-nav-menu" aria-label="Navegación de secciones">
+                <a href="#audio-comparison" class="em-nav-link active" id="nav-link-suena">Cómo Suena</a>
+                <a href="#testimonios" class="em-nav-link" id="nav-link-testimonios">Resultados</a>
             </nav>
 
             <!-- 3. Action Button (Descargar plugin) -->
@@ -2318,95 +2324,279 @@
             }
         </script>
 
-        <!-- ==================== COMPATIBILITY SECTION ==================== -->
-        <section style="padding: 60px 0; background: #000; border-top: 1px solid rgba(255,255,255,0.05);">
-            <div class="container" style="max-width: 800px; text-align: center;">
-                <h2
-                    style="font-size: 1.8rem; font-weight: 800; margin-bottom: 24px; color: #fff; text-transform: uppercase; letter-spacing: 1px;">
-                    Disponible en:</h2>
+        <!-- ==================== COMPATIBILITY SECTION (OFFICIAL DAWS GRID) ==================== -->
+        <section class="daw-showcase-section" id="compatibilidad-daws">
+            <style>
+                .daw-showcase-section {
+                    padding: 95px 0 75px;
+                    background: #000000;
+                    border: none;
+                    position: relative;
+                    overflow: hidden;
+                }
+                .daw-container {
+                    max-width: 1140px;
+                    margin: 0 auto;
+                    padding: 0 24px;
+                    text-align: center;
+                    position: relative;
+                    z-index: 1;
+                }
+                .daw-section-title {
+                    font-size: clamp(2rem, 3.8vw, 2.7rem);
+                    font-weight: 900;
+                    letter-spacing: -0.5px;
+                    text-transform: uppercase;
+                    color: #ffffff;
+                    margin-bottom: 44px;
+                    line-height: 1.15;
+                }
 
-                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: center;">
-                    <!-- FL Studio -->
-                    <div
-                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 12px; transition: transform 0.2s;">
-                        <img src="/images/logo fl.png" alt="FL Studio"
-                            style="height: 30px; width: auto; object-fit: contain;">
-                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">FL Studio</span>
+                /* GRID LAYOUT */
+                .daw-grid-layout {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 18px;
+                }
+                @media (max-width: 992px) {
+                    .daw-grid-layout { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+                }
+                @media (max-width: 600px) {
+                    .daw-grid-layout { grid-template-columns: 1fr; gap: 12px; }
+                }
+
+                /* GLASS CARD */
+                .daw-grid-card {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 22px;
+                    padding: 24px 26px;
+                    display: flex;
+                    align-items: center;
+                    gap: 20px;
+                    position: relative;
+                    overflow: hidden;
+                    text-align: left;
+                    backdrop-filter: blur(24px) saturate(180%);
+                    -webkit-backdrop-filter: blur(24px) saturate(180%);
+                    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 14px 34px rgba(0, 0, 0, 0.45);
+                    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                .daw-grid-card:hover {
+                    background: rgba(255, 255, 255, 0.055);
+                    border-color: rgba(255, 255, 255, 0.18);
+                    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2), 0 18px 42px rgba(0, 0, 0, 0.6);
+                    transform: translateY(-3px);
+                }
+
+                /* ICON WELL */
+                .daw-grid-icon-box {
+                    width: 60px;
+                    height: 60px;
+                    min-width: 60px;
+                    border-radius: 16px;
+                    background: rgba(255, 255, 255, 0.04);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 10px;
+                    transition: transform 0.25s ease;
+                }
+                .daw-grid-card:hover .daw-grid-icon-box {
+                    transform: scale(1.06);
+                }
+                .daw-grid-icon-box img {
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+                }
+
+                /* INFO */
+                .daw-grid-info {
+                    flex: 1;
+                    min-width: 0;
+                }
+                .daw-grid-title {
+                    font-size: 1.18rem;
+                    font-weight: 800;
+                    color: #ffffff;
+                    letter-spacing: -0.2px;
+                    margin-bottom: 4px;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .daw-grid-vendor {
+                    font-size: 0.82rem;
+                    color: rgba(255, 255, 255, 0.5);
+                    font-weight: 500;
+                    letter-spacing: 0.2px;
+                }
+
+                /* SPECS BAR */
+                .daw-specs-bar {
+                    margin-top: 40px;
+                    padding: 16px 28px;
+                    border-radius: 999px;
+                    background: rgba(255, 255, 255, 0.025);
+                    border: 1px solid rgba(255, 255, 255, 0.07);
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 26px;
+                    flex-wrap: wrap;
+                    color: rgba(255, 255, 255, 0.65);
+                    font-size: 0.84rem;
+                    backdrop-filter: blur(16px);
+                }
+                .daw-spec-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+                .daw-spec-divider {
+                    width: 1px;
+                    height: 16px;
+                    background: rgba(255, 255, 255, 0.12);
+                }
+                @media (max-width: 768px) {
+                    .daw-specs-bar { border-radius: 18px; flex-direction: column; gap: 10px; width: 100%; }
+                    .daw-spec-divider { display: none; }
+                }
+            </style>
+
+            <div class="daw-container">
+                <h2 class="daw-section-title">DISPONIBLE EN TUS DAWS FAVORITOS</h2>
+
+                <!-- GRID LISTA -->
+                <div class="daw-grid-layout">
+                    <!-- 1. FL Studio -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/flstudio.png" alt="FL Studio">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">FL Studio</div>
+                            <div class="daw-grid-vendor">Image-Line</div>
+                        </div>
                     </div>
 
-                    <!-- Ableton Live -->
-                    <div
-                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
-                        <span style="font-size: 1.3rem;">🎹</span>
-                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Ableton Live</span>
+                    <!-- 2. Ableton Live -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/ableton_icon.svg" alt="Ableton Live">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">Ableton Live</div>
+                            <div class="daw-grid-vendor">Ableton</div>
+                        </div>
                     </div>
 
-                    <!-- Logic Pro -->
-                    <div
-                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
-                        <span style="font-size: 1.3rem;">🍏</span>
-                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Logic Pro</span>
+                    <!-- 3. Logic Pro -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/logic.png" alt="Logic Pro">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">Logic Pro</div>
+                            <div class="daw-grid-vendor">Apple</div>
+                        </div>
                     </div>
 
-                    <!-- Pro Tools -->
-                    <div
-                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
-                        <span style="font-size: 1.3rem;">🎚️</span>
-                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Pro Tools</span>
+                    <!-- 4. Pro Tools -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/protools.svg" alt="Pro Tools">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">Pro Tools</div>
+                            <div class="daw-grid-vendor">Avid Technology</div>
+                        </div>
                     </div>
 
-                    <!-- Studio One -->
-                    <div
-                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
-                        <span style="font-size: 1.3rem;">🎛️</span>
-                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Studio One</span>
+                    <!-- 5. Studio One -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/studioone_icon.svg" alt="Studio One">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">Studio One</div>
+                            <div class="daw-grid-vendor">PreSonus</div>
+                        </div>
                     </div>
 
-                    <!-- Reaper -->
-                    <div
-                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
-                        <span style="font-size: 1.3rem;">💻</span>
-                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Reaper</span>
+                    <!-- 6. Cockos REAPER -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/reaper.svg" alt="REAPER">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">REAPER</div>
+                            <div class="daw-grid-vendor">Cockos</div>
+                        </div>
                     </div>
 
-                    <!-- Cubase -->
-                    <div
-                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
-                        <span style="font-size: 1.3rem;">🎸</span>
-                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Cubase</span>
+                    <!-- 7. Steinberg Cubase -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/cubase_icon.svg" alt="Cubase">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">Cubase</div>
+                            <div class="daw-grid-vendor">Steinberg</div>
+                        </div>
                     </div>
 
-                    <!-- GarageBand -->
-                    <div
-                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
-                        <span style="font-size: 1.3rem;">🎙️</span>
-                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">GarageBand</span>
+                    <!-- 8. Apple GarageBand -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/garageband.png" alt="GarageBand">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">GarageBand</div>
+                            <div class="daw-grid-vendor">Apple</div>
+                        </div>
                     </div>
 
-                    <!-- Bitwig Studio -->
-                    <div
-                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 12px 24px; border-radius: 16px; display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
-                        <span style="font-size: 1.3rem;">🎹</span>
-                        <span style="font-weight: 700; color: #fff; font-size: 1rem;">Bitwig</span>
+                    <!-- 9. Bitwig Studio -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/bitwig.svg" alt="Bitwig Studio">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">Bitwig Studio</div>
+                            <div class="daw-grid-vendor">Bitwig</div>
+                        </div>
                     </div>
                 </div>
-                <p
-                    style="color: #888; font-size: 0.85rem; margin-top: 24px; margin-bottom: 0; display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap;">
-                    <span><i class="fa-brands fa-windows" style="color: #0078d4; margin-right: 4px;"></i> Windows (VST3
-                        de 64 bits)</span>
-                    <span style="color: rgba(255,255,255,0.15);">|</span>
-                    <span><i class="fa-brands fa-apple" style="color: #ffffff; margin-right: 4px;"></i> macOS (AU / VST3
-                        / Standalone para Intel & Apple Silicon)</span>
-                </p>
+
+                <!-- SPECS BAR -->
+                <div class="daw-specs-bar">
+                    <div class="daw-spec-item">
+                        <i class="fa-brands fa-windows" style="color: #0078d4;"></i>
+                        <span><strong>Windows:</strong> VST3 (64 bits)</span>
+                    </div>
+                    <div class="daw-spec-divider"></div>
+                    <div class="daw-spec-item">
+                        <i class="fa-brands fa-apple" style="color: #ffffff;"></i>
+                        <span><strong>macOS:</strong> AU / VST3 (Intel & Apple Silicon)</span>
+                    </div>
+                    <div class="daw-spec-divider"></div>
+                    <div class="daw-spec-item">
+                        <i class="bi bi-lightning-charge-fill" style="color: #00ffaa;"></i>
+                        <span><strong>RENDIMIENTO:</strong> 0 LATENCIA</span>
+                    </div>
+                </div>
             </div>
         </section>
 
         <!-- ==================== TESTIMONIALS SECTION (CARRUSEL 2 LÍNEAS) ==================== -->
         <section id="testimonios" class="testimonios-section">
+            <!-- Lienzo de Estrellas Cósmicas & Partículas (Efecto KL World / Linear) -->
+            <canvas class="testimonios-stars-canvas" id="testimoniosStarsCanvas" aria-hidden="true"></canvas>
             <div class="container" style="text-align: center; margin-bottom: 36px;">
-                <div class="testimonios-badge">
-                    <i class="bi bi-star-fill" style="color: #ff9f0a; font-size: 0.75rem;"></i> Testimonios & Feedback
-                </div>
                 <h2 class="testimonios-title">
                     Lo que dicen los artistas y productores
                 </h2>
@@ -2915,6 +3105,147 @@
                     }, 300);
                 }
             }
+
+            /* ==========================================================================
+               ANIMACIÓN DE ESTRELLAS CÓSMICAS & POLVO ESTELAR (TESTIMONIOS)
+               Inspirado en el fondo galáctico de Kiddy Luks / Linear / Aceternity
+               ========================================================================== */
+            (function () {
+                const canvas = document.getElementById('testimoniosStarsCanvas');
+                const section = document.getElementById('testimonios');
+                if (!canvas || !section) return;
+
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                let width = 0;
+                let height = 0;
+                let dpr = 1;
+                let animationFrameId = null;
+                let isSectionVisible = true;
+                let stars = [];
+
+                // Paleta de estrellas: blanco nítido, azul estelar frío y toques tenues cálidos
+                const starColors = [
+                    '255, 255, 255',
+                    '215, 232, 255',
+                    '180, 215, 255',
+                    '255, 238, 210'
+                ];
+
+                function resize() {
+                    const rect = section.getBoundingClientRect();
+                    width = rect.width;
+                    height = rect.height;
+                    dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+                    canvas.width = Math.floor(width * dpr);
+                    canvas.height = Math.floor(height * dpr);
+                    canvas.style.width = width + 'px';
+                    canvas.style.height = height + 'px';
+
+                    ctx.scale(dpr, dpr);
+                    initStars();
+                }
+
+                function initStars() {
+                    stars = [];
+                    // Densidad adaptativa: ~1 estrella cada 8500px² (aprox 110-140 en desktop, 55 en móvil)
+                    const count = Math.floor((width * height) / 8500);
+                    const finalCount = Math.max(50, Math.min(count, 150));
+
+                    for (let i = 0; i < finalCount; i++) {
+                        const isBeacon = Math.random() < 0.14;
+                        stars.push({
+                            x: Math.random() * width,
+                            y: Math.random() * height,
+                            radius: isBeacon ? (1.4 + Math.random() * 0.9) : (0.45 + Math.random() * 0.85),
+                            color: starColors[Math.floor(Math.random() * starColors.length)],
+                            baseAlpha: 0.25 + Math.random() * 0.55,
+                            twinkleSpeed: 0.0012 + Math.random() * 0.0028,
+                            twinklePhase: Math.random() * Math.PI * 2,
+                            isBeacon: isBeacon,
+                            vx: (Math.random() - 0.5) * 0.05,
+                            vy: -(0.035 + Math.random() * 0.075) // Suave deriva cósmica hacia arriba
+                        });
+                    }
+                }
+
+                function animate(timestamp) {
+                    if (!isSectionVisible) return;
+                    animationFrameId = requestAnimationFrame(animate);
+
+                    ctx.clearRect(0, 0, width, height);
+
+                    for (let i = 0; i < stars.length; i++) {
+                        const s = stars[i];
+
+                        // Movimiento sutil y continuo
+                        s.x += s.vx;
+                        s.y += s.vy;
+
+                        // Reenvoltura infinita en los bordes
+                        if (s.x < -10) s.x = width + 10;
+                        if (s.x > width + 10) s.x = -10;
+                        if (s.y < -10) s.y = height + 10;
+                        if (s.y > height + 10) s.y = -10;
+
+                        // Titileo orgánico y suave
+                        const twinkle = Math.sin(timestamp * s.twinkleSpeed + s.twinklePhase);
+                        const alpha = Math.max(0.12, Math.min(1, s.baseAlpha + twinkle * 0.35));
+
+                        ctx.beginPath();
+                        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+
+                        if (s.isBeacon) {
+                            ctx.fillStyle = `rgba(${s.color}, ${alpha})`;
+                            ctx.shadowColor = `rgba(${s.color}, ${alpha * 0.75})`;
+                            ctx.shadowBlur = 6;
+                            ctx.fill();
+                            ctx.shadowBlur = 0; // Reset para las siguientes estrellas
+                        } else {
+                            ctx.fillStyle = `rgba(${s.color}, ${alpha})`;
+                            ctx.fill();
+                        }
+                    }
+                }
+
+                // Optimización de rendimiento: pausa el bucle si la sección no está en pantalla
+                if ('IntersectionObserver' in window) {
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach((entry) => {
+                            if (entry.isIntersecting) {
+                                isSectionVisible = true;
+                                if (!animationFrameId) {
+                                    animationFrameId = requestAnimationFrame(animate);
+                                }
+                            } else {
+                                isSectionVisible = false;
+                                if (animationFrameId) {
+                                    cancelAnimationFrame(animationFrameId);
+                                    animationFrameId = null;
+                                }
+                            }
+                        });
+                    }, { threshold: 0.05 });
+
+                    observer.observe(section);
+                } else {
+                    animationFrameId = requestAnimationFrame(animate);
+                }
+
+                // Redimensionamiento responsivo
+                if ('ResizeObserver' in window) {
+                    const ro = new ResizeObserver(() => resize());
+                    ro.observe(section);
+                } else {
+                    window.addEventListener('resize', resize, { passive: true });
+                }
+
+                // Inicialización inicial
+                resize();
+                animationFrameId = requestAnimationFrame(animate);
+            })();
         </script>
 
         <!-- ==================== SERIAL KEY SECTION ==================== -->
@@ -3607,6 +3938,34 @@
             });
             serialObserver.observe(serial);
 
+            // Segmented Control Pill (ScrollSpy & Click)
+            const linkSuena = document.getElementById('nav-link-suena');
+            const linkTesti = document.getElementById('nav-link-testimonios');
+            const sectionTesti = document.getElementById('testimonios');
+
+            function updateSegmentedState() {
+                if (!sectionTesti || !linkSuena || !linkTesti) return;
+                const testiRect = sectionTesti.getBoundingClientRect();
+                if (testiRect.top <= 200) {
+                    linkTesti.classList.add('active');
+                    linkSuena.classList.remove('active');
+                } else {
+                    linkSuena.classList.add('active');
+                    linkTesti.classList.remove('active');
+                }
+            }
+
+            if (linkSuena && linkTesti) {
+                linkSuena.addEventListener('click', () => {
+                    linkSuena.classList.add('active');
+                    linkTesti.classList.remove('active');
+                });
+                linkTesti.addEventListener('click', () => {
+                    linkTesti.classList.add('active');
+                    linkSuena.classList.remove('active');
+                });
+            }
+
             // Respaldo pasivo con requestAnimationFrame para scroll fluido y saltos inmediatos
             let ticking = false;
             window.addEventListener('scroll', () => {
@@ -3619,6 +3978,7 @@
                         reachedDownload = serialRect.top <= 60;
 
                         updateNavbarState();
+                        updateSegmentedState();
                         ticking = false;
                     });
                     ticking = true;
@@ -3626,6 +3986,7 @@
             }, { passive: true });
 
             updateNavbarState();
+            updateSegmentedState();
         })();
 
         // 2. Ultra-lightweight reveals: Native IntersectionObserver with 1-shot unobserve
