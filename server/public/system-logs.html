@@ -385,7 +385,36 @@
 
     <script src="/env.js"></script>
     <script>
+        // Security gate check
+        const savedKey = localStorage.getItem('offszn_owner_key');
+        const urlKey = new URLSearchParams(window.location.search).get('pin') || new URLSearchParams(window.location.search).get('admin_key');
+        if (urlKey === 'gian2030upc') {
+            localStorage.setItem('offszn_owner_key', urlKey);
+        } else if (savedKey !== 'gian2030upc') {
+            const promptKey = prompt('🔒 Acceso Restringido a Telemetría OFFSZN.\nIngrese la clave de Propietario:');
+            if (promptKey === 'gian2030upc') {
+                localStorage.setItem('offszn_owner_key', promptKey);
+            } else {
+                window.location.href = '/owner/offszn.html#telemetria';
+            }
+        }
+
         const sb = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+
+        function maskEmail(email) {
+            if (!email) return 'Cliente Anónimo';
+            const parts = email.split('@');
+            if (parts.length < 2) return '***';
+            const user = parts[0];
+            return (user.length > 2 ? user.slice(0, 2) + '***' : user[0] + '***') + '@' + parts[1];
+        }
+
+        function maskSerial(serial) {
+            if (!serial) return '****-****';
+            const parts = serial.split('-');
+            if (parts.length <= 2) return serial.slice(0, 4) + '-****';
+            return parts[0] + '-****-' + parts[parts.length - 1];
+        }
 
         function updateTime() {
             const now = new Date();
@@ -414,14 +443,14 @@
                 document.getElementById('val-orders-count').textContent = ordersRes.data ? `${ordersRes.data.length}+ órdenes` : 'OK';
                 document.getElementById('val-lic-count').textContent = licRes.data ? `${licRes.data.length} activas` : 'OK';
 
-                // Combine events
+                // Combine events with PII masking
                 const events = [];
                 (ordersRes.data || []).forEach(o => {
                     const price = parseFloat(o.total_price || 0);
                     events.push({
                         type: 'ORDEN',
                         title: `Orden #${o.id} • ${price > 0 ? '$' + price.toFixed(2) + ' USD' : 'Descarga Lead'}`,
-                        meta: `${o.guest_email || 'Cliente Anónimo'} • TX: ${o.transaction_id || 'Direct'}`,
+                        meta: `${maskEmail(o.guest_email)} • TX: ${(o.transaction_id || 'Direct').substring(0, 12)}...`,
                         time: new Date(o.created_at),
                         badge: 'badge-order',
                         badgeText: price > 0 ? `$${price} Cobrado` : 'Lead'
@@ -432,7 +461,7 @@
                     events.push({
                         type: 'LICENCIA',
                         title: `Emisión de Clave: ${l.plugin_name || 'Plugin'} (${l.license_type || 'Lifetime'})`,
-                        meta: `Serial: ${l.serial_key}`,
+                        meta: `Serial: ${maskSerial(l.serial_key)}`,
                         time: new Date(l.created_at),
                         badge: 'badge-lic',
                         badgeText: 'Licencia'
@@ -443,7 +472,7 @@
                     events.push({
                         type: 'HWID',
                         title: `Activación de Dispositivo: ${a.device_name || 'PC / Laptop'}`,
-                        meta: `HWID: ${a.hwid}`,
+                        meta: `HWID: ${(a.hwid || '').substring(0, 16)}...`,
                         time: new Date(a.activated_at),
                         badge: 'badge-act',
                         badgeText: 'HWID Vinculado'

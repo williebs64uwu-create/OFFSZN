@@ -32,13 +32,16 @@ void LicenseManager::initLicenseState()
     }
     else
     {
-        isValid.store (false);
-        isTrial.store (false);
-        daysLeft.store (0);
+        // First launch on this machine: create 3-day trial automatically
+        int64_t now = juce::Time::currentTimeMillis() / 1000;
+        int64_t expiresAt = now + (3 * 86400); // 3 days
+        juce::String hwid = getHardwareID();
+        juce::String trialKey = "PITCH-TRIAL-" + hwid.substring (0, 8).toUpperCase();
 
-        const juce::ScopedLock sl (licenseLock);
-        currentSerial = "";
-        statusMessage = "Sin licencia activa.";
+        file.getParentDirectory().createDirectory();
+        juce::String initialData = trialKey + "|" + juce::String (expiresAt) + "|" + juce::String (now);
+        file.replaceWithText (initialData);
+        validateSettingsContent (initialData);
     }
 }
 
@@ -46,7 +49,11 @@ void LicenseManager::validateSettingsContent (const juce::String& content)
 {
     const juce::ScopedLock sl (licenseLock);
 
-    if (content.startsWith ("EASY-FULL-"))
+    bool isFull = content.startsWith ("PITCH-FULL-") || content.startsWith ("EASY-FULL-") || content.startsWith ("EASY-PITCH-FULL-");
+    bool isTrialOrSub = content.startsWith ("PITCH-TRIAL-") || content.startsWith ("EASY-TRIAL-") || content.startsWith ("EASY-PITCH-TRIAL-")
+                     || content.startsWith ("PITCH-SUB-")   || content.startsWith ("EASY-SUB-")   || content.startsWith ("EASY-PITCH-SUB-");
+
+    if (isFull)
     {
         // Lifetime full license
         isValid.store (true);
@@ -55,7 +62,7 @@ void LicenseManager::validateSettingsContent (const juce::String& content)
         currentSerial = content;
         statusMessage = "Licencia vitalicia activa.";
     }
-    else if (content.startsWith ("EASY-TRIAL-"))
+    else if (isTrialOrSub)
     {
         // Format: SERIAL|EXPIRES_UNIX|LAST_CHECK_UNIX
         auto tokens = juce::StringArray::fromTokens (content, "|", "");
@@ -66,6 +73,12 @@ void LicenseManager::validateSettingsContent (const juce::String& content)
 
         currentSerial = serial;
         isTrial.store (true);
+
+        // Fallback default: 3 days if newly saved offline
+        if (expiresAt == 0)
+        {
+            expiresAt = now + (3 * 86400);
+        }
 
         if (expiresAt > 0 && now >= expiresAt)
         {
@@ -128,7 +141,10 @@ LicenseState LicenseManager::getLicenseState() const
 bool LicenseManager::saveSerialLocally (const juce::String& serial)
 {
     juce::String trimmed = serial.trim();
-    if (! (trimmed.startsWith ("EASY-FULL-") || trimmed.startsWith ("EASY-TRIAL-")))
+    bool matches = trimmed.startsWith ("PITCH-FULL-") || trimmed.startsWith ("EASY-FULL-") || trimmed.startsWith ("EASY-PITCH-FULL-")
+                || trimmed.startsWith ("PITCH-TRIAL-") || trimmed.startsWith ("EASY-TRIAL-") || trimmed.startsWith ("EASY-PITCH-TRIAL-")
+                || trimmed.startsWith ("PITCH-SUB-")   || trimmed.startsWith ("EASY-SUB-")   || trimmed.startsWith ("EASY-PITCH-SUB-");
+    if (! matches)
         return false;
 
     juce::File file = getSettingsFile();
@@ -150,24 +166,31 @@ void LicenseManager::activateSerial (const juce::String& serialKey, std::functio
     juce::Thread::launch ([this, cleanKey, callback]()
     {
         juce::String hwid = getHardwareID();
-        juce::URL activateUrl ("https://offszn.lat/api/plugin/activate");
-        
         juce::String jsonBody = "{\"serial_key\":\"" + cleanKey
                               + "\",\"hwid\":\"" + hwid
                               + "\",\"plugin_name\":\"EASY PITCH\"}";
 
-        activateUrl = activateUrl.withPOSTData (jsonBody);
+        auto tryEndpoint = [&jsonBody](const juce::String& urlStr) -> std::unique_ptr<juce::InputStream>
+        {
+            juce::URL activateUrl (urlStr);
+            activateUrl = activateUrl.withPOSTData (jsonBody);
+            auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
+                               .withExtraHeaders ("Content-Type: application/json\n")
+                               .withConnectionTimeoutMs (5000);
+            return activateUrl.createInputStream (options);
+        };
 
-        auto options = juce::URL::InputStreamOptions (juce::URL::ParameterHandling::inAddress)
-                           .withExtraHeaders ("Content-Type: application/json\n")
-                           .withConnectionTimeoutMs (8000);
-
-        std::unique_ptr<juce::InputStream> stream (activateUrl.createInputStream (options));
+        // 1. Try production cloud endpoint
+        std::unique_ptr<juce::InputStream> stream = tryEndpoint ("https://offszn.lat/api/plugin/activate");
+        
+        // 2. Fallback to local dev server if cloud is offline or user testing locally
+        if (stream == nullptr)
+        {
+            stream = tryEndpoint ("http://127.0.0.1:3000/api/plugin/activate");
+        }
 
         if (stream == nullptr)
         {
-            // Server not reachable
-            // If the format is already valid and user is offline, check if it's already saved
             juce::MessageManager::callAsync ([callback]()
             {
                 if (callback) callback (false, "No se pudo conectar al servidor. Se requiere conexión a internet para la primera activación.");
@@ -187,13 +210,32 @@ void LicenseManager::activateSerial (const juce::String& serialKey, std::functio
             juce::String licenseType = json.getProperty ("license_type", "lifetime").toString();
             int64_t expiresAt = 0;
             if (json.hasProperty ("expires_at_unix"))
+            {
                 expiresAt = json.getProperty ("expires_at_unix", 0).toString().getLargeIntValue();
+            }
+            else if (json.hasProperty ("expires_at"))
+            {
+                juce::String isoStr = json.getProperty ("expires_at", "").toString();
+                if (isoStr.isNotEmpty() && isoStr != "never")
+                {
+                    juce::Time t = juce::Time::fromISO8601 (isoStr);
+                    expiresAt = t.toMilliseconds() / 1000;
+                }
+            }
 
             int64_t now = juce::Time::currentTimeMillis() / 1000;
+
+            if (licenseType.toLowerCase().contains ("trial") && expiresAt <= 0)
+            {
+                int days = json.getProperty ("days_remaining", 3);
+                if (days <= 0) days = 3;
+                expiresAt = now + (days * 86400);
+            }
+
             juce::File file = getSettingsFile();
             file.getParentDirectory().createDirectory();
 
-            if (licenseType.toLowerCase().contains ("trial"))
+            if (licenseType.toLowerCase().contains ("trial") || licenseType.toLowerCase().contains ("sub"))
             {
                 file.replaceWithText (cleanKey + "|" + juce::String (expiresAt) + "|" + juce::String (now));
             }

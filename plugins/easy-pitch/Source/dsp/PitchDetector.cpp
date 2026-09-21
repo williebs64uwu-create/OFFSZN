@@ -1,6 +1,7 @@
 #include "PitchDetector.h"
 #include <cmath>
 #include <algorithm>
+#include <numeric>
 
 namespace EasyPitch
 {
@@ -9,10 +10,12 @@ PitchDetector::PitchDetector()
 {
     inputBuffer.resize (WINDOW_SIZE, 0.0f);
     linearWindow.resize (WINDOW_SIZE, 0.0f);
+    prefixSq.resize (WINDOW_SIZE + 1, 0.0f);
     nsdfBuffer.resize (WINDOW_SIZE, 0.0f);
     maxPositions.reserve (64);
     periodEstimates.reserve (64);
     ampEstimates.reserve (64);
+
     reset();
 }
 
@@ -25,11 +28,24 @@ void PitchDetector::prepare (double sampleRate, int /*maxBlockSize*/)
 void PitchDetector::reset()
 {
     std::fill (inputBuffer.begin(), inputBuffer.end(), 0.0f);
+    std::fill (linearWindow.begin(), linearWindow.end(), 0.0f);
+    std::fill (prefixSq.begin(), prefixSq.end(), 0.0f);
     std::fill (nsdfBuffer.begin(), nsdfBuffer.end(), 0.0f);
+    maxPositions.clear();
+    periodEstimates.clear();
+    ampEstimates.clear();
+
     writeIndex = 0;
     hopCounter = 0;
     dcX1 = 0.0f;
     dcY1 = 0.0f;
+
+    pitchHistory[0] = 0.0f;
+    pitchHistory[1] = 0.0f;
+    pitchHistory[2] = 0.0f;
+    historyIdx = 0;
+    unvoicedHangover = 0;
+    lastValidHz = 0.0f;
 
     latestResult.pitchHz  = 0.0f;
     latestResult.clarity  = 0.0f;
@@ -62,27 +78,42 @@ bool PitchDetector::processSample (float sample, PitchDetectionResult& outResult
 
 void PitchDetector::computeNSDF (const float* window, int size, int minTau, int maxTau)
 {
-    // NSDF: r(tau) = 2 * sum(x_j * x_{j+tau}) / (sum(x_j^2) + sum(x_{j+tau}^2))
+    // O(1) Prefix Sums for squared energy:
+    // prefixSq[k] = sum_{j=0}^{k-1} window[j]^2
+    prefixSq[0] = 0.0f;
+    for (int i = 0; i < size; ++i)
+        prefixSq[i + 1] = prefixSq[i] + (window[i] * window[i]);
+
     std::fill (nsdfBuffer.begin(), nsdfBuffer.end(), 0.0f);
 
     for (int tau = minTau; tau <= maxTau; ++tau)
     {
-        float sumProd = 0.0f;
-        float sumSquare1 = 0.0f;
-        float sumSquare2 = 0.0f;
-
         int limit = size - tau;
-        for (int j = 0; j < limit; ++j)
-        {
-            float s1 = window[j];
-            float s2 = window[j + tau];
-            sumProd += s1 * s2;
-            sumSquare1 += s1 * s1;
-            sumSquare2 += s2 * s2;
-        }
+        if (limit <= 0)
+            break;
 
+        // Vectorized SIMD inner product with 4-way independent accumulators
+        // This eliminates dependency chains and allows auto-vectorization (AVX2/SSE)
+        float s0 = 0.0f, s1 = 0.0f, s2 = 0.0f, s3 = 0.0f;
+        int j = 0;
+        int unrollLimit = limit - 3;
+        for (; j < unrollLimit; j += 4)
+        {
+            s0 += window[j]     * window[j + tau];
+            s1 += window[j + 1] * window[j + 1 + tau];
+            s2 += window[j + 2] * window[j + 2 + tau];
+            s3 += window[j + 3] * window[j + 3 + tau];
+        }
+        float sumProd = (s0 + s1) + (s2 + s3);
+        for (; j < limit; ++j)
+            sumProd += window[j] * window[j + tau];
+
+        // O(1) Energy terms from prefix sums
+        float sumSquare1 = prefixSq[limit] - prefixSq[0];
+        float sumSquare2 = prefixSq[size] - prefixSq[tau];
         float denom = sumSquare1 + sumSquare2;
-        if (denom > 1e-9f)
+
+        if (denom > 1e-8f)
             nsdfBuffer[tau] = (2.0f * sumProd) / denom;
         else
             nsdfBuffer[tau] = 0.0f;
@@ -91,9 +122,8 @@ void PitchDetector::computeNSDF (const float* window, int size, int minTau, int 
 
 void PitchDetector::analyzeFrame (int voiceRangeIndex)
 {
-    // Unroll circular buffer into contiguous window (pre-allocated)
+    // Unroll circular buffer into contiguous window
     float sumSq = 0.0f;
-
     for (int i = 0; i < WINDOW_SIZE; ++i)
     {
         int idx = (writeIndex + i) % WINDOW_SIZE;
@@ -105,31 +135,45 @@ void PitchDetector::analyzeFrame (int voiceRangeIndex)
     float rms = std::sqrt (sumSq / static_cast<float> (WINDOW_SIZE));
     latestResult.rmsLevel = rms;
 
-    // Silence or noise gate threshold (-50 dBFS ~ 0.00316)
+    // Silence / Noise gate threshold (-50 dBFS ~ 0.00316)
     if (rms < 0.00316f)
     {
+        if (unvoicedHangover < 2 && lastValidHz > 0.0f)
+        {
+            unvoicedHangover++;
+            latestResult.pitchHz  = lastValidHz;
+            latestResult.isVoiced = true;
+            return;
+        }
+
+        unvoicedHangover = 0;
+        lastValidHz = 0.0f;
+        pitchHistory[0] = 0.0f;
+        pitchHistory[1] = 0.0f;
+        pitchHistory[2] = 0.0f;
+
         latestResult.pitchHz  = 0.0f;
         latestResult.clarity  = 0.0f;
         latestResult.isVoiced = false;
         return;
     }
 
-    // Determine frequency bounds based on voiceRangeIndex:
-    // 0: General / Amplio (50 - 2400 Hz)
-    // 1: Grave            (50 - 600 Hz)
-    // 2: Aguda            (120 - 2400 Hz)
-    float minHz = 50.0f;
-    float maxHz = 2400.0f;
+    // Realistic vocal pitch bounds:
+    // 0: General / Amplio (75 - 1100 Hz) - covers bass/baritone E2 up to soprano C6
+    // 1: Grave            (65 - 450 Hz)
+    // 2: Aguda            (140 - 1100 Hz)
+    float minHz = 75.0f;
+    float maxHz = 1100.0f;
 
     if (voiceRangeIndex == 1)      // Grave
     {
-        minHz = 50.0f;
-        maxHz = 600.0f;
+        minHz = 65.0f;
+        maxHz = 450.0f;
     }
     else if (voiceRangeIndex == 2) // Aguda
     {
-        minHz = 120.0f;
-        maxHz = 2400.0f;
+        minHz = 140.0f;
+        maxHz = 1100.0f;
     }
 
     int minTau = static_cast<int> (std::floor (currentSampleRate / maxHz));
@@ -145,7 +189,6 @@ void PitchDetector::analyzeFrame (int voiceRangeIndex)
     periodEstimates.clear();
     ampEstimates.clear();
 
-    bool positiveSlope = false;
     for (int tau = minTau; tau < maxTau; ++tau)
     {
         if (nsdfBuffer[tau] > 0.0f)
@@ -174,6 +217,20 @@ void PitchDetector::analyzeFrame (int voiceRangeIndex)
 
     if (ampEstimates.empty())
     {
+        if (unvoicedHangover < 2 && lastValidHz > 0.0f)
+        {
+            unvoicedHangover++;
+            latestResult.pitchHz  = lastValidHz;
+            latestResult.isVoiced = true;
+            return;
+        }
+
+        unvoicedHangover = 0;
+        lastValidHz = 0.0f;
+        pitchHistory[0] = 0.0f;
+        pitchHistory[1] = 0.0f;
+        pitchHistory[2] = 0.0f;
+
         latestResult.pitchHz  = 0.0f;
         latestResult.clarity  = 0.0f;
         latestResult.isVoiced = false;
@@ -184,25 +241,61 @@ void PitchDetector::analyzeFrame (int voiceRangeIndex)
     float maxAmp = *std::max_element (ampEstimates.begin(), ampEstimates.end());
     latestResult.clarity = std::max (0.0f, std::min (1.0f, maxAmp));
 
-    // Voiced clarity threshold (0.48 indicates periodic vocal tone)
-    if (maxAmp < 0.48f)
+    // Voiced clarity threshold (0.42 indicates periodic vocal pitch)
+    if (maxAmp < 0.42f)
     {
+        if (unvoicedHangover < 2 && lastValidHz > 0.0f)
+        {
+            unvoicedHangover++;
+            latestResult.pitchHz  = lastValidHz;
+            latestResult.isVoiced = true;
+            return;
+        }
+
+        unvoicedHangover = 0;
+        lastValidHz = 0.0f;
+        pitchHistory[0] = 0.0f;
+        pitchHistory[1] = 0.0f;
+        pitchHistory[2] = 0.0f;
+
         latestResult.pitchHz  = 0.0f;
         latestResult.isVoiced = false;
         return;
     }
 
-    // McLeod Pitch Method: Choose first significant peak exceeding 0.85 * maxAmp
-    // to avoid octave-drop errors
-    float threshold = 0.85f * maxAmp;
+    // McLeod Pitch Method with Pitch Continuity Tracking:
+    float threshold = 0.82f * maxAmp;
     float chosenPeriod = periodEstimates[0];
+    bool foundContinuous = false;
 
-    for (size_t i = 0; i < ampEstimates.size(); ++i)
+    // Pitch continuity: if we had a valid pitch recently, prefer a peak near that pitch (prevents octave drops)
+    if (lastValidHz > 50.0f)
     {
-        if (ampEstimates[i] >= threshold)
+        float expectedPeriod = static_cast<float> (currentSampleRate / lastValidHz);
+        for (size_t i = 0; i < ampEstimates.size(); ++i)
         {
-            chosenPeriod = periodEstimates[i];
-            break;
+            if (ampEstimates[i] >= 0.70f * maxAmp)
+            {
+                float ratio = periodEstimates[i] / expectedPeriod;
+                if (ratio >= 0.80f && ratio <= 1.25f)
+                {
+                    chosenPeriod = periodEstimates[i];
+                    foundContinuous = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!foundContinuous)
+    {
+        for (size_t i = 0; i < ampEstimates.size(); ++i)
+        {
+            if (ampEstimates[i] >= threshold)
+            {
+                chosenPeriod = periodEstimates[i];
+                break;
+            }
         }
     }
 
@@ -211,7 +304,23 @@ void PitchDetector::analyzeFrame (int voiceRangeIndex)
         float estimatedHz = static_cast<float> (currentSampleRate / chosenPeriod);
         if (estimatedHz >= minHz && estimatedHz <= maxHz)
         {
-            latestResult.pitchHz  = estimatedHz;
+            // 3-tap median filter for glitch-free sudden note leaps
+            pitchHistory[historyIdx] = estimatedHz;
+            historyIdx = (historyIdx + 1) % 3;
+
+            float p0 = pitchHistory[0];
+            float p1 = pitchHistory[1];
+            float p2 = pitchHistory[2];
+
+            float medianHz = estimatedHz;
+            if (p0 > 0.0f && p1 > 0.0f && p2 > 0.0f)
+            {
+                medianHz = std::max (std::min (p0, p1), std::min (std::max (p0, p1), p2));
+            }
+
+            lastValidHz = medianHz;
+            unvoicedHangover = 0;
+            latestResult.pitchHz  = medianHz;
             latestResult.isVoiced = true;
             return;
         }

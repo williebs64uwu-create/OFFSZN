@@ -28,16 +28,27 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo.
-echo [3/3] Copiando interfaz mockup.html a la carpeta de Standalone...
+echo [3/3] Desplegando interfaz y binarios VST3...
 if exist "build\EASY_PITCH_artefacts\Release\Standalone" (
     copy /Y "mockup.html" "build\EASY_PITCH_artefacts\Release\Standalone\mockup.html" >nul
+)
+if exist "%APPDATA%\OFFSZN\EasyPitchGui" (
+    copy /Y "mockup.html" "%APPDATA%\OFFSZN\EasyPitchGui\mockup.html" >nul
+)
+if exist "C:\Users\Willie\Desktop\EASY PITCH" (
+    copy /Y "mockup.html" "C:\Users\Willie\Desktop\EASY PITCH\mockup.html" >nul
+)
+
+if exist "C:\Program Files\Common Files\VST3\EASY PITCH.vst3" (
+    xcopy /E /Y /I "build\EASY_PITCH_artefacts\Release\VST3\EASY PITCH.vst3" "C:\Program Files\Common Files\VST3\EASY PITCH.vst3" >nul 2>nul
 )
 
 echo.
 echo ========================================================
-echo   COMPILACION EXITOSA!
+echo   COMPILACION Y DESPLIEGUE EXITOSO!
 echo   - VST3: build\EASY_PITCH_artefacts\Release\VST3\EASY PITCH.vst3
 echo   - App:  build\EASY_PITCH_artefacts\Release\Standalone\EASY PITCH.exe
+echo   - GUI:  %APPDATA%\OFFSZN\EasyPitchGui\mockup.html
 echo ========================================================
 echo.
 

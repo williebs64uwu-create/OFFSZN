@@ -25,7 +25,7 @@ bool EasyPitchAudioProcessor::producesMidi() const { return false; }
 bool EasyPitchAudioProcessor::isMidiEffect() const { return false; }
 double EasyPitchAudioProcessor::getTailLengthSeconds() const { return 0.0; }
 
-int EasyPitchAudioProcessor::getNumPrograms() { return 3; }
+int EasyPitchAudioProcessor::getNumPrograms() { return 4; }
 int EasyPitchAudioProcessor::getCurrentProgram() { return 1; }
 void EasyPitchAudioProcessor::setCurrentProgram (int index) { loadPresetByIndex (index); }
 
@@ -36,6 +36,7 @@ const juce::String EasyPitchAudioProcessor::getProgramName (int index)
         case 0: return "Suave";
         case 1: return "Firme";
         case 2: return "Marcado";
+        case 3: return "Robot";
         default: return "Default";
     }
 }
@@ -55,6 +56,10 @@ void EasyPitchAudioProcessor::loadPresetByIndex (int index)
             p_amount.store (100.0f);
             break;
         case 2: // Marcado
+            p_speed.store (90.0f);
+            p_amount.store (100.0f);
+            break;
+        case 3: // Robot / Duro
             p_speed.store (100.0f);
             p_amount.store (100.0f);
             break;
@@ -139,8 +144,22 @@ void EasyPitchAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     bool  preserveTimbre = p_preserveTimbre.load();
     float referenceHz    = p_referenceHz.load();
     int   customMask     = p_customMask.load();
+    int   channelMode    = p_channelMode.load();
 
     pitchShifter.setPreserveTimbre (preserveTimbre);
+
+    // If Mono Coherente mode is enabled, mix stereo channels into coherent mono
+    if (channelMode == 1 && totalNumInputChannels > 1)
+    {
+        auto* chL = buffer.getWritePointer (0);
+        auto* chR = buffer.getWritePointer (1);
+        for (int i = 0; i < numSamples; ++i)
+        {
+            float m = 0.5f * (chL[i] + chR[i]);
+            chL[i] = m;
+            chR[i] = m;
+        }
+    }
 
     // Compute monophonic analysis signal for pitch tracking
     const float* inL = buffer.getReadPointer (0);
@@ -185,6 +204,13 @@ void EasyPitchAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, ju
     // Determine if we should bypass
     bool shouldBypass = !enabled;
     pitchShifter.processBlock (buffer, shouldBypass);
+
+    // If channelMode == 1 (Mono Coherente) and track is stereo, replicate mono output to both channels
+    if (channelMode == 1 && totalNumOutputChannels > 1 && totalNumInputChannels > 1 && !shouldBypass)
+    {
+        const float* chL = buffer.getReadPointer (0);
+        buffer.copyFrom (1, 0, chL, numSamples);
+    }
 }
 
 // ── Bridge Communication ─────────────────────────────────────────────────────
@@ -208,6 +234,8 @@ void EasyPitchAudioProcessor::setParamFromUI (const juce::String& paramId, float
         p_referenceHz.store (value);
     else if (paramId == "customMask")
         p_customMask.store (static_cast<int> (value));
+    else if (paramId == "channelMode")
+        p_channelMode.store (static_cast<int> (value));
     else if (paramId == "preset")
         loadPresetByIndex (static_cast<int> (value));
 }
@@ -223,6 +251,7 @@ float EasyPitchAudioProcessor::getParamValue (const juce::String& paramId) const
     if (paramId == "preserveTimbre") return p_preserveTimbre.load() ? 1.0f : 0.0f;
     if (paramId == "referenceHz")    return p_referenceHz.load();
     if (paramId == "customMask")     return static_cast<float> (p_customMask.load());
+    if (paramId == "channelMode")    return static_cast<float> (p_channelMode.load());
 
     return 0.0f;
 }
@@ -258,6 +287,7 @@ void EasyPitchAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     xml.setAttribute ("preserveTimbre", p_preserveTimbre.load());
     xml.setAttribute ("referenceHz",    static_cast<double> (p_referenceHz.load()));
     xml.setAttribute ("customMask",     p_customMask.load());
+    xml.setAttribute ("channelMode",    p_channelMode.load());
 
     copyXmlToBinary (xml, destData);
 }
@@ -276,6 +306,7 @@ void EasyPitchAudioProcessor::setStateInformation (const void* data, int sizeInB
         p_preserveTimbre.store (xml->getBoolAttribute ("preserveTimbre", true));
         p_referenceHz.store    (static_cast<float> (xml->getDoubleAttribute ("referenceHz", 440.0)));
         p_customMask.store     (xml->getIntAttribute  ("customMask", 0x0FFF));
+        p_channelMode.store    (xml->getIntAttribute  ("channelMode", 0));
     }
 }
 

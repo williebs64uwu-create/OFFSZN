@@ -1,5 +1,5 @@
 import { googleWalletService } from './server/src/infrastructure/services/googleWalletService.js';
-import { google } from 'googleapis';
+import { google } from './server/node_modules/googleapis/build/src/index.js';
 
 async function diagnose() {
     googleWalletService.loadConfig();

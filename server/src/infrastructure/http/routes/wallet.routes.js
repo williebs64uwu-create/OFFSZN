@@ -3,6 +3,7 @@ import {
     createWalletPass,
     sendBroadcastPush,
     updateWalletPoints,
+    updateWalletStamps,
     getWalletMembers,
     getWalletStatus,
     saveWalletConfig
@@ -17,6 +18,7 @@ router.get('/status', getWalletStatus);
 // Management & Push routes
 router.post('/push/broadcast', sendBroadcastPush);
 router.post('/points/update', updateWalletPoints);
+router.post('/stamps/update', updateWalletStamps);
 router.get('/members', getWalletMembers);
 router.post('/config/save', saveWalletConfig);
 

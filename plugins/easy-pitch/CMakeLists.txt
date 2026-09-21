@@ -27,13 +27,21 @@ else()
 endif()
 
 # ── Declaración del Plugin JUCE 8 ─────────────────────────────────────────────
+set(EXTRA_PLUGIN_OPTIONS "")
+if(APPLE)
+    set(EASY_PITCH_FORMATS VST3 AU Standalone)
+else()
+    set(EASY_PITCH_FORMATS VST3 Standalone)
+    set(EXTRA_PLUGIN_OPTIONS NEEDS_WEBVIEW2 TRUE)
+endif()
+
 # Fabricante: Ofsz | Código de Producto: Espt (OFFSZN EASY PITCH)
 juce_add_plugin(EASY_PITCH
     COMPANY_NAME "OFFSZN"
     BUNDLE_ID "com.offszn.easypitch"
     PLUGIN_MANUFACTURER_CODE Ofsz
     PLUGIN_CODE Espt
-    FORMATS VST3 Standalone
+    FORMATS ${EASY_PITCH_FORMATS}
     PRODUCT_NAME "EASY PITCH"
     IS_SYNTH FALSE
     NEEDS_MIDI_INPUT FALSE
@@ -41,7 +49,7 @@ juce_add_plugin(EASY_PITCH
     IS_MIDI_EFFECT FALSE
     EDITOR_WANTS_KEYBOARD_FOCUS TRUE
     COPY_PLUGIN_AFTER_BUILD FALSE
-    NEEDS_WEBVIEW2 TRUE
+    ${EXTRA_PLUGIN_OPTIONS}
 )
 
 juce_generate_juce_header(EASY_PITCH)
@@ -82,11 +90,14 @@ target_link_libraries(EASY_PITCH
 target_compile_definitions(EASY_PITCH
     PUBLIC
         JUCE_WEB_BROWSER=1
-        JUCE_USE_WIN_WEBVIEW2=1
         JUCE_USE_CURL=0
         JUCE_VST3_CAN_REPLACE_VST2=0
         JUCE_DISPLAY_SPLASH_SCREEN=0
 )
+
+if(WIN32)
+    target_compile_definitions(EASY_PITCH PUBLIC JUCE_USE_WIN_WEBVIEW2=1)
+endif()
 
 # ── Copia de mockup.html tras compilación ──────────────────────────────────────
 if(WIN32)

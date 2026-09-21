@@ -4561,14 +4561,19 @@
         .catch(function(err) {
           console.warn('[getUserMedia error]', err);
           if (err && (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError')) {
-            setTemporaryTranscript('Permiso de micrófono no habilitado en Windows');
+            setTemporaryTranscript('Micrófono bloqueado en Windows (Configuración > Privacidad)');
             stopVoiceRecording(true);
           } else if (err && err.name === 'NotFoundError') {
             setTemporaryTranscript('No se detectó micrófono de entrada');
             stopVoiceRecording(true);
           } else {
-            // Intentar fallback a Web Speech API
-            tryFallbackWebSpeech();
+            if (!navigator.onLine) {
+              setTemporaryTranscript('Sin conexión a internet — Usa las recomendaciones');
+              stopVoiceRecording(true);
+            } else {
+              // Intentar fallback a Web Speech API
+              tryFallbackWebSpeech();
+            }
           }
         });
       } else {
@@ -4704,8 +4709,14 @@
       })
       .catch(function(err) {
         console.warn('[Whisper API Error]', err);
-        callNative('writeLog', 'Whisper API Error: ' + err.message);
-        setTemporaryTranscript('Servicio de voz offline — Usa las recomendaciones');
+        callNative('writeLog', 'Whisper API Error: ' + (err ? err.message : 'Unknown'));
+        if (!navigator.onLine || (err && (err.name === 'TypeError' || (err.message && err.message.toLowerCase().includes('failed to fetch'))))) {
+          setTemporaryTranscript('Sin conexión a internet — Usa las recomendaciones');
+        } else if (err && err.message && err.message.includes('429')) {
+          setTemporaryTranscript('Servidor de voz ocupado — Usa las recomendaciones');
+        } else {
+          setTemporaryTranscript('Servicio de voz offline — Usa las recomendaciones');
+        }
       })
       .finally(function() {
         voiceIsProcessing = false;
@@ -4716,7 +4727,11 @@
     function tryFallbackWebSpeech() {
       var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SR) {
-        setTemporaryTranscript('Servicio de voz offline — Usa las recomendaciones');
+        if (!navigator.onLine) {
+          setTemporaryTranscript('Sin conexión a internet — Usa las recomendaciones');
+        } else {
+          setTemporaryTranscript('Reconocimiento no disponible — Usa las recomendaciones');
+        }
         stopVoiceRecording(true);
         return;
       }
@@ -4932,7 +4947,8 @@
       var clean = sanitizeVoiceText(cmd);
 
       // 1. RECETA ESTRELLA: "DAME UN PRESET" / "MEJORA MI VOZ" / "STARTER"
-      if (clean.includes('preset') || clean.includes('starter') || clean.includes('estarter')) {
+      if (clean.includes('preset') || clean.includes('starter') || clean.includes('estarter') ||
+          clean.includes('mejora mi voz') || clean.includes('afina mi voz') || clean.includes('hazla sonar bien')) {
         applyStarterPreset();
         return;
       }
@@ -4979,7 +4995,8 @@
       }
 
       // CHORUS
-      if (clean === 'chorus' || clean === 'ponle chorus' || clean.includes('activar chorus')) {
+      if (clean === 'chorus' || clean.includes('ponle chorus') || clean.includes('activar chorus') ||
+          clean.includes('quiero chorus') || clean.includes('agrega chorus') || clean.includes('agregar chorus')) {
         pushSnapshot();
         state.creative.chorus.on = true;
         state.creative.chorus.amount = 18;
@@ -4990,21 +5007,265 @@
         return;
       }
 
-      // 2. NAVEGACIÓN
-      if (clean.includes('ver efectos') || clean.includes('abrir efectos') || clean.includes('modo efectos')) {
-        showEffectsScreen();
-        setTemporaryTranscript('Pantalla de Efectos');
-        return;
-      }
-      if (clean.includes('volver') || clean.includes('microfono') || clean.includes('modo hablar')) {
-        showMainScreen();
-        setTemporaryTranscript('Micrófono');
-        return;
+      // ──────────────────────────────────────────────────
+      // 🎤 PRESETS DE GÉNERO MUSICAL
+      // ──────────────────────────────────────────────────
+
+      // TRAP / RAP URBANO / DRILL
+      if (clean.includes('trap') || clean.includes('rap urbano') || clean.includes('voz urbana') || clean.includes('drill')) {
+        pushSnapshot();
+        state.mixMacro = 100; state.mixChainOn = true;
+        state.mixParams.hpf.val = 82; state.mixParams.boxy.val = 8;
+        state.mixParams.deesser.val = 35; state.mixParams.presMid.val = 75;
+        state.mixParams.presHigh.val = 85; state.mixParams.sat.val = 20;
+        state.mixParams.air.val = 50; state.mixParams.comp.val = 55;
+        state.creative.reverb.on = true; state.creative.reverb.amount = 10; state.creative.reverb.decay = 1.0;
+        state.creative.delay.on = true; state.creative.delay.amount = 14; state.creative.delay.feedback = 20;
+        sendParamToJuce('mix.macro', 100);
+        for (var _k in state.mixParams) sendParamToJuce('mix.' + _k, state.mixParams[_k].val);
+        sendParamToJuce('reverb.enabled', 1.0); sendParamToJuce('reverb.amount', 10);
+        sendParamToJuce('delay.enabled', 1.0); sendParamToJuce('delay.amount', 14);
+        updateMixMacroUI(100); updateMixChainToggleUI(); renderMixGrid(); renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('✓ Preset Trap/Urbano aplicado', true); return;
       }
 
-      // 3. DESHACER / REHACER
-      if (clean.includes('deshacer')) { triggerUndo(); return; }
-      if (clean.includes('rehacer')) { triggerRedo(); return; }
+      // REGGAETON / DEMBOW / PERREO
+      if (clean.includes('reggaeton') || clean.includes('dembow') || clean.includes('perreo')) {
+        pushSnapshot();
+        state.mixMacro = 100; state.mixChainOn = true;
+        state.mixParams.hpf.val = 78; state.mixParams.boxy.val = 12;
+        state.mixParams.deesser.val = 30; state.mixParams.presMid.val = 85;
+        state.mixParams.presHigh.val = 70; state.mixParams.sat.val = 25;
+        state.mixParams.air.val = 45; state.mixParams.comp.val = 65;
+        state.creative.reverb.on = true; state.creative.reverb.amount = 15; state.creative.reverb.decay = 1.5;
+        state.creative.doubler.on = true; state.creative.doubler.amount = 18;
+        sendParamToJuce('mix.macro', 100);
+        for (var _k in state.mixParams) sendParamToJuce('mix.' + _k, state.mixParams[_k].val);
+        sendParamToJuce('reverb.enabled', 1.0); sendParamToJuce('reverb.amount', 15);
+        sendParamToJuce('doubler.enabled', 1.0); sendParamToJuce('doubler.amount', 18);
+        updateMixMacroUI(100); updateMixChainToggleUI(); renderMixGrid(); renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('✓ Preset Reggaetón aplicado', true); return;
+      }
+
+      // CUMBIA / CHICHA / FOLCLÓRICA / REGIONAL / CORRIDO
+      if (clean.includes('cumbia') || clean.includes('chicha') || clean.includes('regional') || clean.includes('folclor') || clean.includes('corrido')) {
+        pushSnapshot();
+        state.mixMacro = 100; state.mixChainOn = true;
+        state.mixParams.hpf.val = 72; state.mixParams.boxy.val = 18;
+        state.mixParams.deesser.val = 25; state.mixParams.presMid.val = 90;
+        state.mixParams.presHigh.val = 60; state.mixParams.sat.val = 35;
+        state.mixParams.air.val = 35; state.mixParams.comp.val = 50;
+        state.creative.reverb.on = true; state.creative.reverb.amount = 22; state.creative.reverb.decay = 2.0;
+        sendParamToJuce('mix.macro', 100);
+        for (var _k in state.mixParams) sendParamToJuce('mix.' + _k, state.mixParams[_k].val);
+        sendParamToJuce('reverb.enabled', 1.0); sendParamToJuce('reverb.amount', 22);
+        updateMixMacroUI(100); updateMixChainToggleUI(); renderMixGrid(); renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('✓ Preset Cumbia/Folclórica aplicado', true); return;
+      }
+
+      // POP RADIO / POLISHED / COMERCIAL
+      if ((clean.includes('pop star') || clean.includes('pop radio') || clean.includes('pop comercial')) ||
+          (clean.includes('comercial') && !clean.includes('filtro'))) {
+        pushSnapshot();
+        state.mixMacro = 100; state.mixChainOn = true;
+        state.mixParams.hpf.val = 80; state.mixParams.boxy.val = 10;
+        state.mixParams.deesser.val = 45; state.mixParams.presMid.val = 80;
+        state.mixParams.presHigh.val = 90; state.mixParams.sat.val = 10;
+        state.mixParams.air.val = 60; state.mixParams.comp.val = 45;
+        state.creative.reverb.on = true; state.creative.reverb.amount = 18; state.creative.reverb.decay = 1.8;
+        state.creative.chorus.on = true; state.creative.chorus.amount = 12;
+        sendParamToJuce('mix.macro', 100);
+        for (var _k in state.mixParams) sendParamToJuce('mix.' + _k, state.mixParams[_k].val);
+        sendParamToJuce('reverb.enabled', 1.0); sendParamToJuce('reverb.amount', 18);
+        sendParamToJuce('chorus.enabled', 1.0); sendParamToJuce('chorus.amount', 12);
+        updateMixMacroUI(100); updateMixChainToggleUI(); renderMixGrid(); renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('✓ Preset Pop Radio aplicado', true); return;
+      }
+
+      // INDIE / ROCK ALTERNATIVO / BANDA
+      if (clean.includes('indie') || clean.includes('rock') || clean.includes('alternativo') || clean.includes('banda')) {
+        pushSnapshot();
+        state.mixMacro = 100; state.mixChainOn = true;
+        state.mixParams.hpf.val = 75; state.mixParams.boxy.val = 15;
+        state.mixParams.deesser.val = 28; state.mixParams.presMid.val = 88;
+        state.mixParams.presHigh.val = 72; state.mixParams.sat.val = 40;
+        state.mixParams.air.val = 40; state.mixParams.comp.val = 35;
+        state.creative.reverb.on = true; state.creative.reverb.amount = 25; state.creative.reverb.decay = 2.5;
+        sendParamToJuce('mix.macro', 100);
+        for (var _k in state.mixParams) sendParamToJuce('mix.' + _k, state.mixParams[_k].val);
+        sendParamToJuce('reverb.enabled', 1.0); sendParamToJuce('reverb.amount', 25);
+        updateMixMacroUI(100); updateMixChainToggleUI(); renderMixGrid(); renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('✓ Preset Indie/Rock aplicado', true); return;
+      }
+
+      // BALADA / SOUL / R&B / ROMÁNTICA / EMOTIVA
+      if (clean.includes('balada') || clean.includes('soul') || clean.includes('romantica') || clean.includes('emotiva') || clean.includes(' rb ') || clean.includes('r b')) {
+        pushSnapshot();
+        state.mixMacro = 100; state.mixChainOn = true;
+        state.mixParams.hpf.val = 68; state.mixParams.boxy.val = 20;
+        state.mixParams.deesser.val = 38; state.mixParams.presMid.val = 95;
+        state.mixParams.presHigh.val = 65; state.mixParams.sat.val = 15;
+        state.mixParams.air.val = 55; state.mixParams.comp.val = 30;
+        state.creative.reverb.on = true; state.creative.reverb.amount = 30; state.creative.reverb.decay = 3.0;
+        state.creative.chorus.on = true; state.creative.chorus.amount = 20;
+        sendParamToJuce('mix.macro', 100);
+        for (var _k in state.mixParams) sendParamToJuce('mix.' + _k, state.mixParams[_k].val);
+        sendParamToJuce('reverb.enabled', 1.0); sendParamToJuce('reverb.amount', 30);
+        sendParamToJuce('chorus.enabled', 1.0); sendParamToJuce('chorus.amount', 20);
+        updateMixMacroUI(100); updateMixChainToggleUI(); renderMixGrid(); renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('✓ Preset Balada/Soul aplicado', true); return;
+      }
+
+      // ──────────────────────────────────────────────────
+      // 🎨 PRESETS DE ESTADO DE ÁNIMO / MOOD
+      // ──────────────────────────────────────────────────
+
+      // VOZ SUAVE / ÍNTIMA / SUSURRO
+      if (clean.includes('suave') || clean.includes('intima') || clean.includes('susurro') || clean.includes('tierna') || clean.includes('bajita')) {
+        pushSnapshot();
+        state.mixMacro = 70; state.mixChainOn = true;
+        state.mixParams.hpf.val = 65; state.mixParams.boxy.val = 25;
+        state.mixParams.deesser.val = 55; state.mixParams.presMid.val = 70;
+        state.mixParams.presHigh.val = 55; state.mixParams.sat.val = 5;
+        state.mixParams.air.val = 70; state.mixParams.comp.val = 20;
+        state.creative.reverb.on = true; state.creative.reverb.amount = 20; state.creative.reverb.decay = 2.2;
+        sendParamToJuce('mix.macro', 70);
+        for (var _k in state.mixParams) sendParamToJuce('mix.' + _k, state.mixParams[_k].val);
+        sendParamToJuce('reverb.enabled', 1.0); sendParamToJuce('reverb.amount', 20);
+        updateMixMacroUI(70); updateMixChainToggleUI(); renderMixGrid(); renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('✓ Mood Suave/Íntimo aplicado', true); return;
+      }
+
+      // VOZ POTENTE / ENERGÉTICA / RABIOSA / DURA
+      if (clean.includes('potente') || clean.includes('rabiosa') || clean.includes('power') || clean.includes('dura') ||
+          (clean.includes('agresiv') && !clean.includes('calor'))) {
+        pushSnapshot();
+        state.mixMacro = 100; state.mixChainOn = true;
+        state.mixParams.hpf.val = 88; state.mixParams.boxy.val = 5;
+        state.mixParams.deesser.val = 20; state.mixParams.presMid.val = 95;
+        state.mixParams.presHigh.val = 80; state.mixParams.sat.val = 50;
+        state.mixParams.air.val = 30; state.mixParams.comp.val = 80;
+        state.creative.reverb.on = false; state.creative.reverb.amount = 0;
+        sendParamToJuce('mix.macro', 100);
+        for (var _k in state.mixParams) sendParamToJuce('mix.' + _k, state.mixParams[_k].val);
+        sendParamToJuce('reverb.enabled', 0.0); sendParamToJuce('reverb.amount', 0);
+        updateMixMacroUI(100); updateMixChainToggleUI(); renderMixGrid(); renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('✓ Mood Agresivo/Potente aplicado', true); return;
+      }
+
+      // VOZ OSCURA / MISTERIOSA / CINEMATOGRÁFICA / NOCHE
+      if (clean.includes('oscura') || clean.includes('misteriosa') || clean.includes('cinematica') || clean.includes('noche') || clean.includes('noir')) {
+        pushSnapshot();
+        state.mixMacro = 100; state.mixChainOn = true;
+        state.mixParams.hpf.val = 70; state.mixParams.boxy.val = 22;
+        state.mixParams.deesser.val = 32; state.mixParams.presMid.val = 85;
+        state.mixParams.presHigh.val = 45; state.mixParams.sat.val = 30;
+        state.mixParams.air.val = 25; state.mixParams.comp.val = 40;
+        state.creative.reverb.on = true; state.creative.reverb.amount = 35; state.creative.reverb.decay = 4.0;
+        sendParamToJuce('mix.macro', 100);
+        for (var _k in state.mixParams) sendParamToJuce('mix.' + _k, state.mixParams[_k].val);
+        sendParamToJuce('reverb.enabled', 1.0); sendParamToJuce('reverb.amount', 35);
+        updateMixMacroUI(100); updateMixChainToggleUI(); renderMixGrid(); renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('✓ Mood Oscuro/Cinematográfico aplicado', true); return;
+      }
+
+      // VOZ BRILLANTE / ENERGÉTICA / FESTIVAL / FIESTA / ALEGRE
+      if (clean.includes('brillante') || clean.includes('energetica') || clean.includes('festival') || clean.includes('fiesta') || clean.includes('alegre')) {
+        pushSnapshot();
+        state.mixMacro = 100; state.mixChainOn = true;
+        state.mixParams.hpf.val = 82; state.mixParams.boxy.val = 8;
+        state.mixParams.deesser.val = 40; state.mixParams.presMid.val = 75;
+        state.mixParams.presHigh.val = 100; state.mixParams.sat.val = 15;
+        state.mixParams.air.val = 80; state.mixParams.comp.val = 55;
+        state.creative.chorus.on = true; state.creative.chorus.amount = 22;
+        state.creative.doubler.on = true; state.creative.doubler.amount = 20;
+        sendParamToJuce('mix.macro', 100);
+        for (var _k in state.mixParams) sendParamToJuce('mix.' + _k, state.mixParams[_k].val);
+        sendParamToJuce('chorus.enabled', 1.0); sendParamToJuce('chorus.amount', 22);
+        sendParamToJuce('doubler.enabled', 1.0); sendParamToJuce('doubler.amount', 20);
+        updateMixMacroUI(100); updateMixChainToggleUI(); renderMixGrid(); renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('✓ Mood Brillante/Festival aplicado', true); return;
+      }
+
+      // ──────────────────────────────────────────────────
+      // 🛠️ COMANDOS DE UTILIDAD
+      // ──────────────────────────────────────────────────
+
+      // GUARDAR / SALVAR PRESET
+      if (clean.includes('guardar') || clean.includes('salvar') || clean.includes('guarda esto') || clean.includes('salva esto')) {
+        savePreset();
+        setTemporaryTranscript('✓ Preset guardado', true); return;
+      }
+
+      // QUITAR / APAGAR REVERB
+      if ((clean.includes('quitar') || clean.includes('quita') || clean.includes('apaga') || clean.includes('desactiva') || clean.includes('sin ')) && clean.includes('reverb')) {
+        pushSnapshot();
+        state.creative.reverb.on = false; state.creative.reverb.amount = 0;
+        sendParamToJuce('reverb.enabled', 0.0); sendParamToJuce('reverb.amount', 0);
+        renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('Reverb desactivado', false); return;
+      }
+
+      // QUITAR / APAGAR DELAY / ECO
+      if ((clean.includes('quitar') || clean.includes('quita') || clean.includes('apaga') || clean.includes('desactiva') || clean.includes('sin ')) && (clean.includes('delay') || clean.includes('eco'))) {
+        pushSnapshot();
+        state.creative.delay.on = false; state.creative.delay.amount = 0;
+        sendParamToJuce('delay.enabled', 0.0); sendParamToJuce('delay.amount', 0);
+        renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('Delay desactivado', false); return;
+      }
+
+      // QUITAR CHORUS
+      if ((clean.includes('quitar') || clean.includes('quita') || clean.includes('apaga') || clean.includes('desactiva') || clean.includes('sin ')) && clean.includes('chorus')) {
+        pushSnapshot();
+        state.creative.chorus.on = false; state.creative.chorus.amount = 0;
+        sendParamToJuce('chorus.enabled', 0.0); sendParamToJuce('chorus.amount', 0);
+        renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('Chorus desactivado', false); return;
+      }
+
+      // QUITAR DOUBLER / ESTEREO
+      if ((clean.includes('quitar') || clean.includes('quita') || clean.includes('apaga') || clean.includes('desactiva') || clean.includes('sin ')) && (clean.includes('doubler') || clean.includes('dobles') || (clean.includes('estereo') && !clean.includes('mas')))) {
+        pushSnapshot();
+        state.creative.doubler.on = false; state.creative.doubler.amount = 0;
+        sendParamToJuce('doubler.enabled', 0.0); sendParamToJuce('doubler.amount', 0);
+        renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('Doubler desactivado', false); return;
+      }
+
+      // SILENCIO / MUTEAR MEZCLA
+      if (clean.includes('silencio') || clean.includes('mutear') || clean.includes('sin mezcla') || (clean.includes('apaga') && clean.includes('mezcla'))) {
+        pushSnapshot();
+        state.mixMacro = 0; state.mixChainOn = false;
+        updateMixMacroUI(0); updateMixChainToggleUI();
+        sendParamToJuce('mix.macro', 0); sendParamToJuce('global.mixMacro', 0);
+        savePreset(); setTemporaryTranscript('Mezcla silenciada', false); return;
+      }
+
+      // VOZ EN SECO / APAGAR SOLO EFECTOS CREATIVOS (mantiene la cadena de mezcla)
+      if (clean.includes('en seco') || clean.includes('sin creativos') || clean.includes('solo base') || clean.includes('apaga efectos creativos')) {
+        pushSnapshot();
+        ['reverb', 'delay', 'chorus', 'doubler'].forEach(function(ck) {
+          if (state.creative[ck]) { state.creative[ck].on = false; state.creative[ck].amount = 0; }
+          sendParamToJuce(ck + '.enabled', 0.0); sendParamToJuce(ck + '.amount', 0);
+        });
+        renderCreativeGrid(); savePreset();
+        setTemporaryTranscript('Efectos creativos apagados', false); return;
+      }
+
+      // ──────────────────────────────────────────────────
+      // 📍 NAVEGACIÓN
+      // ──────────────────────────────────────────────────
+      if (clean.includes('ver efectos') || clean.includes('abrir efectos') || clean.includes('modo efectos') || clean.includes('ir a efectos') || clean.includes('ver creativos')) {
+        showEffectsScreen(); setTemporaryTranscript('Pantalla de Efectos'); return;
+      }
+      if (clean.includes('volver') || clean.includes('ver mezcla') || clean.includes('ir a mezcla') || clean.includes('microfono') || clean.includes('modo hablar')) {
+        showMainScreen(); setTemporaryTranscript('Micrófono'); return;
+      }
+
+      // DESHACER / REHACER
+      if (clean.includes('deshacer') || clean.includes('undo')) { triggerUndo(); return; }
+      if (clean.includes('rehacer') || clean.includes('redo')) { triggerRedo(); return; }
 
       // 4. RECETAS CREATIVAS ESPECÍFICAS (ESPACIO & CREATIVOS)
       // REVERB LARGO / ESPACIAL / GIGANTE / CATEDRAL
@@ -6144,6 +6405,112 @@
     return !!(window.__JUCE__ && window.__JUCE__.backend);
   }
 
+  function startLocalTrialFallback() {
+    var nowUnix = Math.floor(Date.now() / 1000);
+    var expUnix = nowUnix + (3 * 86400); // 72 horas exactas
+    var rand = Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+    var trialKey = 'VOCA-TRIAL-' + rand;
+    var fullStored = trialKey + '|' + expUnix + '|' + nowUnix;
+    try { localStorage.setItem('offszn_serial', trialKey); } catch(e) {}
+    callNative("setLicenseStatus", true, fullStored);
+    updateLicenseBadge('trial', 'PRUEBA · 3 DÍAS');
+    closeActivationModal();
+  }
+
+  function performPeriodicLicenseAudit() {
+    var storedSerial = '';
+    try { storedSerial = localStorage.getItem('offszn_serial') || ''; } catch(e) {}
+
+    callNative("getLicenseState").then(function(state) {
+      var rawSerial = ((state && state.serial) || storedSerial || '').trim();
+      if (!rawSerial) {
+        callNative("setLicenseStatus", false);
+        updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+        openActivationModal(false);
+        return;
+      }
+
+      var cleanSerial = rawSerial.split('|')[0].trim();
+      var isTrial = cleanSerial.toUpperCase().indexOf('TRIAL') !== -1;
+      var tokens = rawSerial.split('|');
+      var expiresUnix = tokens.length > 1 ? parseInt(tokens[1], 10) : 0;
+      var lastCheckUnix = tokens.length > 2 ? parseInt(tokens[2], 10) : 0;
+      var nowUnix = Math.floor(Date.now() / 1000);
+
+      // Verificación en servidor de licencias OFFSZN
+      getHwidAsync().then(function(hwid) {
+        fetch(apiBase + "/api/plugin/activate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            serial_key: cleanSerial,
+            hwid: hwid,
+            plugin_name: OFFSZN_PLUGIN_NAME
+          })
+        }).then(function(res) {
+          return res.json().then(function(d) { return { ok: res.ok, status: res.status, data: d }; });
+        }).then(function(result) {
+          if (result.ok && result.data && result.data.success) {
+            if (isTrial) {
+              var expServer = 0;
+              if (result.data.expires_at) {
+                try { expServer = Math.floor(new Date(result.data.expires_at).getTime() / 1000); } catch(e) {}
+              }
+              var finalExp = expServer > 0 ? expServer : expiresUnix;
+              var fullStored = cleanSerial + '|' + finalExp + '|' + nowUnix;
+              callNative("setLicenseStatus", true, fullStored);
+              var d = result.data.days_remaining || result.data.remaining_days || Math.ceil((finalExp - nowUnix) / 86400);
+              updateLicenseBadge('trial', 'PRUEBA · ' + (d > 1 ? d + ' DÍAS' : '1 DÍA'));
+            } else {
+              callNative("setLicenseStatus", true, cleanSerial);
+              updateLicenseBadge('full', 'FULL · OFFSZN');
+            }
+          } else {
+            // Servidor indicó que la licencia expiró o fue rechazada
+            callNative("setLicenseStatus", false);
+            updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+            openActivationModal(false);
+            if (result.data && result.data.error) {
+              showCustomAlert("Licencia Expirada", result.data.error, "⏳");
+            }
+          }
+        }).catch(function(err) {
+          // FALLBACK OFFLINE SEGURO: si no hay internet en la comprobación periódica de 5 horas
+          console.log("[Auditoría 5h Offline]", err);
+          if (isTrial) {
+            if (expiresUnix > 0 && nowUnix >= expiresUnix) {
+              // 72 horas completadas sin conexión
+              callNative("setLicenseStatus", false);
+              updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+              openActivationModal(false);
+              showCustomAlert("Prueba Expirada", "Tu periodo de prueba de 3 días ha finalizado. Adquiere tu licencia en offszn.lat", "⏳");
+            } else if (lastCheckUnix > 0 && nowUnix < (lastCheckUnix - 3600)) {
+              // Intento de manipular el reloj hacia atrás
+              callNative("setLicenseStatus", false);
+              updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+              openActivationModal(false);
+              showCustomAlert("Reloj del Sistema Inválido", "Se detectó manipulación en la hora del sistema. Conéctate a internet para continuar.", "⚠️");
+            } else {
+              var secLeft = expiresUnix > 0 ? (expiresUnix - nowUnix) : (3 * 86400);
+              var dLeft = Math.max(1, Math.ceil(secLeft / 86400));
+              callNative("setLicenseStatus", true, cleanSerial + '|' + expiresUnix + '|' + nowUnix);
+              updateLicenseBadge('trial', 'PRUEBA · ' + (dLeft > 1 ? dLeft + ' DÍAS' : '1 DÍA'));
+            }
+          } else if (cleanSerial.startsWith('VOCA-FULL-')) {
+            callNative("setLicenseStatus", true, cleanSerial);
+            updateLicenseBadge('full', 'FULL · OFFSZN');
+          }
+        });
+      });
+    }).catch(function(err) {
+      console.warn("[Auditoría error]", err);
+    });
+  }
+
+  // Programar auditoría cada 5 horas (18,000,000 ms)
+  var LICENSE_CHECK_INTERVAL_MS = 5 * 60 * 60 * 1000;
+  setInterval(performPeriodicLicenseAudit, LICENSE_CHECK_INTERVAL_MS);
+
   function initLicenseBoot() {
     var storedSerial = '';
     try { storedSerial = localStorage.getItem('offszn_serial') || ''; } catch(e) {}
@@ -6158,18 +6525,35 @@
           var cleanSerial = rawSerial.split('|')[0].trim();
           try { localStorage.setItem('offszn_serial', cleanSerial); } catch(e) {}
 
-          // 1. Mostrar estado de prueba inmediatamente (cero latencia offline)
           var tokens = rawSerial.split('|');
           var expiresUnix = tokens.length > 1 ? parseInt(tokens[1], 10) : 0;
-          var daysLeft = 3;
-          if (expiresUnix > 0) {
-            var secondsLeft = expiresUnix - Math.floor(Date.now() / 1000);
-            daysLeft = Math.max(1, Math.ceil(secondsLeft / 86400));
+          var lastCheckUnix = tokens.length > 2 ? parseInt(tokens[2], 10) : 0;
+          var nowUnix = Math.floor(Date.now() / 1000);
+
+          // 1. Verificación estricta de tiempo de prueba
+          if (expiresUnix > 0 && nowUnix >= expiresUnix) {
+            callNative("setLicenseStatus", false);
+            updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+            openActivationModal(false);
+            showCustomAlert("Prueba Expirada", "Tu periodo de prueba de 3 días ha expirado. Adquiere tu licencia FULL en offszn.lat para continuar.", "⏳");
+            return;
           }
-          updateLicenseBadge('trial', 'PRUEBA · ' + (daysLeft > 1 ? daysLeft + " DÍAS" : "1 DÍA"));
+          if (lastCheckUnix > 0 && nowUnix < (lastCheckUnix - 3600)) {
+            callNative("setLicenseStatus", false);
+            updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+            openActivationModal(false);
+            showCustomAlert("Reloj del Sistema Inválido", "Se detectó manipulación en la hora del sistema. Conéctate a internet para continuar.", "⚠️");
+            return;
+          }
+
+          var secondsLeft = expiresUnix > 0 ? (expiresUnix - nowUnix) : (3 * 86400);
+          var daysLeft = Math.max(1, Math.ceil(secondsLeft / 86400));
+          var hoursLeft = Math.max(1, Math.floor(secondsLeft / 3600));
+          var timeStr = daysLeft > 1 ? (daysLeft + " DÍAS") : (hoursLeft + " HORAS");
+          updateLicenseBadge('trial', 'PRUEBA · ' + timeStr);
           closeActivationModal();
 
-          // 2. Verificación silenciosa en segundo plano con el servidor
+          // 2. Verificación silenciosa con el servidor
           getHwidAsync().then(function(hwid) {
             fetch(apiBase + "/api/plugin/activate", {
               method: "POST",
@@ -6180,30 +6564,35 @@
                 plugin_name: OFFSZN_PLUGIN_NAME
               })
             }).then(function(res) {
-              return res.json();
-            }).then(function(response) {
-              if (response && response.success) {
-                var d = response.days_remaining || response.remaining_days || daysLeft || 3;
+              return res.json().then(function(d) { return { ok: res.ok, status: res.status, data: d }; });
+            }).then(function(result) {
+              if (result.ok && result.data && result.data.success) {
+                var d = result.data.days_remaining || result.data.remaining_days || daysLeft || 3;
                 updateLicenseBadge('trial', 'PRUEBA · ' + (d > 1 ? d + " DÍAS" : "1 DÍA"));
                 var expUnix = 0;
-                if (response.expires_at) {
-                  try { expUnix = Math.floor(new Date(response.expires_at).getTime() / 1000); } catch(e) {}
+                if (result.data.expires_at) {
+                  try { expUnix = Math.floor(new Date(result.data.expires_at).getTime() / 1000); } catch(e) {}
                 }
-                var nowUnix = Math.floor(Date.now() / 1000);
                 var fullStored = expUnix > 0 ? (cleanSerial + '|' + expUnix + '|' + nowUnix) : cleanSerial;
                 callNative("setLicenseStatus", true, fullStored);
                 closeActivationModal();
-              } else if (response && !response.success && !isValid) {
-                // Periodo de prueba formalmente expirado en servidor y C++
+              } else if (result.data && !result.data.success) {
                 callNative("setLicenseStatus", false);
                 updateLicenseBadge('demo', 'DEMO · ACTIVAR');
                 openActivationModal(false);
+                if (result.data.error) showCustomAlert("Prueba Expirada", result.data.error, "⏳");
               }
             }).catch(function(err) {
               console.log("[Trial offline check]", err);
-              // Si no hay red, mantener prueba activa
-              callNative("setLicenseStatus", true, cleanSerial);
-              closeActivationModal();
+              // Si no hay red, mantener prueba si está dentro de las 72h
+              if (expiresUnix > 0 && nowUnix >= expiresUnix) {
+                callNative("setLicenseStatus", false);
+                updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+                openActivationModal(false);
+              } else {
+                callNative("setLicenseStatus", true, cleanSerial + '|' + expiresUnix + '|' + nowUnix);
+                closeActivationModal();
+              }
             });
           });
         } else {
@@ -6243,9 +6632,40 @@
           }
         }
       } else {
-        // Sin serial en C++ ni en disco -> Solicitar activación
-        updateLicenseBadge('demo', 'DEMO · ACTIVAR');
-        openActivationModal(false);
+        // Sin serial -> Primer inicio del cliente: solicitar prueba de 3 días con HWID
+        getHwidAsync().then(function(hwid) {
+          fetch(apiBase + "/api/plugin/request-trial", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              hwid: hwid,
+              plugin_name: OFFSZN_PLUGIN_NAME,
+              device_name: "Windows DAW"
+            })
+          }).then(function(res) {
+            return res.json().then(function(d) { return { status: res.status, data: d }; });
+          }).then(function(result) {
+            if (result.status === 200 && result.data && result.data.success) {
+              var trialSerial = result.data.serial_key;
+              var expUnix = Math.floor(new Date(result.data.expires_at).getTime() / 1000);
+              var nowUnix = Math.floor(Date.now() / 1000);
+              var fullStored = trialSerial + '|' + expUnix + '|' + nowUnix;
+              try { localStorage.setItem('offszn_serial', trialSerial); } catch(e) {}
+              callNative("setLicenseStatus", true, fullStored);
+              updateLicenseBadge('trial', 'PRUEBA · 3 DÍAS');
+              closeActivationModal();
+            } else if (result.data && (result.data.trial_expired || result.status === 403)) {
+              callNative("setLicenseStatus", false);
+              updateLicenseBadge('demo', 'DEMO · ACTIVAR');
+              openActivationModal(false);
+              showCustomAlert("Prueba Agotada", "Esta computadora ya utilizó su periodo de prueba gratuito de 3 días. Consigue tu licencia FULL en offszn.lat", "⏳");
+            } else {
+              startLocalTrialFallback();
+            }
+          }).catch(function() {
+            startLocalTrialFallback();
+          });
+        });
       }
     }).catch(function(err) {
       console.warn("[getLicenseState err]", err);

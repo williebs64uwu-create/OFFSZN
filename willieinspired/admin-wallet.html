@@ -625,14 +625,15 @@
                             <tr>
                                 <th>Nombre</th>
                                 <th>Email</th>
-                                <th>Saldo de Puntos</th>
-                                <th>Fecha de Unión</th>
+                                <th>Sellos Acumulados</th>
+                                <th>Saldo Puntos</th>
+                                <th>Fecha</th>
                                 <th>Acciones Rápidas</th>
                             </tr>
                         </thead>
                         <tbody id="members-table-body">
                             <tr>
-                                <td colspan="5" style="text-align: center; padding: 2rem;">Cargando miembros...</td>
+                                <td colspan="6" style="text-align: center; padding: 2rem;">Cargando miembros...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -677,11 +678,23 @@
                     Para emitir enlaces oficiales <code>pay.google.com</code> y enviar notificaciones push a la pantalla de bloqueo de cualquier Android, ingresa las credenciales de tu Service Account de Google Cloud.
                 </p>
 
+                <!-- EASY UPLOAD BOX -->
+                <div style="background: rgba(255, 255, 255, 0.03); border: 2px dashed rgba(236, 72, 153, 0.4); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; text-align: center;">
+                    <div style="font-weight: 800; color: #fff; font-size: 1rem; margin-bottom: 0.5rem;">
+                        <i class="bi bi-file-earmark-code" style="color: var(--accent-magenta); font-size: 1.5rem;"></i><br>
+                        Cargar archivo JSON de Google Cloud
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; max-width: 500px; margin-inline: auto;">
+                        Si descargaste tu clave de Google Cloud Console (el archivo que termina en <code>.json</code>), elígelo aquí y se completará todo automáticamente.
+                    </p>
+                    <input type="file" id="cfg-file-input" accept=".json" style="font-size: 0.9rem; color: var(--text-main); background: var(--bg-surface-elevated); padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-subtle); cursor: pointer;">
+                </div>
+
                 <form id="config-form">
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">Issuer ID (Google Pay & Wallet Business)</label>
-                            <input type="text" id="cfg-issuer-id" class="form-input" placeholder="Ej: 3388000000022233344">
+                            <input type="text" id="cfg-issuer-id" class="form-input" placeholder="Ej: 3388000000023178042" value="3388000000023178042">
                         </div>
 
                         <div class="form-group">
@@ -760,7 +773,7 @@
                 const statPoints = document.getElementById('stat-points');
 
                 if (!data.members || data.members.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-dim);">Aún no hay miembros registrados. Abre <a href="/willieinspired/regalos" target="_blank" style="color: var(--accent-magenta);">la página de regalo</a> para crear tu primera tarjeta de prueba.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-dim);">Aún no hay miembros registrados. Abre <a href="/willieinspired/regalos" target="_blank" style="color: var(--accent-magenta);">la página de regalo</a> para crear tu primera tarjeta de prueba.</td></tr>`;
                     statPasses.textContent = '0';
                     statPoints.textContent = '0 PTS';
                     return;
@@ -774,15 +787,28 @@
 
                 data.members.forEach(m => {
                     totalPts += (m.points || 0);
+                    const stamps = m.stamps !== undefined ? Number(m.stamps) : 1;
+                    const maxStamps = Number(m.maxStamps) || 5;
+                    const filled = Math.min(Math.max(0, stamps), maxStamps);
+                    const empty = Math.max(0, maxStamps - filled);
+                    const stampVisual = '⭐'.repeat(filled) + '⚪'.repeat(empty) + ` (${filled}/${maxStamps})`;
+
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td style="font-weight: 700; color: #fff;">${m.name || 'Productor'}</td>
                         <td>${m.email}</td>
+                        <td>
+                            <div style="font-weight: 800; color: #fbbf24; font-size: 0.95rem;">${stampVisual}</div>
+                            ${stamps >= maxStamps ? '<span style="color: var(--accent-green); font-size: 0.75rem; font-weight: 800;">🎉 ¡META COMPLETADA!</span>' : ''}
+                        </td>
                         <td><span style="color: var(--accent-magenta); font-weight: 800;">⚡ ${m.points || 0} PTS</span></td>
                         <td>${new Date(m.createdAt || Date.now()).toLocaleDateString()}</td>
                         <td>
-                            <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="addPoints('${m.email}', 50)">+50 Pts</button>
-                            <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="addPoints('${m.email}', 100)">+100 Pts</button>
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <button class="btn-action" style="padding: 4px 8px; font-size: 0.75rem; background: #fbbf24; color: #000;" onclick="addStamp('${m.email}', 1)" title="Suma 1 sello y manda push a su Android">+1 ⭐ Sello</button>
+                                <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="addStamp('${m.email}', -1)" title="Resta 1 sello">-1 ⭐</button>
+                                <button class="btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="addPoints('${m.email}', 50)">+50 Pts</button>
+                            </div>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -796,6 +822,25 @@
                 statPoints.textContent = `${totalPts} PTS`;
             } catch (e) {
                 console.error('Error fetching members:', e);
+            }
+        }
+
+        async function addStamp(email, count) {
+            try {
+                const res = await fetch('/api/wallet/stamps/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, count, notify: true })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`¡Sello actualizado! ${data.message} ${data.isCompleted ? '🎉 ¡CLIENTE COMPLETÓ LA META!' : ''}`);
+                    loadMembers();
+                } else {
+                    alert(data.error || 'Error al actualizar sellos');
+                }
+            } catch (e) {
+                alert('Error al conectar con el servidor.');
             }
         }
 
@@ -861,6 +906,31 @@
                 btn.innerHTML = '<i class="bi bi-send-fill"></i> Disparar Notificación a Android';
             }
         });
+
+        // File input JSON parser
+        const fileInput = document.getElementById('cfg-file-input');
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const json = JSON.parse(evt.target.result);
+                        if (json.client_email) document.getElementById('cfg-client-email').value = json.client_email;
+                        if (json.private_key) document.getElementById('cfg-private-key').value = json.private_key;
+                        const currentIssuer = document.getElementById('cfg-issuer-id').value.trim();
+                        if (!currentIssuer) {
+                            document.getElementById('cfg-issuer-id').value = '3388000000023178042';
+                        }
+                        alert('¡Archivo de Google leído con éxito! Los campos se llenaron automáticamente. Presiona "Guardar Credenciales" para activar.');
+                    } catch (err) {
+                        alert('El archivo no parece ser un JSON válido de Google Cloud: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            });
+        }
 
         // Config form submission
         document.getElementById('config-form').addEventListener('submit', async (e) => {

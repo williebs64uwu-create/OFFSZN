@@ -1,0 +1,37 @@
+name: Build macOS VST3, AU & Standalone (EASY PITCH v1.0.0)
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'plugins/easy-pitch/**'
+      - 'easy_pitch_build_mac_installer.sh'
+      - '.github/workflows/build_easy_pitch_mac.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14 # Apple Silicon (M1/M2) runner with Xcode 15 and CMake pre-installed
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Clone JUCE Framework
+        run: |
+          git clone --depth 1 --branch 8.0.13 https://github.com/juce-framework/JUCE.git JUCE
+
+      - name: Set Permissions & Run Build Script
+        env:
+          JUCE_DIR: ${{ github.workspace }}/JUCE
+        run: |
+          # Clean CRLF line endings just in case it was pushed from Windows
+          sed -i '' 's/\r$//' easy_pitch_build_mac_installer.sh
+          chmod +x easy_pitch_build_mac_installer.sh
+          ./easy_pitch_build_mac_installer.sh
+
+      - name: Upload Mac Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: EASY_PITCH_Mac_Installer
+          path: EASY_PITCH_Mac_Installer_v1.0.0.pkg

@@ -32,15 +32,16 @@ public:
 
 private:
     double currentSampleRate = 48000.0;
-    static constexpr int WINDOW_SIZE = 2048;
-    static constexpr int HOP_SIZE    = 128; // ~2.6ms at 48kHz for fast causal response
+    static constexpr int WINDOW_SIZE = 1024;
+    static constexpr int HOP_SIZE    = 256; // ~5.3ms at 48kHz for lightweight, causal response
 
     std::vector<float> inputBuffer;
     std::vector<float> linearWindow;
     int writeIndex = 0;
     int hopCounter = 0;
 
-    // Temporary buffers for NSDF calculation
+    // Temporary pre-allocated buffers for fast O(1) NSDF calculation
+    std::vector<float> prefixSq;
     std::vector<float> nsdfBuffer;
     std::vector<int> maxPositions;
     std::vector<float> periodEstimates;
@@ -49,6 +50,12 @@ private:
     // DC Blocker filter state
     float dcX1 = 0.0f;
     float dcY1 = 0.0f;
+
+    // Pitch continuity & 3-tap median filter for glitch-free transitions
+    float pitchHistory[3] = { 0.0f, 0.0f, 0.0f };
+    int historyIdx = 0;
+    int unvoicedHangover = 0;
+    float lastValidHz = 0.0f;
 
     PitchDetectionResult latestResult;
 

@@ -2,7 +2,7 @@ import { googleWalletService } from '../../services/googleWalletService.js';
 
 export async function createWalletPass(req, res) {
     try {
-        const { name, email, phone, customData } = req.body;
+        const { name, email, phone, points, stamps, maxStamps, customData } = req.body;
         if (!email) {
             return res.status(400).json({ error: 'El email es obligatorio.' });
         }
@@ -11,7 +11,9 @@ export async function createWalletPass(req, res) {
             name,
             email,
             phone,
-            points: 100, // 100 Puntos de bienvenida
+            points: points !== undefined ? points : 100, // 100 Puntos de bienvenida
+            stamps: stamps !== undefined ? stamps : 1, // Primer sello de bienvenida
+            maxStamps: maxStamps !== undefined ? maxStamps : 5,
             customData: customData || {}
         });
 
@@ -19,6 +21,27 @@ export async function createWalletPass(req, res) {
     } catch (error) {
         console.error('Error en createWalletPass controller:', error);
         res.status(500).json({ error: error.message || 'Error al generar el pase de Google Wallet.' });
+    }
+}
+
+export async function updateWalletStamps(req, res) {
+    try {
+        const { email, count, notify, customMessage } = req.body;
+        if (!email) {
+            return res.status(400).json({ error: 'El email es obligatorio.' });
+        }
+
+        const result = await googleWalletService.addStampToMember({
+            email,
+            count: count !== undefined ? Number(count) : 1,
+            notify: notify !== undefined ? Boolean(notify) : true,
+            customMessage
+        });
+
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Error en updateWalletStamps controller:', error);
+        res.status(500).json({ error: error.message || 'Error al actualizar sellos.' });
     }
 }
 

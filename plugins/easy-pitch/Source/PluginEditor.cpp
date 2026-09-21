@@ -35,32 +35,40 @@ EasyPitchAudioProcessorEditor::EasyPitchAudioProcessorEditor (EasyPitchAudioProc
 
     webComponent = std::make_unique<EasyPitchWebBrowser> (options);
 
-    // Locate mockup.html
-    juce::File guiAppdata = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-                                .getChildFile ("OFFSZN").getChildFile ("EasyPitchGui").getChildFile ("mockup.html");
-
-    juce::File desktopGui ("C:/Users/Willie/Desktop/EASY PITCH/mockup.html");
-    juce::File localGui   ("D:/!OFFSZN/PROYECTOS/OFFSZN/plugins/easy-pitch/mockup.html");
-    juce::File exeGui     = juce::File::getSpecialLocation (juce::File::currentExecutableFile)
-                                .getParentDirectory().getChildFile ("mockup.html");
+    juce::File terminadosGui ("C:/Users/Willie/Desktop/TERMINADOS - EASY PITCH/mockup.html");
+    juce::File localGui      ("D:/!OFFSZN/PROYECTOS/OFFSZN/plugins/easy-pitch/mockup.html");
+    juce::File desktopGui    ("C:/Users/Willie/Desktop/EASY PITCH/mockup.html");
+    juce::File guiAppdata    = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+                                  .getChildFile ("OFFSZN").getChildFile ("EasyPitchGui").getChildFile ("mockup.html");
+    juce::File globalMacGui  ("/Library/Application Support/OFFSZN/EasyPitchGui/mockup.html");
+    juce::File exeGui        = juce::File::getSpecialLocation (juce::File::currentExecutableFile)
+                                  .getParentDirectory().getChildFile ("mockup.html");
+    juce::File bundleResGui  = juce::File::getSpecialLocation (juce::File::currentExecutableFile)
+                                  .getParentDirectory().getParentDirectory().getChildFile ("Resources").getChildFile ("mockup.html");
 
     juce::File targetHtml;
-    if (guiAppdata.existsAsFile())
-        targetHtml = guiAppdata;
-    else if (desktopGui.existsAsFile())
-        targetHtml = desktopGui;
+    if (terminadosGui.existsAsFile())
+        targetHtml = terminadosGui;
     else if (localGui.existsAsFile())
         targetHtml = localGui;
+    else if (guiAppdata.existsAsFile())
+        targetHtml = guiAppdata;
+    else if (globalMacGui.existsAsFile())
+        targetHtml = globalMacGui;
+    else if (bundleResGui.existsAsFile())
+        targetHtml = bundleResGui;
+    else if (desktopGui.existsAsFile())
+        targetHtml = desktopGui;
     else if (exeGui.existsAsFile())
         targetHtml = exeGui;
     else
-        targetHtml = desktopGui;
+        targetHtml = localGui;
 
     juce::String url = "file:///" + targetHtml.getFullPathName().replaceCharacter ('\\', '/');
     webComponent->goToURL (url);
 
     addAndMakeVisible (*webComponent);
-    setSize (860, 540);
+    setSize (860, 505);
     setResizable (false, false);
 
     startTimerHz (30);
@@ -125,6 +133,7 @@ void EasyPitchAudioProcessorEditor::registerNativeFunctions (juce::WebBrowserCom
             obj->setProperty ("preserveTimbre", audioProcessor.getParamValue ("preserveTimbre"));
             obj->setProperty ("referenceHz",    audioProcessor.getParamValue ("referenceHz"));
             obj->setProperty ("customMask",     audioProcessor.getParamValue ("customMask"));
+            obj->setProperty ("channelMode",    audioProcessor.getParamValue ("channelMode"));
             complete (juce::var (obj));
         })
         .withNativeFunction ("getLiveMeters", [this] (const juce::Array<juce::var>&, auto complete)
@@ -152,6 +161,32 @@ void EasyPitchAudioProcessorEditor::registerNativeFunctions (juce::WebBrowserCom
             obj->setProperty ("message",  state.message);
             obj->setProperty ("hwid",     EasyPitch::LicenseManager::getHardwareID());
             complete (juce::var (obj));
+        })
+        .withNativeFunction ("getHardwareId", [] (const juce::Array<juce::var>&, auto complete)
+        {
+            complete (juce::var (EasyPitch::LicenseManager::getHardwareID()));
+        })
+        .withNativeFunction ("saveLicense", [this] (const juce::Array<juce::var>& args, auto complete)
+        {
+            if (args.size() >= 1)
+            {
+                juce::String serial = args[0].toString();
+                bool saved = audioProcessor.getLicenseManager().saveSerialLocally (serial);
+                if (saved) audioProcessor.getLicenseManager().initLicenseState();
+                complete (juce::var (saved));
+                return;
+            }
+            complete (juce::var (false));
+        })
+        .withNativeFunction ("setLicenseStatus", [this] (const juce::Array<juce::var>& args, auto complete)
+        {
+            if (args.size() >= 2)
+            {
+                juce::String serial = args[1].toString();
+                audioProcessor.getLicenseManager().saveSerialLocally (serial);
+            }
+            audioProcessor.getLicenseManager().initLicenseState();
+            complete (juce::var (audioProcessor.getLicenseManager().isLicensed()));
         })
         .withNativeFunction ("activateLicense", [this] (const juce::Array<juce::var>& args, auto complete)
         {

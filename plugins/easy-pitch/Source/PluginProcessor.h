@@ -83,6 +83,7 @@ private:
     std::atomic<bool>  p_preserveTimbre { true };
     std::atomic<float> p_referenceHz    { 440.0f };// 430 - 450 Hz
     std::atomic<int>   p_customMask     { 0x0FFF };// 12-bit mask for allowed chromatic notes (default all enabled)
+    std::atomic<int>   p_channelMode    { 1 };     // Default: 1 = Mono Coherente (Waves Tune Real-Time standard)
 
     // ── Live Feedback Metrics (UI Timer Reads) ───────────────────────────────
     std::atomic<float> liveInputMidi    { 0.0f };

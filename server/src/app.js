@@ -416,6 +416,7 @@ app.use((req, res, next) => {
             pathLower === '/owner/content-calendar.html' ||
             pathLower === '/owner/content-calendar' ||
             pathLower === '/owner/audience-data.js' ||
+            pathLower === '/owner/payhip-sales-data.js' ||
             pathLower === '/server/public/recovery_dashboard.html' ||
             pathLower === '/server/public/system-logs.html'
         ) {
@@ -588,8 +589,16 @@ app.get(['/recovery-dashboard', '/recovery-dashboard.html', '/recovery_dashboard
     return res.status(404).send('Recovery dashboard not found');
 });
 
-// --- 3.0.8 SYSTEM LOGS DIRECT ROUTE ---
+// --- 3.0.8 SYSTEM LOGS DIRECT ROUTE (PROTECTED) ---
 app.get(['/system-logs', '/system-logs.html', '/server/public/system-logs.html'], (req, res) => {
+    const key = req.query.admin_key || req.query.pin || req.headers['x-admin-key'] || req.cookies?.offszn_owner_key;
+    const isAuth = key === 'gian2030upc' || key === process.env.PLUGIN_ADMIN_KEY;
+    
+    // If not authenticated via query/header/cookie, redirect to owner dashboard
+    if (!isAuth) {
+        return res.redirect('/owner/offszn.html#telemetria');
+    }
+
     const p = path.join(rootPath, 'server/public/system-logs.html');
     if (fs.existsSync(p)) return res.sendFile(p);
     return res.status(404).send('System logs not found');

@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>EASY PITCH</title>
   <script>
-    // Silencia cualquier ventana emergente de error de script en motores antiguos
     window.onerror = function() { return true; };
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,27 +13,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-deep: #0a0c0f;
-      --bg-panel: #12151c;
-      --bg-surface: #181c25;
-      --bg-surface-hover: #202532;
-      --bg-control: #242936;
-      --bg-control-active: #2f3647;
+      --bg-deep: #07090d;
+      --bg-glass: rgba(16, 21, 30, 0.76);
+      --bg-glass-card: rgba(22, 28, 40, 0.65);
+      --bg-surface: rgba(26, 34, 48, 0.7);
+      --bg-surface-hover: rgba(36, 47, 66, 0.85);
+      --bg-control: #151b26;
+      --bg-control-active: #1e2636;
 
-      --border-panel: rgba(255, 255, 255, 0.08);
-      --border-subtle: rgba(255, 255, 255, 0.05);
+      --border-glass: rgba(255, 255, 255, 0.08);
+      --border-subtle: rgba(255, 255, 255, 0.04);
       --border-highlight: rgba(255, 255, 255, 0.16);
+      --border-green: rgba(16, 185, 129, 0.4);
+      --border-cyan: rgba(6, 182, 212, 0.4);
 
       --text-pure: #ffffff;
-      --text-secondary: #c2c7d0;
-      --text-muted: #747b88;
-      --text-dim: #454b57;
+      --text-secondary: #c5cdd9;
+      --text-muted: #727f93;
+      --text-dim: #434c5b;
 
       --accent-green: #10b981;
-      --accent-green-glow: rgba(16, 185, 129, 0.28);
+      --accent-green-bright: #10b981;
+      --accent-green-glow: rgba(16, 185, 129, 0.25);
+      --accent-cyan: #38bdf8;
+      --accent-cyan-glow: rgba(56, 189, 248, 0.25);
       --accent-amber: #f59e0b;
       --accent-red: #ef4444;
-      --accent-cyan: #06b6d4;
 
       --radius-sm: 6px;
       --radius-md: 10px;
@@ -53,7 +57,7 @@
 
     html, body {
       width: 860px;
-      height: 540px;
+      height: 505px;
       overflow: hidden;
       background: var(--bg-deep);
       color: var(--text-pure);
@@ -61,154 +65,338 @@
       position: relative;
     }
 
-    /* Contenedor Principal */
+    /* ── Contenedor Principal con Glassmorphism ── */
     .plugin-window {
       width: 100%;
       height: 100%;
       display: flex;
       flex-direction: column;
-      border: 1px solid var(--border-panel);
-      background: radial-gradient(circle at 50% 0%, #181c26 0%, #0a0c0f 75%);
+      border: 1px solid var(--border-glass);
+      background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.07) 0%, transparent 60%),
+                  radial-gradient(circle at 80% 90%, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
+                  #07090d;
       position: relative;
+      transition: filter 0.25s ease, opacity 0.25s ease;
     }
 
-    /* Textura de Hardware */
     .texture-overlay {
       position: absolute;
       inset: 0;
       pointer-events: none;
       z-index: 1;
-      opacity: 0.035;
+      opacity: 0.025;
       background-image: radial-gradient(#ffffff 0.75px, transparent 0.75px);
       background-size: 4px 4px;
     }
 
-    /* ── HEADER ── */
+    /* ── ESTADO BYPASS REACTIVO GLOBAL ── */
+    .plugin-window.is-bypassed .main-content {
+      opacity: 0.45;
+      filter: grayscale(0.5) contrast(0.95);
+      pointer-events: none;
+      transition: opacity 0.25s ease, filter 0.25s ease;
+    }
+
+    /* ── HEADER LIMPIO Y MINIMALISTA ── */
     .header {
-      height: 58px;
-      padding: 0 24px;
+      height: 48px;
+      padding: 0 18px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: linear-gradient(180deg, #161922 0%, #10131a 100%);
-      border-bottom: 1px solid var(--border-panel);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-      z-index: 10;
+      background: rgba(13, 17, 24, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-glass);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+      z-index: 20;
       flex-shrink: 0;
     }
 
+    .header-left {
+      display: flex;
+      align-items: center;
+    }
+
+    /* Logo: EASY PITCH Todo Blanco */
     .brand-title {
-      font-size: 19px;
+      font-size: 15px;
       font-weight: 800;
-      letter-spacing: 2.5px;
-      color: var(--text-pure);
+      letter-spacing: 2px;
       text-transform: uppercase;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      cursor: default;
+      color: #ffffff;
     }
 
-    .brand-title .title-accent {
-      color: var(--accent-green);
+    .brand-title .title-easy,
+    .brand-title .title-pitch {
+      color: #ffffff !important;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8) !important;
     }
 
+    /* Power / Bypass Toggle Boton Icono Minimalista */
+    .power-toggle-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-glass);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .power-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--border-highlight);
+    }
+
+    .power-toggle-btn.active {
+      color: #10b981;
+      border-color: rgba(16, 185, 129, 0.45);
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .power-toggle-btn:not(.active) {
+      color: #64748b;
+      border-color: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* Header Center: Presets Toolbar Minimalista */
     .header-center {
+      display: flex;
+      align-items: center;
+    }
+
+    .preset-toolbar {
+      display: flex;
+      align-items: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-pill);
+      padding: 2px 6px;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.35);
+    }
+
+    .preset-nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 800;
+      transition: all 0.15s ease;
+    }
+
+    .preset-nav-btn:hover {
+      color: var(--text-pure);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .preset-current-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-pure);
+      padding: 0 14px;
+      min-width: 96px;
+      text-align: center;
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+
+    .preset-current-name:hover {
+      color: var(--accent-green-bright);
+    }
+
+    /* Header Right: Licencia (Easy Mix Style) y Engranaje */
+    .header-right {
       display: flex;
       align-items: center;
       gap: 10px;
     }
 
-    .preset-selector-wrap {
-      display: flex;
-      align-items: center;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-panel);
-      border-radius: var(--radius-sm);
-      padding: 2px 4px;
-    }
-
-    .preset-select {
-      background: transparent;
-      border: none;
-      color: var(--text-pure);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 5px 12px;
-      outline: none;
-      cursor: pointer;
-      font-family: inherit;
-    }
-
-    .preset-select option {
-      background: var(--bg-panel);
-      color: var(--text-pure);
-    }
-
-    .btn-header {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-panel);
-      border-radius: var(--radius-sm);
-      color: var(--text-secondary);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 6px 14px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      display: flex;
+    /* ── TRIAL BADGE (EASY MIX EXACT STYLE) ── */
+    .trial-badge {
+      display: inline-flex;
       align-items: center;
       gap: 6px;
+      background: rgba(255, 159, 10, 0.12);
+      border: 1px solid rgba(255, 159, 10, 0.3);
+      border-radius: 20px;
+      padding: 4px 11px;
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #ff9f0a;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      animation: badgeFadeIn 0.4s ease;
     }
 
-    .btn-header:hover {
+    .trial-badge:hover {
+      background: rgba(255, 159, 10, 0.2);
+      border-color: rgba(255, 159, 10, 0.5);
+    }
+
+    .trial-badge .trial-dot {
+      width: 6px;
+      height: 6px;
+      background: #ff9f0a;
+      border-radius: 50%;
+      animation: trialDotPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes trialDotPulse {
+      0%, 100% {
+        opacity: 0.4;
+        transform: scale(0.8);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.2);
+        box-shadow: 0 0 6px #ff9f0a;
+      }
+    }
+
+    @keyframes badgeFadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .trial-badge.full-mode {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: #10b981;
+    }
+
+    .trial-badge.full-mode .trial-dot {
+      background: #10b981;
+      animation: none;
+      box-shadow: 0 0 6px #10b981;
+    }
+
+    .trial-badge.exp-mode {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #ef4444;
+    }
+
+    .trial-badge.exp-mode .trial-dot {
+      background: #ef4444;
+      animation: none;
+      box-shadow: 0 0 6px #ef4444;
+    }
+
+    /* Botón Engranaje (Ajustes) */
+    .btn-gear {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glass);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .btn-gear:hover {
       background: var(--bg-surface-hover);
       color: var(--text-pure);
       border-color: var(--border-highlight);
     }
 
-    .header-right {
+    /* ── HARD LOCK OVERLAY (EASY MIX STYLE) ── */
+    #license-expired-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 12, 16, 0.97);
+      z-index: 10000;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      animation: fadeInOverlay 0.3s ease;
+    }
+
+    #license-expired-overlay.active {
       display: flex;
-      align-items: center;
-      gap: 12px;
     }
 
-    /* License Badge */
-    .license-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 12px;
-      border-radius: var(--radius-pill);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.8px;
-      cursor: pointer;
+    .exp-icon { font-size: 38px; }
+    .exp-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: #f87171;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
-      transition: all 0.2s ease;
     }
-
-    .license-badge.demo {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: #fca5a5;
+    .exp-subtitle {
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+      max-width: 320px;
+      line-height: 1.6;
     }
-
-    .license-badge.trial {
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid rgba(245, 158, 11, 0.4);
-      color: #fcd34d;
+    .exp-input {
+      width: 280px;
+      padding: 10px 14px;
+      background: #141822;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      color: #ffffff;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      outline: none;
+      text-align: center;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
     }
-
-    .license-badge.full {
-      background: rgba(16, 185, 129, 0.15);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      color: #6ee7b7;
+    .exp-input:focus {
+      border-color: #ff9f0a;
+      box-shadow: 0 0 10px rgba(255, 159, 10, 0.3);
     }
-
-    .badge-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: currentColor;
+    .exp-btn {
+      width: 280px;
+      padding: 11px;
+      background: linear-gradient(180deg, #ff9f0a, #d68100);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(255, 159, 10, 0.4);
+      transition: opacity 0.15s ease;
+    }
+    .exp-btn:hover { opacity: 0.92; }
+    .exp-status {
+      font-size: 11px;
+      color: #f87171;
+      min-height: 16px;
+      text-align: center;
     }
 
     /* ── MAIN CONTENT ── */
@@ -216,98 +404,280 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 16px 28px;
-      gap: 16px;
+      padding: 8px 18px 6px 18px;
+      gap: 7px;
       z-index: 5;
+      position: relative;
     }
 
     /* Fila 1: Selectores de Key y Escala */
     .selectors-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      grid-template-columns: 1fr 1.25fr;
+      gap: 12px;
+      z-index: 25;
     }
 
     .selector-card {
-      background: var(--bg-panel);
-      border: 1px solid var(--border-panel);
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
       border-radius: var(--radius-md);
-      padding: 12px 18px;
+      padding: 4px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      position: relative;
     }
 
     .selector-label {
-      font-size: 11px;
-      font-weight: 700;
+      font-size: 10px;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 1.2px;
       color: var(--text-muted);
     }
 
-    .dropdown-control {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-panel);
-      border-radius: var(--radius-sm);
-      color: var(--text-pure);
-      font-size: 13px;
-      font-weight: 700;
-      padding: 8px 16px;
-      outline: none;
-      cursor: pointer;
-      font-family: inherit;
-      min-width: 140px;
-      transition: border-color 0.15s ease;
+    /* Custom Dropdown Trigger */
+    .custom-dropdown-wrap {
+      position: relative;
     }
 
-    .dropdown-control:hover, .dropdown-control:focus {
-      border-color: var(--border-highlight);
-    }
-
-    .dropdown-control option {
-      background: var(--bg-panel);
-      color: var(--text-pure);
-    }
-
-    /* Fila 2: Unidad Central */
-    .center-unit {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 200px 1fr 200px;
-      gap: 20px;
+    .dropdown-trigger {
+      display: flex;
       align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-pill);
+      color: var(--text-pure);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+      white-space: nowrap;
     }
 
-    /* Perillas de Hardware */
-    .knob-card {
-      background: var(--bg-panel);
-      border: 1px solid var(--border-panel);
-      border-radius: var(--radius-lg);
-      padding: 18px 12px;
-      height: 100%;
+    .dropdown-trigger:hover, .dropdown-trigger.open {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: var(--accent-green);
+      box-shadow: 0 0 12px var(--accent-green-glow);
+    }
+
+    .dropdown-chevron {
+      font-size: 9px;
+      color: var(--text-muted);
+      transition: transform 0.2s ease;
+    }
+
+    .dropdown-trigger.open .dropdown-chevron {
+      transform: rotate(180deg);
+      color: var(--accent-green);
+    }
+
+    /* ── Popover Táctil 12 Notas Cromáticas (1 Click) ── */
+    .key-grid-popover {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      width: 254px;
+      background: rgba(14, 18, 26, 0.98);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      z-index: 150;
+    }
+
+    .key-grid-popover.open {
+      display: grid;
+    }
+
+    .key-pad {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 6px 2px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      cursor: pointer;
+      transition: all 0.12s ease;
+      user-select: none;
+    }
+
+    .key-pad:hover {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: var(--accent-green);
+    }
+
+    .key-pad.selected {
+      background: var(--accent-green);
+      border-color: var(--accent-green-bright);
+      box-shadow: 0 0 10px var(--accent-green-glow);
+    }
+
+    .key-pad-note {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .key-pad-solfege {
+      font-size: 8.5px;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-top: 1px;
+    }
+
+    .key-pad.selected .key-pad-note,
+    .key-pad.selected .key-pad-solfege {
+      color: #ffffff;
+    }
+
+    /* ── Escala Quick-Chips Táctiles (1 Click) ── */
+    .scale-chips-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .scale-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-pill);
+      color: var(--text-secondary);
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .scale-chip:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-pure);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .scale-chip.selected {
+      background: var(--accent-green);
+      border-color: var(--accent-green-bright);
+      color: #ffffff;
+      box-shadow: 0 0 10px var(--accent-green-glow);
+    }
+
+    .scale-chip.more-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 170px;
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(14, 18, 26, 0.98);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-md);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.85);
+      z-index: 150;
+      padding: 4px;
+    }
+
+    .dropdown-menu.open {
+      display: block;
+    }
+
+    .dropdown-item {
+      padding: 6px 12px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.12s ease;
+    }
+
+    .dropdown-item:hover {
+      background: rgba(16, 185, 129, 0.15);
+      color: #ffffff;
+    }
+
+    .dropdown-item.selected {
+      background: rgba(16, 185, 129, 0.25);
+      color: var(--accent-green-bright);
+      font-weight: 800;
+    }
+
+    .dropdown-menu::-webkit-scrollbar {
+      width: 4px;
+    }
+    .dropdown-menu::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    /* ── FILA 2: UNIDAD CENTRAL (KNOBS 270° PERFECTOS Y DISPLAY WAVES TUNE) ── */
+    .center-unit {
+      display: grid;
+      grid-template-columns: 175px 1fr 175px;
+      gap: 12px;
+      align-items: stretch;
+      height: 195px;
+    }
+
+    .knob-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 10px 8px 8px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       position: relative;
     }
 
     .knob-title {
-      font-size: 12px;
+      font-size: 10px;
       font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: 1.5px;
+      letter-spacing: 1.4px;
       color: var(--text-secondary);
-      margin-bottom: 12px;
     }
 
+    /* Track de la Perilla (108px x 108px) */
     .knob-track {
       position: relative;
-      width: 120px;
-      height: 120px;
+      width: 108px;
+      height: 108px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -319,278 +689,415 @@
       left: 0;
       width: 100%;
       height: 100%;
-      transform: rotate(-90deg);
       pointer-events: none;
     }
 
     .ring-bg {
       fill: none;
-      stroke: #1e2430;
-      stroke-width: 6;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 5;
       stroke-linecap: round;
     }
 
     .ring-val {
       fill: none;
       stroke: var(--accent-green);
-      stroke-width: 6;
+      stroke-width: 5;
       stroke-linecap: round;
       filter: drop-shadow(0 0 6px var(--accent-green-glow));
     }
 
+    /* Cuerpo del Knob con Reflejos y Puntero Sincronizado */
     .knob-element {
-      width: 90px;
-      height: 90px;
+      width: 76px;
+      height: 76px;
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #2c3242 0%, #151821 70%, #0d0f14 100%);
-      border: 2px solid #232836;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6), inset 0 2px 3px rgba(255, 255, 255, 0.15);
+      background: radial-gradient(circle at 35% 30%, #303749 0%, #151922 65%, #080a0e 100%);
+      border: 2px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.75),
+                  inset 0 2px 4px rgba(255, 255, 255, 0.25),
+                  inset 0 -3px 5px rgba(0, 0, 0, 0.6);
       position: relative;
       cursor: ns-resize;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .knob-element:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 10px rgba(16, 185, 129, 0.2);
     }
 
     .knob-indicator {
       position: absolute;
-      width: 3px;
-      height: 14px;
-      background: var(--accent-green);
+      width: 2.5px;
+      height: 12px;
+      background: var(--accent-green-bright);
       border-radius: 2px;
-      top: 8px;
+      top: 6px;
       left: 50%;
-      margin-left: -1.5px;
-      transform-origin: center 37px;
+      margin-left: -1.25px;
+      transform-origin: center 32px;
       box-shadow: 0 0 8px var(--accent-green);
       pointer-events: none;
     }
 
     .knob-value-badge {
-      margin-top: 12px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-panel);
-      border-radius: var(--radius-sm);
-      padding: 4px 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-pill);
+      padding: 3px 12px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--text-pure);
-      min-width: 65px;
+      min-width: 56px;
       text-align: center;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
     }
 
-    /* Consola Central de Pitch */
+    /* ── CONSOLA CENTRAL ESTILO WAVES TUNE ── */
     .pitch-console {
-      background: var(--bg-panel);
-      border: 1px solid var(--border-panel);
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
       border-radius: var(--radius-lg);
-      padding: 20px 24px;
-      height: 100%;
+      padding: 10px 14px 8px 14px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+      align-items: center;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       position: relative;
+      overflow: hidden;
     }
 
-    .notes-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+    .waves-tune-header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px;
     }
 
-    .note-box {
-      background: var(--bg-surface);
+    .note-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 12px 14px;
+      border-radius: var(--radius-pill);
+      padding: 3px 10px;
+    }
+
+    .note-tag-label {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+    }
+
+    .note-tag-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--text-pure);
+    }
+
+    .note-tag.target .note-tag-val {
+      color: #c084fc;
+    }
+
+    .waves-meter-stage {
+      position: relative;
+      width: 250px;
+      height: 125px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .waves-arc-svg {
+      width: 240px;
+      height: 125px;
+      overflow: visible;
+    }
+
+    .center-note-display {
+      position: absolute;
+      top: 36px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
+      pointer-events: none;
     }
 
-    .note-box-title {
+    .center-note-char {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1;
+      color: #ffffff;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+      transition: color 0.15s ease;
+    }
+
+    .center-note-display.locked .center-note-char {
+      color: #10b981;
+    }
+
+    .center-cents-readout {
+      font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
       font-weight: 700;
+      color: var(--text-muted);
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .center-note-display.locked .center-cents-readout {
+      color: #10b981;
+    }
+
+    /* ── FILA 3: MINI PIANO STRIP CONTINUO REALISTA (C2 a C6) ── */
+    .mini-piano-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 6px 12px 6px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .piano-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px;
+    }
+
+    .piano-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+      font-weight: 800;
       letter-spacing: 1.2px;
       text-transform: uppercase;
       color: var(--text-muted);
     }
 
-    .note-box-val {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 28px;
-      font-weight: 800;
+    .piano-title-wrap .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 6px var(--accent-green);
+    }
+
+    .btn-piano-reset {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-pill);
+      color: var(--text-muted);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 3px 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-piano-reset:hover {
+      background: rgba(255, 255, 255, 0.1);
       color: var(--text-pure);
-      line-height: 1;
+      border-color: var(--border-highlight);
     }
 
-    .note-box.target .note-box-val {
-      color: var(--accent-green);
-      text-shadow: 0 0 12px var(--accent-green-glow);
-    }
-
-    /* Medidor de Cents */
-    .meter-section {
+    .piano-keyboard-container {
+      width: 100%;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      margin-top: 4px;
-    }
-
-    .meter-header {
-      display: flex;
-      justify-content: space-between;
       align-items: center;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .meter-cents-text {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      font-size: 12px;
-      color: var(--text-pure);
-    }
-
-    .cents-track {
-      height: 14px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-panel);
-      border-radius: var(--radius-pill);
       position: relative;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
     }
 
-    .cents-center-line {
+    /* Fila de LEDs superiores - Estilo Waves Tune Tabs */
+    .piano-led-row {
+      display: flex;
+      position: relative;
+      height: 10px;
+      margin-bottom: 3px;
+      width: 800px;
+    }
+
+    .piano-led-slot {
       position: absolute;
-      left: 50%;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: rgba(255, 255, 255, 0.4);
-      margin-left: -1px;
-      z-index: 2;
-    }
-
-    .cents-bar {
-      position: absolute;
-      top: 2px;
-      bottom: 2px;
-      border-radius: 3px;
-      background: linear-gradient(90deg, #10b981, #06b6d4);
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-      z-index: 1;
-    }
-
-    .cents-scale-labels {
-      display: flex;
-      justify-content: space-between;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      color: var(--text-dim);
-      padding: 0 4px;
-    }
-
-    .status-badge-text {
-      text-align: center;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
-      letter-spacing: 0.5px;
-      height: 16px;
-    }
-
-    /* ── BARRA INFERIOR ── */
-    .bottom-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: 4px;
-    }
-
-    .bottom-status-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--text-dim);
-    }
-
-    .bottom-status-info .dot {
-      width: 6px;
+      width: 14px;
       height: 6px;
-      border-radius: 50%;
-      background: var(--accent-green);
-      box-shadow: 0 0 8px var(--accent-green-glow);
+      border-radius: 2px;
+      background: #18202d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: inset 0 1px 1px rgba(0,0,0,0.4);
     }
 
-    .power-toggle-wrap {
+    .piano-led-slot.active {
+      background: #10b981;
+      border-color: #34d399;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+    }
+
+    .piano-led-slot.excluded {
+      background: #0d1117;
+      border-color: rgba(255, 255, 255, 0.03);
+      opacity: 0.35;
+      box-shadow: none;
+    }
+
+    /* Cinta de Teclas Continuas - Teclado Físico Realista (Waves Tune Style) */
+    .piano-keys-bed {
       display: flex;
-      align-items: center;
-      gap: 10px;
+      position: relative;
+      width: 800px;
+      height: 64px;
+      background: #090c12;
+      border-radius: 4px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      overflow: hidden;
     }
 
-    .power-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-    }
-
-    .power-toggle {
-      width: 44px;
-      height: 24px;
-      border-radius: var(--radius-pill);
-      background: var(--bg-control);
-      border: 1px solid var(--border-panel);
+    .white-key {
+      flex: 1;
+      height: 100%;
+      background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 65%, #cbd5e1 95%, #94a3b8 100%);
+      border-right: 1px solid #64748b;
+      border-bottom: 3px solid #475569;
+      border-radius: 0 0 3px 3px;
       cursor: pointer;
       position: relative;
-      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      padding-bottom: 3px;
+      box-shadow: inset 0 -2px 3px rgba(0,0,0,0.12);
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+      user-select: none;
     }
 
-    .power-toggle.on {
-      background: var(--accent-green);
-      border-color: var(--accent-green);
-      box-shadow: 0 0 12px var(--accent-green-glow);
+    .white-key:hover {
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 80%, #e2e8f0 100%);
     }
 
-    .power-handle {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #ffffff;
+    /* Si una tecla blanca no está en la escala, NO se convierte en un hueco negro: mantiene presencia física suave */
+    .white-key.out-of-scale {
+      background: linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 70%, #94a3b8 100%);
+      border-right: 1px solid #64748b;
+      border-bottom: 3px solid #475569;
+      opacity: 0.85;
+    }
+
+    .white-key.excluded {
+      background: linear-gradient(180deg, #cbd5e1 0%, #94a3b8 100%) !important;
+      opacity: 0.65 !important;
+    }
+
+    .key-octave-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      font-weight: 800;
+      color: #64748b;
+      pointer-events: none;
+    }
+
+    .white-key.out-of-scale .key-octave-text {
+      color: #94a3b8;
+    }
+
+    .black-key {
       position: absolute;
-      top: 2px;
-      left: 2px;
-      transition: transform 0.2s ease;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+      top: 0;
+      width: 17px;
+      height: 40px;
+      background: linear-gradient(180deg, #2b3240 0%, #151822 75%, #080a0f 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-bottom: 2px solid #000000;
+      border-radius: 0 0 2px 2px;
+      z-index: 5;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.75), inset 0 1px 1px rgba(255,255,255,0.25);
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+      user-select: none;
     }
 
-    .power-toggle.on .power-handle {
-      transform: translateX(20px);
+    .black-key:hover {
+      background: linear-gradient(180deg, #374151 0%, #1f2937 80%, #0f131a 100%);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .black-key.out-of-scale {
+      background: linear-gradient(180deg, #1e2430 0%, #11141c 100%);
+      border-color: rgba(255, 255, 255, 0.06);
+      opacity: 0.85;
+    }
+
+    .black-key.excluded {
+      background: #090c10 !important;
+      opacity: 0.65 !important;
+    }
+
+    /* Nota Cantada en Vivo (Estilo Waves Tune Real-Time) */
+    .white-key.sung-active {
+      background: linear-gradient(180deg, #e9d5ff 0%, #c084fc 60%, #9333ea 100%) !important;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.45) !important;
+      border-color: #a855f7 !important;
+      border-bottom: 3px solid #6b21a8 !important;
+    }
+
+    .white-key.sung-active .key-octave-text {
+      color: #ffffff !important;
+      font-weight: 900;
+    }
+
+    .black-key.sung-active {
+      background: linear-gradient(180deg, #c084fc 0%, #9333ea 70%, #581c87 100%) !important;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.45) !important;
+      border-color: #d8b4fe !important;
+    }
+
+    .white-key.target-active {
+      border-bottom: 4px solid #38bdf8 !important;
+    }
+
+    .black-key.target-active {
+      border-bottom: 4px solid #38bdf8 !important;
     }
 
     /* ── MODALES ── */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.8);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 100;
+      z-index: 200;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
     .modal-backdrop.open {
@@ -599,11 +1106,11 @@
 
     .modal-card {
       width: 440px;
-      background: var(--bg-panel);
+      background: rgba(16, 21, 30, 0.96);
       border: 1px solid var(--border-highlight);
       border-radius: var(--radius-lg);
       padding: 24px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.1);
       display: flex;
       flex-direction: column;
       gap: 18px;
@@ -616,9 +1123,9 @@
     }
 
     .modal-title {
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 800;
-      letter-spacing: 1px;
+      letter-spacing: 1.2px;
       text-transform: uppercase;
       color: var(--text-pure);
     }
@@ -631,7 +1138,6 @@
       font-weight: 700;
       cursor: pointer;
       padding: 4px;
-      line-height: 1;
     }
 
     .modal-close:hover {
@@ -646,14 +1152,14 @@
     }
 
     .modal-label {
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
       color: var(--text-secondary);
     }
 
     .modal-input {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-panel);
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-glass);
       border-radius: var(--radius-sm);
       color: var(--text-pure);
       font-size: 12px;
@@ -666,12 +1172,24 @@
       border-color: var(--accent-green);
     }
 
+    .modal-select {
+      background: #151b26;
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-sm);
+      color: var(--text-pure);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 12px;
+      outline: none;
+      font-family: inherit;
+    }
+
     .btn-action-primary {
       background: #ffffff;
       color: #000000;
       font-weight: 800;
-      font-size: 12px;
-      letter-spacing: 0.5px;
+      font-size: 11px;
+      letter-spacing: 0.8px;
       text-transform: uppercase;
       border: none;
       border-radius: var(--radius-sm);
@@ -682,7 +1200,7 @@
     }
 
     .btn-action-primary:hover {
-      background: #f0f0f0;
+      background: #e2e8f0;
     }
 
     .modal-status-msg {
@@ -694,75 +1212,95 @@
   </style>
 </head>
 <body>
-  <div class="plugin-window">
+  <div class="plugin-window" id="pluginWindow">
     <div class="texture-overlay"></div>
 
-    <!-- ── HEADER ── -->
+    <!-- ── HEADER LIMPIO ── -->
     <header class="header">
-      <div class="brand-title">
-        EASY <span class="title-accent">PITCH</span>
+      <div class="header-left">
+        <div class="brand-title">
+          <span class="title-easy">EASY</span>
+          <span class="title-pitch">PITCH</span>
+        </div>
       </div>
 
+      <!-- Presets Selector Minimalista (sin boton guardar) -->
       <div class="header-center">
-        <div class="preset-selector-wrap">
-          <select class="preset-select" id="presetSelect" onchange="onPresetChange(this.value)">
-            <option value="0">Suave</option>
-            <option value="1" selected>Firme</option>
-            <option value="2">Marcado</option>
-          </select>
+        <div class="preset-toolbar">
+          <button class="preset-nav-btn" onclick="prevPreset()" title="Preset anterior">‹</button>
+          <div class="preset-current-name" id="presetNameText" onclick="cyclePreset()" title="Cambiar preset">Firme</div>
+          <button class="preset-nav-btn" onclick="nextPreset()" title="Siguiente preset">›</button>
         </div>
-        <button class="btn-header" onclick="saveCurrentPreset()">Guardar</button>
       </div>
 
+      <!-- Licencia (Easy Mix Style), Boton Engranaje y Boton de Encendido/Bypass al extremo derecho -->
       <div class="header-right">
-        <div class="license-badge trial" id="licenseBadge" onclick="openLicenseModal()">
-          <span class="badge-dot"></span>
-          <span id="licenseBadgeText">PRUEBA · 3 DÍAS</span>
+        <div id="trial-badge" class="trial-badge visible" onclick="openLicenseModal()">
+          <span class="trial-dot"></span>
+          <span id="trial-badge-text">PRUEBA · <span id="trial-time-left">3 DÍAS</span></span>
         </div>
-        <button class="btn-header" onclick="openSettingsModal()">Personalizar</button>
+        <button class="btn-gear" onclick="openSettingsModal()" title="Configuración">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+        <!-- Botón de Encendido / Bypass al extremo derecho -->
+        <button class="power-toggle-btn active" id="powerBtn" onclick="togglePower()" title="Encender / Bypass">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+            <path d="M12 2v10M18.4 6a9 9 0 1 1-12.8 0"/>
+          </svg>
+        </button>
       </div>
     </header>
 
     <!-- ── MAIN CONTENT ── -->
     <main class="main-content">
-      <!-- Selectores: Key y Escala -->
+      <!-- Fila 1: Selectores de Key y Escala (1-Click Accesible) -->
       <div class="selectors-row">
+        <!-- Selector KEY con Popover Táctil 12 Notas -->
         <div class="selector-card">
           <span class="selector-label">Key (Tonalidad)</span>
-          <select class="dropdown-control" id="keySelect" onchange="onParamChange('key', this.value)">
-            <option value="0" selected>C / Do</option>
-            <option value="1">C♯ / Re♭</option>
-            <option value="2">D / Re</option>
-            <option value="3">D♯ / Mi♭</option>
-            <option value="4">E / Mi</option>
-            <option value="5">F / Fa</option>
-            <option value="6">F♯ / Sol♭</option>
-            <option value="7">G / Sol</option>
-            <option value="8">G♯ / La♭</option>
-            <option value="9">A / La</option>
-            <option value="10">A♯ / Si♭</option>
-            <option value="11">B / Si</option>
-          </select>
+          <div class="custom-dropdown-wrap">
+            <div class="dropdown-trigger" id="keyTrigger" onclick="toggleDropdown('keyDropdown')">
+              <span id="keyCurrentText">C / Do</span>
+              <span class="dropdown-chevron">▼</span>
+            </div>
+            <div class="key-grid-popover" id="keyDropdown">
+              <!-- 12 pads cromáticos generados por JS -->
+            </div>
+          </div>
         </div>
 
+        <!-- Selector ESCALA con Chips Rápidos 1-Click -->
         <div class="selector-card">
           <span class="selector-label">Escala</span>
-          <select class="dropdown-control" id="scaleSelect" onchange="onParamChange('scale', this.value)">
-            <option value="0" selected>Mayor</option>
-            <option value="1">Menor natural</option>
-          </select>
+          <div class="scale-chips-row" id="scaleChipsRow">
+            <div class="scale-chip selected" id="chipScaleMayor" onclick="selectScale(1)">Mayor</div>
+            <div class="scale-chip" id="chipScaleMenor" onclick="selectScale(2)">Menor</div>
+            <div class="scale-chip" id="chipScaleCromatica" onclick="selectScale(0)">Cromática</div>
+            <div class="custom-dropdown-wrap">
+              <div class="scale-chip more-chip" id="scaleMoreTrigger" onclick="toggleDropdown('scaleDropdown')">
+                <span id="scaleMoreText">Más</span>
+                <span class="dropdown-chevron">▼</span>
+              </div>
+              <div class="dropdown-menu" id="scaleDropdown">
+                <!-- Resto de escalas generadas por JS -->
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Centro: Rapidez, Display, Cantidad -->
+      <!-- Fila 2: Unidad Central (Knobs 270° con Sincronización Perfecta y Display Waves Tune) -->
       <div class="center-unit">
         <!-- Knob 1: Rapidez -->
         <div class="knob-card">
           <span class="knob-title">Rapidez</span>
           <div class="knob-track">
             <svg class="knob-svg-ring" viewBox="0 0 120 120">
-              <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
-              <circle class="ring-val" id="ringSpeed" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="114"></circle>
+              <circle class="ring-bg" cx="60" cy="60" r="48" stroke-dasharray="226.19 301.59" transform="rotate(135 60 60)"></circle>
+              <circle class="ring-val" id="ringSpeed" cx="60" cy="60" r="48" stroke-dasharray="0 301.59" transform="rotate(135 60 60)"></circle>
             </svg>
             <div class="knob-element" id="knobSpeed" data-param="speed" data-min="0" data-max="100" data-val="65">
               <div class="knob-indicator" id="indicatorSpeed"></div>
@@ -771,39 +1309,31 @@
           <div class="knob-value-badge" id="valBadgeSpeed">65%</div>
         </div>
 
-        <!-- Consola Central -->
+        <!-- Consola Central Estilo Waves Tune Real-Time -->
         <div class="pitch-console">
-          <div class="notes-grid">
-            <div class="note-box">
-              <span class="note-box-title">Entrada</span>
-              <span class="note-box-val" id="inputNoteText">--</span>
+          <div class="waves-tune-header">
+            <div class="note-tag">
+              <span class="note-tag-label">Entrada</span>
+              <span class="note-tag-val" id="inputNoteTag">--</span>
             </div>
-            <div class="note-box target">
-              <span class="note-box-title">Objetivo</span>
-              <span class="note-box-val" id="targetNoteText">--</span>
-            </div>
-          </div>
-
-          <!-- Medidor de Cents en tiempo real -->
-          <div class="meter-section">
-            <div class="meter-header">
-              <span>Ajuste</span>
-              <span class="meter-cents-text" id="centsValText">0 cents</span>
-            </div>
-            <div class="cents-track">
-              <div class="cents-center-line"></div>
-              <div class="cents-bar" id="centsBar" style="left: 50%; width: 0%;"></div>
-            </div>
-            <div class="cents-scale-labels">
-              <span>-50</span>
-              <span>-25</span>
-              <span>0</span>
-              <span>+25</span>
-              <span>+50</span>
+            <div class="note-tag target">
+              <span class="note-tag-label">Objetivo</span>
+              <span class="note-tag-val" id="targetNoteTag">--</span>
             </div>
           </div>
 
-          <div class="status-badge-text" id="statusHelpText">Elige la tonalidad</div>
+          <!-- Escenario Herradura / Arco Waves Tune -->
+          <div class="waves-meter-stage">
+            <svg class="waves-arc-svg" id="wavesArcSvg" viewBox="0 0 240 125">
+              <!-- Segmentos de herradura generados dinámicamente por JS -->
+            </svg>
+
+            <!-- Nota Central Gigante -->
+            <div class="center-note-display" id="centerNoteBox">
+              <span class="center-note-char" id="centerNoteChar">--</span>
+              <span class="center-cents-readout" id="centerCentsReadout">0 CENTS</span>
+            </div>
+          </div>
         </div>
 
         <!-- Knob 2: Cantidad -->
@@ -811,8 +1341,8 @@
           <span class="knob-title">Cantidad</span>
           <div class="knob-track">
             <svg class="knob-svg-ring" viewBox="0 0 120 120">
-              <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
-              <circle class="ring-val" id="ringAmount" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="0"></circle>
+              <circle class="ring-bg" cx="60" cy="60" r="48" stroke-dasharray="226.19 301.59" transform="rotate(135 60 60)"></circle>
+              <circle class="ring-val" id="ringAmount" cx="60" cy="60" r="48" stroke-dasharray="0 301.59" transform="rotate(135 60 60)"></circle>
             </svg>
             <div class="knob-element" id="knobAmount" data-param="amount" data-min="0" data-max="100" data-val="100">
               <div class="knob-indicator" id="indicatorAmount"></div>
@@ -822,42 +1352,43 @@
         </div>
       </div>
 
-      <!-- Barra Inferior -->
-      <footer class="bottom-bar">
-        <div class="bottom-status-info">
-          <span class="dot"></span>
-          <span>MOTOR DE AFINACIÓN DSP</span>
+      <!-- Fila 3: Mini Piano Continuo Realista con Fila Superior de LEDs (C2 a C6) -->
+      <div class="mini-piano-card">
+        <div class="piano-header">
+          <div class="piano-title-wrap">
+            <span class="dot"></span>
+            <span>Teclado de Escala & Notas Permitidas</span>
+          </div>
+          <button class="btn-piano-reset" onclick="resetPianoCustomMask()">Restablecer escala</button>
         </div>
 
-        <div class="power-toggle-wrap">
-          <span class="power-label">Activar</span>
-          <div class="power-toggle on" id="powerToggle" onclick="togglePower()">
-            <div class="power-handle"></div>
-          </div>
+        <div class="piano-keyboard-container">
+          <div class="piano-led-row" id="pianoLedRow"></div>
+          <div class="piano-keys-bed" id="pianoKeysBed"></div>
         </div>
-      </footer>
+      </div>
     </main>
 
-    <!-- ── MODAL PERSONALIZAR ── -->
+    <!-- ── MODAL AJUSTES (ENGRANAJE) ── -->
     <div class="modal-backdrop" id="settingsModal">
       <div class="modal-card">
         <div class="modal-header">
-          <span class="modal-title">Personalizar</span>
+          <span class="modal-title">Configuración</span>
           <button class="modal-close" onclick="closeSettingsModal()">✕</button>
         </div>
 
         <div class="modal-row">
           <span class="modal-label">Rango de voz</span>
-          <select class="dropdown-control" id="voiceRangeSelect" onchange="onParamChange('voiceRange', this.value)">
-            <option value="0">General (65 - 1000 Hz)</option>
+          <select class="modal-select" id="voiceRangeSelect" onchange="onParamChange('voiceRange', this.value)">
+            <option value="0">General / Amplio (75 - 1100 Hz)</option>
             <option value="1">Grave (65 - 450 Hz)</option>
-            <option value="2">Aguda (130 - 1000 Hz)</option>
+            <option value="2">Aguda (140 - 1100 Hz)</option>
           </select>
         </div>
 
         <div class="modal-row">
           <span class="modal-label">Conservar timbre</span>
-          <select class="dropdown-control" id="preserveTimbreSelect" onchange="onParamChange('preserveTimbre', this.value)">
+          <select class="modal-select" id="preserveTimbreSelect" onchange="onParamChange('preserveTimbre', this.value)">
             <option value="1" selected>Activado</option>
             <option value="0">Desactivado</option>
           </select>
@@ -866,6 +1397,14 @@
         <div class="modal-row">
           <span class="modal-label">Referencia A4 (Hz)</span>
           <input type="number" class="modal-input" id="referenceHzInput" min="430" max="450" value="440" style="width: 80px; text-align: center;" onchange="onParamChange('referenceHz', this.value)">
+        </div>
+
+        <div class="modal-row">
+          <span class="modal-label">Modo de audio</span>
+          <select class="modal-select" id="channelModeSelect" onchange="onParamChange('channelMode', this.value)">
+            <option value="1" selected>Mono Coherente (Recomendado)</option>
+            <option value="0">Estéreo (Preserva imagen)</option>
+          </select>
         </div>
 
         <button class="btn-action-primary" onclick="resetSettingsDefaults()">Restablecer ajustes</button>
@@ -880,16 +1419,29 @@
           <button class="modal-close" id="licenseCloseBtn" onclick="closeLicenseModal()">✕</button>
         </div>
 
-        <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
-          Ingresa tu clave de licencia para activar EASY PITCH de por vida o periodo de prueba.
+        <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.5;">
+          Ingresa tu clave de licencia para desbloquear EASY PITCH de por vida o activar tu periodo de prueba.
         </div>
 
-        <input type="text" class="modal-input" id="licenseInput" placeholder="EASY-FULL-XXXX-XXXX o EASY-TRIAL-XXXX" style="width: 100%; text-transform: uppercase;">
+        <input type="text" class="modal-input" id="licenseInput" placeholder="EASY-FULL-XXXX-XXXX" style="width: 100%; text-transform: uppercase;">
 
         <button class="btn-action-primary" id="btnActivateLicense" onclick="submitLicenseActivation()">Activar Licencia</button>
 
         <div class="modal-status-msg" id="licenseStatusMsg" style="color: var(--text-muted);"></div>
       </div>
+    </div>
+
+    <!-- ── EXPIRED / HARD LOCK OVERLAY (EASY MIX EXACT STYLE) ── -->
+    <div id="license-expired-overlay">
+      <div class="exp-icon">🔒</div>
+      <div class="exp-title">Periodo de Prueba Finalizado</div>
+      <div class="exp-subtitle">
+        Tu periodo de prueba para EASY PITCH ha concluido.<br>Ingresa tu Serial Key FULL para continuar disfrutando afinación en tiempo real.
+      </div>
+      <input type="text" class="exp-input" id="expSerialInput" placeholder="EASY-FULL-XXXX-XXXX" spellcheck="false" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
+      <button class="exp-btn" id="expSubmitBtn" onclick="submitExpiredSerial()">Activar Licencia Full</button>
+      <button style="background: none; border: none; color: #94a3b8; font-size: 10.5px; text-decoration: underline; cursor: pointer; margin-top: 4px;" onclick="callNative('openBrowserURL', 'https://offszn.lat/plugins/easy-pitch')">Consigue tu licencia en OFFSZN.lat</button>
+      <div class="exp-status" id="expStatusText"></div>
     </div>
   </div>
 
@@ -931,14 +1483,12 @@
       });
 
       try {
-        // 1. Si existe getNativeFunction en scope
         if (typeof window.getNativeFunction === 'function') {
           return window.getNativeFunction(funcName).apply(null, args);
         }
         if (window.__JUCE__ && typeof window.__JUCE__.getNativeFunction === 'function') {
           return window.__JUCE__.getNativeFunction(funcName).apply(null, args);
         }
-        // 2. JUCE 8 backend event emission (__juce__invoke)
         if (window.__JUCE__ && window.__JUCE__.backend && typeof window.__JUCE__.backend.emitEvent === 'function') {
           window.__JUCE__.backend.emitEvent('__juce__invoke', {
             name: funcName,
@@ -947,7 +1497,6 @@
           });
           return p;
         }
-        // 3. Fallback directo postMessage con protocolo JUCE
         if (window.chrome && window.chrome.webview && typeof window.chrome.webview.postMessage === 'function') {
           window.chrome.webview.postMessage(JSON.stringify({
             eventId: '__juce__invoke',
@@ -966,10 +1515,9 @@
       return Promise.resolve();
     }
 
-    // Inicialización inmediata del puente
     initJuceBridge();
 
-    // ── Cola de Cambios Pendientes (Canal Bidireccional de Respaldo) ──
+    // ── Cola de Cambios Pendientes ──
     window.pendingChanges = [];
 
     function queueParamChange(paramId, numVal) {
@@ -985,33 +1533,54 @@
       return list;
     };
 
-    window.syncFromHost = function(hostParams) {
-      if (!hostParams) return;
-      for (var k in hostParams) {
-        params[k] = hostParams[k];
-      }
-      if (document.getElementById('keySelect')) document.getElementById('keySelect').value = params.key;
-      if (document.getElementById('scaleSelect')) document.getElementById('scaleSelect').value = params.scale;
-      if (document.getElementById('voiceRangeSelect')) document.getElementById('voiceRangeSelect').value = params.voiceRange;
-      if (document.getElementById('preserveTimbreSelect')) document.getElementById('preserveTimbreSelect').value = params.preserveTimbre ? "1" : "0";
-      if (document.getElementById('referenceHzInput')) document.getElementById('referenceHzInput').value = params.referenceHz;
-      updateKnobVisual('speed', params.speed);
-      updateKnobVisual('amount', params.amount);
-      var toggle = document.getElementById('powerToggle');
-      if (toggle) toggle.className = (params.enabled > 0.5) ? 'power-toggle on' : 'power-toggle';
-      updateStatusHelpText();
-    };
+    // ── Catálogo de Escalas y Tonalidades ──
+    var KEY_LIST = [
+      { id: 0,  name: "C / Do" },
+      { id: 1,  name: "C♯ / Re♭" },
+      { id: 2,  name: "D / Re" },
+      { id: 3,  name: "D♯ / Mi♭" },
+      { id: 4,  name: "E / Mi" },
+      { id: 5,  name: "F / Fa" },
+      { id: 6,  name: "F♯ / Sol♭" },
+      { id: 7,  name: "G / Sol" },
+      { id: 8,  name: "G♯ / La♭" },
+      { id: 9,  name: "A / La" },
+      { id: 10, name: "A♯ / Si♭" },
+      { id: 11, name: "B / Si" }
+    ];
 
-    // ── Estado Local de Parámetros ──
+    var SCALE_LIST = [
+      { id: 0, name: "Cromática",         mask: 0x0FFF },
+      { id: 1, name: "Mayor",             mask: 2741 },
+      { id: 2, name: "Menor natural",     mask: 1453 },
+      { id: 3, name: "Menor armónica",    mask: 2477 },
+      { id: 4, name: "Menor melódica",    mask: 2733 },
+      { id: 5, name: "Pentatónica Mayor", mask: 661 },
+      { id: 6, name: "Pentatónica Menor", mask: 1189 },
+      { id: 7, name: "Blues",             mask: 1253 },
+      { id: 8, name: "Dórica",            mask: 1449 }
+    ];
+
+    var PRESET_LIST = [
+      { id: 0, name: "Suave",   speed: 35,  amount: 80 },
+      { id: 1, name: "Firme",   speed: 65,  amount: 100 },
+      { id: 2, name: "Marcado", speed: 90,  amount: 100 },
+      { id: 3, name: "Robot",   speed: 100, amount: 100 }
+    ];
+
+    // ── Estado Local ──
     var params = {
       enabled: 1,
-      key: 0, // 0 = C / Do (activo)
-      scale: 0, // 0 = Mayor
+      key: 0,
+      scale: 1,
       speed: 65,
       amount: 100,
       voiceRange: 0,
       preserveTimbre: 1,
-      referenceHz: 440
+      referenceHz: 440,
+      channelMode: 0,
+      customMask: 0x0FFF,
+      presetIndex: 1
     };
 
     var licenseState = {
@@ -1021,44 +1590,213 @@
       serial: ""
     };
 
+    function isNoteInActiveScale(noteClass) {
+      if (params.scale === 0) return true;
+      var root = params.key;
+      var interval = (noteClass - root + 12) % 12;
+      var scaleDef = SCALE_LIST[params.scale] || SCALE_LIST[1];
+      return (scaleDef.mask & (1 << interval)) !== 0;
+    }
+
+    function isNoteAllowed(noteClass) {
+      var effMask = (params.customMask === 0) ? 0x0FFF : params.customMask;
+      var customOk = (effMask & (1 << noteClass)) !== 0;
+      return customOk && isNoteInActiveScale(noteClass);
+    }
+
     function onParamChange(paramId, value) {
       var numVal = parseFloat(value);
       params[paramId] = numVal;
       queueParamChange(paramId, numVal);
 
-      if (paramId === 'key' || paramId === 'enabled') {
-        updateStatusHelpText();
+      if (paramId === 'key' || paramId === 'scale') {
+        params.customMask = 0x0FFF;
+        queueParamChange("customMask", params.customMask);
+        updatePianoKeys();
+      }
+      if (paramId === 'enabled') {
+        updatePowerUI();
       }
     }
 
+    // ── Power / Bypass Toggle ──
     function togglePower() {
       params.enabled = (params.enabled > 0.5) ? 0 : 1;
-      var toggle = document.getElementById('powerToggle');
-      if (params.enabled > 0.5) {
-        toggle.className = 'power-toggle on';
-      } else {
-        toggle.className = 'power-toggle';
-      }
       queueParamChange("enabled", params.enabled);
-      updateStatusHelpText();
+      updatePowerUI();
     }
 
-    function updateStatusHelpText() {
-      var help = document.getElementById('statusHelpText');
-      if (!help) return;
-      if (params.enabled < 0.5) {
-        help.innerText = "Plugin desactivado (Bypass)";
-        help.style.color = "var(--text-muted)";
+    function updatePowerUI() {
+      var btn = document.getElementById('powerBtn');
+      var win = document.getElementById('pluginWindow');
+      var centerChar = document.getElementById('centerNoteChar');
+      var centsText = document.getElementById('centerCentsReadout');
+
+      if (params.enabled > 0.5) {
+        if (btn) btn.className = 'power-toggle-btn active';
+        if (win) win.classList.remove('is-bypassed');
       } else {
-        help.innerText = "Afinación activa";
-        help.style.color = "var(--accent-green)";
+        if (btn) btn.className = 'power-toggle-btn';
+        if (win) win.classList.add('is-bypassed');
+        if (centerChar) centerChar.innerText = '--';
+        if (centsText) centsText.innerText = '0 CENTS';
       }
     }
 
-    // ── Perillas Táctiles con Anillo SVG y Arrastre Vertical ──
-    var CIRCUMFERENCE = 326.7; // 2 * PI * 52
+    // ── Presets Toolbar ──
+    function setPreset(idx) {
+      if (idx < 0) idx = PRESET_LIST.length - 1;
+      if (idx >= PRESET_LIST.length) idx = 0;
+      params.presetIndex = idx;
+
+      var p = PRESET_LIST[idx];
+      var nameEl = document.getElementById('presetNameText');
+      if (nameEl) nameEl.innerText = p.name;
+
+      callNative("loadPreset", idx);
+      setKnobValue('speed', p.speed);
+      setKnobValue('amount', p.amount);
+    }
+
+    function prevPreset() {
+      setPreset(params.presetIndex - 1);
+    }
+
+    function nextPreset() {
+      setPreset(params.presetIndex + 1);
+    }
+
+    function cyclePreset() {
+      nextPreset();
+    }
+
+    // ── Dropdowns y Selectores Rápidos 1-Click ──
+    function initCustomDropdowns() {
+      // Popover Táctil 12 Notas Cromáticas para Key
+      var keyMenu = document.getElementById('keyDropdown');
+      if (keyMenu) {
+        keyMenu.innerHTML = '';
+        KEY_LIST.forEach(function(k) {
+          var pad = document.createElement('div');
+          pad.className = 'key-pad' + (k.id === params.key ? ' selected' : '');
+          pad.setAttribute('data-key-id', k.id);
+          var parts = k.name.split(' / ');
+          var noteName = parts[0] || '';
+          var solfege = parts[1] || '';
+          pad.innerHTML = '<span class="key-pad-note">' + noteName + '</span>' +
+                          (solfege ? '<span class="key-pad-solfege">' + solfege + '</span>' : '');
+          pad.onclick = function(e) {
+            e.stopPropagation();
+            selectKey(k.id);
+          };
+          keyMenu.appendChild(pad);
+        });
+      }
+
+      // Resto de escalas para el botón "Más"
+      var scaleMenu = document.getElementById('scaleDropdown');
+      if (scaleMenu) {
+        scaleMenu.innerHTML = '';
+        SCALE_LIST.forEach(function(s) {
+          if (s.id !== 1 && s.id !== 2 && s.id !== 0) {
+            var item = document.createElement('div');
+            item.className = 'dropdown-item' + (s.id === params.scale ? ' selected' : '');
+            item.innerText = s.name;
+            item.onclick = function(e) {
+              e.stopPropagation();
+              selectScale(s.id);
+            };
+            scaleMenu.appendChild(item);
+          }
+        });
+      }
+
+      window.addEventListener('click', function() {
+        closeAllDropdowns();
+      });
+    }
+
+    function toggleDropdown(id) {
+      if (window.event) window.event.stopPropagation();
+      var el = document.getElementById(id);
+      var trigger = document.getElementById(id === 'keyDropdown' ? 'keyTrigger' : 'scaleMoreTrigger');
+      var isOpen = el && el.classList.contains('open');
+
+      closeAllDropdowns();
+      if (el && !isOpen) {
+        el.classList.add('open');
+        if (trigger) trigger.classList.add('open');
+      }
+    }
+
+    function closeAllDropdowns() {
+      var menus = document.querySelectorAll('.dropdown-menu, .key-grid-popover');
+      menus.forEach(function(m) { m.classList.remove('open'); });
+      var triggers = document.querySelectorAll('.dropdown-trigger, .scale-chip.more-chip');
+      triggers.forEach(function(t) { t.classList.remove('open'); });
+    }
+
+    function selectKey(id) {
+      params.key = id;
+      var curText = document.getElementById('keyCurrentText');
+      var found = KEY_LIST.find(function(k) { return k.id === id; });
+      if (curText && found) curText.innerText = found.name;
+
+      var pads = document.querySelectorAll('#keyDropdown .key-pad');
+      pads.forEach(function(pad) {
+        var kId = parseInt(pad.getAttribute('data-key-id'), 10);
+        if (kId === id) pad.classList.add('selected');
+        else pad.classList.remove('selected');
+      });
+
+      closeAllDropdowns();
+      onParamChange('key', id);
+    }
+
+    function selectScale(id) {
+      params.scale = id;
+      var chipMayor = document.getElementById('chipScaleMayor');
+      var chipMenor = document.getElementById('chipScaleMenor');
+      var chipCrom = document.getElementById('chipScaleCromatica');
+      var moreTrigger = document.getElementById('scaleMoreTrigger');
+      var moreText = document.getElementById('scaleMoreText');
+
+      if (chipMayor) chipMayor.classList.toggle('selected', id === 1);
+      if (chipMenor) chipMenor.classList.toggle('selected', id === 2);
+      if (chipCrom) chipCrom.classList.toggle('selected', id === 0);
+
+      var isQuickScale = (id === 1 || id === 2 || id === 0);
+      if (moreTrigger) {
+        moreTrigger.classList.toggle('selected', !isQuickScale);
+      }
+      if (moreText) {
+        if (!isQuickScale) {
+          var found = SCALE_LIST.find(function(s) { return s.id === id; });
+          moreText.innerText = found ? found.name : 'Más';
+        } else {
+          moreText.innerText = 'Más';
+        }
+      }
+
+      var items = document.querySelectorAll('#scaleDropdown .dropdown-item');
+      items.forEach(function(it) {
+        if (it.innerText === (SCALE_LIST[id] ? SCALE_LIST[id].name : '')) {
+          it.classList.add('selected');
+        } else {
+          it.classList.remove('selected');
+        }
+      });
+
+      closeAllDropdowns();
+      onParamChange('scale', id);
+    }
+
+    // ── Knobs con Arco 270° Exacto (Inicia a las 7:30 y Termina en el Puntero) ──
+    var KNOB_MAX_LEN = 226.19; // 0.75 * 2 * pi * 48
+    var KNOB_CIRCUM = 301.59;  // 2 * pi * 48
 
     function updateKnobVisual(paramName, val) {
+      // Ángulo de -135° (7:30) a +135° (4:30)
       var angle = -135 + (val / 100) * 270;
       var badge = document.getElementById(paramName === 'speed' ? 'valBadgeSpeed' : 'valBadgeAmount');
       var indicator = document.getElementById(paramName === 'speed' ? 'indicatorSpeed' : 'indicatorAmount');
@@ -1071,10 +1809,16 @@
         badge.innerText = Math.round(val) + "%";
       }
       if (ring) {
-        // Arco proporcional al porcentaje
-        var offset = CIRCUMFERENCE * (1 - (val / 100));
-        ring.style.strokeDashoffset = offset;
+        // La longitud del trazo se llena desde 0 hasta 226.19
+        var filled = (val / 100) * KNOB_MAX_LEN;
+        ring.setAttribute('stroke-dasharray', filled.toFixed(2) + ' ' + KNOB_CIRCUM.toFixed(2));
       }
+    }
+
+    function setKnobValue(paramName, val) {
+      params[paramName] = val;
+      updateKnobVisual(paramName, val);
+      queueParamChange(paramName, val);
     }
 
     function initKnob(knobId) {
@@ -1097,7 +1841,8 @@
         var onMouseMove = function(ev) {
           if (!isDragging) return;
           var deltaY = startY - ev.clientY;
-          var newVal = startVal + (deltaY / 150) * 100;
+          var step = ev.shiftKey ? 0.2 : 0.65;
+          var newVal = startVal + deltaY * step;
           if (newVal < 0) newVal = 0;
           if (newVal > 100) newVal = 100;
 
@@ -1116,81 +1861,361 @@
         window.addEventListener('mousemove', onMouseMove);
         window.addEventListener('mouseup', onMouseUp);
       };
+
+      knob.ondblclick = function() {
+        setKnobValue(paramName, paramName === 'speed' ? 65 : 100);
+      };
     }
 
-    // ── Presets ──
-    function onPresetChange(index) {
-      var idx = parseInt(index, 10);
-      callNative("loadPreset", idx);
+    // ── Visualizador Waves Tune Real-Time (Herradura Radial) ──
+    var NUM_SEGMENTS = 31;
+    var arcSegments = [];
 
-      if (idx === 0) { // Suave
-        setKnobValue('speed', 35);
-        setKnobValue('amount', 80);
-      } else if (idx === 1) { // Firme
-        setKnobValue('speed', 65);
-        setKnobValue('amount', 100);
-      } else if (idx === 2) { // Marcado
-        setKnobValue('speed', 100);
-        setKnobValue('amount', 100);
+    function buildWavesArc() {
+      var svg = document.getElementById('wavesArcSvg');
+      if (!svg) return;
+      svg.innerHTML = '';
+
+      var cx = 120;
+      var cy = 105;
+      var rInner = 82;
+      var rOuter = 98;
+
+      var startAngle = -145 * Math.PI / 180;
+      var endAngle = -35 * Math.PI / 180;
+      var totalAngle = endAngle - startAngle;
+
+      arcSegments = [];
+
+      for (var i = 0; i < NUM_SEGMENTS; i++) {
+        var frac0 = i / NUM_SEGMENTS;
+        var frac1 = (i + 0.8) / NUM_SEGMENTS;
+        var a0 = startAngle + frac0 * totalAngle;
+        var a1 = startAngle + frac1 * totalAngle;
+
+        var x1 = cx + rInner * Math.cos(a0);
+        var y1 = cy + rInner * Math.sin(a0);
+        var x2 = cx + rOuter * Math.cos(a0);
+        var y2 = cy + rOuter * Math.sin(a0);
+        var x3 = cx + rOuter * Math.cos(a1);
+        var y3 = cy + rOuter * Math.sin(a1);
+        var x4 = cx + rInner * Math.cos(a1);
+        var y4 = cy + rInner * Math.sin(a1);
+
+        var pathD = 'M ' + x1 + ' ' + y1 + ' L ' + x2 + ' ' + y2 + ' A ' + rOuter + ' ' + rOuter + ' 0 0 1 ' + x3 + ' ' + y3 + ' L ' + x4 + ' ' + y4 + ' A ' + rInner + ' ' + rInner + ' 0 0 0 ' + x1 + ' ' + y1 + ' Z';
+
+        var seg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        seg.setAttribute('d', pathD);
+        seg.setAttribute('fill', '#151b26');
+        seg.setAttribute('stroke', 'rgba(255,255,255,0.04)');
+        seg.setAttribute('stroke-width', '0.5');
+        svg.appendChild(seg);
+
+        arcSegments.push({
+          el: seg,
+          index: i,
+          cents: -50 + (i / (NUM_SEGMENTS - 1)) * 100
+        });
+      }
+
+      var labelData = [
+        { label: '-50', a: -145 },
+        { label: '-25', a: -117.5 },
+        { label: '0',   a: -90 },
+        { label: '+25', a: -62.5 },
+        { label: '+50', a: -35 }
+      ];
+
+      labelData.forEach(function(item) {
+        var rad = item.a * Math.PI / 180;
+        var lx = cx + 112 * Math.cos(rad);
+        var ly = cy + 112 * Math.sin(rad);
+
+        var txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        txt.setAttribute('x', lx);
+        txt.setAttribute('y', ly);
+        txt.setAttribute('text-anchor', 'middle');
+        txt.setAttribute('dominant-baseline', 'central');
+        txt.setAttribute('fill', '#64748b');
+        txt.setAttribute('font-family', 'JetBrains Mono');
+        txt.setAttribute('font-size', '8');
+        txt.setAttribute('font-weight', '700');
+        txt.textContent = item.label;
+        svg.appendChild(txt);
+      });
+    }
+
+    function updateWavesArcMeter(cents, isVoiced) {
+      var centerIdx = 15;
+
+      if (!isVoiced) {
+        for (var i = 0; i < arcSegments.length; i++) {
+          arcSegments[i].el.setAttribute('fill', '#151b26');
+          arcSegments[i].el.removeAttribute('filter');
+        }
+        return;
+      }
+
+      var clamped = Math.max(-50, Math.min(50, cents));
+      var targetIdx = Math.round(centerIdx + (clamped / 50) * 15);
+      var isLocked = Math.abs(clamped) <= 4;
+
+      for (var j = 0; j < arcSegments.length; j++) {
+        var el = arcSegments[j].el;
+
+        if (isLocked && Math.abs(j - centerIdx) <= 1) {
+          el.setAttribute('fill', '#10b981');
+          el.removeAttribute('filter');
+        } else if (clamped > 0 && j >= centerIdx && j <= targetIdx) {
+          el.setAttribute('fill', '#a855f7');
+          el.removeAttribute('filter');
+        } else if (clamped < 0 && j <= centerIdx && j >= targetIdx) {
+          el.setAttribute('fill', '#a855f7');
+          el.removeAttribute('filter');
+        } else {
+          el.setAttribute('fill', '#151b26');
+          el.removeAttribute('filter');
+        }
       }
     }
 
-    function setKnobValue(paramName, val) {
-      params[paramName] = val;
-      updateKnobVisual(paramName, val);
-      queueParamChange(paramName, val);
+    // ── Mini Piano Continuo Realista (C2 a C6 = MIDI 36 a 84) ──
+    var WHITE_KEY_CLASSES = [0, 2, 4, 5, 7, 9, 11];
+
+    function buildPianoKeyboard() {
+      var bed = document.getElementById('pianoKeysBed');
+      var ledRow = document.getElementById('pianoLedRow');
+      if (!bed || !ledRow) return;
+
+      bed.innerHTML = '';
+      ledRow.innerHTML = '';
+
+      var totalWhiteWidth = 800;
+      var whiteKeyWidth = totalWhiteWidth / 28; // ~28.57px
+      var whiteCount = 0;
+
+      for (var oct = 2; oct <= 5; oct++) {
+        for (var w = 0; w < 7; w++) {
+          var noteClass = WHITE_KEY_CLASSES[w];
+          var midi = (oct + 1) * 12 + noteClass;
+
+          var wKey = document.createElement('div');
+          wKey.className = 'white-key';
+          wKey.setAttribute('data-note', noteClass);
+          wKey.setAttribute('data-midi', midi);
+          wKey.onclick = (function(n) { return function() { onPianoKeyClick(n); }; })(noteClass);
+
+          if (noteClass === 0) {
+            var label = document.createElement('span');
+            label.className = 'key-octave-text';
+            label.innerText = 'C' + oct;
+            wKey.appendChild(label);
+          }
+
+          bed.appendChild(wKey);
+
+          var wLed = document.createElement('div');
+          wLed.className = 'piano-led-slot';
+          wLed.style.left = (whiteCount * whiteKeyWidth + (whiteKeyWidth - 14) / 2) + 'px';
+          wLed.setAttribute('data-note', noteClass);
+          wLed.onclick = (function(n) { return function() { onPianoKeyClick(n); }; })(noteClass);
+          ledRow.appendChild(wLed);
+
+          if (w === 0 || w === 1 || w === 3 || w === 4 || w === 5) {
+            var blackNoteClass = noteClass + 1;
+            var blackMidi = midi + 1;
+
+            var bKey = document.createElement('div');
+            bKey.className = 'black-key';
+            bKey.setAttribute('data-note', blackNoteClass);
+            bKey.setAttribute('data-midi', blackMidi);
+
+            var offsetInOct = (oct - 2) * 7 * whiteKeyWidth;
+            var blackX = offsetInOct + (w + 1) * whiteKeyWidth - 8.5;
+            bKey.style.left = blackX + 'px';
+
+            bKey.onclick = (function(n) { return function() { onPianoKeyClick(n); }; })(blackNoteClass);
+            bed.appendChild(bKey);
+
+            var bLed = document.createElement('div');
+            bLed.className = 'piano-led-slot';
+            bLed.style.left = (blackX + 1.5) + 'px';
+            bLed.setAttribute('data-note', blackNoteClass);
+            bLed.onclick = (function(n) { return function() { onPianoKeyClick(n); }; })(blackNoteClass);
+            ledRow.appendChild(bLed);
+          }
+
+          whiteCount++;
+        }
+      }
+
+      // C6 Final
+      var c6Key = document.createElement('div');
+      c6Key.className = 'white-key';
+      c6Key.setAttribute('data-note', 0);
+      c6Key.setAttribute('data-midi', 84);
+      c6Key.onclick = function() { onPianoKeyClick(0); };
+      var c6Label = document.createElement('span');
+      c6Label.className = 'key-octave-text';
+      c6Label.innerText = 'C6';
+      c6Key.appendChild(c6Label);
+      bed.appendChild(c6Key);
+
+      var c6Led = document.createElement('div');
+      c6Led.className = 'piano-led-slot';
+      c6Led.style.left = (whiteCount * whiteKeyWidth + (whiteKeyWidth - 14) / 2) + 'px';
+      c6Led.setAttribute('data-note', 0);
+      c6Led.onclick = function() { onPianoKeyClick(0); };
+      ledRow.appendChild(c6Led);
     }
 
-    function saveCurrentPreset() {
-      var msg = document.getElementById('statusHelpText');
-      if (msg) {
-        msg.innerText = "Ajustes guardados en la sesión";
-        setTimeout(updateStatusHelpText, 2000);
+    function onPianoKeyClick(noteClass) {
+      var currentEff = (params.customMask === 0) ? 0x0FFF : params.customMask;
+      var newMask = currentEff ^ (1 << noteClass);
+      if (newMask === 0) newMask = 0x0FFF;
+      params.customMask = newMask;
+      queueParamChange("customMask", params.customMask);
+      updatePianoKeys();
+    }
+
+    function resetPianoCustomMask() {
+      params.customMask = 0x0FFF;
+      queueParamChange("customMask", params.customMask);
+      updatePianoKeys();
+    }
+
+    function updatePianoKeys() {
+      var keys = document.querySelectorAll('.white-key, .black-key');
+      for (var i = 0; i < keys.length; i++) {
+        var el = keys[i];
+        var noteClass = parseInt(el.getAttribute('data-note'), 10);
+        var inScale = isNoteInActiveScale(noteClass);
+        var isCustomAllowed = (params.customMask & (1 << noteClass)) !== 0;
+
+        el.classList.remove('out-of-scale', 'excluded');
+        if (!isCustomAllowed) {
+          el.classList.add('excluded');
+        } else if (!inScale) {
+          el.classList.add('out-of-scale');
+        }
+      }
+
+      var leds = document.querySelectorAll('.piano-led-slot');
+      for (var l = 0; l < leds.length; l++) {
+        var led = leds[l];
+        var nClass = parseInt(led.getAttribute('data-note'), 10);
+        var allowed = isNoteAllowed(nClass);
+
+        led.classList.remove('active', 'excluded');
+        if (allowed) {
+          led.classList.add('active');
+        } else {
+          led.classList.add('excluded');
+        }
       }
     }
 
-    // ── Medidor de Cents y Notas en Tiempo Real (30 Hz) ──
+    // ── Seguimiento en Tiempo Real (30 Hz) ──
+    var prevSungKey = null;
+    var prevTargetKey = null;
+
     window.onLiveMetersUpdate = function(data) {
       if (!data) return;
 
-      var inputTxt = document.getElementById('inputNoteText');
-      var targetTxt = document.getElementById('targetNoteText');
-      var centsTxt = document.getElementById('centsValText');
-      var centsBar = document.getElementById('centsBar');
+      var centerChar = document.getElementById('centerNoteChar');
+      var centsText = document.getElementById('centerCentsReadout');
+      var centerBox = document.getElementById('centerNoteBox');
+      var inTag = document.getElementById('inputNoteTag');
+      var tarTag = document.getElementById('targetNoteTag');
 
-      if (data.isVoiced && data.inputNote && data.inputNote !== '--') {
-        if (inputTxt) inputTxt.innerText = data.inputNote;
-        if (targetTxt) targetTxt.innerText = data.targetNote || data.inputNote;
+      if (data.isVoiced && data.inputNote && data.inputNote !== '--' && params.enabled > 0.5) {
+        var noteName = data.targetNote || data.inputNote;
+        if (centerChar) centerChar.innerText = noteName;
+        if (inTag) inTag.innerText = data.inputNote;
+        if (tarTag) tarTag.innerText = data.targetNote || data.inputNote;
 
         var cents = data.centsShift || 0;
-        if (centsTxt) {
-          centsTxt.innerText = (cents >= 0 ? "+" : "") + Math.round(cents) + " cents";
+        var centsSign = (cents >= 0) ? '+' : '';
+        if (centsText) {
+          centsText.innerText = centsSign + Math.round(cents) + ' CENTS';
         }
 
-        if (centsBar) {
-          var clamped = cents;
-          if (clamped < -50) clamped = -50;
-          if (clamped > 50) clamped = 50;
+        var isLocked = Math.abs(cents) <= 4;
+        if (centerBox) {
+          if (isLocked) centerBox.classList.add('locked');
+          else centerBox.classList.remove('locked');
+        }
 
-          if (clamped >= 0) {
-            var widthPct = (clamped / 50) * 50;
-            centsBar.style.left = "50%";
-            centsBar.style.width = widthPct + "%";
-          } else {
-            var widthPct = (Math.abs(clamped) / 50) * 50;
-            centsBar.style.left = (50 - widthPct) + "%";
-            centsBar.style.width = widthPct + "%";
+        updateWavesArcMeter(cents, true);
+
+        var inputMidi = Math.round(data.inputMidi || 0);
+        var targetMidi = Math.round(data.targetMidi || 0);
+
+        if (prevSungKey && prevSungKey.getAttribute('data-midi') != inputMidi) {
+          prevSungKey.classList.remove('sung-active');
+          prevSungKey = null;
+        }
+        if (prevTargetKey && prevTargetKey.getAttribute('data-midi') != targetMidi) {
+          prevTargetKey.classList.remove('target-active');
+          prevTargetKey = null;
+        }
+
+        if (inputMidi >= 36 && inputMidi <= 84) {
+          var sKey = document.querySelector('.piano-keys-bed [data-midi="' + inputMidi + '"]');
+          if (sKey) {
+            sKey.classList.add('sung-active');
+            prevSungKey = sKey;
+          }
+        }
+
+        if (targetMidi >= 36 && targetMidi <= 84) {
+          var tKey = document.querySelector('.piano-keys-bed [data-midi="' + targetMidi + '"]');
+          if (tKey) {
+            tKey.classList.add('target-active');
+            prevTargetKey = tKey;
           }
         }
       } else {
-        if (inputTxt) inputTxt.innerText = "--";
-        if (targetTxt) targetTxt.innerText = "--";
-        if (centsTxt) centsTxt.innerText = "0 cents";
-        if (centsBar) {
-          centsBar.style.left = "50%";
-          centsBar.style.width = "0%";
+        if (centerChar) centerChar.innerText = '--';
+        if (centsText) centsText.innerText = '0 CENTS';
+        if (inTag) inTag.innerText = '--';
+        if (tarTag) tarTag.innerText = '--';
+        if (centerBox) centerBox.classList.remove('locked');
+
+        updateWavesArcMeter(0, false);
+
+        if (prevSungKey) {
+          prevSungKey.classList.remove('sung-active');
+          prevSungKey = null;
+        }
+        if (prevTargetKey) {
+          prevTargetKey.classList.remove('target-active');
+          prevTargetKey = null;
         }
       }
+    };
+
+    // ── Sincronización desde el Host C++ ──
+    window.syncFromHost = function(hostParams) {
+      if (!hostParams) return;
+      for (var k in hostParams) {
+        params[k] = hostParams[k];
+      }
+
+      selectKey(params.key);
+      selectScale(params.scale);
+
+      if (document.getElementById('voiceRangeSelect')) document.getElementById('voiceRangeSelect').value = params.voiceRange;
+      if (document.getElementById('preserveTimbreSelect')) document.getElementById('preserveTimbreSelect').value = params.preserveTimbre ? "1" : "0";
+      if (document.getElementById('referenceHzInput')) document.getElementById('referenceHzInput').value = params.referenceHz;
+      if (document.getElementById('channelModeSelect') && typeof params.channelMode !== 'undefined') {
+        document.getElementById('channelModeSelect').value = params.channelMode;
+      }
+
+      updateKnobVisual('speed', params.speed);
+      updateKnobVisual('amount', params.amount);
+      updatePowerUI();
+      updatePianoKeys();
     };
 
     // ── Modales ──
@@ -1208,10 +2233,12 @@
       if (document.getElementById('voiceRangeSelect')) document.getElementById('voiceRangeSelect').value = "0";
       if (document.getElementById('preserveTimbreSelect')) document.getElementById('preserveTimbreSelect').value = "1";
       if (document.getElementById('referenceHzInput')) document.getElementById('referenceHzInput').value = "440";
+      if (document.getElementById('channelModeSelect')) document.getElementById('channelModeSelect').value = "0";
 
       onParamChange('voiceRange', 0);
       onParamChange('preserveTimbre', 1);
       onParamChange('referenceHz', 440);
+      onParamChange('channelMode', 0);
       closeSettingsModal();
     }
 
@@ -1229,26 +2256,88 @@
       }
     }
 
-    function updateLicenseBadge(isValid, isTrial, daysLeft) {
-      var badge = document.getElementById('licenseBadge');
-      var badgeText = document.getElementById('licenseBadgeText');
+    function updateTrialBadge(isValid, isTrial, daysLeft) {
+      var badge = document.getElementById('trial-badge');
+      var badgeText = document.getElementById('trial-badge-text');
+      var expOverlay = document.getElementById('license-expired-overlay');
       var closeBtn = document.getElementById('licenseCloseBtn');
-      if (!badge || !badgeText) return;
+
+      if (!badge) return;
 
       if (isValid) {
+        if (expOverlay) expOverlay.classList.remove('active');
         if (isTrial) {
-          badge.className = 'license-badge trial';
-          badgeText.innerText = "PRUEBA · " + daysLeft + " DÍAS";
+          badge.className = 'trial-badge visible';
+          if (badgeText) badgeText.innerHTML = 'PRUEBA · <span id="trial-time-left">' + (daysLeft || 3) + ' DÍAS</span>';
         } else {
-          badge.className = 'license-badge full';
-          badgeText.innerText = "FULL";
+          badge.className = 'trial-badge full-mode visible';
+          if (badgeText) badgeText.innerText = 'LICENCIA FULL';
         }
         if (closeBtn) closeBtn.style.display = 'block';
       } else {
-        badge.className = 'license-badge demo';
-        badgeText.innerText = "DEMO · ACTIVAR";
+        badge.className = 'trial-badge exp-mode visible';
+        if (badgeText) badgeText.innerText = 'EXPIRADO';
         if (closeBtn) closeBtn.style.display = 'none';
-        openLicenseModal();
+        if (expOverlay) expOverlay.classList.add('active');
+      }
+    }
+
+    var updateLicenseBadge = updateTrialBadge;
+
+    function submitExpiredSerial() {
+      var input = document.getElementById('expSerialInput');
+      var statusEl = document.getElementById('expStatusText');
+      var btn = document.getElementById('expSubmitBtn');
+      var serial = (input && input.value ? input.value : '').trim().toUpperCase();
+
+      if (!serial) {
+        if (statusEl) {
+          statusEl.innerText = 'Por favor ingresa tu Serial Key.';
+          statusEl.style.color = '#ef4444';
+        }
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'ACTIVANDO...';
+      }
+      if (statusEl) {
+        statusEl.innerText = 'Conectando con el servidor...';
+        statusEl.style.color = '#94a3b8';
+      }
+
+      try {
+        var p = callNative('activateLicense', serial);
+        if (p && p.then) {
+          p.then(function(res) {
+            if (btn) {
+              btn.disabled = false;
+              btn.innerText = 'ACTIVAR LICENCIA FULL';
+            }
+            if (res && res.success) {
+              if (statusEl) {
+                statusEl.innerText = res.message || '¡Licencia activada con éxito!';
+                statusEl.style.color = '#10b981';
+              }
+              setTimeout(function() {
+                initStartupLicense();
+                var expOverlay = document.getElementById('license-expired-overlay');
+                if (expOverlay) expOverlay.classList.remove('active');
+              }, 1000);
+            } else {
+              if (statusEl) {
+                statusEl.innerText = (res && res.message) || 'Serial no válido o sin conexión.';
+                statusEl.style.color = '#ef4444';
+              }
+            }
+          });
+        }
+      } catch (e) {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = 'ACTIVAR LICENCIA FULL';
+        }
       }
     }
 
@@ -1308,7 +2397,6 @@
       }
     }
 
-    // ── Carga Inicial ──
     function initStartupLicense() {
       try {
         var p = callNative("getLicenseState");
@@ -1335,45 +2423,41 @@
               for (var k in data) {
                 params[k] = data[k];
               }
-              if (document.getElementById('keySelect')) document.getElementById('keySelect').value = params.key;
-              if (document.getElementById('scaleSelect')) document.getElementById('scaleSelect').value = params.scale;
+              selectKey(params.key);
+              selectScale(params.scale);
+
               if (document.getElementById('voiceRangeSelect')) document.getElementById('voiceRangeSelect').value = params.voiceRange;
               if (document.getElementById('preserveTimbreSelect')) document.getElementById('preserveTimbreSelect').value = params.preserveTimbre ? "1" : "0";
               if (document.getElementById('referenceHzInput')) document.getElementById('referenceHzInput').value = params.referenceHz;
+              if (document.getElementById('channelModeSelect') && typeof params.channelMode !== 'undefined') {
+                document.getElementById('channelModeSelect').value = params.channelMode;
+              }
+              if (typeof params.customMask !== 'undefined') {
+                params.customMask = parseInt(params.customMask, 10);
+              }
 
               updateKnobVisual('speed', params.speed);
               updateKnobVisual('amount', params.amount);
-
-              var toggle = document.getElementById('powerToggle');
-              if (toggle) {
-                toggle.className = (params.enabled > 0.5) ? 'power-toggle on' : 'power-toggle';
-              }
-              updateStatusHelpText();
+              updatePowerUI();
+              updatePianoKeys();
             }
           });
         }
       } catch (e) {}
     }
 
-    // Inicializar al cargar el DOM
-    window.onload = function() {
+    // ── Inicialización al Cargar el DOM ──
+    window.addEventListener('DOMContentLoaded', function() {
+      buildWavesArc();
+      buildPianoKeyboard();
+      initCustomDropdowns();
       initKnob('knobSpeed');
       initKnob('knobAmount');
-      initJuceBridge();
-      initStartupLicense();
+      updatePianoKeys();
+      updatePowerUI();
       initStartupParams();
-      updateStatusHelpText();
-    };
-
-    // Tecla Escape para cerrar modales
-    window.onkeydown = function(e) {
-      if (e.keyCode === 27) { // 27 = Escape
-        closeSettingsModal();
-        if (licenseState.isValid) {
-          closeLicenseModal();
-        }
-      }
-    };
+      initStartupLicense();
+    });
   </script>
 </body>
 </html>

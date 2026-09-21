@@ -15,7 +15,7 @@ public:
     void prepare (double sampleRate, int maxBlockSize);
     void reset();
 
-    // Set desired shift in cents (-1200 to +1200 cents), speed (0-100), amount (0-100), voiced state and detected pitch
+    // Set desired shift in cents (-300 to +300 cents), speed (0-100), amount (0-100), voiced state and detected pitch
     void setTargetShift (float targetCents, float speedPercent, float amountPercent, bool isVoiced, float detectedHz = 0.0f);
     
     // Set whether formant/timbre preservation is enabled
@@ -31,29 +31,30 @@ public:
 private:
     double currentSampleRate = 48000.0;
     static constexpr int LATENCY_SAMPLES = 512;
-    static constexpr int DELAY_BUFFER_SIZE = 8192;
+    static constexpr int DELAY_BUFFER_SIZE = 16384;
 
     // Trajectory smoothing state
-    float targetCents  = 0.0f;
-    float currentCents = 0.0f;
-    float pitchRatio   = 1.0f;
-    bool  wasVoiced    = false;
-    bool  preserveTimbre = true;
+    float targetCents       = 0.0f;
+    float currentCents      = 0.0f;
+    float pitchRatio        = 1.0f;
+    float smoothingAlpha    = 0.1f;
+    bool  wasVoiced         = false;
+    bool  preserveTimbre    = true;
+    float currentDetectedHz = 200.0f;
 
-    // Pitch-synchronous grain state
-    float targetGrainLength  = 480.0f;
-    float currentGrainLength = 480.0f;
+    // Pitch-synchronous single-stream delay line with zero-phase splice crossfading
+    float readPos0 = 0.0f;
+    float readPos1 = 0.0f;
+    bool  isCrossfading = false;
+    float crossfadeProgress = 0.0f;
+    float crossfadeInc = 1.0f / 192.0f;
 
     // Ring buffers for left & right channels
     std::vector<float> delayBufferL;
     std::vector<float> delayBufferR;
     int writeIndex = 0;
 
-    // Grain phases for dual-pointer overlap-add pitch shifting
-    float grainPhase0 = 0.0f;
-    float grainPhase1 = 0.5f;
-
-    // Formant preservation filtering states
+    // Stable 1-pole formant preservation shelving filter
     float formantFilterStateL = 0.0f;
     float formantFilterStateR = 0.0f;
 
