@@ -10,7 +10,9 @@ $exeSrc  = "D:\!OFFSZN\PROYECTOS\OFFSZN\plugins\easy-pitch\build\EASY_PITCH_arte
 $htmlSrc = "D:\!OFFSZN\PROYECTOS\OFFSZN\plugins\easy-pitch\mockup.html"
 
 Write-Host "Copying VST3 to $dest..."
-Copy-Item -Path $vst3Src -Destination (Join-Path $dest "EASY PITCH.vst3") -Recurse -Force
+$destVst3 = Join-Path $dest "EASY PITCH.vst3"
+if (Test-Path $destVst3) { Remove-Item -Path $destVst3 -Recurse -Force }
+Copy-Item -Path $vst3Src -Destination $destVst3 -Recurse -Force
 
 Write-Host "Copying Standalone EXE to $dest..."
 Copy-Item -Path $exeSrc -Destination (Join-Path $dest "EASY PITCH.exe") -Force
@@ -28,7 +30,9 @@ Write-Host "Updated AppData GUI: $appDataGui\mockup.html"
 
 # Common Files VST3
 if (Test-Path "C:\Program Files\Common Files\VST3") {
-    Copy-Item -Path $vst3Src -Destination "C:\Program Files\Common Files\VST3\EASY PITCH.vst3" -Recurse -Force
+    $commonVst3 = "C:\Program Files\Common Files\VST3\EASY PITCH.vst3"
+    if (Test-Path $commonVst3) { Remove-Item -Path $commonVst3 -Recurse -Force }
+    Copy-Item -Path $vst3Src -Destination $commonVst3 -Recurse -Force
     Write-Host "Installed to C:\Program Files\Common Files\VST3\EASY PITCH.vst3"
 }
 
