@@ -138,7 +138,7 @@ void PitchDetector::analyzeFrame (int voiceRangeIndex)
     // Silence / Noise gate threshold (-50 dBFS ~ 0.00316)
     if (rms < 0.00316f)
     {
-        if (unvoicedHangover < 2 && lastValidHz > 0.0f)
+        if (unvoicedHangover < 4 && lastValidHz > 0.0f)
         {
             unvoicedHangover++;
             latestResult.pitchHz  = lastValidHz;
@@ -217,7 +217,7 @@ void PitchDetector::analyzeFrame (int voiceRangeIndex)
 
     if (ampEstimates.empty())
     {
-        if (unvoicedHangover < 2 && lastValidHz > 0.0f)
+        if (unvoicedHangover < 4 && lastValidHz > 0.0f)
         {
             unvoicedHangover++;
             latestResult.pitchHz  = lastValidHz;
@@ -244,7 +244,7 @@ void PitchDetector::analyzeFrame (int voiceRangeIndex)
     // Voiced clarity threshold (0.42 indicates periodic vocal pitch)
     if (maxAmp < 0.42f)
     {
-        if (unvoicedHangover < 2 && lastValidHz > 0.0f)
+        if (unvoicedHangover < 4 && lastValidHz > 0.0f)
         {
             unvoicedHangover++;
             latestResult.pitchHz  = lastValidHz;
@@ -304,7 +304,7 @@ void PitchDetector::analyzeFrame (int voiceRangeIndex)
         float estimatedHz = static_cast<float> (currentSampleRate / chosenPeriod);
         if (estimatedHz >= minHz && estimatedHz <= maxHz)
         {
-            // 3-tap median filter for glitch-free sudden note leaps
+            // Glitch-free agile pitch tracking:
             pitchHistory[historyIdx] = estimatedHz;
             historyIdx = (historyIdx + 1) % 3;
 
@@ -313,8 +313,18 @@ void PitchDetector::analyzeFrame (int voiceRangeIndex)
             float p2 = pitchHistory[2];
 
             float medianHz = estimatedHz;
-            if (p0 > 0.0f && p1 > 0.0f && p2 > 0.0f)
+            int prevIdx = (historyIdx + 1) % 3; // Index written in previous frame
+            float prevHz = pitchHistory[prevIdx];
+
+            // 1. If peak clarity is high (> 0.70) or 2 consecutive frames agree within 5%:
+            // Lock in immediately to eliminate lag on note drops/rises (e.g. "TRANQUI - LO")
+            if (latestResult.clarity >= 0.70f || (prevHz > 0.0f && std::abs (estimatedHz - prevHz) <= 0.05f * estimatedHz))
             {
+                medianHz = estimatedHz;
+            }
+            else if (p0 > 0.0f && p1 > 0.0f && p2 > 0.0f)
+            {
+                // Fallback to 3-tap median only when clarity is ambiguous (< 0.70) to reject sporadic noise spikes
                 medianHz = std::max (std::min (p0, p1), std::min (std::max (p0, p1), p2));
             }
 

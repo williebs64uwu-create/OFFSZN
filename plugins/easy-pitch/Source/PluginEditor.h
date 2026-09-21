@@ -45,7 +45,7 @@ private:
 
     void registerNativeFunctions (juce::WebBrowserComponent::Options& options);
     void sendInitialStateToUI();
-    int initialSyncTicks = 20;
+    int initialSyncTicks = 90;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (EasyPitchAudioProcessorEditor)
 };

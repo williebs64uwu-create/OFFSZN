@@ -238,6 +238,8 @@ void EasyPitchAudioProcessor::setParamFromUI (const juce::String& paramId, float
         p_channelMode.store (static_cast<int> (value));
     else if (paramId == "preset")
         loadPresetByIndex (static_cast<int> (value));
+
+    updateHostDisplay (juce::AudioProcessor::ChangeDetails().withNonParameterStateChanged (true));
 }
 
 float EasyPitchAudioProcessor::getParamValue (const juce::String& paramId) const
@@ -299,14 +301,14 @@ void EasyPitchAudioProcessor::setStateInformation (const void* data, int sizeInB
     {
         p_enabled.store        (xml->getBoolAttribute ("enabled", true));
         p_key.store            (xml->getIntAttribute  ("key", 0));
-        p_scale.store          (xml->getIntAttribute  ("scale", 0));
+        p_scale.store          (xml->getIntAttribute  ("scale", 1));
         p_speed.store          (static_cast<float> (xml->getDoubleAttribute ("speed", 65.0)));
         p_amount.store         (static_cast<float> (xml->getDoubleAttribute ("amount", 100.0)));
         p_voiceRange.store     (xml->getIntAttribute  ("voiceRange", 0));
         p_preserveTimbre.store (xml->getBoolAttribute ("preserveTimbre", true));
         p_referenceHz.store    (static_cast<float> (xml->getDoubleAttribute ("referenceHz", 440.0)));
         p_customMask.store     (xml->getIntAttribute  ("customMask", 0x0FFF));
-        p_channelMode.store    (xml->getIntAttribute  ("channelMode", 0));
+        p_channelMode.store    (xml->getIntAttribute  ("channelMode", 1));
     }
 }
 

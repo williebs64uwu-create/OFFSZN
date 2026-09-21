@@ -76,7 +76,7 @@ private:
     // ── Atomic Parameters ────────────────────────────────────────────────────
     std::atomic<bool>  p_enabled        { true };
     std::atomic<int>   p_key            { 0 };     // 0 = C / Do (0-indexed across 12 semitones)
-    std::atomic<int>   p_scale          { 0 };     // 0 = Mayor, 1 = Menor natural
+    std::atomic<int>   p_scale          { 1 };     // 1 = Mayor (matches UI default)
     std::atomic<float> p_speed          { 65.0f }; // 0 - 100%
     std::atomic<float> p_amount         { 100.0f };// 0 - 100%
     std::atomic<int>   p_voiceRange     { 0 };     // 0 = General, 1 = Grave, 2 = Aguda

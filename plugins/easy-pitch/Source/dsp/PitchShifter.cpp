@@ -55,8 +55,8 @@ void PitchShifter::setTargetShift (float inTargetCents, float speedPercent, floa
 
     if (!isVoiced)
     {
-        // Smoothly return to 0 cents when unvoiced (silence, breath, consonant)
-        targetCents = 0.0f;
+        // Smoothly decay targetCents towards 0 on unvoiced frames (silence, breath, consonant)
+        targetCents *= 0.85f;
         wasVoiced   = false;
     }
     else
@@ -75,9 +75,10 @@ void PitchShifter::updateSmoothing (float speedPercent)
     float s = std::max (0.0f, std::min (100.0f, speedPercent)) / 100.0f;
 
     // Natural Waves Tune Real-Time portamento curve:
-    // Even at 100% speed (0.1ms in Waves Tune), sub-millisecond anti-click slew
-    // ensures sudden note changes don't click or cause phase cancellation
-    float tau = 0.0006f + 0.080f * std::pow (1.0f - s, 2.2f);
+    // At 0% speed: ~70ms smooth glide
+    // At 65% speed (default): ~12ms smooth vocal tracking
+    // At 100% speed: ~1.5ms fast lock
+    float tau = 0.0015f + 0.070f * std::pow (1.0f - s, 2.0f);
     float dt  = 1.0f / static_cast<float> (currentSampleRate);
     smoothingAlpha = 1.0f - std::exp (-dt / tau);
 }
@@ -139,11 +140,17 @@ void PitchShifter::processBlock (juce::AudioBuffer<float>& buffer, bool bypassTo
 
     for (int i = 0; i < numSamples; ++i)
     {
-        // Continuous per-sample glide toward targetCents (Waves Tune Real-Time feel)
+        // Slew-limited continuous portamento toward targetCents
+        float delta = targetCents - currentCents;
+        // Max ~110 semitones/sec at 44.1kHz (fast enough for vocal runs, prevents click jumps)
+        float maxStep = 2.5f;
+        if (delta > maxStep) delta = maxStep;
+        else if (delta < -maxStep) delta = -maxStep;
+
         if (smoothingAlpha >= 0.999f)
-            currentCents = targetCents;
+            currentCents += delta;
         else
-            currentCents += smoothingAlpha * (targetCents - currentCents);
+            currentCents += smoothingAlpha * delta;
 
         pitchRatio = std::pow (2.0f, currentCents / 1200.0f);
 

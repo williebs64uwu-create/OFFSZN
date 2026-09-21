@@ -68,7 +68,7 @@ EasyPitchAudioProcessorEditor::EasyPitchAudioProcessorEditor (EasyPitchAudioProc
     webComponent->goToURL (url);
 
     addAndMakeVisible (*webComponent);
-    setSize (860, 505);
+    setSize (860, 425);
     setResizable (false, false);
 
     startTimerHz (30);
@@ -122,6 +122,21 @@ void EasyPitchAudioProcessorEditor::registerNativeFunctions (juce::WebBrowserCom
             complete (juce::var (0.0f));
         })
         .withNativeFunction ("getAllParams", [this] (const juce::Array<juce::var>&, auto complete)
+        {
+            auto* obj = new juce::DynamicObject();
+            obj->setProperty ("enabled",        audioProcessor.getParamValue ("enabled"));
+            obj->setProperty ("key",            audioProcessor.getParamValue ("key"));
+            obj->setProperty ("scale",          audioProcessor.getParamValue ("scale"));
+            obj->setProperty ("speed",          audioProcessor.getParamValue ("speed"));
+            obj->setProperty ("amount",         audioProcessor.getParamValue ("amount"));
+            obj->setProperty ("voiceRange",     audioProcessor.getParamValue ("voiceRange"));
+            obj->setProperty ("preserveTimbre", audioProcessor.getParamValue ("preserveTimbre"));
+            obj->setProperty ("referenceHz",    audioProcessor.getParamValue ("referenceHz"));
+            obj->setProperty ("customMask",     audioProcessor.getParamValue ("customMask"));
+            obj->setProperty ("channelMode",    audioProcessor.getParamValue ("channelMode"));
+            complete (juce::var (obj));
+        })
+        .withNativeFunction ("uiReady", [this] (const juce::Array<juce::var>&, auto complete)
         {
             auto* obj = new juce::DynamicObject();
             obj->setProperty ("enabled",        audioProcessor.getParamValue ("enabled"));
@@ -215,6 +230,14 @@ void EasyPitchAudioProcessorEditor::registerNativeFunctions (juce::WebBrowserCom
                 audioProcessor.loadPresetByIndex (index);
             }
             complete (juce::var());
+        })
+        .withNativeFunction ("openBrowserURL", [] (const juce::Array<juce::var>& args, auto complete)
+        {
+            if (args.size() >= 1)
+            {
+                juce::URL (args[0].toString()).launchInDefaultBrowser();
+            }
+            complete (juce::var());
         });
 }
 
@@ -236,7 +259,8 @@ void EasyPitchAudioProcessorEditor::timerCallback()
             "voiceRange:"     + juce::String (audioProcessor.getParamValue ("voiceRange")) + ","
             "preserveTimbre:" + juce::String (audioProcessor.getParamValue ("preserveTimbre")) + ","
             "referenceHz:"    + juce::String (audioProcessor.getParamValue ("referenceHz")) + ","
-            "customMask:"     + juce::String (audioProcessor.getParamValue ("customMask"))
+            "customMask:"     + juce::String (audioProcessor.getParamValue ("customMask")) + ","
+            "channelMode:"    + juce::String (audioProcessor.getParamValue ("channelMode"))
         + "}";
         webComponent->evaluateJavascript ("try { if (window.syncFromHost) { window.syncFromHost(" + syncJson + "); } } catch(e){}");
     }

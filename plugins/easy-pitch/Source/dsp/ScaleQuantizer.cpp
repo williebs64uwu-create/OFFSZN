@@ -1,7 +1,13 @@
 #include "ScaleQuantizer.h"
+#include <algorithm>
+#include <cmath>
 
 namespace EasyPitch
 {
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 static const char* NOTE_NAMES[12] = {
     "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"
@@ -41,7 +47,7 @@ juce::String ScaleQuantizer::midiToNoteName (int midiNote)
     if (midiNote < 0 || midiNote > 127)
         return "--";
 
-    int noteClass = midiNote % 12;
+    int noteClass = (midiNote % 12 + 12) % 12;
     int octave = (midiNote / 12) - 1;
 
     return juce::String (NOTE_NAMES[noteClass]) + juce::String (octave);
@@ -67,14 +73,15 @@ int ScaleQuantizer::getScaleMask (int scaleIndex)
 bool ScaleQuantizer::isNoteAllowed (int noteClass, int rootClass, int scaleIndex, int customMask) const
 {
     int effCustom = (customMask == 0) ? 0x0FFF : customMask;
-    if ((effCustom & (1 << noteClass)) == 0)
+    int normClass = (noteClass % 12 + 12) % 12;
+    if ((effCustom & (1 << normClass)) == 0)
         return false;
 
     if (scaleIndex == 0) // Cromatica
         return true;
 
     // Transpose relative to root
-    int interval = (noteClass - rootClass + 12) % 12;
+    int interval = (normClass - rootClass + 12) % 12;
     int mask = getScaleMask (scaleIndex);
 
     return (mask & (1 << interval)) != 0;
@@ -84,20 +91,20 @@ QuantizeResult ScaleQuantizer::quantize (float detectedHz, int keyIndex, int sca
 {
     QuantizeResult result;
 
-    if (detectedHz <= 20.0f || detectedHz >= 5000.0f)
+    if (detectedHz <= 45.0f || detectedHz >= 1800.0f)
     {
         result.inputNoteName   = "--";
         result.targetNoteName  = "--";
         result.centsCorrection = 0.0f;
         result.isScaleActive   = true;
         result.targetMidiNote  = -1.0f;
-        lastTargetMidi         = -1.0f; // Reset phrase history on pause/silence!
+        lastTargetMidi         = -1.0f;
         return result;
     }
 
     float midiInput = hzToMidi (detectedHz, referenceHz);
-    int roundedMidi = static_cast<int> (std::round (midiInput));
-    result.inputNoteName = midiToNoteName (roundedMidi);
+    int roundedInputMidi = static_cast<int> (std::round (midiInput));
+    result.inputNoteName = midiToNoteName (roundedInputMidi);
     result.isScaleActive = true;
 
     int rootClass = (keyIndex >= 0 && keyIndex < 12) ? keyIndex : 0;
@@ -111,77 +118,102 @@ QuantizeResult ScaleQuantizer::quantize (float detectedHz, int keyIndex, int sca
         lastCustomMask = customMask;
     }
 
-    // Direct search outward from the nearest rounded semitone of the input pitch
-    float bestMidi = -1.0f;
-    float minDistance = 999.0f;
-
-    for (int offset = 0; offset <= 12; ++offset)
+    // 1. Find the nearest allowed scale note below midiInput
+    int noteBelow = -1;
+    for (int m = static_cast<int> (std::floor (midiInput)); m >= 12; --m)
     {
-        for (int sign : { 1, -1 })
+        if (isNoteAllowed (m % 12, rootClass, scaleIndex, customMask))
         {
-            int candidateMidi = roundedMidi + (offset * sign);
-            if (candidateMidi < 12 || candidateMidi > 120)
-                continue;
-
-            int noteClass = candidateMidi % 12;
-            if (isNoteAllowed (noteClass, rootClass, scaleIndex, customMask))
-            {
-                float dist = std::abs (midiInput - static_cast<float> (candidateMidi));
-                if (dist < minDistance)
-                {
-                    minDistance = dist;
-                    bestMidi = static_cast<float> (candidateMidi);
-                }
-            }
-        }
-
-        // If we found a valid scale note within 0.6 semitones, that is unambiguously the target
-        if (bestMidi >= 0.0f && minDistance <= 0.6f)
+            noteBelow = m;
             break;
-    }
-
-    // Safe fallback: stay on current sung note if scale is completely empty
-    if (bestMidi < 0.0f)
-        bestMidi = static_cast<float> (roundedMidi);
-
-    // Hysteresis around scale boundaries:
-    // Only apply hysteresis for small, subtle pitch wavers between adjacent scale notes (<= 2.2 semitones).
-    // For intentional large jumps or runs (> 2.2 semitones), snap cleanly and immediately to the new note!
-    if (lastTargetMidi >= 0.0f && std::abs (bestMidi - lastTargetMidi) >= 0.5f && std::abs (bestMidi - lastTargetMidi) <= 2.2f)
-    {
-        int prevClass = static_cast<int> (std::round (lastTargetMidi)) % 12;
-        if (isNoteAllowed (prevClass, rootClass, scaleIndex, customMask))
-        {
-            float distToLast = std::abs (midiInput - lastTargetMidi);
-            float distToBest = std::abs (midiInput - bestMidi);
-            if (distToLast < distToBest + 0.15f)
-            {
-                bestMidi = lastTargetMidi;
-            }
         }
     }
 
-    lastTargetMidi = bestMidi;
-    result.targetMidiNote = bestMidi;
-    result.targetNoteName = midiToNoteName (static_cast<int> (std::round (bestMidi)));
+    // 2. Find the nearest allowed scale note above midiInput
+    int noteAbove = -1;
+    for (int m = static_cast<int> (std::ceil (midiInput)); m <= 120; ++m)
+    {
+        if (isNoteAllowed (m % 12, rootClass, scaleIndex, customMask))
+        {
+            noteAbove = m;
+            break;
+        }
+    }
 
-    // Direct pitch deviation in cents from sung pitch to target scale note
-    float rawCents = (bestMidi - midiInput) * 100.0f;
-    float cents = rawCents;
+    // If scale is empty or only one bound found
+    if (noteBelow < 0 && noteAbove < 0)
+    {
+        result.targetMidiNote  = static_cast<float> (roundedInputMidi);
+        result.targetNoteName  = result.inputNoteName;
+        result.centsCorrection = 0.0f;
+        return result;
+    }
+    if (noteBelow < 0) noteBelow = noteAbove - 12;
+    if (noteAbove < 0) noteAbove = noteBelow + 12;
 
-    // Waves Tune Real-Time vibrato preservation when speed is below hard-tune
+    float W = static_cast<float> (noteAbove - noteBelow);
+    if (W <= 0.0f) W = 1.0f;
+
+    // Decision midpoint between scale notes with hysteresis
+    float midpoint = static_cast<float> (noteBelow) + (W * 0.5f);
+    float hysteresis = 0.08f; // ~8 cents of stability to prevent flutter between adjacent notes
+    if (lastTargetMidi == static_cast<float> (noteBelow))
+        midpoint += hysteresis;
+    else if (lastTargetMidi == static_cast<float> (noteAbove))
+        midpoint -= hysteresis;
+
+    float targetMidi;
+    float delta; // Target minus input (in semitones)
+    float halfW = W * 0.5f;
+
+    if (midiInput < midpoint)
+    {
+        targetMidi = static_cast<float> (noteBelow);
+        delta = targetMidi - midiInput; // in range [-halfW, 0]
+    }
+    else
+    {
+        targetMidi = static_cast<float> (noteAbove);
+        delta = targetMidi - midiInput; // in range [0, +halfW]
+    }
+
+    lastTargetMidi = targetMidi;
+    result.targetMidiNote = targetMidi;
+    result.targetNoteName = midiToNoteName (static_cast<int> (std::round (targetMidi)));
+
+    // ── Continuous C^1 correction curve (Waves Tune Real-Time design) ──
+    // u in [-1.0, 1.0]: 0 = dead-on pitch, +/-1 = at the note transition boundary
+    float u = std::max (-1.0f, std::min (1.0f, delta / halfW));
+    float signU = (u >= 0.0f) ? 1.0f : -1.0f;
+    float absU  = std::abs (u);
+
     float s = std::max (0.0f, std::min (100.0f, speedPercent)) / 100.0f;
-    if (s < 0.95f)
+
+    // Natural C^1 sinusoidal curve: zero at note center (u=0) AND zero at note boundary (|u|=1)
+    // Guarantees zero jump when transitioning between syllables (e.g. "TRANQUI - LO")
+    float naturalShape = signU * std::sin (static_cast<float> (M_PI) * absU);
+
+    // Fast snap curve for modern robotic / hard tune
+    float snapShape = u * std::pow (std::max (0.0f, 1.0f - absU * absU), 0.25f);
+
+    float shape = (1.0f - s) * naturalShape + s * snapShape;
+
+    // Scale by half-width to convert to cents: halfW * 100 is max semitone half-width in cents
+    float maxPullCents = halfW * 100.0f;
+    float cents = shape * (maxPullCents * 0.5f);
+
+    // Vibrato preservation at natural speeds
+    if (s < 0.80f)
     {
-        float deadzone = 7.0f * (1.0f - s);
-        if (std::abs (rawCents) <= deadzone)
+        float deadzone = 4.0f * (1.0f - s);
+        if (std::abs (cents) <= deadzone)
         {
-            cents = rawCents * 0.35f;
+            cents *= 0.25f;
         }
     }
 
-    // Safety clamp: an auto-tune should never pull more than +/- 200 cents (2 semitones)
-    cents = std::max (-200.0f, std::min (200.0f, cents));
+    // Safety clamp to prevent unnatural pitch pulling
+    cents = std::max (-100.0f, std::min (100.0f, cents));
 
     result.centsCorrection = cents;
     return result;
