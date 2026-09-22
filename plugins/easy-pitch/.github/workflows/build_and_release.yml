@@ -1,0 +1,321 @@
+﻿# ============================================================
+# OFFSZN Easy Pitch — GitHub Actions CI/CD
+# Builds VST3 (Windows x64) + VST3 + AU (macOS Universal)
+# Runs Inno Setup (Windows) → uploads all artifacts
+# Triggered: on push to main / on version tag v*.*.*
+# ============================================================
+name: Build & Release
+
+on:
+  push:
+    branches: [ main ]
+    tags:     [ "v*.*.*" ]
+  workflow_dispatch:
+
+env:
+  JUCE_VERSION: "8.0.13"
+  PLUGIN_VERSION: "1.0.0"
+  PLUGIN_NAME: "EASY PITCH"
+
+jobs:
+  # ──────────────────────────────────────────────
+  #  JOB 1: Windows — VST3 + Inno Setup Installer
+  # ──────────────────────────────────────────────
+  build-windows:
+    name: 🪟 Windows VST3 + Installer
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      # ── Cache JUCE download ──────────────────────────────
+      - name: Cache JUCE
+        id: cache-juce
+        uses: actions/cache@v4
+        with:
+          path: C:\JUCE
+          key: juce-${{ env.JUCE_VERSION }}-windows
+
+      - name: Download JUCE (if not cached)
+        if: steps.cache-juce.outputs.cache-hit != 'true'
+        run: |
+          $url = "https://github.com/juce-framework/JUCE/releases/download/${{ env.JUCE_VERSION }}/juce-${{ env.JUCE_VERSION }}-windows.zip"
+          Invoke-WebRequest $url -OutFile JUCE.zip
+          Expand-Archive JUCE.zip -DestinationPath C:\
+          Rename-Item -Path "C:\JUCE" -NewName "JUCE" -ErrorAction SilentlyContinue
+          if (Test-Path "C:\juce-${{ env.JUCE_VERSION }}-windows\JUCE") {
+            Move-Item "C:\juce-${{ env.JUCE_VERSION }}-windows\JUCE" "C:\JUCE"
+          }
+        shell: pwsh
+
+      # ── Install WebView2 SDK (required for Windows VST3) ─
+      - name: Install WebView2 Evergreen Bootstrap
+        run: |
+          Invoke-WebRequest "https://go.microsoft.com/fwlink/p/?LinkId=2124703" -OutFile MicrosoftEdgeWebview2Setup.exe
+          Start-Process MicrosoftEdgeWebview2Setup.exe -ArgumentList "/silent /install" -Wait
+        shell: pwsh
+
+      # ── Configure CMake ──────────────────────────────────
+      - name: Configure CMake (Windows)
+        run: |
+          cmake -B build -G "Visual Studio 17 2022" -A x64 `
+            -DJUCE_DIR="C:\JUCE" `
+            -DCMAKE_BUILD_TYPE=Release
+        env:
+          JUCE_DIR: C:\JUCE
+
+      # ── Build Release ─────────────────────────────────────
+      - name: Build VST3 (Release)
+        run: cmake --build build --config Release --target EASY_PITCH_VST3 -j 4
+
+      # ── Verify VST3 bundle exists ─────────────────────────
+      - name: Verify VST3 output
+        run: |
+          $vst3 = "build\EASY_PITCH_artefacts\Release\VST3\EASY PITCH.vst3"
+          if (-not (Test-Path $vst3)) {
+            Write-Error "VST3 bundle not found at $vst3"
+            exit 1
+          }
+          Write-Host "VST3 bundle OK: $vst3"
+        shell: pwsh
+
+      # ── Build Inno Setup Installer ────────────────────────
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+        shell: pwsh
+
+      - name: Build Installer
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host "Installer built OK"
+        shell: pwsh
+
+      # ── Upload artifacts ──────────────────────────────────
+      - name: Upload VST3 (Windows)
+        uses: actions/upload-artifact@v4
+        with:
+          name: EASY_PITCH_VST3_Windows
+          path: build/EASY_PITCH_artefacts/Release/VST3/
+          if-no-files-found: error
+
+      - name: Upload Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: EASY_PITCH_Setup_Windows
+          path: Output/EASY_PITCH_Setup.exe
+          if-no-files-found: error
+
+  # ──────────────────────────────────────────────
+  #  JOB 2: macOS — VST3 + AU (Universal Binary)
+  # ──────────────────────────────────────────────
+  build-macos:
+    name: 🍏 macOS VST3 + AU (Universal)
+    runs-on: macos-14       # Apple Silicon runner (arm64 native)
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      # ── Cache JUCE ───────────────────────────────────────
+      - name: Cache JUCE
+        id: cache-juce-mac
+        uses: actions/cache@v4
+        with:
+          path: ~/JUCE
+          key: juce-${{ env.JUCE_VERSION }}-macos
+
+      - name: Download JUCE (if not cached)
+        if: steps.cache-juce-mac.outputs.cache-hit != 'true'
+        run: |
+          curl -L "https://github.com/juce-framework/JUCE/releases/download/${{ env.JUCE_VERSION }}/juce-${{ env.JUCE_VERSION }}-osx.zip" -o JUCE.zip
+          unzip -q JUCE.zip -d ~/
+          # Normalize folder name
+          if [ -d ~/JUCE ]; then echo "JUCE ready"; \
+          elif [ -d ~/juce-${{ env.JUCE_VERSION }}-osx/JUCE ]; then mv ~/juce-${{ env.JUCE_VERSION }}-osx/JUCE ~/JUCE; \
+          else ls ~/; fi
+
+      # ── Select Xcode 15 ─────────────────────────────────
+      - name: Select Xcode 15
+        run: sudo xcode-select --switch /Applications/Xcode_15.4.app
+
+      # ── Configure CMake ──────────────────────────────────
+      - name: Configure CMake (macOS Universal)
+        run: |
+          cmake -B build -G Xcode \
+            -DJUCE_DIR="$HOME/JUCE" \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET="11.0" \
+            -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+
+      # ── Build VST3 + AU ──────────────────────────────────
+      - name: Build VST3
+        run: cmake --build build --config Release --target EASY_PITCH_VST3
+
+      - name: Build AU
+        run: cmake --build build --config Release --target EASY_PITCH_AU
+
+      # ── Verify bundles ────────────────────────────────────
+      - name: Verify macOS bundles
+        run: |
+          VST3="build/EASY_PITCH_artefacts/Release/VST3/EASY PITCH.vst3"
+          AU="build/EASY_PITCH_artefacts/Release/AU/EASY PITCH.component"
+          [ -d "$VST3" ] && echo "VST3 OK: $VST3" || (echo "VST3 MISSING" && exit 1)
+          [ -d "$AU" ]   && echo "AU OK: $AU"     || (echo "AU MISSING"   && exit 1)
+          # Check universal binary
+          file "$VST3/Contents/MacOS/EASY PITCH" || true
+
+      # ── Package into .pkg ─────────────────────────────────
+      - name: Create macOS pkg installer
+        run: |
+          # Stage plugin bundles
+          mkdir -p pkg_stage/Plugins/VST3 pkg_stage/Plugins/Components pkg_stage/GUI
+          cp -R "build/EASY_PITCH_artefacts/Release/VST3/EASY PITCH.vst3" pkg_stage/Plugins/VST3/
+          cp -R "build/EASY_PITCH_artefacts/Release/AU/EASY PITCH.component" pkg_stage/Plugins/Components/
+          cp mockup.html pkg_stage/GUI/
+
+          # Build VST3 component pkg
+          pkgbuild \
+            --root "pkg_stage/Plugins/VST3" \
+            --install-location "/Library/Audio/Plug-Ins/VST3" \
+            --identifier "com.offszn.easypitch.vst3" \
+            --version "${{ env.PLUGIN_VERSION }}" \
+            EASY_PITCH_VST3.pkg
+
+          # Build AU component pkg
+          pkgbuild \
+            --root "pkg_stage/Plugins/Components" \
+            --install-location "/Library/Audio/Plug-Ins/Components" \
+            --identifier "com.offszn.easypitch.au" \
+            --version "${{ env.PLUGIN_VERSION }}" \
+            EASY_PITCH_AU.pkg
+
+          # Build GUI pkg (to /Library/Application Support/OFFSZN/EasyPitchGui/)
+          pkgbuild \
+            --root "pkg_stage/GUI" \
+            --install-location "/Library/Application Support/OFFSZN/EasyPitchGui" \
+            --identifier "com.offszn.easypitch.gui" \
+            --version "${{ env.PLUGIN_VERSION }}" \
+            EASY_PITCH_GUI.pkg
+
+          # Synthesize distribution
+          productbuild \
+            --distribution <(cat <<'DIST'
+          <?xml version="1.0" encoding="utf-8"?>
+          <installer-gui-script minSpecVersion="2">
+              <title>OFFSZN Easy Pitch VST3/AU</title>
+              <welcome file="welcome.html" mime-type="text/html"/>
+              <background file="background.png" scaling="proportional" alignment="center"/>
+              <options customize="never" require-scripts="false"/>
+              <choices-outline>
+                  <line choice="vst3"/>
+                  <line choice="au"/>
+                  <line choice="gui"/>
+              </choices-outline>
+              <choice id="vst3" title="VST3 Plugin">
+                  <pkg-ref id="com.offszn.easypitch.vst3"/>
+              </choice>
+              <choice id="au" title="Audio Unit (AU)">
+                  <pkg-ref id="com.offszn.easypitch.au"/>
+              </choice>
+              <choice id="gui" title="Plugin Interface">
+                  <pkg-ref id="com.offszn.easypitch.gui"/>
+              </choice>
+              <pkg-ref id="com.offszn.easypitch.vst3">EASY_PITCH_VST3.pkg</pkg-ref>
+              <pkg-ref id="com.offszn.easypitch.au">EASY_PITCH_AU.pkg</pkg-ref>
+              <pkg-ref id="com.offszn.easypitch.gui">EASY_PITCH_GUI.pkg</pkg-ref>
+          </installer-gui-script>
+          DIST
+          ) \
+            --package-path . \
+            "OFFSZN_EASY_PITCH_macOS.pkg"
+
+          echo "macOS pkg built OK"
+
+      # ── Upload artifacts ──────────────────────────────────
+      - name: Upload VST3 (macOS)
+        uses: actions/upload-artifact@v4
+        with:
+          name: EASY_PITCH_VST3_macOS
+          path: build/EASY_PITCH_artefacts/Release/VST3/
+          if-no-files-found: error
+
+      - name: Upload AU
+        uses: actions/upload-artifact@v4
+        with:
+          name: EASY_PITCH_AU_macOS
+          path: build/EASY_PITCH_artefacts/Release/AU/
+          if-no-files-found: error
+
+      - name: Upload macOS pkg
+        uses: actions/upload-artifact@v4
+        with:
+          name: EASY_PITCH_Installer_macOS
+          path: OFFSZN_EASY_PITCH_macOS.pkg
+          if-no-files-found: error
+
+  # ──────────────────────────────────────────────
+  #  JOB 3: GitHub Release (only on version tags)
+  # ──────────────────────────────────────────────
+  release:
+    name: 🚀 Publish GitHub Release
+    needs: [ build-windows, build-macos ]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist/
+
+      - name: List release contents
+        run: find dist/ -type f | sort
+
+      - name: Zip Windows VST3
+        run: |
+          cd dist/EASY_PITCH_VST3_Windows
+          zip -r ../../EASY_PITCH_VST3_Windows.zip .
+
+      - name: Zip macOS VST3
+        run: |
+          cd dist/EASY_PITCH_VST3_macOS
+          zip -r ../../EASY_PITCH_VST3_macOS.zip .
+
+      - name: Zip macOS AU
+        run: |
+          cd dist/EASY_PITCH_AU_macOS
+          zip -r ../../EASY_PITCH_AU_macOS.zip .
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "OFFSZN Easy Pitch ${{ github.ref_name }}"
+          body: |
+            ## OFFSZN Easy Pitch ${{ github.ref_name }}
+
+            ### Downloads
+            | Platform | Format | File |
+            |---|---|---|
+            | 🪟 Windows | VST3 + Installer | `EASY_PITCH_Setup.exe` |
+            | 🍏 macOS | VST3 + AU + pkg | `OFFSZN_EASY_PITCH_macOS.pkg` |
+
+            ### Activación
+            Abre el plugin en tu DAW y activa tu licencia con tu serial OFFSZN.
+            Puedes obtener una prueba gratuita de 3 días en [offszn.lat](https://offszn.lat)
+
+            ### Compatibilidad
+            - Windows 10/11 x64 (FL Studio, Ableton, Reaper, Cubase)
+            - macOS 11+ Universal (Apple Silicon + Intel) (Logic Pro, Ableton)
+          files: |
+            dist/EASY_PITCH_Setup_Windows/EASY_PITCH_Setup.exe
+            dist/EASY_PITCH_Installer_macOS/OFFSZN_EASY_PITCH_macOS.pkg
+            EASY_PITCH_VST3_Windows.zip
+            EASY_PITCH_VST3_macOS.zip
+            EASY_PITCH_AU_macOS.zip
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}

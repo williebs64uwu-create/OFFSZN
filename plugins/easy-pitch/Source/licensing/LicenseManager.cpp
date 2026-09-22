@@ -180,14 +180,12 @@ void LicenseManager::activateSerial (const juce::String& serialKey, std::functio
             return activateUrl.createInputStream (options);
         };
 
-        // 1. Try production cloud endpoint
+        // Production endpoint only: offszn.lat
         std::unique_ptr<juce::InputStream> stream = tryEndpoint ("https://offszn.lat/api/plugin/activate");
-        
-        // 2. Fallback to local dev server if cloud is offline or user testing locally
-        if (stream == nullptr)
-        {
-            stream = tryEndpoint ("http://127.0.0.1:3000/api/plugin/activate");
-        }
+
+        // NOTE: Local dev server fallback is intentionally removed for production builds.
+        // If the production server is unreachable, show network error — do NOT fall through
+        // to any local endpoint that could be spoofed.
 
         if (stream == nullptr)
         {

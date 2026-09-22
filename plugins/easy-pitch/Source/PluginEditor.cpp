@@ -35,34 +35,34 @@ EasyPitchAudioProcessorEditor::EasyPitchAudioProcessorEditor (EasyPitchAudioProc
 
     webComponent = std::make_unique<EasyPitchWebBrowser> (options);
 
-    juce::File terminadosGui ("C:/Users/Willie/Desktop/TERMINADOS - EASY PITCH/mockup.html");
-    juce::File localGui      ("D:/!OFFSZN/PROYECTOS/OFFSZN/plugins/easy-pitch/mockup.html");
-    juce::File desktopGui    ("C:/Users/Willie/Desktop/EASY PITCH/mockup.html");
+    // ── GUI Loading: Production-only paths (no dev machine paths) ────────────
+    // Priority 1: AppData (Windows installer deploys mockup.html here)
     juce::File guiAppdata    = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
                                   .getChildFile ("OFFSZN").getChildFile ("EasyPitchGui").getChildFile ("mockup.html");
+    // Priority 2: macOS global Application Support (pkg installer target)
     juce::File globalMacGui  ("/Library/Application Support/OFFSZN/EasyPitchGui/mockup.html");
-    juce::File exeGui        = juce::File::getSpecialLocation (juce::File::currentExecutableFile)
-                                  .getParentDirectory().getChildFile ("mockup.html");
+    // Priority 3: macOS AU/VST3 bundle Resources folder (pkgbuild embeds here)
     juce::File bundleResGui  = juce::File::getSpecialLocation (juce::File::currentExecutableFile)
                                   .getParentDirectory().getParentDirectory().getChildFile ("Resources").getChildFile ("mockup.html");
+    // Priority 4: Fallback next to executable (Standalone / dev builds)
+    juce::File exeGui        = juce::File::getSpecialLocation (juce::File::currentExecutableFile)
+                                  .getParentDirectory().getChildFile ("mockup.html");
 
     juce::File targetHtml;
-    if (terminadosGui.existsAsFile())
-        targetHtml = terminadosGui;
-    else if (localGui.existsAsFile())
-        targetHtml = localGui;
-    else if (guiAppdata.existsAsFile())
-        targetHtml = guiAppdata;
-    else if (globalMacGui.existsAsFile())
-        targetHtml = globalMacGui;
-    else if (bundleResGui.existsAsFile())
-        targetHtml = bundleResGui;
-    else if (desktopGui.existsAsFile())
-        targetHtml = desktopGui;
-    else if (exeGui.existsAsFile())
-        targetHtml = exeGui;
+    if      (guiAppdata.existsAsFile())   targetHtml = guiAppdata;
+    else if (globalMacGui.existsAsFile()) targetHtml = globalMacGui;
+    else if (bundleResGui.existsAsFile()) targetHtml = bundleResGui;
+    else if (exeGui.existsAsFile())       targetHtml = exeGui;
     else
-        targetHtml = localGui;
+    {
+        // Last resort: fallback URL (online error page)
+        webComponent->goToURL ("https://offszn.lat/plugins/easy-pitch?error=gui-not-found");
+        addAndMakeVisible (*webComponent);
+        setSize (860, 425);
+        setResizable (false, false);
+        startTimerHz (30);
+        return;
+    }
 
     juce::String url = "file:///" + targetHtml.getFullPathName().replaceCharacter ('\\', '/');
     webComponent->goToURL (url);

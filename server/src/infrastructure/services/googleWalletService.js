@@ -348,29 +348,19 @@ export class GoogleWalletService {
                     }
                 }
 
-                const classPayload = {
-                    id: this.fullClassId,
-                    issuerName: customData.issuerName || 'OFFSZN Willie Inspired',
-                    reviewStatus: 'UNDER_REVIEW',
-                    viewUnlockRequirement: 'UNLOCK_NOT_REQUIRED',
-                    logo: {
-                        sourceUri: { uri: customData.logoUrl || 'https://offszn.lat/images/LOGO-OFFSZN.png' },
-                        contentDescription: { defaultValue: { language: 'es', value: 'Logo OFFSZN' } }
-                    },
-                    cardTitle: {
-                        defaultValue: { language: 'es', value: customData.cardTitle || 'WILLIE INSPIRED VIP PASS' }
-                    },
-                    hexBackgroundColor: customData.hexBackgroundColor || '#0a0a0f'
-                };
-
                 const claims = {
                     iss: this.clientEmail,
                     aud: 'google',
-                    typ: 'savetogooglewallet',
+                    typ: 'savetowallet',
                     iat: Math.floor(Date.now() / 1000),
+                    origins: [],
                     payload: {
-                        genericClasses: [ classPayload ],
-                        genericObjects: [ genericObject ]
+                        genericObjects: [
+                            {
+                                id: objectId,
+                                classId: this.fullClassId
+                            }
+                        ]
                     }
                 };
 

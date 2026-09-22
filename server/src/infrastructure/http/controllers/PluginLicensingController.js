@@ -1226,7 +1226,7 @@ export const adminGetAnalyticsFull = async (req, res) => {
         pluginRecentSales.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         // 7. Subscriptions summary with real emails & prices
-        let subscriptionsSummary = { total: 0, active: 0, expired: 0, paidVolume: 35.00, mrrActive: 30.00, byPlan: {}, byProvider: {}, recent: [] };
+        let subscriptionsSummary = { total: 0, active: 0, expired: 0, paidVolume: 0, mrrActive: 0, byPlan: {}, byProvider: {}, recent: [] };
         const subs = subsRes.data || [];
         if (subs.length > 0) {
             const subUserIds = [...new Set(subs.map(s => s.user_id).filter(Boolean))];
@@ -1694,7 +1694,8 @@ export const adminGetAnalyticsFull = async (req, res) => {
                 total: totalTrialsCountRes.count || 0,
                 byDay: trialsByDay,
                 recentCount30d: recentTrials ? recentTrials.length : 0,
-                dawActivatedCount: 555
+                // Real DAW activations count from plugin_activations table (not hardcoded)
+                dawActivatedCount: activationsCountRes.count || 0
             },
             users: {
                 total: totalUsersCountRes.count || 0,

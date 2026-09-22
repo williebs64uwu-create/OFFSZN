@@ -5547,7 +5547,8 @@
             if (icon) icon.classList.add('bi-arrow-repeat');
 
             if (MasterState.activeTab.startsWith('bi-') || MasterState.activeTab === 'ventas') {
-                await loadMasterBIData();
+                // Pass forceRefresh=true to bypass server-side 30s cache on manual sync
+                await loadMasterBIData(true);
             } else if (MasterState.activeTab === 'licencias') {
                 await loadMasterLicenses();
             } else if (MasterState.activeTab === 'audiencia') {
@@ -5596,10 +5597,11 @@
         // ────────────────────────────────────────────────────────────
         // BUSINESS INTELLIGENCE (BI) EXECUTIVE SUITE ENGINE
         // ────────────────────────────────────────────────────────────
-        async function loadMasterBIData() {
+        async function loadMasterBIData(forceRefresh = false) {
             try {
                 const pin = localStorage.getItem('offszn_owner_pin') || 'gian2030upc';
-                const res = await fetch(`/api/plugin/admin/analytics-full?pin=${encodeURIComponent(pin)}`);
+                const url = `/api/plugin/admin/analytics-full?pin=${encodeURIComponent(pin)}${forceRefresh ? '&refresh=true' : ''}`;
+                const res = await fetch(url);
                 if (!res.ok) {
                     console.warn('[BI] Error cargando analíticas de servidor:', res.status);
                     return;
@@ -5644,21 +5646,24 @@
         function renderBIGeneral(data) {
             const rev = data.revenue || {};
             const pl = data.pluginLicenses || {};
-            const gross = rev.totalGross || 796;
-            const paid = rev.paidOrdersCount || 102;
-            const free = rev.freeOrdersCount || 1974;
-            const aov = paid > 0 ? (gross / paid).toFixed(2) : '7.80';
+            const audit = rev.audit || {};
+
+            // Use 100% real values from the API — NO hardcoded fallbacks
+            const gross = typeof rev.totalGross === 'number' ? rev.totalGross : 0;
+            const paid = typeof rev.paidOrdersCount === 'number' ? rev.paidOrdersCount : 0;
+            const free = typeof rev.freeOrdersCount === 'number' ? rev.freeOrdersCount : 0;
+            const aov = paid > 0 ? (gross / paid).toFixed(2) : '0.00';
 
             const elRev = document.getElementById('gen-val-revenue');
             if (elRev) elRev.textContent = `$${gross.toFixed(2)}`;
             const elTopRev = document.getElementById('top-total-rev');
             if (elTopRev) elTopRev.textContent = `$${gross.toFixed(2)}`;
 
+            // Audit note: show grand total in DB (organic + test orders)
             const elAuditNote = document.getElementById('gen-audit-note');
-            const audit = rev.audit || {};
-            if (elAuditNote && audit.grandTotalInDB) {
-                const dbTotal = (audit.organicGross || gross) + (audit.februaryTestsGross || 285);
-                elAuditNote.textContent = `Total en BD: $${dbTotal.toFixed(2)}`;
+            if (elAuditNote) {
+                const dbTotal = audit.grandTotalInDB || gross;
+                elAuditNote.textContent = `Total en BD: $${Number(dbTotal).toFixed(2)}`;
             }
 
             const elOrdersCount = document.getElementById('gen-val-orders-count');
@@ -5667,57 +5672,71 @@
             const elAOV = document.getElementById('gen-val-aov');
             if (elAOV) elAOV.textContent = `$${aov}`;
 
+            // Conversion rate: plugin paid orders / total DAW activations
+            const dawCount = data.trials?.dawActivatedCount || 0;
+            const convRate = dawCount > 0 ? ((pl.totalCount || 0) / dawCount * 100).toFixed(1) : (pl.conversionRate || '0.0');
             const elConv = document.getElementById('gen-val-conv');
-            if (elConv) elConv.textContent = `${pl.conversionRate || '14.1'}%`;
+            if (elConv) elConv.textContent = `${convRate}%`;
 
             const elDaw = document.getElementById('gen-val-daw');
-            if (elDaw) elDaw.textContent = (data.trials?.dawActivatedCount || 555).toLocaleString();
+            if (elDaw) elDaw.textContent = dawCount > 0 ? dawCount.toLocaleString() : (data.activations?.total || 0).toLocaleString();
 
             const elFree = document.getElementById('gen-val-free');
             if (elFree) elFree.textContent = free.toLocaleString();
 
-            const ppRev = pl.paypal?.revenue ? pl.paypal.revenue + 116 : 781;
-            const ypRev = pl.yape?.revenue || 15;
+            // Gateway breakdown: use real PayPal & Yape revenue from plugin orders
+            // pl.paypal.revenue = only plugin items via paypal; gross includes all categories
+            // We distribute the gross proportionally: paypal = gross - yape
+            const ypRev = typeof pl.yape?.revenue === 'number' ? pl.yape.revenue : 0;
+            const ppRev = gross - ypRev; // Real PayPal = total organic - Yape
             const elPP = document.getElementById('gen-pp-rev');
             if (elPP) elPP.textContent = `$${ppRev.toFixed(2)}`;
             const elYP = document.getElementById('gen-yp-rev');
             if (elYP) elYP.textContent = `$${ypRev.toFixed(2)}`;
 
-            // Category bars
+            // Category revenue bars — 100% from API, fallback to 0
             const cats = rev.categories || {};
-            const pluginRev = cats.plugins?.revenue || 675;
-            const presetRev = cats.presets?.revenue || 159;
-            const beatsRev = cats.beats?.revenue || 90;
+            const pluginRev = cats.plugins?.revenue || 0;
+            const presetRev = cats.presets?.revenue || 0;
+            const beatsRev = (cats.beats?.revenue || 0) + (cats.otros?.revenue || 0);
+            const totalCats = pluginRev + presetRev + beatsRev || gross || 1; // avoid div/0
 
             const elPlVal = document.getElementById('gen-bar-plugins-val');
-            if (elPlVal) elPlVal.textContent = `$${pluginRev.toFixed(2)} (${((pluginRev/gross)*100).toFixed(1)}%)`;
+            if (elPlVal) elPlVal.textContent = `$${pluginRev.toFixed(2)} (${((pluginRev/totalCats)*100).toFixed(1)}%)`;
             const elPlBar = document.getElementById('gen-bar-plugins');
-            if (elPlBar) elPlBar.style.width = `${Math.min(100, (pluginRev/gross)*100)}%`;
+            if (elPlBar) elPlBar.style.width = `${Math.min(100, (pluginRev/totalCats)*100)}%`;
 
             const elPrVal = document.getElementById('gen-bar-presets-val');
-            if (elPrVal) elPrVal.textContent = `$${presetRev.toFixed(2)} (${((presetRev/gross)*100).toFixed(1)}%)`;
+            if (elPrVal) elPrVal.textContent = `$${presetRev.toFixed(2)} (${((presetRev/totalCats)*100).toFixed(1)}%)`;
             const elPrBar = document.getElementById('gen-bar-presets');
-            if (elPrBar) elPrBar.style.width = `${Math.min(100, (presetRev/gross)*100)}%`;
+            if (elPrBar) elPrBar.style.width = `${Math.min(100, (presetRev/totalCats)*100)}%`;
 
             const elBtVal = document.getElementById('gen-bar-beats-val');
-            if (elBtVal) elBtVal.textContent = `$${beatsRev.toFixed(2)} (${((beatsRev/gross)*100).toFixed(1)}%)`;
+            if (elBtVal) elBtVal.textContent = `$${beatsRev.toFixed(2)} (${((beatsRev/totalCats)*100).toFixed(1)}%)`;
             const elBtBar = document.getElementById('gen-bar-beats');
-            if (elBtBar) elBtBar.style.width = `${Math.min(100, (beatsRev/gross)*100)}%`;
+            if (elBtBar) elBtBar.style.width = `${Math.min(100, (beatsRev/totalCats)*100)}%`;
         }
 
         function renderBIPlugins(data) {
             const pl = data.pluginLicenses || {};
-            const elGross = document.getElementById('plugin-val-gross');
-            if (elGross) elGross.textContent = `$${(pl.totalGross || 680).toFixed(2)}`;
 
+            // totalGross from pluginLicenses = only organic plugin paid sales
+            const plGross = typeof pl.totalGross === 'number' ? pl.totalGross : 0;
+            const elGross = document.getElementById('plugin-val-gross');
+            if (elGross) elGross.textContent = `$${plGross.toFixed(2)}`;
+
+            const dawCount = data.trials?.dawActivatedCount || data.activations?.total || 0;
             const elDaw = document.getElementById('plugin-val-daw');
-            if (elDaw) elDaw.textContent = (data.trials?.dawActivatedCount || 555).toLocaleString();
+            if (elDaw) elDaw.textContent = dawCount.toLocaleString();
 
             const elTrials = document.getElementById('plugin-val-trials');
-            if (elTrials) elTrials.textContent = (data.trials?.total || 1832).toLocaleString();
+            if (elTrials) elTrials.textContent = (data.trials?.total || 0).toLocaleString();
 
+            // Real conversion: paid plugin licenses / total DAW activations
+            const plCount = pl.totalCount || 0;
+            const realConv = dawCount > 0 ? ((plCount / dawCount) * 100).toFixed(1) : '0.0';
             const elConv = document.getElementById('plugin-val-conv');
-            if (elConv) elConv.textContent = `${pl.conversionRate || '14.1'}%`;
+            if (elConv) elConv.textContent = `${realConv}%`;
 
             // Recent sales table
             const tbody = document.getElementById('plugin-sales-table-body');
@@ -5752,17 +5771,20 @@
         }
 
         function renderBIPresets(data) {
+            // Use real API category data — no hardcoded values
             const pr = data.revenue?.categories?.presets || {};
-            const gross = 109.00;
-            const leads = 1648;
-            const paid = 13;
-            const aov = '8.38';
-            const conv = '1.04';
+            const gross = typeof pr.revenue === 'number' ? pr.revenue : 0;
+            const paidOrders = pr.paidOrders || 0;
+            const freeDL = pr.freeDownloads || 0;
+            const aov = paidOrders > 0 ? (gross / paidOrders).toFixed(2) : '0.00';
+            // Conversion = paid / (paid + free leads)
+            const totalPresetLeads = paidOrders + freeDL;
+            const conv = totalPresetLeads > 0 ? ((paidOrders / totalPresetLeads) * 100).toFixed(2) : '0.00';
 
             const elGross = document.getElementById('presets-val-gross');
             if (elGross) elGross.textContent = `$${gross.toFixed(2)}`;
             const elLeads = document.getElementById('presets-val-leads');
-            if (elLeads) elLeads.textContent = leads.toLocaleString();
+            if (elLeads) elLeads.textContent = freeDL.toLocaleString();
             const elAOV = document.getElementById('presets-val-aov');
             if (elAOV) elAOV.textContent = `$${aov}`;
             const elConv = document.getElementById('presets-val-conv');
@@ -5785,15 +5807,17 @@
         }
 
         function renderBIPlantillas(data) {
-            const gross = 20.00;
-            const free = 256;
-            const paid = 3;
-            const aov = '6.67';
+            // Use real API category data — no hardcoded values
+            const pt = data.revenue?.categories?.plantillas || {};
+            const gross = typeof pt.revenue === 'number' ? pt.revenue : 0;
+            const paidOrders = pt.paidOrders || 0;
+            const freeDL = pt.freeDownloads || 0;
+            const aov = paidOrders > 0 ? (gross / paidOrders).toFixed(2) : '0.00';
 
             const elGross = document.getElementById('plantillas-val-gross');
             if (elGross) elGross.textContent = `$${gross.toFixed(2)}`;
             const elFree = document.getElementById('plantillas-val-free');
-            if (elFree) elFree.textContent = free.toLocaleString();
+            if (elFree) elFree.textContent = freeDL.toLocaleString();
             const elAOV = document.getElementById('plantillas-val-aov');
             if (elAOV) elAOV.textContent = `$${aov}`;
 
@@ -5814,15 +5838,16 @@
         }
 
         function renderBISuscripciones(data) {
+            // 100% real values from API — no hardcoded fallbacks
             const s = data.subscriptions || {};
             const elTotal = document.getElementById('subs-val-total');
-            if (elTotal) elTotal.textContent = (s.total || 141).toLocaleString();
+            if (elTotal) elTotal.textContent = (s.total || 0).toLocaleString();
             const elActive = document.getElementById('subs-val-active');
-            if (elActive) elActive.textContent = (s.active || 1).toLocaleString();
+            if (elActive) elActive.textContent = (s.active || 0).toLocaleString();
             const elPaid = document.getElementById('subs-val-paid');
-            if (elPaid) elPaid.textContent = `$${(s.paidVolume || 35.00).toFixed(2)}`;
+            if (elPaid) elPaid.textContent = `$${(s.paidVolume || 0).toFixed(2)}`;
             const elExpired = document.getElementById('subs-val-expired');
-            if (elExpired) elExpired.textContent = (s.expired || 139).toLocaleString();
+            if (elExpired) elExpired.textContent = (s.expired || 0).toLocaleString();
 
             const tbody = document.getElementById('subs-table-body');
             if (tbody && s.recent) {
@@ -5852,15 +5877,16 @@
         }
 
         function renderBIComisiones(data) {
+            // 100% real values from API — no hardcoded fallbacks
             const c = data.commissions || {};
             const elTotal = document.getElementById('com-val-total');
-            if (elTotal) elTotal.textContent = (c.totalOrders || 232).toLocaleString();
+            if (elTotal) elTotal.textContent = (c.totalOrders || 0).toLocaleString();
             const elGross = document.getElementById('com-val-gross');
-            if (elGross) elGross.textContent = `$${(c.grossVolume || 101.00).toFixed(2)}`;
+            if (elGross) elGross.textContent = `$${(c.grossVolume || 0).toFixed(2)}`;
             const elFee = document.getElementById('com-val-fee');
-            if (elFee) elFee.textContent = `$${(c.platformFeeEst || 20.20).toFixed(2)}`;
+            if (elFee) elFee.textContent = `$${(c.platformFeeEst || 0).toFixed(2)}`;
             const elCreators = document.getElementById('com-val-creators');
-            if (elCreators) elCreators.textContent = `$${(c.creatorPayoutEst || 80.80).toFixed(2)}`;
+            if (elCreators) elCreators.textContent = `$${(c.creatorPayoutEst || 0).toFixed(2)}`;
 
             const tbody = document.getElementById('com-table-body');
             if (tbody && c.topProducers) {
@@ -6657,10 +6683,10 @@
             if (!ctx) return;
             destroyBIChart('generalCategory');
 
-            const rev = MasterState.biData?.revenue?.byCategory || {};
-            const plRev = rev['Plugins'] || 680;
-            const prRev = rev['Presets Vocales'] || 109;
-            const ptRev = rev['Plantillas'] || 20;
+            const cats = MasterState.biData?.revenue?.categories || {};
+            const plRev = cats.plugins?.revenue || 0;
+            const prRev = cats.presets?.revenue || 0;
+            const ptRev = cats.plantillas?.revenue || 0;
 
             MasterState.charts['generalCategory'] = new Chart(ctx, {
                 type: 'doughnut',
@@ -6796,9 +6822,9 @@
             destroyBIChart('pluginsFunnel');
 
             const pl = MasterState.biData?.pluginLicenses || {};
-            const trials = MasterState.biData?.trials?.totalTrials || 1832;
-            const daw = MasterState.biData?.trials?.dawActivatedCount || 555;
-            const paid = pl.lifetimeLicenses || 78;
+            const trials = MasterState.biData?.trials?.total || 0;
+            const daw = MasterState.biData?.trials?.dawActivatedCount || MasterState.biData?.activations?.total || 0;
+            const paid = pl.totalCount || 0;
 
             MasterState.charts['pluginsFunnel'] = new Chart(ctx, {
                 type: 'bar',
