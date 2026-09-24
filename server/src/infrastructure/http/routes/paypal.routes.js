@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { optionalAuthenticateTokenMiddleware } from '../../middlewares/optionalAuthenticateTokenMiddleware.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
-import { createPayPalOrder, capturePayPalOrder, getSecureDownloadUrl, linkGuestOrder, connectPayPal, callbackPayPal, handlePayPalWebhook } from '../controllers/PayPalController.js';
+import { createPayPalOrder, capturePayPalOrder, getCheckoutMerchants, getSecureDownloadUrl, linkGuestOrder, connectPayPal, callbackPayPal, handlePayPalWebhook } from '../controllers/PayPalController.js';
 
 const router = Router();
 
 // --- PayPal Checkout ---
+router.post('/orders/paypal/merchants', optionalAuthenticateTokenMiddleware, getCheckoutMerchants);
 router.post('/orders/paypal/create', optionalAuthenticateTokenMiddleware, createPayPalOrder);
 router.post('/orders/paypal/capture', optionalAuthenticateTokenMiddleware, capturePayPalOrder);
 router.post('/orders/paypal/link', authenticateTokenMiddleware, linkGuestOrder);

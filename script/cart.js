@@ -397,13 +397,30 @@ const CartManager = {
         this.state.isVerifying = true;
         
         try {
-            // Fetch Users (plan, payment eligibility, nickname)
+            // 1. Fetch verified payment methods from backend (bypasses RLS to get paypal credentials safely)
+            const apiUrl = window.location.origin.includes('localhost') ? 'http://localhost:3000/api' : 'https://offszn.lat/api';
+            let backendProducers = {};
+            try {
+                const resp = await fetch(`${apiUrl}/orders/paypal/merchants`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ producerIds })
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    backendProducers = data.producers || {};
+                }
+            } catch (apiErr) {
+                console.warn("[CartManager] Backend merchants fetch fallback:", apiErr);
+            }
+
+            // 2. Fetch Users (plan, payment eligibility, nickname)
             const { data: usersData, error: usersError } = await window.supabaseClient
                 .from('users')
                 .select('id, plan, has_paypal, has_yape, nickname, is_verified')
                 .in('id', producerIds);
 
-            if (usersError) throw usersError;
+            if (usersError) console.warn("[CartManager] Supabase users query:", usersError);
 
             // Profiles is now only for username fallback
             const { data: profilesData, error: profilesError } = await window.supabaseClient
@@ -411,23 +428,23 @@ const CartManager = {
                 .select('user_id, username')
                 .in('user_id', producerIds);
 
-            if (profilesError) throw profilesError;
-
-
+            if (profilesError) console.warn("[CartManager] Profiles query:", profilesError);
 
             const verification = {};
             producerIds.forEach(pId => {
                 const user = usersData?.find(u => String(u.id) === String(pId)) || {};
                 const profile = profilesData?.find(p => String(p.user_id) === String(pId)) || {};
+                const bProd = backendProducers[pId] || {};
                 
-                const hasPayPal = !!user.has_paypal;
-                const hasYape = !!user.has_yape;
+                const hasPayPal = bProd.hasPayPal ?? !!user.has_paypal;
+                const hasYape = bProd.hasYape ?? !!user.has_yape;
 
                 verification[pId] = {
                     hasPayPal: hasPayPal,
-                    paypalEmail: null,
-                    plan: user.plan || profile.plan || 'free',
-                    nickname: user.nickname || profile.username || 'Productor',
+                    paypalEmail: bProd.paypalEmail || null,
+                    paypalPayerId: bProd.paypalPayerId || null,
+                    plan: bProd.plan || user.plan || profile.plan || 'free',
+                    nickname: bProd.nickname || user.nickname || profile.username || 'Productor',
                     username: profile.username || user.nickname || null,
                     hasYape: hasYape
                 };

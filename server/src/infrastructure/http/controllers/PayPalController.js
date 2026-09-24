@@ -151,6 +151,8 @@ export const callbackPayPal = async (req, res) => {
             .from('users')
             .update({
                 payment_methods: currentMethods,
+                paypal_email: verifiedEmail,
+                has_paypal: true,
                 paypal_verified: true,
                 paypal_payer_id: payerId
             })
@@ -180,6 +182,67 @@ const mapLicenseToKey = (name) => {
     // Direct matches
     if (['basic', 'premium', 'stems', 'trackout', 'unlimited', 'exclusive'].includes(n)) return n;
     return 'basic';
+};
+
+/**
+ * POST /api/orders/paypal/merchants
+ * Returns verified merchant IDs and emails for producers in cart, bypassing client RLS.
+ */
+export const getCheckoutMerchants = async (req, res) => {
+    try {
+        const { producerIds = [] } = req.body;
+        const MAIN_MERCHANT_ID = 'MXV5F6X8JXG4S';
+
+        if (!Array.isArray(producerIds) || producerIds.length === 0) {
+            return res.status(200).json({
+                merchants: [MAIN_MERCHANT_ID],
+                producers: {}
+            });
+        }
+
+        const cleanIds = producerIds.filter(Boolean);
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('id, nickname, paypal_email, paypal_payer_id, payment_methods, has_paypal, has_yape, plan')
+            .in('id', cleanIds);
+
+        if (error) {
+            console.error('[getCheckoutMerchants] Supabase error:', error);
+            return res.status(500).json({ error: 'Error fetching merchants' });
+        }
+
+        const merchantSet = new Set([MAIN_MERCHANT_ID]);
+        const producers = {};
+
+        (users || []).forEach(u => {
+            const email = (u.paypal_email || u.payment_methods?.paypal || '').toLowerCase().trim();
+            const payerId = (u.paypal_payer_id || '').trim();
+            const hasPayPal = Boolean(u.has_paypal || (email && email.includes('@')));
+
+            if (payerId) {
+                merchantSet.add(payerId);
+            } else if (email) {
+                merchantSet.add(email);
+            }
+
+            producers[u.id] = {
+                hasPayPal,
+                paypalEmail: email || null,
+                paypalPayerId: payerId || null,
+                nickname: u.nickname,
+                hasYape: Boolean(u.has_yape),
+                plan: u.plan || 'free'
+            };
+        });
+
+        res.status(200).json({
+            merchants: Array.from(merchantSet),
+            producers
+        });
+    } catch (err) {
+        console.error('[getCheckoutMerchants] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
 };
 
 export const createPayPalOrder = async (req, res) => {
@@ -283,7 +346,7 @@ export const createPayPalOrder = async (req, res) => {
         // 2. Fetch Producer details for PayPal Emails AND LICENSE SETTINGS
         const producerIds = [...new Set(cartItems.map(item => item.product.producer_id))];
         const [{ data: producers, error: producerError }, { data: profiles, error: profileError }] = await Promise.all([
-            supabase.from('users').select('id, paypal_email, license_settings, nickname, payment_methods, plan, role').in('id', producerIds),
+            supabase.from('users').select('id, paypal_email, paypal_payer_id, license_settings, nickname, payment_methods, plan, role').in('id', producerIds),
             supabase.from('users').select('id, plan, role').in('id', producerIds)
         ]);
 
@@ -301,6 +364,7 @@ export const createPayPalOrder = async (req, res) => {
             producerMap.set(u.id, {
                 id: u.id,
                 email: finalPaypalEmail,
+                payerId: u.paypal_payer_id,
                 settings: u.license_settings,
                 nickname: u.nickname,
                 plan: finalPlan,
@@ -643,11 +707,12 @@ export const createPayPalOrder = async (req, res) => {
             } else {
                 // External producer — split: producer gets their amount, platform fee added separately
                 const itemNet = (parseFloat(item.variant_price) || 0) * globalDiscountFactor;
-                const payeeId = producer.email.toLowerCase().trim();
-                const current = payeeGroups.get(payeeId) || { amount: 0, type: 'email', nickname: producer.nickname };
+                const payeeId = (producer.payerId && producer.payerId.trim()) ? producer.payerId.trim() : producer.email.toLowerCase().trim();
+                const payeeType = (producer.payerId && producer.payerId.trim()) ? 'id' : 'email';
+                const current = payeeGroups.get(payeeId) || { amount: 0, type: payeeType, nickname: producer.nickname };
                 current.amount += itemNet;
                 payeeGroups.set(payeeId, current);
-                console.log(`[PayPalOrder] Split: $${itemNet.toFixed(2)} → ${payeeId} (producer) | fee tracked separately`);
+                console.log(`[PayPalOrder] Split: $${itemNet.toFixed(2)} → ${payeeId} (${payeeType}) (producer) | fee tracked separately`);
             }
         });
 
@@ -911,6 +976,23 @@ export const capturePayPalOrder = async (req, res) => {
                 const capture = unit.payments?.captures?.[0];
                 return acc + (capture ? parseFloat(capture.amount.value) : 0);
             }, 0);
+
+            // Auto-update producer's paypal_payer_id if returned by PayPal and not yet set
+            try {
+                for (const unit of (response.result?.purchase_units || [])) {
+                    const payeeMerchantId = unit.payee?.merchant_id;
+                    const payeeEmail = (unit.payee?.email_address || '').toLowerCase().trim();
+                    if (payeeMerchantId && payeeMerchantId !== MAIN_MERCHANT_ID && payeeEmail) {
+                        await supabase
+                            .from('users')
+                            .update({ paypal_payer_id: payeeMerchantId })
+                            .eq('paypal_email', payeeEmail)
+                            .is('paypal_payer_id', null);
+                    }
+                }
+            } catch (autoSaveErr) {
+                console.warn('[PayPalCapture] Auto-save payer_id non-critical error:', autoSaveErr);
+            }
 
             // Prioritize email from request body (typed by user) over PayPal account email
             const payerEmail = req.body.guestEmail || response.result.payer?.email_address;

@@ -1362,23 +1362,34 @@ const CheckoutManager = {
       return;
     }
 
+    const MAIN_OFFSZN_MERCHANT_ID = 'MXV5F6X8JXG4S';
     const merchantIds = new Set();
 
-    // Only include platform merchant ID if there is a service fee
+    // Include platform merchant ID if there is a service fee or platform product
     const totals = this.calculateTotals();
     if (totals.serviceFee > 0) {
-      // Must match exactly PLATFORM_PAYPAL_EMAIL in backend config
-      merchantIds.add('willie2008garay@gmail.com');
+      merchantIds.add(MAIN_OFFSZN_MERCHANT_ID);
     }
 
-    // Add all producer emails from the cart
+    // Add all producer merchants / emails from the cart
     CartManager.state.items.forEach(item => {
-      const pData = window.CartManager?.state?.producerVerification?.[item.product.producer_id];
-      if (pData && pData.hasPayPal && pData.paypalEmail) {
-        // Enforce lowercase/trimmed to match backend Map identifiers
-        merchantIds.add(pData.paypalEmail.toLowerCase().trim());
+      const prodId = item.product?.producer_id;
+      if (!prodId) {
+        merchantIds.add(MAIN_OFFSZN_MERCHANT_ID);
+        return;
+      }
+      const pData = window.CartManager?.state?.producerVerification?.[prodId];
+      if (pData && pData.hasPayPal) {
+        const mId = (pData.paypalPayerId && pData.paypalPayerId.trim()) 
+          ? pData.paypalPayerId.trim() 
+          : (pData.paypalEmail ? pData.paypalEmail.toLowerCase().trim() : null);
+        if (mId) merchantIds.add(mId);
       }
     });
+
+    if (merchantIds.size === 0) {
+      merchantIds.add(MAIN_OFFSZN_MERCHANT_ID);
+    }
 
     const merchantIdArr = Array.from(merchantIds).sort(); // SORT to ensure stable string
     const merchantIdString = merchantIdArr.join(',');
@@ -1430,8 +1441,9 @@ const CheckoutManager = {
       script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=*`;
       script.setAttribute('data-merchant-id', merchantIdString);
     } else if (merchantIdArr.length === 1) {
-      // SINGLE PAYEE: Put the specific merchant ID directly in the URL
+      // SINGLE PAYEE: Put the specific merchant ID directly in the URL and attribute
       script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=${merchantIdArr[0]}`;
+      script.setAttribute('data-merchant-id', merchantIdArr[0]);
     } else {
       // FALLBACK: Standard SDK load
       script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture`;
