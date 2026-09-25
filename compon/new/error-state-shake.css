@@ -1,0 +1,113 @@
+/* ==========================================================================
+   OFFSZN UI Library • Error State Shake (.t-*)
+   Inspirado en transitions.dev (Motion tokens + Cubic-bezier keyframes)
+   Docs: https://transitions.dev/detail.html?t=error-state-shake
+   ========================================================================== */
+
+:root {
+  /* Motion Tokens */
+  --t-shake-distance: 6px;
+  --t-shake-overshoot: 4px;
+  --t-shake-dur-a: 80ms;
+  --t-shake-dur-b: 60ms;
+  --t-shake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-revert-hold: 3000ms;
+  --t-revert-dur: 280ms;
+  --t-error-border: #e23014;
+  --t-error-text: #ea3822;
+}
+
+/* Wrapper */
+.t-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+/* Input Container */
+.t-input {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  outline: none;
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+  will-change: transform;
+}
+
+.t-input:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.t-input:focus-within {
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+/* Estado de error: sobreescribe el color del borde sin alterar el ancho (1px) */
+.t-input.is-error {
+  border-color: var(--t-error-border);
+  transition: border-color var(--t-revert-dur, 280ms) ease-out;
+}
+
+/* Elemento input nativo */
+.t-input-el {
+  flex: 1 0 0;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #ffffff;
+  padding: 0;
+}
+
+.t-input-el::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+/* Mensaje de error: fade-in con delay en fade-out para evitar saltos */
+.t-error-msg {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--t-error-text);
+  margin: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity    var(--t-revert-dur, 280ms) ease-out,
+    visibility 0s linear var(--t-revert-dur, 280ms);
+}
+
+.t-input-wrap.is-error .t-error-msg {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity    var(--t-revert-dur, 280ms) ease-out,
+    visibility 0s linear 0s;
+}
+
+/* Animación multi-fase de sacudida con easing independiente por parada */
+.t-input.is-shaking {
+  animation: t-input-shake calc(
+    var(--t-shake-dur-a) * 2 + var(--t-shake-dur-b) * 2
+  ) linear;
+}
+
+@keyframes t-input-shake {
+  0%      { transform: translateX(0);                                       animation-timing-function: var(--t-shake-ease); }
+  28.57%  { transform: translateX(var(--t-shake-distance));                 animation-timing-function: var(--t-shake-ease); }
+  57.14%  { transform: translateX(calc(var(--t-shake-distance) * -1));     animation-timing-function: var(--t-shake-ease); }
+  78.57%  { transform: translateX(var(--t-shake-overshoot));                animation-timing-function: var(--t-shake-ease); }
+  100%    { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-input { animation: none !important; transform: none !important; }
+}

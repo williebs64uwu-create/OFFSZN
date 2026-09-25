@@ -194,81 +194,156 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
+            padding-right: 2px;
         }
 
-        .nav-section-title {
-            font-size: 10px;
-            font-weight: 600;
-            font-family: var(--font-mono);
-            text-transform: uppercase;
-            letter-spacing: 0.7px;
-            color: var(--text-dim);
-            padding: 12px 10px 6px;
-        }
-
-        .nav-btn {
+        .nav-section-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 7px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #5c5c66;
+            padding: 18px 12px 6px;
+            cursor: pointer;
             border-radius: 6px;
+            transition: color 0.15s ease;
+            user-select: none;
+        }
+
+        .nav-section-header:first-of-type {
+            padding-top: 4px;
+        }
+
+        .nav-section-header:hover {
+            color: #a1a1aa;
+        }
+
+        .nav-section-header i.nav-collapse-icon {
+            font-size: 9px;
+            color: #52525b;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .nav-section-header.collapsed i.nav-collapse-icon {
+            transform: rotate(-90deg);
+        }
+
+        .nav-section-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-section-group.collapsed {
+            display: none;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #5c5c66;
+            padding: 16px 12px 6px;
+        }
+
+        /* Clean, Ergonomic Nav Buttons (Exact match to Image 1) */
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 9px 12px;
+            border-radius: 9px;
             background: transparent;
-            color: var(--text-muted);
+            color: #8e8e93;
             border: 1px solid transparent;
-            font-size: 12.5px;
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.14s ease;
+            transition: all 0.14s cubic-bezier(0.16, 1, 0.3, 1);
             text-align: left;
             width: 100%;
         }
 
         .nav-btn:hover {
-            background: var(--bg-card);
-            color: var(--text-pure);
-            border-color: var(--border-subtle);
+            background: rgba(255, 255, 255, 0.045);
+            color: #f4f4f5;
         }
 
+        /* Active State - Elevated Rounded Dark Pill (Exact match to Image 1 "Panel Principal") */
         .nav-btn.active {
-            background: #ffffff;
-            color: #000000;
+            background: #1c1c20;
+            color: #ffffff;
             font-weight: 600;
-            border-color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
 
         .nav-btn-content {
             display: flex;
             align-items: center;
-            gap: 9px;
+            gap: 11px;
+            min-width: 0;
+            flex-grow: 1;
         }
 
-        .nav-btn-content i {
-            font-size: 14px;
+        .nav-btn-content i,
+        .nav-btn i {
+            font-size: 15px;
+            width: 18px;
+            text-align: center;
+            color: #71717a;
+            transition: color 0.14s ease;
+            flex-shrink: 0;
         }
 
-        .nav-badge {
-            font-family: var(--font-mono);
-            font-size: 10px;
-            padding: 1px 6px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--text-muted);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .nav-btn.active .nav-badge {
-            background: #000000;
+        .nav-btn:hover .nav-btn-content i,
+        .nav-btn.active .nav-btn-content i,
+        .nav-btn:hover i,
+        .nav-btn.active i {
             color: #ffffff;
-            border-color: #000000;
+        }
+
+        .nav-btn-content span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Minimalist Sincronizado Live Bar (Exact match to Image 1 bottom status) */
+        .sidebar-sync-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border-radius: 8px;
+            background: rgba(34, 197, 94, 0.05);
+            border: 1px solid rgba(34, 197, 94, 0.15);
+            margin-top: 12px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #4ade80;
+        }
+
+        .sidebar-sync-bar i {
+            font-size: 14px;
+            color: #22c55e;
         }
 
         .sidebar-footer {
-            padding-top: 14px;
+            padding-top: 10px;
             border-top: 1px solid var(--border-subtle);
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 4px;
         }
 
         .quick-link {
@@ -279,8 +354,13 @@
             color: var(--text-dim);
             text-decoration: none;
             padding: 6px 10px;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: all 0.15s;
+        }
+
+        .quick-link:hover {
+            color: var(--text-pure);
+            background: var(--bg-card);
         }
 
         .quick-link:hover {
@@ -1039,7 +1119,57 @@
             border-radius: 99px;
         }
 
-        /* Backward Compatibility for Other Subviews */
+        /* ══════════════════════════════════════════════════════════════
+           VISUAL & TYPOGRAPHIC HIERARCHY SYSTEM
+           ══════════════════════════════════════════════════════════════ */
+        .cf-header {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .cf-page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.03em;
+            margin: 0;
+            line-height: 1.2;
+        }
+
+        .cf-page-subtitle {
+            font-size: 13px;
+            color: #71717a;
+            margin-top: 5px;
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
+        /* High-Impact KPI Metrics Hierarchy */
+        .kpi-stat-value {
+            font-size: 30px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .kpi-stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #71717a;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        /* ══════════════════════════════════════════════════════════════
+           BACKWARD COMPATIBILITY & SUBVIEWS
+           ══════════════════════════════════════════════════════════════ */
         .bi-subnav-bar {
             display: flex;
             align-items: center;
@@ -1472,7 +1602,7 @@
         @media (max-width: 1024px) {
             .dual-grid { grid-template-columns: 1fr; }
             aside.sidebar { width: 72px; min-width: 72px; padding: 14px 8px; }
-            .brand-text, .nav-btn span, .nav-section-title, .quick-link span, .sidebar-footer { display: none; }
+            .brand-text, .nav-btn span, .nav-section-title, .nav-section-header, .nav-skill-tag, .quick-link span, .sidebar-footer, .sidebar-sync-bar { display: none; }
             .nav-btn { justify-content: center; padding: 10px; }
             .brand-header { justify-content: center; }
         }
@@ -2227,109 +2357,107 @@
         </div>
 
         <div class="nav-menu scrollable">
-            <div class="nav-section-title">Análisis de Negocio</div>
-            <button class="nav-btn active" data-tab="bi-general" onclick="switchView('bi-general')">
-                <div class="nav-btn-content">
-                    <i class="bi bi-grid-1x2"></i>
-                    <span>General (Consolidado)</span>
-                </div>
-            </button>
-            <button class="nav-btn" data-tab="bi-plugins" onclick="switchView('bi-plugins')">
-                <div class="nav-btn-content">
+            <!-- ── SECCIÓN 1: TRABAJO (PANEL PRINCIPAL & BI) ── -->
+            <div class="nav-section-header" onclick="toggleNavSection(this)">
+                <span>TRABAJO</span>
+                <i class="bi bi-chevron-down nav-collapse-icon"></i>
+            </div>
+            <div class="nav-section-group">
+                <button class="nav-btn active" data-tab="bi-general" onclick="switchView('bi-general')">
+                    <i class="bi bi-house-door"></i>
+                    <span>Panel Principal</span>
+                </button>
+                <button class="nav-btn" data-tab="bi-plugins" onclick="switchView('bi-plugins')">
                     <i class="bi bi-sliders2"></i>
                     <span>Plugins (Mix & Master)</span>
-                </div>
-            </button>
-            <button class="nav-btn" data-tab="bi-presets" onclick="switchView('bi-presets')">
-                <div class="nav-btn-content">
+                </button>
+                <button class="nav-btn" data-tab="bi-presets" onclick="switchView('bi-presets')">
                     <i class="bi bi-soundwave"></i>
                     <span>Presets Vocales</span>
-                </div>
-            </button>
-            <button class="nav-btn" data-tab="bi-plantillas" onclick="switchView('bi-plantillas')">
-                <div class="nav-btn-content">
-                    <i class="bi bi-folder"></i>
+                </button>
+                <button class="nav-btn" data-tab="bi-plantillas" onclick="switchView('bi-plantillas')">
+                    <i class="bi bi-folder2-open"></i>
                     <span>Plantillas de Mezcla</span>
-                </div>
-            </button>
-            <button class="nav-btn" data-tab="bi-suscripciones" onclick="switchView('bi-suscripciones')">
-                <div class="nav-btn-content">
+                </button>
+                <button class="nav-btn" data-tab="bi-suscripciones" onclick="switchView('bi-suscripciones')">
                     <i class="bi bi-arrow-repeat"></i>
                     <span>Suscripciones OFFSZN</span>
-                </div>
-            </button>
-            <button class="nav-btn" data-tab="bi-comisiones" onclick="switchView('bi-comisiones')">
-                <div class="nav-btn-content">
+                </button>
+                <button class="nav-btn" data-tab="bi-comisiones" onclick="switchView('bi-comisiones')">
                     <i class="bi bi-person-hearts"></i>
                     <span>Comisiones Ganadas</span>
-                </div>
-            </button>
-            <button class="nav-btn" data-tab="bi-comparar" onclick="switchView('bi-comparar')">
-                <div class="nav-btn-content">
+                </button>
+                <button class="nav-btn" data-tab="bi-comparar" onclick="switchView('bi-comparar')">
                     <i class="bi bi-bar-chart"></i>
                     <span>Comparador & Márgenes</span>
-                </div>
-            </button>
+                </button>
+            </div>
 
-            <div class="nav-section-title">Operaciones & Catálogo</div>
-            <a href="licencias.html" target="_blank" class="nav-btn" style="text-decoration: none;">
-                <div class="nav-btn-content">
+            <!-- ── SECCIÓN 2: EQUIPO & OPERACIONES ── -->
+            <div class="nav-section-header" onclick="toggleNavSection(this)">
+                <span>EQUIPO & OPERACIONES</span>
+                <i class="bi bi-chevron-down nav-collapse-icon"></i>
+            </div>
+            <div class="nav-section-group">
+                <a href="licencias.html" target="_blank" class="nav-btn" style="text-decoration: none;">
                     <i class="bi bi-send-check"></i>
                     <span>Despacho Operativo ↗</span>
-                </div>
-            </a>
-            <button class="nav-btn" data-tab="licencias" onclick="switchView('licencias')">
-                <div class="nav-btn-content">
-                    <i class="bi bi-key"></i>
+                </a>
+                <button class="nav-btn" data-tab="licencias" onclick="switchView('licencias')">
+                    <i class="bi bi-shield-lock"></i>
                     <span>Auditoría HWID & PDFs</span>
-                </div>
-            </button>
-            <button class="nav-btn" data-tab="audiencia" onclick="switchView('audiencia')">
-                <div class="nav-btn-content">
+                </button>
+                <button class="nav-btn" data-tab="audiencia" onclick="switchView('audiencia')">
                     <i class="bi bi-people"></i>
-                    <span>Audiencia & Leads</span>
-                </div>
-            </button>
+                    <span>Audiencia & Clientes</span>
+                </button>
+            </div>
 
-            <div class="nav-section-title">Marketing & Embudos</div>
-            <button class="nav-btn" data-tab="funnel" onclick="switchView('funnel')">
-                <div class="nav-btn-content">
+            <!-- ── SECCIÓN 3: NEGOCIO & MARKETING ── -->
+            <div class="nav-section-header" onclick="toggleNavSection(this)">
+                <span>NEGOCIO & MARKETING</span>
+                <i class="bi bi-chevron-down nav-collapse-icon"></i>
+            </div>
+            <div class="nav-section-group">
+                <button class="nav-btn" data-tab="funnel" onclick="switchView('funnel')">
                     <i class="bi bi-funnel"></i>
                     <span>Calculadora & Funnel</span>
-                </div>
-            </button>
-            <button class="nav-btn" data-tab="wallet" onclick="switchView('wallet')">
-                <div class="nav-btn-content">
+                </button>
+                <button class="nav-btn" data-tab="wallet" onclick="switchView('wallet')">
                     <i class="bi bi-wallet2"></i>
                     <span>Google Wallet & Push</span>
-                </div>
-            </button>
-            <button class="nav-btn" data-tab="recuperacion" onclick="switchView('recuperacion')">
-                <div class="nav-btn-content">
+                </button>
+                <button class="nav-btn" data-tab="recuperacion" onclick="switchView('recuperacion')">
                     <i class="bi bi-cart-x"></i>
                     <span>Recuperación de Carritos</span>
-                </div>
-            </button>
-
-            <div class="nav-section-title">Sistema & Contenido</div>
-            <button class="nav-btn" data-tab="diagnostico" onclick="switchView('diagnostico')">
-                <div class="nav-btn-content">
-                    <i class="bi bi-shield-check"></i>
-                    <span>Diagnóstico & Logs</span>
-                </div>
-            </button>
-            <button class="nav-btn" data-tab="contenido" onclick="switchView('contenido')">
-                <div class="nav-btn-content">
+                </button>
+                <button class="nav-btn" data-tab="contenido" onclick="switchView('contenido')">
                     <i class="bi bi-film"></i>
                     <span>Bóveda de Contenido</span>
-                </div>
-            </button>
-            <button class="nav-btn" data-tab="telemetria" onclick="switchView('telemetria')">
-                <div class="nav-btn-content">
+                </button>
+            </div>
+
+            <!-- ── SECCIÓN 4: SISTEMA & CONTROL ── -->
+            <div class="nav-section-header" onclick="toggleNavSection(this)">
+                <span>SISTEMA & CONTROL</span>
+                <i class="bi bi-chevron-down nav-collapse-icon"></i>
+            </div>
+            <div class="nav-section-group">
+                <button class="nav-btn" data-tab="diagnostico" onclick="switchView('diagnostico')">
+                    <i class="bi bi-cpu"></i>
+                    <span>Diagnóstico & Logs</span>
+                </button>
+                <button class="nav-btn" data-tab="telemetria" onclick="switchView('telemetria')">
                     <i class="bi bi-broadcast"></i>
-                    <span>Telemetría & Live Stream</span>
-                </div>
-            </button>
+                    <span>Telemetría Live Stream</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ── BARRA INFERIOR DE ESTADO: SINCRONIZADO (Inspirado en Ref 1) ── -->
+        <div class="sidebar-sync-bar" id="sidebar-sync-status-bar" title="Sincronización en tiempo real activa con Supabase">
+            <i class="bi bi-check-circle-fill"></i>
+            <span>Sincronizado</span>
         </div>
 
         <div class="sidebar-footer">
@@ -2359,7 +2487,7 @@
                 <span>/</span>
                 <span>Owner</span>
                 <span>/</span>
-                <span class="active-tab-title" id="crumb-tab">Ventas & Transacciones</span>
+                <span class="active-tab-title" id="crumb-tab">Panel Principal (Consolidado)</span>
             </div>
 
             <div class="top-actions">
@@ -2396,8 +2524,8 @@
                 <div class="cf-title-row">
                     <div class="cf-title-icon"><i class="bi bi-graph-up-arrow"></i></div>
                     <div>
-                        <h1 class="cf-page-title">Ventas & E-Commerce</h1>
-                        <p class="cf-page-subtitle">Auditoría financiera, ingresos netos y registro de transacciones en tiempo real de OFFSZN.</p>
+                        <h1 class="cf-page-title">Panel Principal</h1>
+                        <p class="cf-page-subtitle">Consolidado financiero, ventas en tiempo real y registro de transacciones de OFFSZN.</p>
                     </div>
                 </div>
                 <div class="cf-header-actions">
@@ -4186,6 +4314,18 @@
              VIEW 4: CALCULADORA & FUNNEL HUB
              ──────────────────────────────────────────────────────────── -->
         <div id="view-funnel" class="view-container">
+            <!-- SKILL IDENTITY BANNER -->
+            <div class="skill-identity-banner">
+                <div class="skill-identity-left">
+                    <span class="skill-badge-pill"><i class="bi bi-funnel-fill"></i> SKILL ID: GROWTH_CONVERSION_CALCULATOR</span>
+                    <span class="skill-status-tag"><i class="bi bi-broadcast"></i> SIMULADOR DE ROI</span>
+                </div>
+                <div class="skill-identity-meta">
+                    <span>Jerarquía: <strong>NEGOCIO & MARKETING > EMBUDOS</strong></span>
+                    <span>Modelo: <strong>AOV, CAC & LTV Forecast</strong></span>
+                </div>
+            </div>
+
             <!-- Guía de Operación -->
             <div class="guide-box">
                 <div class="guide-content">
@@ -4292,6 +4432,18 @@
              VIEW 5: GOOGLE WALLET & PUSH (CONSOLIDA ADMIN-WALLET.HTML)
              ──────────────────────────────────────────────────────────── -->
         <div id="view-wallet" class="view-container">
+            <!-- SKILL IDENTITY BANNER -->
+            <div class="skill-identity-banner">
+                <div class="skill-identity-left">
+                    <span class="skill-badge-pill"><i class="bi bi-wallet2"></i> SKILL ID: RETENTION_GOOGLE_WALLET_PASSES</span>
+                    <span class="skill-status-tag"><i class="bi bi-broadcast"></i> PUSH MESSAGING HUB</span>
+                </div>
+                <div class="skill-identity-meta">
+                    <span>Jerarquía: <strong>NEGOCIO & MARKETING > FIDELIZACIÓN</strong></span>
+                    <span>Canal: <strong>Google Wallet API</strong></span>
+                </div>
+            </div>
+
             <!-- Guía de Operación -->
             <div class="guide-box">
                 <div class="guide-content">
@@ -4401,6 +4553,18 @@
              VIEW 6: RECUPERACIÓN & CARRITOS (CONSOLIDA RECOVERY_DASHBOARD.HTML)
              ──────────────────────────────────────────────────────────── -->
         <div id="view-recuperacion" class="view-container">
+            <!-- SKILL IDENTITY BANNER -->
+            <div class="skill-identity-banner">
+                <div class="skill-identity-left">
+                    <span class="skill-badge-pill"><i class="bi bi-cart-x"></i> SKILL ID: CART_RECOVERY_AUTOMATION</span>
+                    <span class="skill-status-tag"><i class="bi bi-broadcast"></i> DETECTOR DE ABANDONOS ACTIVO</span>
+                </div>
+                <div class="skill-identity-meta">
+                    <span>Jerarquía: <strong>NEGOCIO & MARKETING > RETENCIÓN</strong></span>
+                    <span>Canal: <strong>Webhook & Email Automation</strong></span>
+                </div>
+            </div>
+
             <!-- Guía de Operación -->
             <div class="guide-box">
                 <div class="guide-content">
@@ -4506,6 +4670,18 @@
              VIEW 7: DIAGNÓSTICO & LOGS DEL SISTEMA (CONSOLIDA SYSTEM-LOGS.HTML)
              ──────────────────────────────────────────────────────────── -->
         <div id="view-diagnostico" class="view-container">
+            <!-- SKILL IDENTITY BANNER -->
+            <div class="skill-identity-banner">
+                <div class="skill-identity-left">
+                    <span class="skill-badge-pill"><i class="bi bi-cpu-fill"></i> SKILL ID: SYSTEM_HEALTH_AND_LOGS</span>
+                    <span class="skill-status-tag"><i class="bi bi-broadcast"></i> LATENCIA Y SERVIDORES OK</span>
+                </div>
+                <div class="skill-identity-meta">
+                    <span>Jerarquía: <strong>SISTEMA & CONTROL > SALUD</strong></span>
+                    <span>Infraestructura: <strong>PostgreSQL & Cloudflare</strong></span>
+                </div>
+            </div>
+
             <!-- Guía de Operación -->
             <div class="guide-box">
                 <div class="guide-content">
@@ -4560,6 +4736,18 @@
              VIEW 8: BÓVEDA DE CONTENIDO & BANCO DE HOOKS (CONSOLIDA CONTENT-CALENDAR)
              ──────────────────────────────────────────────────────────── -->
         <div id="view-contenido" class="view-container">
+            <!-- SKILL IDENTITY BANNER -->
+            <div class="skill-identity-banner">
+                <div class="skill-identity-left">
+                    <span class="skill-badge-pill"><i class="bi bi-film"></i> SKILL ID: CONTENT_VAULT_AND_MEDIA</span>
+                    <span class="skill-status-tag"><i class="bi bi-broadcast"></i> ACTIVOS DE MARKETING</span>
+                </div>
+                <div class="skill-identity-meta">
+                    <span>Jerarquía: <strong>NEGOCIO & MARKETING > ACTIVOS</strong></span>
+                    <span>Formatos: <strong>Reels, TikTok Hooks & Copys</strong></span>
+                </div>
+            </div>
+
             <!-- Guía de Operación -->
             <div class="guide-box">
                 <div class="guide-content">
@@ -4822,6 +5010,18 @@
              VIEW 9: TELEMETRÍA & LIVE EVENT STREAM (SYSTEM LOGS)
              ──────────────────────────────────────────────────────────── -->
         <div id="view-telemetria" class="view-container">
+            <!-- SKILL IDENTITY BANNER -->
+            <div class="skill-identity-banner">
+                <div class="skill-identity-left">
+                    <span class="skill-badge-pill"><i class="bi bi-broadcast"></i> SKILL ID: TELEMETRY_REALTIME_STREAM</span>
+                    <span class="skill-status-tag"><i class="bi bi-broadcast"></i> WEBSOCKET & HTTP LONG-POLL</span>
+                </div>
+                <div class="skill-identity-meta">
+                    <span>Jerarquía: <strong>SISTEMA & CONTROL > TELEMETRÍA</strong></span>
+                    <span>Flujo: <strong>Eventos en Vivo & Auditoría</strong></span>
+                </div>
+            </div>
+
             <!-- Guía de Operación -->
             <div class="guide-box">
                 <div class="guide-content">
@@ -5453,6 +5653,14 @@
         }
 
         // Tab Router
+        function toggleNavSection(headerEl) {
+            const group = headerEl.nextElementSibling;
+            if (group && group.classList.contains('nav-section-group')) {
+                const isCollapsed = group.classList.toggle('collapsed');
+                headerEl.classList.toggle('collapsed', isCollapsed);
+            }
+        }
+
         function switchView(tabId) {
             if (!isOwnerAuthenticated) return;
             const aliasMap = {
@@ -5476,22 +5684,33 @@
             if (targetView) targetView.classList.add('active');
 
             const targetBtn = document.querySelector(`.nav-btn[data-tab="${activeTab}"]`);
-            if (targetBtn) targetBtn.classList.add('active');
+            if (targetBtn) {
+                targetBtn.classList.add('active');
+                // Ensure parent group is expanded so user sees active state
+                const parentGroup = targetBtn.closest('.nav-section-group');
+                if (parentGroup && parentGroup.classList.contains('collapsed')) {
+                    parentGroup.classList.remove('collapsed');
+                    const prevHeader = parentGroup.previousElementSibling;
+                    if (prevHeader && prevHeader.classList.contains('nav-section-header')) {
+                        prevHeader.classList.remove('collapsed');
+                    }
+                }
+            }
 
             const targetSubnavs = document.querySelectorAll(`.bi-subnav-btn[data-tab="${activeTab}"]`);
             targetSubnavs.forEach(btn => btn.classList.add('active'));
 
             const tabNames = {
-                ventas: '1. General (Consolidado)',
-                'bi-general': '1. General (Consolidado)',
-                'bi-plugins': '2. Plugins (Easy Mix & Master)',
-                'bi-presets': '3. Presets Vocales de Artistas',
-                'bi-plantillas': '4. Plantillas de Mezcla',
-                'bi-suscripciones': '5. Suscripciones OFFSZN',
-                'bi-comisiones': '6. Comisiones Ganadas',
-                'bi-comparar': '7. Comparador E-Commerce & Márgenes',
+                ventas: 'Panel Principal (Consolidado)',
+                'bi-general': 'Panel Principal (Consolidado)',
+                'bi-plugins': 'Plugins (Easy Mix & Master)',
+                'bi-presets': 'Presets Vocales de Artistas',
+                'bi-plantillas': 'Plantillas de Mezcla DAW',
+                'bi-suscripciones': 'Suscripciones OFFSZN (MRR)',
+                'bi-comisiones': 'Comisiones Ganadas',
+                'bi-comparar': 'Comparador E-Commerce & Márgenes',
                 licencias: 'Auditoría HWID & PDFs',
-                audiencia: 'Audiencia & Leads (3,949)',
+                audiencia: 'Audiencia & Clientes (3,949 Leads)',
                 funnel: 'Calculadora & Funnel Hub',
                 wallet: 'Google Wallet & Push',
                 recuperacion: 'Recuperación de Carritos',

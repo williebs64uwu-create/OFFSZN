@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFFSZN • Laboratorio de Componentes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================================================
+       1. VARIABLES & MOTION TOKENS (transitions.dev: Error State Shake)
+       ========================================================================== */
+    :root {
+      /* Motion tokens - transitions.dev error-state-shake */
+      --t-shake-distance: 6px;
+      --t-shake-overshoot: 4px;
+      --t-shake-dur-a: 80ms;
+      --t-shake-dur-b: 60ms;
+      --t-shake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+      --t-revert-hold: 3000ms;
+      --t-revert-dur: 280ms;
+      --t-error-border: #e23014;
+      --t-error-text: #ea3822;
+
+      /* UI Workbench Theme Tokens */
+      --bg-page: #0b0b0e;
+      --bg-surface: #121217;
+      --bg-card: #18181f;
+      --bg-card-subtle: #20202a;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(255, 255, 255, 0.35);
+      --text-main: #f3f3f6;
+      --text-muted: #8e8ea0;
+      --text-faint: #565666;
+      --accent-purple: #7928ca;
+      --accent-purple-glow: rgba(121, 40, 202, 0.25);
+      --accent-cyan: #0070f3;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(121, 40, 202, 0.12), transparent 45%),
+        radial-gradient(circle at 100% 50%, rgba(0, 112, 243, 0.05), transparent 40%);
+    }
+
+    /* Top Navigation / Header */
+    header.lab-header {
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(18, 18, 23, 0.7);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-badge {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff0080, #7928ca);
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-left: 8px;
+      padding-left: 8px;
+      border-left: 1px solid var(--border-subtle);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    /* Layout */
+    .lab-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 2rem;
+      flex: 1;
+    }
+
+    /* Sidebar - Components List */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .sidebar-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+    }
+
+    .sidebar-heading {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-faint);
+      margin-bottom: 0.85rem;
+      font-weight: 600;
+    }
+
+    .comp-nav {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .comp-nav-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .comp-nav-link:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .comp-nav-link.active {
+      color: #fff;
+      background: rgba(121, 40, 202, 0.2);
+      border: 1px solid rgba(121, 40, 202, 0.4);
+    }
+
+    .pill-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-faint);
+    }
+
+    .comp-nav-link.active .pill-tag {
+      background: rgba(121, 40, 202, 0.6);
+      color: #fff;
+    }
+
+    /* Main Content Area */
+    .main-stage {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .component-header {
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 1.25rem;
+    }
+
+    .comp-badge-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .badge-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+
+    .badge-tag.source {
+      background: rgba(0, 112, 243, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(0, 112, 243, 0.3);
+    }
+
+    .comp-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+
+    .comp-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Showcase Canvas & Controls */
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 1.5rem;
+    }
+
+    /* Interactive Preview Canvas */
+    .preview-canvas {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .canvas-topbar {
+      padding: 0.75rem 1.25rem;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .canvas-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-faint);
+    }
+
+    .canvas-viewport {
+      min-height: 280px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2rem;
+      background: 
+        radial-gradient(circle at center, rgba(255, 255, 255, 0.02) 0%, transparent 70%),
+        #111115;
+      position: relative;
+    }
+
+    /* ==========================================================================
+       2. REUSABLE COMPONENT: ERROR STATE SHAKE (.t-*)
+       Matches the exact user screenshot & transitions.dev spec
+       ========================================================================== */
+    .t-input-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+      max-width: 280px;
+      user-select: none;
+    }
+
+    .t-input {
+      display: flex;
+      align-items: center;
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 8px;
+      background: #181818;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      outline: none;
+      transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+      will-change: transform;
+      position: relative;
+    }
+
+    .t-input:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .t-input:focus-within {
+      border-color: rgba(255, 255, 255, 0.55);
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+    }
+
+    /* Error state border */
+    .t-input.is-error {
+      border-color: var(--t-error-border);
+      transition: border-color var(--t-revert-dur, 280ms) ease-out;
+    }
+
+    .t-input-el {
+      flex: 1 0 0;
+      min-width: 0;
+      height: 100%;
+      border: 0;
+      outline: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.4;
+      color: #ffffff;
+      padding: 0;
+      font-weight: 400;
+    }
+
+    .t-input-el::placeholder {
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    /* Error Message Reveal with Delay */
+    .t-error-msg {
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--t-error-text);
+      margin: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity    var(--t-revert-dur, 280ms) ease-out,
+        visibility 0s linear var(--t-revert-dur, 280ms);
+    }
+
+    .t-input-wrap.is-error .t-error-msg {
+      opacity: 1;
+      visibility: visible;
+      transition:
+        opacity    var(--t-revert-dur, 280ms) ease-out,
+        visibility 0s linear 0s;
+    }
+
+    /* Multi-segment keyframe with per-stop easing curve from Figma / transitions.dev */
+    .t-input.is-shaking {
+      animation: t-input-shake calc(
+        var(--t-shake-dur-a) * 2 + var(--t-shake-dur-b) * 2
+      ) linear;
+    }
+
+    @keyframes t-input-shake {
+      0%      { transform: translateX(0);                                       animation-timing-function: var(--t-shake-ease); }
+      28.57%  { transform: translateX(var(--t-shake-distance));                 animation-timing-function: var(--t-shake-ease); }
+      57.14%  { transform: translateX(calc(var(--t-shake-distance) * -1));     animation-timing-function: var(--t-shake-ease); }
+      78.57%  { transform: translateX(var(--t-shake-overshoot));                animation-timing-function: var(--t-shake-ease); }
+      100%    { transform: translateX(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .t-input { animation: none !important; transform: none !important; }
+    }
+
+    /* Action Trigger Button under Canvas */
+    .canvas-footer {
+      padding: 1rem 1.25rem;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .btn-animate {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffffff;
+      color: #0b0b0e;
+      font-weight: 600;
+      font-size: 0.875rem;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-animate:hover {
+      background: #e2e2e8;
+      transform: translateY(-1px);
+    }
+
+    .btn-animate:active {
+      transform: translateY(0);
+      background: #d4d4dc;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    .btn-ghost:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* Controls Panel */
+    .controls-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .controls-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-faint);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .token-control {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .token-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .token-name {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    .token-val {
+      color: #fff;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      background: var(--bg-card-subtle);
+      border-radius: 2px;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(0,0,0,0.5);
+      transition: transform 0.1s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Code Snippets Section */
+    .code-section {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .code-topbar {
+      padding: 0.5rem 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tab-pills {
+      display: flex;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-copy {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-copy:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .code-body {
+      padding: 1.25rem;
+      margin: 0;
+      background: #0d0d11;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: #d1d5db;
+    }
+
+    .code-tab-panel {
+      display: none;
+    }
+
+    .code-tab-panel.active {
+      display: block;
+    }
+
+    /* Notification Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #18181f;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 999;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 900px) {
+      .lab-container {
+        grid-template-columns: 1fr;
+      }
+      .showcase-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Lab Header -->
+  <header class="lab-header">
+    <div class="brand-group">
+      <span class="brand-badge">OFFSZN</span>
+      <h1 class="brand-title">UI Component Lab</h1>
+      <span class="brand-subtitle">compon/new/probar.html</span>
+    </div>
+    <div class="header-actions">
+      <span class="status-pill">
+        <span class="status-dot"></span> Sandbox Activo
+      </span>
+    </div>
+  </header>
+
+  <!-- Lab Container -->
+  <div class="lab-container">
+    
+    <!-- Sidebar: Colección de Componentes -->
+    <aside class="sidebar">
+      <div class="sidebar-block">
+        <div class="sidebar-heading">Componentes Guardados</div>
+        <ul class="comp-nav">
+          <li>
+            <div class="comp-nav-link active">
+              <span>Error State Shake</span>
+              <span class="pill-tag">Input</span>
+            </div>
+          </li>
+          <li>
+            <div class="comp-nav-link" style="opacity: 0.5; cursor: not-allowed;" title="Próximamente">
+              <span>Input Clear Dissolve</span>
+              <span class="pill-tag">Próximo</span>
+            </div>
+          </li>
+          <li>
+            <div class="comp-nav-link" style="opacity: 0.5; cursor: not-allowed;" title="Próximamente">
+              <span>Organic Shimmer</span>
+              <span class="pill-tag">Próximo</span>
+            </div>
+          </li>
+          <li>
+            <div class="comp-nav-link" style="opacity: 0.5; cursor: not-allowed;" title="Próximamente">
+              <span>Avatar Spring Hover</span>
+              <span class="pill-tag">Próximo</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-block">
+        <div class="sidebar-heading">Tecnología</div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+          Vanilla CSS 3 con <strong>Motion Tokens</strong> y animaciones nativas aceleradas por GPU, listo para producción en OFFSZN sin dependencias externas.
+        </p>
+      </div>
+    </aside>
+
+    <!-- Main Stage: Component Showcase -->
+    <main class="main-stage">
+      
+      <!-- Component Header Details -->
+      <div class="component-header">
+        <div class="comp-badge-row">
+          <span class="badge-tag source">transitions.dev</span>
+          <span class="badge-tag">Microinteracción</span>
+          <span class="badge-tag">Validación de Formularios</span>
+        </div>
+        <h2 class="comp-title">Error State Shake</h2>
+        <p class="comp-desc">
+          Transición de error y sacudida horizontal multi-fase calculada con curvas <code>cubic-bezier</code> independientes. Se auto-restaura automáticamente o se limpia al tipear.
+        </p>
+      </div>
+
+      <!-- Preview Canvas & Live Token Controls -->
+      <div class="showcase-grid">
+        
+        <!-- Live Visual Canvas -->
+        <section class="preview-canvas">
+          <div class="canvas-topbar">
+            <span class="canvas-label">Vista Previa Interactiva</span>
+            <span style="font-size: 12px; color: var(--text-muted);">Haz clic en "Animar Error" o presiona Enter</span>
+          </div>
+
+          <div class="canvas-viewport" id="stageContainer">
+            
+            <!-- Exact Match to Screenshot -->
+            <div class="t-input-wrap" id="demoInputWrap">
+              <div class="t-input" id="demoInput">
+                <input 
+                  type="text" 
+                  class="t-input-el" 
+                  id="demoInputEl"
+                  value="John" 
+                  placeholder="Introduce tu nombre o email..."
+                  spellcheck="false"
+                  autocomplete="off"
+                  aria-label="Nombre o email"
+                />
+              </div>
+              <p class="t-error-msg" id="demoErrorMsg">Por favor ingresa un correo válido.</p>
+            </div>
+
+          </div>
+
+          <div class="canvas-footer">
+            <button type="button" class="btn-animate" id="btnTriggerShake">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Animar Error</span>
+            </button>
+
+            <button type="button" class="btn-ghost" id="btnResetInput">
+              Restaurar
+            </button>
+          </div>
+        </section>
+
+        <!-- Controls: Ajuste de Motion Tokens en Tiempo Real -->
+        <section class="controls-panel">
+          <div class="controls-title">
+            <span>Motion Tokens</span>
+            <button type="button" class="btn-ghost" id="btnResetTokens" style="padding: 2px 8px; font-size: 11px;">Default</button>
+          </div>
+
+          <!-- Token: Shake Distance -->
+          <div class="token-control">
+            <div class="token-label-row">
+              <span class="token-name">--t-shake-distance</span>
+              <span class="token-val" id="valDistance">6px</span>
+            </div>
+            <input type="range" id="rangeDistance" min="2" max="16" value="6" step="1" />
+          </div>
+
+          <!-- Token: Overshoot -->
+          <div class="token-control">
+            <div class="token-label-row">
+              <span class="token-name">--t-shake-overshoot</span>
+              <span class="token-val" id="valOvershoot">4px</span>
+            </div>
+            <input type="range" id="rangeOvershoot" min="1" max="12" value="4" step="1" />
+          </div>
+
+          <!-- Token: Duration Phase A -->
+          <div class="token-control">
+            <div class="token-label-row">
+              <span class="token-name">--t-shake-dur-a</span>
+              <span class="token-val" id="valDurA">80ms</span>
+            </div>
+            <input type="range" id="rangeDurA" min="40" max="200" value="80" step="10" />
+          </div>
+
+          <!-- Token: Duration Phase B -->
+          <div class="token-control">
+            <div class="token-label-row">
+              <span class="token-name">--t-shake-dur-b</span>
+              <span class="token-val" id="valDurB">60ms</span>
+            </div>
+            <input type="range" id="rangeDurB" min="30" max="150" value="60" step="10" />
+          </div>
+
+          <!-- Token: Revert Hold -->
+          <div class="token-control">
+            <div class="token-label-row">
+              <span class="token-name">--t-revert-hold</span>
+              <span class="token-val" id="valHold">3000ms</span>
+            </div>
+            <input type="range" id="rangeHold" min="1000" max="6000" value="3000" step="500" />
+          </div>
+
+          <div style="font-size: 11px; color: var(--text-faint); margin-top: 4px; line-height: 1.4;">
+            * Los cambios se aplican inmediatamente como CSS Custom Properties en vivo.
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Code Inspector & Copy Snippets -->
+      <section class="code-section">
+        <div class="code-topbar">
+          <div class="tab-pills">
+            <button type="button" class="tab-btn active" data-tab="html">HTML</button>
+            <button type="button" class="tab-btn" data-tab="css">CSS (.t-*)</button>
+            <button type="button" class="tab-btn" data-tab="js">JavaScript</button>
+            <button type="button" class="tab-btn" data-tab="react">React</button>
+          </div>
+
+          <button type="button" class="btn-copy" id="btnCopySnippet">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span id="copyBtnText">Copiar Código</span>
+          </button>
+        </div>
+
+        <!-- Tab: HTML -->
+        <div class="code-tab-panel active" id="tab-html">
+          <pre class="code-body"><code>&lt;!-- OFFSZN Input con Error State Shake (transitions.dev) --&gt;
+&lt;div class="t-input-wrap" data-input-shake&gt;
+  &lt;div class="t-input"&gt;
+    &lt;input 
+      type="text" 
+      class="t-input-el" 
+      value="John" 
+      placeholder="Introduce tu texto..."
+      spellcheck="false" 
+      autocomplete="off"
+    /&gt;
+  &lt;/div&gt;
+  &lt;p class="t-error-msg"&gt;Por favor ingresa un correo válido.&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+        </div>
+
+        <!-- Tab: CSS -->
+        <div class="code-tab-panel" id="tab-css">
+          <pre class="code-body"><code>/* ==========================================================
+   OFFSZN • Error State Shake (.t-*)
+   Docs: https://transitions.dev/detail.html?t=error-state-shake
+   ========================================================== */
+:root {
+  --t-shake-distance:  6px;
+  --t-shake-overshoot: 4px;
+  --t-shake-dur-a:     80ms;
+  --t-shake-dur-b:     60ms;
+  --t-shake-ease:      cubic-bezier(0.22, 1, 0.36, 1);
+  --t-revert-hold:     3000ms;
+  --t-revert-dur:      280ms;
+  --t-error-border:    #e23014;
+  --t-error-text:      #ea3822;
+}
+
+.t-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.t-input {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: #181818;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  outline: none;
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
+  will-change: transform;
+}
+
+.t-input:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.t-input:focus-within {
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.t-input.is-error {
+  border-color: var(--t-error-border);
+  transition: border-color var(--t-revert-dur, 280ms) ease-out;
+}
+
+.t-input-el {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: #ffffff;
+  padding: 0;
+}
+
+.t-error-msg {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--t-error-text);
+  margin: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity    var(--t-revert-dur, 280ms) ease-out,
+    visibility 0s linear var(--t-revert-dur, 280ms);
+}
+
+.t-input-wrap.is-error .t-error-msg {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity    var(--t-revert-dur, 280ms) ease-out,
+    visibility 0s linear 0s;
+}
+
+/* Multi-segment keyframe with per-stop cubic-bezier */
+.t-input.is-shaking {
+  animation: t-input-shake calc(
+    var(--t-shake-dur-a) * 2 + var(--t-shake-dur-b) * 2
+  ) linear;
+}
+
+@keyframes t-input-shake {
+  0%      { transform: translateX(0);                                       animation-timing-function: var(--t-shake-ease); }
+  28.57%  { transform: translateX(var(--t-shake-distance));                 animation-timing-function: var(--t-shake-ease); }
+  57.14%  { transform: translateX(calc(var(--t-shake-distance) * -1));     animation-timing-function: var(--t-shake-ease); }
+  78.57%  { transform: translateX(var(--t-shake-overshoot));                animation-timing-function: var(--t-shake-ease); }
+  100%    { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-input { animation: none !important; transform: none !important; }
+}</code></pre>
+        </div>
+
+        <!-- Tab: JS -->
+        <div class="code-tab-panel" id="tab-js">
+          <pre class="code-body"><code>/**
+ * OFFSZN Helper: Trigger Error State Shake
+ * @param {HTMLElement} wrapEl - El contenedor .t-input-wrap
+ * @param {string} [customMessage] - Mensaje de error opcional
+ */
+function triggerInputShake(wrapEl, customMessage) {
+  if (!wrapEl) return;
+  const input = wrapEl.querySelector('.t-input');
+  const msgEl = wrapEl.querySelector('.t-error-msg');
+  if (customMessage && msgEl) msgEl.textContent = customMessage;
+
+  // Activar estado de error
+  wrapEl.classList.add('is-error');
+  input.classList.add('is-error');
+
+  // Reiniciar animación de sacudida mediante reflow
+  input.classList.remove('is-shaking');
+  void input.offsetWidth; // Force reflow
+  input.classList.add('is-shaking');
+
+  // Duración total del shake (80ms*2 + 60ms*2 = 280ms)
+  const shakeMs = 280;
+  window.setTimeout(() => {
+    input.classList.remove('is-shaking');
+  }, shakeMs + 20);
+
+  // Auto-revert si no interactúa el usuario
+  if (wrapEl._revertTimer) window.clearTimeout(wrapEl._revertTimer);
+  const holdMs = 3000;
+  wrapEl._revertTimer = window.setTimeout(() => {
+    wrapEl._revertTimer = null;
+    wrapEl.classList.remove('is-error');
+    input.classList.remove('is-error');
+  }, shakeMs + holdMs);
+}
+
+// Inicializar auto-limpieza al tipear
+document.querySelectorAll('.t-input-wrap').forEach((wrap) => {
+  const inputEl = wrap.querySelector('.t-input-el');
+  const input = wrap.querySelector('.t-input');
+  if (!inputEl) return;
+
+  inputEl.addEventListener('input', () => {
+    if (wrap._revertTimer) {
+      window.clearTimeout(wrap._revertTimer);
+      wrap._revertTimer = null;
+    }
+    wrap.classList.remove('is-error');
+    input.classList.remove('is-error');
+  });
+});</code></pre>
+        </div>
+
+        <!-- Tab: React -->
+        <div class="code-tab-panel" id="tab-react">
+          <pre class="code-body"><code>import { useRef, useState } from "react";
+
+export function InputShake({ children, message = "Campo inválido", onCancel }) {
+  const inputRef = useRef(null);
+  const wrapRef = useRef(null);
+  const timerRef = useRef(null);
+  const [hasError, setHasError] = useState(false);
+
+  const triggerError = () => {
+    if (!inputRef.current) return;
+    setHasError(true);
+    inputRef.current.classList.remove("is-shaking");
+    void inputRef.current.offsetWidth;
+    inputRef.current.classList.add("is-shaking");
+
+    window.setTimeout(() => {
+      inputRef.current?.classList.remove("is-shaking");
+    }, 300);
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setHasError(false);
+    }, 3300);
+  };
+
+  const handleInput = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setHasError(false);
+    onCancel?.();
+  };
+
+  return (
+    &lt;div ref={wrapRef} className={`t-input-wrap ${hasError ? "is-error" : ""}`}&gt;
+      &lt;div ref={inputRef} className={`t-input ${hasError ? "is-error" : ""}`} onInput={handleInput}&gt;
+        {children}
+      &lt;/div&gt;
+      &lt;p className="t-error-msg"&gt;{message}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- Toast Feedback -->
+  <div class="toast" id="toastMessage">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+    <span id="toastText">Código copiado al portapapeles</span>
+  </div>
+
+  <!-- JavaScript Interaction Logic -->
+  <script>
+    (function initLab() {
+      const demoInputWrap = document.getElementById('demoInputWrap');
+      const demoInput = document.getElementById('demoInput');
+      const demoInputEl = document.getElementById('demoInputEl');
+      const btnTriggerShake = document.getElementById('btnTriggerShake');
+      const btnResetInput = document.getElementById('btnResetInput');
+      const toastMessage = document.getElementById('toastMessage');
+
+      // Motion token sliders
+      const rangeDistance = document.getElementById('rangeDistance');
+      const rangeOvershoot = document.getElementById('rangeOvershoot');
+      const rangeDurA = document.getElementById('rangeDurA');
+      const rangeDurB = document.getElementById('rangeDurB');
+      const rangeHold = document.getElementById('rangeHold');
+
+      const valDistance = document.getElementById('valDistance');
+      const valOvershoot = document.getElementById('valOvershoot');
+      const valDurA = document.getElementById('valDurA');
+      const valDurB = document.getElementById('valDurB');
+      const valHold = document.getElementById('valHold');
+      const btnResetTokens = document.getElementById('btnResetTokens');
+
+      // Helper to show toast
+      function showToast(text) {
+        document.getElementById('toastText').textContent = text;
+        toastMessage.classList.add('show');
+        setTimeout(() => toastMessage.classList.remove('show'), 2200);
+      }
+
+      // Trigger Shake Logic (transitions.dev)
+      function triggerShake() {
+        demoInputWrap.classList.add('is-error');
+        demoInput.classList.add('is-error');
+
+        // Reflow to restart keyframe
+        demoInput.classList.remove('is-shaking');
+        void demoInput.offsetWidth;
+        demoInput.classList.add('is-shaking');
+
+        // Calculate current animation duration
+        const durA = parseInt(rangeDurA.value, 10);
+        const durB = parseInt(rangeDurB.value, 10);
+        const shakeMs = (durA * 2) + (durB * 2);
+
+        window.setTimeout(() => {
+          demoInput.classList.remove('is-shaking');
+        }, shakeMs + 20);
+
+        // Auto-revert timer
+        if (demoInputWrap._revertTimer) {
+          window.clearTimeout(demoInputWrap._revertTimer);
+        }
+
+        const holdMs = parseInt(rangeHold.value, 10);
+        demoInputWrap._revertTimer = window.setTimeout(() => {
+          demoInputWrap._revertTimer = null;
+          demoInputWrap.classList.remove('is-error');
+          demoInput.classList.remove('is-error');
+        }, shakeMs + holdMs);
+      }
+
+      // Reset error state
+      function resetState() {
+        if (demoInputWrap._revertTimer) {
+          window.clearTimeout(demoInputWrap._revertTimer);
+          demoInputWrap._revertTimer = null;
+        }
+        demoInputWrap.classList.remove('is-error');
+        demoInput.classList.remove('is-error');
+        demoInput.classList.remove('is-shaking');
+      }
+
+      // Clear error immediately when typing
+      demoInputEl.addEventListener('input', () => {
+        resetState();
+      });
+
+      // Allow pressing Enter to test trigger
+      demoInputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          triggerShake();
+        }
+      });
+
+      btnTriggerShake.addEventListener('click', () => {
+        triggerShake();
+      });
+
+      btnResetInput.addEventListener('click', () => {
+        resetState();
+        demoInputEl.value = 'John';
+        demoInputEl.focus();
+      });
+
+      // Token slider listeners
+      function updateTokens() {
+        const root = document.documentElement;
+        
+        root.style.setProperty('--t-shake-distance', rangeDistance.value + 'px');
+        valDistance.textContent = rangeDistance.value + 'px';
+
+        root.style.setProperty('--t-shake-overshoot', rangeOvershoot.value + 'px');
+        valOvershoot.textContent = rangeOvershoot.value + 'px';
+
+        root.style.setProperty('--t-shake-dur-a', rangeDurA.value + 'ms');
+        valDurA.textContent = rangeDurA.value + 'ms';
+
+        root.style.setProperty('--t-shake-dur-b', rangeDurB.value + 'ms');
+        valDurB.textContent = rangeDurB.value + 'ms';
+
+        root.style.setProperty('--t-revert-hold', rangeHold.value + 'ms');
+        valHold.textContent = rangeHold.value + 'ms';
+      }
+
+      [rangeDistance, rangeOvershoot, rangeDurA, rangeDurB, rangeHold].forEach((slider) => {
+        slider.addEventListener('input', updateTokens);
+      });
+
+      btnResetTokens.addEventListener('click', () => {
+        rangeDistance.value = 6;
+        rangeOvershoot.value = 4;
+        rangeDurA.value = 80;
+        rangeDurB.value = 60;
+        rangeHold.value = 3000;
+        updateTokens();
+        showToast('Tokens restaurados a valores originales');
+      });
+
+      // Code Tab Switching
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabPanels = document.querySelectorAll('.code-tab-panel');
+
+      tabBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          tabBtns.forEach((b) => b.classList.remove('active'));
+          tabPanels.forEach((p) => p.classList.remove('active'));
+
+          btn.classList.add('active');
+          const tabId = 'tab-' + btn.getAttribute('data-tab');
+          const panel = document.getElementById(tabId);
+          if (panel) panel.classList.add('active');
+        });
+      });
+
+      // Copy Code Button
+      const btnCopySnippet = document.getElementById('btnCopySnippet');
+      const copyBtnText = document.getElementById('copyBtnText');
+
+      btnCopySnippet.addEventListener('click', () => {
+        const activePanel = document.querySelector('.code-tab-panel.active code');
+        if (!activePanel) return;
+
+        navigator.clipboard.writeText(activePanel.textContent).then(() => {
+          copyBtnText.textContent = '¡Copiado!';
+          showToast('Código copiado al portapapeles');
+          setTimeout(() => {
+            copyBtnText.textContent = 'Copiar Código';
+          }, 2000);
+        }).catch(() => {
+          showToast('Error al copiar al portapapeles');
+        });
+      });
+
+    })();
+  </script>
+</body>
+</html>
