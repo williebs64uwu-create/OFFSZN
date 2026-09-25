@@ -1,0 +1,275 @@
+/* ==========================================================================
+   OFFSZN • Liquid Gooey Component (Hyper-Realistic Physical Edition)
+   Inspirado en la ingeniería de Libraries.dev por Jakub Antalik.
+   Incluye:
+     1. Filtro SVG multicapa: Fusión líquida + Sombra unificada + Borde especular (1px Inset Rim).
+     2. Anticipación física de cierre (inercia absorbente de 5px hacia abajo).
+     3. Materialización suave de iconos (desenfoque cruzado + escala al separarse el cuello).
+     4. Estiramiento direccional (Squash & Stretch) y rebote Bouncy elástico.
+   ========================================================================== */
+
+:root {
+  --liquid-blur: 6px;
+  --liquid-contrast: 18;
+  --liquid-fill: #202020;
+  --liquid-fill-light: #ffffff;
+  --liquid-ink: #fbfbfb;
+  --liquid-ink-muted: #888888;
+  --liquid-open-dur: 520ms;
+  --liquid-close-dur: 240ms;
+  --liquid-ease-bouncy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --liquid-ease-snappy: cubic-bezier(0.22, 1, 0.36, 1);
+  --liquid-ease: var(--liquid-ease-bouncy);
+  --liquid-btn-size: 50px;
+  --liquid-item-size: 40px;
+  --liquid-icon-dur: 180ms;
+  --liquid-icon-delay: 100ms;
+  --liquid-anticip: 5px;
+  --liquid-anticip-dur: 600ms;
+}
+
+/* Contenedor principal centrado */
+.liquid-gooey-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 260px;
+  height: 260px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+/* ==========================================================================
+   CAPA 1: FUSIÓN LÍQUIDA SVG (Goo Layer con Inset Rim y Sombra Real)
+   El filtro SVG dibuja el cuerpo, el borde especular y la sombra fundida.
+   ========================================================================== */
+.liquid-gooey-stage {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: url(#liquid-goo-filter);
+  -webkit-filter: url(#liquid-goo-filter);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Blobs de masa líquida (mercurio oscuro / obsidian) */
+.liquid-blob {
+  position: absolute;
+  background-color: var(--liquid-fill);
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* Disparador central en la masa */
+.liquid-blob-trigger {
+  width: var(--liquid-btn-size);
+  height: var(--liquid-btn-size);
+  transform: translate(0, 0) scale(1);
+  transition: transform var(--liquid-open-dur) var(--liquid-ease),
+              background-color 0.25s ease;
+}
+
+/* Gotas satélites */
+.liquid-blob-item {
+  width: var(--liquid-item-size);
+  height: var(--liquid-item-size);
+  transform: translate(0, 0) scale(0.65);
+  opacity: 0;
+  transition: transform var(--liquid-close-dur) var(--liquid-ease-snappy),
+              opacity calc(var(--liquid-close-dur) * 0.6) ease;
+}
+
+/* Despliegue elástico con stagger */
+.liquid-gooey-wrap.is-open .liquid-blob-item {
+  opacity: 1;
+  transform: translate(var(--item-x, 0px), var(--item-y, 0px)) scale(1);
+  transition-duration: var(--liquid-open-dur);
+  transition-timing-function: var(--liquid-ease);
+  transition-delay: var(--item-delay, 0ms);
+}
+
+/* ==========================================================================
+   ANTICIPACIÓN FÍSICA AL CERRAR (Inercia del líquido)
+   El disparador central se sumerge 5px absorbiendo la llegada de las gotas.
+   ========================================================================== */
+@keyframes liquid-anticipate {
+  0% { transform: translateY(0); }
+  35% { transform: translateY(var(--liquid-anticip)); }
+  100% { transform: translateY(0); }
+}
+
+.liquid-gooey-wrap.is-anticipating .liquid-blob-trigger,
+.liquid-gooey-wrap.is-anticipating .liquid-trigger-btn {
+  animation-name: liquid-anticipate;
+  animation-duration: var(--liquid-anticip-dur);
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-fill-mode: both;
+}
+
+/* ==========================================================================
+   CAPA 2: BOTONES INTERACTIVOS (Crisp Vector Icons)
+   Los botones son transparentes porque la silueta 3D ya la dibuja el SVG.
+   ========================================================================== */
+.liquid-controls-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Disparador Central (+) */
+.liquid-trigger-btn {
+  width: var(--liquid-btn-size);
+  height: var(--liquid-btn-size);
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--liquid-ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  outline: none;
+  pointer-events: auto;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--liquid-open-dur) var(--liquid-ease);
+}
+
+.liquid-trigger-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.75);
+  outline-offset: 3px;
+}
+
+.liquid-trigger-btn:active {
+  transform: scale(0.93);
+}
+
+/* Icono rotatorio + a × */
+.liquid-trigger-icon {
+  display: grid;
+  place-items: center;
+  transform: rotate(0deg);
+  transition: transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+
+.liquid-gooey-wrap.is-open .liquid-trigger-icon {
+  transform: rotate(45deg);
+}
+
+/* Botones Satélites */
+.liquid-item-btn {
+  position: absolute;
+  width: var(--liquid-item-size);
+  height: var(--liquid-item-size);
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--liquid-ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  outline: none;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(0, 0) scale(0.65);
+  transition: transform var(--liquid-close-dur) var(--liquid-ease-snappy),
+              opacity calc(var(--liquid-close-dur) * 0.6) ease;
+  will-change: transform, opacity;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.liquid-gooey-wrap.is-open .liquid-item-btn {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translate(var(--item-x, 0px), var(--item-y, 0px)) scale(1);
+  transition-duration: var(--liquid-open-dur);
+  transition-timing-function: var(--liquid-ease);
+  transition-delay: var(--item-delay, 0ms);
+}
+
+.liquid-item-btn:hover {
+  color: #ffffff;
+}
+
+.liquid-item-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   MATERIALIZACIÓN SUAVE DE LOS ICONOS (Soft Cross-Blur)
+   El icono se retiene borroso mientras el cuello líquido está fundido
+   y se materializa con desenfoque suave al despegarse la gota.
+   ========================================================================== */
+.liquid-sat-icon {
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  filter: blur(2.5px);
+  transform: scale(0.65);
+  transition: opacity 120ms ease,
+              filter 120ms ease,
+              transform 180ms var(--liquid-ease);
+}
+
+.liquid-gooey-wrap.is-open .liquid-sat-icon {
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1);
+  transition-duration: var(--liquid-icon-dur);
+  transition-delay: calc(var(--liquid-icon-delay) + var(--item-delay, 0ms));
+}
+
+/* Tooltip minimalista */
+.liquid-item-btn[data-label]::after {
+  content: attr(data-label);
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: #000000;
+  color: #d1d1d1;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #333333;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.liquid-item-btn[data-label]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ==========================================================================
+   TEMA CLARO / SOLID WHITE
+   ========================================================================== */
+.liquid-gooey-wrap[data-theme="light"] {
+  --liquid-fill: #ffffff;
+  --liquid-ink: #111111;
+}
+
+.liquid-gooey-wrap[data-theme="light"] .liquid-item-btn[data-label]::after {
+  background: #ffffff;
+  color: #000000;
+  border-color: #e0e0e0;
+}

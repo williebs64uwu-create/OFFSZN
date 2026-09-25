@@ -70,6 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const messageDiv = document.getElementById('form-message');
       const submitButton = registerForm.querySelector('button[type="submit"]');
 
+      if (typeof window.validateRegisterForm === 'function' && !window.validateRegisterForm()) {
+        return;
+      }
+
       showMessage(messageDiv, '', false);
       submitButton.disabled = true;
       submitButton.textContent = 'Creando cuenta...';
@@ -178,6 +182,25 @@ document.addEventListener('DOMContentLoaded', () => {
       const password = document.getElementById('log-password').value;
       const submitButton = loginForm.querySelector('button[type="submit"]');
 
+      // Client-side quick check with Error State Shake
+      if (!email || !email.trim()) {
+        if (typeof window.showLoginError === 'function') {
+          window.showLoginError('El correo electrónico es obligatorio.');
+        } else {
+          showMessage(messageDiv, 'El correo electrónico es obligatorio.', true);
+        }
+        return;
+      }
+
+      if (!password) {
+        if (typeof window.showLoginError === 'function') {
+          window.showLoginError('La contraseña es obligatoria.');
+        } else {
+          showMessage(messageDiv, 'La contraseña es obligatoria.', true);
+        }
+        return;
+      }
+
       // Clear previous
       showMessage(messageDiv, '', false);
 
@@ -261,8 +284,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       } catch (error) {
         console.error('Error de inicio de sesión:', error);
-        // Use translateError here
-        showMessage(messageDiv, translateError(error.message), true);
+        const translatedMsg = translateError(error.message);
+
+        if (typeof window.showLoginError === 'function') {
+          window.showLoginError(translatedMsg);
+        } else {
+          showMessage(messageDiv, translatedMsg, true);
+        }
 
         if (submitButton) {
           submitButton.disabled = false;

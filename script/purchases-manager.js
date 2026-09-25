@@ -112,13 +112,20 @@ window.PurchasesManager = (function () {
                     .eq('user_id', userId)
             ]);
 
-            if (ordersRes.error) throw ordersRes.error;
-            if (analyzerRes.error) throw analyzerRes.error;
-            if (pluginsRes.error) throw pluginsRes.error;
+            if (ordersRes.error) {
+                console.error("[PurchasesManager] Error fetching orders:", ordersRes.error);
+                throw ordersRes.error;
+            }
+            if (analyzerRes.error) {
+                console.warn("[PurchasesManager] Non-critical: Analyzer sales query skipped:", analyzerRes.error.message);
+            }
+            if (pluginsRes.error) {
+                console.warn("[PurchasesManager] Non-critical: Plugin serials query skipped:", pluginsRes.error.message);
+            }
 
             const orders = ordersRes.data || [];
-            const analyzerSales = analyzerRes.data || [];
-            const pluginSerials = pluginsRes.data || [];
+            const analyzerSales = (!analyzerRes.error && analyzerRes.data) ? analyzerRes.data : [];
+            const pluginSerials = (!pluginsRes.error && pluginsRes.data) ? pluginsRes.data : [];
 
             if (orders.length === 0 && analyzerSales.length === 0 && pluginSerials.length === 0) {
                 renderEmptyState(container);

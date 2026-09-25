@@ -1,0 +1,101 @@
+/* ==========================================================================
+   OFFSZN UI Library • Toggle Switch (Transitions.dev)
+   Double-bounce thumb travel + track cross-fade
+   Docs: https://transitions.dev/detail.html?t=toggle
+   ========================================================================== */
+
+:root {
+  --toggle-dur: 350ms;
+  --toggle-travel: 14.66px;
+  --toggle-ov1: 1px;
+  --toggle-ov2: 0px;
+  --toggle-track: 180ms;
+  --toggle-ease: cubic-bezier(0.34, 1.35, 0.64, 1);
+  --toggle-on-color: #7928ca; /* Morado insignia OFFSZN */
+  --toggle-off-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Base switch container */
+.t-toggle {
+  position: relative;
+  width: 44px;
+  height: 22px;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 999px;
+  background: var(--toggle-off-color);
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  transition: background var(--toggle-track) var(--toggle-ease), box-shadow 150ms ease;
+  user-select: none;
+}
+
+.t-toggle:hover {
+  filter: brightness(1.1);
+}
+
+.t-toggle:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+/* Active track */
+.t-toggle[data-on="true"] {
+  background: var(--toggle-on-color);
+}
+
+/* White pill thumb (22px x 14.67px inset 3.67px) */
+.t-toggle-thumb {
+  position: absolute;
+  left: 3.67px;
+  top: 3.67px;
+  width: 22px;
+  height: 14.67px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.18);
+  translate: 0 0;
+  will-change: translate;
+}
+
+.t-toggle[data-on="true"] .t-toggle-thumb {
+  translate: var(--toggle-travel) 0;
+}
+
+/* Keyframes gate: .is-init se añade tras la 1ra interacción para evitar que corra al cargar la página */
+.t-toggle.is-init[data-on="true"] .t-toggle-thumb {
+  animation: t-toggle-on var(--toggle-dur) var(--toggle-ease) both;
+}
+
+.t-toggle.is-init[data-on="false"] .t-toggle-thumb {
+  animation: t-toggle-off var(--toggle-dur) var(--toggle-ease) both;
+}
+
+/* Double bounce on ON: overshoot hacia adelante (55%), rebota hacia atrás (80%) y asienta */
+@keyframes t-toggle-on {
+  0%   { translate: 0 0; }
+  55%  { translate: calc(var(--toggle-travel) + var(--toggle-ov1)) 0; }
+  80%  { translate: calc(var(--toggle-travel) - var(--toggle-ov2)) 0; }
+  100% { translate: var(--toggle-travel) 0; }
+}
+
+/* Double bounce on OFF */
+@keyframes t-toggle-off {
+  0%   { translate: var(--toggle-travel) 0; }
+  55%  { translate: calc(0px - var(--toggle-ov1)) 0; }
+  80%  { translate: var(--toggle-ov2) 0; }
+  100% { translate: 0 0; }
+}
+
+/* Accessible touch target expander */
+.t-toggle::before {
+  content: "";
+  position: absolute;
+  inset: -10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-toggle-thumb {
+    animation: none !important;
+  }
+}

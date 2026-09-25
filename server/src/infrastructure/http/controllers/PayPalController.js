@@ -1422,14 +1422,20 @@ export const capturePayPalOrder = async (req, res) => {
                                 <p style="font-size:0.75rem; color:#555;">Este es un recibo automático de OFFSZN. Si tienes problemas, contáctanos por WhatsApp.</p>
                             </div>
                         `;
-                        await sendOffsznEmail({
-                            to: userEmail,
-                            subject: isPlugin 
-                                ? `🔑 Tu Serial Key de ${item.product.name} — OFFSZN`
-                                : `✅ Confirmación de Compra - ${item.product.name}`,
-                            html: buyerHtml,
-                            fromName: 'OFFSZN'
-                        });
+                        // A. Notify Client (Receipt) — includes serial key for plugin purchases
+                        try {
+                            await sendOffsznEmail({
+                                to: userEmail,
+                                subject: isPlugin 
+                                    ? `🔑 Tu Serial Key de ${item.product.name} — OFFSZN`
+                                    : `✅ Confirmación de Compra - ${item.product.name}`,
+                                html: buyerHtml,
+                                fromName: 'OFFSZN'
+                            });
+                            console.log(`[PayPalCapture] Buyer receipt successfully sent to ${userEmail}`);
+                        } catch (buyerMailErr) {
+                            console.error(`[PayPalCapture] Error sending buyer email to ${userEmail}:`, buyerMailErr);
+                        }
 
                         // B. Calculate Actual Display Prices & Splits for Notifications
                         let displayTotal = parseFloat(item.variant_price) || 15;
@@ -1460,25 +1466,30 @@ export const capturePayPalOrder = async (req, res) => {
                         const producerEmail = prodData?.email;
 
                         if (producerEmail) {
-                            const producerHtml = `
-                                <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px; border: 1px solid rgba(255,255,255,0.08);">
-                                    <h2 style="color: #10B981; margin-bottom:16px;">¡Nueva Venta! 💰 ${isPlugin ? '🎛️ Plugin' : '🎵 Beat'}</h2>
-                                    <p style="color:#ccc; line-height:1.6;">Hola <b>${prodData.nickname || 'Productor'}</b>, se acaba de vender una copia de <b style="color:#fff;">${item.product.name}</b>.</p>
-                                    <div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:20px; margin:20px 0;">
-                                        <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Tu Ganancia:</b> <span style="color:#10B981; font-size:1.15rem; font-weight:700;">$${partnerAmount.toFixed(2)} USD</span></p>
-                                        ${isCoke ? `<p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Total Venta:</b> $${displayTotal.toFixed(2)} USD</p>` : ''}
-                                        <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Comprador:</b> ${userNickname} (${userEmail})</p>
-                                        ${(isPlugin && generatedLicenseKey) ? `<p style="color:#888; margin:0;"><b style="color:#ff9f0a;">Serial Key Entregada:</b> <span style="font-family:monospace; color:#fff;">${generatedLicenseKey}</span></p>` : ''}
+                            try {
+                                const producerHtml = `
+                                    <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px; border: 1px solid rgba(255,255,255,0.08);">
+                                        <h2 style="color: #10B981; margin-bottom:16px;">¡Nueva Venta! 💰 ${isPlugin ? '🎛️ Plugin' : '🎵 Beat'}</h2>
+                                        <p style="color:#ccc; line-height:1.6;">Hola <b>${prodData.nickname || 'Productor'}</b>, se acaba de vender una copia de <b style="color:#fff;">${item.product.name}</b>.</p>
+                                        <div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:20px; margin:20px 0;">
+                                            <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Tu Ganancia:</b> <span style="color:#10B981; font-size:1.15rem; font-weight:700;">$${partnerAmount.toFixed(2)} USD</span></p>
+                                            ${isCoke ? `<p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Total Venta:</b> $${displayTotal.toFixed(2)} USD</p>` : ''}
+                                            <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Comprador:</b> ${userNickname} (${userEmail})</p>
+                                            ${(isPlugin && generatedLicenseKey) ? `<p style="color:#888; margin:0;"><b style="color:#ff9f0a;">Serial Key Entregada:</b> <span style="font-family:monospace; color:#fff;">${generatedLicenseKey}</span></p>` : ''}
+                                        </div>
+                                        <a href="https://offszn.lat/transacciones" style="display:inline-block; background:#10B981; color:#000; padding:12px 26px; border-radius:8px; text-decoration:none; font-weight:700;">VER MI BALANCE</a>
                                     </div>
-                                    <a href="https://offszn.lat/transacciones" style="display:inline-block; background:#10B981; color:#000; padding:12px 26px; border-radius:8px; text-decoration:none; font-weight:700;">VER MI BALANCE</a>
-                                </div>
-                            `;
-                            await sendOffsznEmail({
-                                to: producerEmail,
-                                subject: `💸 ¡Nueva Venta! ${item.product.name} — Ganancia: $${partnerAmount.toFixed(2)} USD`,
-                                html: producerHtml,
-                                fromName: 'OFFSZN Ventas'
-                            });
+                                `;
+                                await sendOffsznEmail({
+                                    to: producerEmail,
+                                    subject: `💸 ¡Nueva Venta! ${item.product.name} — Ganancia: $${partnerAmount.toFixed(2)} USD`,
+                                    html: producerHtml,
+                                    fromName: 'OFFSZN Ventas'
+                                });
+                                console.log(`[PayPalCapture] Producer notification successfully sent to ${producerEmail}`);
+                            } catch (prodMailErr) {
+                                console.error(`[PayPalCapture] Error sending producer email to ${producerEmail}:`, prodMailErr);
+                            }
                         }
 
                         // D. Notify Platform Owner (Willie / OFFSZN Admin)
@@ -1510,47 +1521,52 @@ export const capturePayPalOrder = async (req, res) => {
 
                         // Send copy to Willie (with referral breakdown if present)
                         if (!isWillieProducer || affiliateInfo) {
-                            const referralBanner = affiliateInfo ? `
-                                <div style="background:#1e1b4b; border:1px solid #6366f1; border-radius:10px; padding:18px; margin:0 0 20px;">
-                                    <p style="color:#a5b4fc; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; margin:0 0 6px; font-weight:700;">🎯 VENTA POR REFERIDO</p>
-                                    <p style="color:#ffffff; font-size:1.1rem; margin:0 0 10px;">Afiliado: <b style="color:#38bdf8;">${affiliateInfo.name}</b></p>
-                                    <div style="display:flex; gap:20px; font-size:0.95rem;">
-                                        <div><span style="color:#94a3b8;">Pagar a ${affiliateInfo.name}:</span> <b style="color:#f43f5e; font-size:1.1rem;">$${affiliateInfo.commission.toFixed(2)} USD</b></div>
-                                        <div><span style="color:#94a3b8;">Tu Neto (Willie):</span> <b style="color:#10B981; font-size:1.1rem;">$${affiliateInfo.net.toFixed(2)} USD</b></div>
+                            try {
+                                const referralBanner = affiliateInfo ? `
+                                    <div style="background:#1e1b4b; border:1px solid #6366f1; border-radius:10px; padding:18px; margin:0 0 20px;">
+                                        <p style="color:#a5b4fc; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; margin:0 0 6px; font-weight:700;">🎯 VENTA POR REFERIDO</p>
+                                        <p style="color:#ffffff; font-size:1.1rem; margin:0 0 10px;">Afiliado: <b style="color:#38bdf8;">${affiliateInfo.name}</b></p>
+                                        <div style="display:flex; gap:20px; font-size:0.95rem;">
+                                            <div><span style="color:#94a3b8;">Pagar a ${affiliateInfo.name}:</span> <b style="color:#f43f5e; font-size:1.1rem;">$${affiliateInfo.commission.toFixed(2)} USD</b></div>
+                                            <div><span style="color:#94a3b8;">Tu Neto (Willie):</span> <b style="color:#10B981; font-size:1.1rem;">$${affiliateInfo.net.toFixed(2)} USD</b></div>
+                                        </div>
                                     </div>
-                                </div>
-                            ` : '';
+                                ` : '';
 
-                            const emailSubject = affiliateInfo 
-                                ? `💸 ¡Nueva Venta ${item.product.name}! [REFERIDO: ${affiliateInfo.name}] — $${displayTotal.toFixed(2)} USD (Comisión: $${affiliateInfo.commission.toFixed(2)})`
-                                : (isCoke 
-                                    ? `💰 Venta Coca-Cola: $${displayTotal.toFixed(2)} USD (OFFSZN: +$${offsznCommission.toFixed(2)})`
-                                    : `💸 Venta Tienda: ${item.product.name} — $${displayTotal.toFixed(2)} USD`);
+                                const emailSubject = affiliateInfo 
+                                    ? `💸 ¡Nueva Venta ${item.product.name}! [REFERIDO: ${affiliateInfo.name}] — $${displayTotal.toFixed(2)} USD (Comisión: $${affiliateInfo.commission.toFixed(2)})`
+                                    : (isCoke 
+                                        ? `💰 Venta Coca-Cola: $${displayTotal.toFixed(2)} USD (OFFSZN: +$${offsznCommission.toFixed(2)})`
+                                        : `💸 Venta Tienda: ${item.product.name} — $${displayTotal.toFixed(2)} USD`);
 
-                            const adminHtml = `
-                                <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px; border: 1px solid rgba(255,255,255,0.08);">
-                                    <h2 style="color: #8B5CF6; margin-bottom:16px;">¡Registro de Venta en OFFSZN! ⚡</h2>
-                                    ${referralBanner}
-                                    <p style="color:#ccc; line-height:1.6;">El usuario <b>${userNickname}</b> (<b>${userEmail}</b>) compró <b style="color:#fff;">${item.product.name}</b>.</p>
-                                    <div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:20px; margin:20px 0;">
-                                        <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Total Cobrado:</b> <span style="color:#fff; font-weight:700;">$${displayTotal.toFixed(2)} USD</span></p>
-                                        ${isCoke ? `
-                                            <p style="color:#888; margin:0 0 8px;"><b style="color:#8B5CF6;">Comisión OFFSZN (20%):</b> <span style="color:#8B5CF6; font-weight:700;">$${offsznCommission.toFixed(2)} USD</span></p>
-                                            <p style="color:#888; margin:0 0 8px;"><b style="color:#10B981;">Pago Partner (80%):</b> <span style="color:#10B981; font-weight:700;">$${partnerAmount.toFixed(2)} USD</span> (${producerEmail || 'suarez.azocarn@gmail.com'})</p>
-                                        ` : `
-                                            <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Productor:</b> ${prodData?.nickname || 'Externo / OFFSZN'} (${producerEmail || 'N/A'})</p>
-                                        `}
-                                        ${(isPlugin && generatedLicenseKey) ? `<p style="color:#888; margin:0;"><b style="color:#ff9f0a;">Serial Key Oficial:</b> <span style="font-family:monospace; color:#fff;">${generatedLicenseKey}</span></p>` : ''}
+                                const adminHtml = `
+                                    <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px; border: 1px solid rgba(255,255,255,0.08);">
+                                        <h2 style="color: #8B5CF6; margin-bottom:16px;">¡Registro de Venta en OFFSZN! ⚡</h2>
+                                        ${referralBanner}
+                                        <p style="color:#ccc; line-height:1.6;">El usuario <b>${userNickname}</b> (<b>${userEmail}</b>) compró <b style="color:#fff;">${item.product.name}</b>.</p>
+                                        <div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:20px; margin:20px 0;">
+                                            <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Total Cobrado:</b> <span style="color:#fff; font-weight:700;">$${displayTotal.toFixed(2)} USD</span></p>
+                                            ${isCoke ? `
+                                                <p style="color:#888; margin:0 0 8px;"><b style="color:#8B5CF6;">Comisión OFFSZN (20%):</b> <span style="color:#8B5CF6; font-weight:700;">$${offsznCommission.toFixed(2)} USD</span></p>
+                                                <p style="color:#888; margin:0 0 8px;"><b style="color:#10B981;">Pago Partner (80%):</b> <span style="color:#10B981; font-weight:700;">$${partnerAmount.toFixed(2)} USD</span> (${producerEmail || 'suarez.azocarn@gmail.com'})</p>
+                                            ` : `
+                                                <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Productor:</b> ${prodData?.nickname || 'Externo / OFFSZN'} (${producerEmail || 'N/A'})</p>
+                                            `}
+                                            ${(isPlugin && generatedLicenseKey) ? `<p style="color:#888; margin:0;"><b style="color:#ff9f0a;">Serial Key Oficial:</b> <span style="font-family:monospace; color:#fff;">${generatedLicenseKey}</span></p>` : ''}
+                                        </div>
+                                        <a href="https://offszn.lat/admin" style="display:inline-block; background:#8B5CF6; color:#fff; padding:12px 26px; border-radius:8px; text-decoration:none; font-weight:700;">PANEL DE CONTROL</a>
                                     </div>
-                                    <a href="https://offszn.lat/admin" style="display:inline-block; background:#8B5CF6; color:#fff; padding:12px 26px; border-radius:8px; text-decoration:none; font-weight:700;">PANEL DE CONTROL</a>
-                                </div>
-                            `;
-                            await sendOffsznEmail({
-                                to: WILLIE_ADMIN_EMAIL,
-                                subject: emailSubject,
-                                html: adminHtml,
-                                fromName: 'OFFSZN Ventas'
-                            });
+                                `;
+                                await sendOffsznEmail({
+                                    to: WILLIE_ADMIN_EMAIL,
+                                    subject: emailSubject,
+                                    html: adminHtml,
+                                    fromName: 'OFFSZN Ventas'
+                                });
+                                console.log(`[PayPalCapture] Admin notification successfully sent to ${WILLIE_ADMIN_EMAIL}`);
+                            } catch (adminMailErr) {
+                                console.error(`[PayPalCapture] Error sending admin email to ${WILLIE_ADMIN_EMAIL}:`, adminMailErr);
+                            }
                         }
                     }
                 } catch (emailErr) {

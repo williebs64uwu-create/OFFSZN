@@ -14,6 +14,7 @@
   <meta name="description"
     content="Inicia sesión en OFFSZN para acceder a tus kits, beats y herramientas de producción musical.">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/compon/new/error-state-shake/error-state-shake.css">
 
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
   <style>
@@ -191,6 +192,51 @@
                   eyeSlashIcon.style.display = 'block';
                 }
               });
+
+              // Error State Shake Handler (transitions.dev)
+              window.showLoginError = (message) => {
+                const emailInput = document.getElementById('log-email');
+                const passwordInput = document.getElementById('log-password');
+                const emailError = document.getElementById('email-error');
+                const passwordError = document.getElementById('password-error');
+                const formMessage = document.getElementById('form-message');
+
+                const lower = (message || '').toLowerCase();
+                let targetInput = emailInput;
+                let targetError = emailError;
+
+                if (lower.includes('contraseña') || lower.includes('password')) {
+                  targetInput = passwordInput;
+                  targetError = passwordError;
+                }
+
+                if (targetInput) {
+                  targetInput.classList.add('input-error-state');
+                  targetInput.classList.remove('is-shaking');
+                  void targetInput.offsetWidth; // Reflow para reiniciar animación
+                  targetInput.classList.add('is-shaking');
+
+                  setTimeout(() => {
+                    targetInput.classList.remove('is-shaking');
+                  }, 300);
+
+                  targetInput.addEventListener('input', () => {
+                    targetInput.classList.remove('input-error-state', 'is-shaking');
+                    if (targetError) targetError.classList.add('hidden');
+                    if (formMessage) formMessage.style.display = 'none';
+                  }, { once: true });
+                }
+
+                if (targetError) {
+                  targetError.textContent = message;
+                  targetError.classList.remove('hidden');
+                  if (formMessage) formMessage.style.display = 'none';
+                } else if (formMessage) {
+                  formMessage.textContent = message;
+                  formMessage.className = 'form-message error';
+                  formMessage.style.display = 'block';
+                }
+              };
             </script>
           </div>
 

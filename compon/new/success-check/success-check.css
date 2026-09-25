@@ -1,0 +1,135 @@
+/* ==========================================================================
+   OFFSZN UI Library • Success Check (Transitions.dev)
+   Appear transition: Fade + Rotate + Blur + Y-bob (bounce) + SVG Path Draw
+   Docs: https://transitions.dev/detail.html?t=success-check
+   ========================================================================== */
+
+:root {
+  /* Motion Tokens */
+  --check-opacity-dur: 500ms;
+  --check-rotate-dur: 500ms;
+  --check-rotate-from: 80deg;
+  --check-bob-dur: 500ms;
+  --check-y-amount: 40px;
+  --check-blur-dur: 500ms;
+  --check-blur-from: 10px;
+  --check-path-dur: 500ms;
+  --check-path-delay: 80ms;
+  --check-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --check-ease-opacity: cubic-bezier(0.22, 1, 0.36, 1);
+  --check-ease-rotate: cubic-bezier(0.22, 1, 0.36, 1);
+  --check-ease-bob: cubic-bezier(0.34, 1.35, 0.64, 1);
+  --check-ease-path: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Estilos y Colores Black & White */
+  --check-color: #ffffff;
+  --check-size: 44px;
+}
+
+/* Wrapper drives the appear animation; it doesn't own any
+   sizing or color so you can drop in any icon. */
+.t-success-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: center;
+  opacity: 0;
+  color: var(--check-color);
+  will-change: transform, opacity, filter;
+  vertical-align: middle;
+}
+
+/* overflow: visible keeps the stroke from clipping while it
+   draws; display: block kills the inline whitespace under SVGs. */
+.t-success-check svg {
+  display: block;
+  overflow: visible;
+  width: var(--check-size);
+  height: var(--check-size);
+}
+
+/* Stroke-draw setup con pathLength garantizado a 100 para no truncar la segunda pierna */
+.t-success-check svg path,
+.t-success-check svg polyline {
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: var(--check-path-length, 100);
+  stroke-dashoffset: var(--check-path-length, 100);
+}
+
+/* Estado activo: Animaciones en paralelo */
+.t-success-check[data-state="in"] {
+  animation:
+    t-check-fade   var(--check-opacity-dur) var(--check-ease-opacity) forwards,
+    t-check-rotate var(--check-rotate-dur)  var(--check-ease-rotate)  forwards,
+    t-check-blur   var(--check-blur-dur)    var(--check-ease-out)     forwards,
+    t-check-bob    var(--check-bob-dur)     var(--check-ease-bob)     forwards;
+}
+
+.t-success-check[data-state="in"] svg path,
+.t-success-check[data-state="in"] svg polyline {
+  animation: t-check-draw var(--check-path-dur) var(--check-ease-path) var(--check-path-delay, 0ms) forwards;
+}
+
+/* Estado inactivo / salida */
+.t-success-check[data-state="out"] {
+  opacity: 0;
+  transform: rotate(var(--check-rotate-from)) translateY(var(--check-y-amount));
+  filter: blur(var(--check-blur-from));
+}
+
+@keyframes t-check-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes t-check-rotate {
+  from { transform: rotate(var(--check-rotate-from)); }
+  to   { transform: rotate(0deg); }
+}
+
+@keyframes t-check-blur {
+  from { filter: blur(var(--check-blur-from)); }
+  to   { filter: blur(0); }
+}
+
+@keyframes t-check-bob {
+  from { translate: 0 var(--check-y-amount); }
+  to   { translate: 0 0; }
+}
+
+@keyframes t-check-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* ==========================================================================
+   OFFSZN SUCCESS BADGE CONTAINER (Black & White Minimalist)
+   ========================================================================== */
+.t-success-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #141414;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+/* Accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  .t-success-check {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  .t-success-check svg path,
+  .t-success-check svg polyline {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}

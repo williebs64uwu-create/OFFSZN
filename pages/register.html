@@ -15,6 +15,7 @@
   <meta name="description"
     content="Únete a OFFSZN, la comunidad número 1 para productores musicales. Descarga sonidos premium y lleva tus beats al siguiente nivel.">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/compon/new/error-state-shake/error-state-shake.css">
 
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
   <style>
@@ -239,25 +240,36 @@
               window.validateRegisterForm = () => {
                 const isEmailValid = validateEmail();
                 const isPasswordValid = validatePassword();
+                if (!isEmailValid) {
+                  window.showRegisterError('email', emailError.textContent);
+                }
+                if (!isPasswordValid) {
+                  window.showRegisterError('password', passwordError.textContent);
+                }
                 return isEmailValid && isPasswordValid;
               };
 
               window.showRegisterError = (field, message) => {
-                if (field === 'email') {
-                  emailError.textContent = message;
-                  emailError.classList.remove('hidden');
-                  emailInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/50');
-                  emailInput.addEventListener('input', () => {
-                    emailInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/50');
-                  }, { once: true });
-                } else if (field === 'password') {
-                  passwordError.textContent = message;
-                  passwordError.classList.remove('hidden');
-                  passwordInput.classList.add('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/50');
-                  passwordInput.addEventListener('input', () => {
-                    passwordInput.classList.remove('border-red-500', 'focus:border-red-500', 'focus:ring-red-500/50');
-                  }, { once: true });
-                }
+                const targetInput = field === 'email' ? emailInput : passwordInput;
+                const targetError = field === 'email' ? emailError : passwordError;
+                if (!targetInput || !targetError) return;
+
+                targetError.textContent = message;
+                targetError.classList.remove('hidden');
+                
+                targetInput.classList.add('input-error-state');
+                targetInput.classList.remove('is-shaking');
+                void targetInput.offsetWidth; // Reflow para reiniciar sacudida
+                targetInput.classList.add('is-shaking');
+
+                setTimeout(() => {
+                  targetInput.classList.remove('is-shaking');
+                }, 300);
+
+                targetInput.addEventListener('input', () => {
+                  targetInput.classList.remove('input-error-state', 'is-shaking');
+                  targetError.classList.add('hidden');
+                }, { once: true });
               };
 
               document.addEventListener('DOMContentLoaded', () => {

@@ -1,45 +1,42 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OFFSZN • Laboratorio de Componentes</title>
+  <title>OFFSZN • UI Component Lab (Black & White)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
+  <!-- Estilos modulares de cada componente -->
+  <link rel="stylesheet" href="./error-state-shake/error-state-shake.css">
+  <link rel="stylesheet" href="./like-button/like-button.css">
+  <link rel="stylesheet" href="./toggle-switch/toggle-switch.css">
+  <link rel="stylesheet" href="./success-check/success-check.css">
+  <link rel="stylesheet" href="./liquid-gooey/liquid-gooey.css">
+
   <style>
     /* ==========================================================================
-       1. VARIABLES & MOTION TOKENS (transitions.dev: Error State Shake)
+       OFFSZN UI LAB • STRICT BLACK & WHITE MINIMALIST DESIGN SYSTEM
+       Inspirado en transitions.dev y el diseño oscuro minimalista de OFFSZN.
        ========================================================================== */
     :root {
-      /* Motion tokens - transitions.dev error-state-shake */
-      --t-shake-distance: 6px;
-      --t-shake-overshoot: 4px;
-      --t-shake-dur-a: 80ms;
-      --t-shake-dur-b: 60ms;
-      --t-shake-ease: cubic-bezier(0.22, 1, 0.36, 1);
-      --t-revert-hold: 3000ms;
-      --t-revert-dur: 280ms;
-      --t-error-border: #e23014;
-      --t-error-text: #ea3822;
-
-      /* UI Workbench Theme Tokens */
-      --bg-page: #0b0b0e;
-      --bg-surface: #121217;
-      --bg-card: #18181f;
-      --bg-card-subtle: #20202a;
-      --border-subtle: rgba(255, 255, 255, 0.08);
-      --border-focus: rgba(255, 255, 255, 0.35);
-      --text-main: #f3f3f6;
-      --text-muted: #8e8ea0;
-      --text-faint: #565666;
-      --accent-purple: #7928ca;
-      --accent-purple-glow: rgba(121, 40, 202, 0.25);
-      --accent-cyan: #0070f3;
-      --radius-sm: 8px;
-      --radius-md: 12px;
-      --radius-lg: 16px;
+      --bg-page: #000000;
+      --bg-surface: #0a0a0a;
+      --bg-card: #111111;
+      --bg-card-subtle: #161616;
+      --bg-card-hover: #1c1c1c;
+      --border-subtle: #222222;
+      --border-hover: #333333;
+      --border-strong: #444444;
+      --text-main: #ffffff;
+      --text-muted: #888888;
+      --text-faint: #555555;
+      --white: #ffffff;
+      --black: #000000;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
       --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-mono: 'JetBrains Mono', monospace;
     }
@@ -50,25 +47,39 @@
       padding: 0;
     }
 
-    body {
+    html, body {
       background-color: var(--bg-page);
       color: var(--text-main);
       font-family: var(--font-sans);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      width: 100%;
+      overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
-      background-image: 
-        radial-gradient(circle at 50% 0%, rgba(121, 40, 202, 0.12), transparent 45%),
-        radial-gradient(circle at 100% 50%, rgba(0, 112, 243, 0.05), transparent 40%);
     }
 
-    /* Top Navigation / Header */
+    /* Scrollbar minimalista monochrome */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #000000;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2a2a2a;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #444444;
+    }
+
+    /* Header Black & White */
     header.lab-header {
-      padding: 1rem 2rem;
+      width: 100%;
+      padding: 0.9rem 2rem;
       border-bottom: 1px solid var(--border-subtle);
-      background: rgba(18, 18, 23, 0.7);
-      backdrop-filter: blur(12px);
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(16px);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -84,192 +95,392 @@
     }
 
     .brand-badge {
-      font-size: 11px;
+      font-size: 10.5px;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      font-weight: 700;
-      background: linear-gradient(135deg, #ff0080, #7928ca);
-      color: #fff;
+      letter-spacing: 0.12em;
+      font-weight: 800;
+      background: var(--white);
+      color: var(--black);
       padding: 3px 8px;
-      border-radius: 6px;
+      border-radius: 4px;
     }
 
     .brand-title {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 700;
       letter-spacing: -0.02em;
+      color: var(--white);
     }
 
     .brand-subtitle {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
       margin-left: 8px;
-      padding-left: 8px;
+      padding-left: 10px;
       border-left: 1px solid var(--border-subtle);
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      font-family: var(--font-mono);
     }
 
     .status-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: #10b981;
-      background: rgba(16, 185, 129, 0.1);
-      padding: 4px 10px;
-      border-radius: 20px;
-      border: 1px solid rgba(16, 185, 129, 0.2);
+      gap: 7px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--white);
+      background: var(--bg-surface);
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
     }
 
     .status-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
+      background: var(--white);
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.6);
     }
 
-    /* Layout */
+    /* Layout ajustado y blindado contra desbordamientos */
     .lab-container {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 2.5rem 1.5rem;
+      max-width: 1180px;
       width: 100%;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
       display: grid;
-      grid-template-columns: 260px 1fr;
-      gap: 2rem;
+      grid-template-columns: 240px minmax(0, 1fr);
+      gap: 1.75rem;
       flex: 1;
+      min-width: 0;
     }
 
-    /* Sidebar - Components List */
+    /* Sidebar */
     .sidebar {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1.25rem;
+      min-width: 0;
     }
 
     .sidebar-block {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 1.25rem;
+      padding: 1.1rem;
+      position: sticky;
+      top: 75px;
     }
 
-    .sidebar-heading {
-      font-size: 0.75rem;
+    .sidebar-search {
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .sidebar-search input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 7px 10px 7px 28px;
+      font-size: 12.5px;
+      color: var(--white);
+      outline: none;
+      transition: border-color 0.15s ease;
+      font-family: inherit;
+    }
+
+    .sidebar-search input:focus {
+      border-color: var(--border-strong);
+    }
+
+    .sidebar-search svg {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-faint);
+    }
+
+    .nav-category-title {
+      font-size: 10px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
+      font-weight: 700;
       color: var(--text-faint);
-      margin-bottom: 0.85rem;
-      font-weight: 600;
+      margin: 0.85rem 0 0.4rem 4px;
+    }
+
+    .nav-category-title:first-of-type {
+      margin-top: 0;
     }
 
     .comp-nav {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
     }
 
     .comp-nav-link {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 12px;
+      padding: 7px 10px;
       border-radius: var(--radius-sm);
       color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.875rem;
+      font-size: 0.84rem;
       font-weight: 500;
-      transition: all 0.15s ease;
       cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+      border: 1px solid transparent;
     }
 
     .comp-nav-link:hover {
-      color: var(--text-main);
-      background: rgba(255, 255, 255, 0.04);
+      color: var(--white);
+      background: var(--bg-card);
+      border-color: var(--border-subtle);
     }
 
     .comp-nav-link.active {
-      color: #fff;
-      background: rgba(121, 40, 202, 0.2);
-      border: 1px solid rgba(121, 40, 202, 0.4);
+      color: var(--white);
+      background: var(--bg-card-subtle);
+      border-color: var(--border-strong);
+      font-weight: 600;
     }
 
-    .pill-tag {
-      font-size: 10px;
+    .comp-nav-link .pill-tag {
+      font-size: 9.5px;
+      font-weight: 600;
       padding: 2px 6px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-faint);
+      border-radius: 999px;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
     }
 
     .comp-nav-link.active .pill-tag {
-      background: rgba(121, 40, 202, 0.6);
-      color: #fff;
+      background: var(--white);
+      color: var(--black);
+      border-color: var(--white);
     }
 
-    /* Main Content Area */
+    .sidebar-tip-box {
+      margin-top: 1.25rem;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .sidebar-tip-box h4 {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .sidebar-tip-box p {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Main Stage */
     .main-stage {
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 1.5rem;
+      min-width: 0;
+      width: 100%;
     }
 
-    .component-header {
-      border-bottom: 1px solid var(--border-subtle);
-      padding-bottom: 1.25rem;
+    .comp-view {
+      display: none;
+      flex-direction: column;
+      gap: 1.25rem;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .comp-view.active {
+      display: flex;
+    }
+
+    /* Header del Componente */
+    .comp-header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
     }
 
     .comp-badge-row {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     .badge-tag {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 600;
       padding: 2px 8px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      background: var(--bg-surface);
       color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      font-family: var(--font-mono);
+    }
+
+    .badge-tag.folder {
+      color: var(--white);
+      border-color: var(--border-strong);
     }
 
     .badge-tag.source {
-      background: rgba(0, 112, 243, 0.15);
-      color: #60a5fa;
-      border: 1px solid rgba(0, 112, 243, 0.3);
+      color: #cccccc;
     }
 
     .comp-title {
       font-size: 1.75rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #fff;
-      margin-bottom: 6px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--white);
     }
 
     .comp-desc {
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       color: var(--text-muted);
-      line-height: 1.5;
+      line-height: 1.55;
+      max-width: 100%;
+      word-break: break-word;
     }
 
-    /* Showcase Canvas & Controls */
+    /* 🤖 Tarjeta de Referencia Rápida para el Agente (Black & White) */
+    .agent-prompt-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--white);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .agent-prompt-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .agent-prompt-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--white);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .agent-prompt-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .prompt-copy-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: #e5e5e5;
+      min-width: 0;
+    }
+
+    .prompt-text {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .prompt-text b {
+      color: var(--white);
+    }
+
+    .prompt-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-copy-prompt {
+      background: var(--white);
+      color: var(--black);
+      font-weight: 700;
+      font-size: 0.76rem;
+      padding: 5px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--white);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: opacity 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-copy-prompt:hover {
+      opacity: 0.88;
+    }
+
+    .btn-copy-path {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      font-size: 0.76rem;
+      font-weight: 500;
+      padding: 5px 9px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn-copy-path:hover {
+      color: var(--white);
+      border-color: var(--border-strong);
+    }
+
+    /* Grid de Showcase (Mesa + Controles de Tokens) */
     .showcase-grid {
       display: grid;
-      grid-template-columns: 1fr 320px;
-      gap: 1.5rem;
+      grid-template-columns: minmax(0, 1fr) 270px;
+      gap: 1.25rem;
+      min-width: 0;
+      width: 100%;
     }
 
-    /* Interactive Preview Canvas */
+    /* Canvas Viewport */
     .preview-canvas {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
@@ -277,209 +488,105 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      min-width: 0;
     }
 
     .canvas-topbar {
-      padding: 0.75rem 1.25rem;
-      background: rgba(255, 255, 255, 0.02);
+      padding: 0.75rem 1.2rem;
+      background: #0d0d0d;
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      font-size: 0.78rem;
     }
 
     .canvas-label {
-      font-size: 0.8rem;
-      font-weight: 600;
+      font-size: 0.75rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
       color: var(--text-faint);
     }
 
     .canvas-viewport {
-      min-height: 280px;
+      min-height: 220px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 3rem 2rem;
+      padding: 2.2rem 1.5rem;
       background: 
-        radial-gradient(circle at center, rgba(255, 255, 255, 0.02) 0%, transparent 70%),
-        #111115;
+        radial-gradient(#1c1c1c 1px, transparent 1px) 0 0 / 16px 16px,
+        #050505;
       position: relative;
-    }
-
-    /* ==========================================================================
-       2. REUSABLE COMPONENT: ERROR STATE SHAKE (.t-*)
-       Matches the exact user screenshot & transitions.dev spec
-       ========================================================================== */
-    .t-input-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      width: 100%;
-      max-width: 280px;
-      user-select: none;
-    }
-
-    .t-input {
-      display: flex;
-      align-items: center;
-      height: 38px;
-      padding: 0 12px;
-      border-radius: 8px;
-      background: #181818;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      outline: none;
-      transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
-      will-change: transform;
-      position: relative;
-    }
-
-    .t-input:hover {
-      border-color: rgba(255, 255, 255, 0.25);
-    }
-
-    .t-input:focus-within {
-      border-color: rgba(255, 255, 255, 0.55);
-      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
-    }
-
-    /* Error state border */
-    .t-input.is-error {
-      border-color: var(--t-error-border);
-      transition: border-color var(--t-revert-dur, 280ms) ease-out;
-    }
-
-    .t-input-el {
-      flex: 1 0 0;
       min-width: 0;
-      height: 100%;
-      border: 0;
-      outline: none;
-      background: transparent;
-      font-family: inherit;
-      font-size: 14px;
-      line-height: 1.4;
-      color: #ffffff;
-      padding: 0;
-      font-weight: 400;
     }
 
-    .t-input-el::placeholder {
-      color: rgba(255, 255, 255, 0.35);
-    }
-
-    /* Error Message Reveal with Delay */
-    .t-error-msg {
-      font-size: 13px;
-      line-height: 1.4;
-      color: var(--t-error-text);
-      margin: 0;
-      opacity: 0;
-      visibility: hidden;
-      transition:
-        opacity    var(--t-revert-dur, 280ms) ease-out,
-        visibility 0s linear var(--t-revert-dur, 280ms);
-    }
-
-    .t-input-wrap.is-error .t-error-msg {
-      opacity: 1;
-      visibility: visible;
-      transition:
-        opacity    var(--t-revert-dur, 280ms) ease-out,
-        visibility 0s linear 0s;
-    }
-
-    /* Multi-segment keyframe with per-stop easing curve from Figma / transitions.dev */
-    .t-input.is-shaking {
-      animation: t-input-shake calc(
-        var(--t-shake-dur-a) * 2 + var(--t-shake-dur-b) * 2
-      ) linear;
-    }
-
-    @keyframes t-input-shake {
-      0%      { transform: translateX(0);                                       animation-timing-function: var(--t-shake-ease); }
-      28.57%  { transform: translateX(var(--t-shake-distance));                 animation-timing-function: var(--t-shake-ease); }
-      57.14%  { transform: translateX(calc(var(--t-shake-distance) * -1));     animation-timing-function: var(--t-shake-ease); }
-      78.57%  { transform: translateX(var(--t-shake-overshoot));                animation-timing-function: var(--t-shake-ease); }
-      100%    { transform: translateX(0); }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .t-input { animation: none !important; transform: none !important; }
-    }
-
-    /* Action Trigger Button under Canvas */
     .canvas-footer {
-      padding: 1rem 1.25rem;
-      background: var(--bg-card);
+      padding: 0.85rem 1.2rem;
+      background: #0d0d0d;
       border-top: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .btn-animate {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      background: #ffffff;
-      color: #0b0b0e;
-      font-weight: 600;
-      font-size: 0.875rem;
-      padding: 8px 16px;
+      gap: 7px;
+      background: var(--white);
+      color: var(--black);
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 7px 15px;
       border-radius: var(--radius-sm);
       border: none;
       cursor: pointer;
-      transition: all 0.15s ease;
+      transition: opacity 0.15s ease;
     }
 
     .btn-animate:hover {
-      background: #e2e2e8;
-      transform: translateY(-1px);
-    }
-
-    .btn-animate:active {
-      transform: translateY(0);
-      background: #d4d4dc;
+      opacity: 0.88;
     }
 
     .btn-ghost {
       background: transparent;
       border: 1px solid var(--border-subtle);
       color: var(--text-muted);
-      font-size: 0.85rem;
-      padding: 8px 14px;
+      font-size: 0.8rem;
+      padding: 7px 13px;
       border-radius: var(--radius-sm);
       cursor: pointer;
-      font-weight: 500;
+      font-weight: 600;
       transition: all 0.15s ease;
     }
 
     .btn-ghost:hover {
-      color: #fff;
-      border-color: rgba(255, 255, 255, 0.2);
-      background: rgba(255, 255, 255, 0.03);
+      color: var(--white);
+      border-color: var(--border-strong);
     }
 
-    /* Controls Panel */
+    /* Panel de Controles (Motion Tokens) */
     .controls-panel {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 1.25rem;
+      padding: 1.1rem;
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
+      gap: 1rem;
+      min-width: 0;
     }
 
     .controls-title {
-      font-size: 0.85rem;
-      font-weight: 600;
+      font-size: 0.75rem;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
       color: var(--text-faint);
       display: flex;
       align-items: center;
@@ -489,33 +596,33 @@
     .token-control {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
     .token-label-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
     }
 
     .token-name {
       color: var(--text-muted);
       font-family: var(--font-mono);
-      font-size: 0.75rem;
+      font-size: 0.72rem;
     }
 
     .token-val {
-      color: #fff;
+      color: var(--white);
       font-weight: 600;
       font-family: var(--font-mono);
-      font-size: 0.75rem;
+      font-size: 0.72rem;
     }
 
     input[type="range"] {
       width: 100%;
-      height: 4px;
-      background: var(--bg-card-subtle);
+      height: 3px;
+      background: #222222;
       border-radius: 2px;
       outline: none;
       -webkit-appearance: none;
@@ -526,30 +633,133 @@
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      background: #fff;
+      background: var(--white);
       cursor: pointer;
-      box-shadow: 0 0 6px rgba(0,0,0,0.5);
-      transition: transform 0.1s ease;
     }
 
-    input[type="range"]::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
+    /* Contextos de prueba */
+    .settings-list {
+      width: 100%;
+      max-width: 360px;
+      background: #0f0f0f;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
-    /* Code Snippets Section */
+    .settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .settings-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .settings-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--white);
+    }
+
+    .settings-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .success-demo-card {
+      background: #0f0f0f;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.8rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      max-width: 340px;
+      width: 100%;
+    }
+
+    .success-demo-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-top: 0.9rem;
+      margin-bottom: 5px;
+    }
+
+    .success-demo-card p {
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Preset Pills & Liquid Demo Viewport */
+    .btn-preset-group {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .btn-preset-pill {
+      flex: 1;
+      padding: 5px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+
+    .btn-preset-pill:hover {
+      background: var(--bg-card-hover);
+      color: var(--white);
+      border-color: var(--border-hover);
+    }
+
+    .btn-preset-pill.active {
+      background: var(--white);
+      color: var(--black);
+      border-color: var(--white);
+    }
+
+    .liquid-demo-viewport {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 290px;
+      width: 100%;
+      position: relative;
+    }
+
+    /* Code Tabs & Snippet Box */
     .code-section {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
       overflow: hidden;
+      min-width: 0;
+      width: 100%;
     }
 
     .code-topbar {
       padding: 0.5rem 1rem;
-      background: rgba(255, 255, 255, 0.02);
+      background: #0d0d0d;
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
@@ -565,83 +775,88 @@
       background: transparent;
       border: none;
       color: var(--text-muted);
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
-      padding: 6px 12px;
-      border-radius: 6px;
+      padding: 5px 10px;
+      border-radius: 4px;
       cursor: pointer;
       transition: all 0.15s ease;
     }
 
     .tab-btn:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.04);
+      color: var(--white);
+      background: rgba(255, 255, 255, 0.05);
     }
 
     .tab-btn.active {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.1);
+      color: var(--white);
+      background: #1c1c1c;
     }
 
     .btn-copy {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: rgba(255, 255, 255, 0.06);
+      gap: 5px;
+      background: #141414;
       border: 1px solid var(--border-subtle);
       color: var(--text-muted);
       font-size: 0.75rem;
       font-weight: 600;
-      padding: 5px 10px;
-      border-radius: 6px;
+      padding: 4px 10px;
+      border-radius: 4px;
       cursor: pointer;
       transition: all 0.15s ease;
     }
 
     .btn-copy:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.12);
+      color: var(--white);
+      border-color: var(--border-strong);
     }
 
     .code-body {
-      padding: 1.25rem;
+      padding: 1.1rem;
       margin: 0;
-      background: #0d0d11;
+      background: #050505;
       overflow-x: auto;
       font-family: var(--font-mono);
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       line-height: 1.6;
-      color: #d1d5db;
+      color: #cccccc;
+      max-width: 100%;
+      white-space: pre;
     }
 
     .code-tab-panel {
       display: none;
+      max-width: 100%;
+      overflow: hidden;
     }
 
     .code-tab-panel.active {
       display: block;
     }
 
-    /* Notification Toast */
+    /* Toast Notification */
     .toast {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: #18181f;
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      color: #fff;
+      background: #141414;
+      border: 1px solid #333333;
+      color: var(--white);
       padding: 10px 16px;
       border-radius: var(--radius-sm);
-      font-size: 0.85rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      font-size: 0.84rem;
+      font-weight: 500;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
       display: flex;
       align-items: center;
       gap: 8px;
       opacity: 0;
-      transform: translateY(12px);
+      transform: translateY(10px);
       pointer-events: none;
-      transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-      z-index: 999;
+      transition: all 0.2s ease;
+      z-index: 9999;
     }
 
     .toast.show {
@@ -649,28 +864,32 @@
       transform: translateY(0);
     }
 
-    @media (max-width: 900px) {
+    /* Responsive */
+    @media (max-width: 920px) {
       .lab-container {
         grid-template-columns: 1fr;
       }
       .showcase-grid {
         grid-template-columns: 1fr;
       }
+      .sidebar-block {
+        position: static;
+      }
     }
   </style>
 </head>
 <body>
 
-  <!-- Lab Header -->
+  <!-- Top Lab Header (Black & White) -->
   <header class="lab-header">
     <div class="brand-group">
       <span class="brand-badge">OFFSZN</span>
       <h1 class="brand-title">UI Component Lab</h1>
-      <span class="brand-subtitle">compon/new/probar.html</span>
+      <span class="brand-subtitle">compon/new/</span>
     </div>
-    <div class="header-actions">
+    <div>
       <span class="status-pill">
-        <span class="status-dot"></span> Sandbox Activo
+        <span class="status-dot"></span> 4 Componentes Modulares
       </span>
     </div>
   </header>
@@ -678,407 +897,984 @@
   <!-- Lab Container -->
   <div class="lab-container">
     
-    <!-- Sidebar: Colección de Componentes -->
+    <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <div class="sidebar-block">
-        <div class="sidebar-heading">Componentes Guardados</div>
+        
+        <div class="sidebar-search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="componentSearchInput" placeholder="Buscar componente..." autocomplete="off">
+        </div>
+
+        <div class="nav-category-title">Validación & Entradas</div>
         <ul class="comp-nav">
           <li>
-            <div class="comp-nav-link active">
+            <div class="comp-nav-link active" data-target="view-error-shake">
               <span>Error State Shake</span>
-              <span class="pill-tag">Input</span>
-            </div>
-          </li>
-          <li>
-            <div class="comp-nav-link" style="opacity: 0.5; cursor: not-allowed;" title="Próximamente">
-              <span>Input Clear Dissolve</span>
-              <span class="pill-tag">Próximo</span>
-            </div>
-          </li>
-          <li>
-            <div class="comp-nav-link" style="opacity: 0.5; cursor: not-allowed;" title="Próximamente">
-              <span>Organic Shimmer</span>
-              <span class="pill-tag">Próximo</span>
-            </div>
-          </li>
-          <li>
-            <div class="comp-nav-link" style="opacity: 0.5; cursor: not-allowed;" title="Próximamente">
-              <span>Avatar Spring Hover</span>
-              <span class="pill-tag">Próximo</span>
+              <span class="pill-tag">Login & Reg</span>
             </div>
           </li>
         </ul>
-      </div>
 
-      <div class="sidebar-block">
-        <div class="sidebar-heading">Tecnología</div>
-        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
-          Vanilla CSS 3 con <strong>Motion Tokens</strong> y animaciones nativas aceleradas por GPU, listo para producción en OFFSZN sin dependencias externas.
-        </p>
+        <div class="nav-category-title">Microinteracciones</div>
+        <ul class="comp-nav">
+          <li>
+            <div class="comp-nav-link" data-target="view-like-button">
+              <span>Like Button</span>
+              <span class="pill-tag">Modular</span>
+            </div>
+          </li>
+          <li>
+            <div class="comp-nav-link" data-target="view-liquid-gooey">
+              <span>Liquid Gooey</span>
+              <span class="pill-tag">Nuevo</span>
+            </div>
+          </li>
+        </ul>
+
+        <div class="nav-category-title">Controles & Ajustes</div>
+        <ul class="comp-nav">
+          <li>
+            <div class="comp-nav-link" data-target="view-toggle-switch">
+              <span>Toggle Switch</span>
+              <span class="pill-tag">Modular</span>
+            </div>
+          </li>
+        </ul>
+
+        <div class="nav-category-title">Feedback & Estados</div>
+        <ul class="comp-nav">
+          <li>
+            <div class="comp-nav-link" data-target="view-success-check">
+              <span>Success Check</span>
+              <span class="pill-tag">Modular</span>
+            </div>
+          </li>
+        </ul>
+
+        <div class="sidebar-tip-box">
+          <h4>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            Referencia Rápida
+          </h4>
+          <p>
+            Pulsa <strong>"Copiar para el Chat"</strong> en cualquier componente y pégalo aquí para que lo implemente en la pantalla que me digas.
+          </p>
+        </div>
+
       </div>
     </aside>
 
-    <!-- Main Stage: Component Showcase -->
+    <!-- Main Content Area -->
     <main class="main-stage">
       
-      <!-- Component Header Details -->
-      <div class="component-header">
-        <div class="comp-badge-row">
-          <span class="badge-tag source">transitions.dev</span>
-          <span class="badge-tag">Microinteracción</span>
-          <span class="badge-tag">Validación de Formularios</span>
-        </div>
-        <h2 class="comp-title">Error State Shake</h2>
-        <p class="comp-desc">
-          Transición de error y sacudida horizontal multi-fase calculada con curvas <code>cubic-bezier</code> independientes. Se auto-restaura automáticamente o se limpia al tipear.
-        </p>
-      </div>
-
-      <!-- Preview Canvas & Live Token Controls -->
-      <div class="showcase-grid">
+      <!-- ====================================================================
+           1. VISTA: ERROR STATE SHAKE
+           ==================================================================== -->
+      <section class="comp-view active" id="view-error-shake">
         
-        <!-- Live Visual Canvas -->
-        <section class="preview-canvas">
-          <div class="canvas-topbar">
-            <span class="canvas-label">Vista Previa Interactiva</span>
-            <span style="font-size: 12px; color: var(--text-muted);">Haz clic en "Animar Error" o presiona Enter</span>
+        <div class="comp-header">
+          <div class="comp-badge-row">
+            <span class="badge-tag source">transitions.dev</span>
+            <span class="badge-tag folder">compon/new/error-state-shake/</span>
+            <span class="badge-tag">Producción</span>
           </div>
+          <h2 class="comp-title">Error State Shake</h2>
+          <p class="comp-desc">
+            Transición de sacudida horizontal multi-fase calculada con curvas <code>cubic-bezier</code>. Mantiene el ancho y grosor del borde idéntico (cero saltos de layout) y se auto-limpia en cuanto el usuario tipea.
+          </p>
+        </div>
 
-          <div class="canvas-viewport" id="stageContainer">
-            
-            <!-- Exact Match to Screenshot -->
-            <div class="t-input-wrap" id="demoInputWrap">
-              <div class="t-input" id="demoInput">
-                <input 
-                  type="text" 
-                  class="t-input-el" 
-                  id="demoInputEl"
-                  value="John" 
-                  placeholder="Introduce tu nombre o email..."
-                  spellcheck="false"
-                  autocomplete="off"
-                  aria-label="Nombre o email"
-                />
+        <!-- 🤖 Comando Rápido para Antigravity -->
+        <div class="agent-prompt-card">
+          <div class="agent-prompt-header">
+            <span class="agent-prompt-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path></svg>
+              Comando para Antigravity
+            </span>
+            <span class="agent-prompt-hint">Copia y pega en el chat</span>
+          </div>
+          <div class="prompt-copy-box">
+            <span class="prompt-text">Usa el componente <b>Error State Shake</b> (ruta: compon/new/error-state-shake/) en [campo o página]</span>
+            <div class="prompt-actions">
+              <button type="button" class="btn-copy-prompt" data-copy-text="Usa el componente Error State Shake (ruta: compon/new/error-state-shake/) en ">
+                Copiar para el Chat
+              </button>
+              <button type="button" class="btn-copy-path" data-copy-text="compon/new/error-state-shake/error-state-shake.css">
+                Ruta CSS
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase-grid">
+          <div class="preview-canvas">
+            <div class="canvas-topbar">
+              <span class="canvas-label">Vista Previa</span>
+              <span style="font-size: 11.5px; color: var(--text-muted);">Presiona Enter en el input</span>
+            </div>
+
+            <div class="canvas-viewport">
+              <div class="t-input-wrap" id="demoInputWrap" style="max-width: 320px; width: 100%;">
+                <div class="t-input" id="demoInput">
+                  <input 
+                    type="text" 
+                    class="t-input-el" 
+                    id="demoInputEl"
+                    value="usuario@invalido" 
+                    placeholder="Introduce tu texto..."
+                    spellcheck="false"
+                    autocomplete="off"
+                    aria-label="Correo"
+                  />
+                </div>
+                <p class="t-error-msg" id="demoErrorMsg">Por favor ingresa un correo válido.</p>
               </div>
-              <p class="t-error-msg" id="demoErrorMsg">Por favor ingresa un correo válido.</p>
             </div>
 
-          </div>
-
-          <div class="canvas-footer">
-            <button type="button" class="btn-animate" id="btnTriggerShake">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-              </svg>
-              <span>Animar Error</span>
-            </button>
-
-            <button type="button" class="btn-ghost" id="btnResetInput">
-              Restaurar
-            </button>
-          </div>
-        </section>
-
-        <!-- Controls: Ajuste de Motion Tokens en Tiempo Real -->
-        <section class="controls-panel">
-          <div class="controls-title">
-            <span>Motion Tokens</span>
-            <button type="button" class="btn-ghost" id="btnResetTokens" style="padding: 2px 8px; font-size: 11px;">Default</button>
-          </div>
-
-          <!-- Token: Shake Distance -->
-          <div class="token-control">
-            <div class="token-label-row">
-              <span class="token-name">--t-shake-distance</span>
-              <span class="token-val" id="valDistance">6px</span>
+            <div class="canvas-footer">
+              <button type="button" class="btn-animate" id="btnTriggerShake">
+                <span>Animar Error</span>
+              </button>
+              <button type="button" class="btn-ghost" id="btnResetInput">
+                Restablecer
+              </button>
             </div>
-            <input type="range" id="rangeDistance" min="2" max="16" value="6" step="1" />
           </div>
 
-          <!-- Token: Overshoot -->
-          <div class="token-control">
-            <div class="token-label-row">
-              <span class="token-name">--t-shake-overshoot</span>
-              <span class="token-val" id="valOvershoot">4px</span>
+          <!-- Controles de Tokens -->
+          <div class="controls-panel">
+            <div class="controls-title">
+              <span>Tokens CSS</span>
+              <button type="button" class="btn-ghost" id="btnResetShakeTokens" style="padding: 1px 6px; font-size: 10px;">Default</button>
             </div>
-            <input type="range" id="rangeOvershoot" min="1" max="12" value="4" step="1" />
-          </div>
 
-          <!-- Token: Duration Phase A -->
-          <div class="token-control">
-            <div class="token-label-row">
-              <span class="token-name">--t-shake-dur-a</span>
-              <span class="token-val" id="valDurA">80ms</span>
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--t-shake-distance</span>
+                <span class="token-val" id="valDistance">6px</span>
+              </div>
+              <input type="range" id="rangeDistance" min="2" max="16" value="6" step="1" />
             </div>
-            <input type="range" id="rangeDurA" min="40" max="200" value="80" step="10" />
-          </div>
 
-          <!-- Token: Duration Phase B -->
-          <div class="token-control">
-            <div class="token-label-row">
-              <span class="token-name">--t-shake-dur-b</span>
-              <span class="token-val" id="valDurB">60ms</span>
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--t-shake-overshoot</span>
+                <span class="token-val" id="valOvershoot">4px</span>
+              </div>
+              <input type="range" id="rangeOvershoot" min="0" max="10" value="4" step="1" />
             </div>
-            <input type="range" id="rangeDurB" min="30" max="150" value="60" step="10" />
-          </div>
 
-          <!-- Token: Revert Hold -->
-          <div class="token-control">
-            <div class="token-label-row">
-              <span class="token-name">--t-revert-hold</span>
-              <span class="token-val" id="valHold">3000ms</span>
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--t-shake-dur-a</span>
+                <span class="token-val" id="valDurA">80ms</span>
+              </div>
+              <input type="range" id="rangeDurA" min="40" max="160" value="80" step="10" />
             </div>
-            <input type="range" id="rangeHold" min="1000" max="6000" value="3000" step="500" />
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--t-shake-dur-b</span>
+                <span class="token-val" id="valDurB">60ms</span>
+              </div>
+              <input type="range" id="rangeDurB" min="30" max="120" value="60" step="10" />
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--t-revert-hold</span>
+                <span class="token-val" id="valHold">3000ms</span>
+              </div>
+              <input type="range" id="rangeHold" min="1000" max="5000" value="3000" step="500" />
+            </div>
           </div>
-
-          <div style="font-size: 11px; color: var(--text-faint); margin-top: 4px; line-height: 1.4;">
-            * Los cambios se aplican inmediatamente como CSS Custom Properties en vivo.
-          </div>
-        </section>
-
-      </div>
-
-      <!-- Code Inspector & Copy Snippets -->
-      <section class="code-section">
-        <div class="code-topbar">
-          <div class="tab-pills">
-            <button type="button" class="tab-btn active" data-tab="html">HTML</button>
-            <button type="button" class="tab-btn" data-tab="css">CSS (.t-*)</button>
-            <button type="button" class="tab-btn" data-tab="js">JavaScript</button>
-            <button type="button" class="tab-btn" data-tab="react">React</button>
-          </div>
-
-          <button type="button" class="btn-copy" id="btnCopySnippet">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-            <span id="copyBtnText">Copiar Código</span>
-          </button>
         </div>
 
-        <!-- Tab: HTML -->
-        <div class="code-tab-panel active" id="tab-html">
-          <pre class="code-body"><code>&lt;!-- OFFSZN Input con Error State Shake (transitions.dev) --&gt;
-&lt;div class="t-input-wrap" data-input-shake&gt;
+        <!-- Code Tabs -->
+        <div class="code-section">
+          <div class="code-topbar">
+            <div class="tab-pills" data-code-group="shake">
+              <button type="button" class="tab-btn active" data-tab="shake-html">HTML</button>
+              <button type="button" class="tab-btn" data-tab="shake-css">CSS</button>
+              <button type="button" class="tab-btn" data-tab="shake-js">JavaScript</button>
+            </div>
+            <button type="button" class="btn-copy" data-copy-target="shake">
+              <span>Copiar Código</span>
+            </button>
+          </div>
+          <div class="code-tab-panel active" id="tab-shake-html">
+            <pre class="code-body"><code>&lt;div class="t-input-wrap" id="emailWrap"&gt;
   &lt;div class="t-input"&gt;
-    &lt;input 
-      type="text" 
-      class="t-input-el" 
-      value="John" 
-      placeholder="Introduce tu texto..."
-      spellcheck="false" 
-      autocomplete="off"
-    /&gt;
+    &lt;input type="email" class="t-input-el" placeholder="tu@correo.com" /&gt;
   &lt;/div&gt;
-  &lt;p class="t-error-msg"&gt;Por favor ingresa un correo válido.&lt;/p&gt;
+  &lt;p class="t-error-msg"&gt;Correo inválido&lt;/p&gt;
 &lt;/div&gt;</code></pre>
-        </div>
+          </div>
+          <div class="code-tab-panel" id="tab-shake-css">
+            <pre class="code-body"><code>@import "/compon/new/error-state-shake/error-state-shake.css";</code></pre>
+          </div>
+          <div class="code-tab-panel" id="tab-shake-js">
+            <pre class="code-body"><code>import { triggerInputShake } from '/compon/new/error-state-shake/error-state-shake.js';
 
-        <!-- Tab: CSS -->
-        <div class="code-tab-panel" id="tab-css">
-          <pre class="code-body"><code>/* ==========================================================
-   OFFSZN • Error State Shake (.t-*)
-   Docs: https://transitions.dev/detail.html?t=error-state-shake
-   ========================================================== */
-:root {
-  --t-shake-distance:  6px;
-  --t-shake-overshoot: 4px;
-  --t-shake-dur-a:     80ms;
-  --t-shake-dur-b:     60ms;
-  --t-shake-ease:      cubic-bezier(0.22, 1, 0.36, 1);
-  --t-revert-hold:     3000ms;
-  --t-revert-dur:      280ms;
-  --t-error-border:    #e23014;
-  --t-error-text:      #ea3822;
-}
-
-.t-input-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  max-width: 280px;
-}
-
-.t-input {
-  display: flex;
-  align-items: center;
-  height: 38px;
-  padding: 0 12px;
-  border-radius: 8px;
-  background: #181818;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  outline: none;
-  transition: border-color 150ms ease-out, box-shadow 150ms ease-out;
-  will-change: transform;
-}
-
-.t-input:hover {
-  border-color: rgba(255, 255, 255, 0.25);
-}
-
-.t-input:focus-within {
-  border-color: rgba(255, 255, 255, 0.55);
-}
-
-.t-input.is-error {
-  border-color: var(--t-error-border);
-  transition: border-color var(--t-revert-dur, 280ms) ease-out;
-}
-
-.t-input-el {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  outline: none;
-  background: transparent;
-  font-family: inherit;
-  font-size: 14px;
-  color: #ffffff;
-  padding: 0;
-}
-
-.t-error-msg {
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--t-error-text);
-  margin: 0;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity    var(--t-revert-dur, 280ms) ease-out,
-    visibility 0s linear var(--t-revert-dur, 280ms);
-}
-
-.t-input-wrap.is-error .t-error-msg {
-  opacity: 1;
-  visibility: visible;
-  transition:
-    opacity    var(--t-revert-dur, 280ms) ease-out,
-    visibility 0s linear 0s;
-}
-
-/* Multi-segment keyframe with per-stop cubic-bezier */
-.t-input.is-shaking {
-  animation: t-input-shake calc(
-    var(--t-shake-dur-a) * 2 + var(--t-shake-dur-b) * 2
-  ) linear;
-}
-
-@keyframes t-input-shake {
-  0%      { transform: translateX(0);                                       animation-timing-function: var(--t-shake-ease); }
-  28.57%  { transform: translateX(var(--t-shake-distance));                 animation-timing-function: var(--t-shake-ease); }
-  57.14%  { transform: translateX(calc(var(--t-shake-distance) * -1));     animation-timing-function: var(--t-shake-ease); }
-  78.57%  { transform: translateX(var(--t-shake-overshoot));                animation-timing-function: var(--t-shake-ease); }
-  100%    { transform: translateX(0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .t-input { animation: none !important; transform: none !important; }
-}</code></pre>
-        </div>
-
-        <!-- Tab: JS -->
-        <div class="code-tab-panel" id="tab-js">
-          <pre class="code-body"><code>/**
- * OFFSZN Helper: Trigger Error State Shake
- * @param {HTMLElement} wrapEl - El contenedor .t-input-wrap
- * @param {string} [customMessage] - Mensaje de error opcional
- */
-function triggerInputShake(wrapEl, customMessage) {
-  if (!wrapEl) return;
-  const input = wrapEl.querySelector('.t-input');
-  const msgEl = wrapEl.querySelector('.t-error-msg');
-  if (customMessage && msgEl) msgEl.textContent = customMessage;
-
-  // Activar estado de error
-  wrapEl.classList.add('is-error');
-  input.classList.add('is-error');
-
-  // Reiniciar animación de sacudida mediante reflow
-  input.classList.remove('is-shaking');
-  void input.offsetWidth; // Force reflow
-  input.classList.add('is-shaking');
-
-  // Duración total del shake (80ms*2 + 60ms*2 = 280ms)
-  const shakeMs = 280;
-  window.setTimeout(() => {
-    input.classList.remove('is-shaking');
-  }, shakeMs + 20);
-
-  // Auto-revert si no interactúa el usuario
-  if (wrapEl._revertTimer) window.clearTimeout(wrapEl._revertTimer);
-  const holdMs = 3000;
-  wrapEl._revertTimer = window.setTimeout(() => {
-    wrapEl._revertTimer = null;
-    wrapEl.classList.remove('is-error');
-    input.classList.remove('is-error');
-  }, shakeMs + holdMs);
-}
-
-// Inicializar auto-limpieza al tipear
-document.querySelectorAll('.t-input-wrap').forEach((wrap) => {
-  const inputEl = wrap.querySelector('.t-input-el');
-  const input = wrap.querySelector('.t-input');
-  if (!inputEl) return;
-
-  inputEl.addEventListener('input', () => {
-    if (wrap._revertTimer) {
-      window.clearTimeout(wrap._revertTimer);
-      wrap._revertTimer = null;
-    }
-    wrap.classList.remove('is-error');
-    input.classList.remove('is-error');
-  });
-});</code></pre>
-        </div>
-
-        <!-- Tab: React -->
-        <div class="code-tab-panel" id="tab-react">
-          <pre class="code-body"><code>import { useRef, useState } from "react";
-
-export function InputShake({ children, message = "Campo inválido", onCancel }) {
-  const inputRef = useRef(null);
-  const wrapRef = useRef(null);
-  const timerRef = useRef(null);
-  const [hasError, setHasError] = useState(false);
-
-  const triggerError = () => {
-    if (!inputRef.current) return;
-    setHasError(true);
-    inputRef.current.classList.remove("is-shaking");
-    void inputRef.current.offsetWidth;
-    inputRef.current.classList.add("is-shaking");
-
-    window.setTimeout(() => {
-      inputRef.current?.classList.remove("is-shaking");
-    }, 300);
-
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      setHasError(false);
-    }, 3300);
-  };
-
-  const handleInput = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setHasError(false);
-    onCancel?.();
-  };
-
-  return (
-    &lt;div ref={wrapRef} className={`t-input-wrap ${hasError ? "is-error" : ""}`}&gt;
-      &lt;div ref={inputRef} className={`t-input ${hasError ? "is-error" : ""}`} onInput={handleInput}&gt;
-        {children}
-      &lt;/div&gt;
-      &lt;p className="t-error-msg"&gt;{message}&lt;/p&gt;
-    &lt;/div&gt;
-  );
-}</code></pre>
+// Activar error
+triggerInputShake('#emailWrap', 'Por favor ingresa un correo válido.');</code></pre>
+          </div>
         </div>
 
       </section>
+
+      <!-- ====================================================================
+           2. VISTA: LIKE BUTTON
+           ==================================================================== -->
+      <section class="comp-view" id="view-like-button">
+        
+        <div class="comp-header">
+          <div class="comp-badge-row">
+            <span class="badge-tag source">transitions.dev</span>
+            <span class="badge-tag folder">compon/new/like-button/</span>
+            <span class="badge-tag">Modular</span>
+          </div>
+          <h2 class="comp-title">Like Button</h2>
+          <p class="comp-desc">
+            Microinteracción de Like con corazón spring-pop (rebote elástico con curva cúbica) y dispersión orgánica de 8 partículas calculadas dinámicamente con JS.
+          </p>
+        </div>
+
+        <!-- 🤖 Comando Rápido para Antigravity -->
+        <div class="agent-prompt-card">
+          <div class="agent-prompt-header">
+            <span class="agent-prompt-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path></svg>
+              Comando para Antigravity
+            </span>
+            <span class="agent-prompt-hint">Copia y pega en el chat</span>
+          </div>
+          <div class="prompt-copy-box">
+            <span class="prompt-text">Usa el componente <b>Like Button</b> (ruta: compon/new/like-button/) en [tarjeta de beat o kit]</span>
+            <div class="prompt-actions">
+              <button type="button" class="btn-copy-prompt" data-copy-text="Usa el componente Like Button (ruta: compon/new/like-button/) en ">
+                Copiar para el Chat
+              </button>
+              <button type="button" class="btn-copy-path" data-copy-text="compon/new/like-button/like-button.css">
+                Ruta CSS
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase-grid">
+          <div class="preview-canvas">
+            <div class="canvas-topbar">
+              <span class="canvas-label">Vista Previa</span>
+              <span style="font-size: 11.5px; color: var(--text-muted);" id="likeStatusIndicator">Estado: Sin Like (0)</span>
+            </div>
+
+            <div class="canvas-viewport">
+              <button type="button" class="t-like" id="demoLikeBtn" data-liked="false" aria-pressed="false" style="background: #141414; border: 1px solid rgba(255,255,255,0.2); color: #fff; height: 42px; padding: 0 20px;">
+                <span class="t-like-icon-wrap">
+                  <span class="t-like-icon">
+                    <svg class="t-like-heart" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path>
+                    </svg>
+                  </span>
+                  <span class="t-like-particles">
+                    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                  </span>
+                </span>
+                <span id="demoLikeLabel" style="font-weight: 600;">Like</span>
+              </button>
+              <span style="font-size: 11.5px; color: var(--text-faint); margin-top: 14px;">Haz clic en el botón para ver la explosión de partículas</span>
+            </div>
+
+            <div class="canvas-footer">
+              <button type="button" class="btn-animate" id="btnToggleLikeAction">
+                <span>Alternar Like</span>
+              </button>
+              <button type="button" class="btn-ghost" id="btnReplayBurst">
+                Re-disparar Partículas
+              </button>
+            </div>
+          </div>
+
+          <!-- Controles de Tokens -->
+          <div class="controls-panel">
+            <div class="controls-title">
+              <span>Tokens CSS</span>
+              <button type="button" class="btn-ghost" id="btnResetLikeTokens" style="padding: 1px 6px; font-size: 10px;">Default</button>
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--like-particle-dist</span>
+                <span class="token-val" id="valParticleDist">20px</span>
+              </div>
+              <input type="range" id="rangeParticleDist" min="10" max="40" value="20" step="1" />
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--like-particle-dur</span>
+                <span class="token-val" id="valParticleDur">600ms</span>
+              </div>
+              <input type="range" id="rangeParticleDur" min="300" max="1000" value="600" step="50" />
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--like-pop</span>
+                <span class="token-val" id="valLikePop">350ms</span>
+              </div>
+              <input type="range" id="rangeLikePop" min="200" max="600" value="350" step="25" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Tabs -->
+        <div class="code-section">
+          <div class="code-topbar">
+            <div class="tab-pills" data-code-group="like">
+              <button type="button" class="tab-btn active" data-tab="like-html">HTML</button>
+              <button type="button" class="tab-btn" data-tab="like-css">CSS</button>
+              <button type="button" class="tab-btn" data-tab="like-js">JavaScript</button>
+            </div>
+            <button type="button" class="btn-copy" data-copy-target="like">
+              <span>Copiar Código</span>
+            </button>
+          </div>
+          <div class="code-tab-panel active" id="tab-like-html">
+            <pre class="code-body"><code>&lt;button type="button" class="t-like" data-liked="false"&gt;
+  &lt;span class="t-like-icon-wrap"&gt;
+    &lt;span class="t-like-icon"&gt;
+      &lt;svg class="t-like-heart" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"&gt;
+        &lt;path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/&gt;
+      &lt;/svg&gt;
+    &lt;/span&gt;
+    &lt;span class="t-like-particles"&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;i&gt;&lt;/i&gt;&lt;/span&gt;
+  &lt;/span&gt;
+  &lt;span&gt;Like&lt;/span&gt;
+&lt;/button&gt;</code></pre>
+          </div>
+          <div class="code-tab-panel" id="tab-like-css">
+            <pre class="code-body"><code>@import "/compon/new/like-button/like-button.css";</code></pre>
+          </div>
+          <div class="code-tab-panel" id="tab-like-js">
+            <pre class="code-body"><code>import { toggleLike } from '/compon/new/like-button/like-button.js';
+
+const btn = document.querySelector('.t-like');
+btn.addEventListener('click', () => toggleLike(btn));</code></pre>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           3. VISTA: TOGGLE SWITCH
+           ==================================================================== -->
+      <section class="comp-view" id="view-toggle-switch">
+        
+        <div class="comp-header">
+          <div class="comp-badge-row">
+            <span class="badge-tag source">transitions.dev</span>
+            <span class="badge-tag folder">compon/new/toggle-switch/</span>
+            <span class="badge-tag">Modular</span>
+          </div>
+          <h2 class="comp-title">Toggle Switch</h2>
+          <p class="comp-desc">
+            Interruptor con desplazamiento de doble rebote (overshoot 55%, rebote inverso al 80% y asiento elástico al 100%).
+          </p>
+        </div>
+
+        <!-- 🤖 Comando Rápido para Antigravity -->
+        <div class="agent-prompt-card">
+          <div class="agent-prompt-header">
+            <span class="agent-prompt-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path></svg>
+              Comando para Antigravity
+            </span>
+            <span class="agent-prompt-hint">Copia y pega en el chat</span>
+          </div>
+          <div class="prompt-copy-box">
+            <span class="prompt-text">Usa el componente <b>Toggle Switch</b> (ruta: compon/new/toggle-switch/) en [panel de ajustes o opciones]</span>
+            <div class="prompt-actions">
+              <button type="button" class="btn-copy-prompt" data-copy-text="Usa el componente Toggle Switch (ruta: compon/new/toggle-switch/) en ">
+                Copiar para el Chat
+              </button>
+              <button type="button" class="btn-copy-path" data-copy-text="compon/new/toggle-switch/toggle-switch.css">
+                Ruta CSS
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase-grid">
+          <div class="preview-canvas">
+            <div class="canvas-topbar">
+              <span class="canvas-label">Vista Previa</span>
+              <span style="font-size: 11.5px; color: var(--text-muted);" id="toggleStatusIndicator">Switches: 1 / 3 Activos</span>
+            </div>
+
+            <div class="canvas-viewport">
+              <div class="settings-list">
+                <div class="settings-row">
+                  <div class="settings-info">
+                    <span class="settings-label">Notificaciones de Ventas</span>
+                    <span class="settings-desc">Alertas cuando vendas un beat</span>
+                  </div>
+                  <button type="button" class="t-toggle is-init" id="demoToggle1" role="switch" data-on="true" aria-checked="true">
+                    <span class="t-toggle-thumb" aria-hidden="true"></span>
+                  </button>
+                </div>
+
+                <div class="settings-row" style="border-top: 1px solid var(--border-subtle); padding-top: 10px;">
+                  <div class="settings-info">
+                    <span class="settings-label">Descargas en WAV 24-bit</span>
+                    <span class="settings-desc">Audio sin pérdida de máxima calidad</span>
+                  </div>
+                  <button type="button" class="t-toggle" id="demoToggle2" role="switch" data-on="false" aria-checked="false">
+                    <span class="t-toggle-thumb" aria-hidden="true"></span>
+                  </button>
+                </div>
+
+                <div class="settings-row" style="border-top: 1px solid var(--border-subtle); padding-top: 10px;">
+                  <div class="settings-info">
+                    <span class="settings-label">Modo Pure Onyx</span>
+                    <span class="settings-desc">Oscurecimiento profundo de la interfaz</span>
+                  </div>
+                  <button type="button" class="t-toggle" id="demoToggle3" role="switch" data-on="false" aria-checked="false">
+                    <span class="t-toggle-thumb" aria-hidden="true"></span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="canvas-footer">
+              <button type="button" class="btn-animate" id="btnToggleAllOn">
+                <span>Activar Todos</span>
+              </button>
+              <button type="button" class="btn-ghost" id="btnToggleAllOff">
+                Desactivar Todos
+              </button>
+            </div>
+          </div>
+
+          <!-- Controles de Tokens -->
+          <div class="controls-panel">
+            <div class="controls-title">
+              <span>Tokens CSS</span>
+              <button type="button" class="btn-ghost" id="btnResetToggleTokens" style="padding: 1px 6px; font-size: 10px;">Default</button>
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--toggle-dur</span>
+                <span class="token-val" id="valToggleDur">350ms</span>
+              </div>
+              <input type="range" id="rangeToggleDur" min="150" max="650" value="350" step="25" />
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--toggle-travel</span>
+                <span class="token-val" id="valToggleTravel">14.66px</span>
+              </div>
+              <input type="range" id="rangeToggleTravel" min="10" max="20" value="14.66" step="0.5" />
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--toggle-ov1</span>
+                <span class="token-val" id="valToggleOv1">1px</span>
+              </div>
+              <input type="range" id="rangeToggleOv1" min="0" max="4" value="1" step="0.5" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Tabs -->
+        <div class="code-section">
+          <div class="code-topbar">
+            <div class="tab-pills" data-code-group="toggle">
+              <button type="button" class="tab-btn active" data-tab="toggle-html">HTML</button>
+              <button type="button" class="tab-btn" data-tab="toggle-css">CSS</button>
+              <button type="button" class="tab-btn" data-tab="toggle-js">JavaScript</button>
+            </div>
+            <button type="button" class="btn-copy" data-copy-target="toggle">
+              <span>Copiar Código</span>
+            </button>
+          </div>
+          <div class="code-tab-panel active" id="tab-toggle-html">
+            <pre class="code-body"><code>&lt;button type="button" class="t-toggle" role="switch" data-on="false" aria-checked="false"&gt;
+  &lt;span class="t-toggle-thumb" aria-hidden="true"&gt;&lt;/span&gt;
+&lt;/button&gt;</code></pre>
+          </div>
+          <div class="code-tab-panel" id="tab-toggle-css">
+            <pre class="code-body"><code>@import "/compon/new/toggle-switch/toggle-switch.css";</code></pre>
+          </div>
+          <div class="code-tab-panel" id="tab-toggle-js">
+            <pre class="code-body"><code>import { toggleSwitch } from '/compon/new/toggle-switch/toggle-switch.js';
+
+const switchBtn = document.querySelector('.t-toggle');
+switchBtn.addEventListener('click', () => toggleSwitch(switchBtn));</code></pre>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           4. VISTA: SUCCESS CHECK
+           ==================================================================== -->
+      <section class="comp-view" id="view-success-check">
+        
+        <div class="comp-header">
+          <div class="comp-badge-row">
+            <span class="badge-tag source">transitions.dev</span>
+            <span class="badge-tag folder">compon/new/success-check/</span>
+            <span class="badge-tag">Nuevo</span>
+          </div>
+          <h2 class="comp-title">Success Check</h2>
+          <p class="comp-desc">
+            Animación física de éxito con 5 efectos en paralelo: fade in de opacidad, rotación (80° a 0°), desenfoque óptico (10px a 0), rebote vertical Y de 40px con <code>cubic-bezier</code> y trazado progresivo SVG.
+          </p>
+        </div>
+
+        <!-- 🤖 Comando Rápido para Antigravity -->
+        <div class="agent-prompt-card">
+          <div class="agent-prompt-header">
+            <span class="agent-prompt-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path></svg>
+              Comando para Antigravity
+            </span>
+            <span class="agent-prompt-hint">Copia y pega en el chat</span>
+          </div>
+          <div class="prompt-copy-box">
+            <span class="prompt-text">Usa el componente <b>Success Check</b> (ruta: compon/new/success-check/) en [modal de compra o toast]</span>
+            <div class="prompt-actions">
+              <button type="button" class="btn-copy-prompt" data-copy-text="Usa el componente Success Check (ruta: compon/new/success-check/) en ">
+                Copiar para el Chat
+              </button>
+              <button type="button" class="btn-copy-path" data-copy-text="compon/new/success-check/success-check.css">
+                Ruta CSS
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase-grid">
+          <div class="preview-canvas">
+            <div class="canvas-topbar">
+              <span class="canvas-label">Vista Previa</span>
+              <span style="font-size: 11.5px; color: var(--white);" id="successStatusIndicator">Estado: Activo</span>
+            </div>
+
+            <div class="canvas-viewport">
+              <div class="success-demo-card">
+                <div class="t-success-badge" id="demoBadgeContainer">
+                  <span class="t-success-check" id="demoSuccessCheck" data-state="in" aria-hidden="true">
+                    <svg viewBox="0 0 48 48" fill="none">
+                      <path pathLength="100" d="M13.5 24.5L21 32L35.5 16.5" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
+                </div>
+                <h3>¡Pago Confirmado!</h3>
+                <p>Tu sound kit ya se encuentra disponible para descargar.</p>
+              </div>
+            </div>
+
+            <div class="canvas-footer">
+              <button type="button" class="btn-animate" id="btnReplaySuccess">
+                <span>Re-disparar Check</span>
+              </button>
+              <button type="button" class="btn-ghost" id="btnToggleSuccessState">
+                Ocultar
+              </button>
+            </div>
+          </div>
+
+          <!-- Controles de Tokens -->
+          <div class="controls-panel">
+            <div class="controls-title">
+              <span>Tokens CSS</span>
+              <button type="button" class="btn-ghost" id="btnResetSuccessTokens" style="padding: 1px 6px; font-size: 10px;">Default</button>
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--check-rotate-from</span>
+                <span class="token-val" id="valCheckRotate">80deg</span>
+              </div>
+              <input type="range" id="rangeCheckRotate" min="0" max="180" value="80" step="5" />
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--check-y-amount</span>
+                <span class="token-val" id="valCheckY">40px</span>
+              </div>
+              <input type="range" id="rangeCheckY" min="0" max="70" value="40" step="2" />
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--check-blur-from</span>
+                <span class="token-val" id="valCheckBlur">10px</span>
+              </div>
+              <input type="range" id="rangeCheckBlur" min="0" max="25" value="10" step="1" />
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">Duración Global</span>
+                <span class="token-val" id="valCheckDur">500ms</span>
+              </div>
+              <input type="range" id="rangeCheckDur" min="200" max="1000" value="500" step="50" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Tabs -->
+        <div class="code-section">
+          <div class="code-topbar">
+            <div class="tab-pills" data-code-group="success">
+              <button type="button" class="tab-btn active" data-tab="success-html">HTML</button>
+              <button type="button" class="tab-btn" data-tab="success-css">CSS</button>
+              <button type="button" class="tab-btn" data-tab="success-js">JavaScript</button>
+            </div>
+            <button type="button" class="btn-copy" data-copy-target="success">
+              <span>Copiar Código</span>
+            </button>
+          </div>
+          <div class="code-tab-panel active" id="tab-success-html">
+            <pre class="code-body"><code>&lt;div class="t-success-badge"&gt;
+  &lt;span class="t-success-check" data-state="in" aria-hidden="true"&gt;
+    &lt;svg viewBox="0 0 48 48" fill="none"&gt;
+      &lt;path pathLength="100" d="M13.5 24.5L21 32L35.5 16.5" stroke="currentColor" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/&gt;
+    &lt;/svg&gt;
+  &lt;/span&gt;
+&lt;/div&gt;</code></pre>
+          </div>
+          <div class="code-tab-panel" id="tab-success-css">
+            <pre class="code-body"><code>@import "/compon/new/success-check/success-check.css";</code></pre>
+          </div>
+          <div class="code-tab-panel" id="tab-success-js">
+            <pre class="code-body"><code>import { playSuccessCheck, resetSuccessCheck } from '/compon/new/success-check/success-check.js';
+
+playSuccessCheck('#demoSuccessCheck');</code></pre>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           5. VISTA: LIQUID GOOEY (LIBRARIES.DEV)
+           ==================================================================== -->
+      <section class="comp-view" id="view-liquid-gooey">
+        
+        <div class="comp-header">
+          <div class="comp-badge-row">
+            <span class="badge-tag source">libraries.dev</span>
+            <span class="badge-tag folder">compon/new/liquid-gooey/</span>
+            <span class="badge-tag">React + Vanilla</span>
+            <span class="badge-tag">Nuevo</span>
+          </div>
+          <h2 class="comp-title">Liquid Gooey</h2>
+          <p class="comp-desc">
+            Cinemática de separación y fusión líquida (*liquid goo & bouncy spring*). Los botones satélites emergen fundiéndose del disparador central como gotas de mercurio y mantienen los iconos vectoriales y tipografía 100% nítidos mediante el operador <code>feComposite atop</code>.
+          </p>
+        </div>
+
+        <!-- 🤖 Comando Rápido para Antigravity -->
+        <div class="agent-prompt-card">
+          <div class="agent-prompt-header">
+            <span class="agent-prompt-label">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path></svg>
+              Comando para Antigravity
+            </span>
+            <span class="agent-prompt-hint">Copia y pega en el chat</span>
+          </div>
+          <div class="prompt-copy-box">
+            <span class="prompt-text">Usa el componente <b>Liquid Gooey</b> (ruta: compon/new/liquid-gooey/) en [botón flotante / menú de acciones]</span>
+            <div class="prompt-actions">
+              <button type="button" class="btn-copy-prompt" data-copy-text="Usa el componente Liquid Gooey (ruta: compon/new/liquid-gooey/) en ">
+                Copiar para el Chat
+              </button>
+              <button type="button" class="btn-copy-path" data-copy-text="compon/new/liquid-gooey/liquid-gooey.css">
+                Ruta CSS
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="showcase-grid">
+          <div class="preview-canvas">
+            <div class="canvas-topbar">
+              <span class="canvas-label">Vista Previa Interactiva</span>
+              <span style="font-size: 11.5px; color: var(--white);" id="liquidStatusIndicator">Estado: Cerrado (Haz clic en +)</span>
+            </div>
+
+            <div class="canvas-viewport" style="background: radial-gradient(circle at center, #151515 0%, #080808 100%);">
+              <div class="liquid-demo-viewport">
+                
+                <div class="liquid-gooey-wrap" id="demoLiquidGooey">
+                  <!-- Capa de fusión SVG -->
+                  <div class="liquid-gooey-stage">
+                    <div class="liquid-blob liquid-blob-trigger"></div>
+                    <div class="liquid-blob liquid-blob-item" style="--item-x: -54px; --item-y: -34px;"></div>
+                    <div class="liquid-blob liquid-blob-item" style="--item-x: 0px; --item-y: -64px;"></div>
+                    <div class="liquid-blob liquid-blob-item" style="--item-x: 54px; --item-y: -34px;"></div>
+                  </div>
+
+                  <!-- Capa de controles interactivos con iconos vectoriales nítidos -->
+                  <div class="liquid-controls-layer">
+                    <!-- Item 1: Descargar Kit -->
+                    <button type="button" class="liquid-item-btn" style="--item-x: -54px; --item-y: -34px; --item-delay: 0ms;" data-label="Descargar Kit" aria-label="Descargar Kit">
+                      <span class="liquid-sat-icon">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                      </span>
+                    </button>
+
+                    <!-- Item 2: Favorito -->
+                    <button type="button" class="liquid-item-btn" style="--item-x: 0px; --item-y: -64px; --item-delay: 40ms;" data-label="Guardar Favorito" aria-label="Guardar Favorito">
+                      <span class="liquid-sat-icon">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                      </span>
+                    </button>
+
+                    <!-- Item 3: Compartir -->
+                    <button type="button" class="liquid-item-btn" style="--item-x: 54px; --item-y: -34px; --item-delay: 80ms;" data-label="Compartir" aria-label="Compartir">
+                      <span class="liquid-sat-icon">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="18" cy="5" r="3"></circle>
+                          <circle cx="6" cy="12" r="3"></circle>
+                          <circle cx="18" cy="19" r="3"></circle>
+                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                      </span>
+                    </button>
+
+                    <!-- Disparador Central (+) -->
+                    <button type="button" class="liquid-trigger-btn" id="demoLiquidTrigger" aria-label="Alternar acciones rápidas" aria-expanded="false">
+                      <span class="liquid-trigger-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="canvas-footer">
+              <button type="button" class="btn-animate" id="btnToggleLiquidGooey">
+                <span>Alternar Menú</span>
+              </button>
+              <button type="button" class="btn-ghost" id="btnLiquidClose">
+                Cerrar
+              </button>
+            </div>
+          </div>
+
+          <!-- Controles de Tokens -->
+          <div class="controls-panel">
+            <div class="controls-title">
+              <span>Tokens Físicos</span>
+              <button type="button" class="btn-ghost" id="btnResetLiquidTokens" style="padding: 1px 6px; font-size: 10px;">Default</button>
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--liquid-blur (Suavidad)</span>
+                <span class="token-val" id="valLiquidBlur">6px</span>
+              </div>
+              <input type="range" id="rangeLiquidBlur" min="2" max="14" value="6" step="1" />
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">--liquid-contrast (Tensión)</span>
+                <span class="token-val" id="valLiquidContrast">18</span>
+              </div>
+              <input type="range" id="rangeLiquidContrast" min="10" max="32" value="18" step="1" />
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">Distancia Radial</span>
+                <span class="token-val" id="valLiquidDist">64px</span>
+              </div>
+              <input type="range" id="rangeLiquidDist" min="35" max="85" value="64" step="2" />
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">Curva de Rebote</span>
+                <span class="token-val" id="valLiquidPreset">Bouncy</span>
+              </div>
+              <div class="btn-preset-group" id="presetLiquidGroup">
+                <button type="button" class="btn-preset-pill active" data-preset="bouncy">Bouncy</button>
+                <button type="button" class="btn-preset-pill" data-preset="smooth">Smooth</button>
+                <button type="button" class="btn-preset-pill" data-preset="snappy">Snappy</button>
+              </div>
+            </div>
+
+            <div class="token-control">
+              <div class="token-label-row">
+                <span class="token-name">Fondo / Acabado</span>
+                <span class="token-val" id="valLiquidTheme">Obsidian</span>
+              </div>
+              <div class="btn-preset-group" id="themeLiquidGroup">
+                <button type="button" class="btn-preset-pill active" data-theme="dark">Obsidian</button>
+                <button type="button" class="btn-preset-pill" data-theme="light">Solid White</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Tabs -->
+        <div class="code-section">
+          <div class="code-topbar">
+            <div class="tab-pills" data-code-group="liquid">
+              <button type="button" class="tab-btn active" data-tab="liquid-html">HTML</button>
+              <button type="button" class="tab-btn" data-tab="liquid-css">CSS</button>
+              <button type="button" class="tab-btn" data-tab="liquid-js">JavaScript</button>
+              <button type="button" class="tab-btn" data-tab="liquid-react">React (liquid-gooey)</button>
+            </div>
+            <button type="button" class="btn-copy" data-copy-target="liquid">
+              <span>Copiar Código</span>
+            </button>
+          </div>
+          <div class="code-tab-panel active" id="tab-liquid-html">
+            <pre class="code-body"><code>&lt;!-- Requiere el filtro SVG inyectado una sola vez en el documento --&gt;
+&lt;div class="liquid-gooey-wrap" id="myDial"&gt;
+  &lt;div class="liquid-gooey-stage"&gt;
+    &lt;div class="liquid-blob liquid-blob-trigger"&gt;&lt;/div&gt;
+    &lt;div class="liquid-blob liquid-blob-item" style="--item-x: -54px; --item-y: -34px;"&gt;&lt;/div&gt;
+    &lt;div class="liquid-blob liquid-blob-item" style="--item-x: 0px; --item-y: -64px;"&gt;&lt;/div&gt;
+    &lt;div class="liquid-blob liquid-blob-item" style="--item-x: 54px; --item-y: -34px;"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class="liquid-controls-layer"&gt;
+    &lt;button type="button" class="liquid-item-btn" style="--item-x: -54px; --item-y: -34px;" data-label="Descargar"&gt;
+      &lt;svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"&gt;...&lt;/svg&gt;
+    &lt;/button&gt;
+    &lt;button type="button" class="liquid-item-btn" style="--item-x: 0px; --item-y: -64px;" data-label="Favorito"&gt;
+      &lt;svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"&gt;...&lt;/svg&gt;
+    &lt;/button&gt;
+    &lt;button type="button" class="liquid-item-btn" style="--item-x: 54px; --item-y: -34px;" data-label="Compartir"&gt;
+      &lt;svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"&gt;...&lt;/svg&gt;
+    &lt;/button&gt;
+
+    &lt;button type="button" class="liquid-trigger-btn" aria-label="Abrir"&gt;
+      &lt;span class="liquid-trigger-icon"&gt;+&lt;/span&gt;
+    &lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+          </div>
+          <div class="code-tab-panel" id="tab-liquid-css">
+            <pre class="code-body"><code>@import "/compon/new/liquid-gooey/liquid-gooey.css";</code></pre>
+          </div>
+          <div class="code-tab-panel" id="tab-liquid-js">
+            <pre class="code-body"><code>import { LiquidGooey } from '/compon/new/liquid-gooey/liquid-gooey.js';
+
+const dial = new LiquidGooey('#myDial', {
+  blur: 6,
+  contrast: 18,
+  transition: 'bouncy', // 'bouncy' | 'smooth' | 'snappy'
+  closeOnClickOutside: true
+});</code></pre>
+          </div>
+          <div class="code-tab-panel" id="tab-liquid-react">
+            <pre class="code-body"><code>// npm install liquid-gooey
+import { useState } from 'react'
+import { Liquid } from 'liquid-gooey'
+
+export function ActionMenu() {
+  const [open, setOpen] = useState(false)
+
+  return (
+    &lt;Liquid blur={6} contrast={18} fill="#141414" shadow="0 4px 18px rgba(0,0,0,.45)"&gt;
+      &lt;Liquid.Item x={open ? -54 : 0} y={open ? -34 : 0} transition="bouncy"&gt;
+        &lt;button className="round-btn"&gt;&lt;DownloadIcon /&gt;&lt;/button&gt;
+      &lt;/Liquid.Item&gt;
+      &lt;Liquid.Item x={0} y={open ? -64 : 0} transition="bouncy" delay={35}&gt;
+        &lt;button className="round-btn"&gt;&lt;HeartIcon /&gt;&lt;/button&gt;
+      &lt;/Liquid.Item&gt;
+      &lt;Liquid.Item x={open ? 54 : 0} y={open ? -34 : 0} transition="bouncy" delay={70}&gt;
+        &lt;button className="round-btn"&gt;&lt;ShareIcon /&gt;&lt;/button&gt;
+      &lt;/Liquid.Item&gt;
+      &lt;Liquid.Item x={0} y={0}&gt;
+        &lt;button className="round-btn main" onClick={() =&gt; setOpen(!open)}&gt;+&lt;/button&gt;
+      &lt;/Liquid.Item&gt;
+    &lt;/Liquid&gt;
+  )
+}</code></pre>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Filtro SVG Multicapa para Fusión Líquida con Relieve y Sombra Unificada -->
+      <svg class="liquid-gooey-svg-defs" style="position: absolute; width: 0; height: 0; pointer-events: none; overflow: hidden;" aria-hidden="true">
+        <defs id="liquid-goo-defs">
+          <filter id="liquid-goo-filter" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+            <!-- 1. Fusión Líquida: Blur + Umbralización Alpha -->
+            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+            <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" result="shape" />
+
+            <!-- 2. Binarización para relieve de contorno -->
+            <feColorMatrix in="shape" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 60 -29.5" result="bin" />
+
+            <!-- 3. Sombra de contacto / Oclusión ambiental (Close Shadow) -->
+            <feGaussianBlur in="bin" stdDeviation="3" result="ds1-b" />
+            <feOffset in="ds1-b" dx="0" dy="2" result="ds1-o" />
+            <feFlood flood-color="rgba(0, 0, 0, 0.35)" result="ds1-c" />
+            <feComposite in="ds1-c" in2="ds1-o" operator="in" result="shadow1" />
+
+            <!-- 4. Sombra profunda ambiental difusa (Deep Drop Shadow) -->
+            <feGaussianBlur in="bin" stdDeviation="14" result="ds2-b" />
+            <feOffset in="ds2-b" dx="0" dy="8" result="ds2-o" />
+            <feFlood flood-color="rgba(0, 0, 0, 0.55)" result="ds2-c" />
+            <feComposite in="ds2-c" in2="ds2-o" operator="in" result="shadow2" />
+
+            <!-- 5. Borde Especular Líquido (1px Inset Rim Highlight alrededor del cuello) -->
+            <feMorphology in="bin" operator="erode" radius="1" result="er1" />
+            <feComposite in="bin" in2="er1" operator="out" result="rim-band" />
+            <feFlood flood-color="rgba(255, 255, 255, 0.12)" result="rim-c" />
+            <feComposite in="rim-c" in2="rim-band" operator="in" result="inset-rim" />
+
+            <!-- 6. Reflejo Cenital (Top Sheen) -->
+            <feOffset in="er1" dx="0" dy="1.5" result="sheen-o" />
+            <feComposite in="bin" in2="sheen-o" operator="out" result="sheen-band" />
+            <feFlood flood-color="rgba(255, 255, 255, 0.08)" result="sheen-c" />
+            <feComposite in="sheen-c" in2="sheen-band" operator="in" result="inset-sheen" />
+
+            <!-- 7. Composición Multicapa -->
+            <feMerge>
+              <feMergeNode in="shadow2" />
+              <feMergeNode in="shadow1" />
+              <feMergeNode in="shape" />
+              <feMergeNode in="inset-rim" />
+              <feMergeNode in="inset-sheen" />
+            </feMerge>
+          </filter>
+        </defs>
+      </svg>
 
     </main>
 
@@ -1086,23 +1882,81 @@ export function InputShake({ children, message = "Campo inválido", onCancel }) 
 
   <!-- Toast Feedback -->
   <div class="toast" id="toastMessage">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="20 6 9 17 4 12"></polyline>
     </svg>
-    <span id="toastText">Código copiado al portapapeles</span>
+    <span id="toastText">Texto copiado</span>
   </div>
 
-  <!-- JavaScript Interaction Logic -->
+  <!-- Interactive Workbench Script -->
   <script>
-    (function initLab() {
+    (function initWorkbench() {
+      const toastMessage = document.getElementById('toastMessage');
+
+      function showToast(text) {
+        document.getElementById('toastText').textContent = text;
+        toastMessage.classList.add('show');
+        setTimeout(() => toastMessage.classList.remove('show'), 2000);
+      }
+
+      // 1. Navegación & Búsqueda
+      const navLinks = document.querySelectorAll('.comp-nav-link[data-target]');
+      const compViews = document.querySelectorAll('.comp-view');
+      const searchInput = document.getElementById('componentSearchInput');
+
+      navLinks.forEach((link) => {
+        link.addEventListener('click', () => {
+          const targetId = link.getAttribute('data-target');
+          if (!targetId) return;
+
+          navLinks.forEach((l) => l.classList.remove('active'));
+          compViews.forEach((v) => v.classList.remove('active'));
+
+          link.classList.add('active');
+          const targetView = document.getElementById(targetId);
+          if (targetView) targetView.classList.add('active');
+        });
+      });
+
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          const term = e.target.value.toLowerCase().trim();
+          navLinks.forEach((link) => {
+            const name = link.querySelector('span').textContent.toLowerCase();
+            const parentLi = link.closest('li');
+            if (parentLi) {
+              parentLi.style.display = name.includes(term) ? '' : 'none';
+            }
+          });
+        });
+      }
+
+      // 2. Botones de Comando para Antigravity
+      document.querySelectorAll('.btn-copy-prompt').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const text = btn.getAttribute('data-copy-text');
+          navigator.clipboard.writeText(text).then(() => {
+            showToast('¡Comando copiado! Pégalo en el chat');
+          });
+        });
+      });
+
+      document.querySelectorAll('.btn-copy-path').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const text = btn.getAttribute('data-copy-text');
+          navigator.clipboard.writeText(text).then(() => {
+            showToast(`Ruta copiada: ${text}`);
+          });
+        });
+      });
+
+      // 3. Error State Shake
       const demoInputWrap = document.getElementById('demoInputWrap');
       const demoInput = document.getElementById('demoInput');
       const demoInputEl = document.getElementById('demoInputEl');
       const btnTriggerShake = document.getElementById('btnTriggerShake');
       const btnResetInput = document.getElementById('btnResetInput');
-      const toastMessage = document.getElementById('toastMessage');
 
-      // Motion token sliders
       const rangeDistance = document.getElementById('rangeDistance');
       const rangeOvershoot = document.getElementById('rangeOvershoot');
       const rangeDurA = document.getElementById('rangeDurA');
@@ -1114,26 +1968,16 @@ export function InputShake({ children, message = "Campo inválido", onCancel }) 
       const valDurA = document.getElementById('valDurA');
       const valDurB = document.getElementById('valDurB');
       const valHold = document.getElementById('valHold');
-      const btnResetTokens = document.getElementById('btnResetTokens');
+      const btnResetShakeTokens = document.getElementById('btnResetShakeTokens');
 
-      // Helper to show toast
-      function showToast(text) {
-        document.getElementById('toastText').textContent = text;
-        toastMessage.classList.add('show');
-        setTimeout(() => toastMessage.classList.remove('show'), 2200);
-      }
-
-      // Trigger Shake Logic (transitions.dev)
       function triggerShake() {
         demoInputWrap.classList.add('is-error');
         demoInput.classList.add('is-error');
 
-        // Reflow to restart keyframe
         demoInput.classList.remove('is-shaking');
         void demoInput.offsetWidth;
         demoInput.classList.add('is-shaking');
 
-        // Calculate current animation duration
         const durA = parseInt(rangeDurA.value, 10);
         const durB = parseInt(rangeDurB.value, 10);
         const shakeMs = (durA * 2) + (durB * 2);
@@ -1142,11 +1986,7 @@ export function InputShake({ children, message = "Campo inválido", onCancel }) 
           demoInput.classList.remove('is-shaking');
         }, shakeMs + 20);
 
-        // Auto-revert timer
-        if (demoInputWrap._revertTimer) {
-          window.clearTimeout(demoInputWrap._revertTimer);
-        }
-
+        if (demoInputWrap._revertTimer) window.clearTimeout(demoInputWrap._revertTimer);
         const holdMs = parseInt(rangeHold.value, 10);
         demoInputWrap._revertTimer = window.setTimeout(() => {
           demoInputWrap._revertTimer = null;
@@ -1155,8 +1995,7 @@ export function InputShake({ children, message = "Campo inválido", onCancel }) 
         }, shakeMs + holdMs);
       }
 
-      // Reset error state
-      function resetState() {
+      function resetShakeState() {
         if (demoInputWrap._revertTimer) {
           window.clearTimeout(demoInputWrap._revertTimer);
           demoInputWrap._revertTimer = null;
@@ -1166,94 +2005,531 @@ export function InputShake({ children, message = "Campo inválido", onCancel }) 
         demoInput.classList.remove('is-shaking');
       }
 
-      // Clear error immediately when typing
-      demoInputEl.addEventListener('input', () => {
-        resetState();
-      });
-
-      // Allow pressing Enter to test trigger
+      demoInputEl.addEventListener('input', resetShakeState);
       demoInputEl.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          triggerShake();
-        }
+        if (e.key === 'Enter') triggerShake();
       });
-
-      btnTriggerShake.addEventListener('click', () => {
-        triggerShake();
-      });
-
+      btnTriggerShake.addEventListener('click', triggerShake);
       btnResetInput.addEventListener('click', () => {
-        resetState();
-        demoInputEl.value = 'John';
+        resetShakeState();
+        demoInputEl.value = 'usuario@invalido';
         demoInputEl.focus();
       });
 
-      // Token slider listeners
-      function updateTokens() {
+      function updateShakeTokens() {
         const root = document.documentElement;
-        
         root.style.setProperty('--t-shake-distance', rangeDistance.value + 'px');
         valDistance.textContent = rangeDistance.value + 'px';
-
         root.style.setProperty('--t-shake-overshoot', rangeOvershoot.value + 'px');
         valOvershoot.textContent = rangeOvershoot.value + 'px';
-
         root.style.setProperty('--t-shake-dur-a', rangeDurA.value + 'ms');
         valDurA.textContent = rangeDurA.value + 'ms';
-
         root.style.setProperty('--t-shake-dur-b', rangeDurB.value + 'ms');
         valDurB.textContent = rangeDurB.value + 'ms';
-
         root.style.setProperty('--t-revert-hold', rangeHold.value + 'ms');
         valHold.textContent = rangeHold.value + 'ms';
       }
 
-      [rangeDistance, rangeOvershoot, rangeDurA, rangeDurB, rangeHold].forEach((slider) => {
-        slider.addEventListener('input', updateTokens);
+      [rangeDistance, rangeOvershoot, rangeDurA, rangeDurB, rangeHold].forEach((s) => {
+        s.addEventListener('input', updateShakeTokens);
       });
 
-      btnResetTokens.addEventListener('click', () => {
+      btnResetShakeTokens.addEventListener('click', () => {
         rangeDistance.value = 6;
         rangeOvershoot.value = 4;
         rangeDurA.value = 80;
         rangeDurB.value = 60;
         rangeHold.value = 3000;
-        updateTokens();
-        showToast('Tokens restaurados a valores originales');
+        updateShakeTokens();
+        showToast('Tokens restaurados');
       });
 
-      // Code Tab Switching
-      const tabBtns = document.querySelectorAll('.tab-btn');
-      const tabPanels = document.querySelectorAll('.code-tab-panel');
+      // 4. Like Button
+      const demoLikeBtn = document.getElementById('demoLikeBtn');
+      const demoLikeLabel = document.getElementById('demoLikeLabel');
+      const likeStatusIndicator = document.getElementById('likeStatusIndicator');
+      const btnToggleLikeAction = document.getElementById('btnToggleLikeAction');
+      const btnReplayBurst = document.getElementById('btnReplayBurst');
 
-      tabBtns.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          tabBtns.forEach((b) => b.classList.remove('active'));
-          tabPanels.forEach((p) => p.classList.remove('active'));
+      const rangeParticleDist = document.getElementById('rangeParticleDist');
+      const rangeParticleDur = document.getElementById('rangeParticleDur');
+      const rangeLikePop = document.getElementById('rangeLikePop');
 
-          btn.classList.add('active');
-          const tabId = 'tab-' + btn.getAttribute('data-tab');
-          const panel = document.getElementById(tabId);
-          if (panel) panel.classList.add('active');
+      const valParticleDist = document.getElementById('valParticleDist');
+      const valParticleDur = document.getElementById('valParticleDur');
+      const valLikePop = document.getElementById('valLikePop');
+      const btnResetLikeTokens = document.getElementById('btnResetLikeTokens');
+
+      function seedLikeDots(btn) {
+        const dots = btn.querySelectorAll('.t-like-particles i');
+        const dist = parseFloat(rangeParticleDist.value) || 20;
+
+        dots.forEach((dot, i) => {
+          const angle = (360 / dots.length) * i + (Math.random() * 2 - 1) * 16;
+          const mag = dist * (0.68 + Math.random() * 0.5);
+          const rad = (angle * Math.PI) / 180;
+          const s = dot.style;
+
+          s.setProperty('--px', `${(Math.cos(rad) * mag).toFixed(2)}px`);
+          s.setProperty('--py', `${(Math.sin(rad) * mag).toFixed(2)}px`);
+          s.setProperty('--pdur', `calc(var(--like-particle-dur, 600ms) * ${(0.78 + Math.random() * 0.44).toFixed(3)})`);
+          s.setProperty('--pdelay', `${Math.round(Math.random() * 70)}ms`);
+          s.setProperty('--p-end-scale', (0.35 + Math.random() * 0.4).toFixed(2));
+          s.setProperty('--psize', (0.6 + Math.random() * 0.8).toFixed(2));
+        });
+      }
+
+      function handleLikeToggle() {
+        const wasLiked = demoLikeBtn.getAttribute('data-liked') === 'true';
+
+        if (wasLiked) {
+          demoLikeBtn.setAttribute('data-liked', 'false');
+          demoLikeBtn.setAttribute('aria-pressed', 'false');
+          demoLikeBtn.classList.remove('is-bursting');
+          demoLikeLabel.textContent = 'Like';
+          likeStatusIndicator.textContent = 'Estado: Sin Like (0)';
+          return;
+        }
+
+        demoLikeBtn.setAttribute('data-liked', 'true');
+        demoLikeBtn.setAttribute('aria-pressed', 'true');
+        demoLikeBtn.classList.remove('is-bursting');
+        demoLikeLabel.textContent = 'Liked';
+        likeStatusIndicator.textContent = 'Estado: Liked (1)';
+
+        seedLikeDots(demoLikeBtn);
+        void demoLikeBtn.offsetWidth;
+        demoLikeBtn.classList.add('is-bursting');
+
+        if (demoLikeBtn._burstT) window.clearTimeout(demoLikeBtn._burstT);
+        demoLikeBtn._burstT = window.setTimeout(() => {
+          demoLikeBtn.classList.remove('is-bursting');
+        }, parseInt(rangeParticleDur.value, 10) + 120);
+      }
+
+      demoLikeBtn.addEventListener('click', handleLikeToggle);
+      btnToggleLikeAction.addEventListener('click', handleLikeToggle);
+
+      btnReplayBurst.addEventListener('click', () => {
+        demoLikeBtn.setAttribute('data-liked', 'true');
+        demoLikeBtn.setAttribute('aria-pressed', 'true');
+        demoLikeLabel.textContent = 'Liked';
+        likeStatusIndicator.textContent = 'Estado: Liked (Burst disparado)';
+
+        demoLikeBtn.classList.remove('is-bursting');
+        seedLikeDots(demoLikeBtn);
+        void demoLikeBtn.offsetWidth;
+        demoLikeBtn.classList.add('is-bursting');
+
+        showToast('Partículas disparadas');
+      });
+
+      function updateLikeTokens() {
+        const root = document.documentElement;
+        root.style.setProperty('--like-particle-dist', rangeParticleDist.value + 'px');
+        valParticleDist.textContent = rangeParticleDist.value + 'px';
+        root.style.setProperty('--like-particle-dur', rangeParticleDur.value + 'ms');
+        valParticleDur.textContent = rangeParticleDur.value + 'ms';
+        root.style.setProperty('--like-pop', rangeLikePop.value + 'ms');
+        valLikePop.textContent = rangeLikePop.value + 'ms';
+      }
+
+      [rangeParticleDist, rangeParticleDur, rangeLikePop].forEach((s) => {
+        s.addEventListener('input', updateLikeTokens);
+      });
+
+      btnResetLikeTokens.addEventListener('click', () => {
+        rangeParticleDist.value = 20;
+        rangeParticleDur.value = 600;
+        rangeLikePop.value = 350;
+        updateLikeTokens();
+        showToast('Tokens restaurados');
+      });
+
+      // 5. Toggle Switch
+      const demoToggles = [
+        document.getElementById('demoToggle1'),
+        document.getElementById('demoToggle2'),
+        document.getElementById('demoToggle3')
+      ].filter(Boolean);
+
+      const toggleStatusIndicator = document.getElementById('toggleStatusIndicator');
+      const btnToggleAllOn = document.getElementById('btnToggleAllOn');
+      const btnToggleAllOff = document.getElementById('btnToggleAllOff');
+
+      const rangeToggleDur = document.getElementById('rangeToggleDur');
+      const rangeToggleTravel = document.getElementById('rangeToggleTravel');
+      const rangeToggleOv1 = document.getElementById('rangeToggleOv1');
+
+      const valToggleDur = document.getElementById('valToggleDur');
+      const valToggleTravel = document.getElementById('valToggleTravel');
+      const valToggleOv1 = document.getElementById('valToggleOv1');
+      const btnResetToggleTokens = document.getElementById('btnResetToggleTokens');
+
+      function flipToggle(el, forceState) {
+        if (!el.classList.contains('is-init')) el.classList.add('is-init');
+        const curr = el.getAttribute('data-on') === 'true';
+        const next = typeof forceState === 'boolean' ? forceState : !curr;
+        el.setAttribute('data-on', next ? 'true' : 'false');
+        el.setAttribute('aria-checked', next ? 'true' : 'false');
+        
+        const countOn = demoToggles.filter(t => t.getAttribute('data-on') === 'true').length;
+        toggleStatusIndicator.textContent = `Switches: ${countOn} / ${demoToggles.length} Activos`;
+      }
+
+      demoToggles.forEach((t) => {
+        t.addEventListener('click', () => flipToggle(t));
+      });
+
+      btnToggleAllOn.addEventListener('click', () => {
+        demoToggles.forEach(t => flipToggle(t, true));
+      });
+
+      btnToggleAllOff.addEventListener('click', () => {
+        demoToggles.forEach(t => flipToggle(t, false));
+      });
+
+      function updateToggleTokens() {
+        const root = document.documentElement;
+        root.style.setProperty('--toggle-dur', rangeToggleDur.value + 'ms');
+        valToggleDur.textContent = rangeToggleDur.value + 'ms';
+        root.style.setProperty('--toggle-travel', rangeToggleTravel.value + 'px');
+        valToggleTravel.textContent = rangeToggleTravel.value + 'px';
+        root.style.setProperty('--toggle-ov1', rangeToggleOv1.value + 'px');
+        valToggleOv1.textContent = rangeToggleOv1.value + 'px';
+      }
+
+      [rangeToggleDur, rangeToggleTravel, rangeToggleOv1].forEach((s) => {
+        s.addEventListener('input', updateToggleTokens);
+      });
+
+      btnResetToggleTokens.addEventListener('click', () => {
+        rangeToggleDur.value = 350;
+        rangeToggleTravel.value = 14.66;
+        rangeToggleOv1.value = 1;
+        updateToggleTokens();
+        showToast('Tokens restaurados');
+      });
+
+      // 6. Success Check
+      const demoSuccessCheck = document.getElementById('demoSuccessCheck');
+      const successStatusIndicator = document.getElementById('successStatusIndicator');
+      const btnReplaySuccess = document.getElementById('btnReplaySuccess');
+      const btnToggleSuccessState = document.getElementById('btnToggleSuccessState');
+
+      const rangeCheckRotate = document.getElementById('rangeCheckRotate');
+      const rangeCheckY = document.getElementById('rangeCheckY');
+      const rangeCheckBlur = document.getElementById('rangeCheckBlur');
+      const rangeCheckDur = document.getElementById('rangeCheckDur');
+
+      const valCheckRotate = document.getElementById('valCheckRotate');
+      const valCheckY = document.getElementById('valCheckY');
+      const valCheckBlur = document.getElementById('valCheckBlur');
+      const valCheckDur = document.getElementById('valCheckDur');
+      const btnResetSuccessTokens = document.getElementById('btnResetSuccessTokens');
+
+      function replaySuccess() {
+        if (!demoSuccessCheck) return;
+        demoSuccessCheck.setAttribute('data-state', 'out');
+        void demoSuccessCheck.offsetWidth;
+        demoSuccessCheck.setAttribute('data-state', 'in');
+        successStatusIndicator.textContent = 'Estado: Activo';
+        showToast('Animación Success disparada');
+      }
+
+      function toggleSuccessState() {
+        if (!demoSuccessCheck) return;
+        const isCurrentlyIn = demoSuccessCheck.getAttribute('data-state') === 'in';
+        const nextState = isCurrentlyIn ? 'out' : 'in';
+        demoSuccessCheck.setAttribute('data-state', nextState);
+        successStatusIndicator.textContent = nextState === 'in' ? 'Estado: Activo' : 'Estado: Oculto';
+        btnToggleSuccessState.textContent = nextState === 'in' ? 'Ocultar' : 'Mostrar';
+      }
+
+      btnReplaySuccess.addEventListener('click', replaySuccess);
+      btnToggleSuccessState.addEventListener('click', toggleSuccessState);
+
+      function updateSuccessTokens() {
+        const root = document.documentElement;
+        root.style.setProperty('--check-rotate-from', rangeCheckRotate.value + 'deg');
+        valCheckRotate.textContent = rangeCheckRotate.value + 'deg';
+
+        root.style.setProperty('--check-y-amount', rangeCheckY.value + 'px');
+        valCheckY.textContent = rangeCheckY.value + 'px';
+
+        root.style.setProperty('--check-blur-from', rangeCheckBlur.value + 'px');
+        valCheckBlur.textContent = rangeCheckBlur.value + 'px';
+
+        const dur = rangeCheckDur.value + 'ms';
+        root.style.setProperty('--check-opacity-dur', dur);
+        root.style.setProperty('--check-rotate-dur', dur);
+        root.style.setProperty('--check-bob-dur', dur);
+        root.style.setProperty('--check-blur-dur', dur);
+        root.style.setProperty('--check-path-dur', dur);
+        valCheckDur.textContent = dur;
+      }
+
+      [rangeCheckRotate, rangeCheckY, rangeCheckBlur, rangeCheckDur].forEach((s) => {
+        s.addEventListener('input', updateSuccessTokens);
+      });
+
+      btnResetSuccessTokens.addEventListener('click', () => {
+        rangeCheckRotate.value = 80;
+        rangeCheckY.value = 40;
+        rangeCheckBlur.value = 10;
+        rangeCheckDur.value = 500;
+        updateSuccessTokens();
+        showToast('Tokens restaurados');
+      });
+
+      // 6. Liquid Gooey (Libraries.dev)
+      const demoLiquidGooey = document.getElementById('demoLiquidGooey');
+      const demoLiquidTrigger = document.getElementById('demoLiquidTrigger');
+      const btnToggleLiquidGooey = document.getElementById('btnToggleLiquidGooey');
+      const btnLiquidClose = document.getElementById('btnLiquidClose');
+      const liquidStatusIndicator = document.getElementById('liquidStatusIndicator');
+
+      const rangeLiquidBlur = document.getElementById('rangeLiquidBlur');
+      const rangeLiquidContrast = document.getElementById('rangeLiquidContrast');
+      const rangeLiquidDist = document.getElementById('rangeLiquidDist');
+      const valLiquidBlur = document.getElementById('valLiquidBlur');
+      const valLiquidContrast = document.getElementById('valLiquidContrast');
+      const valLiquidDist = document.getElementById('valLiquidDist');
+      const valLiquidPreset = document.getElementById('valLiquidPreset');
+      const valLiquidTheme = document.getElementById('valLiquidTheme');
+      const btnResetLiquidTokens = document.getElementById('btnResetLiquidTokens');
+
+      let isLiquidOpen = false;
+      let liquidAnticipTimer = null;
+      let currentLiquidTheme = 'dark';
+
+      function toggleLiquid(forceState) {
+        if (!demoLiquidGooey) return;
+        isLiquidOpen = typeof forceState === 'boolean' ? forceState : !isLiquidOpen;
+        
+        if (isLiquidOpen) {
+          if (liquidAnticipTimer) {
+            clearTimeout(liquidAnticipTimer);
+            liquidAnticipTimer = null;
+          }
+          demoLiquidGooey.classList.remove('is-anticipating');
+          demoLiquidGooey.classList.add('is-open');
+          demoLiquidTrigger?.setAttribute('aria-expanded', 'true');
+          if (liquidStatusIndicator) liquidStatusIndicator.textContent = 'Estado: Abierto (3 items desplegados)';
+          if (btnToggleLiquidGooey) btnToggleLiquidGooey.querySelector('span').textContent = 'Cerrar Menú';
+        } else {
+          // Inercia de absorción física (anticipación de cierre)
+          demoLiquidGooey.classList.remove('is-anticipating');
+          void demoLiquidGooey.offsetWidth; // Forzar reflow
+          demoLiquidGooey.classList.add('is-anticipating');
+
+          if (liquidAnticipTimer) clearTimeout(liquidAnticipTimer);
+          liquidAnticipTimer = setTimeout(() => {
+            demoLiquidGooey.classList.remove('is-anticipating');
+            liquidAnticipTimer = null;
+          }, 600);
+
+          demoLiquidGooey.classList.remove('is-open');
+          demoLiquidTrigger?.setAttribute('aria-expanded', 'false');
+          if (liquidStatusIndicator) liquidStatusIndicator.textContent = 'Estado: Cerrado (Haz clic en +)';
+          if (btnToggleLiquidGooey) btnToggleLiquidGooey.querySelector('span').textContent = 'Alternar Menú';
+        }
+      }
+
+      if (demoLiquidTrigger) {
+        demoLiquidTrigger.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleLiquid();
+        });
+      }
+
+      if (btnToggleLiquidGooey) {
+        btnToggleLiquidGooey.addEventListener('click', () => toggleLiquid());
+      }
+
+      if (btnLiquidClose) {
+        btnLiquidClose.addEventListener('click', () => toggleLiquid(false));
+      }
+
+      document.addEventListener('click', (e) => {
+        if (isLiquidOpen && demoLiquidGooey && !demoLiquidGooey.contains(e.target) && !btnToggleLiquidGooey?.contains(e.target)) {
+          toggleLiquid(false);
+        }
+      });
+
+      demoLiquidGooey?.querySelectorAll('.liquid-item-btn').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const label = btn.getAttribute('data-label') || 'Acción';
+          showToast(`Acción: ${label}`);
         });
       });
 
-      // Copy Code Button
-      const btnCopySnippet = document.getElementById('btnCopySnippet');
-      const copyBtnText = document.getElementById('copyBtnText');
+      function updateLiquidFilter() {
+        if (!rangeLiquidBlur || !rangeLiquidContrast || !rangeLiquidDist) return;
+        const blur = rangeLiquidBlur.value;
+        const contrast = rangeLiquidContrast.value;
+        const dist = parseFloat(rangeLiquidDist.value);
 
-      btnCopySnippet.addEventListener('click', () => {
-        const activePanel = document.querySelector('.code-tab-panel.active code');
-        if (!activePanel) return;
+        if (valLiquidBlur) valLiquidBlur.textContent = blur + 'px';
+        if (valLiquidContrast) valLiquidContrast.textContent = contrast;
+        if (valLiquidDist) valLiquidDist.textContent = dist + 'px';
 
-        navigator.clipboard.writeText(activePanel.textContent).then(() => {
-          copyBtnText.textContent = '¡Copiado!';
-          showToast('Código copiado al portapapeles');
-          setTimeout(() => {
-            copyBtnText.textContent = 'Copiar Código';
-          }, 2000);
-        }).catch(() => {
-          showToast('Error al copiar al portapapeles');
+        const defs = document.getElementById('liquid-goo-defs');
+        if (defs) {
+          const intercept = Math.round((0.5 - contrast * (5 / 12)) * 100) / 100;
+          const isDark = currentLiquidTheme === 'dark';
+          const rimColor = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)';
+          const sheenColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.5)';
+          const ds1Color = isDark ? 'rgba(0, 0, 0, 0.35)' : 'rgba(0, 0, 0, 0.06)';
+          const ds2Color = isDark ? 'rgba(0, 0, 0, 0.55)' : 'rgba(0, 0, 0, 0.08)';
+
+          defs.innerHTML = `
+            <filter id="liquid-goo-filter" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="${blur}" result="blur" />
+              <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${contrast} ${intercept}" result="goo" />
+              <feComposite in="SourceGraphic" in2="goo" operator="atop" result="shape" />
+              <feColorMatrix in="shape" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 60 -29.5" result="bin" />
+              <feGaussianBlur in="bin" stdDeviation="3" result="ds1-b" />
+              <feOffset in="ds1-b" dx="0" dy="2" result="ds1-o" />
+              <feFlood flood-color="${ds1Color}" result="ds1-c" />
+              <feComposite in="ds1-c" in2="ds1-o" operator="in" result="shadow1" />
+              <feGaussianBlur in="bin" stdDeviation="14" result="ds2-b" />
+              <feOffset in="ds2-b" dx="0" dy="8" result="ds2-o" />
+              <feFlood flood-color="${ds2Color}" result="ds2-c" />
+              <feComposite in="ds2-c" in2="ds2-o" operator="in" result="shadow2" />
+              <feMorphology in="bin" operator="erode" radius="1" result="er1" />
+              <feComposite in="bin" in2="er1" operator="out" result="rim-band" />
+              <feFlood flood-color="${rimColor}" result="rim-c" />
+              <feComposite in="rim-c" in2="rim-band" operator="in" result="inset-rim" />
+              <feOffset in="er1" dx="0" dy="1.5" result="sheen-o" />
+              <feComposite in="bin" in2="sheen-o" operator="out" result="sheen-band" />
+              <feFlood flood-color="${sheenColor}" result="sheen-c" />
+              <feComposite in="sheen-c" in2="sheen-band" operator="in" result="inset-sheen" />
+              <feMerge>
+                <feMergeNode in="shadow2" />
+                <feMergeNode in="shadow1" />
+                <feMergeNode in="shape" />
+                <feMergeNode in="inset-rim" />
+                <feMergeNode in="inset-sheen" />
+              </feMerge>
+            </filter>
+          `.trim();
+        }
+
+        const rad1 = (-148 * Math.PI) / 180;
+        const rad2 = (-90 * Math.PI) / 180;
+        const rad3 = (-32 * Math.PI) / 180;
+
+        const x1 = Math.round(Math.cos(rad1) * dist);
+        const y1 = Math.round(Math.sin(rad1) * dist);
+        const x2 = Math.round(Math.cos(rad2) * dist);
+        const y2 = Math.round(Math.sin(rad2) * dist);
+        const x3 = Math.round(Math.cos(rad3) * dist);
+        const y3 = Math.round(Math.sin(rad3) * dist);
+
+        const blobs = demoLiquidGooey?.querySelectorAll('.liquid-blob-item') || [];
+        const btns = demoLiquidGooey?.querySelectorAll('.liquid-item-btn') || [];
+
+        if (blobs.length >= 3 && btns.length >= 3) {
+          const coords = [
+            { x: x1, y: y1 },
+            { x: x2, y: y2 },
+            { x: x3, y: y3 }
+          ];
+          coords.forEach((c, idx) => {
+            blobs[idx].style.setProperty('--item-x', `${c.x}px`);
+            blobs[idx].style.setProperty('--item-y', `${c.y}px`);
+            btns[idx].style.setProperty('--item-x', `${c.x}px`);
+            btns[idx].style.setProperty('--item-y', `${c.y}px`);
+          });
+        }
+      }
+
+      [rangeLiquidBlur, rangeLiquidContrast, rangeLiquidDist].forEach((s) => {
+        s?.addEventListener('input', updateLiquidFilter);
+      });
+
+      document.querySelectorAll('#presetLiquidGroup .btn-preset-pill').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#presetLiquidGroup .btn-preset-pill').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const preset = btn.getAttribute('data-preset');
+          if (valLiquidPreset) valLiquidPreset.textContent = preset.charAt(0).toUpperCase() + preset.slice(1);
+          
+          const easeMap = {
+            bouncy: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+            smooth: 'cubic-bezier(0.3, 1.05, 0.4, 1)',
+            snappy: 'cubic-bezier(0.22, 1, 0.36, 1)'
+          };
+          demoLiquidGooey?.style.setProperty('--liquid-ease', easeMap[preset] || easeMap.bouncy);
+          showToast(`Cinemática: ${preset}`);
+        });
+      });
+
+      document.querySelectorAll('#themeLiquidGroup .btn-preset-pill').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('#themeLiquidGroup .btn-preset-pill').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const theme = btn.getAttribute('data-theme');
+          currentLiquidTheme = theme;
+          if (valLiquidTheme) valLiquidTheme.textContent = theme === 'dark' ? 'Obsidian' : 'Solid White';
+          demoLiquidGooey?.setAttribute('data-theme', theme);
+          updateLiquidFilter();
+          showToast(`Acabado: ${theme}`);
+        });
+      });
+
+      btnResetLiquidTokens?.addEventListener('click', () => {
+        if (rangeLiquidBlur) rangeLiquidBlur.value = 6;
+        if (rangeLiquidContrast) rangeLiquidContrast.value = 18;
+        if (rangeLiquidDist) rangeLiquidDist.value = 64;
+        currentLiquidTheme = 'dark';
+        updateLiquidFilter();
+        document.querySelector('#presetLiquidGroup .btn-preset-pill[data-preset="bouncy"]')?.click();
+        document.querySelector('#themeLiquidGroup .btn-preset-pill[data-theme="dark"]')?.click();
+        showToast('Tokens restaurados a default');
+      });
+
+      // 7. Tabs de Código & Portapapeles
+      document.querySelectorAll('.tab-pills').forEach((group) => {
+        const btns = group.querySelectorAll('.tab-btn');
+
+        btns.forEach((btn) => {
+          btn.addEventListener('click', () => {
+            btns.forEach((b) => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const tabId = 'tab-' + btn.getAttribute('data-tab');
+            const targetSection = group.closest('.code-section');
+            if (!targetSection) return;
+
+            targetSection.querySelectorAll('.code-tab-panel').forEach((p) => {
+              p.classList.remove('active');
+            });
+
+            const panel = document.getElementById(tabId);
+            if (panel) panel.classList.add('active');
+          });
+        });
+      });
+
+      document.querySelectorAll('.btn-copy').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const section = btn.closest('.code-section');
+          const activePanel = section ? section.querySelector('.code-tab-panel.active code') : null;
+          if (!activePanel) return;
+
+          const spanText = btn.querySelector('span') || btn;
+          navigator.clipboard.writeText(activePanel.textContent).then(() => {
+            spanText.textContent = '¡Copiado!';
+            showToast('Código copiado al portapapeles');
+            setTimeout(() => {
+              spanText.textContent = 'Copiar Código';
+            }, 1800);
+          }).catch(() => {
+            showToast('Error al copiar');
+          });
         });
       });
 
