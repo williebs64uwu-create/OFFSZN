@@ -1,5 +1,6 @@
 const PaymentSettings = {
     userId: null,
+    userEmail: null,
 
     escapeHTML: function (str) {
         if (!str) return "";
@@ -24,7 +25,13 @@ const PaymentSettings = {
         filteredSales: [],
         selectedSalesIds: new Set(),
         currentPage: 1,
-        rowsPerPage: 10
+        rowsPerPage: 10,
+        dateFilter: {
+            type: 'all',
+            startDate: null,
+            endDate: null,
+            label: 'Todas las fechas'
+        }
     },
 
     init: async function () {
@@ -45,6 +52,7 @@ const PaymentSettings = {
         }
 
         this.userId = session.user.id;
+        this.userEmail = session.user.email;
 
         // 2. Start Minimum Wait Timer (1.5s) for smooth skeleton transition
         const timerPromise = new Promise(resolve => setTimeout(resolve, 1500));
@@ -71,6 +79,7 @@ const PaymentSettings = {
         this.setupListeners();
         this.setupYapeListeners();
         this.setupTableListeners();
+        this.setupDateFilterListeners();
     },
 
     getSession: async function () {
@@ -84,7 +93,7 @@ const PaymentSettings = {
         try {
             const { data, error } = await window.supabaseClient
                 .from('users')
-                .select('nickname, avatar_url, role, first_name, last_name, email')
+                .select('nickname, avatar_url, role, first_name, last_name')
                 .eq('id', this.userId)
                 .single();
             if (error) throw error;
@@ -112,6 +121,20 @@ const PaymentSettings = {
 
     fetchSalesHistory: async function () {
         try {
+            // 1. Try secure RPC first (returns all orders with buyer email without table permission issues)
+            const { data: rpcSales, error: rpcErr } = await window.supabaseClient
+                .rpc('get_my_sales_history');
+
+            if (!rpcErr && Array.isArray(rpcSales)) {
+                this.data.sales = rpcSales;
+                return;
+            }
+
+            if (rpcErr) {
+                console.warn("RPC get_my_sales_history unavailable, attempting direct query:", rpcErr);
+            }
+
+            // 2. Fallback: direct query on order_items (excluding buyer:users(email) to avoid 42501 error)
             let allSales = [];
             let page = 0;
             const pageSize = 1000;
@@ -125,7 +148,7 @@ const PaymentSettings = {
                         price_at_purchase,
                         created_at,
                         product:products!inner(id, name, producer_id),
-                        order:orders(id, transaction_id, status, user_id, guest_email, buyer:users(nickname, email))
+                        order:orders(id, transaction_id, status, user_id, guest_email, buyer:users(nickname))
                     `)
                     .eq('products.producer_id', this.userId)
                     .order('created_at', { ascending: false })
@@ -270,7 +293,7 @@ const PaymentSettings = {
                 avatarEl.appendChild(img);
                 avatarEl.style.background = "transparent";
             } else {
-                avatarEl.textContent = (data.nickname || data.email || 'U').charAt(0).toUpperCase();
+                avatarEl.textContent = (data.nickname || this.userEmail || 'U').charAt(0).toUpperCase();
             }
         }
     },
@@ -459,18 +482,281 @@ const PaymentSettings = {
         this.renderSalesHistory();
     },
 
+    applyFilters: function() {
+        const searchInput = document.getElementById('tx-search-input');
+        const clearBtn = document.getElementById('tx-search-clear');
+        const searchVal = (searchInput?.value || '').trim().toLowerCase();
+
+        if (clearBtn) {
+            clearBtn.style.display = searchVal ? 'flex' : 'none';
+        }
+
+        const dateFilter = this.data.dateFilter || { type: 'all' };
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+        const startOfYesterday = new Date(startOfToday);
+        startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+        const endOfYesterday = new Date(startOfToday.getTime() - 1);
+
+        const sevenDaysAgo = new Date(startOfToday);
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+
+        const thirtyDaysAgo = new Date(startOfToday);
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+
+        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0, 0);
+        const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
+        this.data.filteredSales = (this.data.sales || []).filter(sale => {
+            // 1. Text Search Filter (Email, guest email, nickname, transaction ID, or product name)
+            if (searchVal) {
+                const email = (sale.order?.buyer?.email || sale.order?.guest_email || "").toLowerCase();
+                const nickname = (sale.order?.buyer?.nickname || "").toLowerCase();
+                const txId = (sale.order?.transaction_id || "").toLowerCase();
+                const productName = (sale.product?.name || "").toLowerCase();
+                const matches = email.includes(searchVal) || nickname.includes(searchVal) || txId.includes(searchVal) || productName.includes(searchVal);
+                if (!matches) return false;
+            }
+
+            // 2. Date Filter
+            if (dateFilter.type !== 'all' && sale.created_at) {
+                const saleDate = new Date(sale.created_at);
+                if (dateFilter.type === 'today') {
+                    if (saleDate < startOfToday || saleDate > endOfToday) return false;
+                } else if (dateFilter.type === 'yesterday') {
+                    if (saleDate < startOfYesterday || saleDate > endOfYesterday) return false;
+                } else if (dateFilter.type === '7d') {
+                    if (saleDate < sevenDaysAgo) return false;
+                } else if (dateFilter.type === '30d') {
+                    if (saleDate < thirtyDaysAgo) return false;
+                } else if (dateFilter.type === 'this_month') {
+                    if (saleDate < startOfThisMonth) return false;
+                } else if (dateFilter.type === 'last_month') {
+                    if (saleDate < startOfLastMonth || saleDate > endOfLastMonth) return false;
+                } else if (dateFilter.type === 'custom') {
+                    if (dateFilter.startDate) {
+                        const startObj = new Date(dateFilter.startDate + 'T00:00:00');
+                        if (saleDate < startObj) return false;
+                    }
+                    if (dateFilter.endDate) {
+                        const endObj = new Date(dateFilter.endDate + 'T23:59:59.999');
+                        if (saleDate > endObj) return false;
+                    }
+                }
+            }
+
+            return true;
+        });
+
+        this.data.currentPage = 1;
+        this.renderSalesHistory();
+    },
+
+    setupDateFilterListeners: function() {
+        const toggleBtn = document.getElementById('btn-date-filter-toggle');
+        const dropdown = document.getElementById('tx-date-dropdown');
+        const resetBtn = document.getElementById('btn-reset-date-filter');
+        const applyCustomBtn = document.getElementById('btn-apply-custom-date');
+        const dateFromInput = document.getElementById('tx-date-from');
+        const dateToInput = document.getElementById('tx-date-to');
+        const presetItems = document.querySelectorAll('.tx-dd-preset-item');
+
+        if (!toggleBtn || !dropdown) return;
+
+        // Toggle open/close
+        toggleBtn.onclick = (e) => {
+            e.stopPropagation();
+            const isOpen = dropdown.classList.contains('show');
+            if (isOpen) {
+                this.closeDateDropdown();
+            } else {
+                this.openDateDropdown();
+            }
+        };
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target) && !toggleBtn.contains(e.target)) {
+                this.closeDateDropdown();
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeDateDropdown();
+            }
+        });
+
+        // Prevent click inside dropdown from closing it
+        dropdown.onclick = (e) => {
+            e.stopPropagation();
+        };
+
+        // Preset items
+        presetItems.forEach(item => {
+            item.onclick = () => {
+                const preset = item.getAttribute('data-preset');
+                this.setDatePreset(preset);
+                this.closeDateDropdown();
+            };
+        });
+
+        // Reset button
+        if (resetBtn) {
+            resetBtn.onclick = () => {
+                this.setDatePreset('all');
+                this.closeDateDropdown();
+            };
+        }
+
+        // Apply Custom Range
+        if (applyCustomBtn && dateFromInput && dateToInput) {
+            applyCustomBtn.onclick = () => {
+                const fromVal = dateFromInput.value;
+                const toVal = dateToInput.value;
+                if (!fromVal && !toVal) {
+                    if (window.showToast) window.showToast("Selecciona al menos una fecha", "warning");
+                    return;
+                }
+                if (fromVal && toVal && fromVal > toVal) {
+                    if (window.showToast) window.showToast("La fecha 'Desde' no puede ser posterior a 'Hasta'", "warning");
+                    return;
+                }
+                this.setCustomDateRange(fromVal, toVal);
+                this.closeDateDropdown();
+            };
+        }
+    },
+
+    openDateDropdown: function() {
+        const toggleBtn = document.getElementById('btn-date-filter-toggle');
+        const dropdown = document.getElementById('tx-date-dropdown');
+        if (toggleBtn) {
+            toggleBtn.classList.add('open');
+            toggleBtn.setAttribute('aria-expanded', 'true');
+        }
+        if (dropdown) dropdown.classList.add('show');
+    },
+
+    closeDateDropdown: function() {
+        const toggleBtn = document.getElementById('btn-date-filter-toggle');
+        const dropdown = document.getElementById('tx-date-dropdown');
+        if (toggleBtn) {
+            toggleBtn.classList.remove('open');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+        }
+        if (dropdown) dropdown.classList.remove('show');
+    },
+
+    setDatePreset: function(presetKey) {
+        const presetLabels = {
+            'all': 'Todas las fechas',
+            'today': 'Hoy',
+            'yesterday': 'Ayer',
+            '7d': 'Últimos 7 días',
+            '30d': 'Últimos 30 días',
+            'this_month': 'Este mes',
+            'last_month': 'Mes anterior'
+        };
+
+        const label = presetLabels[presetKey] || 'Todas las fechas';
+        this.data.dateFilter = {
+            type: presetKey,
+            startDate: null,
+            endDate: null,
+            label: label
+        };
+
+        // Clear custom inputs
+        const dateFromInput = document.getElementById('tx-date-from');
+        const dateToInput = document.getElementById('tx-date-to');
+        if (dateFromInput) dateFromInput.value = '';
+        if (dateToInput) dateToInput.value = '';
+
+        this.updateDateFilterUI();
+        this.applyFilters();
+    },
+
+    setCustomDateRange: function(startDate, endDate) {
+        let label = 'Personalizado';
+        const formatShort = (dStr) => {
+            if (!dStr) return '';
+            const [y, m, d] = dStr.split('-');
+            return `${d}/${m}`;
+        };
+
+        if (startDate && endDate) {
+            label = `${formatShort(startDate)} - ${formatShort(endDate)}`;
+        } else if (startDate) {
+            label = `Desde ${formatShort(startDate)}`;
+        } else if (endDate) {
+            label = `Hasta ${formatShort(endDate)}`;
+        }
+
+        this.data.dateFilter = {
+            type: 'custom',
+            startDate: startDate || null,
+            endDate: endDate || null,
+            label: label
+        };
+
+        this.updateDateFilterUI();
+        this.applyFilters();
+    },
+
+    updateDateFilterUI: function() {
+        const filter = this.data.dateFilter || { type: 'all', label: 'Todas las fechas' };
+        const labelEl = document.getElementById('date-filter-label');
+        const dotEl = document.getElementById('date-filter-dot');
+        const toggleBtn = document.getElementById('btn-date-filter-toggle');
+        const resetBtn = document.getElementById('btn-reset-date-filter');
+        const presetItems = document.querySelectorAll('.tx-dd-preset-item');
+
+        if (labelEl) labelEl.textContent = filter.label;
+
+        const isFiltered = filter.type !== 'all';
+
+        if (dotEl) dotEl.style.display = isFiltered ? 'inline-block' : 'none';
+        if (toggleBtn) {
+            if (isFiltered) {
+                toggleBtn.classList.add('active-filter');
+            } else {
+                toggleBtn.classList.remove('active-filter');
+            }
+        }
+
+        if (resetBtn) resetBtn.style.display = isFiltered ? 'block' : 'none';
+
+        presetItems.forEach(item => {
+            const p = item.getAttribute('data-preset');
+            if (p === filter.type) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    },
+
     setupTableListeners: function() {
         // Search Filter
         const searchInput = document.getElementById('tx-search-input');
+        const clearBtn = document.getElementById('tx-search-clear');
         if (searchInput) {
-            searchInput.oninput = (e) => {
-                const val = e.target.value.toLowerCase();
-                this.data.filteredSales = this.data.sales.filter(sale => {
-                    const email = (sale.order?.buyer?.email || sale.order?.guest_email || "").toLowerCase();
-                    return email.includes(val);
-                });
-                this.data.currentPage = 1;
-                this.renderSalesHistory();
+            searchInput.oninput = () => {
+                this.applyFilters();
+            };
+        }
+        if (clearBtn) {
+            clearBtn.onclick = () => {
+                if (searchInput) {
+                    searchInput.value = '';
+                    searchInput.focus();
+                }
+                this.applyFilters();
             };
         }
 
@@ -524,13 +810,18 @@ const PaymentSettings = {
             return;
         }
 
+        const activeDateLabel = this.data.dateFilter?.label || 'Todas las fechas';
+        const searchVal = document.getElementById('tx-search-input')?.value?.trim();
+
         const lines = [
             'OFFSZN — Reporte de ventas',
-            `Generado: ${new Date().toLocaleString('es-ES')}`,
-            `Total: ${toExport.length} transacción(es)`,
+            `Generado:        ${new Date().toLocaleString('es-ES')}`,
+            `Filtro de fecha: ${activeDateLabel}`,
+            searchVal ? `Búsqueda:        "${searchVal}"` : null,
+            `Total:           ${toExport.length} transacción(es)`,
             '',
             '─'.repeat(48)
-        ];
+        ].filter(Boolean);
 
         toExport.forEach((s, i) => {
             const amount = parseFloat(s.price_at_purchase || 0);

@@ -17,21 +17,21 @@ const PLUGIN_INFO_MAP = {
     '899': {
         name: 'Easy Mix',
         downloads: {
-            win: 'https://drive.google.com/file/d/1JSArLjFypFYkcGJV3DIu67hxSFU4kG6q/view?usp=sharing',
+            win: 'https://drive.google.com/file/d/1wBErtaIXdj-CPObcaJV0fnomX9rzWVNu/view?usp=sharing',
             mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
         }
     },
     '901': {
         name: 'Easy Mix',
         downloads: {
-            win: 'https://drive.google.com/file/d/1JSArLjFypFYkcGJV3DIu67hxSFU4kG6q/view?usp=sharing',
+            win: 'https://drive.google.com/file/d/1wBErtaIXdj-CPObcaJV0fnomX9rzWVNu/view?usp=sharing',
             mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
         }
     },
     '900': {
         name: 'Easy Master',
         downloads: {
-            win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
+            win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view?usp=sharing',
             mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
         }
     },

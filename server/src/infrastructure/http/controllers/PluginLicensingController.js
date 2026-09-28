@@ -915,7 +915,7 @@ export const adminUpdateLicenseStatus = async (req, res) => {
 // Admin-only: Sends license email directly to buyer via Brevo REST API
 export const adminSendDispatchEmail = async (req, res) => {
     try {
-        const { admin_key, to, subject, message, k1, k2, product, buyer, mark_used = true } = req.body || {};
+        const { admin_key, to, subject, message, html, k1, k2, product, buyer, mark_used = true } = req.body || {};
         const validKey = process.env.PLUGIN_ADMIN_KEY;
         const masterPin = 'gian2030upc';
 
@@ -923,15 +923,16 @@ export const adminSendDispatchEmail = async (req, res) => {
             return res.status(403).json({ error: 'Unauthorized: Clave de administrador inválida.' });
         }
 
-        if (!to || !message) {
-            return res.status(400).json({ error: 'Falta destinatario (to) o contenido (message)' });
+        const emailContent = html || message;
+        if (!to || !emailContent) {
+            return res.status(400).json({ error: 'Falta destinatario (to) o contenido (html / message)' });
         }
 
         const cleanTo = to.trim().toLowerCase();
-        // Plain-text formatted HTML for clean rendering in all email clients
-        const formattedHtml = `
+        // Use provided rich HTML directly, or format plain text message safely
+        const formattedHtml = html ? html : `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #111111; line-height: 1.6; font-size: 15px; white-space: pre-wrap; word-break: break-word;">
-${message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+${message ? message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''}
             </div>
         `;
 

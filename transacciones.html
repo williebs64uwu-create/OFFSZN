@@ -92,31 +92,395 @@
             color: #fff !important;
         }
 
-        /* Redesign: Transactions Table */
+        /* Redesign: Transactions Table & Filters */
         .tx-header-actions {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            gap: 16px;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .tx-filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+            min-width: 0;
+            max-width: 650px;
+        }
+
+        .tx-search-box {
+            position: relative;
+            flex: 1;
+            min-width: 180px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tx-search-icon {
+            position: absolute;
+            left: 14px;
+            color: #71717a;
+            font-size: 0.85rem;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        .tx-search-box:focus-within .tx-search-icon {
+            color: #fff;
         }
 
         .tx-filter-input {
-            flex: 1;
-            max-width: 400px;
+            width: 100%;
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            padding: 10px 16px;
+            padding: 10px 34px 10px 36px;
             color: #fff;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             outline: none;
             transition: all 0.2s;
+            font-family: inherit;
         }
 
         .tx-filter-input:focus {
-            border-color: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.28);
             background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+        }
+
+        .tx-search-clear {
+            position: absolute;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: #71717a;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .tx-search-clear:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Date Filter Button & Dropdown */
+        .tx-date-filter-wrapper {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .btn-date-filter {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: #a1a1aa;
+            font-size: 0.86rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            white-space: nowrap;
+            user-select: none;
+            font-family: inherit;
+        }
+
+        .btn-date-filter:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.22);
+            color: #fff;
+        }
+
+        .btn-date-filter.active-filter {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.28);
+            color: #fff;
+        }
+
+        .btn-date-filter.open {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.35);
+            color: #fff;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06);
+        }
+
+        .tx-filter-icon {
+            font-size: 0.85rem;
+            color: #a1a1aa;
+            transition: color 0.2s;
+        }
+
+        .btn-date-filter:hover .tx-filter-icon,
+        .btn-date-filter.active-filter .tx-filter-icon {
+            color: #fff;
+        }
+
+        .tx-filter-label {
+            font-weight: 500;
+            color: inherit;
+        }
+
+        .date-filter-active-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+            flex-shrink: 0;
+        }
+
+        .tx-chevron-icon {
+            font-size: 0.72rem;
+            color: #71717a;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .btn-date-filter.open .tx-chevron-icon {
+            transform: rotate(180deg);
+            color: #fff;
+        }
+
+        /* Dropdown Menu */
+        .tx-date-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            width: 290px;
+            background: #101013;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            z-index: 999;
+            backdrop-filter: blur(24px);
+            opacity: 0;
+            transform: translateY(-6px) scale(0.98);
+            pointer-events: none;
+            transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .tx-date-dropdown.show {
+            display: block !important;
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .tx-dd-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 6px 10px 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 6px;
+        }
+
+        .tx-dd-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #71717a;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tx-dd-reset-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .tx-dd-reset-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+        }
+
+        .tx-dd-presets {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .tx-dd-preset-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 10px;
+            color: #d4d4d8;
+            font-size: 0.84rem;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: inherit;
+            width: 100%;
+        }
+
+        .tx-dd-preset-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #fff;
+        }
+
+        .tx-dd-preset-item.active {
+            background: rgba(255, 255, 255, 0.09);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .tx-dd-check {
+            font-size: 0.85rem;
+            color: #fff;
+            display: none;
+        }
+
+        .tx-dd-preset-item.active .tx-dd-check {
+            display: block;
+        }
+
+        .tx-dd-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.07);
+            margin: 10px 4px;
+        }
+
+        .tx-dd-custom-section {
+            padding: 4px 6px 4px 6px;
+        }
+
+        .tx-dd-custom-title {
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: #71717a;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+        }
+
+        .tx-dd-custom-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .tx-dd-input-group label {
+            display: block;
+            font-size: 0.72rem;
+            color: #a1a1aa;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .tx-date-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 6px 8px;
+            color: #fff;
+            font-size: 0.76rem;
+            font-family: inherit;
+            outline: none;
+            color-scheme: dark;
+            transition: all 0.2s;
+        }
+
+        .tx-date-input:focus {
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .btn-apply-date-range {
+            width: 100%;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn-apply-date-range:hover {
+            background: #e4e4e7;
+            transform: translateY(-1px);
+        }
+
+        .btn-apply-date-range:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .tx-header-actions {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .tx-filter-bar {
+                display: flex;
+                gap: 8px;
+                width: 100%;
+                max-width: none;
+            }
+
+            .tx-search-box {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .tx-filter-input {
+                font-size: 0.84rem;
+                padding: 9px 30px 9px 34px;
+            }
+
+            .btn-date-filter {
+                padding: 9px 12px;
+                font-size: 0.82rem;
+            }
+
+            .tx-filter-label {
+                max-width: 95px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .tx-date-dropdown {
+                left: auto;
+                right: 0;
+                width: calc(100vw - 40px);
+                max-width: 310px;
+            }
+
+            .tx-export-text {
+                align-self: flex-end;
+            }
         }
 
         .tx-export-text {
@@ -569,7 +933,84 @@
                     <h2 class="settings-group-title"><i class="bi bi-clock-history"></i> Historial de Ventas</h2>
 
                     <div class="tx-header-actions">
-                        <input type="text" id="tx-search-input" class="tx-filter-input" placeholder="Filtrar por email de comprador...">
+                        <div class="tx-filter-bar">
+                            <div class="tx-search-box">
+                                <i class="bi bi-search tx-search-icon"></i>
+                                <input type="text" id="tx-search-input" class="tx-filter-input" placeholder="Filtrar por email de comprador...">
+                                <button type="button" id="tx-search-clear" class="tx-search-clear" style="display: none;" title="Limpiar búsqueda">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+
+                            <div class="tx-date-filter-wrapper" id="dateFilterWrapper">
+                                <button type="button" id="btn-date-filter-toggle" class="btn-date-filter" aria-haspopup="true" aria-expanded="false" title="Filtrar por fecha">
+                                    <i class="bi bi-funnel tx-filter-icon"></i>
+                                    <span id="date-filter-label" class="tx-filter-label">Todas las fechas</span>
+                                    <span id="date-filter-dot" class="date-filter-active-dot" style="display: none;"></span>
+                                    <i class="bi bi-chevron-down tx-chevron-icon"></i>
+                                </button>
+
+                                <div id="tx-date-dropdown" class="tx-date-dropdown" style="display: none;">
+                                    <div class="tx-dd-header">
+                                        <span class="tx-dd-title"><i class="bi bi-sliders2"></i> Filtrar por fecha</span>
+                                        <button type="button" id="btn-reset-date-filter" class="tx-dd-reset-btn" style="display: none;">
+                                            Restablecer
+                                        </button>
+                                    </div>
+
+                                    <div class="tx-dd-presets">
+                                        <button type="button" class="tx-dd-preset-item active" data-preset="all">
+                                            <span>Todas las fechas</span>
+                                            <i class="bi bi-check-lg tx-dd-check"></i>
+                                        </button>
+                                        <button type="button" class="tx-dd-preset-item" data-preset="today">
+                                            <span>Hoy</span>
+                                            <i class="bi bi-check-lg tx-dd-check"></i>
+                                        </button>
+                                        <button type="button" class="tx-dd-preset-item" data-preset="yesterday">
+                                            <span>Ayer</span>
+                                            <i class="bi bi-check-lg tx-dd-check"></i>
+                                        </button>
+                                        <button type="button" class="tx-dd-preset-item" data-preset="7d">
+                                            <span>Últimos 7 días</span>
+                                            <i class="bi bi-check-lg tx-dd-check"></i>
+                                        </button>
+                                        <button type="button" class="tx-dd-preset-item" data-preset="30d">
+                                            <span>Últimos 30 días</span>
+                                            <i class="bi bi-check-lg tx-dd-check"></i>
+                                        </button>
+                                        <button type="button" class="tx-dd-preset-item" data-preset="this_month">
+                                            <span>Este mes</span>
+                                            <i class="bi bi-check-lg tx-dd-check"></i>
+                                        </button>
+                                        <button type="button" class="tx-dd-preset-item" data-preset="last_month">
+                                            <span>Mes anterior</span>
+                                            <i class="bi bi-check-lg tx-dd-check"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="tx-dd-divider"></div>
+
+                                    <div class="tx-dd-custom-section">
+                                        <div class="tx-dd-custom-title">Rango personalizado</div>
+                                        <div class="tx-dd-custom-inputs">
+                                            <div class="tx-dd-input-group">
+                                                <label for="tx-date-from">Desde</label>
+                                                <input type="date" id="tx-date-from" class="tx-date-input">
+                                            </div>
+                                            <div class="tx-dd-input-group">
+                                                <label for="tx-date-to">Hasta</label>
+                                                <input type="date" id="tx-date-to" class="tx-date-input">
+                                            </div>
+                                        </div>
+                                        <button type="button" id="btn-apply-custom-date" class="btn-apply-date-range">
+                                            Aplicar rango
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <button type="button" id="btn-export-reports" class="tx-export-text">Exportar reporte (.txt)</button>
                     </div>
 
@@ -745,7 +1186,7 @@
     <script src="/script/navbar.js?v=20" type="module"></script>
     <script src="/script/sticky-player.js"></script>
     <script src="/script/settings-ui.js?v=2"></script>
-    <script src="/script/payment-settings.js?v=2" type="module"></script>
+    <script src="/script/payment-settings.js?v=3" type="module"></script>
 </body>
 
 </html>

@@ -1389,13 +1389,13 @@ export const capturePayPalOrder = async (req, res) => {
                                 win: '/installer_output/INKA_KOLA_Setup.exe',
                                 mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
                             } : (isEasyMaster ? {
-                                win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
+                                win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view?usp=sharing',
                                 mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
                             } : (isVocalPreset ? {
                                 win: 'https://drive.google.com/file/d/11Zw_4w-vWUjq3b2bImlyQjO2rzXitqLO/view?usp=sharing',
                                 mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
                             } : {
-                                win: 'https://drive.google.com/file/d/1JSArLjFypFYkcGJV3DIu67hxSFU4kG6q/view?usp=sharing',
+                                win: 'https://drive.google.com/file/d/1wBErtaIXdj-CPObcaJV0fnomX9rzWVNu/view?usp=sharing',
                                 mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
                             })))
                         ) : null;

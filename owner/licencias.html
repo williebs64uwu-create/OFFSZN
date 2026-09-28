@@ -1825,11 +1825,26 @@
         const BATCH_START = '2026-09-19T23:00:00Z';
 
         const DOWNLOAD_LINKS = {
-            'easy-mix': 'https://drive.google.com/drive/folders/1G861PzS9w7W9o9yN1W99S6NqS-XkX0-a?usp=sharing',
-            'easy-master': 'https://drive.google.com/drive/folders/1kY2jL6_nQ_8kP6qX_vW5m9Pz9vB8_Xq1?usp=sharing',
-            'coca-cola': 'https://drive.google.com/drive/folders/1f1T-y3F1W_v_2M8_x_q8p6qX_vW5m9Pz?usp=sharing',
-            'inka-kola': 'https://drive.google.com/drive/folders/19jL6_nQ_8kP6qX_vW5m9Pz9vB8_Xq1kY?usp=sharing',
-            'vocal-preset': 'https://drive.google.com/drive/folders/1G861PzS9w7W9o9yN1W99S6NqS-XkX0-a?usp=sharing'
+            'easy-mix': {
+                win: 'https://drive.google.com/file/d/1wBErtaIXdj-CPObcaJV0fnomX9rzWVNu/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
+            },
+            'easy-master': {
+                win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+            },
+            'vocal-preset': {
+                win: 'https://drive.google.com/file/d/11Zw_4w-vWUjq3b2bImlyQjO2rzXitqLO/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
+            },
+            'coca-cola': {
+                win: 'https://drive.google.com/file/d/1cFKYYabnqLkVLeJDQYtWLixh93KzPwbN/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1741Z3uG8amQ5boK1il5Ffj136sW2WHPY/view?usp=sharing'
+            },
+            'inka-kola': {
+                win: '/installer_output/INKA_KOLA_Setup.exe',
+                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+            }
         };
 
         const PRODUCT_NAMES = {
@@ -2241,7 +2256,7 @@
             const pName = PRODUCT_NAMES[pVal] || 'OFFSZN Audio Plugin';
             const k1 = document.getElementById('gen-key1').value.trim() || 'EASY-FULL-XXXX-XXXX';
             const k2 = document.getElementById('gen-key2').value.trim() || 'MASTER-FULL-XXXX-XXXX';
-            const dLink = DOWNLOAD_LINKS[pVal] || 'https://drive.google.com';
+            const links = DOWNLOAD_LINKS[pVal] || DOWNLOAD_LINKS['easy-mix'];
 
             const subject = 'Tu licencia oficial — ' + pName + ' • OFFSZN';
 
@@ -2258,17 +2273,24 @@
                 bodyLines.push('🔑 LICENCIA 1 (Easy Mix): ' + k1);
                 bodyLines.push('🔑 LICENCIA 2 (Easy Master Regalo): ' + k2);
                 bodyLines.push('');
-                bodyLines.push('📥 DESCARGA EASY MIX (Win/Mac):');
-                bodyLines.push(DOWNLOAD_LINKS['easy-mix']);
+                bodyLines.push('📥 DESCARGAS EASY MIX:');
+                bodyLines.push('• Windows: ' + DOWNLOAD_LINKS['easy-mix'].win);
+                bodyLines.push('• macOS: ' + DOWNLOAD_LINKS['easy-mix'].mac);
                 bodyLines.push('');
-                bodyLines.push('📥 DESCARGA EASY MASTER (Win/Mac):');
-                bodyLines.push(DOWNLOAD_LINKS['easy-master']);
+                bodyLines.push('📥 DESCARGAS EASY MASTER:');
+                bodyLines.push('• Windows: ' + DOWNLOAD_LINKS['easy-master'].win);
+                bodyLines.push('• macOS: ' + DOWNLOAD_LINKS['easy-master'].mac);
                 bodyLines.push('');
             } else {
                 bodyLines.push('🔑 SERIAL KEY: ' + k1);
                 bodyLines.push('');
-                bodyLines.push('📥 ENLACE DE DESCARGA DIRECTA (Win/Mac):');
-                bodyLines.push(dLink);
+                bodyLines.push('📥 ENLACES DE DESCARGA DIRECTA:');
+                if (typeof links === 'object' && links.win && links.mac) {
+                    bodyLines.push('• Windows: ' + links.win);
+                    bodyLines.push('• macOS: ' + links.mac);
+                } else if (typeof links === 'string') {
+                    bodyLines.push(links);
+                }
                 bodyLines.push('');
             }
 
@@ -2284,7 +2306,7 @@
             bodyLines.push('Equipo OFFSZN Audio');
 
             const body = bodyLines.join('\n');
-            return { subject, body, pName, k1, k2, dLink };
+            return { subject, body, pName, k1, k2, links };
         }
 
         function renderPreview() {
@@ -2315,21 +2337,77 @@
             btn.disabled = true;
             btn.innerText = 'Enviando vía Brevo...';
 
-            const { subject, body, pName, k1, k2, dLink } = buildEmailContent();
+            const { subject, body, pName, k1, k2, links } = buildEmailContent();
 
             try {
                 const pVal = document.getElementById('gen-product').value;
-                const keysHtml = (pVal === 'promo-2x1')
-                    ? '<div style="background:#09090b; padding:12px; border-radius:6px; font-family:monospace; color:#38bdf8; margin:10px 0;"><strong>Easy Mix:</strong> ' + k1 + '<br><strong>Easy Master:</strong> ' + k2 + '</div>'
-                    : '<div style="background:#09090b; padding:12px; border-radius:6px; font-family:monospace; color:#38bdf8; margin:10px 0; font-size:1.1rem;">' + k1 + '</div>';
+                
+                let keysHtml = '';
+                let downloadHtml = '';
 
-                const htmlContent = '<div style="font-family:sans-serif; background:#000; color:#fff; padding:30px; border-radius:10px; max-width:600px; margin:auto;">'
-                    + '<h2 style="color:#fff; margin-top:0;">¡Gracias por tu compra en OFFSZN!</h2>'
-                    + '<p style="color:#a1a1aa;">Aquí tienes tu acceso oficial y credenciales para <strong>' + pName + '</strong>:</p>'
-                    + keysHtml
-                    + '<p style="margin:20px 0;"><a href="' + dLink + '" style="background:#fff; color:#000; padding:12px 24px; text-decoration:none; font-weight:bold; border-radius:6px; display:inline-block;">Descargar Plugin (Win/Mac)</a></p>'
-                    + '<p style="color:#71717a; font-size:0.8rem; line-height:1.5;">Instrucciones: Abre tu DAW, inserta el plugin en tu canal y pega tu serial. Tu clave es válida de por vida en hasta 2 computadoras personales.</p>'
-                    + '</div>';
+                if (pVal === 'promo-2x1') {
+                    keysHtml = `
+                        <div style="background:#09090b; border:1px solid #27272a; padding:16px; border-radius:8px; font-family:monospace; margin:16px 0;">
+                            <div style="margin-bottom:10px;">
+                                <span style="color:#a1a1aa; font-size:12px; display:block; margin-bottom:4px;">🔑 Licencia Easy Mix:</span>
+                                <strong style="color:#38bdf8; font-size:15px; letter-spacing:1px;">${k1}</strong>
+                            </div>
+                            <div>
+                                <span style="color:#a1a1aa; font-size:12px; display:block; margin-bottom:4px;">🔑 Licencia Easy Master:</span>
+                                <strong style="color:#38bdf8; font-size:15px; letter-spacing:1px;">${k2}</strong>
+                            </div>
+                        </div>
+                    `;
+                    downloadHtml = `
+                        <div style="margin:20px 0;">
+                            <p style="color:#e4e4e7; font-weight:700; margin-bottom:8px; font-size:13px; text-transform:uppercase; letter-spacing:1px;">📦 Instaladores Easy Mix:</p>
+                            <div style="margin-bottom:14px;">
+                                <a href="${DOWNLOAD_LINKS['easy-mix'].win}" style="background:#2563eb; color:#ffffff; padding:10px 18px; text-decoration:none; font-weight:bold; border-radius:6px; display:inline-block; margin-right:8px; margin-bottom:8px; font-size:13px;">Descargar Easy Mix (Windows)</a>
+                                <a href="${DOWNLOAD_LINKS['easy-mix'].mac}" style="background:#27272a; color:#ffffff; border:1px solid #3f3f46; padding:10px 18px; text-decoration:none; font-weight:bold; border-radius:6px; display:inline-block; font-size:13px;">Descargar Easy Mix (macOS)</a>
+                            </div>
+                            <p style="color:#e4e4e7; font-weight:700; margin-bottom:8px; font-size:13px; text-transform:uppercase; letter-spacing:1px;">📦 Instaladores Easy Master:</p>
+                            <div>
+                                <a href="${DOWNLOAD_LINKS['easy-master'].win}" style="background:#2563eb; color:#ffffff; padding:10px 18px; text-decoration:none; font-weight:bold; border-radius:6px; display:inline-block; margin-right:8px; margin-bottom:8px; font-size:13px;">Descargar Easy Master (Windows)</a>
+                                <a href="${DOWNLOAD_LINKS['easy-master'].mac}" style="background:#27272a; color:#ffffff; border:1px solid #3f3f46; padding:10px 18px; text-decoration:none; font-weight:bold; border-radius:6px; display:inline-block; font-size:13px;">Descargar Easy Master (macOS)</a>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    keysHtml = `
+                        <div style="background:#09090b; border:1px solid #27272a; padding:16px; border-radius:8px; font-family:monospace; margin:16px 0;">
+                            <span style="color:#a1a1aa; font-size:12px; display:block; margin-bottom:4px;">🔑 Serial de Activación Oficial:</span>
+                            <strong style="color:#38bdf8; font-size:17px; letter-spacing:1px;">${k1}</strong>
+                        </div>
+                    `;
+                    const currentLinks = links || DOWNLOAD_LINKS['easy-mix'];
+                    const winHref = (currentLinks && currentLinks.win) ? currentLinks.win : (typeof currentLinks === 'string' ? currentLinks : '#');
+                    const macHref = (currentLinks && currentLinks.mac) ? currentLinks.mac : (typeof currentLinks === 'string' ? currentLinks : '#');
+
+                    downloadHtml = `
+                        <div style="margin:20px 0;">
+                            <p style="color:#e4e4e7; font-weight:700; margin-bottom:10px; font-size:13px; text-transform:uppercase; letter-spacing:1px;">Descarga tus instaladores:</p>
+                            <div>
+                                <a href="${winHref}" style="background:#2563eb; color:#ffffff; padding:12px 22px; text-decoration:none; font-weight:bold; border-radius:6px; display:inline-block; margin-right:8px; margin-bottom:8px; font-size:13.5px;">Descargar para Windows</a>
+                                <a href="${macHref}" style="background:#27272a; color:#ffffff; border:1px solid #3f3f46; padding:12px 22px; text-decoration:none; font-weight:bold; border-radius:6px; display:inline-block; font-size:13.5px;">Descargar para macOS</a>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const htmlContent = `
+                    <div style="font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background:#000000; color:#ffffff; padding:32px 24px; border-radius:12px; max-width:600px; margin:auto; border:1px solid #27272a;">
+                        <h2 style="color:#ffffff; margin-top:0; font-size:22px;">¡Gracias por tu compra en OFFSZN!</h2>
+                        <p style="color:#a1a1aa; font-size:14px; line-height:1.5;">Aquí tienes tu acceso oficial y credenciales de activación de por vida para <strong>${pName}</strong>:</p>
+                        ${keysHtml}
+                        ${downloadHtml}
+                        <div style="border-top:1px solid #27272a; margin-top:24px; padding-top:16px;">
+                            <p style="color:#71717a; font-size:12px; line-height:1.6; margin:0;">
+                                <strong>Instrucciones:</strong> Abre tu DAW (FL Studio, Ableton, Logic, etc.), inserta el plugin en tu pista y pega tu Serial Key.<br>
+                                Tu licencia es válida de por vida en hasta 2 computadoras personales de estudio.
+                            </p>
+                        </div>
+                    </div>
+                `;
 
                 const res = await fetch('/api/plugin/admin/send-email', {
                     method: 'POST',
@@ -2338,7 +2416,12 @@
                         admin_key: sessionStorage.getItem(SESSION_AUTH_KEY) || MASTER_PIN,
                         to: email,
                         subject: subject,
-                        html: htmlContent
+                        message: body,
+                        html: htmlContent,
+                        k1: k1,
+                        k2: k2,
+                        product: pVal,
+                        mark_used: true
                     })
                 });
 
@@ -2352,7 +2435,7 @@
             } catch (err) {
                 console.warn('Brevo error:', err);
                 copyTextFallback(body);
-                showToast('Error al conectar con Brevo. Mensaje copiado.');
+                showToast('Error con Brevo: ' + (err.message || 'Error') + '. Mensaje copiado.');
                 markDispatchedKeysUsed(false);
             } finally {
                 btn.disabled = false;
