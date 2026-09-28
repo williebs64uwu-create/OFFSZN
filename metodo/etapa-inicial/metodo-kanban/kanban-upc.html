@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OFFSZN • Tablero Kanban (UPC Universidad)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="kanban-styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <a href="kanban.html" class="brand">
+        <span class="brand-badge">OFFSZN</span>
+        <span class="brand-title">Kanban Studio</span>
+      </a>
+
+      <!-- Board Switcher Navigation -->
+      <nav class="board-switcher">
+        <a href="kanban.html" class="board-tab">
+          <span>🏠</span> Hub
+        </a>
+        <a href="kanban-offszn.html" class="board-tab">
+          <span>🔥</span> OFFSZN Ideas
+        </a>
+        <a href="kanban-upc.html" class="board-tab active">
+          <span>🎓</span> UPC Uni
+        </a>
+        <a href="kanban-pendientes.html" class="board-tab">
+          <span>🎧</span> Pendientes Prod
+        </a>
+      </nav>
+    </div>
+
+    <div class="nav-right">
+      <div id="cloud-sync-badge" class="cloud-sync-badge synced" title="Conectado a Supabase">
+        <span class="sync-dot"></span>
+        <span>Conectado a BD</span>
+      </div>
+      <button type="button" class="btn-primary" onclick="app.openCreateModal()">
+        <span>+</span> Nueva Tarea
+      </button>
+    </div>
+  </header>
+
+  <main class="board-container">
+
+    <!-- Board Header Meta -->
+    <div class="board-header">
+      <div class="board-meta">
+        <div class="board-eyebrow">TABLERO 02 • FORMACIÓN ACADÉMICA</div>
+        <h1 class="board-title" id="boardTitle">🎓 UPC • Gestión Universitaria</h1>
+        <p class="board-desc" id="boardDesc">Control de cursos, entregas de ciclo, exámenes parciales/finales y proyectos grupales.</p>
+      </div>
+
+      <!-- View Mode Switcher -->
+      <div class="view-switcher">
+        <button type="button" class="view-btn active" data-view="kanban" onclick="app.switchView('kanban')">
+          <span>📋</span> Tablero
+        </button>
+        <button type="button" class="view-btn" data-view="table" onclick="app.switchView('table')">
+          <span>☰</span> Lista
+        </button>
+        <button type="button" class="view-btn" data-view="calendar" onclick="app.switchView('calendar')">
+          <span>📅</span> Calendario
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="filter-toolbar">
+      <div class="filter-row-top">
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="boardSearchInput" class="search-input" 
+            placeholder="Buscar tarea, curso, examen o tag..." oninput="app.handleSearch(this.value)">
+          <button type="button" class="clear-search-btn" onclick="app.resetFilters()">✕</button>
+        </div>
+
+        <div class="filter-selectors">
+          <select id="filterStatusSelect" class="select-ctrl" onchange="app.setStatusFilter(this.value)">
+            <option value="all">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="en-curso">En curso</option>
+            <option value="listo">Listo</option>
+          </select>
+
+          <select id="filterPrioritySelect" class="select-ctrl" onchange="app.setPriorityFilter(this.value)">
+            <option value="all">Todas las prioridades</option>
+            <option value="urgent">Urgente</option>
+            <option value="high">Alta</option>
+            <option value="medium">Media</option>
+            <option value="low">Baja</option>
+          </select>
+
+          <button type="button" class="filter-reset-link" onclick="app.resetFilters()">
+            ↺ Restablecer
+          </button>
+        </div>
+      </div>
+
+      <!-- Tag Filters Row -->
+      <div class="tag-chips-row" id="tagChipsContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Mobile Column Tabs (Sticky on small screens) -->
+    <div class="mobile-column-tabs" id="mobileColumnTabs">
+      <!-- Rendered dynamically -->
+    </div>
+
+    <!-- VIEW 1: KANBAN COLUMNS GRID -->
+    <div class="kanban-grid" id="kanbanGrid">
+      
+      <!-- Columna 1: Pendiente -->
+      <div class="kanban-col" data-col="pendiente">
+        <div class="col-header">
+          <div class="col-title-wrap">
+            <span class="col-indicator pending"></span>
+            <span class="col-name">Pendiente</span>
+            <span class="col-count" id="count-pendiente">0</span>
+          </div>
+          <button type="button" class="col-add-btn" title="Añadir tarea" onclick="app.openCreateModal('pendiente')">+</button>
+        </div>
+        <div class="cards-list" id="list-pendiente">
+          <!-- Cards rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Columna 2: En curso -->
+      <div class="kanban-col" data-col="en-curso">
+        <div class="col-header">
+          <div class="col-title-wrap">
+            <span class="col-indicator in-progress"></span>
+            <span class="col-name">En curso</span>
+            <span class="col-count" id="count-en-curso">0</span>
+          </div>
+          <button type="button" class="col-add-btn" title="Añadir tarea" onclick="app.openCreateModal('en-curso')">+</button>
+        </div>
+        <div class="cards-list" id="list-en-curso">
+          <!-- Cards rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Columna 3: Listo -->
+      <div class="kanban-col" data-col="listo">
+        <div class="col-header">
+          <div class="col-title-wrap">
+            <span class="col-indicator done"></span>
+            <span class="col-name">Listo</span>
+            <span class="col-count" id="count-listo">0</span>
+          </div>
+          <button type="button" class="col-add-btn" title="Añadir tarea" onclick="app.openCreateModal('listo')">+</button>
+        </div>
+        <div class="cards-list" id="list-listo">
+          <!-- Cards rendered dynamically -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- VIEW 2: DATABASE TABLE VIEW -->
+    <div class="table-view-container" id="tableViewContainer">
+      <table class="table-view">
+        <thead>
+          <tr>
+            <th>Título de la Tarea / Curso</th>
+            <th>Estado</th>
+            <th>Prioridad</th>
+            <th>Fecha Inicio</th>
+            <th>Fecha Finalización</th>
+            <th>Tags</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Rendered dynamically -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- VIEW 3: MONTHLY CALENDAR VIEW (HIGH CONTRAST & ZERO BLOWOUT) -->
+    <div class="month-calendar-view" id="monthCalendarView">
+      <div class="month-view-head">
+        <div class="month-view-title-wrap">
+          <div class="month-nav-group">
+            <button type="button" class="month-nav-btn" onclick="app.navMonthCalendar(-1)" title="Mes anterior">‹</button>
+            <h3 id="monthViewLabel" class="month-view-title">Septiembre 2026</h3>
+            <button type="button" class="month-nav-btn" onclick="app.navMonthCalendar(1)" title="Mes siguiente">›</button>
+          </div>
+          <button type="button" class="month-today-btn" onclick="app.resetMonthCalendarToday()">Hoy</button>
+        </div>
+
+        <div class="month-legend">
+          <span class="legend-item"><span class="legend-dot pending"></span> Pendiente</span>
+          <span class="legend-item"><span class="legend-dot in-progress"></span> En curso</span>
+          <span class="legend-item"><span class="legend-dot done"></span> Listo</span>
+        </div>
+      </div>
+
+      <div class="month-calendar-shell">
+        <div class="month-weekdays-row">
+          <div class="weekday-col">LUNES</div>
+          <div class="weekday-col">MARTES</div>
+          <div class="weekday-col">MIÉRCOLES</div>
+          <div class="weekday-col">JUEVES</div>
+          <div class="weekday-col">VIERNES</div>
+          <div class="weekday-col weekend">SÁBADO</div>
+          <div class="weekday-col weekend">DOMINGO</div>
+        </div>
+        <div class="month-cells-grid" id="monthGridLarge">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="kanban-core.js"></script>
+  <script>
+    const app = new KanbanApp('upc');
+
+    if (new URLSearchParams(window.location.search).get('new') === 'true') {
+      setTimeout(() => app.openCreateModal(), 200);
+    }
+  </script>
+</body>
+</html>

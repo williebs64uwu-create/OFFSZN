@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OFFSZN • Kanban Studio (Command Center)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="kanban-styles.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="top-nav">
+    <div class="nav-left">
+      <a href="kanban.html" class="brand">
+        <span class="brand-badge">OFFSZN</span>
+        <span class="brand-title">Kanban Studio</span>
+      </a>
+
+      <!-- Board Navigation Tabs -->
+      <nav class="board-switcher">
+        <a href="kanban.html" class="board-tab active">
+          <span>🏠</span> Hub Principal
+        </a>
+        <a href="kanban-offszn.html" class="board-tab">
+          <span>🔥</span> OFFSZN Ideas
+        </a>
+        <a href="kanban-upc.html" class="board-tab">
+          <span>🎓</span> UPC Uni
+        </a>
+        <a href="kanban-pendientes.html" class="board-tab">
+          <span>🎧</span> Pendientes Prod
+        </a>
+      </nav>
+    </div>
+
+    <div class="nav-right">
+      <div id="cloud-sync-badge" class="cloud-sync-badge synced" title="Conectado a Supabase">
+        <span class="sync-dot"></span>
+        <span>Conectado a BD</span>
+      </div>
+      <button type="button" class="btn-primary" onclick="openGlobalCreateModal()">
+        <span>+</span> Nueva Tarea
+      </button>
+    </div>
+  </header>
+
+  <main class="board-container">
+
+    <!-- HERO / COMMAND CENTER -->
+    <div class="hub-hero">
+      <div class="board-eyebrow">COMMAND CENTER • MÉTODO KANBAN</div>
+      <h1 class="hub-hero-title">SISTEMA INTEGRADO DE PRODUCTIVIDAD</h1>
+      <p class="board-desc" style="max-width: 680px;">
+        Gestión centralizada para ideas de OFFSZN, entregas universitarias de UPC y pipeline de producción musical con clientes de estudio.
+      </p>
+
+      <!-- Global Stats Row -->
+      <div class="hub-stats-grid">
+        <div class="hub-stat-card">
+          <div class="hub-stat-label">Total de Tareas</div>
+          <div class="hub-stat-val" id="hubTotalTasks">0</div>
+          <div class="hub-stat-desc">En los 3 tableros activos</div>
+        </div>
+        <div class="hub-stat-card">
+          <div class="hub-stat-label">En Curso</div>
+          <div class="hub-stat-val" style="color: #60a5fa;" id="hubInProgressTasks">0</div>
+          <div class="hub-stat-desc">Foco y ejecución activa</div>
+        </div>
+        <div class="hub-stat-card">
+          <div class="hub-stat-label">Completadas</div>
+          <div class="hub-stat-val" style="color: #4ade80;" id="hubDoneTasks">0</div>
+          <div class="hub-stat-desc">Metas alcanzadas con éxito</div>
+        </div>
+        <div class="hub-stat-card">
+          <div class="hub-stat-label">Prioridad Urgente</div>
+          <div class="hub-stat-val" style="color: #ef4444;" id="hubUrgentTasks">0</div>
+          <div class="hub-stat-desc">Requieren acción inmediata</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: LOS 3 TABLEROS KANBAN -->
+    <div style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+      <h2 style="font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em;">LOS 3 TABLEROS DE TRABAJO</h2>
+      <span style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-dim);">Haz clic para abrir tablero dedicado ↗</span>
+    </div>
+
+    <div class="portals-grid">
+
+      <!-- Portal 1: OFFSZN Ideas -->
+      <a href="kanban-offszn.html" class="portal-card">
+        <div>
+          <span class="portal-badge offszn">TABLERO 01 • MARCA</span>
+          <h3 class="portal-title">🔥 OFFSZN Ideas &amp; Lanzamientos</h3>
+          <p class="portal-desc">
+            Bóveda de ideas, vocal presets para FL Studio, desarrollo de plugins VST3, guiones virales de TikTok/Reels y embudos de venta directa.
+          </p>
+        </div>
+
+        <div class="portal-stats-row">
+          <div>
+            <div class="portal-stat-num" id="portal-offszn-total">-</div>
+            <div class="portal-stat-lbl">Tareas</div>
+          </div>
+          <div>
+            <div class="portal-stat-num" style="color: #60a5fa;" id="portal-offszn-prog">-</div>
+            <div class="portal-stat-lbl">En Curso</div>
+          </div>
+          <div>
+            <div class="portal-stat-num" style="color: #4ade80;" id="portal-offszn-done">-</div>
+            <div class="portal-stat-lbl">Listas</div>
+          </div>
+        </div>
+
+        <div class="portal-footer-link">
+          <span>Abrir Tablero OFFSZN</span>
+          <span>→</span>
+        </div>
+      </a>
+
+      <!-- Portal 2: UPC Uni -->
+      <a href="kanban-upc.html" class="portal-card">
+        <div>
+          <span class="portal-badge upc">TABLERO 02 • UNIVERSIDAD</span>
+          <h3 class="portal-title">🎓 UPC • Universidad</h3>
+          <p class="portal-desc">
+            Planificación académica: entregas de ciclo, exámenes parciales y finales, trabajos en grupo, lecturas de semana y control de rúbricas.
+          </p>
+        </div>
+
+        <div class="portal-stats-row">
+          <div>
+            <div class="portal-stat-num" id="portal-upc-total">-</div>
+            <div class="portal-stat-lbl">Tareas</div>
+          </div>
+          <div>
+            <div class="portal-stat-num" style="color: #60a5fa;" id="portal-upc-prog">-</div>
+            <div class="portal-stat-lbl">En Curso</div>
+          </div>
+          <div>
+            <div class="portal-stat-num" style="color: #4ade80;" id="portal-upc-done">-</div>
+            <div class="portal-stat-lbl">Listas</div>
+          </div>
+        </div>
+
+        <div class="portal-footer-link">
+          <span>Abrir Tablero UPC</span>
+          <span>→</span>
+        </div>
+      </a>
+
+      <!-- Portal 3: Pendientes Producción -->
+      <a href="kanban-pendientes.html" class="portal-card">
+        <div>
+          <span class="portal-badge pendientes">TABLERO 03 • ESTUDIO</span>
+          <h3 class="portal-title">🎧 Pendientes Producción</h3>
+          <p class="portal-desc">
+            Flujo de trabajo para clientes musicales: sesiones de grabación, edición vocal con Melodyne, mezcla estéreo, mastering comercial y stems.
+          </p>
+        </div>
+
+        <div class="portal-stats-row">
+          <div>
+            <div class="portal-stat-num" id="portal-pendientes-total">-</div>
+            <div class="portal-stat-lbl">Tareas</div>
+          </div>
+          <div>
+            <div class="portal-stat-num" style="color: #60a5fa;" id="portal-pendientes-prog">-</div>
+            <div class="portal-stat-lbl">En Curso</div>
+          </div>
+          <div>
+            <div class="portal-stat-num" style="color: #4ade80;" id="portal-pendientes-done">-</div>
+            <div class="portal-stat-lbl">Listas</div>
+          </div>
+        </div>
+
+        <div class="portal-footer-link">
+          <span>Abrir Tablero Pendientes</span>
+          <span>→</span>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- SECCIÓN: ENTREGAS URGENTES Y PRÓXIMAS FECHAS -->
+    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1.5rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <div>
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff;">⚡ Entregas Prioritarias &amp; Próximos Vencimientos</h3>
+          <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">Tareas activas ordenadas por fecha de finalización más cercana en los 3 tableros.</p>
+        </div>
+        <button type="button" class="btn-secondary" onclick="location.reload()">↺ Actualizar</button>
+      </div>
+
+      <div id="hubUrgentList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Global Modal for quick task creation on Hub -->
+  <script src="kanban-core.js"></script>
+  <script>
+    const app = new KanbanApp('hub');
+
+    function openGlobalCreateModal() {
+      window.location.href = 'kanban-offszn.html?new=true';
+    }
+  </script>
+</body>
+</html>

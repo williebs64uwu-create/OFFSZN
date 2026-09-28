@@ -38,6 +38,7 @@ import walletRoutes from './infrastructure/http/routes/wallet.routes.js';
 import yapeRoutes from './infrastructure/http/routes/yape.routes.js';
 import willieRoutes from './infrastructure/http/routes/willie.routes.js';
 import licensePanelRoutes from './infrastructure/http/routes/license-panel.routes.js';
+import kanbanRoutes from './infrastructure/http/routes/kanban.routes.js';
 import { checkAndSendRemindersInternal } from './infrastructure/http/controllers/CalendarController.js';
 import { runSubscriptionScavenger } from './infrastructure/services/subscription-scavenger.js';
 
@@ -372,6 +373,7 @@ app.use('/api', youtubeRoutes);
 app.use('/api', youtubeSyncRoutes);
 app.use('/api', calendarRoutes);
 app.use('/api/pan/lic', licensePanelRoutes);
+app.use('/api', kanbanRoutes);
 
 // B. PROTECTED ROUTERS (Use global router.use(authenticateTokenMiddleware) internally)
 // These MUST come after public/hybrid ones if mounted on the same prefix (/api)
