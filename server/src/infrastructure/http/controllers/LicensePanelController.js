@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken';
-import { LICENSE_PANEL_KEY, JWT_SECRET } from '../../../shared/config/config.js';
+import { JWT_SECRET } from '../../../shared/config/config.js';
+import { isAdminKey } from '../../../shared/config/adminKey.js';
 
-const PANEL_KEY = LICENSE_PANEL_KEY || 'gian2030upc';
-const SIGNING_SECRET = JWT_SECRET || 'offszn_secure_panel_key_2026';
+// Sin secreto de respaldo: si falta JWT_SECRET el panel falla cerrado.
+const SIGNING_SECRET = JWT_SECRET;
 
 export async function authLicensePanel(req, res) {
   try {
@@ -11,7 +12,11 @@ export async function authLicensePanel(req, res) {
       return res.status(400).json({ success: false, error: 'Clave requerida' });
     }
 
-    if (key.trim() !== PANEL_KEY.trim()) {
+    if (!SIGNING_SECRET) {
+      return res.status(503).json({ success: false, error: 'Servidor sin JWT_SECRET configurado' });
+    }
+
+    if (!isAdminKey(key)) {
       return res.status(401).json({ success: false, error: 'Clave incorrecta' });
     }
 
@@ -41,8 +46,7 @@ export async function verifyLicensePanelToken(req, res) {
       return res.status(401).json({ valid: false });
     }
 
-    // Direct key check fallback
-    if (token === PANEL_KEY) {
+    if (isAdminKey(token)) {
       return res.status(200).json({ valid: true });
     }
 
@@ -65,7 +69,7 @@ export function licensePanelAuthMiddleware(req, res, next) {
     return res.status(401).json({ error: 'No autorizado. Proporcione clave o token.' });
   }
 
-  if (token === PANEL_KEY) {
+  if (isAdminKey(token)) {
     return next();
   }
 

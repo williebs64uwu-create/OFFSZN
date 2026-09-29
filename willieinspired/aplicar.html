@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Aplica como Creador | Willie Inspired</title>
+    <meta name="description" content="Aplica al programa de creadores de Willie Inspired. Déjanos tus redes y, si hay buen fit, te enviamos tu código y la guía.">
+    <link rel="icon" type="image/png" sizes="32x32" href="/willieimages/favicon-32x32.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f3f3f5; --card: #fff; --line: rgba(0,0,0,.12); --line-strong: #000;
+            --text: #000; --muted: #5e5c64; --subtle: #8e8c95;
+            --magenta: #ec4899; --magenta-dark: #db2777; --green: #10b981; --red: #e11d48;
+            --sans: 'Plus Jakarta Sans', -apple-system, sans-serif; --mono: 'JetBrains Mono', monospace;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+        body { background: var(--bg) url('/willieimages/bg-noise.png') repeat; background-size: 280px; color: var(--text); min-height: 100vh; }
+        header { background: rgba(255,255,255,.94); border-bottom: 1px solid var(--line); padding: .95rem 1.5rem; }
+        .bar { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-weight: 800; letter-spacing: -.02em; text-transform: uppercase; text-decoration: none; color: #000; }
+        .back { font-size: .88rem; font-weight: 600; color: var(--muted); text-decoration: none; }
+        .back:hover { color: #000; }
+        main { max-width: 560px; margin: 0 auto; padding: 3rem 1.25rem 4rem; }
+        .kicker { font-family: var(--mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+        .kicker::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--magenta); }
+        h1 { font-size: clamp(2.6rem, 9vw, 3.6rem); font-weight: 800; letter-spacing: -.04em; margin: .4rem 0 .8rem; }
+        h1 span { color: var(--magenta); }
+        .lead { color: var(--muted); font-size: 1rem; line-height: 1.55; margin-bottom: 2rem; }
+        .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; margin-bottom: 2.2rem; }
+        .step { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: .8rem; font-size: .8rem; color: var(--muted); line-height: 1.35; }
+        .step b { display: block; font-family: var(--mono); color: var(--magenta); font-size: .72rem; margin-bottom: 4px; }
+        .section-label { font-family: var(--mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .1em; color: var(--magenta); margin: 1.8rem 0 .4rem; }
+        .field { display: flex; align-items: center; gap: 12px; border-bottom: 1.5px solid var(--line); padding: .85rem 0; transition: border-color .15s; }
+        .field:focus-within { border-color: var(--line-strong); }
+        .field label { font-family: var(--mono); font-size: .72rem; color: var(--subtle); width: 92px; flex-shrink: 0; text-transform: lowercase; }
+        .field input { flex: 1; border: 0; outline: 0; background: transparent; font-size: 1rem; font-weight: 500; color: #000; min-width: 0; }
+        .field input::placeholder { color: #b5b3bc; }
+        .chips { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0 0; }
+        .chips input { position: absolute; opacity: 0; pointer-events: none; }
+        .chips label { cursor: pointer; border: 1.5px solid var(--line); background: var(--card); border-radius: 999px; padding: .5rem 1rem; font-size: .9rem; font-weight: 600; transition: all .15s; user-select: none; }
+        .chips label:hover { border-color: #000; }
+        .chips input:checked + label { background: #000; color: #fff; border-color: #000; }
+        .chips input:focus-visible + label { outline: 2px solid var(--magenta); outline-offset: 2px; }
+        .hint { font-size: .78rem; color: var(--subtle); margin-top: .35rem; }
+        .hp { position: absolute; left: -9999px; }
+        .submit { margin-top: 2.2rem; width: 100%; border: 0; border-radius: 999px; background: #000; color: #fff; padding: 1rem; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background .15s, transform .1s; }
+        .submit:hover { background: var(--magenta-dark); }
+        .submit:active { transform: scale(.98); }
+        .submit:disabled { opacity: .6; cursor: wait; }
+        .msg { margin-top: 1rem; font-size: .9rem; font-weight: 600; min-height: 1.2em; color: var(--red); }
+        .alt { margin-top: 1.4rem; font-size: .85rem; color: var(--muted); text-align: center; }
+        .alt a { color: #000; font-weight: 700; }
+        .done { display: none; text-align: center; padding: 3rem 0; }
+        .done .tick { width: 64px; height: 64px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 2rem; margin: 0 auto 1.2rem; }
+        .done h2 { font-size: 2rem; font-weight: 800; letter-spacing: -.03em; margin-bottom: .6rem; }
+        .done p { color: var(--muted); line-height: 1.55; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="bar">
+            <a class="brand" href="/willieinspired">Willie Inspired</a>
+            <a class="back" href="/willieinspired">← Volver</a>
+        </div>
+    </header>
+
+    <main>
+        <form id="form" novalidate>
+            <p class="kicker">creadores</p>
+            <h1>aplica<span>.</span></h1>
+            <p class="lead">Déjanos tus redes. Si hay buen fit, te enviamos tu código personal y la guía para empezar. Sin compromisos y toma menos de 2 minutos.</p>
+
+            <div class="steps">
+                <div class="step"><b>01</b>Llenas el formulario</div>
+                <div class="step"><b>02</b>Revisamos tu perfil</div>
+                <div class="step"><b>03</b>Te llega tu código</div>
+            </div>
+
+            <div class="field"><label for="name">nombre</label><input id="name" name="name" placeholder="tu nombre" autocomplete="name" maxlength="120" required></div>
+            <div class="field"><label for="email">email</label><input id="email" name="email" type="email" placeholder="tu@email.com" autocomplete="email" maxlength="160" required></div>
+
+            <p class="section-label">redes</p>
+            <div class="field"><label for="instagram">instagram</label><input id="instagram" name="instagram" placeholder="@usuario" maxlength="120"></div>
+            <div class="field"><label for="tiktok">tiktok</label><input id="tiktok" name="tiktok" placeholder="@usuario" maxlength="120"></div>
+            <div class="field"><label for="youtube">youtube</label><input id="youtube" name="youtube" placeholder="@usuario o link del canal" maxlength="200"></div>
+            <p class="hint">Con una red es suficiente.</p>
+
+            <p class="section-label">plataforma principal</p>
+            <div class="chips" data-name="mainPlatform">
+                <input type="radio" name="mainPlatform" id="p1" value="instagram"><label for="p1" data-sfx="toggle">Instagram</label>
+                <input type="radio" name="mainPlatform" id="p2" value="tiktok"><label for="p2" data-sfx="toggle">TikTok</label>
+                <input type="radio" name="mainPlatform" id="p3" value="youtube"><label for="p3" data-sfx="toggle">YouTube</label>
+                <input type="radio" name="mainPlatform" id="p4" value="mixto"><label for="p4" data-sfx="toggle">Un mix</label>
+            </div>
+
+            <p class="section-label">alcance aproximado</p>
+            <div class="chips">
+                <input type="radio" name="reach" id="r1" value="menos-5k"><label for="r1" data-sfx="toggle">Menos de 5k</label>
+                <input type="radio" name="reach" id="r2" value="5k-25k"><label for="r2" data-sfx="toggle">5k – 25k</label>
+                <input type="radio" name="reach" id="r3" value="25k-100k"><label for="r3" data-sfx="toggle">25k – 100k</label>
+                <input type="radio" name="reach" id="r4" value="100k+"><label for="r4" data-sfx="toggle">100k+</label>
+            </div>
+
+            <p class="section-label">qué publicas</p>
+            <div class="chips">
+                <input type="radio" name="contentType" id="c1" value="musica"><label for="c1" data-sfx="toggle">Música</label>
+                <input type="radio" name="contentType" id="c2" value="tutoriales"><label for="c2" data-sfx="toggle">Tutoriales</label>
+                <input type="radio" name="contentType" id="c3" value="ambos"><label for="c3" data-sfx="toggle">Ambos</label>
+                <input type="radio" name="contentType" id="c4" value="otro"><label for="c4" data-sfx="toggle">Otro</label>
+            </div>
+
+            <p class="section-label">tu mejor publicación</p>
+            <div class="field"><label for="bestPost">link</label><input id="bestPost" name="bestPost" placeholder="pega el link (opcional)" maxlength="300"></div>
+
+            <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+            <button class="submit" id="send" type="submit" data-sfx="click">Enviar solicitud</button>
+            <p class="msg" id="msg" role="alert"></p>
+            <p class="alt">¿Dudas? Escríbenos a <a href="mailto:willie@offszn.com">willie@offszn.com</a></p>
+        </form>
+
+        <div class="done" id="done">
+            <div class="tick">✓</div>
+            <h2>¡Listo!</h2>
+            <p>Recibimos tu solicitud. Revisamos tu perfil y, si hay buen fit, te escribimos al email que nos diste.</p>
+        </div>
+    </main>
+
+    <script>
+        const form = document.getElementById('form'), msg = document.getElementById('msg'), btn = document.getElementById('send');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.textContent = '';
+            const d = Object.fromEntries(new FormData(form).entries());
+            if (!d.name.trim()) return fail('Escribe tu nombre.');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim())) return fail('Escribe un email válido.');
+            if (!d.instagram.trim() && !d.tiktok.trim() && !d.youtube.trim()) return fail('Agrega al menos una red social.');
+            btn.disabled = true; btn.textContent = 'Enviando…';
+            try {
+                const r = await fetch('/api/creators/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok || !j.success) throw new Error(j.message || 'No se pudo enviar.');
+                form.style.display = 'none';
+                document.getElementById('done').style.display = 'block';
+                window.WISfx && WISfx.play('success');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch (err) {
+                fail(err.message || 'Error de conexión. Intenta de nuevo.');
+                btn.disabled = false; btn.textContent = 'Enviar solicitud';
+            }
+        });
+        function fail(t) { msg.textContent = t; window.WISfx && WISfx.play('error'); }
+    </script>
+    <script src="/willieinspired/sfx.js" defer></script>
+</body>
+</html>

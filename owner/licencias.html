@@ -1223,6 +1223,10 @@
                             <span class="product-card-name">Vocal Preset V2</span>
                             <span class="product-card-badge" id="badge-stock-vocal-preset">-- disp</span>
                         </div>
+                        <div class="product-card-btn" data-value="easy-pitch" onclick="selectProductChip('easy-pitch')">
+                            <span class="product-card-name">Easy Pitch</span>
+                            <span class="product-card-badge" id="badge-stock-easy-pitch">-- disp</span>
+                        </div>
                     </div>
                     <input type="hidden" id="gen-product" value="easy-mix">
 
@@ -1420,6 +1424,7 @@
                     <button class="filter-pill" id="btn-prod-easymix" onclick="setPluginProduct('Easy Mix', this)">Easy Mix ($640 • 71)</button>
                     <button class="filter-pill" id="btn-prod-easymaster" onclick="setPluginProduct('Easy Master', this)">Easy Master ($30 • 6)</button>
                     <button class="filter-pill" id="btn-prod-vocal" onclick="setPluginProduct('Vocal Preset', this)">Vocal Preset ($10 • 1)</button>
+                    <button class="filter-pill" id="btn-prod-easypitch" onclick="setPluginProduct('Easy Pitch', this)">Easy Pitch</button>
                 </div>
             </div>
 
@@ -1648,7 +1653,7 @@
                 <div class="card-panel-header">
                     <div>
                         <div class="card-panel-title">Generador de Claves Oficiales</div>
-                        <div class="card-panel-sub">Crea licencias lifetime directamente en la base de datos Supabase.</div>
+                        <div class="card-panel-sub">Crea licencias Lifetime o Trials de 3 días directamente en la base de datos Supabase.</div>
                     </div>
                 </div>
 
@@ -1660,14 +1665,31 @@
                         <option value="Coca Cola">Coca-Cola Plugin</option>
                         <option value="Inka Kola">Inka Kola Plugin</option>
                         <option value="Vocal Preset">Vocal Preset V2</option>
+                        <option value="Easy Pitch">Easy Pitch</option>
                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de Licencia</label>
+                    <select id="gen-license-type" class="form-control" onchange="onLicenseTypeChange()">
+                        <option value="lifetime" selected>👑 Lifetime (Completa de por vida)</option>
+                        <option value="trial">⏱️ Trial 3 Días (Prueba gratuita)</option>
+                    </select>
+                </div>
+
+                <div id="trial-info-alert" style="display: none; margin-bottom: 16px; padding: 12px 14px; background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: var(--radius-sm); font-size: 0.78rem; color: #d8b4fe; line-height: 1.5;">
+                    <div style="font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; color: #c084fc;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px; height:14px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Modo Trial: 3 Días de Prueba Oficial
+                    </div>
+                    Esta clave tendrá formato <strong>TRIAL</strong> (ej: <code>EASY-TRIAL-XXXX-XXXX</code>). El contador de <strong>3 días</strong> comenzará en el instante exacto en que el usuario la active por primera vez en su DAW (FL Studio, Ableton, Logic, etc.).
                 </div>
 
                 <div class="form-group">
                     <label>Límite de Dispositivos</label>
                     <select id="gen-device-count" class="form-control">
-                        <option value="2" selected>2 Dispositivos (Estándar)</option>
-                        <option value="1">1 Dispositivo</option>
+                        <option value="1">1 Dispositivo (Recomendado para Trial)</option>
+                        <option value="2" selected>2 Dispositivos (Estándar Lifetime)</option>
                         <option value="3">3 Dispositivos</option>
                         <option value="5">5 Dispositivos</option>
                     </select>
@@ -1678,12 +1700,24 @@
                     <span>Crear Licencia en Supabase</span>
                 </button>
 
-                <div id="gen-result-box" style="display: none; margin-top: 20px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 16px;">
-                    <span style="font-size: 0.74rem; color: var(--text-secondary); display: block; margin-bottom: 6px;">Licencia Generada con Éxito:</span>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="text" id="gen-result-key" class="form-control mono" readonly style="color: var(--accent-green); font-weight: 700;">
-                        <button class="btn btn-outline btn-sm" onclick="copyResultKey()">Copiar</button>
+                <div id="gen-result-box" style="display: none; margin-top: 20px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 0.74rem; color: var(--text-secondary);">Licencia Generada con Éxito:</span>
+                        <span id="gen-result-badge" style="font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3);">
+                            👑 LIFETIME
+                        </span>
                     </div>
+                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 10px;">
+                        <input type="text" id="gen-result-key" class="form-control mono" readonly style="color: var(--accent-green); font-weight: 700; font-size: 0.95rem;">
+                        <button class="btn btn-outline btn-sm" onclick="copyResultKey()">Copiar Clave</button>
+                    </div>
+                    <div id="gen-result-desc" style="font-size: 0.76rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;">
+                        <!-- Detalle dinámico: Lifetime o Trial -->
+                    </div>
+                    <button class="btn btn-outline btn-sm" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px;" onclick="copyCustomerMessage()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px; height:14px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span>Copiar Mensaje Listo para Enviar al Cliente (Win / Mac)</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1819,7 +1853,6 @@
         // ==============================================================
         // CONFIG & CONSTANTS
         // ==============================================================
-        const MASTER_PIN = 'gian2030upc';
         const SESSION_AUTH_KEY = 'offszn_owner_auth_token';
         const STORAGE_KEY = 'offszn_licenses_data';
         const BATCH_START = '2026-09-19T23:00:00Z';
@@ -1844,6 +1877,10 @@
             'inka-kola': {
                 win: '/installer_output/INKA_KOLA_Setup.exe',
                 mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+            },
+            'easy-pitch': {
+                win: 'https://drive.google.com/file/d/1K58LeAnNJKUVJVKZ6kmm_xI8R9XHyQ0C/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1Say1PQ7AqdpI_10k5IT8hqgeGvpptRNW/view?usp=sharing'
             }
         };
 
@@ -1853,7 +1890,8 @@
             'promo-2x1': 'Promo 2x1: Easy Mix + Easy Master',
             'coca-cola': 'Coca-Cola Plugin (Win/Mac)',
             'inka-kola': 'Inka Kola Plugin (Win/Mac)',
-            'vocal-preset': 'Vocal Preset V2 (Win/Mac)'
+            'vocal-preset': 'Vocal Preset V2 (Win/Mac)',
+            'easy-pitch': 'Easy Pitch (Win/Mac)'
         };
 
         // GLOBAL APP STATE
@@ -1886,6 +1924,7 @@
             const s = name.toLowerCase();
             if (s.includes('master')) return 'Easy Master';
             if (s.includes('vocal')) return 'Vocal Preset';
+            if (s.includes('pitch')) return 'Easy Pitch';
             if (s.includes('coca') || s.includes('coke')) return 'Coca Cola';
             if (s.includes('inka')) return 'Inka Kola';
             if (s.includes('mix')) return 'Easy Mix';
@@ -1895,10 +1934,25 @@
         // ==============================================================
         // AUTH
         // ==============================================================
-        function checkExistingAuth() {
+        async function verifyAdminPin(pin) {
+            try {
+                const res = await fetch('/api/plugin/admin/verify-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin })
+                });
+                return res.ok;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        async function checkExistingAuth() {
             const token = sessionStorage.getItem(SESSION_AUTH_KEY);
-            if (token === MASTER_PIN) {
+            if (token && await verifyAdminPin(token)) {
                 unlockApp();
+            } else {
+                sessionStorage.removeItem(SESSION_AUTH_KEY);
             }
         }
 
@@ -1919,11 +1973,11 @@
             inp.type = inp.type === 'password' ? 'text' : 'password';
         }
 
-        function handleAuthSubmit(e) {
+        async function handleAuthSubmit(e) {
             e.preventDefault();
             const pin = document.getElementById('auth-pin').value.trim();
             const err = document.getElementById('auth-error-text');
-            if (pin === MASTER_PIN) {
+            if (pin && await verifyAdminPin(pin)) {
                 sessionStorage.setItem(SESSION_AUTH_KEY, pin);
                 err.style.display = 'none';
                 unlockApp();
@@ -2058,7 +2112,7 @@
         }
 
         async function fetchFullAnalyticsBackend() {
-            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || MASTER_PIN;
+            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || '';
             try {
                 const res = await fetch('/api/plugin/admin/analytics-full?admin_key=' + encodeURIComponent(adminPin) + '&_t=' + Date.now());
                 const data = await res.json();
@@ -2074,7 +2128,7 @@
         }
 
         async function syncCloudLicenses(isBackground = false) {
-            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || MASTER_PIN;
+            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || '';
             const statusTxt = document.getElementById('realtime-status-txt');
 
             try {
@@ -2177,7 +2231,8 @@
                 'easy-master': pool.filter(l => !l.used && l.plugin === 'Easy Master').length,
                 'coca-cola': pool.filter(l => !l.used && l.plugin === 'Coca Cola').length,
                 'inka-kola': pool.filter(l => !l.used && l.plugin === 'Inka Kola').length,
-                'vocal-preset': pool.filter(l => !l.used && l.plugin === 'Vocal Preset').length
+                'vocal-preset': pool.filter(l => !l.used && l.plugin === 'Vocal Preset').length,
+                'easy-pitch': pool.filter(l => !l.used && (l.plugin === 'Easy Pitch' || l.plugin === 'EASY PITCH')).length
             };
 
             Object.entries(counts).forEach(([k, cnt]) => {
@@ -2212,6 +2267,7 @@
                 else if (val === 'coca-cola') targetPlugin = 'Coca Cola';
                 else if (val === 'inka-kola') targetPlugin = 'Inka Kola';
                 else if (val === 'vocal-preset') targetPlugin = 'Vocal Preset';
+                else if (val === 'easy-pitch') targetPlugin = 'Easy Pitch';
 
                 const avail = pool.filter(l => !l.used && l.plugin === targetPlugin);
                 if (avail.length > 0 && (!k1Input.value || !avail.some(l => l.serial === k1Input.value))) {
@@ -2236,6 +2292,7 @@
                 else if (val === 'coca-cola') targetPlugin = 'Coca Cola';
                 else if (val === 'inka-kola') targetPlugin = 'Inka Kola';
                 else if (val === 'vocal-preset') targetPlugin = 'Vocal Preset';
+                else if (val === 'easy-pitch') targetPlugin = 'Easy Pitch';
             }
 
             const avail = pool.filter(l => !l.used && l.plugin === targetPlugin);
@@ -2413,7 +2470,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        admin_key: sessionStorage.getItem(SESSION_AUTH_KEY) || MASTER_PIN,
+                        admin_key: sessionStorage.getItem(SESSION_AUTH_KEY) || '',
                         to: email,
                         subject: subject,
                         message: body,
@@ -2468,7 +2525,7 @@
 
             showDispatchSuccessModal(burnedKeys, email, viaEmail);
 
-            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || MASTER_PIN;
+            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || '';
             burnedKeys.forEach(serial => {
                 fetch('/api/plugin/admin/update-status', {
                     method: 'POST',
@@ -3197,6 +3254,7 @@
                 else if (pVal === 'coca-cola') targetPlugin = 'Coca Cola';
                 else if (pVal === 'inka-kola') targetPlugin = 'Inka Kola';
                 else if (pVal === 'vocal-preset') targetPlugin = 'Vocal Preset';
+                else if (pVal === 'easy-pitch') targetPlugin = 'Easy Pitch';
             }
 
             titleEl.innerText = 'Elegir Clave (' + targetPlugin + ')';
@@ -3331,7 +3389,7 @@
                 renderInventory();
                 renderStats();
 
-                const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || MASTER_PIN;
+                const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || '';
                 try {
                     await fetch('/api/plugin/admin/update-status', {
                         method: 'POST',
@@ -3362,14 +3420,39 @@
         // ==============================================================
         // GENERATE NEW LICENSE KEY
         // ==============================================================
+        function onLicenseTypeChange() {
+            const type = document.getElementById('gen-license-type').value;
+            const alertBox = document.getElementById('trial-info-alert');
+            const devSelect = document.getElementById('gen-device-count');
+            const btn = document.getElementById('btn-generate-db');
+
+            if (type === 'trial') {
+                if (alertBox) alertBox.style.display = 'block';
+                if (devSelect) devSelect.value = '1';
+                if (btn) {
+                    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>+ Crear Clave Trial 3 Días en Supabase</span>';
+                }
+            } else {
+                if (alertBox) alertBox.style.display = 'none';
+                if (devSelect) devSelect.value = '2';
+                if (btn) {
+                    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg><span>+ Crear Licencia Lifetime en Supabase</span>';
+                }
+            }
+        }
+
+        let lastGeneratedLicense = null;
+
         async function generateNewFullKey() {
             const btn = document.getElementById('btn-generate-db');
             const plugin = document.getElementById('new-plugin-select').value;
-            const maxDevices = parseInt(document.getElementById('gen-device-count').value) || 2;
-            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || MASTER_PIN;
+            const licenseType = document.getElementById('gen-license-type').value;
+            const isTrial = (licenseType === 'trial');
+            const maxDevices = parseInt(document.getElementById('gen-device-count').value) || (isTrial ? 1 : 2);
+            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || '';
 
             btn.disabled = true;
-            btn.innerText = 'Generando en Supabase...';
+            btn.innerText = isTrial ? 'Generando Trial en Supabase...' : 'Generando Lifetime en Supabase...';
 
             try {
                 let prefix = 'EASY';
@@ -3377,12 +3460,14 @@
                 else if (plugin.includes('Coca')) prefix = 'COKE';
                 else if (plugin.includes('Inka')) prefix = 'INKA';
                 else if (plugin.includes('Vocal')) prefix = 'VOCA';
+                else if (plugin.includes('Pitch')) prefix = 'PITCH';
 
-                const rnd1 = Math.random().toString(16).substring(2, 10).toUpperCase();
-                const rnd2 = Math.random().toString(16).substring(2, 10).toUpperCase();
-                const serialKey = prefix + '-FULL-' + rnd1 + '-' + rnd2;
+                const rnd1 = Math.random().toString(16).substring(2, 6).toUpperCase();
+                const rnd2 = Math.random().toString(16).substring(2, 6).toUpperCase();
+                const typeTag = isTrial ? 'TRIAL' : 'FULL';
+                const serialKey = `${prefix}-${typeTag}-${rnd1}-${rnd2}`;
 
-                const res = await fetch('/api/plugin/admin/create-license', {
+                const res = await fetch('/api/plugin/admin/generate-key', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -3390,25 +3475,54 @@
                         plugin_name: plugin,
                         serial_key: serialKey,
                         max_devices: maxDevices,
-                        license_type: 'lifetime'
+                        license_type: isTrial ? 'trial' : 'lifetime',
+                        trial_days: 3
                     })
                 });
 
                 const data = await res.json();
                 if (data.success && data.serial_key) {
-                    document.getElementById('gen-result-key').value = data.serial_key;
+                    const finalKey = data.serial_key;
+                    document.getElementById('gen-result-key').value = finalKey;
+                    
+                    const badge = document.getElementById('gen-result-badge');
+                    const desc = document.getElementById('gen-result-desc');
+
+                    if (isTrial) {
+                        badge.style.background = 'rgba(168, 85, 247, 0.15)';
+                        badge.style.color = '#c084fc';
+                        badge.style.borderColor = 'rgba(168, 85, 247, 0.3)';
+                        badge.innerHTML = '⏱️ TRIAL 3 DÍAS';
+
+                        desc.innerHTML = `Plugin: <strong>${data.plugin_name || plugin}</strong> • Modalidad: <strong>Prueba 3 Días</strong> • Equipos: <strong>${data.max_devices || maxDevices}</strong><br><span style="color:#d8b4fe; font-size:0.73rem;">⏳ Los 3 días comenzarán a correr en su DAW (FL Studio, Ableton, Logic...) a partir de su primera activación.</span>`;
+                    } else {
+                        badge.style.background = 'rgba(34, 197, 94, 0.15)';
+                        badge.style.color = '#4ade80';
+                        badge.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+                        badge.innerHTML = '👑 LIFETIME';
+
+                        desc.innerHTML = `Plugin: <strong>${data.plugin_name || plugin}</strong> • Modalidad: <strong>Lifetime Oficial</strong> • Equipos: <strong>${data.max_devices || maxDevices}</strong>`;
+                    }
+
+                    lastGeneratedLicense = {
+                        plugin: data.plugin_name || plugin,
+                        serial: finalKey,
+                        type: isTrial ? 'trial' : 'lifetime',
+                        devices: data.max_devices || maxDevices
+                    };
+
                     document.getElementById('gen-result-box').style.display = 'block';
-                    showToast('¡Nueva clave creada en Supabase!');
+                    showToast(isTrial ? '¡Clave Trial 3 Días creada en Supabase!' : '¡Licencia Lifetime creada en Supabase!');
                     await syncCloudLicenses(false);
                 } else {
                     throw new Error(data.error || 'Error al generar clave');
                 }
             } catch (err) {
                 console.warn('Generate key error:', err);
-                showToast('Error al conectar con la base de datos');
+                showToast(err.message || 'Error al conectar con la base de datos');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:14px;height:14px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg><span>Crear Licencia en Supabase</span>';
+                onLicenseTypeChange();
             }
         }
 
@@ -3418,6 +3532,49 @@
                 copyTextFallback(key);
                 showToast('Clave copiada: ' + key);
             }
+        }
+
+        function copyCustomerMessage() {
+            const key = document.getElementById('gen-result-key').value;
+            if (!key) {
+                showToast('Primero genera una clave');
+                return;
+            }
+
+            const pluginSelect = document.getElementById('new-plugin-select');
+            const pluginName = lastGeneratedLicense?.plugin || pluginSelect.options[pluginSelect.selectedIndex].text;
+            const isTrial = lastGeneratedLicense?.type === 'trial' || key.includes('-TRIAL-');
+
+            let slug = 'easy-mix';
+            if (pluginName.includes('Master')) slug = 'easy-master';
+            else if (pluginName.includes('Coca')) slug = 'coca-cola';
+            else if (pluginName.includes('Inka')) slug = 'inka-kola';
+            else if (pluginName.includes('Vocal')) slug = 'vocal-preset';
+            else if (pluginName.includes('Pitch')) slug = 'easy-pitch';
+
+            const links = DOWNLOAD_LINKS[slug] || DOWNLOAD_LINKS['easy-mix'];
+
+            let message = '';
+            if (isTrial) {
+                message = `¡Hola! Aquí tienes tu acceso para probar ${pluginName} durante 3 DÍAS completamente gratis:\n\n` +
+                          `🔑 SERIAL DE PRUEBA (3 DÍAS):\n${key}\n\n` +
+                          `💻 DESCARGA EL INSTALADOR:\n` +
+                          `• Windows: ${links.win}\n` +
+                          `• Mac: ${links.mac}\n\n` +
+                          `📌 NOTA IMPORTANTE:\n` +
+                          `Tus 3 días de prueba comenzarán a contar en el instante en que actives la clave dentro de tu DAW (FL Studio, Ableton, Logic, Reaper, etc.).\n\n` +
+                          `¡A romperla produciendo! 🚀\n- OFFSZN`;
+            } else {
+                message = `¡Hola! Aquí tienes los datos de tu licencia oficial de ${pluginName}:\n\n` +
+                          `🔑 SERIAL KEY (LIFETIME):\n${key}\n\n` +
+                          `💻 DESCARGA EL INSTALADOR:\n` +
+                          `• Windows: ${links.win}\n` +
+                          `• Mac: ${links.mac}\n\n` +
+                          `¡Gracias por ser parte de OFFSZN! 🚀\n- OFFSZN`;
+            }
+
+            copyTextFallback(message);
+            showToast('¡Mensaje listo para enviar al cliente copiado!');
         }
 
         // ==============================================================

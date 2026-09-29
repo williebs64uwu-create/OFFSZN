@@ -49,6 +49,13 @@ const PLUGIN_INFO_MAP = {
             mac: 'https://drive.google.com/file/d/1741Z3uG8amQ5boK1il5Ffj136sW2WHPY/view?usp=sharing'
         }
     },
+    '5000': {
+        name: 'Easy Pitch',
+        downloads: {
+            win: 'https://drive.google.com/file/d/1K58LeAnNJKUVJVKZ6kmm_xI8R9XHyQ0C/view?usp=sharing',
+            mac: 'https://drive.google.com/file/d/1Say1PQ7AqdpI_10k5IT8hqgeGvpptRNW/view?usp=sharing'
+        }
+    },
     '905': {
         name: 'Vocal Preset',
         downloads: {

@@ -15,6 +15,7 @@ class PluginDirectCheckout {
         const isMaster = this.productId === 900 || window.PLUGIN_NAME === 'Easy Master';
         const isInka = this.productId === 902 || window.PLUGIN_NAME === 'INKA KOLA' || window.PLUGIN_NAME === 'Inka Kola';
         const isVocalPreset = this.productId === 905 || window.PLUGIN_NAME === 'Vocal Preset';
+        const isPitch = this.productId === 5000 || window.PLUGIN_NAME === 'Easy Pitch' || window.PLUGIN_NAME === 'EASY PITCH';
 
         if (isCoke) {
             this.downloads = {
@@ -33,6 +34,12 @@ class PluginDirectCheckout {
                 name: 'Easy Master',
                 win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
                 mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+            };
+        } else if (isPitch) {
+            this.downloads = {
+                name: 'Easy Pitch',
+                win: 'https://drive.google.com/file/d/1K58LeAnNJKUVJVKZ6kmm_xI8R9XHyQ0C/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1Say1PQ7AqdpI_10k5IT8hqgeGvpptRNW/view?usp=sharing'
             };
         } else if (isVocalPreset) {
             this.downloads = {
@@ -142,6 +149,7 @@ class PluginDirectCheckout {
                     const isInka = this.productId === 902 || window.PLUGIN_NAME === 'INKA KOLA' || window.PLUGIN_NAME === 'Inka Kola';
                     const isMaster = this.productId === 900 || window.PLUGIN_NAME === 'Easy Master';
                     const isVocal = this.productId === 905 || window.PLUGIN_NAME === 'Vocal Preset';
+                    const isPitch = this.productId === 5000 || window.PLUGIN_NAME === 'Easy Pitch' || window.PLUGIN_NAME === 'EASY PITCH';
                     const createUrl = isCoke 
                         ? '/api/orders/coke/create' 
                         : (isPromo2x1 ? '/api/orders/promo-2x1/create' : '/api/orders/paypal/create');
@@ -161,7 +169,7 @@ class PluginDirectCheckout {
 
                     // --- META PIXEL: INITIATE CHECKOUT ---
                     if (window.MetaPixel) {
-                        const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : 'easy_mix'))));
+                        const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : (isPitch ? 'easy_pitch' : 'easy_mix')))));
                         window.MetaPixel.trackInitiateCheckout({
                             content_ids: [pluginCode],
                             content_name: isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : this.downloads.name,
@@ -218,6 +226,7 @@ class PluginDirectCheckout {
                     const isInka = this.productId === 902 || window.PLUGIN_NAME === 'INKA KOLA' || window.PLUGIN_NAME === 'Inka Kola';
                     const isMaster = this.productId === 900 || window.PLUGIN_NAME === 'Easy Master';
                     const isVocal = this.productId === 905 || window.PLUGIN_NAME === 'Vocal Preset';
+                    const isPitch = this.productId === 5000 || window.PLUGIN_NAME === 'Easy Pitch' || window.PLUGIN_NAME === 'EASY PITCH';
                     const captureUrl = isCoke 
                         ? '/api/orders/coke/capture' 
                         : (isPromo2x1 ? '/api/orders/promo-2x1/capture' : '/api/orders/paypal/capture');
@@ -238,7 +247,7 @@ class PluginDirectCheckout {
                     if (result.status === 'COMPLETED' || result.status === 'APPROVED' || result.id) {
                         // --- META PIXEL: PURCHASE (DEDUPLICATED WITH SERVER CAPI) ---
                         if (window.MetaPixel) {
-                            const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : 'easy_mix'))));
+                            const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : (isPitch ? 'easy_pitch' : 'easy_mix')))));
                             const paidAmount = result.total_price || result.amount || window.CURRENT_PROMO_PRICE || 10;
                             window.MetaPixel.trackPurchase({
                                 content_ids: [pluginCode],

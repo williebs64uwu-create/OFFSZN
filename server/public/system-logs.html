@@ -385,19 +385,37 @@
 
     <script src="/env.js"></script>
     <script>
-        // Security gate check
-        const savedKey = localStorage.getItem('offszn_owner_key');
-        const urlKey = new URLSearchParams(window.location.search).get('pin') || new URLSearchParams(window.location.search).get('admin_key');
-        if (urlKey === 'gian2030upc') {
-            localStorage.setItem('offszn_owner_key', urlKey);
-        } else if (savedKey !== 'gian2030upc') {
-            const promptKey = prompt('🔒 Acceso Restringido a Telemetría OFFSZN.\nIngrese la clave de Propietario:');
-            if (promptKey === 'gian2030upc') {
-                localStorage.setItem('offszn_owner_key', promptKey);
-            } else {
-                window.location.href = '/owner/offszn.html#telemetria';
-            }
+        // Security gate: la clave se valida siempre en el servidor (OFFSZN_VARIABLE_PANEL)
+        async function verifyOwnerKey(k) {
+            try {
+                const r = await fetch('/api/plugin/admin/verify-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin: k })
+                });
+                return r.ok;
+            } catch (e) { return false; }
         }
+        (async () => {
+            const qs = new URLSearchParams(window.location.search);
+            const urlKey = qs.get('pin') || qs.get('admin_key');
+            const savedKey = localStorage.getItem('offszn_owner_key');
+            let ok = false;
+            if (urlKey && await verifyOwnerKey(urlKey)) {
+                localStorage.setItem('offszn_owner_key', urlKey);
+                history.replaceState(null, '', window.location.pathname);
+                ok = true;
+            } else if (savedKey && await verifyOwnerKey(savedKey)) {
+                ok = true;
+            } else {
+                const promptKey = prompt('Acceso restringido a Telemetría OFFSZN. Ingrese la clave de Propietario:');
+                if (promptKey && await verifyOwnerKey(promptKey)) {
+                    localStorage.setItem('offszn_owner_key', promptKey);
+                    ok = true;
+                }
+            }
+            if (!ok) window.location.href = '/owner/offszn.html#telemetria';
+        })();
 
         const sb = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
 

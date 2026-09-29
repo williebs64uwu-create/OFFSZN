@@ -2,6 +2,7 @@ import express from 'express';
 import { 
     requestTrial, 
     activateSerial, 
+    validateLicense,
     generateWebLicense, 
     generateTrialWebLicense, 
     adminResetLicense, 
@@ -22,6 +23,7 @@ const router = express.Router();
 // Rutas usadas por el propio Plugin C++ en las peticiones HTTP (cURL/WebView)
 router.post('/request-trial', requestTrial);
 router.post('/activate', activateSerial);
+router.post('/validate', validateLicense);
 
 // Rutas usadas por la Web para generar licencias gratis ligadas a la cuenta
 router.post('/generate-web', authenticateTokenMiddleware, generateWebLicense);
@@ -34,6 +36,7 @@ router.get('/admin/ab-stats', adminGetABStats);
 
 router.post('/admin/verify-pin', adminVerifyPin);
 router.post('/admin/generate-key', adminGenerateFullKey);
+router.post('/admin/create-license', adminGenerateFullKey);
 router.get('/admin/licenses', adminListLicenses);
 router.post('/admin/licenses', adminListLicenses);
 router.post('/admin/update-status', adminUpdateLicenseStatus);

@@ -386,7 +386,7 @@ function renderExploreFeed() {
     const presetCriteria = (p) => {
         const title = (p.title || p.name || '').toLowerCase();
         // Excluir plugins de audio como Easy Mix del carrusel de presets de voces
-        if (title.includes('easy mix') || title.includes('easy master') || title.includes('inka kola') || title.includes('coca cola') || title.includes('plugin')) {
+        if (title.includes('easy mix') || title.includes('easy master') || title.includes('inka kola') || title.includes('easy pitch') || title.includes('coca cola') || title.includes('plugin')) {
             return false;
         }
         const type = (p.product_type || '').toLowerCase();

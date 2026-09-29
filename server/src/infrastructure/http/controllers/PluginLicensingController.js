@@ -2,6 +2,7 @@ import { supabase } from '../../database/connection.js';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { isAdminKey } from '../../../shared/config/adminKey.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 
 // ─── Country Resolver Helper ──────────────────────────────────────────────────
@@ -80,6 +81,32 @@ function signPayload(payload) {
     if (!privateKey) return 'no-signature';
     const signature = crypto.sign(null, Buffer.from(payload, 'utf8'), privateKey);
     return signature.toString('hex');
+}
+
+// ─── Device identity helpers ───────────────────────────────────────────────────
+// El HWID que envía el plugin es "<nombreEquipo>_<idUnicoDeDispositivo>". El nombre del equipo lo puede
+// cambiar el usuario en segundos, así que la identidad real de la máquina es SOLO la parte final.
+// Comparar el HWID completo permitía resetear una prueba gratis renombrando el PC.
+export function deviceIdOf(hwid) {
+    if (!hwid || typeof hwid !== 'string') return '';
+    const idx = hwid.lastIndexOf('_');
+    return (idx >= 0 ? hwid.slice(idx + 1) : hwid).trim();
+}
+function sameDevice(storedHwid, hwid) {
+    if (!storedHwid || !hwid) return false;
+    if (storedHwid === hwid) return true;
+    const a = deviceIdOf(storedHwid), b = deviceIdOf(hwid);
+    // Un id corto (p.ej. 'device-no-hwid') no es una identidad fiable
+    return a.length >= 8 && a === b;
+}
+
+// Firma v2: ata la respuesta al equipo (hwid), al desafío del cliente (nonce) y a la hora del servidor.
+// El plugin la verifica con la clave pública embebida: un servidor falso (hosts/proxy) no puede reciclar
+// una respuesta capturada porque el nonce cambia en cada petición.
+// Debe coincidir EXACTAMENTE con LicenseManager::buildV2Payload en el plugin.
+function signV2({ serial, licenseType, expiresAtStr, hwid, nonce, serverTime, status }) {
+    const payload = ['v2', serial, licenseType, expiresAtStr, hwid, nonce || '', serverTime, status].join('|');
+    return signPayload(payload);
 }
 
 // ─── Email: Bienvenida de Activación ──────────────────────────────────────────
@@ -271,12 +298,14 @@ export const requestTrial = async (req, res) => {
 
         // ── 1. Check if this HWID ALREADY has a trial (past or present) ──────
         // Strict: ONE trial per machine, ever. No re-trials.
+        // Se compara por ID de dispositivo (sufijo del hwid), no por nombre de equipo: renombrar el PC ya no resetea la prueba.
+        const reqDeviceId = deviceIdOf(hwid);
         const { data: existingAct } = await supabase
             .from('plugin_activations')
             .select('license_id, plugin_licenses!inner(serial_key, expires_at, license_type, plugin_name)')
-            .eq('hwid', hwid)
+            .ilike('hwid', reqDeviceId.length >= 8 ? `%${reqDeviceId}` : hwid)
             .eq('plugin_licenses.license_type', 'trial')
-            .eq('plugin_licenses.plugin_name', activePluginName)
+            .ilike('plugin_licenses.plugin_name', activePluginName) // insensible a mayúsculas: 'EASY PITCH' == 'Easy Pitch'
             .limit(1)
             .maybeSingle();
 
@@ -399,9 +428,9 @@ export const activateSerial = async (req, res) => {
         const { data: license, error: licErr } = await supabase
             .from('plugin_licenses').select('*').eq('serial_key', serial_key).single();
 
-        if (licErr || !license) return res.status(404).json({ error: 'Licencia no encontrada o inválida.' });
+        if (licErr || !license) return res.status(404).json({ error: 'Licencia no encontrada o inválida.', code: 'not_found' });
         if (license.status === 'suspended' || license.status === 'revoked' || license.status === 'banned') {
-            return res.status(403).json({ error: 'Esta licencia ha sido suspendida o revocada.' });
+            return res.status(403).json({ error: 'Esta licencia ha sido suspendida o revocada.', code: 'revoked' });
         }
 
         // ── Validation: Match Plugin product (Coca-Cola vs Inka Kola vs Easy Master vs Easy Mix vs Vocal Preset vs Easy Pitch) ──
@@ -460,8 +489,40 @@ export const activateSerial = async (req, res) => {
             .from('plugin_activations').select('*').eq('license_id', license.id);
         if (actErr) throw actErr;
 
-        const isAlreadyActivated = activations.some(a => a.hwid === hwid);
+        // Coincidencia por ID de dispositivo (no por nombre de equipo): renombrar el PC no gasta un cupo ni "rompe" la prueba.
+        const matchedActivation = activations.find(a => sameDevice(a.hwid, hwid));
+        const isAlreadyActivated = !!matchedActivation;
         const isFirstActivation = activations.length === 0;
+        if (matchedActivation && matchedActivation.hwid !== hwid && hwid !== 'device-no-hwid') {
+            // Auto-cura: guardar el nombre de equipo actual para que las siguientes validaciones coincidan exactas.
+            await supabase.from('plugin_activations').update({ hwid, device_name: device_name || matchedActivation.device_name }).eq('id', matchedActivation.id);
+        }
+        const nonce = String(req.body?.nonce || '').slice(0, 64);
+
+        // Las pruebas SIEMPRE exigen un HWID real: sin él no se puede aplicar "una prueba por equipo".
+        if (license.license_type === 'trial' && hwid === 'device-no-hwid') {
+            return res.status(400).json({ error: 'Falta el identificador del equipo (HWID). Actualiza el plugin.' });
+        }
+
+        // ── 2b. Prevent Trial Abuse: una prueba por EQUIPO (id de dispositivo) y por plugin, para siempre ──
+        // Va ANTES de arrancar el contador para no "gastar" una clave nueva en un equipo que ya no tiene derecho.
+        if (license.license_type === 'trial') {
+            const devId = deviceIdOf(hwid);
+            const { data: pastTrials, error: ptErr } = await supabase
+                .from('plugin_activations')
+                .select('license_id, plugin_licenses!inner(serial_key, plugin_name)')
+                .ilike('hwid', devId.length >= 8 ? `%${devId}` : hwid)
+                .eq('plugin_licenses.license_type', 'trial')
+                .ilike('plugin_licenses.plugin_name', license.plugin_name);
+
+            if (!ptErr && pastTrials && pastTrials.length > 0) {
+                // Con pruebas previas solo puede re-activar exactamente la misma clave de prueba
+                const sameKeyExists = pastTrials.some(pt => pt.plugin_licenses.serial_key === serial_key);
+                if (!sameKeyExists) {
+                    return res.status(403).json({ error: 'Este equipo ya utilizó una prueba gratuita anteriormente.', code: 'trial_used' });
+                }
+            }
+        }
 
         // ── 3. Dynamic Trial Countdown: Starts ONLY on first activation in DAW for NEW trials ──
         if (license.license_type === 'trial' && !license.expires_at) {
@@ -482,30 +543,12 @@ export const activateSerial = async (req, res) => {
 
         // 4. Check expiration (for trials and subscriptions)
         if (license.expires_at && new Date(license.expires_at) < new Date()) {
-            return res.status(403).json({ error: 'Tu periodo de prueba gratuito o suscripción ha expirado.' });
-        }
-
-        // 5. Prevent Trial Abuse: one trial per HWID ever per plugin
-        if (license.license_type === 'trial' && hwid !== 'device-no-hwid') {
-            const { data: pastTrials, error: ptErr } = await supabase
-                .from('plugin_activations')
-                .select('license_id, plugin_licenses!inner(serial_key, plugin_name)')
-                .eq('hwid', hwid)
-                .eq('plugin_licenses.license_type', 'trial')
-                .eq('plugin_licenses.plugin_name', license.plugin_name);
-            
-            if (!ptErr && pastTrials && pastTrials.length > 0) {
-                // If they have past trials, they can only re-activate the exact same trial key
-                const sameKeyExists = pastTrials.some(pt => pt.plugin_licenses.serial_key === serial_key);
-                if (!sameKeyExists) {
-                    return res.status(403).json({ error: 'Este equipo ya utilizó una prueba gratuita anteriormente.' });
-                }
-            }
+            return res.status(403).json({ error: 'Tu periodo de prueba gratuito o suscripción ha expirado.', code: 'expired' });
         }
 
         if (!isAlreadyActivated) {
             if (activations.length >= maxDevices) {
-                return res.status(403).json({ error: `Límite de dispositivos alcanzado (Max: ${maxDevices}). Revoca un dispositivo para activar este.` });
+                return res.status(403).json({ error: `Límite de dispositivos alcanzado (Max: ${maxDevices}). Revoca un dispositivo para activar este.`, code: 'device_limit' });
             }
             await supabase.from('plugin_activations').insert({ license_id: license.id, hwid, device_name: device_name || 'Desconocido' });
             console.log("📝 [API /activate] New device registered:", hwid);
@@ -544,6 +587,8 @@ export const activateSerial = async (req, res) => {
         }
 
         const expiresAtUnix = license.expires_at ? Math.floor(new Date(license.expires_at).getTime() / 1000) : 0;
+        const serverTime = Math.floor(Date.now() / 1000);
+        const signature_v2 = signV2({ serial: serial_key, licenseType: license.license_type, expiresAtStr, hwid, nonce, serverTime, status: 'active' });
         console.log("✅ [API /activate] Success!", { serial_key, license_type: license.license_type, expires_at: expiresAtStr, expires_at_unix: expiresAtUnix, days_remaining: daysRemaining });
         return res.json({
             success: true,
@@ -553,11 +598,73 @@ export const activateSerial = async (req, res) => {
             expires_at_unix: expiresAtUnix,
             days_remaining: daysRemaining,
             remaining_days: daysRemaining,
-            signature
+            signature,                             // v1 (compatibilidad Easy Mix): firma de "serial|expires"
+            server_time: serverTime,               // v2: hora autoritativa del servidor (anti-reloj)
+            nonce,
+            status: 'active',
+            signature_v2
         });
     } catch (error) {
         console.error('💥 [API /activate] Fatal Error:', error);
         res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+};
+
+// ─── POST /api/plugin/validate ────────────────────────────────────────────────
+// Auditoría silenciosa que el plugin hace cada ~5 h. A diferencia de /activate NUNCA registra
+// dispositivos ni arranca contadores: solo confirma que la licencia sigue vigente para ESTE equipo.
+// Body: { serial_key, hwid, plugin_name, nonce }
+// Respuestas definitivas (el plugin actúa): 200 valid / 403 revoked|expired|device_not_registered / 404 not_found.
+export const validateLicense = async (req, res) => {
+    try {
+        const rawSerial = (req.body?.serial_key || '').trim();
+        const hwid = req.body?.hwid || '';
+        const nonce = String(req.body?.nonce || '').slice(0, 64);
+        if (!rawSerial || !hwid) return res.status(400).json({ valid: false, error: 'Faltan datos', code: 'bad_request' });
+
+        const keyMatch = rawSerial.match(/(EASY|MASTER|INKA|COKE|VOCA|PITCH)-(FULL|TRIAL|SUB)-[A-Z0-9]{4,8}-[A-Z0-9]{4,8}/i);
+        const serial_key = keyMatch ? keyMatch[0].toUpperCase() : rawSerial.toUpperCase();
+
+        const { data: license } = await supabase.from('plugin_licenses').select('*').eq('serial_key', serial_key).maybeSingle();
+        if (!license) return res.status(404).json({ valid: false, error: 'Licencia no encontrada.', code: 'not_found' });
+
+        if (['suspended', 'revoked', 'banned'].includes(license.status)) {
+            return res.status(403).json({ valid: false, error: 'Licencia suspendida o revocada.', code: 'revoked' });
+        }
+
+        const { data: activations } = await supabase.from('plugin_activations').select('*').eq('license_id', license.id);
+        const matched = (activations || []).find(a => sameDevice(a.hwid, hwid));
+        if (!matched) {
+            return res.status(403).json({ valid: false, error: 'Este equipo no está registrado para esta licencia.', code: 'device_not_registered' });
+        }
+        if (matched.hwid !== hwid) {
+            await supabase.from('plugin_activations').update({ hwid }).eq('id', matched.id);
+        }
+
+        if (license.expires_at && new Date(license.expires_at) < new Date()) {
+            return res.status(403).json({ valid: false, error: 'Licencia expirada.', code: 'expired' });
+        }
+
+        const expiresAtStr = license.expires_at ? new Date(license.expires_at).toISOString() : 'never';
+        const expiresAtUnix = license.expires_at ? Math.floor(new Date(license.expires_at).getTime() / 1000) : 0;
+        const serverTime = Math.floor(Date.now() / 1000);
+        const signature_v2 = signV2({ serial: serial_key, licenseType: license.license_type, expiresAtStr, hwid, nonce, serverTime, status: 'active' });
+        return res.json({
+            valid: true,
+            success: true,
+            serial_key,
+            license_type: license.license_type,
+            expires_at: expiresAtStr,
+            expires_at_unix: expiresAtUnix,
+            server_time: serverTime,
+            nonce,
+            status: 'active',
+            signature_v2
+        });
+    } catch (error) {
+        console.error('💥 [API /validate] Fatal Error:', error);
+        // 500 = inconcluso: el plugin NO debe bloquear al usuario por un error del servidor
+        res.status(500).json({ valid: false, error: 'Error interno del servidor.', code: 'server_error' });
     }
 };
 
@@ -570,8 +677,7 @@ export const adminResetLicense = async (req, res) => {
         const { admin_key, serial_key, plugin_name } = req.body;
 
         // Shared-secret auth — must be configured in environment
-        const expectedKey = process.env.PLUGIN_ADMIN_KEY;
-        if (!expectedKey || admin_key !== expectedKey) {
+        if (!isAdminKey(admin_key)) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
@@ -642,8 +748,7 @@ export const adminResetLicense = async (req, res) => {
 export const adminDeleteLicense = async (req, res) => {
     try {
         const { admin_key, serial_key } = req.body;
-        const expectedKey = process.env.PLUGIN_ADMIN_KEY;
-        if (!expectedKey || admin_key !== expectedKey) return res.status(403).json({ error: 'Unauthorized' });
+        if (!isAdminKey(admin_key)) return res.status(403).json({ error: 'Unauthorized' });
         if (!serial_key) return res.status(400).json({ error: 'Falta serial_key' });
 
         const { data: lic } = await supabase.from('plugin_licenses').select('id').eq('serial_key', serial_key).single();
@@ -663,9 +768,7 @@ export const adminDeleteLicense = async (req, res) => {
 // Admin-only: Returns real-time A/B Testing sales & revenue stats ($5 vs $10)
 export const adminGetABStats = async (req, res) => {
     try {
-        const adminKey = req.query.admin_key || req.headers['x-admin-key'];
-        const expectedKey = process.env.PLUGIN_ADMIN_KEY;
-        if (!expectedKey || adminKey !== expectedKey) return res.status(403).json({ error: 'Unauthorized' });
+        const adminKey = req.query.admin_key || req.headers['x-admin-key'];        if (!isAdminKey(adminKey)) return res.status(403).json({ error: 'Unauthorized' });
 
         const { data: orderItems, error: itemsErr } = await supabase
             .from('order_items')
@@ -742,10 +845,8 @@ export const adminGetABStats = async (req, res) => {
 export const adminVerifyPin = async (req, res) => {
     try {
         const { pin } = req.body;
-        const validKey = process.env.PLUGIN_ADMIN_KEY;
-        const masterPin = 'gian2030upc';
 
-        if (pin && (pin === masterPin || pin === validKey)) {
+        if (isAdminKey(pin)) {
             return res.json({ success: true, authorized: true });
         }
         return res.status(401).json({ success: false, error: 'PIN o Clave no autorizada.' });
@@ -756,14 +857,12 @@ export const adminVerifyPin = async (req, res) => {
 };
 
 // ─── POST /api/plugin/admin/generate-key ───────────────────────────────────────
-// Admin-only: Generates a real FULL Lifetime license with 2 devices limit & saves in Supabase
+// Admin-only: Generates a Lifetime or Trial license & saves in Supabase
 export const adminGenerateFullKey = async (req, res) => {
     try {
-        const { admin_key, plugin_name, max_devices } = req.body;
-        const validKey = process.env.PLUGIN_ADMIN_KEY;
-        const masterPin = 'gian2030upc';
+        const { admin_key, plugin_name, max_devices, license_type = 'lifetime', serial_key, trial_days = 3 } = req.body || {};
 
-        if (!admin_key || (admin_key !== validKey && admin_key !== masterPin)) {
+        if (!isAdminKey(admin_key)) {
             return res.status(403).json({ error: 'Unauthorized: Clave de administrador inválida.' });
         }
 
@@ -778,15 +877,30 @@ export const adminGenerateFullKey = async (req, res) => {
 
         const targetPlugin = Object.keys(validPlugins).find(k => k.toLowerCase() === (plugin_name || '').toLowerCase()) || 'Easy Mix';
         const prefix = validPlugins[targetPlugin] || 'OFFSZN';
-        const devicesLimit = parseInt(max_devices) || 2; // Default 2 devices
+        
+        const isTrial = (license_type || '').toLowerCase().includes('trial');
+        const dbLicenseType = isTrial ? 'trial' : 'lifetime';
+        const typeTag = isTrial ? 'TRIAL' : 'FULL';
+        const defaultDevices = isTrial ? 1 : 2;
+        const devicesLimit = parseInt(max_devices) || defaultDevices;
 
-        const serialKey = `${prefix}-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+        // Use custom key if supplied, otherwise generate canonical format
+        let finalSerial = serial_key;
+        if (!finalSerial || typeof finalSerial !== 'string' || !finalSerial.includes('-')) {
+            const rnd1 = crypto.randomBytes(4).toString('hex').toUpperCase();
+            const rnd2 = crypto.randomBytes(4).toString('hex').toUpperCase();
+            finalSerial = `${prefix}-${typeTag}-${rnd1}-${rnd2}`;
+        } else {
+            finalSerial = finalSerial.trim().toUpperCase();
+        }
 
+        // For trials, expires_at remains null upon generation so the 3 days count down
+        // automatically from the exact moment the user activates it in their DAW (/activate)
         const { data: inserted, error: dbErr } = await supabase
             .from('plugin_licenses')
             .insert({
-                serial_key: serialKey,
-                license_type: 'lifetime',
+                serial_key: finalSerial,
+                license_type: dbLicenseType,
                 status: 'active',
                 expires_at: null,
                 max_devices: devicesLimit,
@@ -800,14 +914,14 @@ export const adminGenerateFullKey = async (req, res) => {
             throw dbErr;
         }
 
-        console.log(`🔑 [Admin] Generated NEW ${targetPlugin} Full License (${devicesLimit} devices): ${serialKey}`);
+        console.log(`🔑 [Admin] Generated NEW ${targetPlugin} ${dbLicenseType.toUpperCase()} License (${devicesLimit} devices): ${finalSerial}`);
 
         return res.json({
             success: true,
-            serial_key: serialKey,
+            serial_key: finalSerial,
             plugin_name: targetPlugin,
             max_devices: devicesLimit,
-            license_type: 'lifetime',
+            license_type: dbLicenseType,
             status: 'active'
         });
     } catch (err) {
@@ -821,10 +935,8 @@ export const adminGenerateFullKey = async (req, res) => {
 export const adminListLicenses = async (req, res) => {
     try {
         const pin = req.query.admin_key || req.headers['x-admin-key'] || req.body?.admin_key;
-        const validKey = process.env.PLUGIN_ADMIN_KEY;
-        const masterPin = 'gian2030upc';
 
-        if (!pin || (pin !== validKey && pin !== masterPin)) {
+        if (!isAdminKey(pin)) {
             return res.status(403).json({ error: 'Unauthorized: Clave de administrador inválida.' });
         }
 
@@ -850,10 +962,8 @@ export const adminListLicenses = async (req, res) => {
 export const adminUpdateLicenseStatus = async (req, res) => {
     try {
         const { admin_key, serial_key, status, max_devices } = req.body || {};
-        const validKey = process.env.PLUGIN_ADMIN_KEY;
-        const masterPin = 'gian2030upc';
 
-        if (!admin_key || (admin_key !== validKey && admin_key !== masterPin)) {
+        if (!isAdminKey(admin_key)) {
             return res.status(403).json({ error: 'Unauthorized: Clave de administrador inválida.' });
         }
 
@@ -916,10 +1026,8 @@ export const adminUpdateLicenseStatus = async (req, res) => {
 export const adminSendDispatchEmail = async (req, res) => {
     try {
         const { admin_key, to, subject, message, html, k1, k2, product, buyer, mark_used = true } = req.body || {};
-        const validKey = process.env.PLUGIN_ADMIN_KEY;
-        const masterPin = 'gian2030upc';
 
-        if (!admin_key || (admin_key !== validKey && admin_key !== masterPin)) {
+        if (!isAdminKey(admin_key)) {
             return res.status(403).json({ error: 'Unauthorized: Clave de administrador inválida.' });
         }
 
@@ -980,10 +1088,8 @@ const BI_ANALYTICS_TTL = 30000;
 export const adminGetAnalyticsFull = async (req, res) => {
     try {
         const pin = req.query.admin_key || req.query.pin || req.headers['x-admin-key'] || req.body?.admin_key || req.body?.pin;
-        const validKey = process.env.PLUGIN_ADMIN_KEY;
-        const masterPin = 'gian2030upc';
 
-        if (!pin || (pin !== validKey && pin !== masterPin)) {
+        if (!isAdminKey(pin)) {
             return res.status(403).json({ error: 'Unauthorized: Clave de administrador inválida.' });
         }
 
@@ -1079,9 +1185,24 @@ export const adminGetAnalyticsFull = async (req, res) => {
         let simulatedRevenue = 0;
         let totalGrossInDB = 0;
         const monthlyData = {};
+        const organicPaidIds = new Set();
 
         const orderMap = {};
         allOrders.forEach(o => { orderMap[o.id] = o; });
+
+        // Precio efectivo por ítem: se reparte lo REALMENTE cobrado (orders.total_price) entre los ítems
+        // de la orden. Así cupones y el recargo de PayPal no descuadran categorías vs facturación.
+        const orderItemSubtotal = {};
+        allOrderItems.forEach(i => {
+            orderItemSubtotal[i.order_id] = (orderItemSubtotal[i.order_id] || 0) + parseFloat(i.price_at_purchase || 0);
+        });
+        const effPrice = (item, o) => {
+            const list = parseFloat(item.price_at_purchase || 0);
+            if (list <= 0) return 0;
+            const sub = orderItemSubtotal[item.order_id] || 0;
+            const paid = parseFloat(o.total_price || 0);
+            return sub > 0 ? list * (paid / sub) : list;
+        };
 
         allOrders.forEach(o => {
             const val = parseFloat(o.total_price || 0);
@@ -1104,6 +1225,7 @@ export const adminGetAnalyticsFull = async (req, res) => {
                 yapeTestRevenue += val;
             } else {
                 if (val > 0) {
+                    organicPaidIds.add(o.id);
                     organicPaidCount++;
                     organicRevenue += val;
                     if (!monthlyData[m]) monthlyData[m] = { revenue: 0, orders: 0, free: 0 };
@@ -1142,7 +1264,7 @@ export const adminGetAnalyticsFull = async (req, res) => {
             const p = prodMap[item.product_id] || {};
             const name = (p.name || '').toLowerCase();
             const type = (p.product_type || p.category || '').toLowerCase();
-            const price = parseFloat(item.price_at_purchase || 0);
+            const price = effPrice(item, o);
 
             let catKey = 'otros';
             if (name.includes('easy mix') || name.includes('easy master') || name.includes('inka') || type === 'plugin') {
@@ -1162,6 +1284,15 @@ export const adminGetAnalyticsFull = async (req, res) => {
                 categories[catKey].freeDownloads += 1;
             }
         });
+
+        // Órdenes cobradas sin ítems registrados: se cuentan en "Otros" para que las categorías sumen la facturación.
+        const ordersWithItems = new Set(allOrderItems.map(i => i.order_id));
+        organicPaidIds.forEach(id => {
+            if (ordersWithItems.has(id)) return;
+            categories.otros.revenue += parseFloat(orderMap[id]?.total_price || 0);
+            categories.otros.paidOrders += 1;
+        });
+        Object.values(categories).forEach(c => { c.revenue = Math.round(c.revenue * 100) / 100; });
 
         // 6. Strict Plugin Licenses breakdown
 
@@ -1191,7 +1322,7 @@ export const adminGetAnalyticsFull = async (req, res) => {
             const p = prodMap[item.product_id] || {};
             const name = (p.name || '').toLowerCase();
             const isPlugin = name.includes('easy mix') || name.includes('easy master') || (item.product_id === 905 || name.includes('vocal preset')) || p.product_type === 'plugin';
-            const price = parseFloat(item.price_at_purchase || 0);
+            const price = effPrice(item, o);
 
             if (isPlugin && price > 0) {
                 const normName = name.includes('easy mix') ? 'Easy Mix' : (name.includes('easy master') ? 'Easy Master' : 'Vocal Preset');
@@ -1343,7 +1474,7 @@ export const adminGetAnalyticsFull = async (req, res) => {
                            (o.guest_email && o.guest_email.toLowerCase().includes('willie'));
             if (isTest) return;
 
-            const price = parseFloat(item.price_at_purchase || 0);
+            const price = effPrice(item, o);
             const pid = item.product_id;
 
             if (presetsMap[pid]) {
@@ -1737,9 +1868,7 @@ export const adminGetAnalyticsFull = async (req, res) => {
 export const adminGetTelemetryEvents = async (req, res) => {
     try {
         const pin = req.query.admin_key || req.query.pin || req.headers['x-admin-key'];
-        const validKey = process.env.PLUGIN_ADMIN_KEY;
-        const masterPin = 'gian2030upc';
-        if (!pin || (pin !== validKey && pin !== masterPin)) {
+        if (!isAdminKey(pin)) {
             return res.status(403).json({ error: 'Unauthorized: Clave de administrador inválida.' });
         }
 

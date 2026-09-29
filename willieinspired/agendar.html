@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Agendar Sesión 1 a 1 | Willie Inspired</title>
+    <meta name="description" content="Agenda tu asesoría privada de mezcla, masterización o revisión de proyecto con Willie Inspired por Google Meet.">
+    <link rel="icon" type="image/png" sizes="32x32" href="/willieimages/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/willieimages/favicon-16x16.png">
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --bg-texture: #f3f3f5;
+            --bg-card: #ffffff;
+            --bg-card-subtle: #fafafb;
+            --stroke-light: rgba(0, 0, 0, 0.08);
+            --stroke-hover: rgba(0, 0, 0, 0.16);
+            --stroke-focus: #000000;
+            
+            --text-main: #000000;
+            --text-muted: #5e5c64;
+            --text-subtle: #8e8c95;
+            
+            --accent-magenta: #ec4899;
+            --accent-magenta-hover: #db2777;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            
+            --radius-sm: 8px;
+            --radius-md: 14px;
+            --radius-lg: 20px;
+            --radius-card: 22px;
+            --radius-pill: 9999px;
+            
+            --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-sans);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-texture);
+            background-image: url('/willieimages/bg-noise.png');
+            background-repeat: repeat;
+            background-size: 280px;
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header Editorial Willie Inspired */
+        .portal-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--stroke-light);
+            padding: 0.95rem 1.5rem;
+        }
+
+        .portal-header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #000000;
+        }
+
+        .waveform-icon {
+            display: flex;
+            align-items: center;
+            gap: 2.5px;
+            height: 18px;
+        }
+
+        .waveform-bar {
+            width: 2.5px;
+            background: #000000;
+            border-radius: 999px;
+        }
+        .waveform-bar:nth-child(1) { height: 6px; }
+        .waveform-bar:nth-child(2) { height: 13px; }
+        .waveform-bar:nth-child(3) { height: 18px; }
+        .waveform-bar:nth-child(4) { height: 11px; }
+        .waveform-bar:nth-child(5) { height: 5px; }
+
+        .brand-text {
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            text-transform: uppercase;
+        }
+
+        .brand-badge {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 3px 8px;
+            border-radius: var(--radius-pill);
+            background: #000000;
+            color: #ffffff;
+            margin-left: 6px;
+        }
+
+        .header-nav-link {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--stroke-light);
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .header-nav-link:hover {
+            color: #000000;
+            border-color: var(--stroke-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Contenedor Principal */
+        .booking-page-wrap {
+            max-width: 1180px;
+            width: 100%;
+            margin: 2.5rem auto 4rem;
+            padding: 0 1.25rem;
+            flex: 1;
+        }
+
+        /* Banner de introducción */
+        .booking-hero-intro {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            background: rgba(236, 72, 153, 0.08);
+            color: var(--accent-magenta);
+            border: 1px solid rgba(236, 72, 153, 0.25);
+            padding: 4px 12px;
+            border-radius: var(--radius-pill);
+            margin-bottom: 0.75rem;
+        }
+
+        .booking-hero-intro h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        .booking-hero-intro p {
+            font-size: 1rem;
+            color: var(--text-muted);
+            max-width: 580px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        /* Tarjeta Principal Dividida (Split Screen Cal.diy) */
+        .cal-shell-card {
+            background: var(--bg-card);
+            border: 1px solid var(--stroke-light);
+            border-radius: var(--radius-card);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 310px 1fr 240px;
+            min-height: 520px;
+            transition: all 0.3s ease;
+        }
+
+        /* ==========================================================================
+           COLUMNA 1: DETALLES DEL HOST & SELECTOR DE SERVICIO
+           ========================================================================== */
+        .col-host-details {
+            border-right: 1px solid var(--stroke-light);
+            padding: 1.8rem 1.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            background: var(--bg-card-subtle);
+        }
+
+        .host-profile-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .host-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            background: #000000;
+        }
+
+        .host-meta h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .host-meta h3 i {
+            color: #3b82f6;
+            font-size: 0.95rem;
+        }
+
+        .host-meta p {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Selector de Servicios (Pills / Cards) */
+        .service-list-title {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            color: var(--text-subtle);
+        }
+
+        .service-picker {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .service-item-btn {
+            background: #ffffff;
+            border: 1px solid var(--stroke-light);
+            border-radius: var(--radius-md);
+            padding: 10px 12px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .service-item-btn:hover {
+            border-color: var(--stroke-hover);
+            transform: translateY(-1px);
+        }
+
+        .service-item-btn.active {
+            border-color: #000000;
+            background: #ffffff;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+        }
+
+        .service-item-btn.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 4px 0 0 4px;
+            background: var(--item-color, var(--accent-magenta));
+        }
+
+        .service-btn-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+
+        .service-btn-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .service-price-tag {
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .service-price-tag.free {
+            color: var(--accent-green);
+        }
+
+        /* Descripción del Servicio Seleccionado */
+        .service-desc-box {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--stroke-light);
+            flex: 1;
+        }
+
+        /* Selector de Zona Horaria */
+        .tz-selector-wrap {
+            margin-top: auto;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--stroke-light);
+        }
+
+        .tz-label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            color: var(--text-subtle);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tz-select-input {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid var(--stroke-light);
+            border-radius: var(--radius-sm);
+            padding: 6px 10px;
+            font-size: 0.82rem;
+            color: var(--text-main);
+            outline: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .tz-select-input:focus {
+            border-color: #000000;
+        }
+
+        /* ==========================================================================
+           COLUMNA 2: CALENDARIO MENSUAL (CAL.DIY MONTH PICKER)
+           ========================================================================== */
+        .col-calendar-view {
+            padding: 2rem 2.2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .calendar-month-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .calendar-nav-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .cal-nav-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--stroke-light);
+            background: #ffffff;
+            color: var(--text-main);
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .cal-nav-btn:hover {
+            border-color: var(--stroke-hover);
+            background: var(--bg-card-subtle);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            text-align: center;
+        }
+
+        .cal-day-name {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-subtle);
+            padding-bottom: 6px;
+        }
+
+        .cal-day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-main);
+            border-radius: var(--radius-md);
+            border: 1px solid transparent;
+            cursor: pointer;
+            position: relative;
+            background: transparent;
+            transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+        }
+
+        .cal-day-cell:hover:not(.disabled) {
+            background: rgba(0, 0, 0, 0.05);
+            border-color: var(--stroke-light);
+            transform: scale(1.05);
+        }
+
+        .cal-day-cell.available {
+            font-weight: 700;
+        }
+
+        .cal-day-cell.available::after {
+            content: '';
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--accent-magenta);
+            position: absolute;
+            bottom: 5px;
+        }
+
+        .cal-day-cell.selected {
+            background: #000000 !important;
+            color: #ffffff !important;
+            border-color: #000000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            transform: scale(1.08);
+        }
+
+        .cal-day-cell.selected::after {
+            background: #ffffff;
+        }
+
+        .cal-day-cell.disabled {
+            color: rgba(0, 0, 0, 0.2);
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .cal-day-cell.today {
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+
+        /* ==========================================================================
+           COLUMNA 3: SLOTS DE HORARIOS DISPONIBLES
+           ========================================================================== */
+        .col-slots-view {
+            border-left: 1px solid var(--stroke-light);
+            padding: 1.8rem 1.4rem;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+        }
+
+        .slots-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .slots-date-badge {
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .format-toggle {
+            display: flex;
+            gap: 2px;
+            background: var(--bg-texture);
+            border: 1px solid var(--stroke-light);
+            border-radius: 6px;
+            padding: 2px;
+        }
+
+        .format-btn {
+            border: 0;
+            background: transparent;
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .format-btn.active {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .slots-scroll-area {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            max-height: 420px;
+            padding-right: 4px;
+        }
+
+        /* Scrollbar sutil */
+        .slots-scroll-area::-webkit-scrollbar {
+            width: 4px;
+        }
+        .slots-scroll-area::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 999px;
+        }
+
+        .slot-btn-group {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .slot-time-btn {
+            flex: 1;
+            padding: 10px 12px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--text-main);
+            background: #ffffff;
+            border: 1px solid var(--stroke-light);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            text-align: center;
+            font-family: var(--font-mono);
+            transition: all 0.15s ease;
+        }
+
+        .slot-time-btn:hover {
+            border-color: #000000;
+            background: var(--bg-card-subtle);
+        }
+
+        .slot-btn-group.selected .slot-time-btn {
+            background: var(--bg-card-subtle);
+            border-color: #000000;
+            flex: 1;
+        }
+
+        .slot-confirm-btn {
+            display: none;
+            padding: 10px 14px;
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #ffffff;
+            background: #000000;
+            border: 1px solid #000000;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            white-space: nowrap;
+            animation: slotConfirmPop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .slot-btn-group.selected .slot-confirm-btn {
+            display: block;
+        }
+
+        @keyframes slotConfirmPop {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .no-slots-placeholder {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-subtle);
+            font-size: 0.84rem;
+            line-height: 1.5;
+        }
+
+        .no-slots-placeholder i {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-subtle);
+        }
+
+        /* ==========================================================================
+           PASO 2: FORMULARIO DE DETALLES DEL ARTISTA / TAREAS PREVIAS
+           ========================================================================== */
+        .step-panel {
+            display: none;
+            width: 100%;
+        }
+
+        .step-panel.active {
+            display: block;
+        }
+
+        .booking-form-wrap {
+            padding: 2.5rem 3rem;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .form-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .form-back-btn:hover {
+            color: #000000;
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .form-summary-card {
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--stroke-light);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .summary-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .summary-time {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .summary-price {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #000000;
+        }
+
+        .form-group-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-field.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-field label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid var(--stroke-light);
+            border-radius: var(--radius-md);
+            padding: 11px 14px;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus {
+            border-color: #000000;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .form-field textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn-submit-booking {
+            width: 100%;
+            background: #000000;
+            color: #ffffff;
+            border: 0;
+            border-radius: var(--radius-md);
+            padding: 14px 20px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-submit-booking:hover {
+            background: #222222;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .btn-submit-booking:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ==========================================================================
+           PASO 3: CONFIRMACIÓN DE ÉXITO (SUCCESS CHECKOUT)
+           ========================================================================== */
+        .confirmation-view {
+            padding: 3rem 2rem;
+            text-align: center;
+            max-width: 580px;
+            margin: 0 auto;
+        }
+
+        .success-circle-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+            display: grid;
+            place-items: center;
+            font-size: 1.8rem;
+            margin: 0 auto 1.25rem;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .confirmation-view h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+
+        .confirmation-view p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+
+        .confirmed-details-card {
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--stroke-light);
+            border-radius: var(--radius-card);
+            padding: 1.5rem;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-row i {
+            color: var(--text-subtle);
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .calendar-sync-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-cal-sync {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-cal-google {
+            background: #ffffff;
+            color: #000000;
+            border: 1px solid var(--stroke-light);
+        }
+
+        .btn-cal-google:hover {
+            border-color: var(--stroke-hover);
+            background: var(--bg-card-subtle);
+        }
+
+        .btn-cal-ics {
+            background: #000000;
+            color: #ffffff;
+            border: 1px solid #000000;
+        }
+
+        .btn-cal-ics:hover {
+            background: #222222;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 960px) {
+            .cal-shell-card {
+                grid-template-columns: 1fr;
+                border-radius: var(--radius-lg);
+            }
+            .col-host-details {
+                border-right: 0;
+                border-bottom: 1px solid var(--stroke-light);
+            }
+            .col-slots-view {
+                border-left: 0;
+                border-top: 1px solid var(--stroke-light);
+            }
+            .form-group-grid {
+                grid-template-columns: 1fr;
+            }
+            .calendar-sync-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header Portal Willie Inspired -->
+    <header class="portal-header">
+        <div class="portal-header-inner">
+            <a href="/willieinspired" class="brand-link">
+                <div class="waveform-icon">
+                    <span class="waveform-bar"></span>
+                    <span class="waveform-bar"></span>
+                    <span class="waveform-bar"></span>
+                    <span class="waveform-bar"></span>
+                    <span class="waveform-bar"></span>
+                </div>
+                <span class="brand-text">WILLIE INSPIRED</span>
+                <span class="brand-badge">AGENDAR</span>
+            </a>
+
+            <a href="/willieinspired" class="header-nav-link">
+                <i class="bi bi-arrow-left"></i>
+                <span>Tienda de Presets</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Contenedor Principal -->
+    <main class="booking-page-wrap">
+
+        <div class="booking-hero-intro">
+            <div class="hero-badge-pill">
+                <i class="bi bi-broadcast"></i> Sesiones 1 a 1 en Vivo
+            </div>
+            <h1>Agenda tu Sesión con Willie</h1>
+            <p>Revisión quirúrgica de stems, afinación vocal, masterización y optimización de tu cadena de mezcla en FL Studio.</p>
+        </div>
+
+        <!-- PASO 1: SELECCIÓN DE SERVICIO, DÍA Y HORA (SPLIT VIEW) -->
+        <div class="step-panel active" id="stepPickSlot">
+            <div class="cal-shell-card">
+                
+                <!-- Columna 1: Host & Servicios -->
+                <div class="col-host-details">
+                    <div class="host-profile-row">
+                        <img src="/willieimages/favicon-32x32.png" alt="Willie Inspired" class="host-avatar" onerror="this.src='https://ui-avatars.com/api/?name=Willie+Inspired&background=000&color=fff'">
+                        <div class="host-meta">
+                            <h3>Willie Inspired <i class="bi bi-patch-check-fill"></i></h3>
+                            <p>📀 +1,500 artistas producidos</p>
+                        </div>
+                    </div>
+
+                    <div class="service-list-title">Selecciona el tipo de sesión:</div>
+                    <div class="service-picker" id="servicePickerContainer">
+                        <!-- Renderizado dinámicamente -->
+                    </div>
+
+                    <div class="service-desc-box" id="serviceDescDisplay">
+                        <!-- Descripción del servicio activo -->
+                    </div>
+
+                    <div class="tz-selector-wrap">
+                        <div class="tz-label">
+                            <i class="bi bi-globe"></i> Zona Horaria
+                        </div>
+                        <select id="timezoneSelect" class="tz-select-input">
+                            <option value="America/Lima">América/Lima (GMT-5)</option>
+                            <option value="America/Bogota">América/Bogotá (GMT-5)</option>
+                            <option value="America/Mexico_City">América/Ciudad de México (GMT-6)</option>
+                            <option value="America/Santiago">América/Santiago (GMT-3)</option>
+                            <option value="America/Argentina/Buenos_Aires">América/Buenos Aires (GMT-3)</option>
+                            <option value="Europe/Madrid">Europa/Madrid (CET)</option>
+                            <option value="America/New_York">América/Nueva York (EDT)</option>
+                            <option value="America/Los_Angeles">América/Los Ángeles (PDT)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Columna 2: Calendario Mensual -->
+                <div class="col-calendar-view">
+                    <div class="calendar-header">
+                        <div class="calendar-month-title" id="calendarMonthTitle">Octubre 2026</div>
+                        <div class="calendar-nav-buttons">
+                            <button type="button" class="cal-nav-btn" id="btnPrevMonth" aria-label="Mes anterior">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button type="button" class="cal-nav-btn" id="btnNextMonth" aria-label="Mes siguiente">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="calendar-grid">
+                        <div class="cal-day-name">Do</div>
+                        <div class="cal-day-name">Lu</div>
+                        <div class="cal-day-name">Ma</div>
+                        <div class="cal-day-name">Mi</div>
+                        <div class="cal-day-name">Ju</div>
+                        <div class="cal-day-name">Vi</div>
+                        <div class="cal-day-name">Sa</div>
+                    </div>
+
+                    <div class="calendar-grid" id="calendarDaysGrid" style="margin-top: 8px;">
+                        <!-- Días generados dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Columna 3: Horarios / Slots -->
+                <div class="col-slots-view">
+                    <div class="slots-header">
+                        <div class="slots-date-badge" id="slotsDateBadge">Selecciona fecha</div>
+                        <div class="format-toggle">
+                            <button type="button" class="format-btn active" data-fmt="12">12h</button>
+                            <button type="button" class="format-btn" data-fmt="24">24h</button>
+                        </div>
+                    </div>
+
+                    <div class="slots-scroll-area" id="slotsContainer">
+                        <div class="no-slots-placeholder">
+                            <i class="bi bi-calendar4-week"></i>
+                            Elige un día en el calendario para ver los horarios disponibles.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- PASO 2: FORMULARIO DE RESERVA / TAREAS PREVIAS -->
+        <div class="step-panel" id="stepBookingForm">
+            <div class="cal-shell-card" style="grid-template-columns: 1fr;">
+                <div class="booking-form-wrap">
+                    
+                    <button type="button" class="form-back-btn" id="btnBackToSlots">
+                        <i class="bi bi-arrow-left"></i> Cambiar fecha y hora
+                    </button>
+
+                    <div class="form-summary-card">
+                        <div>
+                            <div class="summary-title" id="formSummaryTitle">Asesoría de Mezcla</div>
+                            <div class="summary-time" id="formSummaryTime">
+                                <i class="bi bi-calendar3"></i> <span>--</span>
+                            </div>
+                        </div>
+                        <div class="summary-price" id="formSummaryPrice">$35 USD</div>
+                    </div>
+
+                    <form id="bookingSubmissionForm">
+                        <div class="form-group-grid">
+                            <div class="form-field">
+                                <label for="clientNameInput">Tu Nombre Completo *</label>
+                                <input type="text" id="clientNameInput" required placeholder="Ej: Willie / Juan Carlos">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="clientEmailInput">Tu Correo Electrónico *</label>
+                                <input type="email" id="clientEmailInput" required placeholder="correo@ejemplo.com">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="clientPhoneInput">WhatsApp / Teléfono</label>
+                                <input type="tel" id="clientPhoneInput" placeholder="+51 987 654 321">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="clientDawSelect">¿Qué DAW utilizas? *</label>
+                                <select id="clientDawSelect" required>
+                                    <option value="FL Studio 24 / 21">FL Studio (24 / 21 / 20)</option>
+                                    <option value="Ableton Live">Ableton Live (11 / 12)</option>
+                                    <option value="Logic Pro">Logic Pro</option>
+                                    <option value="Studio One">Studio One</option>
+                                    <option value="Pro Tools">Pro Tools</option>
+                                    <option value="Otro">Otro secuenciador</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field full">
+                                <label for="clientAudioLinkInput">Enlace a tu proyecto o maqueta (Opcional)</label>
+                                <input type="url" id="clientAudioLinkInput" placeholder="https://drive.google.com/... o Dropbox">
+                            </div>
+
+                            <div class="form-field full">
+                                <label for="clientGoalTextarea">¿Qué objetivo específico quieres resolver en la sesión? *</label>
+                                <textarea id="clientGoalTextarea" required placeholder="Ej: Siento que mis voces suenan opacas en 300Hz y no logro el brillo comercial sin que moleste el de-esser..."></textarea>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit-booking" id="btnConfirmBooking">
+                            <span>Confirmar Cita</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- PASO 3: CONFIRMACIÓN DE ÉXITO -->
+        <div class="step-panel" id="stepConfirmation">
+            <div class="cal-shell-card" style="grid-template-columns: 1fr;">
+                <div class="confirmation-view">
+                    
+                    <div class="success-circle-icon">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+
+                    <h2>¡Sesión Agendada con Éxito!</h2>
+                    <p>Te hemos enviado la confirmación y el enlace de la videollamada a tu correo.</p>
+
+                    <div class="confirmed-details-card">
+                        <div class="detail-row">
+                            <i class="bi bi-person-badge"></i>
+                            <div><strong>Anfitrión:</strong> Willie Inspired</div>
+                        </div>
+                        <div class="detail-row">
+                            <i class="bi bi-award"></i>
+                            <div><strong>Servicio:</strong> <span id="confServiceTitle">--</span></div>
+                        </div>
+                        <div class="detail-row">
+                            <i class="bi bi-clock"></i>
+                            <div><strong>Fecha y Hora:</strong> <span id="confDateTime">--</span></div>
+                        </div>
+                        <div class="detail-row">
+                            <i class="bi bi-camera-video"></i>
+                            <div><strong>Modalidad:</strong> <a href="#" id="confMeetLink" target="_blank" style="color: #2563eb; text-decoration: underline;">Abrir Google Meet</a></div>
+                        </div>
+                    </div>
+
+                    <div class="calendar-sync-buttons">
+                        <a href="#" id="btnGoogleCalendar" target="_blank" class="btn-cal-sync btn-cal-google">
+                            <i class="bi bi-google"></i>
+                            <span>Google Calendar</span>
+                        </a>
+                        <button type="button" id="btnDownloadIcs" class="btn-cal-sync btn-cal-ics">
+                            <i class="bi bi-calendar-event"></i>
+                            <span>Descargar .ICS</span>
+                        </button>
+                    </div>
+
+                    <a href="/willieinspired" class="form-back-btn" style="display: inline-flex;">
+                        <i class="bi bi-arrow-left"></i> Volver a Willie Inspired
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Script de Agendamiento (Frontend Controller) -->
+    <script>
+        (function initBookingApp() {
+            // Estado global de la aplicación de agendamiento
+            const state = {
+                services: [],
+                currentService: null,
+                currentDate: new Date(),
+                selectedDateStr: null,
+                selectedSlot: null,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Lima',
+                timeFormat: '12',
+                bookingResult: null
+            };
+
+            // DOM Elements
+            const servicePickerContainer = document.getElementById('servicePickerContainer');
+            const serviceDescDisplay = document.getElementById('serviceDescDisplay');
+            const timezoneSelect = document.getElementById('timezoneSelect');
+            const calendarMonthTitle = document.getElementById('calendarMonthTitle');
+            const calendarDaysGrid = document.getElementById('calendarDaysGrid');
+            const btnPrevMonth = document.getElementById('btnPrevMonth');
+            const btnNextMonth = document.getElementById('btnNextMonth');
+            const slotsContainer = document.getElementById('slotsContainer');
+            const slotsDateBadge = document.getElementById('slotsDateBadge');
+            const formatButtons = document.querySelectorAll('.format-btn');
+            
+            const stepPickSlot = document.getElementById('stepPickSlot');
+            const stepBookingForm = document.getElementById('stepBookingForm');
+            const stepConfirmation = document.getElementById('stepConfirmation');
+            const btnBackToSlots = document.getElementById('btnBackToSlots');
+            const bookingSubmissionForm = document.getElementById('bookingSubmissionForm');
+
+            // 1. Inicializar Timezone
+            if (timezoneSelect) {
+                // Verificar si existe la timezone del usuario en el selector
+                let hasTz = false;
+                for (let opt of timezoneSelect.options) {
+                    if (opt.value === state.timezone) {
+                        opt.selected = true;
+                        hasTz = true;
+                        break;
+                    }
+                }
+                if (!hasTz) {
+                    const newOpt = new Option(`${state.timezone} (Local)`, state.timezone, true, true);
+                    timezoneSelect.add(newOpt);
+                }
+
+                timezoneSelect.addEventListener('change', (e) => {
+                    state.timezone = e.target.value;
+                    if (state.selectedDateStr) {
+                        loadSlotsForDate(state.selectedDateStr);
+                    }
+                });
+            }
+
+            // 2. Cargar Servicios desde la API
+            async function fetchServices() {
+                try {
+                    const res = await fetch('/api/booking/services');
+                    const json = await res.json();
+                    if (json.success && json.data.length > 0) {
+                        state.services = json.data;
+                    } else {
+                        throw new Error('Fallback');
+                    }
+                } catch {
+                    // Fallback estático de resguardo
+                    state.services = [
+                        {
+                            slug: 'asesoria-mezcla-60min',
+                            title: 'Asesoría 1 a 1: Mezcla & Master en FL Studio',
+                            description: 'Sesión privada por Google Meet compartiendo pantalla. Revisaremos tu proyecto FLP en vivo, afinación vocal, frecuencias quirúrgicas y compresión.',
+                            duration_minutes: 60,
+                            price_usd: 35.00,
+                            color: '#ec4899'
+                        },
+                        {
+                            slug: 'revision-beat-45min',
+                            title: 'Revisión de Beat & Arreglo Musical en Vivo',
+                            description: 'Sesión de feedback técnico y creativo sobre tu instrumental. Optimización de drums, 808 sidechain y estructura para venta.',
+                            duration_minutes: 45,
+                            price_usd: 25.00,
+                            color: '#8b5cf6'
+                        },
+                        {
+                            slug: 'diagnostico-vocal-30min',
+                            title: 'Diagnóstico Rápido de Cadena Vocal',
+                            description: 'Llamada rápida para revisar tu acústica, cadena de plugins y darte la ruta para sonar profesional sin micro caro.',
+                            duration_minutes: 30,
+                            price_usd: 0.00,
+                            color: '#10b981'
+                        }
+                    ];
+                }
+
+                renderServicePicker();
+                selectService(state.services[0]);
+            }
+
+            function renderServicePicker() {
+                servicePickerContainer.innerHTML = '';
+                state.services.forEach(svc => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'service-item-btn';
+                    btn.style.setProperty('--item-color', svc.color || '#ec4899');
+                    
+                    const isFree = Number(svc.price_usd) === 0;
+                    const priceLabel = isFree ? 'Gratis' : `$${svc.price_usd} USD`;
+                    const priceClass = isFree ? 'service-price-tag free' : 'service-price-tag';
+
+                    btn.innerHTML = `
+                        <div class="service-btn-title">${svc.title}</div>
+                        <div class="service-btn-row">
+                            <span><i class="bi bi-clock"></i> ${svc.duration_minutes} min</span>
+                            <span class="${priceClass}">${priceLabel}</span>
+                        </div>
+                    `;
+
+                    btn.addEventListener('click', () => selectService(svc));
+                    servicePickerContainer.appendChild(btn);
+                });
+            }
+
+            function selectService(svc) {
+                state.currentService = svc;
+                const buttons = servicePickerContainer.querySelectorAll('.service-item-btn');
+                buttons.forEach((btn, idx) => {
+                    btn.classList.toggle('active', state.services[idx].slug === svc.slug);
+                });
+
+                serviceDescDisplay.textContent = svc.description;
+                if (state.selectedDateStr) {
+                    loadSlotsForDate(state.selectedDateStr);
+                }
+            }
+
+            // 3. Renderizar Calendario Mensual
+            function renderCalendar() {
+                const year = state.currentDate.getFullYear();
+                const month = state.currentDate.getMonth();
+
+                const monthNames = [
+                    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                ];
+                calendarMonthTitle.textContent = `${monthNames[month]} ${year}`;
+
+                calendarDaysGrid.innerHTML = '';
+
+                // Primer día del mes y total de días
+                const firstDayIndex = new Date(year, month, 1).getDay(); // 0: Dom
+                const totalDays = new Date(year, month + 1, 0).getDate();
+
+                const now = new Date();
+                const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+                // Espacios en blanco para alinear
+                for (let i = 0; i < firstDayIndex; i++) {
+                    const emptyCell = document.createElement('div');
+                    calendarDaysGrid.appendChild(emptyCell);
+                }
+
+                for (let day = 1; day <= totalDays; day++) {
+                    const dayCell = document.createElement('button');
+                    dayCell.type = 'button';
+                    dayCell.className = 'cal-day-cell';
+                    dayCell.textContent = day;
+
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const cellDate = new Date(year, month, day);
+                    const dayOfWeek = cellDate.getDay();
+
+                    // Marcar si es hoy
+                    if (dateStr === todayStr) {
+                        dayCell.classList.add('today');
+                    }
+
+                    // Deshabilitar fechas pasadas o domingos (0)
+                    const isPast = cellDate.setHours(0, 0, 0, 0) < now.setHours(0, 0, 0, 0);
+                    const isSunday = dayOfWeek === 0;
+
+                    if (isPast || isSunday) {
+                        dayCell.classList.add('disabled');
+                    } else {
+                        dayCell.classList.add('available');
+                    }
+
+                    // Marcar seleccionado
+                    if (dateStr === state.selectedDateStr) {
+                        dayCell.classList.add('selected');
+                    }
+
+                    dayCell.addEventListener('click', () => {
+                        if (dayCell.classList.contains('disabled')) return;
+                        calendarDaysGrid.querySelectorAll('.cal-day-cell').forEach(c => c.classList.remove('selected'));
+                        dayCell.classList.add('selected');
+                        state.selectedDateStr = dateStr;
+                        loadSlotsForDate(dateStr);
+                    });
+
+                    calendarDaysGrid.appendChild(dayCell);
+                }
+            }
+
+            btnPrevMonth.addEventListener('click', () => {
+                state.currentDate.setMonth(state.currentDate.getMonth() - 1);
+                renderCalendar();
+            });
+
+            btnNextMonth.addEventListener('click', () => {
+                state.currentDate.setMonth(state.currentDate.getMonth() + 1);
+                renderCalendar();
+            });
+
+            // 4. Cargar y Renderizar Slots de Hora
+            async function loadSlotsForDate(dateStr) {
+                if (!state.currentService) return;
+
+                // Formatear cabecera de fecha
+                const parts = dateStr.split('-');
+                const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                const dayName = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][d.getDay()];
+                slotsDateBadge.textContent = `${dayName} ${d.getDate()}`;
+
+                slotsContainer.innerHTML = '<div class="no-slots-placeholder"><i class="bi bi-hourglass-split"></i> Calculando horarios libres...</div>';
+
+                try {
+                    const res = await fetch(`/api/booking/slots?slug=${state.currentService.slug}&date=${dateStr}&timezone=${encodeURIComponent(state.timezone)}`);
+                    const json = await res.json();
+
+                    if (json.success && json.slots.length > 0) {
+                        renderSlots(json.slots);
+                    } else {
+                        slotsContainer.innerHTML = '<div class="no-slots-placeholder"><i class="bi bi-calendar-x"></i> No hay horarios disponibles para esta fecha.</div>';
+                    }
+                } catch {
+                    slotsContainer.innerHTML = '<div class="no-slots-placeholder"><i class="bi bi-exclamation-triangle"></i> Error al cargar horarios.</div>';
+                }
+            }
+
+            function renderSlots(slots) {
+                slotsContainer.innerHTML = '';
+
+                slots.forEach(slot => {
+                    const group = document.createElement('div');
+                    group.className = 'slot-btn-group';
+
+                    const timeLabel = state.timeFormat === '12' ? slot.time12 : slot.time24;
+
+                    const timeBtn = document.createElement('button');
+                    timeBtn.type = 'button';
+                    timeBtn.className = 'slot-time-btn';
+                    timeBtn.textContent = timeLabel;
+
+                    const confirmBtn = document.createElement('button');
+                    confirmBtn.type = 'button';
+                    confirmBtn.className = 'slot-confirm-btn';
+                    confirmBtn.textContent = 'Confirmar';
+
+                    timeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        slotsContainer.querySelectorAll('.slot-btn-group').forEach(g => g.classList.remove('selected'));
+                        group.classList.add('selected');
+                        state.selectedSlot = slot;
+                    });
+
+                    confirmBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        state.selectedSlot = slot;
+                        goToStep2Form();
+                    });
+
+                    group.appendChild(timeBtn);
+                    group.appendChild(confirmBtn);
+                    slotsContainer.appendChild(group);
+                });
+            }
+
+            // Alternador de Formato 12h / 24h
+            formatButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    formatButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.timeFormat = btn.getAttribute('data-fmt');
+                    if (state.selectedDateStr) {
+                        loadSlotsForDate(state.selectedDateStr);
+                    }
+                });
+            });
+
+            // 5. Navegación a Paso 2 (Formulario de Reserva)
+            function goToStep2Form() {
+                stepPickSlot.classList.remove('active');
+                stepBookingForm.classList.add('active');
+
+                // Llenar resumen
+                document.getElementById('formSummaryTitle').textContent = state.currentService.title;
+                const d = new Date(state.selectedSlot.startTime);
+                const timeStr = state.timeFormat === '12' ? state.selectedSlot.time12 : state.selectedSlot.time24;
+                document.getElementById('formSummaryTime').querySelector('span').textContent = `${d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })} a las ${timeStr} (${state.timezone})`;
+                
+                const isFree = Number(state.currentService.price_usd) === 0;
+                document.getElementById('formSummaryPrice').textContent = isFree ? 'Gratis' : `$${state.currentService.price_usd} USD`;
+
+                window.scrollTo({ top: 120, behavior: 'smooth' });
+            }
+
+            btnBackToSlots.addEventListener('click', () => {
+                stepBookingForm.classList.remove('active');
+                stepPickSlot.classList.add('active');
+            });
+
+            // 6. Enviar Reserva a la API
+            bookingSubmissionForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const btn = document.getElementById('btnConfirmBooking');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="bi bi-hourglass-split"></i> <span>Agendando...</span>';
+
+                const payload = {
+                    slug: state.currentService.slug,
+                    clientName: document.getElementById('clientNameInput').value.trim(),
+                    clientEmail: document.getElementById('clientEmailInput').value.trim(),
+                    clientPhone: document.getElementById('clientPhoneInput').value.trim(),
+                    clientTimezone: state.timezone,
+                    startTime: state.selectedSlot.startTime,
+                    responses: {
+                        daw: document.getElementById('clientDawSelect').value,
+                        audio_link: document.getElementById('clientAudioLinkInput').value.trim(),
+                        goal: document.getElementById('clientGoalTextarea').value.trim()
+                    }
+                };
+
+                try {
+                    const res = await fetch('/api/booking/create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const json = await res.json();
+                    if (json.success && json.data) {
+                        state.bookingResult = json.data;
+                        goToStep3Confirmation();
+                    } else {
+                        alert(json.message || 'Error al crear la reserva');
+                        btn.disabled = false;
+                        btn.innerHTML = '<span>Confirmar Cita</span> <i class="bi bi-arrow-right"></i>';
+                    }
+                } catch (err) {
+                    alert('Error de conexión al procesar la cita');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>Confirmar Cita</span> <i class="bi bi-arrow-right"></i>';
+                }
+            });
+
+            // 7. Navegación a Paso 3 (Confirmación y Sincronización de Calendario)
+            function goToStep3Confirmation() {
+                stepBookingForm.classList.remove('active');
+                stepConfirmation.classList.add('active');
+
+                const b = state.bookingResult;
+                document.getElementById('confServiceTitle').textContent = b.serviceTitle;
+                
+                const d = new Date(b.startTime);
+                document.getElementById('confDateTime').textContent = d.toLocaleString('es-ES', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                }) + ` (${b.clientTimezone})`;
+
+                const meetLink = document.getElementById('confMeetLink');
+                meetLink.href = b.meetingUrl;
+                meetLink.textContent = b.meetingUrl;
+
+                // Enlace de Google Calendar directo
+                const startIsoClean = new Date(b.startTime).toISOString().replace(/-|:|\.\d\d\d/g, "");
+                const endIsoClean = new Date(b.endTime).toISOString().replace(/-|:|\.\d\d\d/g, "");
+                const gCalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(b.serviceTitle + ' - Willie Inspired')}&dates=${startIsoClean}/${endIsoClean}&details=${encodeURIComponent('Sesión 1 a 1 por Google Meet: ' + b.meetingUrl)}&location=${encodeURIComponent(b.meetingUrl)}`;
+                document.getElementById('btnGoogleCalendar').href = gCalUrl;
+
+                // Generador de archivo .ICS (Apple Calendar / Outlook)
+                document.getElementById('btnDownloadIcs').addEventListener('click', () => {
+                    const icsContent = [
+                        'BEGIN:VCALENDAR',
+                        'VERSION:2.0',
+                        'PRODID:-//Willie Inspired//OFFSZN Booking//ES',
+                        'BEGIN:VEVENT',
+                        `UID:${b.uid}@willieinspired.offszn.lat`,
+                        `DTSTAMP:${new Date().toISOString().replace(/-|:|\.\d\d\d/g, "")}`,
+                        `DTSTART:${startIsoClean}`,
+                        `DTEND:${endIsoClean}`,
+                        `SUMMARY:${b.serviceTitle} - Willie Inspired`,
+                        `DESCRIPTION:Sesión 1 a 1 por Google Meet.\\nEnlace: ${b.meetingUrl}`,
+                        `LOCATION:${b.meetingUrl}`,
+                        'STATUS:CONFIRMED',
+                        'END:VEVENT',
+                        'END:VCALENDAR'
+                    ].join('\r\n');
+
+                    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.setAttribute('download', `sesion-willie-${b.uid}.ics`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+
+                window.scrollTo({ top: 100, behavior: 'smooth' });
+            }
+
+            // Iniciar aplicación
+            fetchServices();
+            renderCalendar();
+        })();
+    </script>
+<script src="/willieinspired/sfx.js" defer></script>
+</body>
+</html>

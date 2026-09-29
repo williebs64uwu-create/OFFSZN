@@ -1,7 +1,23 @@
 ---
 name: crear-plugin-offszn
-description: Workflow completo y arquitectura modular para crear plugins VST3/AU en OFFSZN: landings, assets multimedia, UI responsive/anti-resize, seguridad anti-abuso, seriales y compilación multiplataforma.
+description: OBSOLETO — Este skill fue fusionado en el skill unificado. Usar .agents/skills/juce-plugin-creator/SKILL.md
 ---
+
+# OBSOLETO — Usar el Skill Unificado
+
+Este skill ha sido fusionado y superado por el skill maestro:
+
+**Skill activo:** [`.agents/skills/juce-plugin-creator/SKILL.md`](file:///d:/%21OFFSZN/PROYECTOS/OFFSZN/.agents/skills/juce-plugin-creator/SKILL.md)
+
+El skill unificado contiene TODO lo que tenia este skill mas:
+- Boilerplate completo de C++ con todas las native functions (getLicenseState, setLicenseStatus, setParam, openExternalURL)
+- CMakeLists.txt template completo con reglas codesign macOS correctas
+- Script macOS build_mac_installer.sh con postinstall (xattr + AudioComponentRegistrar)
+- GitHub Actions workflow template para CI/CD macOS
+- Arquitectura de comandos de voz (Vocal Preset)
+- Checklist pre-lanzamiento completa
+
+**No usar este archivo. Usar el skill unificado.**
 
 # 🎛️ Creador de Plugins, UI Responsive y Landings OFFSZN
 

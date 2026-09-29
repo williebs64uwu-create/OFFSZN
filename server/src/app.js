@@ -39,6 +39,8 @@ import yapeRoutes from './infrastructure/http/routes/yape.routes.js';
 import willieRoutes from './infrastructure/http/routes/willie.routes.js';
 import licensePanelRoutes from './infrastructure/http/routes/license-panel.routes.js';
 import kanbanRoutes from './infrastructure/http/routes/kanban.routes.js';
+import bookingRoutes from './infrastructure/http/routes/booking.routes.js';
+import creatorApplicationRoutes from './infrastructure/http/routes/creator-application.routes.js';
 import { checkAndSendRemindersInternal } from './infrastructure/http/controllers/CalendarController.js';
 import { runSubscriptionScavenger } from './infrastructure/services/subscription-scavenger.js';
 
@@ -260,6 +262,7 @@ app.use(cors(corsOptions));
 import cookieParser from 'cookie-parser'
 import jwt from 'jsonwebtoken'
 import { JWT_SECRET, SUPABASE_URL, SUPABASE_ANON_KEY, EMAILJS_PUBLIC_KEY, EMAILOCTOPUS_API_KEY, EMAILOCTOPUS_LIST_ID, META_PIXEL_ID } from '../src/shared/config/config.js'
+import { isAdminKey } from '../src/shared/config/adminKey.js'
 
 // --- PUBLIC ENVIRONMENT VARIABLES ---
 app.get('/env.js', (req, res) => {
@@ -374,6 +377,8 @@ app.use('/api', youtubeSyncRoutes);
 app.use('/api', calendarRoutes);
 app.use('/api/pan/lic', licensePanelRoutes);
 app.use('/api', kanbanRoutes);
+app.use('/api/booking', bookingRoutes);
+app.use('/api/creators', creatorApplicationRoutes);
 
 // B. PROTECTED ROUTERS (Use global router.use(authenticateTokenMiddleware) internally)
 // These MUST come after public/hybrid ones if mounted on the same prefix (/api)
@@ -475,6 +480,16 @@ app.get(['/plugins/easy-mix', '/plugins/easy-mix.html'], (req, res) => {
         return res.sendFile(pluginsLandingPath);
     }
     return res.sendFile(path.join(rootPath, 'plugin/easy-mix.html'));
+});
+
+// Rutas directas para Easy Pitch: /plugin/ = landing para anuncios (ancla al precio), /plugins/ = showcase orgánico
+app.get(['/plugin/easy-pitch', '/plugin/easy-pitch.html'], (req, res) => {
+    const p = path.join(rootPath, 'plugin/easy-pitch.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.sendFile(path.join(rootPath, 'plugins/easy-pitch.html'));
+});
+app.get(['/plugins/easy-pitch', '/plugins/easy-pitch.html'], (req, res) => {
+    return res.sendFile(path.join(rootPath, 'plugins/easy-pitch.html'));
 });
 
 // Rutas directas para Vocal Preset
@@ -594,7 +609,7 @@ app.get(['/recovery-dashboard', '/recovery-dashboard.html', '/recovery_dashboard
 // --- 3.0.8 SYSTEM LOGS DIRECT ROUTE (PROTECTED) ---
 app.get(['/system-logs', '/system-logs.html', '/server/public/system-logs.html'], (req, res) => {
     const key = req.query.admin_key || req.query.pin || req.headers['x-admin-key'] || req.cookies?.offszn_owner_key;
-    const isAuth = key === 'gian2030upc' || key === process.env.PLUGIN_ADMIN_KEY;
+    const isAuth = isAdminKey(key);
     
     // If not authenticated via query/header/cookie, redirect to owner dashboard
     if (!isAuth) {
@@ -812,6 +827,7 @@ app.get('/sitemap.xml', async (req, res) => {
             { loc: 'https://offszn.lat/plugins/vocal-preset.html', priority: '0.9', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/easy-master.html', priority: '0.9', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/inka-kola.html', priority: '0.9', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/plugins/easy-pitch.html', priority: '0.9', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/offszn-recorder.html', priority: '0.8', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/x-flow-analyzer.html', priority: '0.8', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/legal/ayuda-y-contacto.html', priority: '0.5', changefreq: 'monthly' }
