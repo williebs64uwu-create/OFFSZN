@@ -150,9 +150,14 @@ class PluginDirectCheckout {
                     const isMaster = this.productId === 900 || window.PLUGIN_NAME === 'Easy Master';
                     const isVocal = this.productId === 905 || window.PLUGIN_NAME === 'Vocal Preset';
                     const isPitch = this.productId === 5000 || window.PLUGIN_NAME === 'Easy Pitch' || window.PLUGIN_NAME === 'EASY PITCH';
-                    const createUrl = isCoke 
+                    // Pages with their own checkout endpoint (e.g. Easy Pitch offer page) set window.PLUGIN_CHECKOUT_OVERRIDE
+                    const override = window.PLUGIN_CHECKOUT_OVERRIDE;
+                    if (override) {
+                        Object.assign(createPayload, override.getPayload ? override.getPayload() : {});
+                    }
+                    const createUrl = override ? override.createUrl : (isCoke 
                         ? '/api/orders/coke/create' 
-                        : (isPromo2x1 ? '/api/orders/promo-2x1/create' : '/api/orders/paypal/create');
+                        : (isPromo2x1 ? '/api/orders/promo-2x1/create' : '/api/orders/paypal/create'));
 
                     const response = await fetch(createUrl, {
                         method: 'POST',
@@ -227,9 +232,13 @@ class PluginDirectCheckout {
                     const isMaster = this.productId === 900 || window.PLUGIN_NAME === 'Easy Master';
                     const isVocal = this.productId === 905 || window.PLUGIN_NAME === 'Vocal Preset';
                     const isPitch = this.productId === 5000 || window.PLUGIN_NAME === 'Easy Pitch' || window.PLUGIN_NAME === 'EASY PITCH';
-                    const captureUrl = isCoke 
+                    const override = window.PLUGIN_CHECKOUT_OVERRIDE;
+                    if (override) {
+                        Object.assign(capturePayload, override.getPayload ? override.getPayload() : {});
+                    }
+                    const captureUrl = override ? override.captureUrl : (isCoke 
                         ? '/api/orders/coke/capture' 
-                        : (isPromo2x1 ? '/api/orders/promo-2x1/capture' : '/api/orders/paypal/capture');
+                        : (isPromo2x1 ? '/api/orders/promo-2x1/capture' : '/api/orders/paypal/capture'));
 
                     const response = await fetch(captureUrl, {
                         method: 'POST',
@@ -261,8 +270,12 @@ class PluginDirectCheckout {
                         }
 
                         // Display the premium success modal with the generated key(s)!
-                        const key = result.generatedLicenseKey || result.serialKey || 'EASY-FULL-XXXX-XXXX';
-                        this.showSuccessModal(key);
+                        if (Array.isArray(result.licenses) && result.licenses.length) {
+                            this.showLicensesModal(result.licenses);
+                        } else {
+                            const key = result.generatedLicenseKey || result.serialKey || 'EASY-FULL-XXXX-XXXX';
+                            this.showSuccessModal(key);
+                        }
                     } else {
                         this.hideProcessingState();
                         alert('El pago no pudo completarse. Por favor reintenta.');
@@ -530,6 +543,74 @@ class PluginDirectCheckout {
     hideProcessingState() {
         const overlay = document.getElementById('plugin-processing-overlay');
         if (overlay) overlay.classList.remove('active');
+    }
+
+    /**
+     * Success modal for endpoints that return `licenses: [{ plugin, key, downloads: { win, mac } }]`.
+     */
+    showLicensesModal(licenses) {
+        this.hideProcessingState();
+
+        let modal = document.getElementById('plugin-success-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'plugin-success-modal';
+            modal.className = 'plugin-modal-overlay';
+            document.body.appendChild(modal);
+        }
+
+        const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+        const blocks = licenses.map((lic) => `
+            <div style="text-align: left; margin-bottom: 18px;">
+                <span style="font-size: 0.8rem; font-weight: 700; color: #a1a1aa; text-transform: uppercase; letter-spacing: 1px;">${esc(lic.plugin)}</span>
+                <div class="plugin-key-container" style="margin-top: 6px; margin-bottom: 10px; padding: 12px 16px; border-color: rgba(255,255,255,0.2);">
+                    <span class="plugin-key-value" style="font-size: 0.95rem; color: #fff;">${esc(lic.key || 'Enviada a tu correo')}</span>
+                    <button class="plugin-copy-btn btn-copy-license" data-key="${esc(lic.key || '')}" style="padding: 6px 12px; font-size: 0.8rem; background: #fff; color: #000;">Copiar</button>
+                </div>
+                <div class="plugin-download-buttons">
+                    <a href="${esc(lic.downloads?.win || '#')}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer" style="padding: 10px; font-size: 0.85rem;">
+                        <i class="bi bi-windows"></i> Windows
+                    </a>
+                    <a href="${esc(lic.downloads?.mac || '#')}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer" style="padding: 10px; font-size: 0.85rem;">
+                        <i class="bi bi-apple"></i> macOS
+                    </a>
+                </div>
+            </div>
+        `).join('');
+
+        modal.innerHTML = `
+            <div class="plugin-modal-card" style="border-color: rgba(255,255,255,0.12); box-shadow: 0 30px 60px rgba(0,0,0,0.7);">
+                <button class="plugin-modal-close-x" id="plugin-modal-close-x" title="Cerrar">&times;</button>
+                <div class="plugin-modal-success-icon" style="background: #fff; border-color: #fff; color: #000; box-shadow: none;">
+                    <i class="bi bi-check-lg"></i>
+                </div>
+                <h2 class="plugin-modal-title" style="background: none; -webkit-text-fill-color: #fff; color: #fff;">¡Compra completada!</h2>
+                <p class="plugin-modal-desc" style="margin-bottom: 22px;">
+                    ${licenses.length > 1 ? 'Aquí tienes tus licencias de por vida' : 'Aquí tienes tu licencia de por vida'}. También te las enviamos a tu correo.
+                </p>
+                ${blocks}
+            </div>
+        `;
+
+        modal.querySelector('#plugin-modal-close-x').addEventListener('click', () => {
+            modal.classList.remove('active');
+        });
+
+        modal.querySelectorAll('.btn-copy-license').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const key = btn.getAttribute('data-key');
+                if (!key) return;
+                navigator.clipboard.writeText(key).then(() => {
+                    btn.innerText = 'Copiado';
+                    setTimeout(() => { btn.innerText = 'Copiar'; }, 2000);
+                }).catch((err) => console.error('Copy failed:', err));
+            });
+        });
+
+        setTimeout(() => {
+            modal.classList.add('active');
+        }, 100);
     }
 
     showSuccessModal(serialKey) {

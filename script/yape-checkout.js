@@ -836,7 +836,13 @@
                     bodyPayload.customPricePEN = Number(window.YAPE_FIXED_PRICE_PEN);
                 }
 
-                const response = await fetch('/api/orders/yape/charge', {
+                // Pages with their own checkout endpoint (e.g. Easy Pitch offer page) set window.YAPE_CHECKOUT_OVERRIDE
+                const override = window.YAPE_CHECKOUT_OVERRIDE;
+                if (override && override.getPayload) {
+                    Object.assign(bodyPayload, override.getPayload());
+                }
+
+                const response = await fetch(override ? override.chargeUrl : '/api/orders/yape/charge', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(bodyPayload)
@@ -867,7 +873,41 @@
 
             const isPromo2x1 = Boolean(data.isPromo2x1 || data.bonusSerialKey || window.IS_PROMO_2X1);
 
-            if (isPromo2x1 && (data.bonusSerialKey || data.serialKey)) {
+            if (Array.isArray(data.licenses) && data.licenses.length) {
+                const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+                const cards = data.licenses.map((lic) => `
+                    <div class="yape-license-card" style="margin-bottom:12px;">
+                        <span style="font-size:0.72rem; color:#a1a1aa; text-transform:uppercase; letter-spacing:1px; font-weight:700;">${esc(lic.plugin)}</span>
+                        <div class="yape-key-text" style="font-size:0.95rem; color:#fff;">${esc(lic.key || 'Enviada a tu correo')}</div>
+                        <button type="button" class="yape-btn-copy" data-copy="${esc(lic.key || '')}">Copiar clave</button>
+                        <div class="yape-download-actions" style="margin-top:10px;">
+                            <a href="${esc(lic.downloads?.win || '#')}" target="_blank" rel="noopener noreferrer" class="yape-download-btn yape-download-win">Windows</a>
+                            <a href="${esc(lic.downloads?.mac || '#')}" target="_blank" rel="noopener noreferrer" class="yape-download-btn yape-download-mac">macOS</a>
+                        </div>
+                    </div>
+                `).join('');
+
+                successView.innerHTML = `
+                    <div class="yape-success-icon-wrap">
+                        <i class="bi bi-check-lg"></i>
+                    </div>
+                    <h2 style="font-size:1.25rem; font-weight:800; margin:0 0 6px;">¡Pago con Yape exitoso!</h2>
+                    <p style="color:#a1a1aa; font-size:0.82rem; margin:0 0 16px;">${esc(data.offerName || '')} — ${data.licenses.length > 1 ? 'tus licencias de por vida' : 'tu licencia de por vida'}:</p>
+                    ${cards}
+                    <p style="color:#71717a; font-size:0.75rem; margin-top:12px;">También te las enviamos a tu correo.</p>
+                `;
+
+                successView.querySelectorAll('[data-copy]').forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        const key = btn.getAttribute('data-copy');
+                        if (!key) return;
+                        navigator.clipboard.writeText(key).then(() => {
+                            btn.innerText = '¡Copiado!';
+                            setTimeout(() => { btn.innerText = 'Copiar clave'; }, 2000);
+                        });
+                    });
+                });
+            } else if (isPromo2x1 && (data.bonusSerialKey || data.serialKey)) {
                 const mixKey = data.serialKey || 'Activo en tu cuenta';
                 const masterKey = data.bonusSerialKey || 'Activo en tu cuenta';
 
