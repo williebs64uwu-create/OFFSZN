@@ -488,6 +488,9 @@ app.get(['/plugin/easy-pitch', '/plugin/easy-pitch.html'], (req, res) => {
     if (fs.existsSync(p)) return res.sendFile(p);
     return res.sendFile(path.join(rootPath, 'plugins/easy-pitch.html'));
 });
+app.get(['/plugin/easy-pitch/comprar', '/plugins/easy-pitch/comprar', '/easy-pitch/comprar'], (req, res) => {
+    return res.sendFile(path.join(rootPath, 'plugins/easy-pitch-comprar.html'));
+});
 app.get(['/plugins/easy-pitch', '/plugins/easy-pitch.html'], (req, res) => {
     return res.sendFile(path.join(rootPath, 'plugins/easy-pitch.html'));
 });

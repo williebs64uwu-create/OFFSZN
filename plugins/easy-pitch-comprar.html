@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprar Easy Pitch | Oferta por tiempo limitado — OFFSZN</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/png" sizes="32x32" href="/willieimages/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/willieimages/favicon-16x16.png">
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/willieimages/apple-touch-icon.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --accent: #f2379f;
+            --accent-soft: rgba(242, 55, 159, 0.12);
+            --accent-line: rgba(242, 55, 159, 0.4);
+            --bg: #000000;
+            --card: #0a0a0a;
+            --line: rgba(255, 255, 255, 0.08);
+            --muted: #a1a1aa;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body { width: 100%; overflow-x: hidden; }
+
+        body {
+            font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: #fff;
+            min-height: 100vh;
+            padding-top: 60px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ==================== NAVBAR + CONTADOR ==================== */
+        .ep-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(10, 10, 12, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--line);
+            z-index: 1000;
+        }
+
+        .ep-nav-inner {
+            max-width: 1120px;
+            height: 100%;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .ep-nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .ep-nav-logo { height: 24px; width: auto; display: block; }
+
+        .ep-nav-badge {
+            background: var(--accent-soft);
+            color: var(--accent);
+            border: 1px solid rgba(242, 55, 159, 0.35);
+            font-size: 0.66rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+        }
+
+        .ep-offer-timer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #e4e4e7;
+            white-space: nowrap;
+        }
+
+        .ep-offer-timer i { color: var(--accent); }
+
+        .ep-timer-value {
+            font-family: 'Geist Mono', ui-monospace, monospace;
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: #fff;
+            background: var(--accent-soft);
+            border: 1px solid rgba(242, 55, 159, 0.35);
+            padding: 4px 10px;
+            border-radius: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        /* ==================== HEADER ==================== */
+        .ep-header {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 56px 20px 8px;
+            text-align: center;
+        }
+
+        .ep-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--accent);
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .ep-title {
+            font-size: clamp(2rem, 4.2vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -0.8px;
+            line-height: 1.12;
+            margin-bottom: 14px;
+        }
+
+        .ep-subtitle {
+            color: var(--muted);
+            font-size: 1.05rem;
+            line-height: 1.55;
+        }
+
+        /* ==================== LAYOUT ==================== */
+        .ep-main {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 40px 24px 90px;
+            display: grid;
+            grid-template-columns: 1fr 440px;
+            grid-template-rows: auto 1fr;
+            column-gap: 40px;
+            row-gap: 24px;
+            align-items: start;
+        }
+
+        .ep-step-label {
+            color: var(--muted);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        /* ==================== OPCIONES ==================== */
+        .ep-options {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .ep-option {
+            position: relative;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 18px;
+            width: 100%;
+            text-align: left;
+            background: var(--card);
+            border: 1.5px solid var(--line);
+            border-radius: 20px;
+            padding: 20px 22px;
+            color: inherit;
+            font-family: inherit;
+            cursor: pointer;
+            transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+        }
+
+        .ep-option:hover { border-color: rgba(255, 255, 255, 0.18); }
+
+        .ep-option.selected {
+            border-color: var(--accent-line);
+            background: rgba(242, 55, 159, 0.05);
+            box-shadow: 0 0 0 4px rgba(242, 55, 159, 0.08);
+        }
+
+        .ep-radio {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: border-color 0.2s ease;
+        }
+
+        .ep-option.selected .ep-radio { border-color: var(--accent); }
+
+        .ep-option.selected .ep-radio::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .ep-option-body { min-width: 0; }
+
+        .ep-option-images {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .ep-option-images img {
+            height: 54px;
+            width: auto;
+            max-width: 110px;
+            object-fit: contain;
+        }
+
+        .ep-plus {
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 1.1rem;
+        }
+
+        .ep-option-name,
+        .ep-option-desc { display: block; }
+
+        .ep-option-name {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            margin-bottom: 4px;
+        }
+
+        .ep-option-desc {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.45;
+        }
+
+        .ep-option-price {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .ep-option-old {
+            display: block;
+            color: rgba(255, 255, 255, 0.3);
+            text-decoration: line-through;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .ep-option-new {
+            font-size: 1.7rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .ep-option-tag {
+            position: absolute;
+            top: -11px;
+            right: 20px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .ep-checks {
+            grid-column: 1;
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 28px;
+            padding: 22px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+        }
+
+        .ep-checks li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #e4e4e7;
+            font-size: 0.98rem;
+            font-weight: 500;
+        }
+
+        .ep-checks i { color: #fff; font-size: 1.05rem; }
+
+        /* ==================== TARJETA DE PAGO ==================== */
+        .ep-pay-card {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+            position: sticky;
+            top: 84px;
+            background: rgba(242, 55, 159, 0.05);
+            border: 1.5px solid var(--accent-line);
+            border-radius: 22px;
+            padding: 30px 26px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(242, 55, 159, 0.1);
+        }
+
+        .ep-pay-summary-label {
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .ep-pay-product {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            margin-bottom: 4px;
+        }
+
+        .ep-pay-platform {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 18px;
+        }
+
+        .ep-pay-price {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px 0 20px;
+            border-top: 1px solid var(--line);
+        }
+
+        .ep-pay-old {
+            font-size: 1.2rem;
+            text-decoration: line-through;
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 500;
+        }
+
+        .ep-pay-new {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .ep-pay-unit { font-size: 1rem; color: #888; }
+
+        .ep-pay-save {
+            text-align: center;
+            color: var(--accent);
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin: -10px 0 18px;
+        }
+
+        .ep-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-family: inherit;
+            font-weight: 800;
+            font-size: 1rem;
+            text-decoration: none;
+            cursor: pointer;
+            margin-bottom: 12px;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+        }
+
+        .ep-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+
+        .ep-btn-paypal { background: #ffc439; color: #003087; }
+        .ep-btn-paypal b { color: #009cde; font-style: italic; }
+        .ep-btn-mp { background: #009ee3; color: #fff; }
+        .ep-btn-yape { background: #fff; color: #000; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15); }
+        .ep-btn-binance { background: #f0b90b; color: #000; margin-bottom: 0; }
+
+        .ep-btn img { width: 24px; height: 24px; object-fit: contain; border-radius: 5px; }
+
+        .ep-secure {
+            margin-top: 18px;
+            color: #71717a;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .ep-help {
+            display: block;
+            margin-top: 10px;
+            text-align: center;
+            color: var(--accent);
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        footer {
+            text-align: center;
+            color: #3f3f46;
+            font-size: 0.75rem;
+            padding: 0 20px 40px;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 960px) {
+            .ep-main {
+                grid-template-columns: 1fr;
+                max-width: 560px;
+                padding: 28px 16px 70px;
+                gap: 28px;
+            }
+
+            .ep-pay-card { grid-column: auto; grid-row: auto; position: static; padding: 24px 18px; }
+
+            .ep-checks { grid-column: auto; margin-top: 0; }
+        }
+
+        @media (max-width: 600px) {
+            body { padding-top: 54px; }
+
+            .ep-navbar { height: 54px; }
+
+            .ep-nav-inner { padding: 0 14px; gap: 10px; }
+
+            .ep-nav-badge { display: none; }
+
+            .ep-nav-logo { height: 20px; }
+
+            .ep-offer-timer { font-size: 0.74rem; gap: 7px; }
+
+            .ep-offer-label-long { display: none; }
+
+            .ep-timer-value { font-size: 0.78rem; padding: 3px 7px; }
+
+            .ep-header { padding: 34px 16px 0; }
+
+            .ep-subtitle { font-size: 0.95rem; }
+
+            .ep-option {
+                grid-template-columns: auto 1fr;
+                gap: 14px;
+                padding: 18px 16px;
+            }
+
+            .ep-option-price {
+                grid-column: 2;
+                text-align: left;
+                display: flex;
+                align-items: baseline;
+                gap: 8px;
+            }
+
+            .ep-option-old { display: inline; }
+
+            .ep-option-images img { height: 44px; }
+
+            .ep-pay-new { font-size: 2.6rem; }
+        }
+
+        @media (min-width: 601px) {
+            .ep-offer-label-short { display: none; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR CON CONTADOR DE OFERTA -->
+    <header class="ep-navbar">
+        <div class="ep-nav-inner">
+            <a href="/plugin/easy-pitch" class="ep-nav-brand" title="Volver a Easy Pitch">
+                <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN" class="ep-nav-logo" width="110" height="25">
+                <span class="ep-nav-badge">EASY PITCH</span>
+            </a>
+            <div class="ep-offer-timer">
+                <i class="bi bi-clock-fill"></i>
+                <span class="ep-offer-label-long">La oferta termina en</span>
+                <span class="ep-offer-label-short">Termina en</span>
+                <span class="ep-timer-value" id="ep-countdown">24h 00m 00s</span>
+            </div>
+        </div>
+    </header>
+
+    <section class="ep-header">
+        <div class="ep-kicker"><i class="bi bi-lightning-charge-fill"></i> Oferta por tiempo limitado</div>
+        <h1 class="ep-title">Elige tu versión de Easy Pitch</h1>
+        <p class="ep-subtitle">Licencia de por vida, pago único. Suma Easy Master por solo $2 más y masteriza tus temas con el mismo flujo.</p>
+    </section>
+
+    <main class="ep-main">
+
+        <!-- COLUMNA IZQUIERDA: OPCIONES -->
+        <div>
+            <div class="ep-step-label">1. Elige tu paquete</div>
+
+            <div class="ep-options" role="radiogroup" aria-label="Paquetes de Easy Pitch">
+
+                <button type="button" class="ep-option" data-option="single" role="radio" aria-checked="false">
+                    <span class="ep-radio"></span>
+                    <span class="ep-option-body">
+                        <span class="ep-option-images">
+                            <img src="/plugins/easy-pitch.png" alt="Easy Pitch">
+                        </span>
+                        <span class="ep-option-name">Easy Pitch</span>
+                        <span class="ep-option-desc">Afinación vocal en tiempo real, sin latencia.</span>
+                    </span>
+                    <span class="ep-option-price">
+                        <span class="ep-option-old">$25</span>
+                        <span class="ep-option-new">$7</span>
+                    </span>
+                </button>
+
+                <button type="button" class="ep-option selected" data-option="bundle" role="radio" aria-checked="true">
+                    <span class="ep-option-tag">MEJOR VALOR</span>
+                    <span class="ep-radio"></span>
+                    <span class="ep-option-body">
+                        <span class="ep-option-images">
+                            <img src="/plugins/easy-pitch.png" alt="Easy Pitch">
+                            <span class="ep-plus">+</span>
+                            <img src="/images/plugins/easy-master.png" alt="Easy Master">
+                        </span>
+                        <span class="ep-option-name">Easy Pitch + Easy Master</span>
+                        <span class="ep-option-desc">Afina tus voces y masteriza tus temas. 2 licencias de por vida.</span>
+                    </span>
+                    <span class="ep-option-price">
+                        <span class="ep-option-old">$50</span>
+                        <span class="ep-option-new">$9</span>
+                    </span>
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- COLUMNA DERECHA: PAGO -->
+        <aside class="ep-pay-card" id="pago">
+            <div class="ep-step-label" style="margin-bottom: 10px;">2. Elige cómo pagar</div>
+            <div class="ep-pay-summary-label">Tu pedido</div>
+            <div class="ep-pay-product" id="ep-pay-product">Easy Pitch + Easy Master</div>
+            <div class="ep-pay-platform">Licencia de por vida · Windows y Mac</div>
+
+            <div class="ep-pay-price">
+                <span class="ep-pay-old" id="ep-pay-old">$50</span>
+                <span class="ep-pay-new" id="ep-pay-new">$9</span>
+                <span class="ep-pay-unit">USD único</span>
+            </div>
+            <div class="ep-pay-save" id="ep-pay-save">Easy Master por solo $2 más</div>
+
+            <!-- PayPal: se conecta al cobro real antes de publicar (ver nota en el script) -->
+            <a class="ep-btn ep-btn-paypal" data-method="paypal" href="#" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-paypal"></i> Pagar con <b>PayPal</b>
+            </a>
+
+            <a class="ep-btn ep-btn-mp" data-method="mercadopago" href="#" target="_blank" rel="noopener noreferrer">
+                <img src="/images/payments/mercadopago.png" alt="">
+                Pagar con Mercado Pago
+            </a>
+
+            <a class="ep-btn ep-btn-yape" data-method="yape" href="#" target="_blank" rel="noopener noreferrer">
+                <img src="/images/payments/yape.png" alt="">
+                <span id="ep-yape-label">Pagar con Yape (Soles 🇵🇪)</span>
+            </a>
+
+            <a class="ep-btn ep-btn-binance" data-method="binance" href="#" target="_blank" rel="noopener noreferrer">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 2L4.5 9.5L7.33 12.33L12 7.66L16.67 12.33L19.5 9.5L12 2ZM4.5 14.5L2 12L4.5 9.5L7.33 12.33L4.5 14.5ZM19.5 14.5L16.67 12.33L19.5 9.5L22 12L19.5 14.5ZM12 22L4.5 14.5L7.33 11.67L12 16.34L16.67 11.67L19.5 14.5L12 22ZM12 13.5L9.17 10.67L12 7.84L14.83 10.67L12 13.5Z" />
+                </svg>
+                Pagar con Binance
+            </a>
+
+            <div class="ep-secure"><i class="bi bi-shield-lock-fill"></i> Transacción segura y encriptada</div>
+            <a class="ep-help" data-method="help" href="#" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-whatsapp"></i> ¿Dudas? Escríbenos por WhatsApp
+            </a>
+        </aside>
+
+        <ul class="ep-checks">
+            <li><i class="bi bi-check-lg"></i> Pago único — sin mensualidades</li>
+            <li><i class="bi bi-check-lg"></i> Windows y Mac (VST3 / AU)</li>
+            <li><i class="bi bi-check-lg"></i> Actualizaciones de por vida</li>
+            <li><i class="bi bi-check-lg"></i> Serial Key por correo al instante</li>
+            <li><i class="bi bi-check-lg"></i> Soporte por WhatsApp</li>
+        </ul>
+
+    </main>
+
+    <footer>&copy; 2026 OFFSZN. Todos los derechos reservados.</footer>
+
+    <script>
+        // ── OPCIONES Y PRECIOS ──
+        // NOTA: el cobro por PayPal a $7 / $9 necesita su propio endpoint en el servidor
+        // (hoy /api/orders/* solo acepta $5, $10, $15 o $20). Mientras tanto, todos los
+        // métodos abren WhatsApp con el paquete y el precio elegidos.
+        const OPTIONS = {
+            single: { name: 'Easy Pitch', price: 7, old: 25, save: 'Ahorras $18 hoy' },
+            bundle: { name: 'Easy Pitch + Easy Master', price: 9, old: 50, save: 'Easy Master por solo $2 más' }
+        };
+        const PEN_RATE = 3.8;
+        const WHATSAPP = 'https://wa.me/51993525005?text=';
+
+        let selected = 'bundle';
+
+        function waLink(message) {
+            return WHATSAPP + encodeURIComponent(message);
+        }
+
+        function render() {
+            const opt = OPTIONS[selected];
+            const soles = Math.round(opt.price * PEN_RATE);
+
+            document.querySelectorAll('.ep-option').forEach((el) => {
+                const isSel = el.dataset.option === selected;
+                el.classList.toggle('selected', isSel);
+                el.setAttribute('aria-checked', String(isSel));
+            });
+
+            document.getElementById('ep-pay-product').textContent = opt.name;
+            document.getElementById('ep-pay-old').textContent = '$' + opt.old;
+            document.getElementById('ep-pay-new').textContent = '$' + opt.price;
+            document.getElementById('ep-pay-save').textContent = opt.save;
+            document.getElementById('ep-yape-label').textContent = 'Pagar con Yape (S/ ' + soles + ')';
+
+            const base = 'Hola, quiero comprar ' + opt.name + ' ($' + opt.price + ' USD)';
+            const messages = {
+                paypal: base + ' con PayPal',
+                mercadopago: base + ' con Mercado Pago',
+                yape: 'Hola, quiero comprar ' + opt.name + ' por Yape (S/ ' + soles + ' soles)',
+                binance: base + ' con Binance',
+                help: 'Hola, tengo una duda sobre la oferta de ' + opt.name
+            };
+            document.querySelectorAll('[data-method]').forEach((el) => {
+                el.href = waLink(messages[el.dataset.method]);
+            });
+        }
+
+        document.querySelectorAll('.ep-option').forEach((el) => {
+            el.addEventListener('click', () => {
+                selected = el.dataset.option;
+                render();
+            });
+        });
+
+        render();
+
+        // ── CONTADOR LOCAL DE 24 HORAS (por visitante, se reinicia al llegar a 0) ──
+        (function () {
+            const KEY = 'offszn_easy_pitch_offer_24h';
+            const DURATION = 24 * 60 * 60 * 1000;
+            const el = document.getElementById('ep-countdown');
+
+            function readEnd() {
+                try { return parseInt(localStorage.getItem(KEY), 10); } catch (e) { return NaN; }
+            }
+
+            function saveEnd(value) {
+                try { localStorage.setItem(KEY, String(value)); } catch (e) { /* sin storage: solo en memoria */ }
+            }
+
+            let end = readEnd();
+            if (!end || isNaN(end) || end <= Date.now()) {
+                end = Date.now() + DURATION;
+                saveEnd(end);
+            }
+
+            function tick() {
+                let left = end - Date.now();
+                if (left <= 0) {
+                    end = Date.now() + DURATION;
+                    saveEnd(end);
+                    left = DURATION;
+                }
+                const h = Math.floor(left / 3600000);
+                const m = Math.floor((left % 3600000) / 60000);
+                const s = Math.floor((left % 60000) / 1000);
+                el.textContent = String(h).padStart(2, '0') + 'h ' + String(m).padStart(2, '0') + 'm ' + String(s).padStart(2, '0') + 's';
+            }
+
+            tick();
+            setInterval(tick, 1000);
+        })();
+    </script>
+</body>
+
+</html>
