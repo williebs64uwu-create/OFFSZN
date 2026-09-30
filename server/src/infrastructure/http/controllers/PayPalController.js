@@ -1210,11 +1210,12 @@ export const capturePayPalOrder = async (req, res) => {
                 const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola') || prodId === '902';
                 const isVocalPreset = prodName.toLowerCase().includes('vocal') || prodId === '905';
                 const isEasyPitch = prodName.toLowerCase().includes('easy pitch') || prodName.toLowerCase().includes('easypitch') || prodId === '5000';
+                const isOmni = prodName.toLowerCase().includes('omni');
                 const isPromo2x1 = item.is_promo_2x1 === true || item.product?.is_promo_2x1 === true || prodName.toLowerCase().includes('2x1') || (item.license_name || '').toLowerCase().includes('2x1') || req.body.isPromo2x1 === true;
                 
-                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch) {
+                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni) {
                     try {
-                        const pluginName = isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix')));
+                        const pluginName = isOmni ? 'Omni Plugin' : (isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix'))));
                         const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
                                                (item.product?.product_type && item.product.product_type === 'subscription');
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';
@@ -2359,8 +2360,13 @@ export const handlePayPalWebhook = async (req, res) => {
                 item.name?.toLowerCase().includes('easy pitch') || 
                 item.name?.toLowerCase().includes('easypitch')
             );
+            const hasOmniInItems = items.some(item =>
+                item.name?.toLowerCase().includes('omni')
+            );
             
-            if (description.toLowerCase().includes('easy pitch') || description.toLowerCase().includes('easypitch') || hasPitchInItems) {
+            if (description.toLowerCase().includes('omni') || hasOmniInItems) {
+                pluginToGenerate = 'Omni Plugin';
+            } else if (description.toLowerCase().includes('easy pitch') || description.toLowerCase().includes('easypitch') || hasPitchInItems) {
                 pluginToGenerate = 'Easy Pitch';
             } else if (description.toLowerCase().includes('easy master') || description.toLowerCase().includes('easymaster') || hasEasyMasterInItems) {
                 pluginToGenerate = 'Easy Master';

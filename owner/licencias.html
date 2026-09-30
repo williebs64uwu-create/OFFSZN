@@ -1227,6 +1227,10 @@
                             <span class="product-card-name">Easy Pitch</span>
                             <span class="product-card-badge" id="badge-stock-easy-pitch">-- disp</span>
                         </div>
+                        <div class="product-card-btn" data-value="omni" onclick="selectProductChip('omni')">
+                            <span class="product-card-name">Omni Plugin</span>
+                            <span class="product-card-badge" id="badge-stock-omni">-- disp</span>
+                        </div>
                     </div>
                     <input type="hidden" id="gen-product" value="easy-mix">
 
@@ -1425,6 +1429,7 @@
                     <button class="filter-pill" id="btn-prod-easymaster" onclick="setPluginProduct('Easy Master', this)">Easy Master ($30 • 6)</button>
                     <button class="filter-pill" id="btn-prod-vocal" onclick="setPluginProduct('Vocal Preset', this)">Vocal Preset ($10 • 1)</button>
                     <button class="filter-pill" id="btn-prod-easypitch" onclick="setPluginProduct('Easy Pitch', this)">Easy Pitch</button>
+                    <button class="filter-pill" id="btn-prod-omni" onclick="setPluginProduct('Omni Plugin', this)">Omni Plugin</button>
                 </div>
             </div>
 
@@ -1666,6 +1671,7 @@
                         <option value="Inka Kola">Inka Kola Plugin</option>
                         <option value="Vocal Preset">Vocal Preset V2</option>
                         <option value="Easy Pitch">Easy Pitch</option>
+                        <option value="Omni Plugin">Omni Plugin</option>
                     </select>
                 </div>
 
@@ -1881,6 +1887,10 @@
             'easy-pitch': {
                 win: 'https://drive.google.com/file/d/1K58LeAnNJKUVJVKZ6kmm_xI8R9XHyQ0C/view?usp=sharing',
                 mac: 'https://drive.google.com/file/d/1Say1PQ7AqdpI_10k5IT8hqgeGvpptRNW/view?usp=sharing'
+            },
+            'omni': {
+                win: '/downloads/Omni_Plugin_Setup.exe',
+                mac: '#'
             }
         };
 
@@ -1891,7 +1901,8 @@
             'coca-cola': 'Coca-Cola Plugin (Win/Mac)',
             'inka-kola': 'Inka Kola Plugin (Win/Mac)',
             'vocal-preset': 'Vocal Preset V2 (Win/Mac)',
-            'easy-pitch': 'Easy Pitch (Win/Mac)'
+            'easy-pitch': 'Easy Pitch (Win/Mac)',
+            'omni': 'Omni Plugin (Win/Mac)'
         };
 
         // GLOBAL APP STATE
@@ -1925,6 +1936,7 @@
             if (s.includes('master')) return 'Easy Master';
             if (s.includes('vocal')) return 'Vocal Preset';
             if (s.includes('pitch')) return 'Easy Pitch';
+            if (s.includes('omni')) return 'Omni Plugin';
             if (s.includes('coca') || s.includes('coke')) return 'Coca Cola';
             if (s.includes('inka')) return 'Inka Kola';
             if (s.includes('mix')) return 'Easy Mix';
@@ -2232,7 +2244,8 @@
                 'coca-cola': pool.filter(l => !l.used && l.plugin === 'Coca Cola').length,
                 'inka-kola': pool.filter(l => !l.used && l.plugin === 'Inka Kola').length,
                 'vocal-preset': pool.filter(l => !l.used && l.plugin === 'Vocal Preset').length,
-                'easy-pitch': pool.filter(l => !l.used && (l.plugin === 'Easy Pitch' || l.plugin === 'EASY PITCH')).length
+                'easy-pitch': pool.filter(l => !l.used && (l.plugin === 'Easy Pitch' || l.plugin === 'EASY PITCH')).length,
+                'omni': pool.filter(l => !l.used && (l.plugin === 'Omni Plugin' || l.plugin === 'OMNI PLUGIN' || l.plugin === 'Omni')).length
             };
 
             Object.entries(counts).forEach(([k, cnt]) => {
@@ -2268,6 +2281,7 @@
                 else if (val === 'inka-kola') targetPlugin = 'Inka Kola';
                 else if (val === 'vocal-preset') targetPlugin = 'Vocal Preset';
                 else if (val === 'easy-pitch') targetPlugin = 'Easy Pitch';
+                else if (val === 'omni') targetPlugin = 'Omni Plugin';
 
                 const avail = pool.filter(l => !l.used && l.plugin === targetPlugin);
                 if (avail.length > 0 && (!k1Input.value || !avail.some(l => l.serial === k1Input.value))) {
@@ -2293,6 +2307,7 @@
                 else if (val === 'inka-kola') targetPlugin = 'Inka Kola';
                 else if (val === 'vocal-preset') targetPlugin = 'Vocal Preset';
                 else if (val === 'easy-pitch') targetPlugin = 'Easy Pitch';
+                else if (val === 'omni') targetPlugin = 'Omni Plugin';
             }
 
             const avail = pool.filter(l => !l.used && l.plugin === targetPlugin);
@@ -3461,6 +3476,7 @@
                 else if (plugin.includes('Inka')) prefix = 'INKA';
                 else if (plugin.includes('Vocal')) prefix = 'VOCA';
                 else if (plugin.includes('Pitch')) prefix = 'PITCH';
+                else if (plugin.includes('Omni')) prefix = 'OMNI';
 
                 const rnd1 = Math.random().toString(16).substring(2, 6).toUpperCase();
                 const rnd2 = Math.random().toString(16).substring(2, 6).toUpperCase();

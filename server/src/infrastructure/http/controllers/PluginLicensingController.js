@@ -4,6 +4,9 @@ import fs from 'fs';
 import path from 'path';
 import { isAdminKey } from '../../../shared/config/adminKey.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
+import {
+    PLUGINS, DEFAULT_PLUGIN, extractSerial, findPluginBySerial, findPluginByName, prefixForName, checkProductMatch
+} from '../../../shared/config/pluginRegistry.js';
 
 // ─── Country Resolver Helper ──────────────────────────────────────────────────
 let cachedEmailCountryMap = null;
@@ -117,14 +120,8 @@ async function sendActivationEmail({ to, serialKey, licenseType, expiresAt }) {
         const greeting = isTrial ? 'Aquí tienes los datos de tu prueba!' : 'Felicidades por tu compra!';
         const typeLabel = isTrial ? 'TRIAL' : 'FULL';
 
-        // Auto-detect plugin name from serial prefix
-        const upperSerial = (serialKey || '').toUpperCase();
-        const isPitch  = upperSerial.startsWith('PITCH') || upperSerial.startsWith('EASY-PITCH');
-        const isCoke   = upperSerial.startsWith('COKE');
-        const isMaster = upperSerial.startsWith('MASTER');
-        const isInka   = upperSerial.startsWith('INKA');
-        const isVoca   = upperSerial.startsWith('VOCA');
-        const pluginName = isPitch ? 'Easy Pitch' : (isVoca ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInka ? 'Inka Kola' : (isMaster ? 'Easy Master' : 'Easy Mix'))));
+        // Nombre del plugin según el prefijo del serial (registro central)
+        const pluginName = (findPluginBySerial(serialKey) || DEFAULT_PLUGIN).displayName;
 
         const html = `
         <div style="font-family: Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #333;">
@@ -169,20 +166,13 @@ export const generateWebLicense = async (req, res) => {
         }
 
         // 2. Map plugin name to product IDs
-        const isPitchPlugin = (plugin_name === 'EASY PITCH' || plugin_name === 'Easy Pitch');
-        const isVocalPlugin = (plugin_name === 'Vocal Preset' || plugin_name === 'VOCAL PRESET');
-        const isCokePlugin = (plugin_name === 'COCA COLA' || plugin_name === 'Coca-Cola' || plugin_name === 'COCA-COLA');
-        const isInkaPlugin = (plugin_name === 'INKA KOLA' || plugin_name === 'Inka Kola');
-        const isMasterPlugin = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
-        const isMixPlugin = (plugin_name === 'Easy Mix' || plugin_name === 'EASY MIX');
-        
-        let validProductIds = [];
-        if (isPitchPlugin) validProductIds = [906, 907];
-        else if (isVocalPlugin) validProductIds = [905];
-        else if (isCokePlugin) validProductIds = [903];
-        else if (isInkaPlugin) validProductIds = [902];
-        else if (isMasterPlugin) validProductIds = [900];
-        else if (isMixPlugin) validProductIds = [899, 901];
+        // Los IDs de producto de cada plugin salen del registro central (Omni: variable OMNI_PRODUCT_IDS)
+        const targetPluginDef = findPluginByName(plugin_name);
+        if (!targetPluginDef) return res.status(400).json({ error: 'Plugin desconocido.' });
+        const validProductIds = targetPluginDef.productIds;
+        if (validProductIds.length === 0) {
+            return res.status(403).json({ error: 'Este producto aún no está disponible para generar licencias web.' });
+        }
 
         // 3. Verify that user has an actual paid order for this plugin
         const { data: orderItem, error: orderCheckErr } = await supabase
@@ -214,7 +204,7 @@ export const generateWebLicense = async (req, res) => {
         }
 
         // 4. Generate the new lifetime license
-        const basePrefix = isPitchPlugin ? 'PITCH' : (isVocalPlugin ? 'VOCA' : (isCokePlugin ? 'COKE' : (isInkaPlugin ? 'INKA' : (isMasterPlugin ? 'MASTER' : 'EASY'))));
+        const basePrefix = targetPluginDef.prefix;
         const serialKey = `${basePrefix}-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiresAt = null;
 
@@ -258,12 +248,7 @@ export const generateTrialWebLicense = async (req, res) => {
         }
 
         // Create new trial key with NO expiry set yet (starts countdown on first activation in DAW)
-        const isPitch  = (plugin_name === 'EASY PITCH'  || plugin_name === 'Easy Pitch');
-        const isVocal  = (plugin_name === 'Vocal Preset' || plugin_name === 'VOCAL PRESET');
-        const isCoke   = (plugin_name === 'COCA COLA'   || plugin_name === 'Coca-Cola' || plugin_name === 'COCA-COLA');
-        const isMaster = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
-        const isInka   = (plugin_name === 'INKA KOLA'   || plugin_name === 'Inka Kola');
-        const basePrefix = isPitch ? 'PITCH' : (isVocal ? 'VOCA' : (isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY'))));
+        const basePrefix = prefixForName(plugin_name);
         const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
         const { data: newLic, error: licErr } = await supabase
@@ -330,12 +315,8 @@ export const requestTrial = async (req, res) => {
         }
 
         // ── 2. No previous trial → create one ────────────────────────────────
-        const isPitch = (activePluginName === 'EASY PITCH' || activePluginName === 'Easy Pitch');
-        const isVocal = (activePluginName === 'Vocal Preset' || activePluginName === 'VOCAL PRESET');
-        const isCoke = (activePluginName === 'COCA COLA' || activePluginName === 'Coca-Cola' || activePluginName === 'COCA-COLA');
-        const isMaster = (activePluginName === 'EASY MASTER' || activePluginName === 'Easy Master');
-        const isInka = (activePluginName === 'INKA KOLA' || activePluginName === 'Inka Kola');
-        const basePrefix = isPitch ? 'PITCH' : (isVocal ? 'VOCA' : (isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY'))));
+        const trialPlugin = findPluginByName(activePluginName) || DEFAULT_PLUGIN;
+        const basePrefix = trialPlugin.prefix;
         const serialKey = `${basePrefix}-TRIAL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const expiryDate = new Date();
         const trialDays = 3;
@@ -363,12 +344,7 @@ export const requestTrial = async (req, res) => {
 // ─── Helper: Generate plugin license after purchase ────────────────────────────
 // Called internally from PayPalController after a successful plugin purchase.
 export async function generatePluginLicense({ licenseType, userEmail, userId, pluginName = 'Easy Mix' }) {
-    const isPitch = (pluginName === 'EASY PITCH' || pluginName === 'Easy Pitch');
-    const isVocal = (pluginName === 'Vocal Preset' || pluginName === 'VOCAL PRESET');
-    const isCoke = (pluginName === 'COCA COLA' || pluginName === 'Coca-Cola' || pluginName === 'COCA-COLA');
-    const isInka = (pluginName === 'INKA KOLA' || pluginName === 'Inka Kola');
-    const isMaster = (pluginName === 'EASY MASTER' || pluginName === 'Easy Master');
-    let basePrefix = isPitch ? 'PITCH' : (isVocal ? 'VOCA' : (isCoke ? 'COKE' : (isInka ? 'INKA' : (isMaster ? 'MASTER' : 'EASY'))));
+    const basePrefix = prefixForName(pluginName);
     const prefix = licenseType === 'subscription' ? `${basePrefix}-SUB` : `${basePrefix}-FULL`;
     const serialKey = `${prefix}-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
@@ -421,8 +397,7 @@ export const activateSerial = async (req, res) => {
         }
 
         // Robust extraction: Extract pure serial key pattern even if user copied "Easy Mix: EASY-FULL-..."
-        const keyMatch = rawSerial.match(/(EASY|MASTER|INKA|COKE|VOCA|PITCH)-(FULL|TRIAL|SUB)-[A-Z0-9]{4,8}-[A-Z0-9]{4,8}/i);
-        const serial_key = keyMatch ? keyMatch[0].toUpperCase() : rawSerial.toUpperCase();
+        const serial_key = extractSerial(rawSerial);
 
         // 1. Find license
         const { data: license, error: licErr } = await supabase
@@ -433,54 +408,14 @@ export const activateSerial = async (req, res) => {
             return res.status(403).json({ error: 'Esta licencia ha sido suspendida o revocada.', code: 'revoked' });
         }
 
-        // ── Validation: Match Plugin product (Coca-Cola vs Inka Kola vs Easy Master vs Easy Mix vs Vocal Preset vs Easy Pitch) ──
-        const upperSerial = (serial_key || '').toUpperCase();
-        const requestedPlugin = (req.body?.plugin_name || '').toLowerCase();
-        const registeredPlugin = (license.plugin_name || '').toLowerCase();
-
-        const isPitchKey = upperSerial.startsWith('PITCH') || upperSerial.startsWith('EASY-PITCH') || registeredPlugin.includes('pitch');
-        const isCokeKey = upperSerial.startsWith('COKE') || registeredPlugin.includes('coca') || registeredPlugin.includes('coke');
-        const isInkaKey = upperSerial.startsWith('INKA') || registeredPlugin.includes('inka');
-        const isMasterKey = upperSerial.startsWith('MASTER') || registeredPlugin.includes('master');
-        const isVocaKey = upperSerial.startsWith('VOCA') || registeredPlugin.includes('vocal');
-        const isMixKey = (upperSerial.startsWith('EASY-') && !upperSerial.startsWith('EASY-MASTER') && !upperSerial.startsWith('EASY-PITCH')) || (registeredPlugin.includes('mix') && !registeredPlugin.includes('master') && !registeredPlugin.includes('pitch'));
-
-        const isPitchReq = requestedPlugin.includes('pitch');
-        const isCokeReq = requestedPlugin.includes('coca') || requestedPlugin.includes('coke');
-        const isInkaReq = requestedPlugin.includes('inka');
-        const isMasterReq = requestedPlugin.includes('master');
-        const isVocaReq = requestedPlugin.includes('vocal') || requestedPlugin.includes('voca');
-        const isMixReq = requestedPlugin.includes('mix') && !requestedPlugin.includes('master') && !requestedPlugin.includes('pitch') && !requestedPlugin.includes('coca') && !requestedPlugin.includes('coke') && !requestedPlugin.includes('vocal');
-
-        if (isPitchReq && !isPitchKey) {
-            return res.status(403).json({ error: 'Esta licencia no pertenece a Easy Pitch.' });
-        }
-        if (isCokeReq && !isCokeKey) {
-            return res.status(403).json({ error: 'Esta licencia no pertenece a Coca-Cola Plugin.' });
-        }
-        if (isInkaReq && !isInkaKey) {
-            return res.status(403).json({ error: 'Esta licencia no pertenece a Inka Kola.' });
-        }
-        if (isMasterReq && !isMasterKey) {
-            return res.status(403).json({ error: 'Esta licencia no pertenece a Easy Master.' });
-        }
-        if (isVocaReq && !isVocaKey) {
-            return res.status(403).json({ error: 'Esta licencia no pertenece a Vocal Preset.' });
-        }
-        if (isMixReq && !isMixKey) {
-            return res.status(403).json({ error: 'Esta licencia no pertenece a Easy Mix.' });
-        }
-        if (isPitchKey && !isPitchReq && requestedPlugin.length > 0) {
-            return res.status(403).json({ error: 'Esta licencia es exclusiva para Easy Pitch y no sirve para otros plugins.' });
-        }
-        if (isCokeKey && !isCokeReq && requestedPlugin.length > 0) {
-            return res.status(403).json({ error: 'Esta licencia es exclusiva para Coca-Cola y no sirve para otros plugins.' });
-        }
-        if (isInkaKey && !isInkaReq && requestedPlugin.length > 0) {
-            return res.status(403).json({ error: 'Esta licencia es exclusiva para Inka Kola y no sirve para otros plugins.' });
-        }
-        if (isVocaKey && !isVocaReq && requestedPlugin.length > 0) {
-            return res.status(403).json({ error: 'Esta licencia es exclusiva para Vocal Preset y no sirve para otros plugins.' });
+        // ── Validación de producto: una licencia solo sirve para SU plugin (registro central: pluginRegistry.js) ──
+        const productCheck = checkProductMatch({
+            serial: serial_key,
+            licensePluginName: license.plugin_name,
+            requestedPluginName: req.body?.plugin_name
+        });
+        if (!productCheck.ok) {
+            return res.status(403).json({ error: productCheck.message, code: productCheck.code });
         }
 
         // 2. Count activations — use max_devices from DB (default 1)
@@ -526,8 +461,7 @@ export const activateSerial = async (req, res) => {
 
         // ── 3. Dynamic Trial Countdown: Starts ONLY on first activation in DAW for NEW trials ──
         if (license.license_type === 'trial' && !license.expires_at) {
-            const isCurrentInka = (license.plugin_name || '').toLowerCase().includes('inka');
-            const trialDays = isCurrentInka ? 7 : 3;
+            const trialDays = (findPluginBySerial(serial_key) || findPluginByName(license.plugin_name) || DEFAULT_PLUGIN).trialDays;
             const expiryDate = new Date();
             expiryDate.setDate(expiryDate.getDate() + trialDays);
             const newExpiresAt = expiryDate.toISOString();
@@ -622,14 +556,23 @@ export const validateLicense = async (req, res) => {
         const nonce = String(req.body?.nonce || '').slice(0, 64);
         if (!rawSerial || !hwid) return res.status(400).json({ valid: false, error: 'Faltan datos', code: 'bad_request' });
 
-        const keyMatch = rawSerial.match(/(EASY|MASTER|INKA|COKE|VOCA|PITCH)-(FULL|TRIAL|SUB)-[A-Z0-9]{4,8}-[A-Z0-9]{4,8}/i);
-        const serial_key = keyMatch ? keyMatch[0].toUpperCase() : rawSerial.toUpperCase();
+        const serial_key = extractSerial(rawSerial);
 
         const { data: license } = await supabase.from('plugin_licenses').select('*').eq('serial_key', serial_key).maybeSingle();
         if (!license) return res.status(404).json({ valid: false, error: 'Licencia no encontrada.', code: 'not_found' });
 
         if (['suspended', 'revoked', 'banned'].includes(license.status)) {
             return res.status(403).json({ valid: false, error: 'Licencia suspendida o revocada.', code: 'revoked' });
+        }
+
+        // La auditoría también verifica el producto: una licencia de otro plugin no puede "auditarse" como válida aquí
+        const productCheck = checkProductMatch({
+            serial: serial_key,
+            licensePluginName: license.plugin_name,
+            requestedPluginName: req.body?.plugin_name
+        });
+        if (!productCheck.ok) {
+            return res.status(403).json({ valid: false, error: productCheck.message, code: productCheck.code });
         }
 
         const { data: activations } = await supabase.from('plugin_activations').select('*').eq('license_id', license.id);
@@ -706,11 +649,7 @@ export const adminResetLicense = async (req, res) => {
         }
 
         // 4. Generate a new FULL lifetime key
-        const isPitchReset = (plugin_name === 'EASY PITCH' || plugin_name === 'Easy Pitch');
-        const isVocalReset = (plugin_name === 'Vocal Preset' || plugin_name === 'VOCAL PRESET');
-        const isInkaReset = (plugin_name === 'INKA KOLA' || plugin_name === 'Inka Kola');
-        const isMasterReset = (plugin_name === 'EASY MASTER' || plugin_name === 'Easy Master');
-        let basePrefix = isPitchReset ? 'PITCH' : (isVocalReset ? 'VOCA' : (isInkaReset ? 'INKA' : (isMasterReset ? 'MASTER' : 'EASY')));
+        const basePrefix = prefixForName(plugin_name);
         const newSerial = `${basePrefix}-FULL-${crypto.randomBytes(4).toString('hex').toUpperCase()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
         const { data: newLic, error: insertErr } = await supabase
             .from('plugin_licenses')
@@ -866,17 +805,10 @@ export const adminGenerateFullKey = async (req, res) => {
             return res.status(403).json({ error: 'Unauthorized: Clave de administrador inválida.' });
         }
 
-        const validPlugins = {
-            'Easy Mix': 'EASY',
-            'Easy Master': 'MASTER',
-            'Coca Cola': 'COKE',
-            'Inka Kola': 'INKA',
-            'Vocal Preset': 'VOCA',
-            'Easy Pitch': 'PITCH'
-        };
-
-        const targetPlugin = Object.keys(validPlugins).find(k => k.toLowerCase() === (plugin_name || '').toLowerCase()) || 'Easy Mix';
-        const prefix = validPlugins[targetPlugin] || 'OFFSZN';
+        // Registro central de plugins (incluye Omni Plugin). Sin nombre o desconocido → Easy Mix (comportamiento histórico).
+        const targetDef = findPluginByName(plugin_name) || DEFAULT_PLUGIN;
+        const targetPlugin = targetDef.dbName || targetDef.displayName; // nombre tal como se guarda en plugin_licenses
+        const prefix = targetDef.prefix;
         
         const isTrial = (license_type || '').toLowerCase().includes('trial');
         const dbLicenseType = isTrial ? 'trial' : 'lifetime';
