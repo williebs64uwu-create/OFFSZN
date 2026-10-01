@@ -1,0 +1,54 @@
+name: Build Windows VST3 + Installer (VOCAL PRESET v1.0.0)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'plugins/vocal-preset/**'
+      - 'mockup.html'
+      - '.github/workflows/build_vocal_preset_windows.yml'
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Verificar que existe el código C++ del plugin
+        shell: bash
+        run: |
+          if [ ! -f plugins/vocal-preset/Source/PluginProcessor.cpp ]; then
+            echo "::error::Falta plugins/vocal-preset/Source/ (PluginProcessor, PluginEditor, CommandParser, VocalEngine). Sube esa carpeta al repo y vuelve a ejecutar."
+            exit 1
+          fi
+
+      - name: Clone JUCE Framework
+        shell: bash
+        run: git clone --depth 1 --branch 8.0.13 https://github.com/juce-framework/JUCE.git JUCE
+
+      - name: Configure & Build (Release x64)
+        shell: pwsh
+        env:
+          JUCE_DIR: ${{ github.workspace }}/JUCE
+        working-directory: plugins/vocal-preset
+        run: |
+          cmake -B build -G "Visual Studio 17 2022" -A x64
+          cmake --build build --config Release --parallel
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Build Installer
+        shell: pwsh
+        working-directory: plugins/vocal-preset
+        run: '& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer.iss'
+
+      - name: Upload Windows Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OFFSZN_VocalPreset_Windows_Installer
+          path: plugins/vocal-preset/Output/OFFSZN_VocalPreset_Setup.exe

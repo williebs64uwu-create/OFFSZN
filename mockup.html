@@ -12,6 +12,18 @@
       } catch(e) {}
     })();
   </script>
+  <script>
+    // ES5 puro (corre incluso en el motor viejo de Internet Explorer).
+    // Si no hay Promise, el plugin cayó al motor IE porque falta Edge WebView2.
+    if (typeof Promise === 'undefined') {
+      window.onerror = function () { return true; };
+      document.write('<body style="margin:0;background:#08090a;color:#fff;font:14px Segoe UI,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center">' +
+        '<div style="max-width:420px;line-height:1.5"><h2>Falta Microsoft Edge WebView2</h2>' +
+        '<p>Vocal Preset necesita el runtime WebView2 para mostrar su interfaz.</p>' +
+        '<p>Reinstala con el instalador oficial de OFFSZN, o descarga el runtime en<br>' +
+        '<b>developer.microsoft.com/microsoft-edge/webview2</b><br>(Evergreen Standalone Installer) y reabre tu DAW.</p></div></body>');
+    }
+  </script>
   <title>OFFSZN Vocal Preset</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
