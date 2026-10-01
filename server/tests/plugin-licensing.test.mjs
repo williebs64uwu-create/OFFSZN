@@ -165,6 +165,43 @@ test('una licencia de Omni NO sirve en otros plugins (y viceversa)', async () =>
     assert.equal(ok.code, 200);
 });
 
+// ── Easy Level ────────────────────────────────────────────────────────────────────────────────────────────────────
+test('Easy Level: prefijo LEVEL, clave propia, firma v2 y exclusiva (no sirve en otros plugins ni al revés)', async () => {
+    const R = await import('../src/shared/config/pluginRegistry.js');
+    assert.equal(R.prefixForName('EASY LEVEL'), 'LEVEL');
+    assert.equal(R.prefixForName('Easy Level'), 'LEVEL');
+    assert.equal(R.findPluginBySerial('LEVEL-FULL-AB12CD34-EF56AB78').id, 'easy-level');
+    assert.equal(R.extractSerial('Easy Level: level-trial-ab12cd34-ef56ab78'), 'LEVEL-TRIAL-AB12CD34-EF56AB78');
+
+    const level = await newKey('Easy Level');
+    assert.match(level, /^LEVEL-FULL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    const hwid = HW('PC-WILLIE', DEV_A), nonce = 'n-level';
+    const ok = await call(C.activateSerial, { serial_key: level, hwid, plugin_name: 'EASY LEVEL', nonce });
+    assert.equal(ok.code, 200, JSON.stringify(ok.body));
+    assert.ok(verifyV2(ok, { serial: level, hwid, nonce }));
+    const v = await call(C.validateLicense, { serial_key: level, hwid, plugin_name: 'EASY LEVEL', nonce: 'n2' });
+    assert.equal(v.code, 200, JSON.stringify(v.body));
+
+    for (const other of ['Easy Pitch', 'EASY MIX', 'Omni Plugin']) {
+        const r = await call(C.activateSerial, { serial_key: level, hwid, plugin_name: other });
+        assert.equal(r.code, 403, `Easy Level no debe activarse en ${other}`); assert.equal(r.body.code, 'wrong_product');
+    }
+    const pitch = await newKey('Easy Pitch');
+    const x = await call(C.activateSerial, { serial_key: pitch, hwid, plugin_name: 'EASY LEVEL' });
+    assert.equal(x.code, 403); assert.equal(x.body.code, 'wrong_product');
+});
+
+test('admin: si el panel manda un serial con el prefijo de otro plugin, el servidor lo corrige', async () => {
+    const r = await call(C.adminGenerateFullKey, { admin_key: ADMIN, plugin_name: 'Easy Level', serial_key: 'EASY-FULL-1234ABCD-5678ABCD' });
+    assert.equal(r.code, 200);
+    assert.match(r.body.serial_key, /^LEVEL-FULL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    // y el serial propio del plugin se respeta tal cual (paneles que ya generan el prefijo correcto)
+    const ok = await call(C.adminGenerateFullKey, { admin_key: ADMIN, plugin_name: 'Easy Level', serial_key: 'level-full-aaaa1111-bbbb2222' });
+    assert.equal(ok.body.serial_key, 'LEVEL-FULL-AAAA1111-BBBB2222');
+    const mix = await call(C.adminGenerateFullKey, { admin_key: ADMIN, plugin_name: 'Easy Mix', serial_key: 'EASY-FULL-CAFE0001-CAFE0002' });
+    assert.equal(mix.body.serial_key, 'EASY-FULL-CAFE0001-CAFE0002');
+});
+
 test('regresión: los demás plugins siguen activando con su propio nombre', async () => {
     for (const name of ['Easy Pitch', 'Easy Mix', 'Easy Master', 'Inka Kola', 'Coca Cola', 'Vocal Preset']) {
         const serial = await newKey(name);

@@ -824,6 +824,14 @@ export const adminGenerateFullKey = async (req, res) => {
             finalSerial = `${prefix}-${typeTag}-${rnd1}-${rnd2}`;
         } else {
             finalSerial = finalSerial.trim().toUpperCase();
+            // Blindaje: si el panel manda un serial con el prefijo de OTRO plugin (ej. "EASY-…" para Easy Level), esa clave
+            // nunca podría activarse (wrong_product). Se genera una canónica con el prefijo correcto.
+            const serialPlugin = findPluginBySerial(finalSerial);
+            if (!serialPlugin || serialPlugin.id !== targetDef.id) {
+                const rnd1 = crypto.randomBytes(4).toString('hex').toUpperCase();
+                const rnd2 = crypto.randomBytes(4).toString('hex').toUpperCase();
+                finalSerial = `${prefix}-${typeTag}-${rnd1}-${rnd2}`;
+            }
         }
 
         // For trials, expires_at remains null upon generation so the 3 days count down

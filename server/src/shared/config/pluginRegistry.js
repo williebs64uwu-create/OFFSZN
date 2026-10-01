@@ -19,13 +19,15 @@ export const PLUGINS = [
     { id: 'vocal-preset',prefix: 'VOCA',   displayName: 'Vocal Preset', names: ['vocal preset'],             keywords: ['vocal', 'voca'],   productIds: [905],      trialDays: 3, exclusive: true  },
     { id: 'easy-pitch',  prefix: 'PITCH',  displayName: 'Easy Pitch',   names: ['easy pitch'],               keywords: ['pitch'],           productIds: [906, 907], trialDays: 3, exclusive: true  },
     // Omni Plugin: el/los IDs del producto en la tienda se definen con OMNI_PRODUCT_IDS (coma-separados) cuando exista en `products`.
-    { id: 'omni',        prefix: 'OMNI',   displayName: 'Omni Plugin',  names: ['omni plugin', 'omni'],      keywords: ['omni'],            productIds: idsFromEnv('OMNI_PRODUCT_IDS'), trialDays: 3, exclusive: true }
+    { id: 'omni',        prefix: 'OMNI',   displayName: 'Omni Plugin',  names: ['omni plugin', 'omni'],      keywords: ['omni'],            productIds: idsFromEnv('OMNI_PRODUCT_IDS'), trialDays: 3, exclusive: true },
+    // Easy Level (nivelador de voces con Clover): IDs de tienda con LEVEL_PRODUCT_IDS (coma-separados) cuando exista en `products`.
+    { id: 'easy-level',  prefix: 'LEVEL',  displayName: 'Easy Level',   names: ['easy level'],               keywords: ['level'],           productIds: idsFromEnv('LEVEL_PRODUCT_IDS'), trialDays: 3, exclusive: true }
 ];
 
 export const DEFAULT_PLUGIN = PLUGINS[0]; // Easy Mix: comportamiento histórico cuando no se indica plugin
 
 // Orden de evaluación de palabras clave: los específicos primero ("Easy Master"/"Easy Pitch" contienen "easy"; "mix" va al final)
-const KEYWORD_ORDER = ['omni', 'easy-pitch', 'easy-master', 'coca-cola', 'inka-kola', 'vocal-preset', 'easy-mix'];
+const KEYWORD_ORDER = ['omni', 'easy-level', 'easy-pitch', 'easy-master', 'coca-cola', 'inka-kola', 'vocal-preset', 'easy-mix'];
 
 export function normalizeName(name) {
     return String(name || '').toLowerCase().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
