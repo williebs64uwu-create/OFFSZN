@@ -13,16 +13,57 @@
     })();
   </script>
   <script>
-    // ES5 puro (corre incluso en el motor viejo de Internet Explorer).
-    // Si no hay Promise, el plugin cayó al motor IE porque falta Edge WebView2.
-    if (typeof Promise === 'undefined') {
-      window.onerror = function () { return true; };
-      document.write('<body style="margin:0;background:#08090a;color:#fff;font:14px Segoe UI,Arial,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center">' +
-        '<div style="max-width:420px;line-height:1.5"><h2>Falta Microsoft Edge WebView2</h2>' +
-        '<p>Vocal Preset necesita el runtime WebView2 para mostrar su interfaz.</p>' +
-        '<p>Reinstala con el instalador oficial de OFFSZN, o descarga el runtime en<br>' +
-        '<b>developer.microsoft.com/microsoft-edge/webview2</b><br>(Evergreen Standalone Installer) y reabre tu DAW.</p></div></body>');
-    }
+    // Compatibilidad modo local (motor IE/MSHTML cuando falta Edge WebView2): ES5 puro.
+    // Añade Promise y Map mínimos solo si el motor no los trae. En WebView2 no hace nada.
+    (function () {
+      if (typeof Promise === 'undefined') {
+        window.__OFFSZN_LEGACY_ENGINE = true;
+        var P = function (executor) {
+          var self = this; self._s = 0; self._v = undefined; self._cb = [];
+          function settle(state, val) {
+            if (self._s) return; self._s = state; self._v = val;
+            setTimeout(function () { for (var i = 0; i < self._cb.length; i++) self._cb[i](); self._cb = []; }, 0);
+          }
+          function resolve(val) {
+            if (val && typeof val.then === 'function') { try { val.then(resolve, reject); } catch (e) { reject(e); } return; }
+            settle(1, val);
+          }
+          function reject(err) { settle(2, err); }
+          try { executor(resolve, reject); } catch (e) { reject(e); }
+        };
+        P.prototype.then = function (onOk, onErr) {
+          var self = this;
+          return new P(function (resolve, reject) {
+            function run() {
+              var fn = self._s === 1 ? onOk : onErr;
+              if (typeof fn !== 'function') { (self._s === 1 ? resolve : reject)(self._v); return; }
+              try { resolve(fn(self._v)); } catch (e) { reject(e); }
+            }
+            if (self._s) setTimeout(run, 0); else self._cb.push(run);
+          });
+        };
+        P.prototype['catch'] = function (onErr) { return this.then(undefined, onErr); };
+        P.resolve = function (v) { return new P(function (r) { r(v); }); };
+        P.reject = function (e) { return new P(function (_, r) { r(e); }); };
+        P.all = function (list) {
+          return new P(function (resolve, reject) {
+            var out = [], n = list.length, done = 0;
+            if (!n) { resolve(out); return; }
+            for (var i = 0; i < n; i++) (function (i) {
+              P.resolve(list[i]).then(function (v) { out[i] = v; if (++done === n) resolve(out); }, reject);
+            })(i);
+          });
+        };
+        window.Promise = P;
+      }
+      if (typeof Map === 'undefined') {
+        window.Map = function () { this._k = []; this._v = []; };
+        window.Map.prototype.has = function (k) { return this._k.indexOf(k) !== -1; };
+        window.Map.prototype.get = function (k) { var i = this._k.indexOf(k); return i < 0 ? undefined : this._v[i]; };
+        window.Map.prototype.set = function (k, v) { var i = this._k.indexOf(k); if (i < 0) { this._k.push(k); this._v.push(v); } else this._v[i] = v; return this; };
+        window.Map.prototype['delete'] = function (k) { var i = this._k.indexOf(k); if (i < 0) return false; this._k.splice(i, 1); this._v.splice(i, 1); return true; };
+      }
+    })();
   </script>
   <title>OFFSZN Vocal Preset</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
