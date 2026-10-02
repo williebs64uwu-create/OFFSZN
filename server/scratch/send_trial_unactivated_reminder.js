@@ -119,8 +119,8 @@ async function main() {
             
             <p>Puedes descargar el instalador directamente desde Google Drive en el siguiente enlace:</p>
             <p>
-                • <strong>Para Windows</strong>: <a href="https://drive.google.com/file/d/1WfaTrrbuaxymcFhnHGjmrump_rG-LGUW/view?usp=sharing" style="color: #0066cc; text-decoration: underline;">Descargar VST3</a><br>
-                • <strong>Para macOS</strong>: <a href="https://drive.google.com/file/d/1o1q0Ca5eghr1CJmtxmOw52MgEXi_wKl9/view?usp=sharing" style="color: #0066cc; text-decoration: underline;">Descargar AU/VST3</a>
+                • <strong>Para Windows</strong>: <a href="https://drive.google.com/file/d/1BkXVJlm7PTxIo6Id2SyYxddvz6Of6_jD/view?usp=sharing" style="color: #0066cc; text-decoration: underline;">Descargar VST3</a><br>
+                • <strong>Para macOS</strong>: <a href="https://drive.google.com/file/d/1fOMUrVvttNNPI0rXru4eJbViqeczWp1W/view?usp=sharing" style="color: #0066cc; text-decoration: underline;">Descargar AU/VST3</a>
             </p>
             
             <p>Si tienes cualquier duda con la instalación o activación, puedes responder a este correo o escribirnos directamente a nuestro WhatsApp de soporte aquí:</p>

@@ -1210,11 +1210,14 @@ export const capturePayPalOrder = async (req, res) => {
                 const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola') || prodId === '902';
                 const isVocalPreset = prodName.toLowerCase().includes('vocal') || prodId === '905';
                 const isEasyPitch = prodName.toLowerCase().includes('easy pitch') || prodName.toLowerCase().includes('easypitch') || prodId === '5000';
+                const isOmni = prodName.toLowerCase().includes('omni');
+                const isEasyLevel = prodName.toLowerCase().includes('easy level') || prodName.toLowerCase().includes('easylevel');
+                const isEasyDeeser = /de-?e?s?ser/.test(prodName.toLowerCase()) && prodName.toLowerCase().includes('easy');
                 const isPromo2x1 = item.is_promo_2x1 === true || item.product?.is_promo_2x1 === true || prodName.toLowerCase().includes('2x1') || (item.license_name || '').toLowerCase().includes('2x1') || req.body.isPromo2x1 === true;
                 
-                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch) {
+                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isEasyLevel || isEasyDeeser) {
                     try {
-                        const pluginName = isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix')));
+                        const pluginName = isEasyDeeser ? 'Easy Deeser' : isEasyLevel ? 'Easy Level' : isOmni ? 'Omni Plugin' : (isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix'))));
                         const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
                                                (item.product?.product_type && item.product.product_type === 'subscription');
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';
@@ -1405,8 +1408,8 @@ export const capturePayPalOrder = async (req, res) => {
                                 win: 'https://drive.google.com/file/d/11Zw_4w-vWUjq3b2bImlyQjO2rzXitqLO/view?usp=sharing',
                                 mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
                             } : {
-                                win: 'https://drive.google.com/file/d/1wBErtaIXdj-CPObcaJV0fnomX9rzWVNu/view?usp=sharing',
-                                mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
+                                win: 'https://drive.google.com/file/d/1BkXVJlm7PTxIo6Id2SyYxddvz6Of6_jD/view?usp=sharing',
+                                mac: 'https://drive.google.com/file/d/1fOMUrVvttNNPI0rXru4eJbViqeczWp1W/view?usp=sharing'
                             }))))
                         ) : null;
 
@@ -2359,8 +2362,22 @@ export const handlePayPalWebhook = async (req, res) => {
                 item.name?.toLowerCase().includes('easy pitch') || 
                 item.name?.toLowerCase().includes('easypitch')
             );
+            const hasOmniInItems = items.some(item =>
+                item.name?.toLowerCase().includes('omni')
+            );
             
-            if (description.toLowerCase().includes('easy pitch') || description.toLowerCase().includes('easypitch') || hasPitchInItems) {
+            const hasLevelInItems = items.some(item =>
+                item.name?.toLowerCase().includes('easy level') || item.name?.toLowerCase().includes('easylevel')
+            );
+            const isDeeserText = (t) => /easy ?de-?e?s?ser/.test(String(t || '').toLowerCase());
+            const hasDeeserInItems = items.some(item => isDeeserText(item.name));
+            if (isDeeserText(description) || hasDeeserInItems) {
+                pluginToGenerate = 'Easy Deeser';
+            } else if (description.toLowerCase().includes('easy level') || description.toLowerCase().includes('easylevel') || hasLevelInItems) {
+                pluginToGenerate = 'Easy Level';
+            } else if (description.toLowerCase().includes('omni') || hasOmniInItems) {
+                pluginToGenerate = 'Omni Plugin';
+            } else if (description.toLowerCase().includes('easy pitch') || description.toLowerCase().includes('easypitch') || hasPitchInItems) {
                 pluginToGenerate = 'Easy Pitch';
             } else if (description.toLowerCase().includes('easy master') || description.toLowerCase().includes('easymaster') || hasEasyMasterInItems) {
                 pluginToGenerate = 'Easy Master';

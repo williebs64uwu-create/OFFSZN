@@ -6,13 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plugins VST & AU | OFFSZN</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <meta name="description" content="Descubre nuestra colección de plugins VST y AU diseñados para llevar tus producciones al siguiente nivel.">
+    <meta name="description" content="Plugins VST y AU de OFFSZN para voces, mezcla y mastering: Easy Pitch, Easy Mix, Coca-Cola, Easy Master, Inka Kola y más.">
     <meta name="theme-color" content="#0a0a0a">
+    <meta property="og:title" content="Plugins VST & AU | OFFSZN">
+    <meta property="og:description" content="Plugins para voces, mezcla y mastering. Fáciles, rápidos y hechos para productores.">
+    <meta property="og:image" content="https://offszn.lat/plugins/easy-pitch.png">
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <link rel="stylesheet" href="/css/auth-ui.css">
     <link rel="stylesheet" href="/css/global-overlays.css">
     <link rel="stylesheet" href="/css/navbar.css">
@@ -31,401 +34,91 @@
 
     <style>
         :root {
-            --bg-color: #050505;
-            --card-bg: #111111;
-            --card-hover: #1a1a1a;
-            --border-color: rgba(255, 255, 255, 0.08);
-            --accent: #fff;
+            --bg: #050505;
+            --card: #0c0c0d;
+            --card-2: #121214;
+            --line: rgba(255, 255, 255, 0.08);
+            --line-2: rgba(255, 255, 255, 0.16);
+            --muted: #8a8a8f;
+            --muted-2: #5f5f64;
         }
 
-        body {
-            background-color: var(--bg-color);
-            color: #fff;
-            font-family: 'Geist', sans-serif;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; }
+        body { background: var(--bg); color: #fff; font-family: 'Geist', sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 1320px; margin: 0 auto; padding: 0 24px; }
+        a { color: inherit; }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 24px;
+        /* ==================== DESTACADO: EASY PITCH ==================== */
+        .featured { padding: 48px 0 28px; }
+        .featured-card {
+            display: grid; grid-template-columns: 1.05fr 1fr; gap: 0; align-items: stretch;
+            background: linear-gradient(135deg, #0f0f11 0%, #08080a 100%);
+            border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
         }
+        .featured-text { padding: 48px 44px; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
+        .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--muted); }
+        .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: #fff; }
+        .featured-text h1 { margin: 0; font-size: clamp(2.2rem, 4.6vw, 3.6rem); font-weight: 800; line-height: 1.02; letter-spacing: -1px; }
+        .featured-text p { margin: 0; color: #b6b6bb; font-size: 1.05rem; line-height: 1.55; max-width: 480px; }
+        .featured-points { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+        .chip { font-size: 12px; font-weight: 600; color: #d6d6da; border: 1px solid var(--line-2); border-radius: 100px; padding: 6px 12px; }
+        .featured-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+        .featured-media { position: relative; background: #000; display: flex; align-items: center; justify-content: center; padding: 34px; border-left: 1px solid var(--line); min-height: 340px; }
+        .featured-media img { width: 100%; max-width: 520px; height: auto; object-fit: contain; transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+        .featured-card:hover .featured-media img { transform: scale(1.03); }
 
-        /* ==================== BANNER ==================== */
-        .catalog-banner {
-            background: #050505;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding: 80px 0;
-            overflow: hidden;
-            position: relative;
-        }
+        /* ==================== BOTONES ==================== */
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 100px; font-weight: 800; font-size: 0.92rem; text-decoration: none;
+            padding: 13px 24px; transition: transform .15s ease, background .15s ease, border-color .15s ease; border: 1px solid transparent; cursor: pointer; white-space: nowrap; }
+        .btn:active { transform: scale(.97); }
+        .btn-buy { background: #fff; color: #000; }
+        .btn-buy:hover { background: #e9e9ec; }
+        .btn-ghost { background: transparent; color: #fff; border-color: var(--line-2); }
+        .btn-ghost:hover { border-color: rgba(255,255,255,.4); }
+        .btn-sm { padding: 9px 16px; font-size: 0.84rem; }
 
-        .catalog-banner::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 50%;
-            width: 1000px; height: 100%;
-            background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 60%);
-            transform: translateX(-50%);
-            pointer-events: none;
-        }
+        /* ==================== BARRA DE FILTROS ==================== */
+        .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 26px 0 18px; border-bottom: 1px solid var(--line); margin-bottom: 26px; flex-wrap: wrap; }
+        .toolbar h2 { margin: 0; font-size: 1.35rem; font-weight: 800; }
+        .toolbar .sub { color: var(--muted); font-size: .9rem; font-weight: 600; margin-top: 4px; }
+        .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+        .filter-btn { background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 8px 16px; border-radius: 100px; font: 600 0.88rem 'Geist', sans-serif; cursor: pointer; transition: color .15s, border-color .15s, background .15s; }
+        .filter-btn:hover { color: #fff; border-color: var(--line-2); }
+        .filter-btn.active { background: #fff; color: #000; border-color: #fff; }
+        .search { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 100px; padding: 8px 14px; min-width: 220px; }
+        .search i { color: var(--muted); }
+        .search input { background: transparent; border: 0; outline: 0; color: #fff; font: 500 0.9rem 'Geist', sans-serif; width: 100%; }
+        .search input::placeholder { color: var(--muted-2); }
 
-        .banner-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 40px;
-        }
+        /* ==================== TARJETAS ==================== */
+        .plugins-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 20px; padding-bottom: 110px; }
+        .plugin-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; color: #fff;
+            transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+        .plugin-card:hover { transform: translateY(-3px); border-color: var(--line-2); box-shadow: 0 16px 34px rgba(0,0,0,.6); }
+        .card-image { position: relative; display: block; aspect-ratio: 16 / 11; background: #000; padding: 22px; border-bottom: 1px solid var(--line); overflow: hidden; }
+        .card-image img { width: 100%; height: 100%; object-fit: contain; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+        .plugin-card:hover .card-image img { transform: scale(1.05); }
+        .badge { position: absolute; top: 12px; left: 12px; z-index: 2; font-size: 11px; font-weight: 800; letter-spacing: .3px; padding: 3px 9px; border-radius: 6px; background: #fff; color: #000; }
+        .badge.free { background: #30d158; color: #000; }
+        .badge.new { background: #fff; color: #000; }
+        .card-body { padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 6px; flex-grow: 1; }
+        .plugin-cat { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted-2); }
+        .plugin-title { margin: 0; font-size: 16px; font-weight: 800; line-height: 1.25; }
+        .plugin-title a { text-decoration: none; }
+        .plugin-desc { color: var(--muted); font-size: 13px; line-height: 1.45; margin: 0 0 14px; }
+        .card-actions { display: flex; gap: 8px; margin-top: auto; }
+        .card-actions .btn { flex: 1; }
+        .empty { display: none; grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 60px 0; }
 
-        .banner-text {
-            flex: 1;
-            max-width: 550px;
-            z-index: 2;
+        @media (max-width: 900px) {
+            .featured-card { grid-template-columns: 1fr; }
+            .featured-media { border-left: 0; border-top: 1px solid var(--line); min-height: 240px; }
+            .featured-text { padding: 34px 24px; }
         }
-
-        .banner-text h1 {
-            font-size: clamp(2.2rem, 5vw, 3.5rem);
-            font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 24px;
-            text-transform: uppercase;
-            background: linear-gradient(to right, #ffffff, #888888);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .btn-banner {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #fff;
-            color: #000;
-            padding: 14px 28px;
-            border-radius: 100px;
-            font-weight: 800;
-            text-decoration: none;
-            transition: all 0.2s;
-            font-size: 0.95rem;
-        }
-
-        .btn-banner:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255,255,255,0.1);
-        }
-
-        .banner-images {
-            flex: 1;
-            position: relative;
-            height: 350px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1;
-        }
-
-        .b-img {
-            position: absolute;
-            border-radius: 12px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #111;
-        }
-
-        .b-img-1 {
-            width: 280px;
-            z-index: 3;
-            transform: scale(1.05);
-        }
-        
-        .b-img-2 {
-            width: 240px;
-            left: 5%;
-            z-index: 2;
-            transform: rotate(-8deg) translateY(-20px);
-            opacity: 0.7;
-        }
-
-        .b-img-3 {
-            width: 220px;
-            right: 5%;
-            z-index: 1;
-            transform: rotate(10deg) translateY(30px);
-            opacity: 0.5;
-        }
-
-        .banner-images:hover .b-img-1 { transform: scale(1.12); }
-        .banner-images:hover .b-img-2 { transform: rotate(-12deg) translateY(-30px); opacity: 0.9; }
-        .banner-images:hover .b-img-3 { transform: rotate(15deg) translateY(40px); opacity: 0.9; }
-
-        @media (max-width: 768px) {
-            .banner-container {
-                flex-direction: column;
-                text-align: center;
-            }
-            .banner-text {
-                max-width: 100%;
-            }
-            .banner-images {
-                width: 100%;
-                height: 280px;
-                margin-top: 40px;
-            }
-            .b-img-1 { width: 200px; }
-            .b-img-2 { width: 160px; left: 0; }
-            .b-img-3 { width: 140px; right: 0; }
-        }
-
-        /* ==================== FILTERS ==================== */
-        .filters-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 30px 0;
-            margin-bottom: 20px;
-        }
-
-        .filters-group {
-            display: flex;
-            gap: 12px;
-        }
-
-        .filter-btn {
-            background: transparent;
-            color: #888;
-            border: 1px solid var(--border-color);
-            padding: 8px 16px;
-            border-radius: 100px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .filter-btn:hover {
-            color: #fff;
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .filter-btn.active {
-            background: #fff;
-            color: #000;
-            border-color: #fff;
-        }
-
-        /* ==================== PLUGIN BOUTIQUE STYLE CARDS (DARK) ==================== */
-        .plugins-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 20px;
-            padding-bottom: 100px;
-        }
-
-        .plugin-card {
-            background: #0a0a0a;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            text-decoration: none;
-            color: #fff;
-            transition: all 0.2s;
-            position: relative;
-        }
-
-        .plugin-card:hover {
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-
-        .card-image {
-            width: 100%;
-            aspect-ratio: 16/11;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            padding: 20px;
-            box-sizing: border-box;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            overflow: hidden;
-        }
-        
-        .card-image img {
-            object-fit: contain;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .plugin-card:hover .card-image img {
-            transform: scale(1.05);
-        }
-
-        .pb-hot-badge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background: #fff;
-            color: #000;
-            font-size: 11px;
-            font-weight: 800;
-            padding: 2px 8px;
-            border-radius: 4px;
-            z-index: 10;
-        }
-
-        .card-body {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-        }
-
-        .plugin-title {
-            font-size: 15px;
-            font-weight: 700;
-            margin: 0 0 4px 0;
-            line-height: 1.3;
-            color: #fff;
-        }
-
-        .vendor {
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 24px;
-            font-weight: 400;
-        }
-
-        .card-footer-pb {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            margin-top: auto;
-        }
-
-        .price-col {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .old-price {
-            font-size: 12px;
-            color: #666;
-            text-decoration: line-through;
-            font-weight: 500;
-        }
-
-        .new-price-row {
-            display: flex;
-            align-items: baseline;
-            gap: 6px;
-        }
-
-        .new-price {
-            font-size: 15px;
-            font-weight: 800;
-            color: #fff;
-        }
-
-        .discount {
-            font-size: 12px;
-            font-weight: 700;
-            color: #30d158;
-        }
-
-        .pb-stars {
-            font-size: 13px;
-            font-weight: 700;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .pb-stars i {
-            font-size: 11px;
-            color: #fff;
-        }
-
-        /* ==================== MOCKUPS CSS ==================== */
-        .mockup-plugin {
-            background: #0a0a0a;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .mockup-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-        }
-
-        .mockup-logo {
-            font-weight: 800;
-            font-size: 12px;
-            letter-spacing: 2px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .mockup-badge {
-            background: #111;
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-
-        .mockup-drop {
-            background: #050505;
-            border: 1px dashed rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .mockup-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-
-        .mockup-main-text {
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        @media (max-width: 768px) {
-            .filters-bar {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 16px;
-            }
-            .plugins-grid {
-                grid-template-columns: 1fr;
-            }
+        @media (max-width: 640px) {
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .search { min-width: 0; }
+            .plugins-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -437,134 +130,163 @@
     </div>
     <script src="/script/load-navbar.js?v=25"></script>
 
-    <!-- ==================== MAIN CONTENT ==================== -->
     <main>
-        <section class="catalog-banner">
-            <div class="container banner-container">
-                <div class="banner-text">
-                    <h1>OPTIMIZA TU FLUJO DE TRABAJO EN SEGUNDOS CON LOS MEJORES PLUGINS.</h1>
-                    <a href="#plugins-grid" class="btn-banner">Explorar Colección <i class="bi bi-arrow-down-short" style="font-size: 1.2rem; margin-left:-4px;"></i></a>
-                </div>
-                <div class="banner-images">
-                    <!-- Plugin 2: X-Flow -->
-                    <img src="/images/PLUGIN.png" class="b-img b-img-2" alt="X Flow">
-                    <!-- Plugin 3: Converter -->
-                    <img src="/images/plugins/CONVERTER.png" class="b-img b-img-3" alt="Converter">
-                    <!-- Plugin 1: Easy Mix (Center) -->
-                    <img src="/images/plugins/easy-mix.png" class="b-img b-img-1" alt="Easy Mix">
-                </div>
+        <!-- ==================== DESTACADO ==================== -->
+        <section class="featured">
+            <div class="container">
+                <article class="featured-card">
+                    <div class="featured-text">
+                        <span class="eyebrow"><span class="dot"></span> Destacado · Nuevo</span>
+                        <h1>EASY PITCH</h1>
+                        <p>Afinación vocal en tiempo real. Elige la tonalidad, sube la cantidad y tu voz queda afinada al instante, sin complicarte.</p>
+                        <div class="featured-points">
+                            <span class="chip">Afinación en tiempo real</span>
+                            <span class="chip">VST3 · AU</span>
+                            <span class="chip">Windows · Mac</span>
+                        </div>
+                        <div class="featured-actions">
+                            <a class="btn btn-buy" href="/plugins/easy-pitch.html#pricing-section"><i class="bi bi-bag"></i> Comprar</a>
+                            <a class="btn btn-ghost" href="/plugins/easy-pitch.html">Ver plugin</a>
+                        </div>
+                    </div>
+                    <a class="featured-media" href="/plugins/easy-pitch.html" aria-label="Ver Easy Pitch">
+                        <img src="/plugins/easy-pitch.png" alt="Easy Pitch VST">
+                    </a>
+                </article>
             </div>
         </section>
 
-        <section class="catalog-section">
+        <!-- ==================== CATÁLOGO ==================== -->
+        <section class="catalog-section" id="catalogo">
             <div class="container">
-                
-                <!-- Filters -->
-                <div class="filters-bar">
-                    <div class="filters-group" id="category-filters">
+                <div class="toolbar">
+                    <div>
+                        <h2>Todos los plugins</h2>
+                        <div class="sub" id="results-count">Mostrando 8 plugins</div>
+                    </div>
+                    <div class="filters" id="category-filters">
                         <button class="filter-btn active" data-filter="all">Todos</button>
+                        <button class="filter-btn" data-filter="voces">Voces</button>
                         <button class="filter-btn" data-filter="mezcla">Mezcla & Mastering</button>
-                        <button class="filter-btn" data-filter="utilidad">Utilidades</button>
+                        <button class="filter-btn" data-filter="gratis">Gratis</button>
                     </div>
-                    <div style="color: #666; font-size: 0.9rem; font-weight: 600;" id="results-count">
-                        Mostrando 3 plugins
-                    </div>
+                    <label class="search"><i class="bi bi-search"></i><input id="search" type="search" placeholder="Buscar plugin" aria-label="Buscar plugin"></label>
                 </div>
 
-                    <!-- PLUGIN: COCA-COLA -->
-                    <a href="/plugins/coca-cola.html" class="plugin-card" data-category="mezcla">
-                        <div class="card-image">
-                            <div class="pb-hot-badge" style="background: #e61b2b; color: #fff;">Nuevo!</div>
-                            <img src="/plugins/coca-cola.png" alt="Coca-Cola VST">
-                        </div>
+                <div class="plugins-grid" id="plugins-grid">
+
+                    <!-- 1) EASY PITCH (siempre primero) -->
+                    <article class="plugin-card" data-category="voces" data-name="easy pitch afinacion autotune">
+                        <a class="card-image" href="/plugins/easy-pitch.html"><span class="badge new">Nuevo</span><img src="/plugins/easy-pitch.png" alt="Easy Pitch VST" loading="lazy"></a>
                         <div class="card-body">
-                            <h2 class="plugin-title">COCA-COLA</h2>
-                            <div class="vendor">Vocal Channel Strip by OFFSZN</div>
-                            
-                            <div class="card-footer-pb">
-                                <div class="price-col">
-                                    <span class="old-price">$30.00</span>
-                                    <div class="new-price-row">
-                                        <span class="new-price">$10.00</span>
-                                        <span class="discount">(67% off)</span>
-                                    </div>
-                                </div>
-                                <div class="pb-stars"><i class="bi bi-star-fill"></i> 5.0</div>
+                            <span class="plugin-cat">Voces · Afinación</span>
+                            <h3 class="plugin-title"><a href="/plugins/easy-pitch.html">EASY PITCH</a></h3>
+                            <p class="plugin-desc">Afinación vocal en tiempo real, simple y natural.</p>
+                            <div class="card-actions">
+                                <a class="btn btn-buy btn-sm" href="/plugins/easy-pitch.html#pricing-section">Comprar</a>
+                                <a class="btn btn-ghost btn-sm" href="/plugins/easy-pitch.html">Ver plugin</a>
                             </div>
                         </div>
-                    </a>
+                    </article>
 
-                    <!-- PLUGIN: EASY MIX -->
-                    <a href="/plugins/easy-mix.html" class="plugin-card" data-category="mezcla">
-                        <div class="card-image">
-                            <div class="pb-hot-badge">Hot!</div>
-                            <img src="/images/plugins/easy-mix.png" alt="Easy Mix">
-                        </div>
+                    <!-- EASY MIX -->
+                    <article class="plugin-card" data-category="voces mezcla" data-name="easy mix mezcla voces">
+                        <a class="card-image" href="/plugins/easy-mix.html"><span class="badge">Más vendido</span><img src="/images/plugins/easy-mix.png" alt="Easy Mix VST" loading="lazy"></a>
                         <div class="card-body">
-                            <h2 class="plugin-title">EASY MIX</h2>
-                            <div class="vendor">Vocal FX by OFFSZN</div>
-                            
-                            <div class="card-footer-pb">
-                                <div class="price-col">
-                                    <span class="old-price">$45.00</span>
-                                    <div class="new-price-row">
-                                        <span class="new-price">$20.00</span>
-                                        <span class="discount">(55% off)</span>
-                                    </div>
-                                </div>
-                                <div class="pb-stars"><i class="bi bi-star-fill"></i> 4.9</div>
+                            <span class="plugin-cat">Voces · Mezcla</span>
+                            <h3 class="plugin-title"><a href="/plugins/easy-mix.html">EASY MIX</a></h3>
+                            <p class="plugin-desc">Mezcla tu voz en segundos, sin saber de mezcla.</p>
+                            <div class="card-actions">
+                                <a class="btn btn-buy btn-sm" href="/plugins/easy-mix.html#pricing-section">Comprar</a>
+                                <a class="btn btn-ghost btn-sm" href="/plugins/easy-mix.html">Ver plugin</a>
                             </div>
                         </div>
-                    </a>
+                    </article>
 
-                    <!-- PLUGIN: CROCKER / X-FLOW ANALYZER -->
-                    <a href="/plugins/x-flow-analyzer.html" class="plugin-card" data-category="mezcla">
-                        <div class="card-image">
-                            <div class="pb-hot-badge">Hot!</div>
-                            <img src="/images/PLUGIN.png" alt="X Flow Analyzer">
-                        </div>
+                    <!-- COCA-COLA -->
+                    <article class="plugin-card" data-category="voces mezcla" data-name="coca cola channel strip voces">
+                        <a class="card-image" href="/plugins/coca-cola.html"><img src="/plugins/coca-cola.png" alt="Coca-Cola VST" loading="lazy"></a>
                         <div class="card-body">
-                            <h2 class="plugin-title">CROCKER (X Flow Analyzer)</h2>
-                            <div class="vendor">Analyzer by OFFSZN</div>
-                            
-                            <div class="card-footer-pb">
-                                <div class="price-col">
-                                    <span class="old-price">$30.00</span>
-                                    <div class="new-price-row">
-                                        <span class="new-price">GRATIS</span>
-                                        <span class="discount">(100% off)</span>
-                                    </div>
-                                </div>
-                                <div class="pb-stars"><i class="bi bi-star-fill"></i> 4.7</div>
+                            <span class="plugin-cat">Voces · Channel Strip</span>
+                            <h3 class="plugin-title"><a href="/plugins/coca-cola.html">COCA-COLA</a></h3>
+                            <p class="plugin-desc">El channel strip definitivo para tus voces.</p>
+                            <div class="card-actions">
+                                <a class="btn btn-buy btn-sm" href="/plugins/coca-cola.html#pricing-section">Comprar</a>
+                                <a class="btn btn-ghost btn-sm" href="/plugins/coca-cola.html">Ver plugin</a>
                             </div>
                         </div>
-                    </a>
+                    </article>
 
-                    <!-- PLUGIN: CONVERTER -->
-                    <a href="/plugins/vst-plugins.html" class="plugin-card" data-category="utilidad">
-                        <div class="card-image">
-                            <div class="pb-hot-badge">Hot!</div>
-                            <img src="/images/plugins/CONVERTER.png" alt="Converter">
-                        </div>
+                    <!-- EASY MASTER -->
+                    <article class="plugin-card" data-category="voces mezcla" data-name="easy master voces profesionales">
+                        <a class="card-image" href="/plugins/easy-master.html"><img src="/images/plugins/EASY%20MASTER%20IMAGE.png" alt="Easy Master VST" loading="lazy"></a>
                         <div class="card-body">
-                            <h2 class="plugin-title">CONVERTER</h2>
-                            <div class="vendor">Utility by OFFSZN</div>
-                            
-                            <div class="card-footer-pb">
-                                <div class="price-col">
-                                    <span class="old-price">$10.00</span>
-                                    <div class="new-price-row">
-                                        <span class="new-price">GRATIS</span>
-                                        <span class="discount">(100% off)</span>
-                                    </div>
-                                </div>
-                                <div class="pb-stars"><i class="bi bi-star-fill"></i> 4.8</div>
+                            <span class="plugin-cat">Voces · Mezcla</span>
+                            <h3 class="plugin-title"><a href="/plugins/easy-master.html">EASY MASTER</a></h3>
+                            <p class="plugin-desc">Voces profesionales en FL Studio, rápido.</p>
+                            <div class="card-actions">
+                                <a class="btn btn-buy btn-sm" href="/plugins/easy-master.html#pricing-section">Comprar</a>
+                                <a class="btn btn-ghost btn-sm" href="/plugins/easy-master.html">Ver plugin</a>
                             </div>
                         </div>
-                    </a>
+                    </article>
 
+                    <!-- INKA KOLA -->
+                    <article class="plugin-card" data-category="mezcla" data-name="inka kola mastering master beats">
+                        <a class="card-image" href="/plugins/inka-kola.html"><img src="/plugins/inka-kola.png" alt="Inka Kola VST" loading="lazy"></a>
+                        <div class="card-body">
+                            <span class="plugin-cat">Mastering</span>
+                            <h3 class="plugin-title"><a href="/plugins/inka-kola.html">INKA KOLA</a></h3>
+                            <p class="plugin-desc">Masteriza canciones y beats así de fácil.</p>
+                            <div class="card-actions">
+                                <a class="btn btn-buy btn-sm" href="/plugins/inka-kola.html#pricing-section">Comprar</a>
+                                <a class="btn btn-ghost btn-sm" href="/plugins/inka-kola.html">Ver plugin</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- VOCAL PRESET -->
+                    <article class="plugin-card" data-category="voces" data-name="vocal preset voces control por voz">
+                        <a class="card-image" href="/plugins/vocal-preset.html"><img src="/images/plugins/vocal-preset-og.jpg" alt="Vocal Preset VST" loading="lazy"></a>
+                        <div class="card-body">
+                            <span class="plugin-cat">Voces · Preset</span>
+                            <h3 class="plugin-title"><a href="/plugins/vocal-preset.html">VOCAL PRESET</a></h3>
+                            <p class="plugin-desc">Tu cadena de voces, controlada con tu voz.</p>
+                            <div class="card-actions">
+                                <a class="btn btn-buy btn-sm" href="/plugins/vocal-preset.html#pricing-section">Comprar</a>
+                                <a class="btn btn-ghost btn-sm" href="/plugins/vocal-preset.html">Ver plugin</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- CROCKER (X FLOW ANALYZER) — gratis -->
+                    <article class="plugin-card" data-category="mezcla gratis" data-name="crocker x flow analyzer analizador gratis">
+                        <a class="card-image" href="/plugins/x-flow-analyzer.html"><span class="badge free">Gratis</span><img src="/images/PLUGIN.png" alt="Crocker X Flow Analyzer" loading="lazy"></a>
+                        <div class="card-body">
+                            <span class="plugin-cat">Análisis</span>
+                            <h3 class="plugin-title"><a href="/plugins/x-flow-analyzer.html">CROCKER (X Flow Analyzer)</a></h3>
+                            <p class="plugin-desc">Analizador para revisar tu mezcla.</p>
+                            <div class="card-actions">
+                                <a class="btn btn-ghost btn-sm" href="/plugins/x-flow-analyzer.html"><i class="bi bi-download"></i> Descargar gratis</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- CONVERTER — gratis -->
+                    <article class="plugin-card" data-category="gratis" data-name="converter convertir audio wav utilidad gratis">
+                        <a class="card-image" href="/plugins/vst-plugins.html"><span class="badge free">Gratis</span><img src="/images/plugins/CONVERTER.png" alt="Converter VST" loading="lazy"></a>
+                        <div class="card-body">
+                            <span class="plugin-cat">Utilidad</span>
+                            <h3 class="plugin-title"><a href="/plugins/vst-plugins.html">CONVERTER</a></h3>
+                            <p class="plugin-desc">Convierte audios raros a WAV en FL Studio.</p>
+                            <div class="card-actions">
+                                <a class="btn btn-ghost btn-sm" href="/plugins/vst-plugins.html"><i class="bi bi-download"></i> Descargar gratis</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <div class="empty" id="empty">No encontramos plugins con esa búsqueda.</div>
                 </div>
-
             </div>
         </section>
     </main>
@@ -579,37 +301,38 @@
     <script src="/script/footer.js?v=21"></script>
     <script src="/script/navbar.js?v=21" type="module"></script>
 
-    <!-- FILTER LOGIC -->
+    <!-- FILTROS + BÚSQUEDA -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const filterBtns = document.querySelectorAll('#category-filters .filter-btn');
+            const btns = document.querySelectorAll('#category-filters .filter-btn');
             const cards = document.querySelectorAll('#plugins-grid .plugin-card');
-            const resultsCount = document.getElementById('results-count');
+            const count = document.getElementById('results-count');
+            const empty = document.getElementById('empty');
+            const search = document.getElementById('search');
+            let filter = 'all';
 
-            filterBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    // Update active button state
-                    filterBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    const filterValue = btn.getAttribute('data-filter');
-                    let visibleCount = 0;
-
-                    // Filter cards
-                    cards.forEach(card => {
-                        const cardCategory = card.getAttribute('data-category');
-                        if (filterValue === 'all' || cardCategory === filterValue) {
-                            card.style.display = 'flex';
-                            visibleCount++;
-                        } else {
-                            card.style.display = 'none';
-                        }
-                    });
-
-                    // Update count
-                    resultsCount.textContent = `Mostrando ${visibleCount} plugin${visibleCount !== 1 ? 's' : ''}`;
+            function apply() {
+                const q = (search.value || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+                let visible = 0;
+                cards.forEach((card) => {
+                    const cats = (card.dataset.category || '').split(' ');
+                    const name = card.dataset.name || '';
+                    const show = (filter === 'all' || cats.includes(filter)) && (!q || name.includes(q));
+                    card.style.display = show ? '' : 'none';
+                    if (show) visible++;
                 });
-            });
+                count.textContent = `Mostrando ${visible} plugin${visible !== 1 ? 's' : ''}`;
+                empty.style.display = visible ? 'none' : 'block';
+            }
+
+            btns.forEach((btn) => btn.addEventListener('click', () => {
+                btns.forEach((b) => b.classList.remove('active'));
+                btn.classList.add('active');
+                filter = btn.dataset.filter;
+                apply();
+            }));
+            search.addEventListener('input', apply);
+            apply();
         });
     </script>
 </body>

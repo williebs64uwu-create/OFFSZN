@@ -16,6 +16,7 @@ import { supabase } from '../../database/connection.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { generatePluginLicense } from './PluginLicensingController.js';
 import { createDeliverySessionRecord } from './WilliePresetDeliveryController.js';
+import { findPluginByName } from '../../../shared/config/pluginRegistry.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const OFFSZN_MERCHANT_ID = 'MXV5F6X8JXG4S';
@@ -57,6 +58,7 @@ const WILLIE_CATALOG = {
     'plugin-inka-kola':   { name: 'INKA KOLA VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     'plugin-vocal-preset': { name: 'Vocal Preset VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     'plugin-easy-pitch':  { name: 'Easy Pitch VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/plugins/easy-pitch.png' },
+    'plugin-omni':        { name: 'Omni Plugin VST3 (OFFSZN)', price: 15, type: 'plugin', image: '/willieimages/HERO.png' },
     // Legacy numeric IDs (from offszn_cart compatibility)
     '899': { name: 'Easy Mix VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     '900': { name: 'Easy Master VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
@@ -318,7 +320,8 @@ export const captureWilliePayPalOrder = async (req, res) => {
         const pluginLicensesGenerated = [];
         for (const i of resolvedItems) {
             if (i.type === 'plugin') {
-                const pName = (i.name.toLowerCase().includes('master')) ? 'Easy Master' : ((i.name.toLowerCase().includes('inka')) ? 'Inka Kola' : ((i.name.toLowerCase().includes('vocal')) ? 'Vocal Preset' : 'Easy Mix'));
+                const targetDef = findPluginByName(i.name);
+                const pName = targetDef ? (targetDef.dbName || targetDef.displayName) : 'Easy Mix';
                 try {
                     const licRes = await generatePluginLicense({
                         licenseType: 'lifetime',

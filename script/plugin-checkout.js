@@ -50,8 +50,8 @@ class PluginDirectCheckout {
         } else {
             this.downloads = {
                 name: 'Easy Mix',
-                win: 'https://drive.google.com/file/d/1JSArLjFypFYkcGJV3DIu67hxSFU4kG6q/view?usp=sharing',
-                mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
+                win: 'https://drive.google.com/file/d/1BkXVJlm7PTxIo6Id2SyYxddvz6Of6_jD/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1fOMUrVvttNNPI0rXru4eJbViqeczWp1W/view?usp=sharing'
             };
         }
 
@@ -640,8 +640,8 @@ class PluginDirectCheckout {
 
             // Links configuration for 2x1 combo
             const mixLinks = {
-                win: 'https://drive.google.com/file/d/1JSArLjFypFYkcGJV3DIu67hxSFU4kG6q/view?usp=sharing',
-                mac: 'https://drive.google.com/file/d/1OUMuGr4trI7M5J0JvaLc-4n5xaTyN17z/view?usp=sharing'
+                win: 'https://drive.google.com/file/d/1BkXVJlm7PTxIo6Id2SyYxddvz6Of6_jD/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1fOMUrVvttNNPI0rXru4eJbViqeczWp1W/view?usp=sharing'
             };
             const masterLinks = {
                 win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view',
