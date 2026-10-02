@@ -136,9 +136,10 @@ class KanbanApp {
     this.selectedTag = 'all';
     this.draggedTaskId = null;
 
-    // Calendar view state (Fixed to Sep 2026 for reference consistency)
-    this.calViewYear = 2026;
-    this.calViewMonth = 8; // 0-indexed: 8 is September
+    // Calendar view state (defaults to current date)
+    const today = new Date();
+    this.calViewYear = today.getFullYear();
+    this.calViewMonth = today.getMonth();
 
     // Popover states
     this.activeDropdown = null;
