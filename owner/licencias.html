@@ -1235,6 +1235,10 @@
                             <span class="product-card-name">Easy Level</span>
                             <span class="product-card-badge" id="badge-stock-easy-level">-- disp</span>
                         </div>
+                        <div class="product-card-btn" data-value="easy-deeser" onclick="selectProductChip('easy-deeser')">
+                            <span class="product-card-name">Easy Deeser</span>
+                            <span class="product-card-badge" id="badge-stock-easy-deeser">-- disp</span>
+                        </div>
                     </div>
                     <input type="hidden" id="gen-product" value="easy-mix">
 
@@ -1435,6 +1439,7 @@
                     <button class="filter-pill" id="btn-prod-easypitch" onclick="setPluginProduct('Easy Pitch', this)">Easy Pitch</button>
                     <button class="filter-pill" id="btn-prod-omni" onclick="setPluginProduct('Omni Plugin', this)">Omni Plugin</button>
                     <button class="filter-pill" id="btn-prod-easylevel" onclick="setPluginProduct('Easy Level', this)">Easy Level</button>
+                    <button class="filter-pill" id="btn-prod-easydeeser" onclick="setPluginProduct('Easy Deeser', this)">Easy Deeser</button>
                 </div>
             </div>
 
@@ -1678,6 +1683,7 @@
                         <option value="Easy Pitch">Easy Pitch</option>
                         <option value="Omni Plugin">Omni Plugin</option>
                         <option value="Easy Level">Easy Level</option>
+                        <option value="Easy Deeser">Easy Deeser</option>
                     </select>
                 </div>
 
@@ -1901,6 +1907,10 @@
             'easy-level': {
                 win: '#',   // poner el enlace del instalador cuando exista
                 mac: '#'
+            },
+            'easy-deeser': {
+                win: '#',   // poner el enlace del instalador cuando exista
+                mac: '#'
             }
         };
 
@@ -1913,7 +1923,8 @@
             'vocal-preset': 'Vocal Preset V2 (Win/Mac)',
             'easy-pitch': 'Easy Pitch (Win/Mac)',
             'omni': 'Omni Plugin (Win/Mac)',
-            'easy-level': 'Easy Level (Win/Mac)'
+            'easy-level': 'Easy Level (Win/Mac)',
+            'easy-deeser': 'Easy Deeser (Win/Mac)'
         };
 
         // GLOBAL APP STATE
@@ -1949,6 +1960,7 @@
             if (s.includes('pitch')) return 'Easy Pitch';
             if (s.includes('omni')) return 'Omni Plugin';
             if (s.includes('level')) return 'Easy Level';
+            if (/de-?e?s?ser/.test(s)) return 'Easy Deeser';
             if (s.includes('coca') || s.includes('coke')) return 'Coca Cola';
             if (s.includes('inka')) return 'Inka Kola';
             if (s.includes('mix')) return 'Easy Mix';
@@ -2258,7 +2270,8 @@
                 'vocal-preset': pool.filter(l => !l.used && l.plugin === 'Vocal Preset').length,
                 'easy-pitch': pool.filter(l => !l.used && (l.plugin === 'Easy Pitch' || l.plugin === 'EASY PITCH')).length,
                 'omni': pool.filter(l => !l.used && (l.plugin === 'Omni Plugin' || l.plugin === 'OMNI PLUGIN' || l.plugin === 'Omni')).length,
-                'easy-level': pool.filter(l => !l.used && (l.plugin === 'Easy Level' || l.plugin === 'EASY LEVEL')).length
+                'easy-level': pool.filter(l => !l.used && (l.plugin === 'Easy Level' || l.plugin === 'EASY LEVEL')).length,
+                'easy-deeser': pool.filter(l => !l.used && (l.plugin === 'Easy Deeser' || l.plugin === 'EASY DEESER')).length
             };
 
             Object.entries(counts).forEach(([k, cnt]) => {
@@ -2296,6 +2309,7 @@
                 else if (val === 'easy-pitch') targetPlugin = 'Easy Pitch';
                 else if (val === 'omni') targetPlugin = 'Omni Plugin';
                 else if (val === 'easy-level') targetPlugin = 'Easy Level';
+                else if (val === 'easy-deeser') targetPlugin = 'Easy Deeser';
 
                 const avail = pool.filter(l => !l.used && l.plugin === targetPlugin);
                 if (avail.length > 0 && (!k1Input.value || !avail.some(l => l.serial === k1Input.value))) {
@@ -2323,6 +2337,7 @@
                 else if (val === 'easy-pitch') targetPlugin = 'Easy Pitch';
                 else if (val === 'omni') targetPlugin = 'Omni Plugin';
                 else if (val === 'easy-level') targetPlugin = 'Easy Level';
+                else if (val === 'easy-deeser') targetPlugin = 'Easy Deeser';
             }
 
             const avail = pool.filter(l => !l.used && l.plugin === targetPlugin);
@@ -3287,6 +3302,7 @@
                 else if (pVal === 'easy-pitch') targetPlugin = 'Easy Pitch';
                 else if (pVal === 'omni') targetPlugin = 'Omni Plugin';
                 else if (pVal === 'easy-level') targetPlugin = 'Easy Level';
+                else if (pVal === 'easy-deeser') targetPlugin = 'Easy Deeser';
             }
 
             titleEl.innerText = 'Elegir Clave (' + targetPlugin + ')';
@@ -3495,6 +3511,7 @@
                 else if (plugin.includes('Pitch')) prefix = 'PITCH';
                 else if (plugin.includes('Omni')) prefix = 'OMNI';
                 else if (plugin.includes('Level')) prefix = 'LEVEL';
+                else if (plugin.includes('Deeser')) prefix = 'DEESER';
 
                 const rnd1 = Math.random().toString(16).substring(2, 6).toUpperCase();
                 const rnd2 = Math.random().toString(16).substring(2, 6).toUpperCase();
@@ -3587,6 +3604,7 @@
             else if (pluginName.includes('Pitch')) slug = 'easy-pitch';
             else if (pluginName.includes('Omni')) slug = 'omni';
             else if (pluginName.includes('Level')) slug = 'easy-level';
+            else if (pluginName.includes('Deeser')) slug = 'easy-deeser';
 
             const links = DOWNLOAD_LINKS[slug] || DOWNLOAD_LINKS['easy-mix'];
 

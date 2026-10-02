@@ -191,6 +191,33 @@ test('Easy Level: prefijo LEVEL, clave propia, firma v2 y exclusiva (no sirve en
     assert.equal(x.code, 403); assert.equal(x.body.code, 'wrong_product');
 });
 
+// ── Easy Deeser ───────────────────────────────────────────────────────────────────────────────────────────────────
+test('Easy Deeser: prefijo DEESER, clave propia, firma v2 y exclusiva (no sirve en otros plugins ni al revés)', async () => {
+    const R = await import('../src/shared/config/pluginRegistry.js');
+    assert.equal(R.prefixForName('EASY DEESER'), 'DEESER');
+    assert.equal(R.prefixForName('Easy De-Esser'), 'DEESER');
+    assert.equal(R.findPluginBySerial('DEESER-FULL-AB12CD34-EF56AB78').id, 'easy-deeser');
+    assert.equal(R.extractSerial('Easy Deeser: deeser-trial-ab12cd34-ef56ab78'), 'DEESER-TRIAL-AB12CD34-EF56AB78');
+
+    const key = await newKey('Easy Deeser');
+    assert.match(key, /^DEESER-FULL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    const hwid = HW('PC-WILLIE', DEV_A), nonce = 'n-deeser';
+    const ok = await call(C.activateSerial, { serial_key: key, hwid, plugin_name: 'EASY DEESER', nonce });
+    assert.equal(ok.code, 200, JSON.stringify(ok.body));
+    assert.ok(verifyV2(ok, { serial: key, hwid, nonce }));
+    const v = await call(C.validateLicense, { serial_key: key, hwid, plugin_name: 'EASY DEESER', nonce: 'n3' });
+    assert.equal(v.code, 200, JSON.stringify(v.body));
+    for (const other of ['Easy Level', 'Easy Pitch', 'EASY MIX', 'Omni Plugin']) {
+        const r = await call(C.activateSerial, { serial_key: key, hwid, plugin_name: other });
+        assert.equal(r.code, 403, `Easy Deeser no debe activarse en ${other}`); assert.equal(r.body.code, 'wrong_product');
+    }
+    const level = await newKey('Easy Level');
+    const x = await call(C.activateSerial, { serial_key: level, hwid, plugin_name: 'EASY DEESER' });
+    assert.equal(x.code, 403); assert.equal(x.body.code, 'wrong_product');
+    const fixed = await call(C.adminGenerateFullKey, { admin_key: ADMIN, plugin_name: 'Easy Deeser', serial_key: 'LEVEL-FULL-1234ABCD-5678ABCD' });
+    assert.match(fixed.body.serial_key, /^DEESER-FULL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+});
+
 test('admin: si el panel manda un serial con el prefijo de otro plugin, el servidor lo corrige', async () => {
     const r = await call(C.adminGenerateFullKey, { admin_key: ADMIN, plugin_name: 'Easy Level', serial_key: 'EASY-FULL-1234ABCD-5678ABCD' });
     assert.equal(r.code, 200);

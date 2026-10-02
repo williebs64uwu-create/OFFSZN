@@ -1212,11 +1212,12 @@ export const capturePayPalOrder = async (req, res) => {
                 const isEasyPitch = prodName.toLowerCase().includes('easy pitch') || prodName.toLowerCase().includes('easypitch') || prodId === '5000';
                 const isOmni = prodName.toLowerCase().includes('omni');
                 const isEasyLevel = prodName.toLowerCase().includes('easy level') || prodName.toLowerCase().includes('easylevel');
+                const isEasyDeeser = /de-?e?s?ser/.test(prodName.toLowerCase()) && prodName.toLowerCase().includes('easy');
                 const isPromo2x1 = item.is_promo_2x1 === true || item.product?.is_promo_2x1 === true || prodName.toLowerCase().includes('2x1') || (item.license_name || '').toLowerCase().includes('2x1') || req.body.isPromo2x1 === true;
                 
-                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isEasyLevel) {
+                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isEasyLevel || isEasyDeeser) {
                     try {
-                        const pluginName = isEasyLevel ? 'Easy Level' : isOmni ? 'Omni Plugin' : (isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix'))));
+                        const pluginName = isEasyDeeser ? 'Easy Deeser' : isEasyLevel ? 'Easy Level' : isOmni ? 'Omni Plugin' : (isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix'))));
                         const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
                                                (item.product?.product_type && item.product.product_type === 'subscription');
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';
@@ -2368,7 +2369,11 @@ export const handlePayPalWebhook = async (req, res) => {
             const hasLevelInItems = items.some(item =>
                 item.name?.toLowerCase().includes('easy level') || item.name?.toLowerCase().includes('easylevel')
             );
-            if (description.toLowerCase().includes('easy level') || description.toLowerCase().includes('easylevel') || hasLevelInItems) {
+            const isDeeserText = (t) => /easy ?de-?e?s?ser/.test(String(t || '').toLowerCase());
+            const hasDeeserInItems = items.some(item => isDeeserText(item.name));
+            if (isDeeserText(description) || hasDeeserInItems) {
+                pluginToGenerate = 'Easy Deeser';
+            } else if (description.toLowerCase().includes('easy level') || description.toLowerCase().includes('easylevel') || hasLevelInItems) {
                 pluginToGenerate = 'Easy Level';
             } else if (description.toLowerCase().includes('omni') || hasOmniInItems) {
                 pluginToGenerate = 'Omni Plugin';
