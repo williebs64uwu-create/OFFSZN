@@ -570,6 +570,28 @@ app.get(['/owner/content-calendar', '/owner/content-calendar.html'], (req, res) 
     return res.status(404).send('Content calendar not found');
 });
 
+// --- 3.0.5.1 KANBAN STUDIO DIRECT ROUTES ---
+app.get(['/kanban', '/kanban.html'], (req, res) => {
+    const p = path.join(rootPath, 'metodo/etapa-inicial/metodo-kanban/kanban.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Kanban hub not found');
+});
+app.get(['/kanban-offszn', '/kanban-offszn.html'], (req, res) => {
+    const p = path.join(rootPath, 'metodo/etapa-inicial/metodo-kanban/kanban-offszn.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Kanban OFFSZN not found');
+});
+app.get(['/kanban-upc', '/kanban-upc.html'], (req, res) => {
+    const p = path.join(rootPath, 'metodo/etapa-inicial/metodo-kanban/kanban-upc.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Kanban UPC not found');
+});
+app.get(['/kanban-pendientes', '/kanban-pendientes.html'], (req, res) => {
+    const p = path.join(rootPath, 'metodo/etapa-inicial/metodo-kanban/kanban-pendientes.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Kanban Pendientes not found');
+});
+
 // --- 3.0.6 AUDIENCE & SALES DATA ASSET ROUTES ---
 app.get('/owner/audience-data.js', (req, res) => {
     const p = path.join(rootPath, 'owner/audience-data.js');
@@ -634,7 +656,8 @@ app.use((req, res, next) => {
     const skipPaths = [
         '/api', '/ffmpeg_clean', '/offszn-debug', '/legal/offszn-debug', '/env.js', '/components',
         '/willieinspired', '/@willieinspired', '/pan/lic', '/owner', '/licencias-dispatch',
-        '/recovery-dashboard', '/system-logs', '/ayuda/admin', '/music-raw-to-defined'
+        '/recovery-dashboard', '/system-logs', '/ayuda/admin', '/music-raw-to-defined',
+        '/kanban'
     ];
     if (skipPaths.some(p => req.path.startsWith(p))) return next();
 
@@ -732,6 +755,17 @@ app.get('/favicon.ico', (req, res) => {
     }
     res.status(204).end();
 });
+
+// Dedicated static mount for metodo & kanban suite with guaranteed MIME types
+const metodoStaticPath = path.join(rootPath, 'metodo');
+app.use('/metodo', express.static(metodoStaticPath, {
+    maxAge: '1d',
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        if (filePath.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+    }
+}));
 
 // Serve everything from rootPath — CSS, JS, images, HTML files, etc.
 app.use(express.static(rootPath, {
