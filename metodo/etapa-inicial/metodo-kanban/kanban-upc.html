@@ -84,9 +84,10 @@
         <div class="filter-selectors">
           <select id="filterStatusSelect" class="select-ctrl" onchange="app.setStatusFilter(this.value)">
             <option value="all">Todos los estados</option>
-            <option value="pendiente">Pendiente</option>
-            <option value="en-curso">En curso</option>
-            <option value="listo">Listo</option>
+            <option value="backlog">Backlog</option>
+            <option value="todo">TODO</option>
+            <option value="in-progress">In progress</option>
+            <option value="complete">Complete</option>
           </select>
 
           <select id="filterPrioritySelect" class="select-ctrl" onchange="app.setPriorityFilter(this.value)">
@@ -114,51 +115,70 @@
       <!-- Rendered dynamically -->
     </div>
 
-    <!-- VIEW 1: KANBAN COLUMNS GRID -->
-    <div class="kanban-grid" id="kanbanGrid">
+    <!-- VIEW 1: HOVER.DEV CUSTOM KANBAN BOARD -->
+    <div class="hover-kanban-board" id="kanbanGrid">
       
-      <!-- Columna 1: Pendiente -->
-      <div class="kanban-col" data-col="pendiente">
-        <div class="col-header">
-          <div class="col-title-wrap">
-            <span class="col-indicator pending"></span>
-            <span class="col-name">Pendiente</span>
-            <span class="col-count" id="count-pendiente">0</span>
-          </div>
-          <button type="button" class="col-add-btn" title="Añadir tarea" onclick="app.openCreateModal('pendiente')">+</button>
+      <!-- Columna 1: Backlog -->
+      <div class="hover-col" data-col="backlog">
+        <div class="hover-col-header">
+          <h3 class="hover-col-title text-neutral-500">Backlog</h3>
+          <span class="hover-col-count" id="count-backlog">0</span>
         </div>
-        <div class="cards-list" id="list-pendiente">
+        <div class="hover-cards-list" id="list-backlog">
           <!-- Cards rendered dynamically -->
+        </div>
+        <div class="inline-add-slot" id="slot-backlog">
+          <!-- Inline add button/form rendered dynamically -->
         </div>
       </div>
 
-      <!-- Columna 2: En curso -->
-      <div class="kanban-col" data-col="en-curso">
-        <div class="col-header">
-          <div class="col-title-wrap">
-            <span class="col-indicator in-progress"></span>
-            <span class="col-name">En curso</span>
-            <span class="col-count" id="count-en-curso">0</span>
-          </div>
-          <button type="button" class="col-add-btn" title="Añadir tarea" onclick="app.openCreateModal('en-curso')">+</button>
+      <!-- Columna 2: TODO -->
+      <div class="hover-col" data-col="todo">
+        <div class="hover-col-header">
+          <h3 class="hover-col-title text-yellow-200">TODO</h3>
+          <span class="hover-col-count" id="count-todo">0</span>
         </div>
-        <div class="cards-list" id="list-en-curso">
+        <div class="hover-cards-list" id="list-todo">
           <!-- Cards rendered dynamically -->
+        </div>
+        <div class="inline-add-slot" id="slot-todo">
+          <!-- Inline add button/form rendered dynamically -->
         </div>
       </div>
 
-      <!-- Columna 3: Listo -->
-      <div class="kanban-col" data-col="listo">
-        <div class="col-header">
-          <div class="col-title-wrap">
-            <span class="col-indicator done"></span>
-            <span class="col-name">Listo</span>
-            <span class="col-count" id="count-listo">0</span>
-          </div>
-          <button type="button" class="col-add-btn" title="Añadir tarea" onclick="app.openCreateModal('listo')">+</button>
+      <!-- Columna 3: In progress -->
+      <div class="hover-col" data-col="in-progress">
+        <div class="hover-col-header">
+          <h3 class="hover-col-title text-blue-200">In progress</h3>
+          <span class="hover-col-count" id="count-in-progress">0</span>
         </div>
-        <div class="cards-list" id="list-listo">
+        <div class="hover-cards-list" id="list-in-progress">
           <!-- Cards rendered dynamically -->
+        </div>
+        <div class="inline-add-slot" id="slot-in-progress">
+          <!-- Inline add button/form rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Columna 4: Complete -->
+      <div class="hover-col" data-col="complete">
+        <div class="hover-col-header">
+          <h3 class="hover-col-title text-emerald-200">Complete</h3>
+          <span class="hover-col-count" id="count-complete">0</span>
+        </div>
+        <div class="hover-cards-list" id="list-complete">
+          <!-- Cards rendered dynamically -->
+        </div>
+        <div class="inline-add-slot" id="slot-complete">
+          <!-- Inline add button/form rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Hover.dev BurnBarrel Component -->
+      <div class="burn-barrel-slot">
+        <div class="burn-barrel" id="burnBarrel" title="Arrastra una tarjeta aquí para eliminarla">
+          <div class="burn-barrel-icon">🔥</div>
+          <div class="burn-barrel-text">Arrastra aquí para quemar tarea</div>
         </div>
       </div>
 
@@ -197,9 +217,10 @@
         </div>
 
         <div class="month-legend">
-          <span class="legend-item"><span class="legend-dot pending"></span> Pendiente</span>
-          <span class="legend-item"><span class="legend-dot in-progress"></span> En curso</span>
-          <span class="legend-item"><span class="legend-dot done"></span> Listo</span>
+          <span class="legend-item"><span class="legend-dot backlog"></span> Backlog</span>
+          <span class="legend-item"><span class="legend-dot todo"></span> TODO</span>
+          <span class="legend-item"><span class="legend-dot in-progress"></span> In progress</span>
+          <span class="legend-item"><span class="legend-dot complete"></span> Complete</span>
         </div>
       </div>
 

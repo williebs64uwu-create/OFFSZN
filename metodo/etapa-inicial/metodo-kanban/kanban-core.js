@@ -6,6 +6,14 @@
 
 const STORAGE_KEY = 'OFFSZN_KANBAN_DATABASE_V3';
 
+function normalizeStatus(status) {
+  if (!status) return 'todo';
+  if (status === 'pendiente') return 'todo';
+  if (status === 'en-curso') return 'in-progress';
+  if (status === 'listo') return 'complete';
+  return status;
+}
+
 // Clean initial empty boards ready for user's own genuine tasks
 const DEFAULT_BOARDS_DATA = {
   offszn: {
@@ -182,95 +190,6 @@ class KanbanApp {
     updateSyncStatus('synced');
   }
 
-  renderHubDashboard() {
-    const boards = ['offszn', 'upc', 'pendientes'];
-    let totalTasks = 0;
-    let urgentTasks = 0;
-    let inProgressTasks = 0;
-    let doneTasks = 0;
-    let allActiveTasks = [];
-
-    boards.forEach(bId => {
-      const b = this.db[bId];
-      if (!b) return;
-      const tasks = b.tasks || [];
-      const total = tasks.length;
-      const prog = tasks.filter(t => t.status === 'en-curso').length;
-      const done = tasks.filter(t => t.status === 'listo').length;
-      const urgent = tasks.filter(t => t.priority === 'urgent' && t.status !== 'listo').length;
-
-      totalTasks += total;
-      urgentTasks += urgent;
-      inProgressTasks += prog;
-      doneTasks += done;
-
-      tasks.forEach(t => {
-        if (t.status !== 'listo') {
-          allActiveTasks.push({ ...t, boardId: bId, boardName: b.title });
-        }
-      });
-
-      const elTot = document.getElementById(`portal-${bId}-total`);
-      const elProg = document.getElementById(`portal-${bId}-prog`);
-      const elDone = document.getElementById(`portal-${bId}-done`);
-      if (elTot) elTot.textContent = total;
-      if (elProg) elProg.textContent = prog;
-      if (elDone) elDone.textContent = done;
-    });
-
-    const elGTot = document.getElementById('global-total-tasks');
-    const elGUrg = document.getElementById('global-urgent-tasks');
-    const elGProg = document.getElementById('global-in-progress');
-    const elGDone = document.getElementById('global-done-tasks');
-    if (elGTot) elGTot.textContent = totalTasks;
-    if (elGUrg) elGUrg.textContent = urgentTasks;
-    if (elGProg) elGProg.textContent = inProgressTasks;
-    if (elGDone) elGDone.textContent = doneTasks;
-
-    const urgentContainer = document.getElementById('hubUrgentList');
-    if (urgentContainer) {
-      if (allActiveTasks.length === 0) {
-        urgentContainer.innerHTML = `
-          <div style="text-align: center; padding: 2.5rem; color: var(--text-faint);">
-            <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎉</div>
-            <div style="font-size: 0.95rem; font-weight: 600; color: var(--text-secondary);">No hay tareas pendientes en ningún tablero</div>
-            <p style="font-size: 0.8rem; margin-top: 0.35rem; color: var(--text-muted);">Ingresa a cualquiera de los 3 tableros para añadir tus proyectos reales.</p>
-          </div>
-        `;
-      } else {
-        allActiveTasks.sort((a, b) => {
-          if (!a.dueDate) return 1;
-          if (!b.dueDate) return -1;
-          return new Date(a.dueDate) - new Date(b.dueDate);
-        });
-
-        urgentContainer.innerHTML = allActiveTasks.slice(0, 6).map(t => {
-          const boardTag = t.boardId === 'offszn' ? '🔥 OFFSZN' : (t.boardId === 'upc' ? '🎓 UPC' : '🎧 ESTUDIO');
-          const pMeta = {
-            urgent: { label: '⚡ Urgente', color: '#f87171', bg: 'rgba(239, 68, 68, 0.1)' },
-            high: { label: '▲ Alta', color: '#fb923c', bg: 'rgba(249, 115, 22, 0.1)' },
-            medium: { label: '● Media', color: '#facc15', bg: 'rgba(234, 179, 8, 0.1)' },
-            low: { label: '▼ Baja', color: '#4ade80', bg: 'rgba(34, 197, 94, 0.1)' }
-          }[t.priority] || { label: '● Media', color: '#facc15', bg: 'rgba(234, 179, 8, 0.1)' };
-
-          return `
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: var(--bg-surface); border: 1px solid var(--border-card); border-radius: 8px;">
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); padding: 0.2rem 0.5rem; background: var(--bg-subtle); border-radius: 4px;">${boardTag}</span>
-                <span style="font-weight: 600; color: #fff; font-size: 0.9rem;">${this.escapeHTML(t.title)}</span>
-              </div>
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <span style="font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 999px; color: ${pMeta.color}; background: ${pMeta.bg}; font-weight: 600;">${pMeta.label}</span>
-                <span style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">🏁 ${t.dueDate ? this.formatShortDate(t.dueDate) : 'Sin fecha'}</span>
-                <a href="kanban-${t.boardId}.html" style="font-size: 0.8rem; color: var(--text-link); text-decoration: none; font-weight: 600;">Abrir →</a>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-    }
-  }
-
   getBoardData() {
     return this.db[this.boardId] || null;
   }
@@ -322,7 +241,7 @@ class KanbanApp {
     }
 
     if (this.filterStatus !== 'all') {
-      tasks = tasks.filter(t => t.status === this.filterStatus);
+      tasks = tasks.filter(t => normalizeStatus(t.status) === this.filterStatus);
     }
 
     if (this.filterPriority !== 'all') {
@@ -360,117 +279,166 @@ class KanbanApp {
   }
 
   // ═════════════════════════════════════════════════════════════
-  // KANBAN COLUMNS & CARDS
+  // HOVER.DEV CUSTOM KANBAN COLUMNS & CARDS
+  // Reference: www.hover.dev/components/boards#custom-kanban
   // ═════════════════════════════════════════════════════════════
   renderKanbanColumns() {
     const tasks = this.getFilteredTasks();
 
     const columns = [
-      { id: 'pendiente', name: 'Pendiente', indicator: 'pending' },
-      { id: 'en-curso', name: 'En curso', indicator: 'in-progress' },
-      { id: 'listo', name: 'Listo', indicator: 'done' }
+      { id: 'backlog', name: 'Backlog', titleClass: 'text-neutral-500' },
+      { id: 'todo', name: 'TODO', titleClass: 'text-yellow-200' },
+      { id: 'in-progress', name: 'In progress', titleClass: 'text-blue-200' },
+      { id: 'complete', name: 'Complete', titleClass: 'text-emerald-200' }
     ];
 
     const mobileTabs = document.getElementById('mobileColumnTabs');
     if (mobileTabs) {
       mobileTabs.innerHTML = columns.map(c => {
-        const count = tasks.filter(t => t.status === c.id).length;
+        const count = tasks.filter(t => normalizeStatus(t.status) === c.id).length;
         return `<button type="button" class="mobile-col-btn" onclick="app.scrollToColumn('${c.id}')">
-          <span class="col-indicator ${c.indicator}"></span> ${c.name} (${count})
+          <span class="col-indicator ${c.id}"></span> ${c.name} (${count})
         </button>`;
       }).join('');
     }
 
     columns.forEach(col => {
-      const colCards = tasks.filter(t => t.status === col.id);
+      const colCards = tasks.filter(t => normalizeStatus(t.status) === col.id);
       const countEl = document.getElementById(`count-${col.id}`);
       const listEl = document.getElementById(`list-${col.id}`);
+      const slotEl = document.getElementById(`slot-${col.id}`);
 
       if (countEl) countEl.textContent = colCards.length;
       if (listEl) {
-        if (colCards.length === 0) {
-          listEl.innerHTML = `
-            <div class="col-empty-card">
-              <span class="empty-icon">📂</span>
-              <p class="empty-text">Sin tareas en ${col.name}</p>
-              <button type="button" class="empty-add-btn" onclick="app.openCreateModal('${col.id}')">+ Añadir tarea</button>
-            </div>`;
+        let cardsHtml = '';
+        const firstBefore = colCards.length > 0 ? colCards[0].id : '-1';
+        cardsHtml += `<div class="drop-indicator" data-before="${firstBefore}" data-column="${col.id}"></div>`;
+
+        colCards.forEach((task, idx) => {
+          const next = colCards[idx + 1];
+          const beforeId = next ? next.id : '-1';
+          cardsHtml += this.createHoverCardHTML(task);
+          cardsHtml += `<div class="drop-indicator" data-before="${beforeId}" data-column="${col.id}"></div>`;
+        });
+
+        listEl.innerHTML = cardsHtml;
+      }
+
+      if (slotEl) {
+        if (this.activeInlineAddCol === col.id) {
+          slotEl.innerHTML = `
+            <div class="inline-add-card-form">
+              <textarea id="inline-textarea-${col.id}" class="inline-add-textarea" placeholder="Add new task..." 
+                onkeydown="app.handleInlineKeydown(event, '${col.id}')"></textarea>
+              <div class="inline-add-actions">
+                <button type="button" class="btn-inline-close" onclick="app.closeInlineAdd('${col.id}')">Close</button>
+                <button type="button" class="btn-inline-submit" onclick="app.submitInlineAdd('${col.id}')">
+                  <span>Add</span>
+                  <span>+</span>
+                </button>
+              </div>
+            </div>
+          `;
+          setTimeout(() => {
+            const ta = document.getElementById(`inline-textarea-${col.id}`);
+            if (ta) ta.focus();
+          }, 20);
         } else {
-          listEl.innerHTML = colCards.map(t => this.createCardHTML(t)).join('');
+          slotEl.innerHTML = `
+            <button type="button" class="btn-add-card" onclick="app.openInlineAdd('${col.id}')">
+              <span>Add card</span>
+              <span style="font-size: 0.9rem; margin-left: 2px;">+</span>
+            </button>
+          `;
         }
       }
     });
 
-    this.attachDragEvents();
+    this.attachHoverDragEvents();
   }
 
-  createCardHTML(task) {
-    const priorityMeta = {
-      urgent: { label: '⚡ Urgente', class: 'urgent' },
-      high: { label: '▲ Alta', class: 'high' },
-      medium: { label: '● Media', class: 'medium' },
-      low: { label: '▼ Baja', class: 'low' }
-    };
-
-    const statusLabels = {
-      'pendiente': 'Pendiente',
-      'en-curso': 'En curso',
-      'listo': 'Listo'
-    };
-
-    const tagsHtml = (task.tags || []).map(tg => `<span class="card-tag">#${tg}</span>`).join('');
-
-    const startFormatted = task.startDate ? this.formatShortDate(task.startDate) : 'Inicio';
-    const dueFormatted = task.dueDate ? this.formatShortDate(task.dueDate) : 'Finalización';
-    const isOverdue = task.dueDate && new Date(task.dueDate) < new Date('2026-09-27') && task.status !== 'listo';
-
-    const pMeta = priorityMeta[task.priority] || priorityMeta.medium;
-    const taskCode = (task.id || '').toUpperCase();
-    const avatarInitials = this.boardId === 'offszn' ? 'OF' : (this.boardId === 'upc' ? 'UP' : 'WK');
+  createHoverCardHTML(task) {
+    const isOverdue = task.dueDate && new Date(task.dueDate) < new Date('2026-09-27') && normalizeStatus(task.status) !== 'complete';
+    const tagsHtml = (task.tags || []).map(tg => `<span class="hover-card-tag">#${this.escapeHTML(tg)}</span>`).join('');
+    const dueFormatted = task.dueDate ? this.formatShortDate(task.dueDate) : '';
 
     return `
-      <div class="kanban-card" draggable="true" data-id="${task.id}" onclick="app.onCardClick(event, '${task.id}')">
-        <div class="card-top">
-          <div class="card-top-left">
-            <span class="priority-pill ${pMeta.class}">
-              ${pMeta.label}
-            </span>
-            <span class="card-id-badge">#${taskCode}</span>
+      <div class="hover-card" draggable="true" data-id="${task.id}" onclick="app.onCardClick(event, '${task.id}')">
+        <div class="hover-card-title">${this.escapeHTML(task.title)}</div>
+        ${task.desc ? `<div style="font-size: 0.78rem; color: #a3a3a3; margin-top: 0.25rem; line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${this.escapeHTML(task.desc)}</div>` : ''}
+        ${(tagsHtml || dueFormatted) ? `
+          <div class="hover-card-meta">
+            <div class="hover-card-tags">${tagsHtml}</div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              ${dueFormatted ? `<span class="hover-card-date" ${isOverdue ? 'style="color: #f87171;"' : ''}>🏁 ${dueFormatted}</span>` : ''}
+              <div class="hover-card-actions">
+                <button type="button" class="hover-card-btn" title="Editar detalles" onclick="event.stopPropagation(); app.openEditModal('${task.id}')">✎</button>
+                <button type="button" class="hover-card-btn delete-btn" title="Eliminar" onclick="event.stopPropagation(); app.deleteTask('${task.id}')">✕</button>
+              </div>
+            </div>
           </div>
-          <div class="card-top-right">
-            <button type="button" class="card-menu-btn" title="Editar tarea" onclick="event.stopPropagation(); app.openEditModal('${task.id}')">✎</button>
-            <button type="button" class="card-menu-btn delete-btn" title="Eliminar tarea" onclick="event.stopPropagation(); app.deleteTask('${task.id}')">✕</button>
+        ` : `
+          <div class="hover-card-meta" style="justify-content: flex-end; margin-top: 0.25rem;">
+            <div class="hover-card-actions">
+              <button type="button" class="hover-card-btn" title="Editar detalles" onclick="event.stopPropagation(); app.openEditModal('${task.id}')">✎</button>
+              <button type="button" class="hover-card-btn delete-btn" title="Eliminar" onclick="event.stopPropagation(); app.deleteTask('${task.id}')">✕</button>
+            </div>
           </div>
-        </div>
-
-        <div class="card-title">${this.escapeHTML(task.title)}</div>
-        ${task.desc ? `<div class="card-desc">${this.escapeHTML(task.desc)}</div>` : ''}
-
-        ${tagsHtml ? `<div class="card-tags">${tagsHtml}</div>` : ''}
-
-        <div class="card-dates-row">
-          <button type="button" class="date-trigger-btn ${task.startDate ? 'has-date' : ''}" 
-            title="Seleccionar Fecha de Inicio" onclick="event.stopPropagation(); app.openCalendarPopover(event, '${task.id}', 'startDate')">
-            📅 ${startFormatted}
-          </button>
-          <span style="color: var(--text-faint); font-size: 0.72rem;">→</span>
-          <button type="button" class="date-trigger-btn ${task.dueDate ? 'has-date' : ''} ${isOverdue ? 'overdue' : ''}" 
-            title="Seleccionar Fecha de Finalización / Máxima" onclick="event.stopPropagation(); app.openCalendarPopover(event, '${task.id}', 'dueDate')">
-            🏁 ${dueFormatted} ${isOverdue ? '<span class="overdue-dot" title="Vencido">!</span>' : ''}
-          </button>
-        </div>
-
-        <div class="card-footer">
-          <button type="button" class="status-dropdown-trigger ${task.status || 'pendiente'}" 
-            title="Cambiar estado" onclick="event.stopPropagation(); app.openDropdownPopover(event, '${task.id}')">
-            ● ${statusLabels[task.status] || 'Pendiente'} ▾
-          </button>
-          <div class="card-footer-right">
-            <span class="assignee-avatar" title="Responsable: ${this.boardId.toUpperCase()} Team">${avatarInitials}</span>
-          </div>
-        </div>
+        `}
       </div>
     `;
+  }
+
+  // Backwards compatibility alias for modal & table views
+  createCardHTML(task) {
+    return this.createHoverCardHTML(task);
+  }
+
+  openInlineAdd(colId) {
+    this.activeInlineAddCol = colId;
+    this.renderKanbanColumns();
+  }
+
+  closeInlineAdd(colId) {
+    this.activeInlineAddCol = null;
+    this.renderKanbanColumns();
+  }
+
+  handleInlineKeydown(event, colId) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      this.submitInlineAdd(colId);
+    } else if (event.key === 'Escape') {
+      this.closeInlineAdd(colId);
+    }
+  }
+
+  submitInlineAdd(colId) {
+    const ta = document.getElementById(`inline-textarea-${colId}`);
+    if (!ta) return;
+    const val = ta.value.trim();
+    if (!val) {
+      this.closeInlineAdd(colId);
+      return;
+    }
+
+    const board = this.getBoardData();
+    if (board) {
+      const newTask = {
+        id: `${this.boardId}-${Date.now().toString(36)}`,
+        title: val,
+        desc: '',
+        status: colId,
+        priority: 'medium',
+        startDate: '',
+        dueDate: '',
+        tags: []
+      };
+      board.tasks.push(newTask);
+      saveKanbanDB(this.db);
+      this.activeInlineAddCol = null;
+      this.renderBoard();
+    }
   }
 
   // ═════════════════════════════════════════════════════════════
@@ -494,11 +462,20 @@ class KanbanApp {
       low: { label: '▼ Baja', class: 'low' }
     };
 
-    const statusLabels = { 'pendiente': 'Pendiente', 'en-curso': 'En curso', 'listo': 'Listo' };
+    const statusLabels = {
+      'backlog': 'Backlog',
+      'todo': 'TODO',
+      'in-progress': 'In progress',
+      'complete': 'Complete',
+      'pendiente': 'TODO',
+      'en-curso': 'In progress',
+      'listo': 'Complete'
+    };
 
     tbody.innerHTML = tasks.map(t => {
       const pMeta = priorityMeta[t.priority] || priorityMeta.medium;
-      const isOverdue = t.dueDate && new Date(t.dueDate) < new Date('2026-09-27') && t.status !== 'listo';
+      const normStatus = normalizeStatus(t.status);
+      const isOverdue = t.dueDate && new Date(t.dueDate) < new Date('2026-09-27') && normStatus !== 'complete';
 
       return `
         <tr>
@@ -509,8 +486,8 @@ class KanbanApp {
             </div>
           </td>
           <td>
-            <button type="button" class="status-dropdown-trigger ${t.status}" onclick="app.openDropdownPopover(event, '${t.id}')">
-              ● ${statusLabels[t.status]} ▾
+            <button type="button" class="status-dropdown-trigger ${normStatus}" onclick="app.openDropdownPopover(event, '${t.id}')">
+              ● ${statusLabels[normStatus] || normStatus} ▾
             </button>
           </td>
           <td>
@@ -580,13 +557,13 @@ class KanbanApp {
 
       const badges = [
         ...startTasks.map(t => `
-          <div class="month-task-badge ${t.status}" title="Inicio: ${this.escapeHTML(t.title)}" onclick="event.stopPropagation(); app.openEditModal('${t.id}')">
+          <div class="month-task-badge ${normalizeStatus(t.status)}" title="Inicio: ${this.escapeHTML(t.title)}" onclick="event.stopPropagation(); app.openEditModal('${t.id}')">
             <span class="badge-icon">▶</span>
             <span class="badge-title">${this.escapeHTML(t.title)}</span>
           </div>
         `),
         ...dueTasks.map(t => `
-          <div class="month-task-badge ${t.status}" title="Entrega: ${this.escapeHTML(t.title)}" onclick="event.stopPropagation(); app.openEditModal('${t.id}')">
+          <div class="month-task-badge ${normalizeStatus(t.status)}" title="Entrega: ${this.escapeHTML(t.title)}" onclick="event.stopPropagation(); app.openEditModal('${t.id}')">
             <span class="badge-icon">🏁</span>
             <span class="badge-title">${this.escapeHTML(t.title)}</span>
           </div>
@@ -630,7 +607,7 @@ class KanbanApp {
   }
 
   openCreateModalOnDate(dateStr) {
-    this.openCreateModal('pendiente');
+    this.openCreateModal('todo');
     const start = document.getElementById('formStartDate');
     const due = document.getElementById('formDueDate');
     if (start) start.value = dateStr;
@@ -651,9 +628,9 @@ class KanbanApp {
       const b = this.db[bId];
       if (b && b.tasks) {
         totalTasks += b.tasks.length;
-        inProgressTasks += b.tasks.filter(t => t.status === 'en-curso').length;
-        doneTasks += b.tasks.filter(t => t.status === 'listo').length;
-        urgentTasks += b.tasks.filter(t => t.priority === 'urgent' && t.status !== 'listo').length;
+        inProgressTasks += b.tasks.filter(t => normalizeStatus(t.status) === 'in-progress').length;
+        doneTasks += b.tasks.filter(t => normalizeStatus(t.status) === 'complete').length;
+        urgentTasks += b.tasks.filter(t => t.priority === 'urgent' && normalizeStatus(t.status) !== 'complete').length;
       }
     });
 
@@ -671,8 +648,8 @@ class KanbanApp {
       const b = this.db[bId];
       if (b) {
         const pTotal = b.tasks.length;
-        const pProg = b.tasks.filter(t => t.status === 'en-curso').length;
-        const pDone = b.tasks.filter(t => t.status === 'listo').length;
+        const pProg = b.tasks.filter(t => normalizeStatus(t.status) === 'in-progress').length;
+        const pDone = b.tasks.filter(t => normalizeStatus(t.status) === 'complete').length;
 
         const elTotal = document.getElementById(`portal-${bId}-total`);
         const elProg = document.getElementById(`portal-${bId}-prog`);
@@ -691,7 +668,7 @@ class KanbanApp {
         const b = this.db[bId];
         if (b && b.tasks) {
           b.tasks.forEach(t => {
-            if (t.status !== 'listo') {
+            if (normalizeStatus(t.status) !== 'complete') {
               urgentList.push({ ...t, boardName: b.title, boardId: bId });
             }
           });
@@ -732,16 +709,19 @@ class KanbanApp {
         <input type="text" id="popoverSearchInput" class="dropdown-search-input" placeholder="Busca una opción..." oninput="app.filterDropdownOptions(this.value)">
       </div>
       <div class="dropdown-options-list" id="popoverOptionsList">
-        <button type="button" class="dropdown-option" onclick="app.selectStatus('pendiente')">
-          <span class="pill-option-status pendiente">Pendiente</span>
+        <button type="button" class="dropdown-option" onclick="app.selectStatus('backlog')">
+          <span class="pill-option-status backlog">Backlog</span>
         </button>
-        <button type="button" class="dropdown-option" onclick="app.selectStatus('en-curso')">
-          <span class="pill-option-status en-curso">En curso</span>
+        <button type="button" class="dropdown-option" onclick="app.selectStatus('todo')">
+          <span class="pill-option-status todo">TODO</span>
         </button>
-        <button type="button" class="dropdown-option" onclick="app.selectStatus('listo')">
-          <span class="pill-option-status listo">Listo</span>
+        <button type="button" class="dropdown-option" onclick="app.selectStatus('in-progress')">
+          <span class="pill-option-status in-progress">In progress</span>
         </button>
-        <button type="button" class="dropdown-option" onclick="app.selectStatus('pendiente')">
+        <button type="button" class="dropdown-option" onclick="app.selectStatus('complete')">
+          <span class="pill-option-status complete">Complete</span>
+        </button>
+        <button type="button" class="dropdown-option" onclick="app.selectStatus('todo')">
           <span class="option-none-text">Ninguno</span>
         </button>
       </div>
@@ -1054,9 +1034,10 @@ class KanbanApp {
             <div class="form-group">
               <label class="form-label" for="formStatus">Estado</label>
               <select id="formStatus" class="form-select">
-                <option value="pendiente">Pendiente</option>
-                <option value="en-curso">En curso</option>
-                <option value="listo">Listo</option>
+                <option value="backlog">Backlog</option>
+                <option value="todo" selected>TODO</option>
+                <option value="in-progress">In progress</option>
+                <option value="complete">Complete</option>
               </select>
             </div>
 
@@ -1098,7 +1079,7 @@ class KanbanApp {
     document.body.appendChild(modal);
   }
 
-  openCreateModal(columnId = 'pendiente') {
+  openCreateModal(columnId = 'todo') {
     this.closeAllPopovers();
     const modal = document.getElementById('taskModalBackdrop');
     const title = document.getElementById('modalTitle');
@@ -1107,7 +1088,7 @@ class KanbanApp {
     if (modal && form) {
       form.reset();
       document.getElementById('formTaskId').value = '';
-      document.getElementById('formStatus').value = columnId;
+      document.getElementById('formStatus').value = normalizeStatus(columnId);
       document.getElementById('formStartDate').value = '2026-09-28';
       document.getElementById('formDueDate').value = '2026-10-05';
       if (title) title.textContent = 'Nueva Tarea';
@@ -1131,7 +1112,7 @@ class KanbanApp {
       document.getElementById('formTaskId').value = task.id;
       document.getElementById('formTitle').value = task.title;
       document.getElementById('formDesc').value = task.desc || '';
-      document.getElementById('formStatus').value = task.status || 'pendiente';
+      document.getElementById('formStatus').value = normalizeStatus(task.status);
       document.getElementById('formPriority').value = task.priority || 'medium';
       document.getElementById('formStartDate').value = task.startDate || '';
       document.getElementById('formDueDate').value = task.dueDate || '';
@@ -1156,7 +1137,7 @@ class KanbanApp {
     const id = document.getElementById('formTaskId').value;
     const title = document.getElementById('formTitle').value.trim();
     const desc = document.getElementById('formDesc').value.trim();
-    const status = document.getElementById('formStatus').value;
+    const status = normalizeStatus(document.getElementById('formStatus').value);
     const priority = document.getElementById('formPriority').value;
     const startDate = document.getElementById('formStartDate').value;
     const dueDate = document.getElementById('formDueDate').value;
@@ -1204,51 +1185,182 @@ class KanbanApp {
   }
 
   // ═════════════════════════════════════════════════════════════
-  // DRAG & DROP
+  // HOVER.DEV DRAG & DROP ENGINE (VIOLET INDICATORS & BURNBARREL)
+  // Reference: www.hover.dev/components/boards#custom-kanban
   // ═════════════════════════════════════════════════════════════
-  attachDragEvents() {
-    const cards = document.querySelectorAll('.kanban-card');
+  attachHoverDragEvents() {
+    // 1. Cards dragstart & dragend
+    const cards = document.querySelectorAll('.hover-card, .kanban-card');
     cards.forEach(card => {
       card.addEventListener('dragstart', (e) => {
-        this.draggedTaskId = card.getAttribute('data-id');
+        const id = card.getAttribute('data-id');
+        this.draggedTaskId = id;
         card.classList.add('dragging');
-        e.dataTransfer.setData('text/plain', this.draggedTaskId);
+        e.dataTransfer.setData('text/plain', id);
+        e.dataTransfer.effectAllowed = 'move';
       });
 
       card.addEventListener('dragend', () => {
         card.classList.remove('dragging');
         this.draggedTaskId = null;
+        this.clearAllIndicators();
+        document.querySelectorAll('.hover-col, .kanban-col').forEach(c => c.classList.remove('drag-active', 'drag-over'));
       });
     });
 
-    const columns = document.querySelectorAll('.kanban-col');
-    columns.forEach(col => {
+    // 2. Columns dragover, dragleave, drop
+    const cols = document.querySelectorAll('.hover-col, .kanban-col');
+    cols.forEach(col => {
       col.addEventListener('dragover', (e) => {
         e.preventDefault();
-        col.classList.add('drag-over');
+        col.classList.add('drag-active');
+        this.highlightIndicator(e, col);
       });
 
-      col.addEventListener('dragleave', () => {
-        col.classList.remove('drag-over');
+      col.addEventListener('dragleave', (e) => {
+        // Only trigger if actually leaving column boundary
+        const rect = col.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX >= rect.right || e.clientY < rect.top || e.clientY >= rect.bottom) {
+          col.classList.remove('drag-active');
+          this.clearColumnIndicators(col);
+        }
       });
 
       col.addEventListener('drop', (e) => {
         e.preventDefault();
-        col.classList.remove('drag-over');
+        col.classList.remove('drag-active');
         const colId = col.getAttribute('data-col');
-        if (this.draggedTaskId && colId) {
-          const board = this.getBoardData();
-          if (board) {
-            const task = board.tasks.find(t => t.id === this.draggedTaskId);
-            if (task && task.status !== colId) {
-              task.status = colId;
-              saveKanbanDB(this.db);
-              this.renderCurrentView();
-            }
-          }
+        const cardId = e.dataTransfer.getData('text/plain') || this.draggedTaskId;
+
+        if (cardId && colId) {
+          const indicators = Array.from(col.querySelectorAll('.drop-indicator'));
+          const activeInd = indicators.find(i => i.classList.contains('active')) || indicators[indicators.length - 1];
+          const beforeId = activeInd ? activeInd.getAttribute('data-before') : '-1';
+          this.clearAllIndicators();
+          this.moveTask(cardId, colId, beforeId);
         }
       });
     });
+
+    // 3. Hover.dev BurnBarrel (Delete Drop Zone)
+    const burnBarrel = document.getElementById('burnBarrel');
+    if (burnBarrel) {
+      burnBarrel.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        burnBarrel.classList.add('active');
+        e.dataTransfer.dropEffect = 'move';
+      });
+
+      burnBarrel.addEventListener('dragleave', () => {
+        burnBarrel.classList.remove('active');
+      });
+
+      burnBarrel.addEventListener('drop', (e) => {
+        e.preventDefault();
+        burnBarrel.classList.remove('active');
+        const cardId = e.dataTransfer.getData('text/plain') || this.draggedTaskId;
+        if (cardId) {
+          this.deleteTaskDirect(cardId);
+        }
+      });
+    }
+  }
+
+  // Alias for backwards compatibility
+  attachDragEvents() {
+    this.attachHoverDragEvents();
+  }
+
+  highlightIndicator(e, colEl) {
+    const indicators = Array.from(colEl.querySelectorAll('.drop-indicator'));
+    indicators.forEach(i => i.classList.remove('active'));
+
+    const nearest = this.getNearestIndicator(e, indicators);
+    if (nearest) {
+      nearest.classList.add('active');
+    }
+  }
+
+  clearColumnIndicators(colEl) {
+    const indicators = colEl.querySelectorAll('.drop-indicator');
+    indicators.forEach(i => i.classList.remove('active'));
+  }
+
+  clearAllIndicators() {
+    document.querySelectorAll('.drop-indicator').forEach(i => i.classList.remove('active'));
+  }
+
+  getNearestIndicator(e, indicators) {
+    if (!indicators || indicators.length === 0) return null;
+    const DISTANCE_OFFSET = 50;
+
+    return indicators.reduce(
+      (closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = e.clientY - (box.top + DISTANCE_OFFSET);
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      },
+      {
+        offset: Number.NEGATIVE_INFINITY,
+        element: indicators[indicators.length - 1]
+      }
+    ).element;
+  }
+
+  moveTask(cardId, targetCol, beforeId) {
+    const board = this.getBoardData();
+    if (!board) return;
+
+    const taskIndex = board.tasks.findIndex(t => t.id === cardId);
+    if (taskIndex === -1) return;
+
+    const [task] = board.tasks.splice(taskIndex, 1);
+    task.status = targetCol;
+
+    if (beforeId === '-1' || !beforeId) {
+      let lastIndex = -1;
+      for (let i = board.tasks.length - 1; i >= 0; i--) {
+        if (normalizeStatus(board.tasks[i].status) === targetCol) {
+          lastIndex = i;
+          break;
+        }
+      }
+      if (lastIndex === -1) {
+        board.tasks.push(task);
+      } else {
+        board.tasks.splice(lastIndex + 1, 0, task);
+      }
+    } else {
+      const beforeIndex = board.tasks.findIndex(t => t.id === beforeId);
+      if (beforeIndex === -1) {
+        board.tasks.push(task);
+      } else {
+        board.tasks.splice(beforeIndex, 0, task);
+      }
+    }
+
+    saveKanbanDB(this.db);
+    this.renderCurrentView();
+  }
+
+  deleteTaskDirect(cardId) {
+    const board = this.getBoardData();
+    if (!board) return;
+
+    board.tasks = board.tasks.filter(t => t.id !== cardId);
+    saveKanbanDB(this.db);
+    this.renderCurrentView();
+
+    // Burn animation trigger
+    const barrel = document.getElementById('burnBarrel');
+    if (barrel) {
+      barrel.classList.add('active');
+      setTimeout(() => barrel.classList.remove('active'), 600);
+    }
   }
 
   handleSearch(val) {
@@ -1299,7 +1411,7 @@ class KanbanApp {
   }
 
   scrollToColumn(colId) {
-    const col = document.querySelector(`.kanban-col[data-col="${colId}"]`);
+    const col = document.querySelector(`.hover-col[data-col="${colId}"], .kanban-col[data-col="${colId}"]`);
     if (col) {
       col.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       document.querySelectorAll('.mobile-col-btn').forEach(b => {
