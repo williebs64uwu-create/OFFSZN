@@ -7,11 +7,48 @@
 const STORAGE_KEY = 'OFFSZN_KANBAN_DATABASE_V3';
 
 function normalizeStatus(status) {
-  if (!status) return 'todo';
-  if (status === 'pendiente') return 'todo';
-  if (status === 'en-curso') return 'in-progress';
-  if (status === 'listo') return 'complete';
-  return status;
+  if (!status) return 'pendiente';
+  const s = String(status).toLowerCase().trim();
+  if (s === 'backlog' || s === 'todo' || s === 'pendiente' || s === 'pending') return 'pendiente';
+  if (s === 'in-progress' || s === 'en-curso' || s === 'in_progress' || s === 'progreso') return 'en-curso';
+  if (s === 'complete' || s === 'listo' || s === 'completed' || s === 'terminado') return 'listo';
+  return 'pendiente';
+}
+
+function getTagColor(tag) {
+  const t = String(tag || '').toLowerCase().trim();
+  if (t.includes('mezcla') || t.includes('mix')) {
+    return { bg: 'rgba(168, 85, 247, 0.18)', text: '#c084fc', border: 'rgba(168, 85, 247, 0.35)' };
+  }
+  if (t.includes('master') || t.includes('mastering')) {
+    return { bg: 'rgba(59, 130, 246, 0.18)', text: '#93c5fd', border: 'rgba(59, 130, 246, 0.35)' };
+  }
+  if (t.includes('afin') || t.includes('vocal') || t.includes('preset')) {
+    return { bg: 'rgba(236, 72, 153, 0.18)', text: '#f472b6', border: 'rgba(236, 72, 153, 0.35)' };
+  }
+  if (t.includes('beat') || t.includes('prod') || t.includes('remake')) {
+    return { bg: 'rgba(6, 182, 212, 0.18)', text: '#67e8f9', border: 'rgba(6, 182, 212, 0.35)' };
+  }
+  if (t.includes('cliente') || t.includes('pago') || t.includes('venta')) {
+    return { bg: 'rgba(16, 185, 129, 0.18)', text: '#6ee7b7', border: 'rgba(16, 185, 129, 0.35)' };
+  }
+  if (t.includes('entrega') || t.includes('urgente') || t.includes('examen') || t.includes('parcial')) {
+    return { bg: 'rgba(245, 158, 11, 0.18)', text: '#fde68a', border: 'rgba(245, 158, 11, 0.35)' };
+  }
+  if (t.includes('plugin') || t.includes('agente') || t.includes('codigo') || t.includes('código')) {
+    return { bg: 'rgba(99, 102, 241, 0.18)', text: '#a5b4fc', border: 'rgba(99, 102, 241, 0.35)' };
+  }
+  const palette = [
+    { bg: 'rgba(168, 85, 247, 0.18)', text: '#c084fc', border: 'rgba(168, 85, 247, 0.35)' },
+    { bg: 'rgba(59, 130, 246, 0.18)', text: '#93c5fd', border: 'rgba(59, 130, 246, 0.35)' },
+    { bg: 'rgba(16, 185, 129, 0.18)', text: '#6ee7b7', border: 'rgba(16, 185, 129, 0.35)' },
+    { bg: 'rgba(245, 158, 11, 0.18)', text: '#fde68a', border: 'rgba(245, 158, 11, 0.35)' },
+    { bg: 'rgba(236, 72, 153, 0.18)', text: '#f472b6', border: 'rgba(236, 72, 153, 0.35)' },
+    { bg: 'rgba(6, 182, 212, 0.18)', text: '#67e8f9', border: 'rgba(6, 182, 212, 0.35)' }
+  ];
+  let h = 0;
+  for (let i = 0; i < t.length; i++) h = t.charCodeAt(i) + ((h << 5) - h);
+  return palette[Math.abs(h) % palette.length];
 }
 
 // Clean initial empty boards ready for user's own genuine tasks
@@ -280,17 +317,16 @@ class KanbanApp {
   }
 
   // ═════════════════════════════════════════════════════════════
-  // HOVER.DEV CUSTOM KANBAN COLUMNS & CARDS
-  // Reference: www.hover.dev/components/boards#custom-kanban
+  // HOVER.DEV × NOTION HYBRID KANBAN COLUMNS & CARDS
+  // 3 Canonical Columns (Pendiente, En curso, Listo) & Rich Colors
   // ═════════════════════════════════════════════════════════════
   renderKanbanColumns() {
     const tasks = this.getFilteredTasks();
 
     const columns = [
-      { id: 'backlog', name: 'Backlog', titleClass: 'text-neutral-500' },
-      { id: 'todo', name: 'TODO', titleClass: 'text-yellow-200' },
-      { id: 'in-progress', name: 'In progress', titleClass: 'text-blue-200' },
-      { id: 'complete', name: 'Complete', titleClass: 'text-emerald-200' }
+      { id: 'pendiente', name: 'Pendiente', pillClass: 'pill-pendiente', icon: '⏳' },
+      { id: 'en-curso', name: 'En curso', pillClass: 'pill-en-curso', icon: '⚡' },
+      { id: 'listo', name: 'Listo', pillClass: 'pill-listo', icon: '✅' }
     ];
 
     const mobileTabs = document.getElementById('mobileColumnTabs');
@@ -298,7 +334,7 @@ class KanbanApp {
       mobileTabs.innerHTML = columns.map(c => {
         const count = tasks.filter(t => normalizeStatus(t.status) === c.id).length;
         return `<button type="button" class="mobile-col-btn" onclick="app.scrollToColumn('${c.id}')">
-          <span class="col-indicator ${c.id}"></span> ${c.name} (${count})
+          <span class="col-indicator ${c.id}"></span> ${c.icon} ${c.name} (${count})
         </button>`;
       }).join('');
     }
@@ -329,13 +365,25 @@ class KanbanApp {
         if (this.activeInlineAddCol === col.id) {
           slotEl.innerHTML = `
             <div class="inline-add-card-form">
-              <textarea id="inline-textarea-${col.id}" class="inline-add-textarea" placeholder="Add new task..." 
+              <textarea id="inline-textarea-${col.id}" class="inline-add-textarea" placeholder="Escribe el nombre de la tarea..." 
                 onkeydown="app.handleInlineKeydown(event, '${col.id}')"></textarea>
+              
+              <div class="inline-quick-props">
+                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                  <span style="font-size: 0.72rem; color: #94a3b8; font-weight: 600;">Prioridad:</span>
+                  <select id="inline-priority-${col.id}" class="inline-select-priority">
+                    <option value="medium" selected>● Media</option>
+                    <option value="high">▲ Alta</option>
+                    <option value="urgent">⚡ Urgente</option>
+                    <option value="low">▼ Baja</option>
+                  </select>
+                </div>
+              </div>
+
               <div class="inline-add-actions">
-                <button type="button" class="btn-inline-close" onclick="app.closeInlineAdd('${col.id}')">Close</button>
+                <button type="button" class="btn-inline-close" onclick="app.closeInlineAdd('${col.id}')">Cancelar</button>
                 <button type="button" class="btn-inline-submit" onclick="app.submitInlineAdd('${col.id}')">
-                  <span>Add</span>
-                  <span>+</span>
+                  <span>+ Añadir Tarea</span>
                 </button>
               </div>
             </div>
@@ -347,8 +395,7 @@ class KanbanApp {
         } else {
           slotEl.innerHTML = `
             <button type="button" class="btn-add-card" onclick="app.openInlineAdd('${col.id}')">
-              <span>Add card</span>
-              <span style="font-size: 0.9rem; margin-left: 2px;">+</span>
+              <span>+ Añadir tarea</span>
             </button>
           `;
         }
@@ -359,33 +406,94 @@ class KanbanApp {
   }
 
   createHoverCardHTML(task) {
-    const isOverdue = task.dueDate && new Date(task.dueDate) < new Date('2026-09-27') && normalizeStatus(task.status) !== 'complete';
-    const tagsHtml = (task.tags || []).map(tg => `<span class="hover-card-tag">#${this.escapeHTML(tg)}</span>`).join('');
-    const dueFormatted = task.dueDate ? this.formatShortDate(task.dueDate) : '';
+    const normStatus = normalizeStatus(task.status);
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isOverdue = task.dueDate && task.dueDate < todayStr && normStatus !== 'listo';
+    const isNear = task.dueDate && !isOverdue && normStatus !== 'listo';
+
+    // Priority chip with vivid colors
+    const p = (task.priority || 'medium').toLowerCase();
+    let priorityHtml = '';
+    if (p === 'urgent') {
+      priorityHtml = `<span class="priority-chip chip-urgent"><span class="priority-dot"></span>⚡ Urgente</span>`;
+    } else if (p === 'high') {
+      priorityHtml = `<span class="priority-chip chip-high"><span class="priority-dot"></span>▲ Alta</span>`;
+    } else if (p === 'medium') {
+      priorityHtml = `<span class="priority-chip chip-medium"><span class="priority-dot"></span>● Media</span>`;
+    } else {
+      priorityHtml = `<span class="priority-chip chip-low"><span class="priority-dot"></span>▼ Baja</span>`;
+    }
+
+    // Status chip for extra visual clarity (matching DROPDOWNS.png)
+    let statusChipHtml = '';
+    if (normStatus === 'en-curso') {
+      statusChipHtml = `<span class="status-pill-badge pill-en-curso mini-pill"><span class="status-indicator-dot pulse"></span>En curso</span>`;
+    } else if (normStatus === 'listo') {
+      statusChipHtml = `<span class="status-pill-badge pill-listo mini-pill"><span class="status-indicator-dot"></span>Listo</span>`;
+    }
+
+    // Smart Tag Detection: Ensure every card has colorful, distinct Notion tags
+    let rawTags = Array.isArray(task.tags) ? [...task.tags] : [];
+    if (rawTags.length === 0) {
+      const tLow = (task.title || '').toLowerCase();
+      if (tLow.includes('beat') || tLow.includes('remake')) rawTags.push('Beats');
+      if (tLow.includes('preset') || tLow.includes('vocal')) rawTags.push('Preset');
+      if (tLow.includes('plugin') || tLow.includes('deeser')) rawTags.push('Plugin');
+      if (tLow.includes('ordenar') || tLow.includes('pc') || tLow.includes('archivo')) rawTags.push('Organización');
+      if (tLow.includes('landing') || tLow.includes('web') || tLow.includes('página') || tLow.includes('pagina')) rawTags.push('Desarrollo');
+      if (tLow.includes('tiktok') || tLow.includes('video') || tLow.includes('contenido')) rawTags.push('Contenido');
+      if (tLow.includes('mezcla') || tLow.includes('mix')) rawTags.push('Mezcla');
+      if (tLow.includes('master') || tLow.includes('mastering')) rawTags.push('Mastering');
+      if (tLow.includes('agente') || tLow.includes('investigar')) rawTags.push('Investigación');
+      if (tLow.includes('examen') || tLow.includes('parcial') || tLow.includes('final')) rawTags.push('Examen');
+      if (tLow.includes('grupo') || tLow.includes('uni')) rawTags.push('UPC');
+      
+      // If still empty, assign a default contextual tag so card is never colorless
+      if (rawTags.length === 0) {
+        if (this.boardId === 'pendientes') rawTags.push('Producción');
+        else if (this.boardId === 'offszn') rawTags.push('OFFSZN');
+        else if (this.boardId === 'upc') rawTags.push('Universidad');
+        else rawTags.push('General');
+      }
+    }
+
+    // Tags HTML with rich Notion pastel colors
+    const tagsHtml = rawTags.map(tg => {
+      const tc = getTagColor(tg);
+      return `<span class="hover-card-tag" style="background:${tc.bg}; color:${tc.text}; border-color:${tc.border};">#${this.escapeHTML(tg)}</span>`;
+    }).join('');
+
+    // Due date badge
+    let dueHtml = '';
+    if (task.dueDate) {
+      const dueFormatted = this.formatShortDate(task.dueDate);
+      const dateClass = isOverdue ? 'overdue' : (isNear ? 'near' : '');
+      const icon = isOverdue ? '🚨' : '📅';
+      dueHtml = `<span class="hover-card-date ${dateClass}">${icon} ${dueFormatted}</span>`;
+    }
 
     return `
-      <div class="hover-card" draggable="true" data-id="${task.id}" onclick="app.onCardClick(event, '${task.id}')">
+      <div class="hover-card card-priority-${p} card-status-${normStatus}" draggable="true" data-id="${task.id}" onclick="app.onCardClick(event, '${task.id}')">
+        <div class="hover-card-head">
+          <div class="card-head-badges">
+            ${priorityHtml}
+            ${statusChipHtml}
+          </div>
+          <div class="hover-card-actions">
+            <button type="button" class="hover-card-btn" title="Editar detalles" onclick="event.stopPropagation(); app.openEditModal('${task.id}')">✎</button>
+            <button type="button" class="hover-card-btn delete-btn" title="Eliminar" onclick="event.stopPropagation(); app.deleteTask('${task.id}')">✕</button>
+          </div>
+        </div>
+
         <div class="hover-card-title">${this.escapeHTML(task.title)}</div>
-        ${task.desc ? `<div style="font-size: 0.78rem; color: #a3a3a3; margin-top: 0.25rem; line-height: 1.35; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${this.escapeHTML(task.desc)}</div>` : ''}
-        ${(tagsHtml || dueFormatted) ? `
-          <div class="hover-card-meta">
-            <div class="hover-card-tags">${tagsHtml}</div>
-            <div style="display: flex; align-items: center; gap: 0.4rem;">
-              ${dueFormatted ? `<span class="hover-card-date" ${isOverdue ? 'style="color: #f87171;"' : ''}>🏁 ${dueFormatted}</span>` : ''}
-              <div class="hover-card-actions">
-                <button type="button" class="hover-card-btn" title="Editar detalles" onclick="event.stopPropagation(); app.openEditModal('${task.id}')">✎</button>
-                <button type="button" class="hover-card-btn delete-btn" title="Eliminar" onclick="event.stopPropagation(); app.deleteTask('${task.id}')">✕</button>
-              </div>
-            </div>
+        ${task.desc ? `<div class="hover-card-desc">${this.escapeHTML(task.desc)}</div>` : ''}
+
+        <div class="hover-card-meta">
+          <div class="hover-card-tags">${tagsHtml}</div>
+          <div class="hover-card-meta-right">
+            ${dueHtml}
           </div>
-        ` : `
-          <div class="hover-card-meta" style="justify-content: flex-end; margin-top: 0.25rem;">
-            <div class="hover-card-actions">
-              <button type="button" class="hover-card-btn" title="Editar detalles" onclick="event.stopPropagation(); app.openEditModal('${task.id}')">✎</button>
-              <button type="button" class="hover-card-btn delete-btn" title="Eliminar" onclick="event.stopPropagation(); app.deleteTask('${task.id}')">✕</button>
-            </div>
-          </div>
-        `}
+        </div>
       </div>
     `;
   }
@@ -423,6 +531,9 @@ class KanbanApp {
       return;
     }
 
+    const prioSelect = document.getElementById(`inline-priority-${colId}`);
+    const chosenPriority = prioSelect ? prioSelect.value : 'medium';
+
     const board = this.getBoardData();
     if (board) {
       const newTask = {
@@ -430,7 +541,7 @@ class KanbanApp {
         title: val,
         desc: '',
         status: colId,
-        priority: 'medium',
+        priority: chosenPriority,
         startDate: '',
         dueDate: '',
         tags: []
@@ -464,19 +575,21 @@ class KanbanApp {
     };
 
     const statusLabels = {
-      'backlog': 'Backlog',
-      'todo': 'TODO',
-      'in-progress': 'In progress',
-      'complete': 'Complete',
-      'pendiente': 'TODO',
-      'en-curso': 'In progress',
-      'listo': 'Complete'
+      'pendiente': 'Pendiente',
+      'en-curso': 'En curso',
+      'listo': 'Listo',
+      'backlog': 'Pendiente',
+      'todo': 'Pendiente',
+      'in-progress': 'En curso',
+      'complete': 'Listo'
     };
+
+    const todayStr = new Date().toISOString().split('T')[0];
 
     tbody.innerHTML = tasks.map(t => {
       const pMeta = priorityMeta[t.priority] || priorityMeta.medium;
       const normStatus = normalizeStatus(t.status);
-      const isOverdue = t.dueDate && new Date(t.dueDate) < new Date('2026-09-27') && normStatus !== 'complete';
+      const isOverdue = t.dueDate && t.dueDate < todayStr && normStatus !== 'listo';
 
       return `
         <tr>
@@ -629,9 +742,9 @@ class KanbanApp {
       const b = this.db[bId];
       if (b && b.tasks) {
         totalTasks += b.tasks.length;
-        inProgressTasks += b.tasks.filter(t => normalizeStatus(t.status) === 'in-progress').length;
-        doneTasks += b.tasks.filter(t => normalizeStatus(t.status) === 'complete').length;
-        urgentTasks += b.tasks.filter(t => t.priority === 'urgent' && normalizeStatus(t.status) !== 'complete').length;
+        inProgressTasks += b.tasks.filter(t => normalizeStatus(t.status) === 'en-curso').length;
+        doneTasks += b.tasks.filter(t => normalizeStatus(t.status) === 'listo').length;
+        urgentTasks += b.tasks.filter(t => t.priority === 'urgent' && normalizeStatus(t.status) !== 'listo').length;
       }
     });
 
@@ -649,8 +762,8 @@ class KanbanApp {
       const b = this.db[bId];
       if (b) {
         const pTotal = b.tasks.length;
-        const pProg = b.tasks.filter(t => normalizeStatus(t.status) === 'in-progress').length;
-        const pDone = b.tasks.filter(t => normalizeStatus(t.status) === 'complete').length;
+        const pProg = b.tasks.filter(t => normalizeStatus(t.status) === 'en-curso').length;
+        const pDone = b.tasks.filter(t => normalizeStatus(t.status) === 'listo').length;
 
         const elTotal = document.getElementById(`portal-${bId}-total`);
         const elProg = document.getElementById(`portal-${bId}-prog`);
@@ -669,7 +782,7 @@ class KanbanApp {
         const b = this.db[bId];
         if (b && b.tasks) {
           b.tasks.forEach(t => {
-            if (normalizeStatus(t.status) !== 'complete') {
+            if (normalizeStatus(t.status) !== 'listo') {
               urgentList.push({ ...t, boardName: b.title, boardId: bId });
             }
           });
@@ -710,19 +823,16 @@ class KanbanApp {
         <input type="text" id="popoverSearchInput" class="dropdown-search-input" placeholder="Busca una opción..." oninput="app.filterDropdownOptions(this.value)">
       </div>
       <div class="dropdown-options-list" id="popoverOptionsList">
-        <button type="button" class="dropdown-option" onclick="app.selectStatus('backlog')">
-          <span class="pill-option-status backlog">Backlog</span>
+        <button type="button" class="dropdown-option" onclick="app.selectStatus('pendiente')">
+          <span class="pill-option-status pendiente">Pendiente</span>
         </button>
-        <button type="button" class="dropdown-option" onclick="app.selectStatus('todo')">
-          <span class="pill-option-status todo">TODO</span>
+        <button type="button" class="dropdown-option" onclick="app.selectStatus('en-curso')">
+          <span class="pill-option-status en-curso">En curso</span>
         </button>
-        <button type="button" class="dropdown-option" onclick="app.selectStatus('in-progress')">
-          <span class="pill-option-status in-progress">In progress</span>
+        <button type="button" class="dropdown-option" onclick="app.selectStatus('listo')">
+          <span class="pill-option-status listo">Listo</span>
         </button>
-        <button type="button" class="dropdown-option" onclick="app.selectStatus('complete')">
-          <span class="pill-option-status complete">Complete</span>
-        </button>
-        <button type="button" class="dropdown-option" onclick="app.selectStatus('todo')">
+        <button type="button" class="dropdown-option" onclick="app.selectStatus('pendiente')">
           <span class="option-none-text">Ninguno</span>
         </button>
       </div>
@@ -989,7 +1099,11 @@ class KanbanApp {
   }
 
   setCalendarToday() {
-    this.selectCalendarDate('2026-09-28');
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    this.selectCalendarDate(`${y}-${m}-${day}`);
   }
 
   closeAllPopovers() {
@@ -1035,10 +1149,9 @@ class KanbanApp {
             <div class="form-group">
               <label class="form-label" for="formStatus">Estado</label>
               <select id="formStatus" class="form-select">
-                <option value="backlog">Backlog</option>
-                <option value="todo" selected>TODO</option>
-                <option value="in-progress">In progress</option>
-                <option value="complete">Complete</option>
+                <option value="pendiente" selected>⏳ Pendiente</option>
+                <option value="en-curso">⚡ En curso</option>
+                <option value="listo">✅ Listo</option>
               </select>
             </div>
 

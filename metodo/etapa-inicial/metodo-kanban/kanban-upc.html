@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/metodo/etapa-inicial/metodo-kanban/kanban-styles.css">
+  <link rel="stylesheet" href="/metodo/etapa-inicial/metodo-kanban/kanban-styles.css?v=3.5">
 </head>
 <body>
 
@@ -84,18 +84,17 @@
         <div class="filter-selectors">
           <select id="filterStatusSelect" class="select-ctrl" onchange="app.setStatusFilter(this.value)">
             <option value="all">Todos los estados</option>
-            <option value="backlog">Backlog</option>
-            <option value="todo">TODO</option>
-            <option value="in-progress">In progress</option>
-            <option value="complete">Complete</option>
+            <option value="pendiente">⏳ Pendiente</option>
+            <option value="en-curso">⚡ En curso</option>
+            <option value="listo">✅ Listo</option>
           </select>
 
           <select id="filterPrioritySelect" class="select-ctrl" onchange="app.setPriorityFilter(this.value)">
             <option value="all">Todas las prioridades</option>
-            <option value="urgent">Urgente</option>
-            <option value="high">Alta</option>
-            <option value="medium">Media</option>
-            <option value="low">Baja</option>
+            <option value="urgent">⚡ Urgente</option>
+            <option value="high">▲ Alta</option>
+            <option value="medium">● Media</option>
+            <option value="low">▼ Baja</option>
           </select>
 
           <button type="button" class="filter-reset-link" onclick="app.resetFilters()">
@@ -115,61 +114,56 @@
       <!-- Rendered dynamically -->
     </div>
 
-    <!-- VIEW 1: HOVER.DEV CUSTOM KANBAN BOARD -->
+    <!-- VIEW 1: HOVER.DEV × NOTION 3-COLUMN KANBAN BOARD -->
     <div class="hover-kanban-board" id="kanbanGrid">
       
-      <!-- Columna 1: Backlog -->
-      <div class="hover-col" data-col="backlog">
+      <!-- Columna 1: Pendiente -->
+      <div class="hover-col col-pendiente" data-col="pendiente">
         <div class="hover-col-header">
-          <h3 class="hover-col-title text-neutral-500">Backlog</h3>
-          <span class="hover-col-count" id="count-backlog">0</span>
+          <div class="status-pill-badge pill-pendiente">
+            <span class="status-indicator-dot"></span>
+            <span>Pendiente</span>
+          </div>
+          <span class="hover-col-count" id="count-pendiente">0</span>
         </div>
-        <div class="hover-cards-list" id="list-backlog">
+        <div class="hover-cards-list" id="list-pendiente">
           <!-- Cards rendered dynamically -->
         </div>
-        <div class="inline-add-slot" id="slot-backlog">
+        <div class="inline-add-slot" id="slot-pendiente">
           <!-- Inline add button/form rendered dynamically -->
         </div>
       </div>
 
-      <!-- Columna 2: TODO -->
-      <div class="hover-col" data-col="todo">
+      <!-- Columna 2: En curso -->
+      <div class="hover-col col-en-curso" data-col="en-curso">
         <div class="hover-col-header">
-          <h3 class="hover-col-title text-yellow-200">TODO</h3>
-          <span class="hover-col-count" id="count-todo">0</span>
+          <div class="status-pill-badge pill-en-curso">
+            <span class="status-indicator-dot pulse"></span>
+            <span>En curso</span>
+          </div>
+          <span class="hover-col-count" id="count-en-curso">0</span>
         </div>
-        <div class="hover-cards-list" id="list-todo">
+        <div class="hover-cards-list" id="list-en-curso">
           <!-- Cards rendered dynamically -->
         </div>
-        <div class="inline-add-slot" id="slot-todo">
+        <div class="inline-add-slot" id="slot-en-curso">
           <!-- Inline add button/form rendered dynamically -->
         </div>
       </div>
 
-      <!-- Columna 3: In progress -->
-      <div class="hover-col" data-col="in-progress">
+      <!-- Columna 3: Listo -->
+      <div class="hover-col col-listo" data-col="listo">
         <div class="hover-col-header">
-          <h3 class="hover-col-title text-blue-200">In progress</h3>
-          <span class="hover-col-count" id="count-in-progress">0</span>
+          <div class="status-pill-badge pill-listo">
+            <span class="status-indicator-dot"></span>
+            <span>Listo</span>
+          </div>
+          <span class="hover-col-count" id="count-listo">0</span>
         </div>
-        <div class="hover-cards-list" id="list-in-progress">
+        <div class="hover-cards-list" id="list-listo">
           <!-- Cards rendered dynamically -->
         </div>
-        <div class="inline-add-slot" id="slot-in-progress">
-          <!-- Inline add button/form rendered dynamically -->
-        </div>
-      </div>
-
-      <!-- Columna 4: Complete -->
-      <div class="hover-col" data-col="complete">
-        <div class="hover-col-header">
-          <h3 class="hover-col-title text-emerald-200">Complete</h3>
-          <span class="hover-col-count" id="count-complete">0</span>
-        </div>
-        <div class="hover-cards-list" id="list-complete">
-          <!-- Cards rendered dynamically -->
-        </div>
-        <div class="inline-add-slot" id="slot-complete">
+        <div class="inline-add-slot" id="slot-listo">
           <!-- Inline add button/form rendered dynamically -->
         </div>
       </div>
@@ -217,10 +211,9 @@
         </div>
 
         <div class="month-legend">
-          <span class="legend-item"><span class="legend-dot backlog"></span> Backlog</span>
-          <span class="legend-item"><span class="legend-dot todo"></span> TODO</span>
-          <span class="legend-item"><span class="legend-dot in-progress"></span> In progress</span>
-          <span class="legend-item"><span class="legend-dot complete"></span> Complete</span>
+          <span class="legend-item"><span class="legend-dot pendiente"></span> Pendiente</span>
+          <span class="legend-item"><span class="legend-dot en-curso"></span> En curso</span>
+          <span class="legend-item"><span class="legend-dot listo"></span> Listo</span>
         </div>
       </div>
 
@@ -242,7 +235,7 @@
 
   </main>
 
-  <script src="/metodo/etapa-inicial/metodo-kanban/kanban-core.js"></script>
+  <script src="/metodo/etapa-inicial/metodo-kanban/kanban-core.js?v=3.5"></script>
   <script>
     const app = new KanbanApp('upc');
 
