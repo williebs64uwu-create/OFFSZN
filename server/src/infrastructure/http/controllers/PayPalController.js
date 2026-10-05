@@ -733,13 +733,18 @@ export const createPayPalOrder = async (req, res) => {
                 ? { email_address: identifier } 
                 : { merchant_id: identifier };
 
+            const itemsSummary = verifiedCartItems.map(i => i.product?.name).filter(Boolean).join(', ');
+            const unitDesc = itemsSummary 
+                ? `${itemsSummary} - ${data.nickname || 'OFFSZN'}`.substring(0, 127) 
+                : `Pago consolidado - ${data.nickname || 'OFFSZN'}`;
+
             purchaseUnits.push({
                 reference_id: `payee_${identifier.substring(0, 8)}_${uuidv4().substring(0, 4)}`,
                 amount: {
                     currency_code: 'USD',
                     value: data.amount.toFixed(2)
                 },
-                description: `Pago consolidado - ${data.nickname || 'OFFSZN'}`,
+                description: unitDesc,
                 payee: payeeObj
             });
         });
@@ -1002,7 +1007,7 @@ export const capturePayPalOrder = async (req, res) => {
             // Prioritize email from request body (typed by user) over PayPal account email
             const payerEmail = req.body.guestEmail || response.result.payer?.email_address;
 
-            const { data: order, error: orderError } = await supabase
+            let { data: order, error: orderError } = await supabase
                 .from('orders')
                 .insert({
                     user_id: userId,
@@ -1017,7 +1022,29 @@ export const capturePayPalOrder = async (req, res) => {
                 .select()
                 .single();
 
-            if (orderError) throw orderError;
+            if (orderError) {
+                console.error('[PayPalCapture] Error inserting order with product_id, attempting fallback with null product_id:', orderError.message);
+                const retry = await supabase
+                    .from('orders')
+                    .insert({
+                        user_id: userId,
+                        transaction_id: orderID,
+                        status: 'completed',
+                        total_price: totalPaid,
+                        amount: totalPaid,
+                        guest_email: payerEmail,
+                        producer_id: null,
+                        product_id: null
+                    })
+                    .select()
+                    .single();
+                if (retry.error) {
+                    console.error('[PayPalCapture] Fallback order insert also failed:', retry.error.message);
+                    order = { id: null, transaction_id: orderID };
+                } else {
+                    order = retry.data;
+                }
+            }
 
             // 3. Create Transactions and Order Items
             const transactions = [];
@@ -2416,7 +2443,7 @@ export const handlePayPalWebhook = async (req, res) => {
             const productId = pluginToGenerate === 'Easy Pitch' ? 5000 : (pluginToGenerate === 'Easy Master' ? 900 : (pluginToGenerate === 'Vocal Preset' ? 905 : 899));
 
             // Create Order Record to prevent double-processing and show in "Mis Compras"
-            const { data: newOrder, error: orderError } = await supabase
+            let { data: newOrder, error: orderError } = await supabase
                 .from('orders')
                 .insert({
                     user_id: matchedUserId,
@@ -2430,7 +2457,27 @@ export const handlePayPalWebhook = async (req, res) => {
                 .select()
                 .single();
 
-            if (orderError) throw orderError;
+            if (orderError) {
+                console.error('[PayPalWebhook] Error inserting order with product_id, attempting fallback:', orderError.message);
+                const retry = await supabase
+                    .from('orders')
+                    .insert({
+                        user_id: matchedUserId,
+                        product_id: null,
+                        transaction_id: transactionId,
+                        status: 'completed',
+                        total_price: amountPaid,
+                        amount: amountPaid,
+                        guest_email: matchedUserId ? null : payerEmail
+                    })
+                    .select()
+                    .single();
+                if (retry.error) {
+                    console.error('[PayPalWebhook] Fallback order insert also failed:', retry.error.message);
+                } else {
+                    newOrder = retry.data;
+                }
+            }
 
             // Generate license and send email automatically
             const result = await generatePluginLicense({

@@ -274,9 +274,22 @@ export const chargeYape = async (req, res) => {
             }).select('id').single();
 
             if (orderErr) {
-                console.error('[YapeCharge] Supabase order insert error:', orderErr);
+                console.error('[YapeCharge] Supabase order insert error, attempting fallback with null product_id:', orderErr.message);
+                const retry = await supabase.from('orders').insert({
+                    user_id: null,
+                    total_price: validUsdPrice,
+                    amount: validUsdPrice,
+                    status: 'completed',
+                    guest_email: email,
+                    product_id: null,
+                    transaction_id: `MP-YAPE-${mpData.id}`
+                }).select('id').single();
+                if (!retry.error) {
+                    orderId = retry.data?.id;
+                }
             } else {
                 orderId = orderData?.id;
+            }
                 if (orderId && parsedProductId) {
                     await supabase.from('order_items').insert({
                         order_id: orderId,

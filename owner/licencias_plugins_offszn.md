@@ -118,18 +118,17 @@ INKA-FULL-F8966A7B-C258DADE
 
 ---
 
-## 🎙️ 5. VOCAL PRESET (20 Claves Activas — 2 Dispositivos)
+## 🎙️ 5. VOCAL PRESET (17 Claves Activas Disponibles — 2 Dispositivos)
 **Plugin:** `Vocal Preset` | **Tipo:** `lifetime` | **Dispositivos:** 2 | **Expiración:** NUNCA
 
+### Disponibles (17):
 ```text
 VOCA-FULL-07D8747B-2CAB5076
 VOCA-FULL-0D08DB43-A60611BC
 VOCA-FULL-1D1918F6-5C3DF7D4
 VOCA-FULL-388C1BEC-126F2B42
 VOCA-FULL-3D11E914-31D7CAD3
-VOCA-FULL-4B7F8BF5-6E6E53C4
 VOCA-FULL-54E007F0-18989AD4
-VOCA-FULL-6684F803-10B1A301
 VOCA-FULL-67BADBB4-06358785
 VOCA-FULL-902520DD-95289B58
 VOCA-FULL-969FF104-BF3A6981
@@ -140,8 +139,14 @@ VOCA-FULL-D16D5355-1E9E095B
 VOCA-FULL-E5B44441-514C6C1D
 VOCA-FULL-E785BD23-164E84EA
 VOCA-FULL-ED74E512-FEFD9900
-VOCA-FULL-EDC7702E-054BB804
 VOCA-FULL-F26DBEB7-60691470
+```
+
+### Usadas / Regaladas (3):
+```text
+VOCA-FULL-EDC7702E-054BB804 (Regalada / Usada)
+VOCA-FULL-4B7F8BF5-6E6E53C4 (Regalada / Usada)
+VOCA-FULL-6684F803-10B1A301 (Regalada / Usada)
 ```
 
 ---
@@ -154,5 +159,5 @@ VOCA-FULL-F26DBEB7-60691470
 | **Easy Master** | 20 | `lifetime` | `active` | NUNCA | 2 por clave |
 | **Coca Cola** | 20 | `lifetime` | `active` | NUNCA | 2 por clave |
 | **Inka Kola** | 20 | `lifetime` | `active` | NUNCA | 2 por clave |
-| **Vocal Preset** | 20 | `lifetime` | `active` | NUNCA | 2 por clave |
-| **TOTAL DISPONIBLES** | **100** | | | | |
+| **Vocal Preset** | 17 | `lifetime` | `active` | NUNCA | 2 por clave |
+| **TOTAL DISPONIBLES** | **97** | | | | |
