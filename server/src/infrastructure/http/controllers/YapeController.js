@@ -290,15 +290,14 @@ export const chargeYape = async (req, res) => {
             } else {
                 orderId = orderData?.id;
             }
-                if (orderId && parsedProductId) {
-                    await supabase.from('order_items').insert({
-                        order_id: orderId,
-                        product_id: parsedProductId,
-                        price_at_purchase: validUsdPrice,
-                        quantity: 1,
-                        license_name: 'lifetime'
-                    });
-                }
+            if (orderId && parsedProductId) {
+                await supabase.from('order_items').insert({
+                    order_id: orderId,
+                    product_id: parsedProductId,
+                    price_at_purchase: validUsdPrice,
+                    quantity: 1,
+                    license_name: 'lifetime'
+                });
             }
         } catch (dbErr) {
             console.error('[YapeCharge] DB insert exception:', dbErr);
