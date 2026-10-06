@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#0a0a0a">
     <meta property="og:title" content="Plugins VST & AU | OFFSZN">
     <meta property="og:description" content="Plugins para voces, mezcla y mastering. Fáciles, rápidos y hechos para productores.">
-    <meta property="og:image" content="https://offszn.lat/plugins/easy-pitch.png">
+    <meta property="og:image" content="https://offszn.lat/plugins/easy-level.png">
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -110,6 +110,18 @@
         .card-actions .btn { flex: 1; }
         .empty { display: none; grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 60px 0; }
 
+
+        /* ==================== POP UP: EASY LEVEL ==================== */
+        .promo-pop { position: fixed; inset: 0; z-index: 5000; display: none; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,.72); backdrop-filter: blur(6px); }
+        .promo-pop.open { display: flex; }
+        .promo-box { position: relative; width: 100%; max-width: 440px; background: linear-gradient(135deg, #131316 0%, #08080a 100%); border: 1px solid var(--line-2); border-radius: 20px; padding: 34px 30px 30px; text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.7); animation: promoIn .25s ease; }
+        @keyframes promoIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+        .promo-box img { width: 100%; border-radius: 12px; border: 1px solid var(--line); margin-bottom: 20px; }
+        .promo-box h2 { margin: 0 0 18px; font-size: 1.5rem; font-weight: 800; line-height: 1.15; letter-spacing: -.5px; }
+        .promo-box .btn { width: 100%; padding: 15px 24px; font-size: 1rem; }
+        .promo-close { position: absolute; top: 10px; right: 12px; width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(255,255,255,.08); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; }
+        .promo-close:hover { background: rgba(255,255,255,.18); }
+
         @media (max-width: 900px) {
             .featured-card { grid-template-columns: 1fr; }
             .featured-media { border-left: 0; border-top: 1px solid var(--line); min-height: 240px; }
@@ -137,20 +149,20 @@
                 <article class="featured-card">
                     <div class="featured-text">
                         <span class="eyebrow"><span class="dot"></span> Destacado · Nuevo</span>
-                        <h1>EASY PITCH</h1>
-                        <p>Afinación vocal en tiempo real. Elige la tonalidad, sube la cantidad y tu voz queda afinada al instante, sin complicarte.</p>
+                        <h1>EASY LEVEL</h1>
+                        <p>Nivela tus voces en un clic. Arrastra tu voz, elige el nivel objetivo y cada frase sube o baja hasta quedar pareja, sin perder naturalidad.</p>
                         <div class="featured-points">
-                            <span class="chip">Afinación en tiempo real</span>
+                            <span class="chip">Nivelación por frases</span>
                             <span class="chip">VST3 · AU</span>
                             <span class="chip">Windows · Mac</span>
                         </div>
                         <div class="featured-actions">
-                            <a class="btn btn-buy" href="/plugins/easy-pitch.html#pricing-section"><i class="bi bi-bag"></i> Comprar</a>
-                            <a class="btn btn-ghost" href="/plugins/easy-pitch.html">Ver plugin</a>
+                            <a class="btn btn-buy" href="https://payhip.com/b/kYGd8" target="_blank" rel="noopener"><i class="bi bi-bag"></i> Comprar</a>
+                            <a class="btn btn-ghost" href="#catalogo">Ver todos los plugins</a>
                         </div>
                     </div>
-                    <a class="featured-media" href="/plugins/easy-pitch.html" aria-label="Ver Easy Pitch">
-                        <img src="/plugins/easy-pitch.png" alt="Easy Pitch VST">
+                    <a class="featured-media" href="https://payhip.com/b/kYGd8" target="_blank" rel="noopener" aria-label="Comprar Easy Level">
+                        <img src="/plugins/easy-level.png" alt="Easy Level VST">
                     </a>
                 </article>
             </div>
@@ -291,6 +303,17 @@
         </section>
     </main>
 
+
+    <!-- ==================== POP UP EASY LEVEL ==================== -->
+    <div class="promo-pop" id="level-pop" role="dialog" aria-modal="true" aria-labelledby="level-pop-title">
+        <div class="promo-box">
+            <button class="promo-close" id="level-pop-close" aria-label="Cerrar">&times;</button>
+            <img src="/plugins/easy-level.png" alt="Easy Level VST">
+            <h2 id="level-pop-title">NIVELA TUS VOCES CON EASY LEVEL</h2>
+            <a class="btn btn-buy" id="level-pop-buy" href="https://payhip.com/b/kYGd8" target="_blank" rel="noopener">OBTENERLO AHORA</a>
+        </div>
+    </div>
+
     <!-- ==================== FOOTER ==================== -->
     <div id="footer-placeholder"></div>
 
@@ -333,6 +356,21 @@
             }));
             search.addEventListener('input', apply);
             apply();
+        });
+    </script>
+
+    <!-- POP UP EASY LEVEL: sale una vez por sesión -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const pop = document.getElementById('level-pop');
+            const KEY = 'offszn_level_pop';
+            try { if (sessionStorage.getItem(KEY)) return; } catch (e) {}
+            const close = () => { pop.classList.remove('open'); try { sessionStorage.setItem(KEY, '1'); } catch (e) {} };
+            setTimeout(() => pop.classList.add('open'), 1500);
+            document.getElementById('level-pop-close').addEventListener('click', close);
+            document.getElementById('level-pop-buy').addEventListener('click', close);
+            pop.addEventListener('click', (e) => { if (e.target === pop) close(); });
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
         });
     </script>
 </body>
