@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EASY LEVEL · Carrusel IG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== Sistema de color (EASY LEVEL · @offszn) ===== */
+  :root {
+    --brand: #2F6BFF;          /* BRAND_PRIMARY (azul del plugin) */
+    --brand-light: #DCE8FF;    /* BRAND_LIGHT */
+    --brand-dark: #0B2A7A;     /* BRAND_DARK */
+    --light-bg: #F4F5F7;       /* LIGHT_BG */
+    --dark-bg: #0A0A0C;        /* DARK_BG */
+    --light-border: #E1E4EA;   /* LIGHT_BORDER */
+    --ink: #0B0B0F;
+    --muted-l: #6B7280;
+    --muted-d: #9AA0AA;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; font-family: 'Inter', system-ui, sans-serif; display: flex; justify-content: center; padding: 24px; }
+
+  .ig-frame { width: 420px; background: #000; border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+  .carousel-viewport { width: 420px; height: 525px; overflow: hidden; cursor: grab; }
+  .carousel-track { display: flex; width: max-content; transition: transform .35s cubic-bezier(.2,.7,.2,1); }
+
+  /* ===== Slide base 420x525 ===== */
+  .slide { position: relative; width: 420px; height: 525px; flex-shrink: 0; overflow: hidden; padding: 34px 28px 52px; display: flex; flex-direction: column; }
+  .light { background: radial-gradient(120% 70% at 0% 0%, var(--brand-light) 0%, var(--light-bg) 55%); color: var(--ink); }
+  .dark  { background: radial-gradient(90% 60% at 100% 0%, #16264d 0%, var(--dark-bg) 60%); color: #fff; }
+
+  .pill { align-self: flex-start; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 7px 12px; border-radius: 100px; background: var(--brand); color: #fff; }
+  .dark .pill { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.18); }
+  h1, h2 { font-family: 'Inter Tight', 'Inter', sans-serif; font-weight: 800; letter-spacing: -1.6px; line-height: .98; }
+  h1 { font-size: 46px; }
+  h2 { font-size: 36px; }
+  .accent { color: var(--brand); }
+  .dark .accent { color: #5b8dff; }
+  .sub { font-size: 15px; line-height: 1.4; font-weight: 500; color: var(--muted-l); }
+  .dark .sub { color: var(--muted-d); }
+  .tag { font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted-l); }
+  .dark .tag { color: var(--muted-d); }
+  .handle { position: absolute; left: 28px; bottom: 22px; font-size: 11px; font-weight: 700; letter-spacing: .5px; color: var(--muted-l); }
+  .dark .handle { color: var(--muted-d); }
+
+  /* captura UI */
+  .shot { border-radius: 14px; border: 1px solid var(--light-border); box-shadow: 0 18px 40px rgba(11,42,122,.22); display: block; width: 100%; }
+  .dark .shot { border-color: rgba(255,255,255,.12); box-shadow: 0 18px 40px rgba(0,0,0,.6); }
+
+  /* barra de progreso + flecha */
+  .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(120,120,130,.25); }
+  .progress i { display: block; height: 100%; background: var(--brand); }
+  .swipe { position: absolute; right: 22px; bottom: 20px; display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; color: var(--muted-l); }
+  .dark .swipe { color: var(--muted-d); }
+  .swipe b { width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-size: 16px; }
+  .dark .swipe b { background: #fff; color: #000; }
+
+  /* listas */
+  .rows { display: grid; gap: 10px; margin-top: 22px; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border-radius: 14px; font-size: 15px; font-weight: 700; letter-spacing: -.2px; background: #fff; border: 1px solid var(--light-border); }
+  .dark .row { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.1); }
+  .row .ic { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; font-size: 14px; flex-shrink: 0; background: var(--brand-light); color: var(--brand-dark); }
+  .dark .row .ic { background: rgba(91,141,255,.2); color: #8fb0ff; }
+  .row small { display: block; font-size: 12px; font-weight: 500; color: var(--muted-l); margin-top: 1px; letter-spacing: 0; }
+  .dark .row small { color: var(--muted-d); }
+  .step { display: flex; gap: 14px; align-items: flex-start; }
+  .step .n { font-family: 'Inter Tight'; font-weight: 800; font-size: 34px; letter-spacing: -1px; color: var(--brand); line-height: 1; width: 52px; flex-shrink: 0; }
+  .dark .step .n { color: #5b8dff; }
+  .step p { font-size: 17px; font-weight: 700; letter-spacing: -.3px; line-height: 1.2; }
+  .step p small { display: block; font-size: 13px; font-weight: 500; color: var(--muted-d); margin-top: 3px; letter-spacing: 0; }
+  .btn-cta { display: inline-flex; align-self: flex-start; align-items: center; gap: 8px; background: #fff; color: #000; font-weight: 800; font-size: 15px; padding: 14px 24px; border-radius: 100px; }
+  .kw { display: inline-block; background: var(--brand); color: #fff; padding: 2px 14px 6px; border-radius: 12px; }
+
+  /* nav preview (no se exporta) */
+  .nav { display: flex; justify-content: center; gap: 8px; padding: 10px; background: #000; }
+  .nav button { background: #222; color: #fff; border: 0; padding: 6px 14px; border-radius: 8px; cursor: pointer; font: 600 12px Inter; }
+</style>
+</head>
+<body>
+<div class="ig-frame">
+  <div class="carousel-viewport">
+    <div class="carousel-track">
+
+      <!-- 1 · HERO / HOOK -->
+      <section class="slide light">
+        <span class="pill">Nuevo · Easy Level</span>
+        <h1 style="margin-top:20px">Deja de subir y bajar tus voces <span class="accent">a mano.</span></h1>
+        <p class="sub" style="margin-top:14px">Empareja el volumen de cada frase por ti.</p>
+        <img class="shot" src="easy_level/ui.png" alt="EASY LEVEL" style="margin-top:auto;margin-bottom:6px">
+        <div class="handle">@offszn</div>
+        <div class="swipe">desliza <b>→</b></div>
+        <div class="progress"><i style="width:14%"></i></div>
+      </section>
+
+      <!-- 2 · PROBLEMA -->
+      <section class="slide dark">
+        <span class="pill">El problema</span>
+        <h2 style="margin-top:20px">Una de las etapas que más tiempo te hace perder.</h2>
+        <div class="rows">
+          <div class="row"><span class="ic">↓</span><div>Frases bajitas que se pierden<small>Subir clip gain frase por frase</small></div></div>
+          <div class="row"><span class="ic">↑</span><div>Frases fuertes que saturan<small>Bajar y bajar a mano</small></div></div>
+          <div class="row"><span class="ic">✕</span><div>Y el compresor te aplasta la voz<small>Pierdes naturalidad</small></div></div>
+        </div>
+        <div class="handle">@offszn</div>
+        <div class="swipe"><b>→</b></div>
+        <div class="progress"><i style="width:28%"></i></div>
+      </section>
+
+      <!-- 3 · SOLUCIÓN + ANTES / DESPUÉS -->
+      <section class="slide light">
+        <span class="pill">La solución</span>
+        <h2 style="margin-top:20px"><span class="accent">Easy Level</span> nivela tu voz por frases.</h2>
+        <p class="sub" style="margin-top:12px">Sin compresión y con naturalidad.</p>
+        <img class="shot" src="easy_level/antes_despues.png" alt="Antes y después" style="margin-top:auto;margin-bottom:6px">
+        <div class="handle">@offszn</div>
+        <div class="swipe"><b>→</b></div>
+        <div class="progress"><i style="width:42%"></i></div>
+      </section>
+
+      <!-- 4 · CÓMO SE USA -->
+      <section class="slide dark">
+        <span class="pill">Cómo se usa</span>
+        <h2 style="margin-top:20px">3 pasos. Cero automatización manual.</h2>
+        <div style="display:grid;gap:22px;margin-top:30px">
+          <div class="step"><span class="n">01</span><p>Pones tu voz<small>Arrástrala dentro del plugin</small></p></div>
+          <div class="step"><span class="n">02</span><p>Mejora volumen y pegada<small>Eliges tu nivel y listo</small></p></div>
+          <div class="step"><span class="n">03</span><p>La arrastras a tu DAW<small>Ya sale nivelada, lista para mezclar</small></p></div>
+        </div>
+        <div class="handle">@offszn</div>
+        <div class="swipe"><b>→</b></div>
+        <div class="progress"><i style="width:57%"></i></div>
+      </section>
+
+      <!-- 5 · DETALLES -->
+      <section class="slide light">
+        <span class="pill">Todo lo que incluye</span>
+        <h2 style="margin-top:20px">Pagas una vez. <span class="accent">Es tuyo.</span></h2>
+        <div class="rows">
+          <div class="row"><span class="ic">✓</span><div>Nivelación por frases</div></div>
+          <div class="row"><span class="ic">✓</span><div>VST3 · AU<small>Funciona en tu DAW</small></div></div>
+          <div class="row"><span class="ic">✓</span><div>Windows y Mac</div></div>
+          <div class="row"><span class="ic">✓</span><div>Licencia de por vida</div></div>
+        </div>
+        <div class="handle">@offszn</div>
+        <div class="swipe"><b>→</b></div>
+        <div class="progress"><i style="width:71%"></i></div>
+      </section>
+
+      <!-- 6 · CTA -->
+      <section class="slide dark" style="justify-content:center">
+        <span class="pill">Easy Level · Licencia de por vida</span>
+        <h1 style="margin-top:22px;font-size:44px">Comenta <span class="kw">VOCES</span> y te lo envío.</h1>
+        <p class="sub" style="margin-top:16px">Te mando el link por privado.</p>
+        <div class="handle">@offszn</div>
+        <div class="progress"><i style="width:100%"></i></div>
+      </section>
+
+    </div>
+  </div>
+  <div class="nav"><button id="prev">←</button><button id="next">→</button></div>
+</div>
+<script>
+  const track = document.querySelector('.carousel-track'), n = track.children.length; let i = 0;
+  const go = (k) => { i = Math.max(0, Math.min(n - 1, k)); track.style.transform = `translateX(${-i * 420}px)`; };
+  document.getElementById('prev').onclick = () => go(i - 1);
+  document.getElementById('next').onclick = () => go(i + 1);
+  addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') go(i + 1); if (e.key === 'ArrowLeft') go(i - 1); });
+</script>
+</body>
+</html>
