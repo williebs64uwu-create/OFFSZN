@@ -16,6 +16,7 @@ import {
     adminGetAnalyticsFull,
     adminGetTelemetryEvents
 } from '../controllers/PluginLicensingController.js';
+import { receiveDiag, adminListDiag, diagLimiter } from '../controllers/PluginDiagController.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 
 const router = express.Router();
@@ -24,6 +25,8 @@ const router = express.Router();
 router.post('/request-trial', requestTrial);
 router.post('/activate', activateSerial);
 router.post('/validate', validateLicense);
+router.post('/diag', diagLimiter, receiveDiag);
+router.get('/admin/diag', adminListDiag);
 
 // Rutas usadas por la Web para generar licencias gratis ligadas a la cuenta
 router.post('/generate-web', authenticateTokenMiddleware, generateWebLicense);
