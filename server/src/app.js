@@ -756,6 +756,28 @@ app.get('/favicon.ico', (req, res) => {
     res.status(204).end();
 });
 
+// Dedicated static mount for css with guaranteed MIME type
+const cssStaticPath = path.join(rootPath, 'css');
+app.use('/css', express.static(cssStaticPath, {
+    maxAge: '7d',
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+        res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+    }
+}));
+
+// Dedicated static mount for script with guaranteed MIME type
+const scriptStaticPath = path.join(rootPath, 'script');
+app.use('/script', express.static(scriptStaticPath, {
+    maxAge: '7d',
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.js') || filePath.endsWith('.mjs')) res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+        res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+    }
+}));
+
 // Dedicated static mount for metodo & kanban suite with guaranteed MIME types
 const metodoStaticPath = path.join(rootPath, 'metodo');
 app.use('/metodo', express.static(metodoStaticPath, {
@@ -776,6 +798,11 @@ app.use(express.static(rootPath, {
         if (filePath.endsWith('.html')) {
             res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
         } else {
+            if (filePath.endsWith('.css')) {
+                res.setHeader('Content-Type', 'text/css; charset=utf-8');
+            } else if (filePath.endsWith('.js') || filePath.endsWith('.mjs')) {
+                res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+            }
             // Assets (JS, CSS, images, audio): cache at Vercel Edge CDN for 7 days
             res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
             res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
@@ -1540,9 +1567,16 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
 // --- 5. 404 HANDLER (MUST BE LAST) ---
 app.use((req, res, next) => {
     // Si llegamos aquí, no se encontró ninguna ruta anterior ni archivo estático
-    // Servimos 404.html si no es una petición API
     if (req.path.startsWith('/api')) {
         return res.status(404).json({ error: 'Endpoint Not Found' });
+    }
+
+    // Do NOT return HTML for missing CSS/JS to prevent browser strict MIME errors
+    if (req.path.startsWith('/css/') || req.path.endsWith('.css')) {
+        return res.status(404).type('text/css').send('/* 404 Not Found */');
+    }
+    if (req.path.startsWith('/script/') || req.path.endsWith('.js') || req.path.endsWith('.mjs')) {
+        return res.status(404).type('application/javascript').send('/* 404 Not Found */');
     }
 
     // Servir 404.html con status 404 real
