@@ -789,6 +789,60 @@ app.use('/metodo', express.static(metodoStaticPath, {
     }
 }));
 
+// Dedicated static mount for images
+const imagesStaticPath = path.join(rootPath, 'images');
+app.use('/images', express.static(imagesStaticPath, {
+    maxAge: '7d',
+    setHeaders: (res) => {
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+        res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+    }
+}));
+
+// Dedicated static mount for libs with guaranteed MIME types
+const libsStaticPath = path.join(rootPath, 'libs');
+app.use('/libs', express.static(libsStaticPath, {
+    maxAge: '7d',
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.js') || filePath.endsWith('.mjs')) res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+        res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+    }
+}));
+
+// Dedicated static mount for components
+const componentsStaticPath = path.join(rootPath, 'components');
+app.use('/components', express.static(componentsStaticPath, {
+    maxAge: '7d',
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.js') || filePath.endsWith('.mjs')) res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        if (filePath.endsWith('.css')) res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+        res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+    }
+}));
+
+// Dedicated static mount for recursos
+const recursosStaticPath = path.join(rootPath, 'recursos');
+app.use('/recursos', express.static(recursosStaticPath, {
+    maxAge: '7d',
+    setHeaders: (res) => {
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+        res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+    }
+}));
+
+// Dedicated static mount for plugin assets (e.g. plugins/*.png, *.jpg)
+const pluginsStaticPath = path.join(rootPath, 'plugins');
+app.use('/plugins', express.static(pluginsStaticPath, {
+    maxAge: '7d',
+    setHeaders: (res) => {
+        res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+        res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+    }
+}));
+
 // Serve everything from rootPath — CSS, JS, images, HTML files, etc.
 app.use(express.static(rootPath, {
     dotfiles: 'deny',
@@ -812,6 +866,36 @@ app.use(express.static(rootPath, {
         }
     }
 }));
+
+// Universal static asset fallback for any existing file on disk with an extension
+app.use((req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+    if (!path.extname(req.path)) return next();
+    if (req.path.startsWith('/api/')) return next();
+
+    // Prevent path traversal
+    const safePath = path.normalize(req.path).replace(/^(\.\.[\/\\])+/, '');
+    const fullPath = path.join(rootPath, safePath);
+
+    if (fullPath.startsWith(rootPath) && fs.existsSync(fullPath)) {
+        try {
+            const stat = fs.statSync(fullPath);
+            if (stat.isFile()) {
+                if (fullPath.endsWith('.js') || fullPath.endsWith('.mjs')) {
+                    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+                } else if (fullPath.endsWith('.css')) {
+                    res.setHeader('Content-Type', 'text/css; charset=utf-8');
+                }
+                res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
+                res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
+                return res.sendFile(fullPath);
+            }
+        } catch (e) {
+            // Proceed to next middleware
+        }
+    }
+    next();
+});
 
 // --- 3.3.5 SERVER-SIDE ID OBFUSCATOR (Sync with script/id-obfuscator.js) ---
 const OBF_CHARS = 'qL8zF1Gk7XwNjR4yvB5tM6dncb9sPp2hQr3JmKW0ZTDVagHflSx_';
@@ -1571,12 +1655,15 @@ app.use((req, res, next) => {
         return res.status(404).json({ error: 'Endpoint Not Found' });
     }
 
-    // Do NOT return HTML for missing CSS/JS to prevent browser strict MIME errors
+    // Do NOT return HTML for missing CSS/JS/images to prevent browser strict MIME errors
     if (req.path.startsWith('/css/') || req.path.endsWith('.css')) {
         return res.status(404).type('text/css').send('/* 404 Not Found */');
     }
     if (req.path.startsWith('/script/') || req.path.endsWith('.js') || req.path.endsWith('.mjs')) {
         return res.status(404).type('application/javascript').send('/* 404 Not Found */');
+    }
+    if (req.path.match(/\.(png|jpg|jpeg|gif|webp|svg|ico)$/i)) {
+        return res.status(404).type('text/plain').send('Image Not Found');
     }
 
     // Servir 404.html con status 404 real
