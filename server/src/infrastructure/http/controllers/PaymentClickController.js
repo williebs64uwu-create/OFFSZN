@@ -31,8 +31,18 @@ export const receivePaymentClick = async (req, res) => {
             price_usd: priceUsd && KNOWN_PRICES_USD.has(priceUsd) ? priceUsd : null,
             price_pen: num(b.price_pen),
             variant: clip(b.variant, 30),
-            page: clip(b.page, 120)
+            page: clip(b.page, 120),
+            email: null
         };
+
+        // Si el cliente tiene sesion iniciada, el email se obtiene del token verificado (no del body).
+        const token = (req.headers.authorization || '').split(' ')[1];
+        if (token && token !== 'undefined' && token !== 'null') {
+            try {
+                const { data } = await supabase.auth.getUser(token);
+                row.email = data?.user?.email || null;
+            } catch (_) { /* clic anonimo */ }
+        }
 
         const { error } = await supabase.from('manual_payment_clicks').insert(row);
         if (error) console.warn('[PaymentClick] insert error (¿tabla creada?):', error.message);

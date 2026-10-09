@@ -4,6 +4,14 @@
 (function () {
     var SOLES = { 17: 65, 25: 95 };
 
+    // Si el cliente tiene sesion iniciada, se manda su token para que el servidor registre su email.
+    var authToken = null;
+    try {
+        if (window.AuthUtils && typeof window.AuthUtils.getSession === 'function') {
+            window.AuthUtils.getSession().then(function (s) { authToken = s && s.access_token; }).catch(function () {});
+        }
+    } catch (_) {}
+
     function newRef() {
         var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         var out = '';
@@ -53,11 +61,9 @@
             page: location.pathname
         });
         try {
-            if (navigator.sendBeacon) {
-                navigator.sendBeacon('/api/plugin/payment-click', new Blob([payload], { type: 'application/json' }));
-            } else {
-                fetch('/api/plugin/payment-click', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true });
-            }
+            var headers = { 'Content-Type': 'application/json' };
+            if (authToken) headers['Authorization'] = 'Bearer ' + authToken;
+            fetch('/api/plugin/payment-click', { method: 'POST', headers: headers, body: payload, keepalive: true });
         } catch (_) { /* no bloquear el clic */ }
     }, true);
 })();

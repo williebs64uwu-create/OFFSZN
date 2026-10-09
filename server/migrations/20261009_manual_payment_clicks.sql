@@ -9,7 +9,8 @@ create table if not exists public.manual_payment_clicks (
     price_usd numeric,
     price_pen numeric,
     variant text,
-    page text
+    page text,
+    email text
 );
 create index if not exists manual_payment_clicks_ref_idx on public.manual_payment_clicks (ref);
 create index if not exists manual_payment_clicks_created_idx on public.manual_payment_clicks (created_at desc);

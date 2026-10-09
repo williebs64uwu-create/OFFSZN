@@ -66,8 +66,8 @@
         <div class="card">
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Ref</th><th>Cuándo</th><th>Producto</th><th>Método</th><th>Precio</th><th>Variante</th></tr></thead>
-                    <tbody id="rows"><tr><td colspan="6" class="empty">Cargando…</td></tr></tbody>
+                    <thead><tr><th>Ref</th><th>Cuándo</th><th>Email</th><th>Producto</th><th>Método</th><th>Precio</th><th>Variante</th></tr></thead>
+                    <tbody id="rows"><tr><td colspan="7" class="empty">Cargando…</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -96,7 +96,18 @@
     }
 
     function fmtDate(iso) {
-        return new Date(iso).toLocaleString('es-PE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        const d = new Date(iso);
+        const exact = d.toLocaleString('es-PE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        const mins = Math.floor((Date.now() - d.getTime()) / 60000);
+        const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+        const days = Math.round((startToday - new Date(d).setHours(0, 0, 0, 0)) / 86400000);
+        let rel;
+        if (mins < 1) rel = 'ahora';
+        else if (mins < 60) rel = 'hace ' + mins + ' min';
+        else if (days <= 0) rel = 'hoy · hace ' + Math.floor(mins / 60) + ' h';
+        else if (days === 1) rel = 'ayer';
+        else rel = 'hace ' + days + ' días';
+        return '<b>' + rel + '</b> <span class="pen">' + exact + '</span>';
     }
     function priceHtml(c) {
         const usd = c.price_usd ? '$' + Number(c.price_usd) : '—';
@@ -114,9 +125,9 @@
 
     function renderRows(list) {
         $('rows').innerHTML = list.length ? list.map(c =>
-            '<tr><td class="ref">' + esc(c.ref) + '</td><td>' + fmtDate(c.created_at) + '</td><td>' + esc(c.product) +
+            '<tr><td class="ref">' + esc(c.ref) + '</td><td>' + fmtDate(c.created_at) + '</td><td>' + (c.email ? esc(c.email) : '<span class="pen">anónimo</span>') + '</td><td>' + esc(c.product) +
             '</td><td>' + esc(c.method) + '</td><td>' + priceHtml(c) + '</td><td>' + esc(c.variant) + '</td></tr>'
-        ).join('') : '<tr><td colspan="6" class="empty">Sin registros</td></tr>';
+        ).join('') : '<tr><td colspan="7" class="empty">Sin registros</td></tr>';
     }
 
     async function showAll() {
@@ -135,7 +146,7 @@
         if (!list.length) { $('result').innerHTML = '<span class="pen">No hay registro con ese código.</span>'; return; }
         const c = list[0];
         $('search-card').classList.add('found');
-        $('result').innerHTML = '<div style="font-size:.85rem; color:var(--muted)">' + esc(c.product) + ' · ' + esc(c.method) + ' · ' + fmtDate(c.created_at) +
+        $('result').innerHTML = '<div style="font-size:.85rem; color:var(--muted)">' + esc(c.product) + ' · ' + esc(c.method) + ' · ' + fmtDate(c.created_at) + (c.email ? ' · ' + esc(c.email) : '') +
             '</div><div style="font-size:2rem; margin-top:4px">Cobrar: ' + priceHtml(c) + '</div>';
         renderRows(list);
     }
