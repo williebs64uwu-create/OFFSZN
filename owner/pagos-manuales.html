@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFFSZN • Pagos Manuales</title>
+    <style>
+        :root { --bg:#09090b; --surface:#121216; --border:rgba(255,255,255,.1); --text:#fff; --muted:#a1a1aa; --green:#10b981; --amber:#f59e0b; --blue:#38bdf8; }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; padding:24px 16px; }
+        .wrap { max-width:1000px; margin:0 auto; }
+        h1 { font-size:1.3rem; margin-bottom:4px; }
+        p.sub { color:var(--muted); font-size:.85rem; margin-bottom:20px; }
+        .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
+        input, button { font:inherit; border-radius:8px; border:1px solid var(--border); background:#0e0e12; color:var(--text); padding:10px 12px; }
+        button { cursor:pointer; background:#fff; color:#000; font-weight:700; border:0; }
+        button.ghost { background:transparent; color:var(--text); border:1px solid var(--border); }
+        .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+        .row input { flex:1; min-width:180px; }
+        #auth { max-width:360px; margin:15vh auto 0; }
+        #auth input { width:100%; margin:12px 0; }
+        #err { color:#f43f5e; font-size:.8rem; display:none; margin-bottom:8px; }
+        .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:16px; }
+        .stat b { display:block; font-size:1.4rem; }
+        .stat span { color:var(--muted); font-size:.75rem; }
+        .table-wrap { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:.85rem; }
+        th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--border); white-space:nowrap; }
+        th { color:var(--muted); font-weight:600; font-size:.72rem; text-transform:uppercase; }
+        .ref { font-family:ui-monospace,Menlo,monospace; font-weight:800; letter-spacing:1px; color:var(--blue); }
+        .price { font-weight:800; color:var(--green); font-size:1rem; }
+        .pen { color:var(--muted); font-size:.78rem; }
+        .empty { color:var(--muted); text-align:center; padding:28px; }
+        .found { border-color:var(--green); }
+    </style>
+</head>
+<body>
+    <div id="auth" class="card">
+        <h1>Pagos manuales</h1>
+        <p class="sub">Acceso administrativo OFFSZN</p>
+        <form id="auth-form">
+            <input type="password" id="pin" placeholder="PIN maestro" autocomplete="current-password" autofocus>
+            <div id="err">Clave incorrecta</div>
+            <button type="submit" style="width:100%">Entrar</button>
+        </form>
+    </div>
+
+    <div id="app" class="wrap" style="display:none">
+        <div class="row" style="justify-content:space-between; margin-bottom:6px">
+            <h1>Pagos manuales · Yape, Mercado Pago, Binance, WhatsApp</h1>
+            <button class="ghost" id="logout">Salir</button>
+        </div>
+        <p class="sub">El cliente te escribe con un código <b>Ref</b>. Búscalo aquí y cóbrale el precio que vio.</p>
+
+        <div class="card" id="search-card">
+            <div class="row">
+                <input id="ref" placeholder="Código Ref del cliente (ej. K7F2P)" maxlength="12" style="text-transform:uppercase">
+                <button id="btn-search">Buscar</button>
+                <button class="ghost" id="btn-all">Ver últimos</button>
+            </div>
+            <div id="result" style="margin-top:14px"></div>
+        </div>
+
+        <div class="stats" id="stats"></div>
+
+        <div class="card">
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Ref</th><th>Cuándo</th><th>Producto</th><th>Método</th><th>Precio</th><th>Variante</th></tr></thead>
+                    <tbody id="rows"><tr><td colspan="6" class="empty">Cargando…</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Misma clave y misma sesión que el panel de licencias.
+    const SESSION_KEY = 'offszn_owner_auth_token';
+    const $ = (id) => document.getElementById(id);
+    const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+    const getPin = () => sessionStorage.getItem(SESSION_KEY) || '';
+
+    async function verifyPin(pin) {
+        try {
+            const r = await fetch('/api/plugin/admin/verify-pin', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ pin }) });
+            return r.ok;
+        } catch (_) { return false; }
+    }
+
+    async function load(ref) {
+        const url = '/api/plugin/admin/payment-clicks?limit=300&admin_key=' + encodeURIComponent(getPin()) + (ref ? '&ref=' + encodeURIComponent(ref) : '');
+        const r = await fetch(url);
+        if (r.status === 403) { logout(); return null; }
+        const j = await r.json();
+        return j.clicks || [];
+    }
+
+    function fmtDate(iso) {
+        return new Date(iso).toLocaleString('es-PE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+    }
+    function priceHtml(c) {
+        const usd = c.price_usd ? '$' + Number(c.price_usd) : '—';
+        const pen = c.price_pen ? ' <span class="pen">/ S/ ' + Number(c.price_pen) + '</span>' : '';
+        return '<span class="price">' + usd + '</span>' + pen;
+    }
+
+    function renderStats(list) {
+        const by = {};
+        list.forEach(c => { const k = c.price_usd ? '$' + Number(c.price_usd) : 'sin precio'; by[k] = (by[k] || 0) + 1; });
+        const entries = Object.entries(by);
+        $('stats').innerHTML = '<div class="card stat"><b>' + list.length + '</b><span>clics (mostrados)</span></div>' +
+            entries.map(([k, n]) => '<div class="card stat"><b>' + n + '</b><span>vieron ' + esc(k) + '</span></div>').join('');
+    }
+
+    function renderRows(list) {
+        $('rows').innerHTML = list.length ? list.map(c =>
+            '<tr><td class="ref">' + esc(c.ref) + '</td><td>' + fmtDate(c.created_at) + '</td><td>' + esc(c.product) +
+            '</td><td>' + esc(c.method) + '</td><td>' + priceHtml(c) + '</td><td>' + esc(c.variant) + '</td></tr>'
+        ).join('') : '<tr><td colspan="6" class="empty">Sin registros</td></tr>';
+    }
+
+    async function showAll() {
+        $('result').innerHTML = '';
+        $('search-card').classList.remove('found');
+        const list = await load();
+        if (!list) return;
+        renderStats(list); renderRows(list);
+    }
+
+    async function search() {
+        const ref = $('ref').value.trim().toUpperCase();
+        if (!ref) return showAll();
+        const list = await load(ref);
+        if (!list) return;
+        if (!list.length) { $('result').innerHTML = '<span class="pen">No hay registro con ese código.</span>'; return; }
+        const c = list[0];
+        $('search-card').classList.add('found');
+        $('result').innerHTML = '<div style="font-size:.85rem; color:var(--muted)">' + esc(c.product) + ' · ' + esc(c.method) + ' · ' + fmtDate(c.created_at) +
+            '</div><div style="font-size:2rem; margin-top:4px">Cobrar: ' + priceHtml(c) + '</div>';
+        renderRows(list);
+    }
+
+    function logout() { sessionStorage.removeItem(SESSION_KEY); location.reload(); }
+
+    async function unlock() {
+        $('auth').style.display = 'none';
+        $('app').style.display = 'block';
+        showAll();
+    }
+
+    $('auth-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const pin = $('pin').value.trim();
+        if (pin && await verifyPin(pin)) { sessionStorage.setItem(SESSION_KEY, pin); unlock(); }
+        else $('err').style.display = 'block';
+    });
+    $('btn-search').addEventListener('click', search);
+    $('btn-all').addEventListener('click', () => { $('ref').value = ''; showAll(); });
+    $('ref').addEventListener('keydown', (e) => { if (e.key === 'Enter') search(); });
+    $('logout').addEventListener('click', logout);
+
+    (async () => { const pin = getPin(); if (pin && await verifyPin(pin)) unlock(); })();
+</script>
+</body>
+</html>
