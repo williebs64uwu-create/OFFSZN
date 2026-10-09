@@ -50,15 +50,16 @@
             <h1>Pagos manuales · Yape, Mercado Pago, Binance, WhatsApp</h1>
             <button class="ghost" id="logout">Salir</button>
         </div>
-        <p class="sub">El cliente te escribe con un código <b>Ref</b>. Búscalo aquí y cóbrale el precio que vio.</p>
+        <p class="sub">Cuando un cliente te escriba por WhatsApp, mira aquí el clic más reciente de ese método: la hora y el precio que vio.</p>
 
-        <div class="card" id="search-card">
-            <div class="row">
-                <input id="ref" placeholder="Código Ref del cliente (ej. K7F2P)" maxlength="12" style="text-transform:uppercase">
-                <button id="btn-search">Buscar</button>
-                <button class="ghost" id="btn-all">Ver últimos</button>
+        <div class="card">
+            <div class="row" id="filters">
+                <button class="ghost" data-m="">Todos</button>
+                <button class="ghost" data-m="Yape">Yape</button>
+                <button class="ghost" data-m="Mercado Pago">Mercado Pago</button>
+                <button class="ghost" data-m="Binance">Binance</button>
+                <button class="ghost" data-m="WhatsApp">WhatsApp</button>
             </div>
-            <div id="result" style="margin-top:14px"></div>
         </div>
 
         <div class="stats" id="stats"></div>
@@ -66,8 +67,8 @@
         <div class="card">
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Ref</th><th>Cuándo</th><th>Email</th><th>Producto</th><th>Método</th><th>Precio</th><th>Variante</th></tr></thead>
-                    <tbody id="rows"><tr><td colspan="7" class="empty">Cargando…</td></tr></tbody>
+                    <thead><tr><th>Cuándo</th><th>Email</th><th>Producto</th><th>Método</th><th>Precio</th><th>Variante</th></tr></thead>
+                    <tbody id="rows"><tr><td colspan="6" class="empty">Cargando…</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -125,30 +126,17 @@
 
     function renderRows(list) {
         $('rows').innerHTML = list.length ? list.map(c =>
-            '<tr><td class="ref">' + esc(c.ref) + '</td><td>' + fmtDate(c.created_at) + '</td><td>' + (c.email ? esc(c.email) : '<span class="pen">anónimo</span>') + '</td><td>' + esc(c.product) +
+            '<tr><td>' + fmtDate(c.created_at) + '</td><td>' + (c.email ? esc(c.email) : '<span class="pen">anónimo</span>') + '</td><td>' + esc(c.product) +
             '</td><td>' + esc(c.method) + '</td><td>' + priceHtml(c) + '</td><td>' + esc(c.variant) + '</td></tr>'
-        ).join('') : '<tr><td colspan="7" class="empty">Sin registros</td></tr>';
+        ).join('') : '<tr><td colspan="6" class="empty">Sin registros</td></tr>';
     }
 
+    let method = '';
     async function showAll() {
-        $('result').innerHTML = '';
-        $('search-card').classList.remove('found');
         const list = await load();
         if (!list) return;
-        renderStats(list); renderRows(list);
-    }
-
-    async function search() {
-        const ref = $('ref').value.trim().toUpperCase();
-        if (!ref) return showAll();
-        const list = await load(ref);
-        if (!list) return;
-        if (!list.length) { $('result').innerHTML = '<span class="pen">No hay registro con ese código.</span>'; return; }
-        const c = list[0];
-        $('search-card').classList.add('found');
-        $('result').innerHTML = '<div style="font-size:.85rem; color:var(--muted)">' + esc(c.product) + ' · ' + esc(c.method) + ' · ' + fmtDate(c.created_at) + (c.email ? ' · ' + esc(c.email) : '') +
-            '</div><div style="font-size:2rem; margin-top:4px">Cobrar: ' + priceHtml(c) + '</div>';
-        renderRows(list);
+        const shown = method ? list.filter(c => c.method === method) : list;
+        renderStats(shown); renderRows(shown);
     }
 
     function logout() { sessionStorage.removeItem(SESSION_KEY); location.reload(); }
@@ -165,9 +153,8 @@
         if (pin && await verifyPin(pin)) { sessionStorage.setItem(SESSION_KEY, pin); unlock(); }
         else $('err').style.display = 'block';
     });
-    $('btn-search').addEventListener('click', search);
-    $('btn-all').addEventListener('click', () => { $('ref').value = ''; showAll(); });
-    $('ref').addEventListener('keydown', (e) => { if (e.key === 'Enter') search(); });
+    document.querySelectorAll('#filters button').forEach(btn => btn.addEventListener('click', () => { method = btn.dataset.m; showAll(); }));
+    setInterval(() => { if ($('app').style.display !== 'none') showAll(); }, 20000);
     $('logout').addEventListener('click', logout);
 
     (async () => { const pin = getPin(); if (pin && await verifyPin(pin)) unlock(); })();
