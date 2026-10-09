@@ -1102,34 +1102,6 @@
                 }
                 const origEl = document.getElementById('promo-original-display');
                 if (origEl) origEl.innerText = `Antes: $${window.AB_ORIGINAL_PRICE} USD`;
-
-                const solesMap = { 5: 19, 10: 38, 15: 57, 20: 76, 17: 65, 25: 95 };
-                const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
-
-                // Update WhatsApp and Payment links dynamically with assigned price
-                const waLinks = document.querySelectorAll('a[href*="wa.me"]');
-                waLinks.forEach(link => {
-                    let currentHref = link.getAttribute('href');
-                    if (currentHref.includes('text=')) {
-                        let parts = currentHref.split('text=');
-                        let rawDecoded = decodeURIComponent(parts[1]);
-                        let isYape = rawDecoded.toLowerCase().includes('yape') || link.innerText.toLowerCase().includes('yape');
-                        let isMp = rawDecoded.toLowerCase().includes('mercado') || link.innerText.toLowerCase().includes('mercado');
-                        let isBinance = rawDecoded.toLowerCase().includes('binance') || link.innerText.toLowerCase().includes('binance');
-
-                        let baseText = rawDecoded.replace(/por\s+\$?\d+(\s*USD)?(\s*\/\s*S\/\s*\d+\s*soles)?/gi, '').replace(/\(\$?\d+(\s*USD)?(\s*\/\s*S\/\s*\d+\s*soles)?\)/gi, '').trim();
-
-                        if (isYape) {
-                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero comprar la promo 2x1 por Yape ($' + assignedPrice + ' USD / S/ ' + solesPrice + ' soles)')}`);
-                        } else if (isMp) {
-                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero comprar la promo 2x1 por Mercado Pago ($' + assignedPrice + ' USD)')}`);
-                        } else if (isBinance) {
-                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero pagar con Binance la promo 2x1 ($' + assignedPrice + ' USD)')}`);
-                        } else {
-                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent(baseText + ' por $' + assignedPrice + ' USD')}`);
-                        }
-                    }
-                });
             });
         })();
 
@@ -1214,5 +1186,6 @@
     <script src="https://sdk.mercadopago.com/js/v2"></script>
     <script src="/script/plugin-checkout.js?v=20261002"></script>
     <script src="/script/yape-checkout.js?v=20261002"></script>
+    <script src="/script/manual-pay-tracker.js?v=20261009"></script>
 </body>
 </html>
