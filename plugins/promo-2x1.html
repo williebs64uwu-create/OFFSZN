@@ -950,10 +950,10 @@
         
         <div class="price-box">
             <div class="original-price-wrap">
-                <span class="original-price">Antes: $30 USD</span>
+                <span class="original-price">Antes: $35 USD</span>
             </div>
             <div class="promo-price-main">
-                <span class="promo-price" id="promo-price-display">$10.00 <span>USD</span></span>
+                <span class="promo-price" id="promo-price-display">$25.00 <span>USD</span></span>
             </div>
             <p class="price-details">Pago único de por vida · 2 licencias incluidas</p>
         </div>
@@ -1047,32 +1047,13 @@
             const STORAGE_KEY = 'offszn_ab_promo_2x1_price_v5';
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
-            const validTiers = [5, 10, 15, 20];
+            const validTiers = [5, 10, 15, 20, 25];
 
-            let assignedPrice;
+            // Precio fijo: $25. ?price= permite forzar otro tier para pruebas.
+            let assignedPrice = 25;
             const parsedForced = parseInt(forcedPrice, 10);
             if (forcedPrice && validTiers.includes(parsedForced)) {
                 assignedPrice = parsedForced;
-                localStorage.setItem(STORAGE_KEY, assignedPrice);
-            } else {
-                let saved = localStorage.getItem(STORAGE_KEY);
-                let parsedSaved = parseInt(saved, 10);
-                if (validTiers.includes(parsedSaved)) {
-                    assignedPrice = parsedSaved;
-                } else {
-                    // Ponderación: 50% de probabilidad para $10, 15% para $5, 20% para $15, 15% para $20
-                    const rand = Math.random();
-                    if (rand < 0.15) {
-                        assignedPrice = 5;   // 15%
-                    } else if (rand < 0.65) {
-                        assignedPrice = 10;  // 50% (La gran mayoría de veces)
-                    } else if (rand < 0.85) {
-                        assignedPrice = 15;  // 20%
-                    } else {
-                        assignedPrice = 20;  // 15%
-                    }
-                    localStorage.setItem(STORAGE_KEY, assignedPrice);
-                }
             }
 
             window.CURRENT_PROMO_PRICE = assignedPrice;
@@ -1106,7 +1087,7 @@
                     priceEl.innerHTML = `$${assignedPrice}.00 <span>USD</span>`;
                 }
 
-                const solesMap = { 5: 19, 10: 38, 15: 57, 20: 76 };
+                const solesMap = { 5: 19, 10: 38, 15: 57, 20: 76, 25: 95 };
                 const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
 
                 // Update WhatsApp and Payment links dynamically with assigned price

@@ -51,7 +51,7 @@
         "@type": "Offer",
         "url": "https://offszn.lat/plugin/easy-mix",
         "priceCurrency": "USD",
-        "price": "5.00",
+        "price": "25.00",
         "priceValidUntil": "2026-12-31",
         "availability": "https://schema.org/InStock",
         "itemCondition": "https://schema.org/NewCondition"
@@ -2523,8 +2523,8 @@
                         
                         <div style="display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-bottom: 24px;">
                             <span id="easy-mix-original-price"
-                                style="font-size: 1.3rem; text-decoration: line-through; color: rgba(255,255,255,0.3); font-weight: 500;">$25</span>
-                            <span id="easy-mix-price-val" style="font-size: 3rem; font-weight: 800; color: #fff;">$5</span>
+                                style="font-size: 1.3rem; text-decoration: line-through; color: rgba(255,255,255,0.3); font-weight: 500;">$35</span>
+                            <span id="easy-mix-price-val" style="font-size: 3rem; font-weight: 800; color: #fff;">$25</span>
                             <span style="font-size: 1rem; color: #888;">único</span>
                         </div>
 
@@ -2863,31 +2863,11 @@
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPriceParam = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
 
-            let assignedPrice;
-            const validTiers = [5, 10, 15, 20];
-
+            // Precio fijo: $25 (tachado $35). ?price= permite forzar otro tier para pruebas.
+            let assignedPrice = 25;
+            const validTiers = [5, 10, 15, 20, 25];
             if (forcedPriceParam && validTiers.includes(parseInt(forcedPriceParam, 10))) {
                 assignedPrice = parseInt(forcedPriceParam, 10);
-                localStorage.setItem(STORAGE_KEY, assignedPrice);
-            } else {
-                let saved = localStorage.getItem(STORAGE_KEY);
-                let parsedSaved = parseInt(saved, 10);
-                if (validTiers.includes(parsedSaved)) {
-                    assignedPrice = parsedSaved;
-                } else {
-                    // Ponderación: 50% de probabilidad para $10, 25% para $5, 15% para $15, 10% para $20
-                    const rand = Math.random();
-                    if (rand < 0.25) {
-                        assignedPrice = 5;   // 25%
-                    } else if (rand < 0.75) {
-                        assignedPrice = 10;  // 50% (La mayoría de veces)
-                    } else if (rand < 0.90) {
-                        assignedPrice = 15;  // 15%
-                    } else {
-                        assignedPrice = 20;  // 10%
-                    }
-                    localStorage.setItem(STORAGE_KEY, assignedPrice);
-                }
             }
 
             window.CURRENT_PROMO_PRICE = assignedPrice;
@@ -2918,10 +2898,10 @@
                 const origPriceEl = document.getElementById('easy-mix-original-price');
                 if (priceEl) priceEl.innerText = `$${assignedPrice}`;
                 if (origPriceEl) {
-                    origPriceEl.innerText = assignedPrice === 15 ? '$35' : '$25';
+                    origPriceEl.innerText = '$35';
                 }
 
-                const solesMap = { 5: 19, 10: 38, 15: 57, 20: 76 };
+                const solesMap = { 5: 19, 10: 38, 15: 57, 20: 76, 25: 95 };
                 const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
 
                 const waLinks = document.querySelectorAll('a[href*="wa.me"]');

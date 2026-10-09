@@ -471,7 +471,7 @@ export const createPayPalOrder = async (req, res) => {
             // Do NOT use DB price_basic — it may be wrong or outdated.
             if (['899', '900', '901', '902', '905', '5000'].includes(prodIdToFind)) {
                 const pluginPrice = parseFloat(item.variant_price) || 10;
-                const validPluginPrice = [5, 10, 15, 20].includes(pluginPrice) ? pluginPrice : 10;
+                const validPluginPrice = [5, 10, 15, 20, 25].includes(pluginPrice) ? pluginPrice : 10;
 
                 subtotal += validPluginPrice;    // 100% to OFFSZN
                 verifiedCartItems.push({ ...item, variant_price: validPluginPrice });
