@@ -1,6 +1,6 @@
 // Pagos manuales (Yape / Mercado Pago / Binance / WhatsApp).
-// El mensaje de WhatsApp YA NO lleva precio: lleva un codigo "Ref". El precio que vio el cliente
-// (variante A/B) queda registrado y se consulta en /owner/pagos-manuales con ese codigo.
+// El mensaje de WhatsApp YA NO lleva precio. El precio que vio el cliente (variante A/B) queda
+// registrado con la hora del clic y se consulta en /owner/pagos-manuales (se cruza por hora/metodo).
 (function () {
     var SOLES = { 17: 65, 25: 95 };
 
@@ -49,7 +49,7 @@
             .replace(/\s*por\s+\$?\d+(\s*USD)?(\s*\/\s*S\/\s*\d+\s*soles)?/gi, '')
             .replace(/\s*\(\$?\d+(\s*USD)?(\s*\/\s*S\/\s*\d+\s*soles)?\)/gi, '')
             .trim();
-        link.setAttribute('href', parts[0] + 'text=' + encodeURIComponent(base + ' (Ref: ' + ref + ')'));
+        link.setAttribute('href', parts[0] + 'text=' + encodeURIComponent(base));
 
         var payload = JSON.stringify({
             ref: ref,
