@@ -22,8 +22,8 @@ const WILLIE_ADMIN_EMAIL = 'willie2008garay@gmail.com';
 
 const DOWNLOAD_LINKS = {
     easyMix: {
-        win: 'https://drive.google.com/file/d/1BkXVJlm7PTxIo6Id2SyYxddvz6Of6_jD/view?usp=sharing',
-        mac: 'https://drive.google.com/file/d/1fOMUrVvttNNPI0rXru4eJbViqeczWp1W/view?usp=sharing'
+        win: 'https://drive.google.com/file/d/1oHgJXJwirHDVvovbImJnBklEo-BIxlv4/view?usp=sharing',
+        mac: 'https://drive.google.com/file/d/1Yc5HIQfIbFpFM_W4OZgyoFyR2ojIKg0je/view?usp=sharing'
     },
     easyMaster: {
         win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view?usp=sharing',

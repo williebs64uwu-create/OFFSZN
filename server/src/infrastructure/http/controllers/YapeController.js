@@ -17,15 +17,15 @@ const PLUGIN_INFO_MAP = {
     '899': {
         name: 'Easy Mix',
         downloads: {
-            win: 'https://drive.google.com/file/d/1BkXVJlm7PTxIo6Id2SyYxddvz6Of6_jD/view?usp=sharing',
-            mac: 'https://drive.google.com/file/d/1fOMUrVvttNNPI0rXru4eJbViqeczWp1W/view?usp=sharing'
+            win: 'https://drive.google.com/file/d/1oHgJXJwirHDVvovbImJnBklEo-BIxlv4/view?usp=sharing',
+            mac: 'https://drive.google.com/file/d/1Yc5HIQfIbFpFM_W4OZgyoFyR2ojIKg0je/view?usp=sharing'
         }
     },
     '901': {
         name: 'Easy Mix',
         downloads: {
-            win: 'https://drive.google.com/file/d/1BkXVJlm7PTxIo6Id2SyYxddvz6Of6_jD/view?usp=sharing',
-            mac: 'https://drive.google.com/file/d/1fOMUrVvttNNPI0rXru4eJbViqeczWp1W/view?usp=sharing'
+            win: 'https://drive.google.com/file/d/1oHgJXJwirHDVvovbImJnBklEo-BIxlv4/view?usp=sharing',
+            mac: 'https://drive.google.com/file/d/1Yc5HIQfIbFpFM_W4OZgyoFyR2ojIKg0je/view?usp=sharing'
         }
     },
     '900': {

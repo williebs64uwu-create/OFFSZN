@@ -1436,8 +1436,8 @@ export const capturePayPalOrder = async (req, res) => {
                                 win: 'https://drive.google.com/file/d/11Zw_4w-vWUjq3b2bImlyQjO2rzXitqLO/view?usp=sharing',
                                 mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
                             } : {
-                                win: 'https://drive.google.com/file/d/1BkXVJlm7PTxIo6Id2SyYxddvz6Of6_jD/view?usp=sharing',
-                                mac: 'https://drive.google.com/file/d/1fOMUrVvttNNPI0rXru4eJbViqeczWp1W/view?usp=sharing'
+                                win: 'https://drive.google.com/file/d/1oHgJXJwirHDVvovbImJnBklEo-BIxlv4/view?usp=sharing',
+                                mac: 'https://drive.google.com/file/d/1Yc5HIQfIbFpFM_W4OZgyoFyR2ojIKg0je/view?usp=sharing'
                             }))))
                         ) : null;
 
