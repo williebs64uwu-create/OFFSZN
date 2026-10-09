@@ -291,7 +291,7 @@ export const createPayPalOrder = async (req, res) => {
 
             let variantPrice = productObj.price_basic || 10;
             const requestedCustomPrice = parseFloat(req.body.customPrice || req.body.abPrice);
-            if (requestedCustomPrice && [5, 10, 15, 20].includes(requestedCustomPrice)) {
+            if (requestedCustomPrice && [5, 10, 15, 17, 20, 25].includes(requestedCustomPrice)) {
                 variantPrice = requestedCustomPrice;
             }
 
@@ -471,7 +471,7 @@ export const createPayPalOrder = async (req, res) => {
             // Do NOT use DB price_basic — it may be wrong or outdated.
             if (['899', '900', '901', '902', '905', '5000'].includes(prodIdToFind)) {
                 const pluginPrice = parseFloat(item.variant_price) || 10;
-                const validPluginPrice = [5, 10, 15, 20].includes(pluginPrice) ? pluginPrice : 10;
+                const validPluginPrice = [5, 10, 15, 17, 20, 25].includes(pluginPrice) ? pluginPrice : 10;
 
                 subtotal += validPluginPrice;    // 100% to OFFSZN
                 verifiedCartItems.push({ ...item, variant_price: validPluginPrice });
@@ -881,7 +881,7 @@ export const capturePayPalOrder = async (req, res) => {
                 } else {
                     let variantPrice = productObj.price_basic || 10;
                     const requestedCustomPrice = parseFloat(req.body.customPrice || req.body.abPrice);
-                    if (requestedCustomPrice && [5, 10, 15, 20].includes(requestedCustomPrice)) {
+                    if (requestedCustomPrice && [5, 10, 15, 17, 20, 25].includes(requestedCustomPrice)) {
                         variantPrice = requestedCustomPrice;
                     }
 

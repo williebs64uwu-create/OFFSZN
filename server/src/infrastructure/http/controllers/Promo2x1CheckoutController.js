@@ -39,7 +39,7 @@ export const createPromo2x1Order = async (req, res) => {
     try {
         const userId = req.user?.userId;
         const customPrice = parseFloat(req.body.customPrice || req.body.abPrice) || 10;
-        const validPrice = [5, 10, 15, 20].includes(customPrice) ? customPrice : 10;
+        const validPrice = [5, 10, 15, 17, 20, 25].includes(customPrice) ? customPrice : 10;
 
         const request = new paypal.orders.OrdersCreateRequest();
         request.prefer('return=representation');
@@ -121,7 +121,7 @@ export const capturePromo2x1Order = async (req, res) => {
         const userId = req.user?.userId;
         const orderID = req.body.orderID;
         const customPrice = parseFloat(req.body.customPrice || req.body.abPrice) || 10;
-        const validPrice = [5, 10, 15, 20].includes(customPrice) ? customPrice : 10;
+        const validPrice = [5, 10, 15, 17, 20, 25].includes(customPrice) ? customPrice : 10;
 
         if (!orderID) {
             return res.status(400).json({ error: 'Falta orderID' });

@@ -950,10 +950,10 @@
         
         <div class="price-box">
             <div class="original-price-wrap">
-                <span class="original-price">Antes: $30 USD</span>
+                <span class="original-price" id="promo-original-display">Antes: $35 USD</span>
             </div>
             <div class="promo-price-main">
-                <span class="promo-price" id="promo-price-display">$10.00 <span>USD</span></span>
+                <span class="promo-price" id="promo-price-display">$25.00 <span>USD</span></span>
             </div>
             <p class="price-details">Pago único de por vida · 2 licencias incluidas</p>
         </div>
@@ -1047,33 +1047,28 @@
             const STORAGE_KEY = 'offszn_ab_promo_2x1_price_v5';
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
-            const validTiers = [5, 10, 15, 20];
-
+            // A/B $17 vs $25 (50/50). Se asigna una vez por navegador y se mantiene
+            // (misma clave en las 3 páginas, así el visitante ve siempre el mismo precio).
+            // ?price=17|25 fuerza una variante para pruebas.
+            const AB_KEY = 'offszn_ab_em_17_25_v1';
+            const AB_TIERS = [17, 25];
+            const AB_ORIGINAL = { 17: 25, 25: 35 }; // precio tachado de cada variante (~30 por ciento de descuento en ambas)
             let assignedPrice;
-            const parsedForced = parseInt(forcedPrice, 10);
-            if (forcedPrice && validTiers.includes(parsedForced)) {
-                assignedPrice = parsedForced;
-                localStorage.setItem(STORAGE_KEY, assignedPrice);
-            } else {
-                let saved = localStorage.getItem(STORAGE_KEY);
-                let parsedSaved = parseInt(saved, 10);
-                if (validTiers.includes(parsedSaved)) {
-                    assignedPrice = parsedSaved;
-                } else {
-                    // Ponderación: 50% de probabilidad para $10, 15% para $5, 20% para $15, 15% para $20
-                    const rand = Math.random();
-                    if (rand < 0.15) {
-                        assignedPrice = 5;   // 15%
-                    } else if (rand < 0.65) {
-                        assignedPrice = 10;  // 50% (La gran mayoría de veces)
-                    } else if (rand < 0.85) {
-                        assignedPrice = 15;  // 20%
-                    } else {
-                        assignedPrice = 20;  // 15%
-                    }
-                    localStorage.setItem(STORAGE_KEY, assignedPrice);
+            try {
+                const forced = parseInt(forcedPrice, 10);
+                const saved = parseInt(localStorage.getItem(AB_KEY), 10);
+                if (AB_TIERS.includes(forced)) {
+                    assignedPrice = forced;
+                } else if (AB_TIERS.includes(saved)) {
+                    assignedPrice = saved;
                 }
+                if (!assignedPrice) assignedPrice = Math.random() < 0.5 ? 17 : 25;
+                localStorage.setItem(AB_KEY, assignedPrice);
+            } catch (e) {
+                if (!assignedPrice) assignedPrice = Math.random() < 0.5 ? 17 : 25;
             }
+            window.AB_VARIANT = 'price_' + assignedPrice;
+            window.AB_ORIGINAL_PRICE = AB_ORIGINAL[assignedPrice];
 
             window.CURRENT_PROMO_PRICE = assignedPrice;
             window.PLUGIN_ID = 899;
@@ -1105,8 +1100,10 @@
                 if (priceEl) {
                     priceEl.innerHTML = `$${assignedPrice}.00 <span>USD</span>`;
                 }
+                const origEl = document.getElementById('promo-original-display');
+                if (origEl) origEl.innerText = `Antes: $${window.AB_ORIGINAL_PRICE} USD`;
 
-                const solesMap = { 5: 19, 10: 38, 15: 57, 20: 76 };
+                const solesMap = { 5: 19, 10: 38, 15: 57, 20: 76, 17: 65, 25: 95 };
                 const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
 
                 // Update WhatsApp and Payment links dynamically with assigned price
