@@ -420,6 +420,8 @@ app.use((req, res, next) => {
             pathLower === '/owner/licencias' ||
             pathLower === '/owner/offszn.html' ||
             pathLower === '/owner/offszn' ||
+            pathLower === '/owner/pagos-manuales.html' ||
+            pathLower === '/owner/pagos-manuales' ||
             pathLower === '/owner/content-calendar.html' ||
             pathLower === '/owner/content-calendar' ||
             pathLower === '/owner/audience-data.js' ||
@@ -561,6 +563,13 @@ app.get(['/owner/offszn', '/owner/offszn.html'], (req, res) => {
     const p = path.join(rootPath, 'owner/offszn.html');
     if (fs.existsSync(p)) return res.sendFile(p);
     return res.status(404).send('Owner OS not found');
+});
+
+// --- 3.0.4b PAGOS MANUALES (panel admin, protegido por clave en la propia pagina/API) ---
+app.get(['/owner/pagos-manuales', '/owner/pagos-manuales.html'], (req, res) => {
+    const p = path.join(rootPath, 'owner/pagos-manuales.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Panel de pagos manuales not found');
 });
 
 // --- 3.0.5 CONTENT CALENDAR DIRECT ROUTE ---
