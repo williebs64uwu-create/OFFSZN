@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EASY MIX V3 · Carrusel IG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== Sistema de color (EASY MIX V3 · @offszn) ===== */
+  :root {
+    --bg: #0B0B0E;            /* DARK_BG */
+    --panel: #15151A;
+    --line: rgba(255,255,255,.10);
+    --red: #FF3B30;           /* BRAND_PRIMARY (MIX) */
+    --blue: #0A84FF;          /* 1. Limpieza */
+    --purple: #BF5AF2;        /* 3. Espacio y FX */
+    --gold: #FFB020;          /* asistente STAR */
+    --muted: #9AA0AA;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111; font-family: 'Inter', system-ui, sans-serif; display: flex; justify-content: center; padding: 24px; }
+  .ig-frame { width: 420px; background: #000; border-radius: 14px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+  .carousel-viewport { width: 420px; height: 525px; overflow: hidden; }
+  .carousel-track { display: flex; width: max-content; transition: transform .35s cubic-bezier(.2,.7,.2,1); }
+
+  .slide { position: relative; width: 420px; height: 525px; flex-shrink: 0; overflow: hidden; padding: 34px 26px 52px; display: flex; flex-direction: column; color: #fff;
+    background: radial-gradient(90% 55% at 100% 0%, var(--glow, #2a1210) 0%, var(--bg) 62%); }
+  .pill { align-self: flex-start; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; padding: 7px 12px; border-radius: 100px; background: var(--accent, var(--red)); color: #fff; }
+  .pill.dark { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); }
+  h1, h2 { font-family: 'Inter Tight', 'Inter', sans-serif; font-weight: 800; letter-spacing: -1.6px; line-height: .98; }
+  h1 { font-size: 44px; } h2 { font-size: 34px; }
+  .hl { color: var(--accent, var(--red)); }
+  .sub { font-size: 14px; line-height: 1.4; font-weight: 500; color: var(--muted); }
+  .handle { position: absolute; left: 26px; bottom: 22px; font-size: 11px; font-weight: 700; letter-spacing: .5px; color: var(--muted); }
+  .swipe { position: absolute; right: 22px; bottom: 20px; width: 34px; height: 34px; border-radius: 50%; background: #fff; color: #000; display: grid; place-items: center; font-size: 16px; font-weight: 700; }
+  .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(255,255,255,.12); }
+  .progress i { display: block; height: 100%; background: var(--accent, var(--red)); }
+
+  .card { display: block; width: 100%; border-radius: 14px; border: 1px solid var(--line); box-shadow: 0 18px 44px rgba(0,0,0,.65), 0 0 60px var(--glow2, rgba(255,59,48,.14)); background: var(--panel); }
+  .stage.bleed { width: 128%; max-width: none; align-self: flex-start; border-radius: 14px 0 0 14px; border-right: 0; }
+  .stage { margin-top: auto; margin-bottom: 6px; align-self: center; }
+  .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+  .chip { font-size: 13px; font-weight: 700; letter-spacing: -.2px; padding: 10px 12px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
+  .chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
+  .legend { display: grid; gap: 8px; margin-top: 14px; }
+  .legend div { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; }
+  .legend b { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; font-size: 12px; background: var(--c); color: #fff; }
+  .kw { display: inline-block; background: var(--red); color: #fff; padding: 2px 14px 6px; border-radius: 12px; }
+  .star { filter: drop-shadow(0 12px 22px rgba(255,176,32,.35)); }
+
+  /* ===== Animación (solo 3 s; luego queda estático) ===== */
+  @keyframes pop   { from { opacity: 0; transform: translateY(14px) scale(.95); } to { opacity: 1; transform: none; } }
+  @keyframes paint { from { clip-path: inset(-10% 100% -10% 0); } to { clip-path: inset(-10% -2% -10% 0); } }
+  @keyframes wipe  { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  @keyframes bounce{ 0% { opacity: 0; transform: translateY(18px) scale(.7); } 60% { opacity: 1; transform: translateY(-6px) scale(1.06); } 100% { opacity: 1; transform: none; } }
+  .a-pop   { animation: pop .45s cubic-bezier(.2,.8,.2,1) var(--d,0s) both; }
+  .a-paint { display: inline-block; animation: paint .6s cubic-bezier(.5,0,.2,1) var(--d,0s) both; }
+  .a-wipe  { animation: wipe .8s cubic-bezier(.5,0,.2,1) var(--d,0s) both; }
+  .a-bounce{ animation: bounce .6s cubic-bezier(.2,.8,.2,1) var(--d,0s) both; }
+
+  .nav { display: flex; justify-content: center; gap: 8px; padding: 10px; background: #000; }
+  .nav button { background: #222; color: #fff; border: 0; padding: 6px 14px; border-radius: 8px; cursor: pointer; font: 600 12px Inter; }
+</style>
+</head>
+<body>
+<div class="ig-frame">
+  <div class="carousel-viewport">
+    <div class="carousel-track">
+
+      <!-- 1 · HOOK (ESTÁTICA, sin animación -> PNG) -->
+      <section class="slide" data-still="1" style="--glow:#2a1210">
+        <span class="pill">Easy Mix V3</span>
+        <h1 style="margin-top:16px">Este plugin lo tiene <span class="hl">todo.</span></h1>
+        <div class="chips">
+          <div class="chip" style="--c:var(--red)"><i></i>Autotune</div>
+          <div class="chip" style="--c:var(--gold)"><i></i>Afinación</div>
+          <div class="chip" style="--c:var(--purple)"><i></i>Efectos creativos</div>
+          <div class="chip" style="--c:var(--blue)"><i></i>Mezcla completa</div>
+        </div>
+        <img class="card stage bleed" src="easy_mix_v3/mix_all.png" alt="EASY MIX V3">
+        <div class="handle">@offszn</div>
+        <div class="swipe">→</div>
+        <div class="progress"><i style="width:17%"></i></div>
+      </section>
+
+      <!-- 2 · ASISTENTE STAR (escaneo en vivo) -->
+      <section class="slide" data-anim="3" style="--glow:#33210a;--accent:var(--gold);--glow2:rgba(255,176,32,.16)">
+        <span class="pill a-pop">Modo asistente</span>
+        <h2 class="a-pop" style="margin-top:16px;--d:.1s">STAR escucha tu voz y deja la mezcla <span class="hl">puesta.</span></h2>
+        <img class="card stage a-pop" id="scanImg" style="--d:.2s" src="easy_mix_v3/scan/f_000.jpg" alt="Asistente STAR analizando">
+        <div class="handle">@offszn</div>
+        <div class="swipe">→</div>
+        <div class="progress"><i style="width:34%"></i></div>
+      </section>
+
+      <!-- 3 · AUTOTUNE Y AFINACIÓN -->
+      <section class="slide" data-anim="3" style="--glow:#33150f;--accent:var(--red)">
+        <span class="pill a-pop">Autotune y afinación</span>
+        <h2 class="a-pop" style="margin-top:16px;--d:.1s">Eliges tonalidad y escala. Tu voz queda <span class="hl">afinada.</span></h2>
+        <img class="card stage a-wipe" style="--d:.5s" src="easy_mix_v3/pitch.png" alt="Afinador autotune">
+        <div class="handle">@offszn</div>
+        <div class="swipe">→</div>
+        <div class="progress"><i style="width:50%"></i></div>
+      </section>
+
+      <!-- 4 · EFECTOS CREATIVOS -->
+      <section class="slide" data-anim="3" style="--glow:#2a1038;--accent:var(--purple);--glow2:rgba(191,90,242,.2)">
+        <span class="pill a-pop">Efectos creativos</span>
+        <h2 class="a-pop" style="margin-top:16px;--d:.1s">Reverb V3, doubler y delay con <span class="hl">sidechain.</span></h2>
+        <img class="card stage a-pop" style="--d:.5s;width:68%" src="easy_mix_v3/mix_fx.png" alt="Espacio y FX">
+        <div class="handle">@offszn</div>
+        <div class="swipe">→</div>
+        <div class="progress"><i style="width:67%"></i></div>
+      </section>
+
+      <!-- 5 · MEZCLA COMPLETA -->
+      <section class="slide" data-anim="3" style="--glow:#0f2440;--accent:var(--blue);--glow2:rgba(10,132,255,.18)">
+        <span class="pill a-pop">Mezcla completa</span>
+        <h2 class="a-pop" style="margin-top:16px;--d:.1s">Limpieza, color y espacio en <span class="hl">una ventana.</span></h2>
+        <div class="legend">
+          <div class="a-pop" style="--c:var(--blue);--d:.4s"><b>1</b>Limpieza</div>
+          <div class="a-pop" style="--c:var(--red);--d:.8s"><b>2</b>Color y cuerpo</div>
+          <div class="a-pop" style="--c:var(--purple);--d:1.2s"><b>3</b>Espacio y FX</div>
+        </div>
+        <img class="card stage bleed a-wipe" style="--d:1.6s" src="easy_mix_v3/mix_all.png" alt="Mezcla completa">
+        <div class="handle">@offszn</div>
+        <div class="swipe">→</div>
+        <div class="progress"><i style="width:84%"></i></div>
+      </section>
+
+      <!-- 6 · CTA -->
+      <section class="slide" data-anim="3" style="--glow:#2a1210;justify-content:center">
+        <span class="pill dark a-pop">Disponible para Windows y Mac</span>
+        <h1 style="margin-top:22px;font-size:44px"><span class="a-pop" style="--d:.2s;display:inline-block">Comenta</span> <span class="kw a-paint" style="--d:.6s">MIX</span> <span class="a-pop" style="--d:1.2s;display:inline-block">y te lo envío.</span></h1>
+        <img class="star a-bounce" src="easy_mix_v3/star.png" alt="STAR" style="position:absolute;right:30px;bottom:66px;width:96px;--d:1.8s">
+        <div class="handle">@offszn</div>
+        <div class="progress"><i style="width:100%"></i></div>
+      </section>
+
+    </div>
+  </div>
+  <div class="nav"><button id="prev">←</button><button id="next">→</button></div>
+</div>
+<script>
+  const track = document.querySelector('.carousel-track'), n = track.children.length; let i = 0;
+  const go = (k) => { i = Math.max(0, Math.min(n - 1, k)); track.style.transform = `translateX(${-i * 420}px)`; };
+  document.getElementById('prev').onclick = () => go(i - 1);
+  document.getElementById('next').onclick = () => go(i + 1);
+  addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') go(i + 1); if (e.key === 'ArrowLeft') go(i - 1); });
+
+  // Escaneo del asistente: el exportador llama __setScan(tiempo en ms). 0.4s-2.9s = 0 -> 100 %, luego queda "¡Listo!"
+  const SCAN_START = 400, SCAN_END = 2900, SCAN_FRAMES = 90;
+  window.__setScan = async (ms) => {
+    const el = document.getElementById('scanImg');
+    const idx = Math.max(0, Math.min(SCAN_FRAMES, Math.round(((ms - SCAN_START) / (SCAN_END - SCAN_START)) * SCAN_FRAMES)));
+    const src = ms >= SCAN_END ? 'easy_mix_v3/scan/done.jpg' : `easy_mix_v3/scan/f_${String(idx).padStart(3, '0')}.jpg`;
+    if (!el.src.endsWith(src)) { el.src = src; try { await el.decode(); } catch (e) {} }
+  };
+  // Vista en navegador: reproduce el escaneo al llegar a la slide 2
+  let t0 = null;
+  const preview = (ts) => { if (i === 1) { if (t0 === null) t0 = ts; window.__setScan(Math.min(ts - t0, 3000)); } else t0 = null; requestAnimationFrame(preview); };
+  requestAnimationFrame(preview);
+</script>
+</body>
+</html>
