@@ -2410,52 +2410,62 @@
                     Comprueba cómo Omni transforma una mezcla plana en un master con pegada comercial, brillo analógico y volumen competitivo.
                 </p>
                 <style id="omni-ab-grid">
-                .abg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;text-align:left;margin-top:8px}
+                .abg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;align-items:start;text-align:left;margin-top:8px}
                 .abg .audio-glass-card{margin:0;transition:transform .45s cubic-bezier(.16,1,.3,1),box-shadow .5s,border-color .4s}
                 .abg .audio-glass-card:hover{transform:translateY(-4px);box-shadow:0 0 50px rgba(168,85,247,.2);border-color:rgba(168,85,247,.35)}
-                .abg .audio-glass-card:last-child:nth-child(odd){grid-column:1/-1;justify-self:center;width:calc(50% - 11px)}
+                .abg-col{display:flex;flex-direction:column;gap:22px;min-width:0}
+                .abg-head{display:flex;align-items:center;gap:10px;padding:0 6px 2px;color:#fff;font-weight:800;letter-spacing:.02em}
+                .abg-head i{color:#c084fc;font-size:1.1rem}
+                .abg-head span{font-size:1.15rem}
+                .abg-head small{margin-left:auto;color:#8a8a93;font-weight:600;font-size:.8rem}
                 .abg .ws-track-caption{justify-content:center;text-align:center}
                 .abg .ws-tag-after{color:#a855f7!important}
                 .ws-play-btn{transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .35s}
                 .ws-play-btn:hover{transform:scale(1.12);box-shadow:0 0 24px rgba(168,85,247,.55)}
-                @media(max-width:760px){.abg{grid-template-columns:1fr}.abg .audio-glass-card:last-child:nth-child(odd){width:100%}}
+                @media(max-width:760px){.abg{grid-template-columns:1fr}}
                 </style>
                 <div class="abg em-reveal" id="abGrid">
-                    <div class="audio-glass-card" data-card-id="omni-beat-1">
-                        <div class="ws-track-row" data-track-id="omni-off">
+                    <div class="abg-col" data-mode="beat">
+                        <div class="abg-head"><i class="bi bi-music-note-beamed"></i><span data-es="Modo Beat" data-en="Beat Mode">Modo Beat</span><small data-es="Beats sin letra" data-en="Instrumentals">Beats sin letra</small></div>
+                        <div class="audio-glass-card" data-card-id="omni-beat-1">
+                        <div class="ws-track-row" data-track-id="omni-off" data-gain="0.56">
                             <button type="button" class="ws-play-btn" aria-label="Reproducir Antes"><i class="bi bi-play-fill"></i></button>
                             <div class="ws-waveform-wrap" data-audio-src="/plugins/omni-antes-beat.m4a"></div>
                         </div>
-                        <div class="ws-track-caption"><span class="ws-tag-before">ANTES:</span> <span class="ws-track-name">Beat sin master</span></div>
+                        <div class="ws-track-caption"><span class="ws-tag-before">ANTES:</span> <span class="ws-track-name">Sin Omni</span></div>
                         <div class="ws-track-row" data-track-id="omni-on">
                             <button type="button" class="ws-play-btn" aria-label="Reproducir Después"><i class="bi bi-play-fill"></i></button>
                             <div class="ws-waveform-wrap" data-audio-src="/plugins/omni-despues-beat.m4a"></div>
                         </div>
-                        <div class="ws-track-caption"><span class="ws-tag-after">DESPUÉS:</span> <span class="ws-track-name">Modo Beat</span></div>
+                        <div class="ws-track-caption"><span class="ws-tag-after">DESPUÉS:</span> <span class="ws-track-name">Con Omni</span></div>
                     </div>
-                    <div class="audio-glass-card" data-card-id="omni-beat-2">
-                        <div class="ws-track-row" data-track-id="omni-off">
+                        <div class="audio-glass-card" data-card-id="omni-beat-2">
+                        <div class="ws-track-row" data-track-id="omni-off" data-gain="0.56">
                             <button type="button" class="ws-play-btn" aria-label="Reproducir Antes"><i class="bi bi-play-fill"></i></button>
                             <div class="ws-waveform-wrap" data-audio-src="/plugins/omni-antes-beat2.m4a"></div>
                         </div>
-                        <div class="ws-track-caption"><span class="ws-tag-before">ANTES:</span> <span class="ws-track-name">Beat sin master</span></div>
+                        <div class="ws-track-caption"><span class="ws-tag-before">ANTES:</span> <span class="ws-track-name">Sin Omni</span></div>
                         <div class="ws-track-row" data-track-id="omni-on">
                             <button type="button" class="ws-play-btn" aria-label="Reproducir Después"><i class="bi bi-play-fill"></i></button>
                             <div class="ws-waveform-wrap" data-audio-src="/plugins/omni-despues-beat2.m4a"></div>
                         </div>
-                        <div class="ws-track-caption"><span class="ws-tag-after">DESPUÉS:</span> <span class="ws-track-name">Modo Beat</span></div>
+                        <div class="ws-track-caption"><span class="ws-tag-after">DESPUÉS:</span> <span class="ws-track-name">Con Omni</span></div>
                     </div>
-                    <div class="audio-glass-card" data-card-id="omni-master-1">
+                    </div>
+                    <div class="abg-col" data-mode="master">
+                        <div class="abg-head"><i class="bi bi-sliders"></i><span data-es="Modo Master" data-en="Master Mode">Modo Master</span><small data-es="Canciones" data-en="Songs">Canciones</small></div>
+                        <div class="audio-glass-card" data-card-id="omni-master-1">
                         <div class="ws-track-row" data-track-id="omni-off">
                             <button type="button" class="ws-play-btn" aria-label="Reproducir Antes"><i class="bi bi-play-fill"></i></button>
                             <div class="ws-waveform-wrap" data-audio-src="/plugins/omni-antes.mp3"></div>
                         </div>
-                        <div class="ws-track-caption"><span class="ws-tag-before">ANTES:</span> <span class="ws-track-name">Canción sin master</span></div>
+                        <div class="ws-track-caption"><span class="ws-tag-before">ANTES:</span> <span class="ws-track-name">Sin Omni</span></div>
                         <div class="ws-track-row" data-track-id="omni-on" data-gain="0.516">
                             <button type="button" class="ws-play-btn" aria-label="Reproducir Después"><i class="bi bi-play-fill"></i></button>
                             <div class="ws-waveform-wrap" data-audio-src="/plugins/omni-despues.mp3"></div>
                         </div>
-                        <div class="ws-track-caption"><span class="ws-tag-after">DESPUÉS:</span> <span class="ws-track-name">Modo Master</span></div>
+                        <div class="ws-track-caption"><span class="ws-tag-after">DESPUÉS:</span> <span class="ws-track-name">Con Omni</span></div>
+                    </div>
                     </div>
                 </div>
             </div>
