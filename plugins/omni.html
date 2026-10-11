@@ -4261,6 +4261,24 @@
   setMode('beat',true);
 })();
 </script>
+
+<script id="omni-wa-owner">
+/* Omni: todos los enlaces de WhatsApp de esta pagina (botones, burbuja y footer compartido) van al WhatsApp de Gadiel. */
+(function(){
+  var NUM='51952467395',DEF='Hola Gadiel, estoy interesado en comprar Omni';
+  function fix(root){
+    (root||document).querySelectorAll('a[href*="wa.me"],a[href*="wa.link"]').forEach(function(a){
+      var h=a.getAttribute('href')||'';
+      if(h.indexOf('wa.me/'+NUM)!==-1)return;
+      var m=h.match(/[?&]text=([^&]*)/),txt=m?m[1]:encodeURIComponent(DEF);
+      a.setAttribute('href','https://wa.me/'+NUM+'?text='+txt);
+    });
+  }
+  fix();
+  var t;new MutationObserver(function(){clearTimeout(t);t=setTimeout(fix,150)}).observe(document.body,{childList:true,subtree:true});
+  window.addEventListener('load',function(){setTimeout(fix,800)});
+})();
+</script>
 </body>
 
 </html>
