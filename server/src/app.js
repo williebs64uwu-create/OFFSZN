@@ -499,6 +499,11 @@ app.get(['/plugin/omni', '/plugin/omni.html', '/plugins/omni', '/plugins/omni.ht
     return res.sendFile(path.join(rootPath, 'plugins/omni.html'));
 });
 
+// Demo interactiva VST3 de Omni (evita loop de 301 entre Vercel y Express static)
+app.get(['/plugins/omni-ui', '/plugins/omni-ui/', '/plugins/omni-ui/index.html'], (req, res) => {
+    return res.sendFile(path.join(rootPath, 'plugins/omni-ui/index.html'));
+});
+
 // Rutas directas para Vocal Preset
 app.get(['/plugin/vocal-preset', '/plugin/vocal-preset.html', '/plugins/vocal-preset', '/plugins/vocal-preset.html'], (req, res) => {
     const pluginsLandingPath = path.join(rootPath, 'plugins/vocal-preset.html');
@@ -850,6 +855,7 @@ app.use('/recursos', express.static(recursosStaticPath, {
 // Dedicated static mount for plugin assets (e.g. plugins/*.png, *.jpg)
 const pluginsStaticPath = path.join(rootPath, 'plugins');
 app.use('/plugins', express.static(pluginsStaticPath, {
+    redirect: false,
     maxAge: '7d',
     setHeaders: (res) => {
         res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
