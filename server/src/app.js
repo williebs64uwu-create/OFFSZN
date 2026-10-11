@@ -499,9 +499,9 @@ app.get(['/plugin/omni', '/plugin/omni.html', '/plugins/omni', '/plugins/omni.ht
     return res.sendFile(path.join(rootPath, 'plugins/omni.html'));
 });
 
-// Demo interactiva VST3 de Omni (evita loop de 301 entre Vercel y Express static)
-app.get(['/plugins/omni-ui', '/plugins/omni-ui/', '/plugins/omni-ui/index.html'], (req, res) => {
-    return res.sendFile(path.join(rootPath, 'plugins/omni-ui/index.html'));
+// Demo interactiva VST3 de Omni (carga limpia sin colisión de carpetas)
+app.get(['/plugins/omni-demo', '/plugins/omni-demo.html'], (req, res) => {
+    return res.sendFile(path.join(rootPath, 'plugins/omni-demo.html'));
 });
 
 // Rutas directas para Vocal Preset
