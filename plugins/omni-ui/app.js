@@ -634,7 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
     drawPhaseCorrelationMeter(ctx, w, h, data, spaceSpread);
   }
 
-  // --- Renderizado del Medidor de Correlación de Fase (Multibanda / Banda Única con Estética SVNDALPHON) ---
+  // --- Renderizado del Medidor de Correlación de Fase (Multibanda / Banda Única con Estética SVNDVLPHON) ---
   function drawPhaseCorrelationMeter(ctx, w, h, data, spaceSpread) {
     const meterW = 46;
     const meterH = Math.min(185, h * 0.78);
