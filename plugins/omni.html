@@ -2448,34 +2448,37 @@
 @media(prefers-reduced-motion:reduce){.abx-bars i{animation:none}}
 </style>
 <div class="abx em-reveal" id="abx">
-  <div class="abx-c"><div class="abx-t"><span>ANTES</span><span>SIN OMNI</span></div><div class="abx-bars" data-n="28" data-lvl=".38"></div><div class="abx-lufs"><span>Volumen</span><b id="abxB">-21.5 LUFS</b></div></div>
-  <div class="abx-c after"><div class="abx-t"><span>DESPUÉS</span><span>CON OMNI</span></div><div class="abx-bars" data-n="28" data-lvl=".85"></div><div class="abx-lufs"><span>Volumen</span><b id="abxA">-9.8 LUFS</b></div></div>
+  <div class="abx-c"><div class="abx-t"><span>ANTES</span><span>SIN OMNI</span></div><div class="abx-bars" data-n="28" data-lvl=".42"></div><div class="abx-lufs"><span>Volumen</span><b id="abxB">-18.0 LUFS</b></div></div>
+  <div class="abx-c after"><div class="abx-t"><span>DESPUÉS</span><span>CON OMNI</span></div><div class="abx-bars" data-n="28" data-lvl=".72"></div><div class="abx-lufs"><span>Volumen</span><b id="abxA">-13.5 LUFS</b></div></div>
 </div>
 <script>
 (function(){document.querySelectorAll('#abx .abx-bars').forEach(function(w){var n=+w.dataset.n,l=+w.dataset.lvl;for(var i=0;i<n;i++){var u=i/(n-1),sh=.5+.5*Math.sin(u*Math.PI*1.1+.3)*(1-u*.35),h=Math.max(.12,Math.min(1,sh*l+Math.random()*.15*l)),e=document.createElement('i');e.style.setProperty('--h',(h*100).toFixed(0)+'%');e.style.setProperty('--d',(0.5+Math.random()*0.9).toFixed(2)+'s');e.style.animationDelay=(-Math.random()).toFixed(2)+'s';w.appendChild(e)}})})();
 </script>
 
                 <!-- 3 PILL BUTTONS (GENRES) -->
-                <div class="audio-tabs" style="display: flex; justify-content: center; gap: 16px; margin-bottom: 40px; flex-wrap: wrap;">
-                    <button class="audio-tab-btn" data-genre="trap" type="button" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 12px 28px; border-radius: 100px; font-weight: 600; cursor: pointer;">
-                        Trap
-                    </button>
-                    <button class="audio-tab-btn active" data-genre="reggaeton" type="button" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 12px 28px; border-radius: 100px; font-weight: 600; cursor: pointer;">
-                        Reggaeton
-                    </button>
-                    <button class="audio-tab-btn" data-genre="boombap" type="button" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 12px 28px; border-radius: 100px; font-weight: 600; cursor: pointer;">
-                        Boom bap
-                    </button>
+                <div class="audio-tabs" style="display: flex; justify-content: center; gap: 16px; margin-bottom: 14px; flex-wrap: wrap;">
+                    <button class="audio-tab-btn active" data-mode="beat" type="button" aria-pressed="true" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 12px 28px; border-radius: 100px; font-weight: 600; cursor: pointer;">Modo Beat</button>
+                    <button class="audio-tab-btn" data-mode="master" type="button" aria-pressed="false" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 12px 28px; border-radius: 100px; font-weight: 600; cursor: pointer;">Modo Master</button>
                 </div>
+                <p class="mode-cap" id="modeCap" style="color:#a1a1aa;margin:0 auto 26px;max-width:640px;font-size:.95rem;line-height:1.5"></p>
+                <div class="ref-chips" id="refChips" role="tablist" aria-label="Referencias"></div>
+                <style id="omni-chips-css">
+                .ref-chips{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:-8px auto 26px}
+                .ref-chips:empty{display:none}
+                .ref-chip{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:#a1a1aa;font:700 .82rem/1 inherit;cursor:pointer;transition:all .3s cubic-bezier(.16,1,.3,1)}
+                .ref-chip b{font-weight:800;color:#c9a6ff;font-size:.72rem;letter-spacing:.08em}
+                .ref-chip:hover{color:#fff;transform:translateY(-2px)}
+                .ref-chip.active{color:#fff;border-color:#a855f7;background:rgba(168,85,247,.16);box-shadow:0 0 18px rgba(168,85,247,.25)}
+                </style>
 
                 <!-- SINGLE PLAYER CARD -->
-                <div class="audio-glass-card" data-card-id="omni-demo-card-reggaeton">
+                <div class="audio-glass-card" data-card-id="omni-demo-card-beat-0">
                     <!-- PISTA ANTES (OMNI OFF) -->
                     <div class="ws-track-row" data-track-id="omni-off">
                         <button type="button" class="ws-play-btn" aria-label="Reproducir Antes (Omni OFF)">
                             <i class="bi bi-play-fill"></i>
                         </button>
-                        <div class="ws-waveform-wrap" data-audio-src="/plugins/omni-antes.mp3"></div>
+                        <div class="ws-waveform-wrap" data-audio-src="/plugins/omni-antes-beat.m4a"></div>
                     </div>
                     <div class="ws-track-caption">
                         <span class="ws-tag-before">ANTES:</span>
@@ -2487,7 +2490,7 @@
                         <button type="button" class="ws-play-btn" aria-label="Reproducir Después (Omni ON)">
                             <i class="bi bi-play-fill"></i>
                         </button>
-                        <div class="ws-waveform-wrap" data-audio-src="/plugins/omni-despues.mp3"></div>
+                        <div class="ws-waveform-wrap" data-audio-src="/plugins/omni-despues-beat.m4a"></div>
                     </div>
                     <div class="ws-track-caption">
                         <span class="ws-tag-after" style="color: #7f00ff;">DESPUÉS:</span>
@@ -2495,7 +2498,90 @@
                     </div>
                 </div>
 
-            </div>
+            
+<style id="omni-meter-css">
+.mx-wrap{max-width:900px;margin:34px auto 0;text-align:left}
+.mx-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.mx-title{font-size:.8rem;font-weight:800;letter-spacing:.14em;color:#c9a6ff;text-transform:uppercase}
+.mx-toggle{display:inline-flex;align-items:center;gap:10px;padding:9px 16px;border-radius:100px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#d4d4d8;font:700 .8rem/1 inherit;cursor:pointer;transition:all .3s cubic-bezier(.16,1,.3,1)}
+.mx-toggle i{width:34px;height:18px;border-radius:18px;background:#3a3a42;position:relative;transition:background .3s}
+.mx-toggle i::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.mx-toggle[aria-pressed=true]{border-color:#a855f7;color:#fff;background:rgba(168,85,247,.15)}
+.mx-toggle[aria-pressed=true] i{background:#a855f7}
+.mx-toggle[aria-pressed=true] i::after{transform:translateX(16px)}
+.mx-table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid rgba(255,255,255,.08);border-radius:16px;overflow:hidden;background:rgba(255,255,255,.02)}
+.mx-table th,.mx-table td{padding:14px 18px;text-align:right;font-variant-numeric:tabular-nums;border-bottom:1px solid rgba(255,255,255,.06)}
+.mx-table tr:last-child td{border-bottom:0}
+.mx-table th{font-size:.7rem;letter-spacing:.14em;color:#8a8a93;font-weight:800;text-transform:uppercase;background:rgba(255,255,255,.03)}
+.mx-table th:first-child,.mx-table td:first-child{text-align:left;color:#d4d4d8;font-weight:600}
+.mx-table td.a{color:#fff;font-weight:700}
+.mx-table td.d{color:#c9a6ff;font-weight:800}
+.mx-table td.c{font-weight:800}
+.mx-up{color:#4ade80}.mx-down{color:#fbbf24}.mx-eq{color:#8a8a93}
+.mx-note{margin-top:12px;color:#7a7a84;font-size:.82rem;line-height:1.5}
+@media(max-width:640px){.mx-table th,.mx-table td{padding:11px 10px;font-size:.85rem}}
+</style>
+<div class="mx-wrap em-reveal" id="mxWrap">
+  <div class="mx-head">
+    <span class="mx-title">Datos medidos del audio de demo</span>
+    <button class="mx-toggle" id="mxMatch" type="button" aria-pressed="false"><i></i><span>Igualar volumen</span></button>
+  </div>
+  <table class="mx-table">
+    <thead><tr><th>&nbsp;</th><th>Antes</th><th>Después</th><th>Cambio</th></tr></thead>
+    <tbody>
+      <tr><td>Sonoridad (LUFS)</td><td class="a" id="mxL0"></td><td class="d" id="mxL1"></td><td class="c" id="mxLc"></td></tr>
+      <tr><td>Pico máximo (dBFS)</td><td class="a" id="mxP0"></td><td class="d" id="mxP1"></td><td class="c" id="mxPc"></td></tr>
+      <tr><td>Cresta (dB)</td><td class="a" id="mxC0"></td><td class="d" id="mxC1"></td><td class="c" id="mxCc"></td></tr>
+      <tr><td>Rango dinámico (LU)</td><td class="a" id="mxR0"></td><td class="d" id="mxR1"></td><td class="c" id="mxRc"></td></tr>
+      <tr><td>Ancho estéreo</td><td class="a" id="mxW0"></td><td class="d" id="mxW1"></td><td class="c" id="mxWc"></td></tr>
+    </tbody>
+  </table>
+  <p class="mx-note" id="mxNote">El DESPUÉS se reproduce a un nivel de streaming, sin saturar: suena unos 4.5 LU más fuerte que el ANTES. Activa «Igualar volumen» para comparar solo la calidad del sonido, a la misma sonoridad.</p>
+</div>
+<script id="omni-meter-js">
+(function(){
+  var cur=null,matched=false;
+  function en(){return (window.OMNI_PAGE_LANG&&window.OMNI_PAGE_LANG.get())==='en'}
+  function gainDb(){return cur?((matched?cur.A.l:cur.target)-cur.D.l):0}
+  function fmt(v,d){return (v>0?'+':'')+v.toFixed(d)}
+  function put(id,t,cls){var e=document.getElementById(id);if(!e)return;e.textContent=t;if(cls!==undefined)e.className='c '+cls}
+  function table(){
+    if(!cur)return;
+    var g=gainDb(),loudDiff=(cur.D.l+g)-cur.A.l;
+    var rows=[['L',cur.A.l,cur.D.l+g,'LU'],['P',cur.A.p,cur.D.p+g,'dB'],['C',cur.A.c,cur.D.c,'dB'],['R',cur.A.r,cur.D.r,'LU'],['W',cur.A.w,cur.D.w,'pts']];
+    rows.forEach(function(r){
+      var w=r[0]==='W';
+      put('mx'+r[0]+'0',w?r[1].toFixed(0)+'%':r[1].toFixed(1));put('mx'+r[0]+'1',w?r[2].toFixed(0)+'%':r[2].toFixed(1));
+      var diff=r[2]-r[1],zero=Math.abs(diff)<.05;
+      put('mx'+r[0]+'c',zero?(w?'0 pts':'0.0 '+r[3]):(w?fmt(diff,0)+' pts':fmt(diff,1)+' '+r[3]),zero?'mx-eq':(r[0]==='C'||r[0]==='R'?'mx-down':'mx-up'));
+    });
+    var pb=document.getElementById('abxB'),pa=document.getElementById('abxA');
+    if(pb)pb.textContent=cur.A.l.toFixed(1)+' LUFS';if(pa)pa.textContent=(cur.D.l+g).toFixed(1)+' LUFS';
+    var n=document.getElementById('mxNote');
+    if(n){
+      var e=en(),x=Math.abs(loudDiff).toFixed(1),txt;
+      if(matched)txt=e?'Both tracks are played at the same loudness, so you only hear the difference in sound quality.':'Ambos audios suenan a la misma sonoridad: solo escuchas la diferencia de calidad del sonido.';
+      else txt=e?'The AFTER is about '+x+' LU louder than the BEFORE and stays under 0 dB with no clipping. Turn on “Match volume” to compare sound quality alone.':'El DESPUÉS suena unos '+x+' LU más fuerte que el ANTES y se mantiene por debajo de 0 dB, sin saturar. Activa «Igualar volumen» para comparar solo la calidad del sonido.';
+      n.textContent=txt;
+    }
+  }
+  function applyGain(){
+    var T=window.__omniWsTracks||[],lin=Math.pow(10,gainDb()/20);
+    T.forEach(function(t){
+      var off=/-off$/.test(t.playBtn.closest('.ws-track-row').getAttribute('data-track-id')||'');
+      try{t.ws.setVolume(off?1:Math.min(1,lin))}catch(e){}
+    });
+  }
+  function refresh(){applyGain();table()}
+  var btn=document.getElementById('mxMatch');
+  if(!btn)return;
+  btn.addEventListener('click',function(){matched=!matched;btn.setAttribute('aria-pressed',matched);refresh()});
+  document.addEventListener('omni-item',function(e){cur=e.detail.data;refresh();setTimeout(refresh,500);setTimeout(refresh,2500)});
+  var n=0,iv=setInterval(function(){refresh();if(++n>20)clearInterval(iv)},700);
+  new MutationObserver(table).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+})();
+</script>
+</div>
         </section>
 
         <!-- ==================== 2. SECCIÓN BENTO GRID (¿QUÉ ES OMNI?) ==================== -->
@@ -3452,11 +3538,11 @@
 
                     <div class="faq-item">
                         <button class="faq-question">
-                            ¿Por qué elegir el plugin Omni de OFFSZN para masterizar?
+                            ¿Por qué elegir el plugin Omni de OFFSZN para tus beats y tus masters?
                             <i class="bi bi-chevron-down"></i>
                         </button>
                         <div class="faq-answer">
-                            Omni simplifica el mastering al máximo. En lugar de lidiar con menús complejos y una cadena de varios plugins, Omni te entrega los controles esenciales con nombres claros y presets calibrados por género, con un sonido moderno, limpio e impactante para música urbana, trap, reggaeton, pop y más.
+                            Omni no es solo para masterizar canciones terminadas: también puedes ponerlo en pleno proceso de creación de un beat para que te ayude con el master mientras produces. En lugar de lidiar con menús complejos y una cadena de varios plugins, Omni te entrega los controles esenciales con nombres claros y presets calibrados por género, con un sonido moderno, limpio e impactante para música urbana, trap, reggaeton, pop y más.
                         </div>
                     </div>
 
@@ -3802,7 +3888,7 @@
                 const origEl = document.getElementById('omni-original-price');
                 if (origEl) origEl.innerText = `$${window.AB_ORIGINAL_PRICE}`;
 
-                const solesMap = { 17: 65, 25: 95 };
+                const solesMap = { 17: 50, 25: 50 };
                 const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
 
                 const waLinks = document.querySelectorAll('a[href*="wa.me"]');
@@ -3980,6 +4066,7 @@
     </script>
     <script src="https://sdk.mercadopago.com/js/v2"></script>
     <script src="/script/plugin-checkout.js?v=20261011"></script>
+    <script>window.YAPE_FIXED_PRICE_PEN = 50; /* Yape: S/ 50.00 exactos */</script>
     <script src="/script/yape-checkout.js?v=20261011"></script>
     <script src="/script/pay-click-tracker.js?v=20261011"></script>
 
@@ -4036,7 +4123,7 @@
 
 <script id="omni-i18n-js">
 (function(){
-  var EN={"Omni VST | El Plugin Todo en Uno de OFFSZN": "Omni VST | The All-in-One Plugin by OFFSZN", "🚀 Obtén tu": "🚀 Get your", "licencia de por vida": "lifetime license", "de Omni": "of Omni", "Cómo Suena": "How It Sounds", "Descargar plugin": "Download plugin", "EL TODO EN UNO": "THE ALL-IN-ONE", "DEFINITIVO": "DEFINITIVE", "Controla Espectro, Volumen, Claridad, Pegada, Espacio y Calidez en un solo plugin. Cambia entre Modo Beat y Modo Master para adaptar la cadena a tus necesidades.": "Control Spectrum, Loudness, Clarity, Punch, Space and Warmth in a single plugin. Switch between Beat Mode and Master Mode to fit the chain to your needs.", "ADQUIRIR LICENCIA": "GET LICENSE", "Escucha el Antes y Después": "Hear the Before & After", "Comprueba cómo Omni transforma una mezcla plana en un master con pegada comercial, brillo analógico y volumen competitivo.": "Hear how Omni turns a flat mix into a master with commercial punch, analog sheen and competitive loudness.", "ANTES": "BEFORE", "SIN OMNI": "WITHOUT OMNI", "DESPUÉS": "AFTER", "CON OMNI": "WITH OMNI", "Volumen": "Loudness", "ANTES:": "BEFORE:", "DESPUÉS:": "AFTER:", "Sin Omni": "Without Omni", "Con Omni": "With Omni", "Boom bap": "Boom bap", "¿QUÉ ES OMNI?": "WHAT IS OMNI?", "El Todo-en-Uno Definitivo": "The Definitive All-in-One", "Un ecosistema de masterización que reemplaza cadenas infinitas de plugins. Combina EQ dinámica, compresión y saturación bajo una interfaz simple.": "A mastering ecosystem that replaces endless plugin chains. It combines dynamic EQ, compression and saturation under one simple interface.", "Modo Beat y Modo Master": "Beat Mode & Master Mode", "Modo Beat es para productores que hacen beats, en lugar de usar una cadena de master. Modo Master reemplaza tu master. Y Reference Match jala el master de una canción ya hecha.": "Beat Mode is for producers making beats, instead of using a mastering chain. Master Mode replaces your master. And Reference Match pulls the master from an existing song.", "Tu Ingeniero Personal": "Your Personal Engineer", "Un sistema DSP puro que analiza archivos de audio para extraer su curva de EQ y volumen, automatizando los parámetros por ti.": "A pure DSP system that analyzes audio files to extract their EQ curve and loudness, automating the parameters for you.", "LA TRAMPA LEGAL DE LA INDUSTRIA": "THE INDUSTRY'S LEGAL TRICK", "El Copiador de Masters Definitivo.": "The Ultimate Master Copier.", "¿Tu mezcla no suena como la de tus artistas favoritos? Róbales el sonido.": "Doesn't your mix sound like your favorite artists'? Steal their sound.", "Reference Match extrae la huella acústica de cualquier canción comercial. Arrastra tu pista de referencia a la interfaz y observa cómo Omni mueve sus perillas automáticamente para imitar ese volumen, pegada y brillo.": "Reference Match extracts the acoustic fingerprint of any commercial song. Drag your reference track into the interface and watch Omni move its knobs automatically to match that loudness, punch and shine.", "Arrastra un archivo .WAV o .MP3 aquí": "Drag a .WAV or .MP3 file here", "Omni analizará la curva de EQ y RMS instantáneamente.": "Omni will analyze the EQ curve and RMS instantly.", "Inicia sesión para ver o comprar tu licencia.": "Sign in to view or buy your license.", "¿En qué DAWs funciona Omni?": "Which DAWs does Omni work in?", "Funciona en FL Studio, Ableton Live, Cubase, Studio One, REAPER y Bitwig Studio en Windows (VST3 de 64 bits). La versión para Mac (AU y VST3, para Logic Pro y GarageBand) llegará próximamente.": "It works in FL Studio, Ableton Live, Cubase, Studio One, REAPER and Bitwig Studio on Windows (64-bit VST3). The Mac version (AU and VST3, for Logic Pro and GarageBand) is coming soon.", "¿Tiene latencia?": "Does it have latency?", "Omni es un plugin de mastering: introduce unos 4 ms de latencia a 48 kHz (197 muestras), que tu DAW compensa automáticamente al mezclar y exportar. No está pensado para monitorear en vivo mientras grabas.": "Omni is a mastering plugin: it adds about 4 ms of latency at 48 kHz (197 samples), which your DAW compensates automatically when mixing and exporting. It is not meant for live monitoring while recording.", "DISPONIBLE EN TUS DAWS FAVORITOS": "AVAILABLE IN YOUR FAVORITE DAWS", "Apple · Próximamente": "Apple · Coming soon", "Avid Technology · Próximamente": "Avid Technology · Coming soon", "Windows:": "Windows:", "VST3 (64 bits)": "VST3 (64-bit)", "macOS:": "macOS:", "próximamente (AU / VST3)": "coming soon (AU / VST3)", "LATENCIA:": "LATENCY:", "~4 MS (COMPENSADA POR EL DAW)": "~4 MS (COMPENSATED BY THE DAW)", "Descarga tu Plugin": "Download your Plugin", "Crea tu cuenta o inicia sesión para descargar.": "Create your account or sign in to download.", "Crear Cuenta": "Create Account", "Descargar para Windows": "Download for Windows", "macOS: próximamente": "macOS: coming soon", "¿Problemas de instalación? Contáctanos para ayudarte": "Installation problems? Contact us and we will help you", "Tu Licencia Actual": "Your Current License", "Pega esta clave dentro de Omni en tu DAW para validarlo.": "Paste this key inside Omni in your DAW to validate it.", "Cargando...": "Loading...", "Aún no tienes ninguna licencia asociada a tu cuenta.": "You do not have any license linked to your account yet.", "Obtener Prueba Gratuita (3 Días)": "Get Free Trial (3 Days)", "Obtener licencia de por vida de Omni": "Get the Omni lifetime license", "Si ya lo probaste y te encantó, adquiere la licencia de por vida.": "If you have tried it and loved it, get the lifetime license.", "Pago Único — Sin mensualidades": "One-time payment — No subscriptions", "1 Computadora (Transferible)": "1 Computer (Transferable)", "Actualizaciones de por vida": "Lifetime updates", "29 presets de beat por género y 5 de master": "29 beat presets by genre and 5 master presets", "Serial Key por correo al instante": "Serial Key by email instantly", "Soporte VIP 24/7": "VIP support 24/7", "MÁS POPULAR": "MOST POPULAR", "Licencia Full de Omni": "Omni Full License", "Disponible en Windows (VST3 de 64 bits) · Mac próximamente": "Available on Windows (64-bit VST3) · Mac coming soon", "único": "one-time", "Pagar con Mercado Pago": "Pay with Mercado Pago", "Pagar con Yape (Soles 🇵🇪)": "Pay with Yape (Soles 🇵🇪)", "Pagar con Binance": "Pay with Binance", "SOPORTE": "SUPPORT", "Preguntas": "Questions", "¿Es compatible con mi DAW?": "Is it compatible with my DAW?", "Sí, si tu DAW usa VST3 de 64 bits en Windows: FL Studio, Ableton Live, Cubase, Studio One, REAPER y Bitwig Studio. Logic Pro y GarageBand (que solo cargan AU) llegarán con la versión para Mac, y Pro Tools (que solo usa AAX) no está soportado por ahora.": "Yes, if your DAW uses 64-bit VST3 on Windows: FL Studio, Ableton Live, Cubase, Studio One, REAPER and Bitwig Studio. Logic Pro and GarageBand (AU only) will arrive with the Mac version, and Pro Tools (AAX only) is not supported for now.", "¿Cómo obtengo mi licencia?": "How do I get my license?", "Al comprar la versión de por vida o activar tu prueba de 3 días, la licencia se vincula automáticamente a tu cuenta de OFFSZN. Podrás ver tu \"Serial Key\" aquí mismo y simplemente pegarla en Omni dentro de tu DAW la primera vez que lo abras.": "When you buy the lifetime version or activate your 3-day trial, the license is linked automatically to your OFFSZN account. You will see your \"Serial Key\" right here and just paste it into Omni inside your DAW the first time you open it.", "¿Funciona en Mac y Windows?": "Does it work on Mac and Windows?", "Hoy Omni está disponible para Windows 10/11 (64 bits): plugin VST3 y versión independiente. La versión para macOS (VST3 y AU, Intel y Apple Silicon) está en desarrollo y se anunciará aquí cuando esté lista.": "Today Omni is available for Windows 10/11 (64-bit): VST3 plugin and standalone version. The macOS version (VST3 and AU, Intel and Apple Silicon) is in development and will be announced here when ready.", "¿Puedo usarlo en más de un dispositivo?": "Can I use it on more than one device?", "Sí. Tu Serial Key personal te permite activar el plugin en hasta 2 computadoras simultáneamente (por ejemplo, tu PC de estudio y tu laptop para viajar).": "Yes. Your personal Serial Key lets you activate the plugin on up to 2 computers at the same time (for example, your studio PC and your travel laptop).", "¿Tiene latencia para grabar en vivo?": "Does it have latency for live recording?", "¿Por qué elegir el plugin Omni de OFFSZN para masterizar?": "Why choose the OFFSZN Omni plugin for mastering?", "Omni simplifica el mastering al máximo. En lugar de lidiar con menús complejos y una cadena de varios plugins, Omni te entrega los controles esenciales con nombres claros y presets calibrados por género, con un sonido moderno, limpio e impactante para música urbana, trap, reggaeton, pop y más.": "Omni simplifies mastering as much as possible. Instead of dealing with complex menus and a chain of several plugins, Omni gives you the essential controls with clear names and genre-calibrated presets, with a modern, clean and impactful sound for urban music, trap, reggaeton, pop and more.", "Empieza Hoy con Omni.": "Start Today with Omni.", "Descargar Ahora": "Download Now", "Envíanos un mensaje de": "Send us a message on", "WhatsApp": "WhatsApp"};
+  var EN={"Omni VST | El Plugin Todo en Uno de OFFSZN": "Omni VST | The All-in-One Plugin by OFFSZN", "🚀 Obtén tu": "🚀 Get your", "licencia de por vida": "lifetime license", "de Omni": "of Omni", "Cómo Suena": "How It Sounds", "Descargar plugin": "Download plugin", "EL TODO EN UNO": "THE ALL-IN-ONE", "DEFINITIVO": "DEFINITIVE", "Controla Espectro, Volumen, Claridad, Pegada, Espacio y Calidez en un solo plugin. Cambia entre Modo Beat y Modo Master para adaptar la cadena a tus necesidades.": "Control Spectrum, Loudness, Clarity, Punch, Space and Warmth in a single plugin. Switch between Beat Mode and Master Mode to fit the chain to your needs.", "ADQUIRIR LICENCIA": "GET LICENSE", "Escucha el Antes y Después": "Hear the Before & After", "Comprueba cómo Omni transforma una mezcla plana en un master con pegada comercial, brillo analógico y volumen competitivo.": "Hear how Omni turns a flat mix into a master with commercial punch, analog sheen and competitive loudness.", "ANTES": "BEFORE", "SIN OMNI": "WITHOUT OMNI", "DESPUÉS": "AFTER", "CON OMNI": "WITH OMNI", "Volumen": "Loudness", "ANTES:": "BEFORE:", "DESPUÉS:": "AFTER:", "Sin Omni": "Without Omni", "Con Omni": "With Omni", "Boom bap": "Boom bap", "¿QUÉ ES OMNI?": "WHAT IS OMNI?", "El Todo-en-Uno Definitivo": "The Definitive All-in-One", "Un ecosistema de masterización que reemplaza cadenas infinitas de plugins. Combina EQ dinámica, compresión y saturación bajo una interfaz simple.": "A mastering ecosystem that replaces endless plugin chains. It combines dynamic EQ, compression and saturation under one simple interface.", "Modo Beat y Modo Master": "Beat Mode & Master Mode", "Modo Beat es para productores que hacen beats, en lugar de usar una cadena de master. Modo Master reemplaza tu master. Y Reference Match jala el master de una canción ya hecha.": "Beat Mode is for producers making beats, instead of using a mastering chain. Master Mode replaces your master. And Reference Match pulls the master from an existing song.", "Tu Ingeniero Personal": "Your Personal Engineer", "Un sistema DSP puro que analiza archivos de audio para extraer su curva de EQ y volumen, automatizando los parámetros por ti.": "A pure DSP system that analyzes audio files to extract their EQ curve and loudness, automating the parameters for you.", "LA TRAMPA LEGAL DE LA INDUSTRIA": "THE INDUSTRY'S LEGAL TRICK", "El Copiador de Masters Definitivo.": "The Ultimate Master Copier.", "¿Tu mezcla no suena como la de tus artistas favoritos? Róbales el sonido.": "Doesn't your mix sound like your favorite artists'? Steal their sound.", "Reference Match extrae la huella acústica de cualquier canción comercial. Arrastra tu pista de referencia a la interfaz y observa cómo Omni mueve sus perillas automáticamente para imitar ese volumen, pegada y brillo.": "Reference Match extracts the acoustic fingerprint of any commercial song. Drag your reference track into the interface and watch Omni move its knobs automatically to match that loudness, punch and shine.", "Arrastra un archivo .WAV o .MP3 aquí": "Drag a .WAV or .MP3 file here", "Omni analizará la curva de EQ y RMS instantáneamente.": "Omni will analyze the EQ curve and RMS instantly.", "Inicia sesión para ver o comprar tu licencia.": "Sign in to view or buy your license.", "¿En qué DAWs funciona Omni?": "Which DAWs does Omni work in?", "Funciona en FL Studio, Ableton Live, Cubase, Studio One, REAPER y Bitwig Studio en Windows (VST3 de 64 bits). La versión para Mac (AU y VST3, para Logic Pro y GarageBand) llegará próximamente.": "It works in FL Studio, Ableton Live, Cubase, Studio One, REAPER and Bitwig Studio on Windows (64-bit VST3). The Mac version (AU and VST3, for Logic Pro and GarageBand) is coming soon.", "¿Tiene latencia?": "Does it have latency?", "Omni es un plugin de mastering: introduce unos 4 ms de latencia a 48 kHz (197 muestras), que tu DAW compensa automáticamente al mezclar y exportar. No está pensado para monitorear en vivo mientras grabas.": "Omni is a mastering plugin: it adds about 4 ms of latency at 48 kHz (197 samples), which your DAW compensates automatically when mixing and exporting. It is not meant for live monitoring while recording.", "DISPONIBLE EN TUS DAWS FAVORITOS": "AVAILABLE IN YOUR FAVORITE DAWS", "Apple · Próximamente": "Apple · Coming soon", "Avid Technology · Próximamente": "Avid Technology · Coming soon", "Windows:": "Windows:", "VST3 (64 bits)": "VST3 (64-bit)", "macOS:": "macOS:", "próximamente (AU / VST3)": "coming soon (AU / VST3)", "LATENCIA:": "LATENCY:", "~4 MS (COMPENSADA POR EL DAW)": "~4 MS (COMPENSATED BY THE DAW)", "Descarga tu Plugin": "Download your Plugin", "Crea tu cuenta o inicia sesión para descargar.": "Create your account or sign in to download.", "Crear Cuenta": "Create Account", "Descargar para Windows": "Download for Windows", "macOS: próximamente": "macOS: coming soon", "¿Problemas de instalación? Contáctanos para ayudarte": "Installation problems? Contact us and we will help you", "Tu Licencia Actual": "Your Current License", "Pega esta clave dentro de Omni en tu DAW para validarlo.": "Paste this key inside Omni in your DAW to validate it.", "Cargando...": "Loading...", "Aún no tienes ninguna licencia asociada a tu cuenta.": "You do not have any license linked to your account yet.", "Obtener Prueba Gratuita (3 Días)": "Get Free Trial (3 Days)", "Obtener licencia de por vida de Omni": "Get the Omni lifetime license", "Si ya lo probaste y te encantó, adquiere la licencia de por vida.": "If you have tried it and loved it, get the lifetime license.", "Pago Único — Sin mensualidades": "One-time payment — No subscriptions", "1 Computadora (Transferible)": "1 Computer (Transferable)", "Actualizaciones de por vida": "Lifetime updates", "29 presets de beat por género y 5 de master": "29 beat presets by genre and 5 master presets", "Serial Key por correo al instante": "Serial Key by email instantly", "Soporte VIP 24/7": "VIP support 24/7", "MÁS POPULAR": "MOST POPULAR", "Licencia Full de Omni": "Omni Full License", "Disponible en Windows (VST3 de 64 bits) · Mac próximamente": "Available on Windows (64-bit VST3) · Mac coming soon", "único": "one-time", "Pagar con Mercado Pago": "Pay with Mercado Pago", "Pagar con Yape (Soles 🇵🇪)": "Pay with Yape (Soles 🇵🇪)", "Pagar con Binance": "Pay with Binance", "SOPORTE": "SUPPORT", "Preguntas": "Questions", "¿Es compatible con mi DAW?": "Is it compatible with my DAW?", "Sí, si tu DAW usa VST3 de 64 bits en Windows: FL Studio, Ableton Live, Cubase, Studio One, REAPER y Bitwig Studio. Logic Pro y GarageBand (que solo cargan AU) llegarán con la versión para Mac, y Pro Tools (que solo usa AAX) no está soportado por ahora.": "Yes, if your DAW uses 64-bit VST3 on Windows: FL Studio, Ableton Live, Cubase, Studio One, REAPER and Bitwig Studio. Logic Pro and GarageBand (AU only) will arrive with the Mac version, and Pro Tools (AAX only) is not supported for now.", "¿Cómo obtengo mi licencia?": "How do I get my license?", "Al comprar la versión de por vida o activar tu prueba de 3 días, la licencia se vincula automáticamente a tu cuenta de OFFSZN. Podrás ver tu \"Serial Key\" aquí mismo y simplemente pegarla en Omni dentro de tu DAW la primera vez que lo abras.": "When you buy the lifetime version or activate your 3-day trial, the license is linked automatically to your OFFSZN account. You will see your \"Serial Key\" right here and just paste it into Omni inside your DAW the first time you open it.", "¿Funciona en Mac y Windows?": "Does it work on Mac and Windows?", "Hoy Omni está disponible para Windows 10/11 (64 bits): plugin VST3 y versión independiente. La versión para macOS (VST3 y AU, Intel y Apple Silicon) está en desarrollo y se anunciará aquí cuando esté lista.": "Today Omni is available for Windows 10/11 (64-bit): VST3 plugin and standalone version. The macOS version (VST3 and AU, Intel and Apple Silicon) is in development and will be announced here when ready.", "¿Puedo usarlo en más de un dispositivo?": "Can I use it on more than one device?", "Sí. Tu Serial Key personal te permite activar el plugin en hasta 2 computadoras simultáneamente (por ejemplo, tu PC de estudio y tu laptop para viajar).": "Yes. Your personal Serial Key lets you activate the plugin on up to 2 computers at the same time (for example, your studio PC and your travel laptop).", "¿Tiene latencia para grabar en vivo?": "Does it have latency for live recording?", "¿Por qué elegir el plugin Omni de OFFSZN para tus beats y tus masters?": "Why choose the OFFSZN Omni plugin for your beats and your masters?", "Omni no es solo para masterizar canciones terminadas: también puedes ponerlo en pleno proceso de creación de un beat para que te ayude con el master mientras produces. En lugar de lidiar con menús complejos y una cadena de varios plugins, Omni te entrega los controles esenciales con nombres claros y presets calibrados por género, con un sonido moderno, limpio e impactante para música urbana, trap, reggaeton, pop y más.": "Omni is not only for mastering finished songs: you can also put it in the middle of creating a beat so it helps you with the master while you produce. Instead of dealing with complex menus and a chain of several plugins, Omni gives you the essential controls with clear names and genre-calibrated presets, with a modern, clean and impactful sound for urban music, trap, reggaeton, pop and more.", "Empieza Hoy con Omni.": "Start Today with Omni.", "Descargar Ahora": "Download Now", "Envíanos un mensaje de": "Send us a message on", "WhatsApp": "WhatsApp", "Datos medidos del audio de demo": "Measured data from the demo audio", "Igualar volumen": "Match volume", "Antes": "Before", "Después": "After", "Cambio": "Change", "Sonoridad (LUFS)": "Loudness (LUFS)", "Pico máximo (dBFS)": "Peak level (dBFS)", "Cresta (dB)": "Crest factor (dB)", "Rango dinámico (LU)": "Dynamic range (LU)", "Ancho estéreo": "Stereo width", "Modo Beat": "Beat Mode", "Modo Master": "Master Mode", "Referencias": "References"};
   var KEY='omni.lang', lang='es';
   try{var sv=localStorage.getItem(KEY);if(sv==='en'||sv==='es')lang=sv}catch(e){}
   var norm=function(t){return t.replace(/\s+/g,' ').trim()};
@@ -4098,37 +4185,80 @@
 </script>
 <script id="omni-genre-js">
 (function(){
-  var G={
-    trap:{b:'-22.4',a:'-9.4',lb:.34,la:.9},
-    reggaeton:{b:'-21.5',a:'-9.8',lb:.38,la:.85},
-    boombap:{b:'-19.8',a:'-11.2',lb:.45,la:.78}
+  var M={
+    beat:{
+      cap:{es:'Beats sin letra, sin masterizar → pasados por Omni en Modo Beat.',en:'Unmastered instrumentals → run through Omni in Beat Mode.'},
+      items:[
+        {tag:'BEAT 1',name:'Em',preset:'Trap · Melodic',src:['/plugins/omni-antes-beat.m4a','/plugins/omni-despues-beat.m4a'],lb:.5,la:.8,
+         A:{l:-15.40,p:-9.48,c:9.54,r:9.26,w:8},D:{l:-10.55,p:-1.74,c:12.48,r:9.56,w:7},target:-10.55},
+        {tag:'BEAT 2',name:'123 Emin',preset:'Trap · Rage',src:['/plugins/omni-antes-beat2.m4a','/plugins/omni-despues-beat2.m4a'],lb:.46,la:.68,
+         A:{l:-15.73,p:-8.49,c:10.86,r:12.22,w:22},D:{l:-12.26,p:-0.50,c:15.73,r:12.05,w:17},target:-12.26}
+      ]},
+    master:{
+      cap:{es:'Canciones terminadas → Omni como master final (Modo Master).',en:'Finished songs → Omni as the final master (Master Mode).'},
+      items:[
+        {tag:'CANCIÓN 1',tagEn:'SONG 1',name:'Reggaeton',src:['/plugins/omni-antes.mp3','/plugins/omni-despues.mp3'],lb:.42,la:.72,
+         A:{l:-17.98,p:-5.15,c:16.40,r:5.42,w:29},D:{l:-7.76,p:0.71,c:12.09,r:3.75,w:35},target:-13.5}
+      ]}
   };
-  var btns=[].slice.call(document.querySelectorAll('.audio-tab-btn[data-genre]'));
+  var btns=[].slice.call(document.querySelectorAll('.audio-tab-btn[data-mode]')),mode='beat',idx=0;
   if(!btns.length)return;
+  function lang(){return (window.OMNI_PAGE_LANG&&window.OMNI_PAGE_LANG.get())==='en'?'en':'es'}
+  function item(){return M[mode].items[idx]}
   function bars(wrap,lvl){
     wrap.innerHTML='';var n=+wrap.dataset.n||28;
     for(var i=0;i<n;i++){var u=i/(n-1),sh=.5+.5*Math.sin(u*Math.PI*1.1+.3)*(1-u*.35),h=Math.max(.12,Math.min(1,sh*lvl+Math.random()*.15*lvl)),e=document.createElement('i');
       e.style.setProperty('--h',(h*100).toFixed(0)+'%');e.style.setProperty('--d',(0.5+Math.random()*0.9).toFixed(2)+'s');e.style.animationDelay=(-Math.random()).toFixed(2)+'s';wrap.appendChild(e)}
   }
-  function select(g){
-    var d=G[g];if(!d)return;
-    btns.forEach(function(b){var on=b.dataset.genre===g;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on)});
-    var ab=document.getElementById('abx');
-    if(ab){var w=ab.querySelectorAll('.abx-bars');bars(w[0],d.lb);bars(w[1],d.la);
-      var pb=document.getElementById('abxB'),pa=document.getElementById('abxA');if(pb)pb.textContent=d.b+' LUFS';if(pa)pa.textContent=d.a+' LUFS';
-      [].forEach.call(ab.children,function(c){c.animate([{transform:'scale(.97)',opacity:.5},{transform:'none',opacity:1}],{duration:420,easing:'cubic-bezier(.16,1,.3,1)'})})}
-    var card=document.querySelector('.audio-glass-card');if(card)card.setAttribute('data-card-id','omni-demo-card-'+g);
-    var suf=g==='reggaeton'?'':'-'+g;
+  function caption(){
+    var c=document.getElementById('modeCap');if(!c)return;
+    var it=item(),txt=M[mode].cap[lang()];
+    if(mode==='beat')txt+=' ('+it.preset+')';
+    c.textContent=txt;
+    var chips=document.getElementById('refChips');
+    if(chips)[].forEach.call(chips.children,function(b,i){var t=M[mode].items[i];b.firstChild.textContent=lang()==='en'&&t.tagEn?t.tagEn:t.tag});
+  }
+  function buildChips(){
+    var chips=document.getElementById('refChips');if(!chips)return;
+    chips.innerHTML='';
+    var list=M[mode].items;
+    if(list.length<2)return;
+    list.forEach(function(it,i){
+      var b=document.createElement('button');b.type='button';b.className='ref-chip'+(i===idx?' active':'');b.setAttribute('role','tab');b.setAttribute('aria-selected',i===idx);
+      b.innerHTML='<b></b>';
+      b.addEventListener('click',function(){pick(i)});chips.appendChild(b);
+    });
+  }
+  function apply(first){
+    var it=item(),ab=document.getElementById('abx');
+    if(ab){var w=ab.querySelectorAll('.abx-bars');bars(w[0],it.lb);bars(w[1],it.la);
+      if(!first)[].forEach.call(ab.children,function(c){c.animate([{transform:'scale(.97)',opacity:.5},{transform:'none',opacity:1}],{duration:420,easing:'cubic-bezier(.16,1,.3,1)'})})}
     var T=window.__omniWsTracks||[];
     T.forEach(function(t){
-      var isOff=t.playBtn.closest('.ws-track-row').getAttribute('data-track-id')==='omni-off';
-      var src='/plugins/omni-'+(isOff?'antes':'despues')+suf+'.mp3';
+      var off=/-off$/.test(t.playBtn.closest('.ws-track-row').getAttribute('data-track-id')||'');
+      var src=it.src[off?0:1];
       try{t.ws.pause();t.ws.load(src).catch(function(){})}catch(e){}
       t.waveWrap.setAttribute('data-audio-src',src);
     });
-    if(!T.length){document.querySelectorAll('.ws-waveform-wrap').forEach(function(w){var off=w.parentNode.getAttribute('data-track-id')==='omni-off';w.setAttribute('data-audio-src','/plugins/omni-'+(off?'antes':'despues')+suf+'.mp3')})}
+    if(!T.length)document.querySelectorAll('.ws-waveform-wrap').forEach(function(w){var off=/-off$/.test(w.parentNode.getAttribute('data-track-id')||'');w.setAttribute('data-audio-src',it.src[off?0:1])});
+    var card=document.querySelector('.audio-glass-card');if(card)card.setAttribute('data-card-id','omni-demo-card-'+mode+'-'+idx);
+    caption();
+    document.dispatchEvent(new CustomEvent('omni-item',{detail:{mode:mode,idx:idx,data:it}}));
   }
-  btns.forEach(function(b){b.addEventListener('click',function(){select(b.dataset.genre)})});
+  function setMode(m,first){
+    mode=m;idx=0;
+    btns.forEach(function(b){var on=b.dataset.mode===m;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on)});
+    buildChips();apply(first);
+  }
+  function pick(i){
+    idx=i;
+    [].forEach.call(document.getElementById('refChips').children,function(b,j){b.classList.toggle('active',j===i);b.setAttribute('aria-selected',j===i)});
+    apply(false);
+  }
+  btns.forEach(function(b){b.addEventListener('click',function(){setMode(b.dataset.mode,false)})});
+  new MutationObserver(caption).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+  window.OMNI_MODE={get:function(){return mode},item:item};
+  setMode('beat',true);
 })();
 </script>
 </body>
