@@ -1243,6 +1243,10 @@
                             <span class="product-card-name">Easy Clean</span>
                             <span class="product-card-badge" id="badge-stock-easy-clean">-- disp</span>
                         </div>
+                        <div class="product-card-btn" data-value="ghost" onclick="selectProductChip('ghost')">
+                            <span class="product-card-name">GHOST</span>
+                            <span class="product-card-badge" id="badge-stock-ghost">-- disp</span>
+                        </div>
                     </div>
                     <input type="hidden" id="gen-product" value="easy-mix">
 
@@ -1445,6 +1449,7 @@
                     <button class="filter-pill" id="btn-prod-easylevel" onclick="setPluginProduct('Easy Level', this)">Easy Level</button>
                     <button class="filter-pill" id="btn-prod-easydeeser" onclick="setPluginProduct('Easy Deeser', this)">Easy Deeser</button>
                     <button class="filter-pill" id="btn-prod-easyclean" onclick="setPluginProduct('Easy Clean', this)">Easy Clean</button>
+                    <button class="filter-pill" id="btn-prod-ghost" onclick="setPluginProduct('GHOST', this)">GHOST</button>
                 </div>
             </div>
 
@@ -1690,6 +1695,7 @@
                         <option value="Easy Level">Easy Level</option>
                         <option value="Easy Deeser">Easy Deeser</option>
                         <option value="Easy Clean">Easy Clean</option>
+                        <option value="GHOST">GHOST</option>
                     </select>
                 </div>
 
@@ -1921,6 +1927,10 @@
             'easy-clean': {
                 win: '#',   // poner el enlace del instalador cuando exista
                 mac: '#'
+            },
+            'ghost': {
+                win: '#',   // poner el enlace del instalador cuando exista (GHOST es solo Windows por ahora)
+                mac: '#'
             }
         };
 
@@ -1935,7 +1945,8 @@
             'omni': 'Omni Plugin (Win/Mac)',
             'easy-level': 'Easy Level (Win/Mac)',
             'easy-deeser': 'Easy Deeser (Win/Mac)',
-            'easy-clean': 'Easy Clean (Win/Mac)'
+            'easy-clean': 'Easy Clean (Win/Mac)',
+            'ghost': 'GHOST (Windows)'
         };
 
         // GLOBAL APP STATE
@@ -1973,6 +1984,7 @@
             if (s.includes('level')) return 'Easy Level';
             if (/de-?e?s?ser/.test(s)) return 'Easy Deeser';
             if (s.includes('clean')) return 'Easy Clean';
+            if (s.includes('ghost')) return 'GHOST';
             if (s.includes('coca') || s.includes('coke')) return 'Coca Cola';
             if (s.includes('inka')) return 'Inka Kola';
             if (s.includes('mix')) return 'Easy Mix';
@@ -2284,7 +2296,8 @@
                 'omni': pool.filter(l => !l.used && (l.plugin === 'Omni Plugin' || l.plugin === 'OMNI PLUGIN' || l.plugin === 'Omni')).length,
                 'easy-level': pool.filter(l => !l.used && (l.plugin === 'Easy Level' || l.plugin === 'EASY LEVEL')).length,
                 'easy-deeser': pool.filter(l => !l.used && (l.plugin === 'Easy Deeser' || l.plugin === 'EASY DEESER')).length,
-                'easy-clean': pool.filter(l => !l.used && (l.plugin === 'Easy Clean' || l.plugin === 'EASY CLEAN')).length
+                'easy-clean': pool.filter(l => !l.used && (l.plugin === 'Easy Clean' || l.plugin === 'EASY CLEAN')).length,
+                'ghost': pool.filter(l => !l.used && (l.plugin === 'GHOST' || l.plugin === 'Ghost')).length
             };
 
             Object.entries(counts).forEach(([k, cnt]) => {
@@ -2324,6 +2337,7 @@
                 else if (val === 'easy-level') targetPlugin = 'Easy Level';
                 else if (val === 'easy-deeser') targetPlugin = 'Easy Deeser';
                 else if (val === 'easy-clean') targetPlugin = 'Easy Clean';
+                else if (val === 'ghost') targetPlugin = 'GHOST';
 
                 const avail = pool.filter(l => !l.used && l.plugin === targetPlugin);
                 if (avail.length > 0 && (!k1Input.value || !avail.some(l => l.serial === k1Input.value))) {
@@ -2353,6 +2367,7 @@
                 else if (val === 'easy-level') targetPlugin = 'Easy Level';
                 else if (val === 'easy-deeser') targetPlugin = 'Easy Deeser';
                 else if (val === 'easy-clean') targetPlugin = 'Easy Clean';
+                else if (val === 'ghost') targetPlugin = 'GHOST';
             }
 
             const avail = pool.filter(l => !l.used && l.plugin === targetPlugin);
@@ -3319,6 +3334,7 @@
                 else if (pVal === 'easy-level') targetPlugin = 'Easy Level';
                 else if (pVal === 'easy-deeser') targetPlugin = 'Easy Deeser';
                 else if (pVal === 'easy-clean') targetPlugin = 'Easy Clean';
+                else if (pVal === 'ghost') targetPlugin = 'GHOST';
             }
 
             titleEl.innerText = 'Elegir Clave (' + targetPlugin + ')';
@@ -3529,6 +3545,7 @@
                 else if (plugin.includes('Level')) prefix = 'LEVEL';
                 else if (plugin.includes('Deeser')) prefix = 'DEESER';
                 else if (plugin.includes('Clean')) prefix = 'CLEAN';
+                else if (plugin.includes('GHOST') || plugin.includes('Ghost')) prefix = 'GHOST';
 
                 const rnd1 = Math.random().toString(16).substring(2, 6).toUpperCase();
                 const rnd2 = Math.random().toString(16).substring(2, 6).toUpperCase();
@@ -3623,6 +3640,7 @@
             else if (pluginName.includes('Level')) slug = 'easy-level';
             else if (pluginName.includes('Deeser')) slug = 'easy-deeser';
             else if (pluginName.includes('Clean')) slug = 'easy-clean';
+            else if (pluginName.includes('GHOST') || pluginName.includes('Ghost')) slug = 'ghost';
 
             const links = DOWNLOAD_LINKS[slug] || DOWNLOAD_LINKS['easy-mix'];
 

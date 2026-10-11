@@ -24,13 +24,15 @@ export const PLUGINS = [
     // Easy Deeser (de-esser por partes con Clover): IDs de tienda con DEESER_PRODUCT_IDS (coma-separados) cuando exista en `products`.
     { id: 'easy-deeser', prefix: 'DEESER', displayName: 'Easy Deeser',  names: ['easy deeser', 'easy de esser', 'easy deesser'], keywords: ['deeser', 'deesser', 'de esser'], productIds: idsFromEnv('DEESER_PRODUCT_IDS'), trialDays: 3, exclusive: true },
     // Easy Clean (quitar ruido de fondo con Clover): IDs de tienda con CLEAN_PRODUCT_IDS (coma-separados) cuando exista en `products`.
-    { id: 'easy-clean',  prefix: 'CLEAN',  displayName: 'Easy Clean',   names: ['easy clean'],               keywords: ['clean'],           productIds: idsFromEnv('CLEAN_PRODUCT_IDS'), trialDays: 3, exclusive: true }
+    { id: 'easy-clean',  prefix: 'CLEAN',  displayName: 'Easy Clean',   names: ['easy clean'],               keywords: ['clean'],           productIds: idsFromEnv('CLEAN_PRODUCT_IDS'), trialDays: 3, exclusive: true },
+    // GHOST (agente de mastering): IDs de tienda con GHOST_PRODUCT_IDS (coma-separados) cuando exista en `products`.
+    { id: 'ghost',       prefix: 'GHOST',  displayName: 'GHOST',        names: ['ghost', 'offszn ghost'],    keywords: ['ghost'],           productIds: idsFromEnv('GHOST_PRODUCT_IDS'), trialDays: 3, exclusive: true }
 ];
 
 export const DEFAULT_PLUGIN = PLUGINS[0]; // Easy Mix: comportamiento histórico cuando no se indica plugin
 
 // Orden de evaluación de palabras clave: los específicos primero ("Easy Master"/"Easy Pitch" contienen "easy"; "mix" va al final)
-const KEYWORD_ORDER = ['omni', 'easy-clean', 'easy-deeser', 'easy-level', 'easy-pitch', 'easy-master', 'coca-cola', 'inka-kola', 'vocal-preset', 'easy-mix'];
+const KEYWORD_ORDER = ['omni', 'ghost', 'easy-clean', 'easy-deeser', 'easy-level', 'easy-pitch', 'easy-master', 'coca-cola', 'inka-kola', 'vocal-preset', 'easy-mix'];
 
 export function normalizeName(name) {
     return String(name || '').toLowerCase().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
