@@ -62,6 +62,13 @@ const PLUGIN_INFO_MAP = {
             win: 'https://drive.google.com/file/d/11Zw_4w-vWUjq3b2bImlyQjO2rzXitqLO/view?usp=sharing',
             mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
         }
+    },
+    '5001': {
+        name: 'Omni Plugin',
+        downloads: {
+            win: '/downloads/Omni_Plugin_Setup.exe',
+            mac: ''
+        }
     }
 };
 

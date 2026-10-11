@@ -18,8 +18,7 @@ export const PLUGINS = [
     { id: 'inka-kola',   prefix: 'INKA',   displayName: 'Inka Kola',    names: ['inka kola'],                keywords: ['inka'],            productIds: [902],      trialDays: 7, exclusive: true  },
     { id: 'vocal-preset',prefix: 'VOCA',   displayName: 'Vocal Preset', names: ['vocal preset'],             keywords: ['vocal', 'voca'],   productIds: [905],      trialDays: 3, exclusive: true  },
     { id: 'easy-pitch',  prefix: 'PITCH',  displayName: 'Easy Pitch',   names: ['easy pitch'],               keywords: ['pitch'],           productIds: [906, 907], trialDays: 3, exclusive: true  },
-    // Omni Plugin: el/los IDs del producto en la tienda se definen con OMNI_PRODUCT_IDS (coma-separados) cuando exista en `products`.
-    { id: 'omni',        prefix: 'OMNI',   displayName: 'Omni Plugin',  names: ['omni plugin', 'omni'],      keywords: ['omni'],            productIds: idsFromEnv('OMNI_PRODUCT_IDS'), trialDays: 3, exclusive: true },
+    { id: 'omni',        prefix: 'OMNI',   displayName: 'Omni Plugin',  names: ['omni plugin', 'omni'],      keywords: ['omni'],            productIds: idsFromEnv('OMNI_PRODUCT_IDS').length ? idsFromEnv('OMNI_PRODUCT_IDS') : [5001], trialDays: 3, exclusive: true },
     // Easy Level (nivelador de voces con Clover): IDs de tienda con LEVEL_PRODUCT_IDS (coma-separados) cuando exista en `products`.
     { id: 'easy-level',  prefix: 'LEVEL',  displayName: 'Easy Level',   names: ['easy level'],               keywords: ['level'],           productIds: idsFromEnv('LEVEL_PRODUCT_IDS'), trialDays: 3, exclusive: true },
     // Easy Deeser (de-esser por partes con Clover): IDs de tienda con DEESER_PRODUCT_IDS (coma-separados) cuando exista en `products`.

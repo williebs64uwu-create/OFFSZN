@@ -1,0 +1,4136 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- PayPal Preconnect for Ultra Fast Load -->
+    <link rel="preconnect" href="https://www.paypal.com" crossorigin>
+    <link rel="preconnect" href="https://www.paypalobjects.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.paypal.com">
+    <link rel="dns-prefetch" href="https://www.paypalobjects.com">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omni VST | El Plugin Todo en Uno de OFFSZN</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/willieimages/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/willieimages/favicon-16x16.png">
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+    <link rel="shortcut icon" href="/willieimages/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/willieimages/apple-touch-icon.png">
+    <meta name="description"
+        content="Omni VST de OFFSZN: plugin de mastering todo en uno. Loudness, ecualizador de 4 bandas, glue, estéreo y Reference Match en un solo VST3 para FL Studio, Ableton Live, Cubase, Studio One, REAPER y Bitwig (Windows).">
+    <meta name="keywords"
+        content="omni vst, omni plugin, plugin de mastering, mastering todo en uno, reference match, vst3, fl studio, offszn, presets de mastering, limitador, loudness">
+    <meta name="theme-color" content="#0a0a0a">
+    <!-- Open Graph / Facebook -->
+    <meta property="og:title" content="Omni VST | El Plugin Todo en Uno de OFFSZN">
+    <meta property="og:description"
+        content="Mastering todo en uno en un solo plugin: loudness, EQ, glue, estéreo y Reference Match con presets calibrados por género. VST3 para Windows.">
+    <meta property="og:image" content="https://offszn.lat/plugins/omni.png">
+    <meta property="og:url" content="https://offszn.lat/plugins/omni">
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="OFFSZN">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://offszn.lat/plugins/omni.png">
+
+    <!-- Schema.org Structured Data (Product & FAQ) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": "Omni VST",
+      "image": "https://offszn.lat/plugins/omni.png",
+      "description": "Omni de OFFSZN es un plugin de mastering todo en uno (VST3 de 64 bits para Windows): loudness, ecualizador, glue, estéreo y Reference Match con presets calibrados por género.",
+      "brand": {
+        "@type": "Brand",
+        "name": "OFFSZN"
+      },
+      "offers": {
+        "@type": "Offer",
+        "url": "https://offszn.lat/plugins/omni",
+        "priceCurrency": "USD",
+        "price": "17.00",
+        "priceValidUntil": "2026-12-31",
+        "availability": "https://schema.org/InStock",
+        "itemCondition": "https://schema.org/NewCondition"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "reviewCount": "128"
+      }
+    }
+    </script>
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/auth-ui.css">
+    <link rel="stylesheet" href="/css/global-overlays.css">
+    <link rel="stylesheet" href="/css/navbar.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Supabase & Config -->
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>window.supabaseClient = null;</script>
+    <script src="/script/config.js"></script>
+    <script src="/script/auth-utils.js?v=12"></script>
+
+    <style>
+        :root {
+            --bg-neo: #0a0a0a;
+            --text-neo: #f3f4f6;
+            --text-muted: #8b92a2;
+            --accent-omni: #ffffff;
+            --accent: #f2379f;
+            --accent-glow: rgba(242, 55, 159, 0.4);
+        }
+
+        .plugin-landing {
+            background: #0a0a0a;
+            color: var(--text-neo);
+            font-family: "Geist", sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ==================== HERO ==================== */
+        .hero-section {
+            position: relative;
+            margin-top: 0;
+            padding: 42px 0 38px;
+            text-align: center;
+            animation: heroFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            transition: background 0.4s ease;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 28px 0 24px;
+            }
+
+            .hero-image-container {
+                max-width: 100% !important;
+                margin: 18px auto 0 !important;
+                padding: 0 !important;
+            }
+
+            .hero-mockup {
+                max-width: 100% !important;
+                border-radius: 14px !important;
+                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(242, 55, 159, 0.2) !important;
+            }
+
+            .hero-orb-wrapper {
+                width: 280px !important;
+                height: 280px !important;
+            }
+
+            .hero-orb-core {
+                width: 170px !important;
+                height: 170px !important;
+                filter: blur(20px) !important;
+            }
+
+            .hero-orb-ring.ring-1 {
+                width: 220px !important;
+                height: 220px !important;
+            }
+
+            .hero-orb-ring.ring-2 {
+                width: 260px !important;
+                height: 260px !important;
+            }
+        }
+
+        .hero-bg-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            opacity: 1;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .hero-bg-layer.has-bg {
+            opacity: 1;
+        }
+
+        .hero-bg-layer::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(255,255,255,0.02) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-section>.container {
+            position: relative;
+            z-index: 2;
+        }
+
+        @keyframes heroFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-top-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            width: 100%;
+        }
+
+        .area-1 {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .area-2 {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .hero-title {
+            font-size: clamp(2.2rem, 6vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: #888;
+            max-width: 550px;
+            margin: 0 auto 40px;
+            line-height: 1.5;
+        }
+
+        .hero-image-container {
+            position: relative;
+            max-width: 720px;
+            width: 100%;
+            margin: 24px auto 0;
+            padding: 0;
+            box-sizing: border-box;
+            animation: heroFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes heroFloat {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* ==================== HERO ORB ANIMATION ==================== */
+        .hero-orb-wrapper {
+            position: absolute;
+            top: 48%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 520px;
+            height: 520px;
+            pointer-events: none;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hero-orb-core {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, rgba(242, 55, 159, 0.42) 0%, rgba(153, 69, 255, 0.28) 45%, rgba(242, 55, 159, 0.08) 72%, transparent 100%);
+            filter: blur(30px);
+            animation: orbPulse 5s ease-in-out infinite alternate, orbDrift 11s ease-in-out infinite;
+            will-change: transform, opacity;
+        }
+
+        .hero-orb-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px dashed rgba(242, 55, 159, 0.25);
+            box-shadow: 0 0 40px rgba(242, 55, 159, 0.16), inset 0 0 25px rgba(153, 69, 255, 0.12);
+        }
+
+        .hero-orb-ring.ring-1 {
+            width: 400px;
+            height: 400px;
+            animation: orbRotateClockwise 24s linear infinite;
+        }
+
+        .hero-orb-ring.ring-2 {
+            width: 490px;
+            height: 490px;
+            border-color: rgba(255, 255, 255, 0.08);
+            border-style: solid;
+            animation: orbRotateCounter 32s linear infinite;
+        }
+
+        .hero-orb-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            animation: orbRotateClockwise 20s linear infinite;
+        }
+
+        .orb-particle {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #f2379f;
+            box-shadow: 0 0 10px #f2379f, 0 0 20px rgba(242, 55, 159, 0.8);
+        }
+
+        .orb-particle.p1 {
+            top: 10%;
+            left: 48%;
+        }
+
+        .orb-particle.p2 {
+            top: 50%;
+            right: 6%;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            box-shadow: 0 0 8px #fff;
+        }
+
+        .orb-particle.p3 {
+            bottom: 14%;
+            left: 32%;
+            width: 6px;
+            height: 6px;
+        }
+
+        .orb-particle.p4 {
+            top: 68%;
+            left: 10%;
+            width: 3px;
+            height: 3px;
+            background: #9945ff;
+            box-shadow: 0 0 6px #9945ff;
+        }
+
+        @keyframes orbPulse {
+            0% {
+                transform: scale(0.92);
+                opacity: 0.65;
+            }
+
+            50% {
+                transform: scale(1.12);
+                opacity: 0.95;
+                filter: blur(36px);
+            }
+
+            100% {
+                transform: scale(0.92);
+                opacity: 0.65;
+            }
+        }
+
+        @keyframes orbDrift {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            33% {
+                transform: translate(-14px, 12px);
+            }
+
+            66% {
+                transform: translate(14px, -10px);
+            }
+        }
+
+        @keyframes orbRotateClockwise {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes orbRotateCounter {
+            from {
+                transform: rotate(360deg);
+            }
+
+            to {
+                transform: rotate(0deg);
+            }
+        }
+
+        .hero-mockup {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 720px;
+            height: auto;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 50px rgba(242, 55, 159, 0.2);
+            display: block;
+            margin: 0 auto;
+            transition: transform 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .hero-mockup:hover {
+            transform: translateY(-3px) scale(1.008);
+            box-shadow: 0 32px 75px rgba(0, 0, 0, 0.9), 0 0 65px rgba(242, 55, 159, 0.3);
+        }
+
+        /* CTA Buttons (Matching X Flow Analyzer) */
+        .btn-free-download {
+            background: #0a0a0a;
+            color: var(--text-neo);
+            padding: 15px 36px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1.05rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255,255,255,0.05);
+            gap: 8px;
+            box-shadow: -5px -5px 15px rgba(255, 255, 255, 0.03), 5px 5px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .btn-free-download:hover {
+            box-shadow: inset -5px -5px 15px rgba(255, 255, 255, 0.03), inset 5px 5px 15px rgba(0, 0, 0, 0.6);
+            color: #fff;
+        }
+
+        .btn-free-download.primary-large {
+            padding: 16px 48px;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+        }
+
+        .btn-serial {
+            background: transparent;
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 100px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            gap: 8px;
+            opacity: 0.7;
+            cursor: pointer;
+        }
+
+        .btn-serial:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.4);
+            opacity: 1;
+        }
+
+        /* ==================== CONTENT SECTIONS ==================== */
+        .feature-section {
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .alt-bg {
+            background: #0a0a0a;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            padding: 80px 0;
+        }
+
+        .content-grid.reverse {
+            direction: rtl;
+        }
+
+        .content-grid.reverse .text-content {
+            direction: ltr;
+        }
+
+        .feature-tag {
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .text-content h2 {
+            font-size: 2.5rem;
+            margin-bottom: 24px;
+            font-weight: 700;
+        }
+
+        .text-content p {
+            color: #aaa;
+            line-height: 1.8;
+            font-size: 1.05rem;
+        }
+
+        /* ==================== SERIAL KEY SECTION ==================== */
+        .serial-section {
+            padding: 80px 0;
+            text-align: center;
+            background: #0a0a0a;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            color: #888;
+            font-size: 1.05rem;
+            max-width: 500px;
+            margin: 0 auto 40px;
+        }
+
+        .serial-card {
+            background: #0a0a0a;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: -5px -5px 15px rgba(255, 255, 255, 0.03), 5px 5px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .auth-wall {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .auth-wall i {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .serial-display {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .serial-box {
+            background: #0a0a0a;
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 16px 24px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            border-radius: 12px;
+            width: 100%;
+            user-select: all;
+            cursor: pointer;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+            box-shadow: inset -5px -5px 15px rgba(255, 255, 255, 0.03), inset 5px 5px 15px rgba(0, 0, 0, 0.6);
+            color: #fff;
+        }
+
+        .serial-box:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn-auth {
+            background: #0a0a0a;
+            color: var(--text-neo);
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            box-shadow: -5px -5px 15px rgba(255, 255, 255, 0.03), 5px 5px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .btn-auth:hover {
+            box-shadow: inset -5px -5px 15px rgba(255, 255, 255, 0.03), inset 5px 5px 15px rgba(0, 0, 0, 0.6);
+        }
+
+        .btn-download {
+            background: transparent;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-download:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ==================== COMPRAR LICENCIA (DOBLE COLUMNA DESKTOP) ==================== */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        #pricing-section {
+            scroll-margin-top: 85px;
+        }
+
+        .pricing-double-layout {
+            display: grid;
+            grid-template-columns: 1.15fr 460px;
+            gap: 54px;
+            align-items: center;
+            max-width: 1120px;
+            margin: 50px auto 0;
+            text-align: left;
+        }
+
+        .pricing-text-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .pricing-headline {
+            font-size: clamp(2.2rem, 3.8vw, 3.2rem);
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.15;
+            margin: 0 0 16px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .pricing-subtext {
+            font-size: 1.05rem;
+            color: #a1a1aa;
+            line-height: 1.6;
+            margin: 0 0 32px 0;
+            max-width: 520px;
+        }
+
+        .pricing-checks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .pricing-check-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            color: #f4f4f5;
+            font-size: 1.08rem;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+        }
+
+        .pricing-check-item svg {
+            flex-shrink: 0;
+            stroke: #ffffff;
+        }
+
+        .pricing-card-col {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .pricing-card-inner {
+            width: 100%;
+            max-width: 460px;
+            background: #0a0a0a;
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 36px 30px;
+            border-radius: 22px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: -5px -5px 15px rgba(255, 255, 255, 0.03), 5px 5px 15px rgba(0, 0, 0, 0.6);
+            box-sizing: border-box;
+        }
+
+        .pricing-popular-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: #f2379f;
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+
+        .pricing-card-title {
+            font-size: 1.6rem;
+            margin-bottom: 4px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .pricing-card-platform {
+            color: #a1a1aa;
+            font-size: 0.95rem;
+            margin-bottom: 22px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 960px) {
+            .pricing-double-layout {
+                display: flex;
+                flex-direction: column;
+                gap: 22px;
+                text-align: center;
+                margin-top: 24px;
+            }
+
+            .pricing-text-col {
+                display: contents;
+            }
+
+            .pricing-header-area {
+                order: 1;
+                width: 100%;
+            }
+
+            .pricing-headline {
+                font-size: clamp(1.85rem, 6vw, 2.3rem);
+                margin-bottom: 10px;
+            }
+
+            .pricing-subtext {
+                margin: 0 auto 16px auto;
+                font-size: 0.95rem;
+                padding: 0 10px;
+            }
+
+            .pricing-card-col {
+                order: 2;
+                width: 100%;
+            }
+
+            .pricing-card-col .pricing-card-inner {
+            width: 100%;
+            max-width: 460px;
+            background: #0a0a0a;
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 36px 30px;
+            border-radius: 22px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: -5px -5px 15px rgba(255, 255, 255, 0.03), 5px 5px 15px rgba(0, 0, 0, 0.6);
+            box-sizing: border-box;
+        }
+
+            .pricing-card-title {
+                display: none !important;
+            }
+
+            .pricing-popular-badge {
+                position: static;
+                margin: 0 auto 10px auto;
+                display: inline-block;
+                width: fit-content;
+            }
+
+            .pricing-card-platform {
+                margin-bottom: 14px;
+                font-size: 0.92rem;
+                color: #d4d4d8;
+            }
+
+            .pricing-checks-area {
+                order: 3;
+                width: 100%;
+                margin-top: 14px;
+                display: flex;
+                justify-content: center;
+            }
+
+            .pricing-checks-list {
+                display: flex;
+                flex-direction: column;
+                text-align: left;
+                max-width: 360px;
+                margin: 0 auto;
+                gap: 15px;
+            }
+
+            .pricing-check-item {
+                font-size: 0.98rem;
+                gap: 12px;
+            }
+        }
+
+        /* ==================== FAQ SECTION ==================== */
+        .faq-section {
+            padding: 100px 0;
+            background: #0a0a0a;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .faq-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .faq-header .subtitle {
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .faq-header h2 {
+            font-size: clamp(3rem, 6vw, 4.5rem);
+            font-weight: 800;
+            letter-spacing: -2px;
+            color: #fff;
+        }
+
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .faq-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .faq-question {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: left;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .faq-question i {
+            transition: transform 0.3s;
+            color: #666;
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            color: #888;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding-bottom: 24px;
+        }
+
+        /* ==================== TAGLINE (FINAL CTA) ==================== */
+        .tagline-section {
+            padding: 100px 20px;
+            text-align: center;
+            background: #0a0a0a;
+        }
+
+        .tagline-section h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #666);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+                text-align: center;
+            }
+
+            .content-grid.reverse {
+                direction: ltr;
+            }
+
+            .hero-top-actions {
+                flex-direction: column;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .area-1,
+            .area-2 {
+                align-items: center;
+            }
+
+            .tagline-section h2 {
+                font-size: 2rem;
+            }
+
+            .faq-section {
+                padding: 60px 0;
+            }
+
+            .faq-header {
+                margin-bottom: 30px;
+            }
+
+            .faq-header h2 {
+                font-size: 2.2rem;
+            }
+
+            .faq-question {
+                font-size: 1.05rem;
+                padding: 18px 0;
+            }
+
+            .faq-answer {
+                font-size: 0.95rem;
+                line-height: 1.5;
+            }
+        }
+
+        /* ==================== STICKY HEADER & TOP ANNOUNCEMENT BAR ==================== */
+        .sticky-header-wrapper {
+            position: sticky;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 9999;
+        }
+
+        body {
+            padding-top: 40px;
+        }
+
+        .top-announcement-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            background: linear-gradient(90deg, #1e0b2e 0%, #3d1459 50%, #1e0b2e 100%);
+            border-bottom: 1px solid rgba(168, 85, 247, 0.25);
+            padding: 0 16px;
+            z-index: 9999;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: background 0.25s ease, border-color 0.25s ease;
+        }
+
+        .top-announcement-bar:hover {
+            background: linear-gradient(90deg, #2a1040 0%, #4e1a73 50%, #2a1040 100%);
+            border-bottom-color: rgba(168, 85, 247, 0.45);
+        }
+
+        .top-announcement-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            color: #ffffff;
+        }
+
+        .top-announcement-text {
+            color: #f1f5f9;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+        }
+
+        .top-announcement-text strong {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .top-announcement-arrow {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+            transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.22s ease;
+        }
+
+        .top-announcement-bar:hover .top-announcement-arrow {
+            transform: translateX(4px);
+            background: rgba(255, 255, 255, 0.32);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 38px !important;
+            }
+
+            .top-announcement-bar {
+                height: 38px;
+                padding: 0 12px;
+            }
+
+            .top-announcement-content {
+                gap: 8px;
+                font-size: 0.82rem;
+            }
+
+            .top-announcement-arrow {
+                width: 22px;
+                height: 22px;
+                font-size: 0.76rem;
+            }
+        }
+
+        /* WhatsApp Floating Widget */
+        .whatsapp-widget-container {
+            position: fixed;
+            bottom: 90px;
+            right: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10000;
+            text-decoration: none;
+            pointer-events: none;
+        }
+
+        .whatsapp-bubble-card {
+            position: relative;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 10px 28px 10px 16px;
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.1);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            line-height: 1.3;
+            display: flex;
+            align-items: center;
+            pointer-events: auto;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: whatsappBubbleIn 0.5s ease;
+            white-space: nowrap;
+        }
+
+        .whatsapp-bubble-card:hover {
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.3);
+            color: #0f172a;
+        }
+
+        .whatsapp-bubble-close {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 2px 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: color 0.2s, background 0.2s;
+        }
+
+        .whatsapp-bubble-close:hover {
+            color: #0f172a;
+            background: #f1f5f9;
+        }
+
+        .whatsapp-floating-btn {
+            pointer-events: auto;
+            width: 58px;
+            height: 58px;
+            background-color: #25D366;
+            color: #fff !important;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            transition: background-color 0.2s ease, opacity 0.2s ease;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .whatsapp-floating-btn:hover {
+            background-color: #20ba5a;
+            color: #fff;
+            opacity: 0.95;
+            transform: none;
+        }
+
+        @keyframes whatsappBubbleIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px) scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .whatsapp-widget-container {
+                bottom: 80px;
+                right: 16px;
+                gap: 8px;
+            }
+
+            .whatsapp-bubble-card {
+                font-size: 0.78rem;
+                padding: 8px 24px 8px 12px;
+                border-radius: 14px;
+            }
+
+            .whatsapp-floating-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 26px;
+            }
+        }
+
+        /* ==================== OMNI STICKY NAVBAR ==================== */
+        .em-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 56px;
+            background: rgba(10, 10, 12, 0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+        }
+
+        .em-navbar.nav-visible {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .em-nav-inner {
+            max-width: 1200px;
+            height: 100%;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .em-nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .em-nav-brand:hover {
+            opacity: 0.88;
+        }
+
+        .em-nav-logo-img {
+            height: 25px;
+            width: auto;
+            display: block;
+        }
+
+        .em-nav-badge {
+            background: rgba(242, 55, 159, 0.15);
+            color: #f2379f;
+            border: 1px solid rgba(242, 55, 159, 0.35);
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* ==================== SEGMENTED CONTROL PILL ==================== */
+        .em-nav-menu {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            padding: 4px;
+            gap: 4px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            user-select: none;
+        }
+
+        .em-nav-link {
+            color: #9ca3af;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 6px 18px;
+            border-radius: 999px;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            letter-spacing: -0.2px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .em-nav-link:hover {
+            color: #ffffff;
+        }
+
+        .em-nav-link.active {
+            background: #ffffff;
+            color: #000000 !important;
+            font-weight: 700;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .em-nav-actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .em-nav-btn-cta {
+            background: #f2379f;
+            color: #ffffff !important;
+            font-weight: 800;
+            font-size: 0.9rem;
+            padding: 9px 20px;
+            border-radius: 999px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: opacity 0.2s ease, background 0.2s ease;
+        }
+
+        .em-nav-btn-cta:hover {
+            background: #ff47ac;
+            opacity: 0.95;
+        }
+
+        @media (max-width: 768px) {
+            .em-navbar {
+                height: 52px;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                background: rgba(10, 10, 12, 0.98) !important;
+            }
+
+            .em-nav-inner {
+                padding: 0 16px;
+                gap: 12px;
+            }
+
+            .em-nav-badge {
+                display: none;
+            }
+
+            .em-nav-menu {
+                display: none !important;
+            }
+
+            .em-nav-btn-cta {
+                font-size: 0.82rem;
+                font-weight: 700;
+                padding: 7px 16px;
+                border-radius: 999px;
+                white-space: nowrap;
+                letter-spacing: -0.2px;
+                box-shadow: 0 3px 12px rgba(242, 55, 159, 0.35);
+            }
+
+            .em-nav-btn-cta i {
+                font-size: 0.82rem;
+            }
+        }
+
+        /* ==================== CÓMO SUENA (AUDIO + VIDEO INTEGRADO RESPONSIVE) ==================== */
+        .audio-comparison-section {
+            padding: 55px 0 85px;
+            background: radial-gradient(circle at 50% 12%, rgba(242, 55, 159, 0.05) 0%, rgba(5, 5, 5, 1) 50%), #000000;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .audio-comp-header {
+            text-align: center;
+            max-width: 860px;
+            margin: 0 auto 36px;
+        }
+
+        @media (max-width: 768px) {
+            .audio-comparison-section {
+                padding: 38px 0 60px;
+            }
+
+            .audio-comp-header {
+                margin: 0 auto 26px;
+            }
+        }
+
+        .audio-comp-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #ffffff;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.35), 0 8px 24px rgba(0, 0, 0, 0.6);
+            padding: 6px 18px;
+            border-radius: 999px;
+            margin-bottom: 20px;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+            user-select: none;
+        }
+
+        .audio-comp-badge:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+            border-color: rgba(255, 255, 255, 0.28);
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.5), 0 12px 30px rgba(0, 0, 0, 0.75);
+        }
+
+        .audio-comp-badge .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #f2379f;
+            box-shadow: 0 0 8px rgba(242, 55, 159, 0.95);
+            animation: liquidDotPulse 2.4s ease-in-out infinite;
+        }
+
+        @keyframes liquidDotPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.35;
+                transform: scale(0.8);
+            }
+        }
+
+        .audio-comp-title {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0 0 10px 0;
+            letter-spacing: -0.5px;
+            line-height: 1.15;
+            text-transform: uppercase;
+        }
+
+        .audio-comp-title .title-accent {
+            color: #f2379f;
+        }
+
+        .audio-comp-subtext {
+            color: #a1a1aa;
+            font-size: 1.05rem;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* DISEÑO UNIFICADO: EN PC AUDIOS IZQUIERDA Y VIDEO DERECHA. EN MÓVIL VIDEO PRIMERO Y AUDIOS DESPUÉS */
+        .como-suena-unified-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            max-width: 1050px;
+            margin: 0 auto;
+        }
+
+        .como-suena-audios-col {
+            flex: 1;
+            min-width: 320px;
+            width: 100%;
+        }
+
+        .como-suena-video-col {
+            flex: 0 0 290px;
+            max-width: 290px;
+            width: 100%;
+        }
+
+        @media (max-width: 860px) {
+            .como-suena-unified-container {
+                flex-direction: column-reverse; /* VIDEO PRIMERO EN CELULAR, LUEGO AUDIOS */
+                gap: 30px;
+            }
+
+            .como-suena-video-col {
+                max-width: 280px;
+            }
+
+            .como-suena-audios-col {
+                min-width: unset;
+                max-width: 540px;
+            }
+        }
+
+        /* Dark Glass Card Style */
+        .audio-glass-card {
+            background: rgba(14, 14, 14, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 20px;
+            padding: 34px 28px 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+            display: flex;
+            flex-direction: column;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .audio-glass-card:hover {
+            border-color: rgba(242, 55, 159, 0.35);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 0 35px rgba(242, 55, 159, 0.1);
+        }
+
+        /* Track row: play button + waveform side-by-side */
+        .ws-track-row {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            width: 100%;
+        }
+
+        .ws-play-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: #ffffff;
+            font-size: 1.45rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.18s ease;
+        }
+
+        .ws-play-btn:hover {
+            transform: scale(1.18);
+            color: #f2379f;
+        }
+
+        .ws-play-btn:active {
+            transform: scale(0.95);
+        }
+
+        .ws-play-btn i {
+            display: block;
+            line-height: 1;
+        }
+
+        .ws-waveform-wrap {
+            flex: 1;
+            height: 48px;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .ws-waveform-wrap>div {
+            width: 100%;
+        }
+
+        .ws-track-caption {
+            text-align: center;
+            margin: 14px 0 28px;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+            line-height: 1.3;
+            user-select: none;
+        }
+
+        .ws-track-caption:last-child {
+            margin-bottom: 0;
+        }
+
+        .ws-tag-before {
+            color: #ffffff;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .ws-tag-after {
+            color: #f2379f;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-right: 6px;
+        }
+
+        .ws-track-name {
+            color: #8e949e;
+            font-weight: 500;
+        }
+
+        /* WaveSurfer Skeleton loader */
+        .ws-skeleton {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            width: 100%;
+            height: 48px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .ws-loaded .ws-skeleton {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .ws-skeleton-bar {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 2px;
+            min-height: 6px;
+            animation: wsSkelPulse 1.6s ease-in-out infinite alternate;
+        }
+
+        @keyframes wsSkelPulse {
+            0% {
+                background: rgba(255, 255, 255, 0.08);
+            }
+
+            100% {
+                background: rgba(242, 55, 159, 0.22);
+            }
+        }
+
+        /* Video Frame Styling */
+        .pitch-video-frame {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.85), 0 0 40px rgba(242, 55, 159, 0.15);
+            border: 2.5px solid rgba(255, 255, 255, 0.12);
+            background: #111;
+            aspect-ratio: 9 / 16;
+            width: 100%;
+        }
+
+        .pitch-video-click-interceptor {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 50px;
+            z-index: 4;
+            cursor: pointer;
+        }
+
+        .pitch-video-overlay-badge {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.82);
+            border: 1px solid #f2379f;
+            padding: 8px 14px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #f2379f;
+            font-weight: 700;
+            font-size: 0.8rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            z-index: 5;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .pitch-video-player {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        /* ==================== DAWS SHOWCASE ==================== */
+        .daw-showcase-section {
+            padding: 80px 0 90px;
+            background: #000000;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .daw-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .daw-section-title {
+            font-size: clamp(1.4rem, 3.2vw, 1.9rem);
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #ffffff;
+            margin-bottom: 45px;
+            text-transform: uppercase;
+        }
+
+        .daw-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .daw-grid-layout {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 580px) {
+            .daw-grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .daw-grid-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            text-align: left;
+            transition: all 0.25s ease;
+        }
+
+        .daw-grid-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .daw-grid-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            transition: transform 0.25s ease;
+        }
+
+        .daw-grid-card:hover .daw-grid-icon-box {
+            transform: scale(1.06);
+        }
+
+        .daw-grid-icon-box img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+        }
+
+        .daw-grid-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .daw-grid-title {
+            font-size: 1.18rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.2px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .daw-grid-vendor {
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        .daw-specs-bar {
+            margin-top: 40px;
+            padding: 16px 28px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 26px;
+            flex-wrap: wrap;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.84rem;
+            backdrop-filter: blur(16px);
+        }
+
+        .daw-spec-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .daw-spec-divider {
+            width: 1px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        @media (max-width: 768px) {
+            .daw-specs-bar {
+                border-radius: 18px;
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+            }
+
+            .daw-spec-divider {
+                display: none;
+            }
+        }
+
+        /* ==================== TESTIMONIALS CAROUSEL (2 ROWS INFINITE) ==================== */
+        :root {
+            --bg-neo: #0a0a0a;
+            --text-neo: #f3f4f6;
+            --text-muted: #8b92a2;
+            --accent-omni: #ffffff;
+            --testi-gap: 18px;
+        }
+
+        .testimonios-section {
+            padding: 110px 0 95px;
+            background: radial-gradient(ellipse 85% 65% at 50% 50%, #150a1a 0%, #0d0611 45%, #030508 100%);
+            border-top: none;
+            border-bottom: none;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .testimonios-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: linear-gradient(to bottom, #000000 0%, rgba(0, 0, 0, 0) 100%);
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .testimonios-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: linear-gradient(to top, #000000 0%, rgba(0, 0, 0, 0) 100%);
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .testimonios-stars-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .testimonios-title {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .testimonios-subtitle {
+            color: #a1a1aa;
+            font-size: 1.05rem;
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .testi-carousel-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: var(--testi-gap);
+            width: 100%;
+            overflow: hidden;
+            padding: 10px 0;
+            z-index: 2;
+        }
+
+        .testi-carousel-fade-left,
+        .testi-carousel-fade-right {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 120px;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        .testi-carousel-fade-left {
+            left: 0;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        .testi-carousel-fade-right {
+            right: 0;
+            background: linear-gradient(to left, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        .testi-marquee-row {
+            display: flex;
+            width: 100%;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        .testi-marquee-group {
+            display: flex;
+            flex-shrink: 0;
+            align-items: center;
+            gap: var(--testi-gap);
+            padding-right: var(--testi-gap);
+            will-change: transform;
+        }
+
+        .scroll-left {
+            animation: marqueeLeft 42s linear infinite;
+        }
+
+        .scroll-right {
+            animation: marqueeRight 42s linear infinite;
+        }
+
+        .testi-carousel-wrapper:hover .testi-marquee-group {
+            animation-play-state: paused;
+        }
+
+        @keyframes marqueeLeft {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        @keyframes marqueeRight {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        .testi-card {
+            width: 280px;
+            height: 200px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #111;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .testi-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: rgba(242, 55, 159, 0.4);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(242, 55, 159, 0.2);
+        }
+
+        .testi-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .testi-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s ease;
+        }
+
+        .testi-card:hover .testi-card-overlay {
+            opacity: 1;
+        }
+
+        .testi-overlay-badge {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Yape Button White */
+        .btn-yape-white {
+            width: 100%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-sizing: border-box;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            font-weight: 800;
+            font-size: 1rem;
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-yape-white:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        /* Reveals */
+        .em-reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .em-reveal.is-revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    
+        .top-announcement-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            z-index: 10000;
+            background: linear-gradient(90deg, #1e0b2e 0%, #3d1459 50%, #1e0b2e 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 15px rgba(153, 69, 255, 0.15), inset 0 -2px 10px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+        }
+
+        .top-announcement-bar:hover {
+            box-shadow: 0 6px 20px rgba(153, 69, 255, 0.3), inset 0 -2px 10px rgba(0,0,0,0.4);
+            filter: brightness(1.1);
+        }
+
+        .top-announcement-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+            color: #d4d4d8;
+        }
+
+        .top-announcement-content strong {
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .top-announcement-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            font-size: 0.7rem;
+            color: #fff;
+            box-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+
+    
+        /* ==================== OMNI NEW BENTO & AUDIO ==================== */
+        body {
+            background-color: #050508 !important;
+            --bg-base: #050508;
+            --accent-purple: #7f00ff;
+        }
+
+        /* 1. AUDIO COMPARISON (SINGLE PLAYER TOGGLE) */
+        .audio-glass-container {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 2px 15px rgba(255,255,255,0.02);
+            text-align: left;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .omni-toggle-btn {
+            background: #111;
+            border: 1px solid rgba(127, 0, 255, 0.3);
+            border-radius: 100px;
+            display: inline-flex;
+            overflow: hidden;
+            margin-top: 20px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(127, 0, 255, 0.1);
+        }
+
+        .omni-toggle-option {
+            padding: 12px 30px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #888;
+            transition: all 0.3s;
+        }
+
+        .omni-toggle-option.active {
+            background: var(--accent-purple);
+            color: #fff;
+            box-shadow: inset 0 2px 10px rgba(255,255,255,0.2);
+        }
+
+        /* 2. BENTO GRID */
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .bento-card {
+            background: linear-gradient(180deg, rgba(20,20,25,0.8) 0%, rgba(10,10,15,0.9) 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 40px 30px;
+            transition: all 0.4s ease;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bento-card:hover {
+            border-color: rgba(127, 0, 255, 0.4);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 30px rgba(127, 0, 255, 0.15);
+            transform: translateY(-5px);
+        }
+
+        .bento-card h3 {
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 16px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .bento-card p {
+            color: #a1a1aa;
+            font-size: 1.05rem;
+            line-height: 1.6;
+        }
+
+        @media(max-width: 900px) {
+            .bento-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 3. REFERENCE MATCH HERO */
+        .reference-match-section {
+            padding: 120px 0;
+            background: radial-gradient(circle at center, rgba(127, 0, 255, 0.08) 0%, #050508 70%);
+            text-align: center;
+        }
+
+        .neon-badge {
+            color: var(--accent-purple);
+            font-size: 0.75rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            display: inline-block;
+            text-shadow: 0 0 10px rgba(127, 0, 255, 0.5);
+        }
+
+        .reference-title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 16px;
+            letter-spacing: -1.5px;
+        }
+
+        .reference-subtitle {
+            font-size: 1.3rem;
+            color: #d4d4d8;
+            max-width: 650px;
+            margin: 0 auto 30px auto;
+            font-weight: 500;
+        }
+
+        .reference-desc {
+            font-size: 1.1rem;
+            color: #888;
+            max-width: 700px;
+            margin: 0 auto 50px auto;
+            line-height: 1.7;
+        }
+
+        .drag-drop-area {
+            background: rgba(0,0,0,0.6);
+            border: 2px dashed rgba(127, 0, 255, 0.4);
+            border-radius: 20px;
+            padding: 60px 40px;
+            max-width: 600px;
+            margin: 0 auto;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .drag-drop-area:hover {
+            background: rgba(127, 0, 255, 0.05);
+            border-color: var(--accent-purple);
+        }
+
+        .drag-drop-area i {
+            font-size: 3rem;
+            color: var(--accent-purple);
+            margin-bottom: 16px;
+        }
+
+        .drag-drop-area p {
+            font-size: 1.2rem;
+            color: #fff;
+            font-weight: 700;
+        }
+
+    </style>
+
+<style id="omni-genre-css">
+.audio-tab-btn.active{border-color:#7f00ff!important;color:#fff!important;box-shadow:0 0 18px rgba(127,0,255,.35)!important;background:rgba(127,0,255,.12)!important}
+.audio-tab-btn{outline:none}
+.audio-tab-btn:focus-visible{box-shadow:0 0 0 3px rgba(127,0,255,.5)!important}
+</style>
+</head>
+
+<body>
+
+    <!-- ==================== TOP ANNOUNCEMENT BAR ==================== -->
+    <a href="#pricing-section" class="top-announcement-bar" id="top-announcement-bar"
+        title="Obtener licencia de Omni">
+        <div class="top-announcement-content">
+            <span class="top-announcement-text">🚀 Obtén tu <strong>licencia de por vida</strong> de Omni</span>
+            <span class="top-announcement-arrow" aria-hidden="true">
+                <i class="bi bi-arrow-right"></i>
+            </span>
+        </div>
+    </a>
+
+    <!-- ==================== FIXED STICKY NAVBAR ==================== -->
+    <header class="em-navbar" id="em-navbar">
+        <div class="em-nav-inner">
+            <!-- 1. Logo OFFSZN -->
+            <a href="/" class="em-nav-brand" title="Ir al inicio de OFFSZN">
+                <img src="/images/LOGO OFFSZN.webp" alt="OFFSZN Logo" width="110" height="25" class="em-nav-logo-img">
+                <span class="em-nav-badge">OMNI</span>
+            </a>
+
+            <!-- 2. Nav Links Segmented Control (Cómo Suena + Resultados) -->
+            <nav class="em-nav-menu" aria-label="Navegación de secciones">
+                <a href="#audio-comparison" class="em-nav-link active" id="nav-link-suena">Cómo Suena</a>
+            </nav>
+
+            <!-- 3. Action Button (Descargar plugin) -->
+            <div class="em-nav-actions">
+                <a href="#serial-section" class="em-nav-btn-cta">
+                    <i class="bi bi-download"></i>
+                    <span>Descargar plugin</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="plugin-landing">
+
+        <!-- HERO SECTION -->
+        <section class="hero-section" style="padding: 100px 0 80px; text-align: left; overflow: visible;">
+            <div class="hero-bg-layer" id="hero-bg-layer" style="background: #0a0a0a; z-index: -1;"></div>
+            <div class="container" style="display: flex; align-items: center; justify-content: space-between; gap: 40px; position: relative; z-index: 2;">
+                
+                <div class="hero-text-content" style="flex: 1; max-width: 600px; display: flex; flex-direction: column; align-items: flex-start;">
+                    <div class="hero-tag" style="font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; color: #a1a1aa; text-transform: uppercase; margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
+                        <span style="width: 24px; height: 1px; background: #a1a1aa;"></span> Made by SVNDVLPHON
+                    </div>
+                    
+                    <h1 class="hero-title" style="font-size: clamp(3rem, 5vw, 5rem); font-weight: 900; line-height: 1.05; margin-bottom: 20px; letter-spacing: -1px; text-transform: uppercase; background: linear-gradient(180deg, #FFFFFF 0%, #A1A1AA 50%, #52525b 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0px 4px 20px rgba(255,255,255,0.05);">
+                        EL TODO EN UNO<br>DEFINITIVO
+                    </h1>
+                    
+                    <p class="hero-subtitle" style="font-size: 1.1rem; color: #a1a1aa; max-width: 500px; margin: 0 0 40px 0; line-height: 1.6; font-weight: 500;">
+                        Controla Espectro, Volumen, Claridad, Pegada, Espacio y Calidez en un solo plugin. Cambia entre Modo Beat y Modo Master para adaptar la cadena a tus necesidades.
+                    </p>
+                    
+                    <a href="#pricing-section" class="btn-free-download" style="background: linear-gradient(180deg, #e4e4e7 0%, #a1a1aa 100%); color: #0a0a0a; padding: 18px 42px; border-radius: 100px; font-weight: 900; font-size: 1.05rem; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,0.8); box-shadow: 0 10px 30px rgba(255,255,255,0.1), inset 0 2px 4px rgba(255,255,255,0.9); text-transform: uppercase;">
+                        ADQUIRIR LICENCIA
+                    </a>
+                </div>
+
+                <div class="hero-image-container" style="flex: 1; position: relative; display: flex; justify-content: flex-end; perspective: 1000px;">
+                    <img src="/plugins/omni-hero.webp" alt="Omni VST" class="hero-mockup" style="width: 100%; max-width: 600px; height: auto; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: -20px 20px 60px rgba(0, 0, 0, 0.9), inset 0 2px 10px rgba(255,255,255,0.05); transform: rotateY(-12deg) rotateX(4deg); transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer;" onmouseover="this.style.transform='rotateY(-5deg) rotateX(2deg) scale(1.02)'" onmouseout="this.style.transform='rotateY(-12deg) rotateX(4deg) scale(1)'" loading="eager">
+                </div>
+                
+            </div>
+            
+            <!-- Logos Row -->
+            <div class="hero-logos-row" style="margin-top: 80px; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); padding: 30px 0; background: #0a0a0a;">
+                <div class="container" style="display: flex; justify-content: center; gap: 60px; align-items: center; flex-wrap: wrap; opacity: 0.5; filter: grayscale(100%);">
+                    <span style="font-weight: 800; font-size: 1.2rem; color: #fff; letter-spacing: -0.5px;"><i class="bi bi-music-note-beamed"></i> FL Studio</span>
+                    <span style="font-weight: 800; font-size: 1.2rem; color: #fff; letter-spacing: -0.5px;"><i class="bi bi-vinyl"></i> Ableton Live</span>
+                    <span style="font-weight: 800; font-size: 1.2rem; color: #fff; letter-spacing: -0.5px;"><i class="bi bi-mic-fill"></i> Cubase</span>
+                    <span style="font-weight: 800; font-size: 1.2rem; color: #fff; letter-spacing: -0.5px;"><i class="bi bi-speaker"></i> Studio One</span>
+                </div>
+            </div>
+        </section>
+<!-- ==================== OMNI INTERACTIVO: UI OFICIAL DEL PLUGIN ==================== -->
+<section id="omni-demo" class="omx-section">
+<style>
+.omx-section{background:#050508;padding:90px 0 80px;position:relative;overflow:hidden}
+.omx-section::before{content:"";position:absolute;left:50%;top:50%;width:900px;height:600px;transform:translate(-50%,-50%);background:radial-gradient(closest-side,rgba(157,44,240,.22),transparent 70%);filter:blur(30px);pointer-events:none;animation:omGlow 6s ease-in-out infinite}
+.omx-wrap{max-width:1040px;margin:0 auto;padding:0 20px;position:relative}
+.omx-head{text-align:center;margin-bottom:34px}
+.omx-badge{display:inline-flex;gap:8px;align-items:center;font-size:.7rem;font-weight:700;letter-spacing:2px;color:#c9a6ff;border:1px solid rgba(157,44,240,.4);padding:7px 14px;border-radius:100px;background:rgba(157,44,240,.08);text-transform:uppercase}
+.omx-badge i{width:7px;height:7px;border-radius:50%;background:#9d2cf0;box-shadow:0 0 10px #9d2cf0;animation:omGlow 1.6s infinite}
+.omx-head h2{font-size:clamp(2rem,4.6vw,3.4rem);font-weight:900;color:#fff;margin:16px 0 10px;letter-spacing:-1px}
+.omx-head p{color:#a1a1aa;max-width:640px;margin:0 auto;line-height:1.6}
+.omx-frame{position:relative;width:100%;aspect-ratio:960/670;border-radius:20px;overflow:hidden;border:1px solid rgba(157,44,240,.35);background:#000;box-shadow:0 40px 90px rgba(0,0,0,.7),0 0 70px rgba(157,44,240,.2)}
+.omx-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+.omx-hint{text-align:center;color:#6f6f78;font-size:.82rem;margin-top:16px}
+</style>
+<div class="omx-wrap">
+  <div class="omx-head em-reveal">
+    <span class="omx-badge"><i></i><span data-t="demo.badge">Demo interactiva</span></span>
+    <h2 data-t="demo.title">Pruébalo aquí mismo</h2>
+    <p data-t="demo.sub">Esta es la interfaz oficial de Omni. Mueve las perillas, cambia entre Modo Beat y Modo Master, elige presets y personaliza el skin.</p>
+  </div>
+  <div class="omx-frame em-reveal">
+    <iframe id="omniUiFrame" src="/plugins/omni-ui/index.html" title="Omni VST3" loading="lazy" allow="autoplay"></iframe>
+  </div>
+  <p class="omx-hint" data-t="demo.hint">Arrastra las perillas en vertical · doble clic para reiniciar · el botón de paleta cambia chasis, color e idioma</p>
+</div>
+</section>
+
+
+        <!-- WHAT IS OMNI? (GRID 3) -->
+        
+        <!-- ==================== AUDIO COMPARISON (TABS + WAVESURFER) ==================== -->
+        
+        <!-- ==================== 1. SECCIÓN A/B (ANTES VS DESPUÉS) ==================== -->
+        <section id="audio-comparison" class="section-wrapper" style="background: #050508; padding: 100px 0 60px; text-align: center;">
+            <div class="container" style="max-width: 900px;">
+                
+                <h2 style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 900; margin: 0 0 16px 0; color: #fff; letter-spacing: -1px;">Escucha el Antes y Después</h2>
+                <p class="subtitle" style="color: #a1a1aa; max-width: 700px; margin: 0 auto 40px auto; line-height: 1.6; font-size: 1.1rem;">
+                    Comprueba cómo Omni transforma una mezcla plana en un master con pegada comercial, brillo analógico y volumen competitivo.
+                </p>
+
+                
+<style>
+.abx{max-width:900px;margin:0 auto 36px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.abx-c{position:relative;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px 16px 12px;background:rgba(255,255,255,.02);overflow:hidden;transition:transform .5s cubic-bezier(.16,1,.3,1),border-color .4s,box-shadow .5s}
+.abx-c.after{border-color:rgba(168,85,247,.45);background:linear-gradient(180deg,rgba(168,85,247,.10),rgba(255,255,255,.02));box-shadow:0 0 40px rgba(168,85,247,.15)}
+.abx-c:hover{transform:translateY(-4px)}
+.abx-t{display:flex;justify-content:space-between;font-size:.7rem;font-weight:800;letter-spacing:2px;color:#8a8a93;margin-bottom:12px}
+.abx-c.after .abx-t{color:#c9a6ff}
+.abx-bars{display:flex;align-items:flex-end;gap:3px;height:90px}
+.abx-bars i{flex:1;border-radius:3px 3px 0 0;background:#3f3f46;height:var(--h);transform-origin:bottom;animation:abxBar var(--d) ease-in-out infinite alternate}
+.abx-c.after .abx-bars i{background:linear-gradient(180deg,#e9d5ff,#a855f7 55%,#6d28d9);box-shadow:0 0 10px rgba(168,85,247,.5)}
+.abx-lufs{margin-top:10px;font-size:.78rem;color:#a1a1aa;display:flex;justify-content:space-between}
+.abx-lufs b{color:#fff}
+@keyframes abxBar{from{transform:scaleY(.55)}to{transform:scaleY(1)}}
+.audio-glass-card{transition:box-shadow .6s,border-color .4s;position:relative}
+.audio-glass-card:hover{box-shadow:0 0 50px rgba(168,85,247,.22)}
+.ws-play-btn{transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .35s}
+.ws-play-btn:hover{transform:scale(1.12);box-shadow:0 0 24px rgba(168,85,247,.55)}
+.audio-tab-btn{transition:all .35s cubic-bezier(.16,1,.3,1)!important}
+.audio-tab-btn:hover{transform:translateY(-2px);color:#fff!important}
+@media(max-width:640px){.abx{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.abx-bars i{animation:none}}
+</style>
+<div class="abx em-reveal" id="abx">
+  <div class="abx-c"><div class="abx-t"><span>ANTES</span><span>SIN OMNI</span></div><div class="abx-bars" data-n="28" data-lvl=".38"></div><div class="abx-lufs"><span>Volumen</span><b id="abxB">-21.5 LUFS</b></div></div>
+  <div class="abx-c after"><div class="abx-t"><span>DESPUÉS</span><span>CON OMNI</span></div><div class="abx-bars" data-n="28" data-lvl=".85"></div><div class="abx-lufs"><span>Volumen</span><b id="abxA">-9.8 LUFS</b></div></div>
+</div>
+<script>
+(function(){document.querySelectorAll('#abx .abx-bars').forEach(function(w){var n=+w.dataset.n,l=+w.dataset.lvl;for(var i=0;i<n;i++){var u=i/(n-1),sh=.5+.5*Math.sin(u*Math.PI*1.1+.3)*(1-u*.35),h=Math.max(.12,Math.min(1,sh*l+Math.random()*.15*l)),e=document.createElement('i');e.style.setProperty('--h',(h*100).toFixed(0)+'%');e.style.setProperty('--d',(0.5+Math.random()*0.9).toFixed(2)+'s');e.style.animationDelay=(-Math.random()).toFixed(2)+'s';w.appendChild(e)}})})();
+</script>
+
+                <!-- 3 PILL BUTTONS (GENRES) -->
+                <div class="audio-tabs" style="display: flex; justify-content: center; gap: 16px; margin-bottom: 40px; flex-wrap: wrap;">
+                    <button class="audio-tab-btn" data-genre="trap" type="button" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 12px 28px; border-radius: 100px; font-weight: 600; cursor: pointer;">
+                        Trap
+                    </button>
+                    <button class="audio-tab-btn active" data-genre="reggaeton" type="button" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 12px 28px; border-radius: 100px; font-weight: 600; cursor: pointer;">
+                        Reggaeton
+                    </button>
+                    <button class="audio-tab-btn" data-genre="boombap" type="button" style="background: transparent; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 12px 28px; border-radius: 100px; font-weight: 600; cursor: pointer;">
+                        Boom bap
+                    </button>
+                </div>
+
+                <!-- SINGLE PLAYER CARD -->
+                <div class="audio-glass-card" data-card-id="omni-demo-card-reggaeton">
+                    <!-- PISTA ANTES (OMNI OFF) -->
+                    <div class="ws-track-row" data-track-id="omni-off">
+                        <button type="button" class="ws-play-btn" aria-label="Reproducir Antes (Omni OFF)">
+                            <i class="bi bi-play-fill"></i>
+                        </button>
+                        <div class="ws-waveform-wrap" data-audio-src="/plugins/omni-antes.mp3"></div>
+                    </div>
+                    <div class="ws-track-caption">
+                        <span class="ws-tag-before">ANTES:</span>
+                        <span class="ws-track-name">Sin Omni</span>
+                    </div>
+
+                    <!-- PISTA DESPUÉS (OMNI ON) -->
+                    <div class="ws-track-row" data-track-id="omni-on">
+                        <button type="button" class="ws-play-btn" aria-label="Reproducir Después (Omni ON)">
+                            <i class="bi bi-play-fill"></i>
+                        </button>
+                        <div class="ws-waveform-wrap" data-audio-src="/plugins/omni-despues.mp3"></div>
+                    </div>
+                    <div class="ws-track-caption">
+                        <span class="ws-tag-after" style="color: #7f00ff;">DESPUÉS:</span>
+                        <span class="ws-track-name">Con Omni</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==================== 2. SECCIÓN BENTO GRID (¿QUÉ ES OMNI?) ==================== -->
+        <section id="what-is-omni" class="section-wrapper" style="background: #050508; padding: 60px 0 80px;">
+            <div class="container">
+                <div class="pill-tag" style="background: #111; border: 1px solid rgba(255,255,255,0.1); color: #888; padding: 6px 16px; border-radius: 99px; font-size: 0.75rem; font-weight: 800; letter-spacing: 2px; margin-bottom: 24px;"><i class="bi bi-grid-fill"></i> ¿QUÉ ES OMNI?</div>
+                
+                <div class="bento-grid">
+                    <!-- Tarjeta 1 -->
+                    <div class="bento-card">
+                        <i class="bi bi-box-seam" style="font-size: 2.5rem; color: #7f00ff; margin-bottom: 24px; display: inline-block;"></i>
+                        <h3>El Todo-en-Uno Definitivo</h3>
+                        <p>Un ecosistema de masterización que reemplaza cadenas infinitas de plugins. Combina EQ dinámica, compresión y saturación bajo una interfaz simple.</p>
+                    </div>
+                    <!-- Tarjeta 2 -->
+                    <div class="bento-card">
+                        <i class="bi bi-sliders" style="font-size: 2.5rem; color: #7f00ff; margin-bottom: 24px; display: inline-block;"></i>
+                        <h3>Modo Beat y Modo Master</h3>
+                        <p>Modo Beat es para productores que hacen beats, en lugar de usar una cadena de master. Modo Master reemplaza tu master. Y Reference Match jala el master de una canción ya hecha.</p>
+                    </div>
+                    <!-- Tarjeta 3 -->
+                    <div class="bento-card">
+                        <i class="bi bi-robot" style="font-size: 2.5rem; color: #7f00ff; margin-bottom: 24px; display: inline-block;"></i>
+                        <h3>Tu Ingeniero Personal</h3>
+                        <p>Un sistema DSP puro que analiza archivos de audio para extraer su curva de EQ y volumen, automatizando los parámetros por ti.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 3. SECCIÓN HERO SECUNDARIA (REFERENCE MATCH) ==================== -->
+        <section class="reference-match-section">
+            <div class="container">
+                <div class="neon-badge">LA TRAMPA LEGAL DE LA INDUSTRIA</div>
+                <h2 class="reference-title">El Copiador de Masters Definitivo.</h2>
+                <p class="reference-subtitle">¿Tu mezcla no suena como la de tus artistas favoritos? Róbales el sonido.</p>
+                <p class="reference-desc">Reference Match extrae la huella acústica de cualquier canción comercial. Arrastra tu pista de referencia a la interfaz y observa cómo Omni mueve sus perillas automáticamente para imitar ese volumen, pegada y brillo.</p>
+
+                <style id="rm-css">
+.rm-video{max-width:920px;margin:46px auto 0;text-align:left}
+.rm-stage{position:relative;aspect-ratio:16/10;border-radius:20px;overflow:hidden;border:1px solid rgba(168,85,247,.35);background:#050508;box-shadow:0 40px 90px rgba(0,0,0,.7),0 0 70px rgba(157,44,240,.18);container-type:inline-size;font-size:1.55cqw;color:#fff;font-family:'Geist',system-ui,sans-serif;user-select:none;-webkit-user-select:none}
+.rm-bg{position:absolute;inset:-4%;background:url(/plugins/omni-hero.webp) center/cover no-repeat;filter:blur(7px) brightness(.38) saturate(.9);transform:scale(1.05)}
+.rm-bg::after{content:"";position:absolute;inset:0;background:radial-gradient(closest-side,transparent 40%,rgba(0,0,0,.6))}
+.rm-layer{position:absolute;inset:0;display:grid;place-items:center;opacity:0;pointer-events:none;padding:1.6em 0}
+.rm-file{position:absolute;left:50%;top:50%;display:flex;align-items:center;gap:.8em;padding:.9em 1.3em;border-radius:1em;background:#17171b;border:1px solid rgba(168,85,247,.55);box-shadow:0 1.2em 3em rgba(0,0,0,.6),0 0 2em rgba(168,85,247,.35);font-weight:700;font-size:1.1em;white-space:nowrap;opacity:0}
+.rm-file i{font-size:1.6em;color:#b026ff}
+.rm-file small{display:block;font-weight:500;color:#8a8a93;font-size:.75em;margin-top:.15em}
+.rm-drop{position:absolute;inset:7%;border:.18em dashed rgba(168,85,247,.55);border-radius:1.2em;display:grid;place-items:center;color:#c9a6ff;font-weight:700;letter-spacing:.08em;font-size:1em;opacity:0}
+.rm-modal{width:62%;background:#141417;border:1px solid rgba(255,255,255,.1);border-radius:1.3em;padding:1.2em 1.6em;box-shadow:0 2em 5em rgba(0,0,0,.7)}
+.rm-modal h4{margin:0;font-size:1.25em;font-weight:800;letter-spacing:.03em;color:#fff}
+.rm-sub{color:#a1a1aa;font-size:.95em;margin:.7em 0 1em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm-viz{height:8em;border-radius:.9em;background:#08080a;border:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-around;padding:0 1.4em}
+.rm-viz b{position:relative;width:.2em;border-radius:1em;background:linear-gradient(#e9d5ff,#a855f7);box-shadow:0 0 .9em rgba(168,85,247,.8);display:block;transition:height .12s linear}
+.rm-steps{display:flex;justify-content:space-between;margin:1.1em 0 .9em;font-size:.78em;font-weight:800;letter-spacing:.08em;color:#52525b}
+.rm-steps span{display:flex;align-items:center;gap:.55em;transition:color .3s}
+.rm-steps span::before{content:"";width:.7em;height:.7em;border-radius:50%;background:#3a3a42;transition:all .3s}
+.rm-steps span.on{color:#fff}.rm-steps span.on::before{background:#b026ff;box-shadow:0 0 .9em #b026ff}
+.rm-steps span.done{color:#a1a1aa}.rm-steps span.done::before{background:#7c3aed}
+.rm-pbar{height:.75em;border-radius:1em;background:#26262c;overflow:hidden}
+.rm-pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c3aed,#b026ff);border-radius:1em;box-shadow:0 0 1em rgba(176,38,255,.6)}
+.rm-stat{display:flex;justify-content:space-between;color:#a1a1aa;font-size:.9em;margin:.9em 0 1em}
+.rm-stat b{color:#fff;font-weight:600}
+.rm-foot{border-top:1px solid rgba(255,255,255,.08);padding-top:.7em;display:flex;justify-content:flex-end;gap:.8em}
+.rm-btn{padding:.7em 1.5em;border-radius:.7em;font-weight:800;font-size:.95em;border:1px solid rgba(255,255,255,.12);background:#1c1c21;color:#cfcfd6}
+.rm-btn.p{background:#b026ff;border-color:#b026ff;color:#fff;transition:transform .2s,box-shadow .3s}
+.rm-btn.p.hit{transform:scale(.94);box-shadow:0 0 2.2em rgba(176,38,255,.9)}
+.rm-res{width:78%}
+.rm-res .hd{display:flex;justify-content:space-between;align-items:baseline}
+.rm-res .hd span{color:#8a8a93;font-size:.85em}
+.rm-res canvas{display:block;width:100%;height:6em;border-radius:.8em;background:#0b0b0e;border:1px solid rgba(255,255,255,.05);margin:.7em 0}
+.rm-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:.7em;margin-bottom:.8em}
+.rm-cards div{background:#1a1a1e;border:1px solid rgba(255,255,255,.06);border-radius:.7em;padding:.45em .7em}
+.rm-cards small{display:block;color:#8a8a93;font-size:.68em;font-weight:800;letter-spacing:.08em}
+.rm-cards b{font-size:1.15em;font-weight:800}
+.rm-cards b em{font-style:normal;font-size:.6em;color:#8a8a93;margin-left:.3em}
+.rm-adj{display:grid;grid-template-columns:1fr 1fr;gap:.2em 2.2em;margin:.4em 0 .6em}
+.rm-adj div{display:flex;align-items:center;gap:.7em;font-size:.8em;color:#d4d4d8}
+.rm-adj em{flex:0 0 5.2em;font-style:normal}
+.rm-adj span{flex:1;height:.4em;border-radius:1em;background:#26262c;overflow:hidden}
+.rm-adj i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c3aed,#b026ff)}
+.rm-adj b{flex:0 0 2.6em;text-align:right;font-weight:800;color:#fff}
+.rm-adj u{text-decoration:none;color:#8a8a93;font-size:.7em;margin-left:.2em}
+.rm-plug{width:90%}
+.rm-plug .lab{font-size:.72em;font-weight:800;letter-spacing:.06em;color:#d4d4d8;margin-bottom:.6em;display:flex;align-items:center;gap:.7em}
+.rm-plug .lab s{display:inline-block;width:2.4em;border-top:.16em dashed #fff;opacity:.8}
+.rm-plug canvas{display:block;width:100%;height:15em;background:#000;border-radius:.9em;border:1px solid rgba(168,85,247,.5);box-shadow:0 0 2.4em rgba(168,85,247,.35)}
+.rm-badge{position:absolute;right:3%;top:5%;font-size:.8em;font-weight:800;letter-spacing:.08em;padding:.55em 1em;border-radius:100px;background:rgba(168,85,247,.18);border:1px solid rgba(168,85,247,.6);color:#e9d5ff;opacity:0;transition:opacity .4s}
+.rm-cap{margin-top:14px;font-size:1.05rem;font-weight:700;text-align:center;color:#fff;min-height:1.5em}
+.rm-ctl{display:flex;align-items:center;gap:14px;margin-top:14px}
+.rm-play{width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#fff;cursor:pointer;display:grid;place-items:center;font-size:1.1rem;flex:0 0 auto;transition:all .3s cubic-bezier(.16,1,.3,1)}
+.rm-play:hover{background:#a855f7;border-color:#a855f7;transform:scale(1.08)}
+.rm-track{flex:1;position:relative;height:30px;cursor:pointer;display:flex;align-items:center}
+.rm-track::before{content:"";position:absolute;left:0;right:0;height:5px;border-radius:5px;background:rgba(255,255,255,.12)}
+.rm-fill{position:absolute;left:0;height:5px;border-radius:5px;background:linear-gradient(90deg,#7c3aed,#c084fc);width:0}
+.rm-chap{position:absolute;top:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:#2a2a30;border:2px solid #52525b;transition:all .3s}
+.rm-chap.on{background:#a855f7;border-color:#e9d5ff;box-shadow:0 0 12px #a855f7}
+.rm-time{font-size:.8rem;color:#a1a1aa;font-variant-numeric:tabular-nums;min-width:74px;text-align:right}
+@media (max-width:700px){.rm-stage{font-size:2.3cqw;aspect-ratio:4/4.4}.rm-modal{width:92%}.rm-res{width:94%}.rm-cards{grid-template-columns:repeat(4,1fr)}.rm-cards b{font-size:1em}.rm-adj em{flex-basis:4.4em}}
+</style>
+<div class="rm-video" id="rmVideo" aria-label="Reference Match demo">
+  <div class="rm-stage" id="rmStage">
+    <div class="rm-bg"></div>
+    <div class="rm-drop" id="rmDrop"><span id="rmDropT">SUELTA TU CANCIÓN AQUÍ</span></div>
+    <div class="rm-file" id="rmFile"><i class="bi bi-file-earmark-music-fill"></i><div><span id="rmFileN">Canción de referencia.mp3</span><small>320 kbps · 4:23</small></div></div>
+    <div class="rm-layer" id="rmL1"><div class="rm-modal">
+      <h4 id="rmT1">ANALIZANDO REFERENCIA</h4>
+      <div class="rm-sub" id="rmS1">Elige el archivo…</div>
+      <div class="rm-viz" id="rmViz"></div>
+      <div class="rm-steps" id="rmSteps"><span>AUDIO</span><span>LUFS</span><span>PICOS</span><span>ESPECTRO</span><span>AJUSTES</span></div>
+      <div class="rm-pbar"><i id="rmBar"></i></div>
+      <div class="rm-stat"><b id="rmMsg">Esperando el archivo…</b><b id="rmPct">0%</b></div>
+      <div class="rm-foot"><span class="rm-btn" id="rmCancel">Cancelar</span></div>
+    </div></div>
+    <div class="rm-layer" id="rmL2"><div class="rm-modal rm-res">
+      <div class="hd"><h4>REFERENCE MATCH</h4><span id="rmMeta">4:23 · 44.1 kHz · estéreo</span></div>
+      <div class="rm-sub" style="margin:.5em 0 0" id="rmS2">Canción de referencia.mp3</div>
+      <canvas id="rmCv"></canvas>
+      <div class="rm-cards">
+        <div><small id="rmK1">SONORIDAD</small><b><span id="rmV1">-9.1</span><em>LUFS</em></b></div>
+        <div><small id="rmK2">CRESTA</small><b><span id="rmV2">13.3</span><em>dB</em></b></div>
+        <div><small id="rmK3">ANCHO</small><b><span id="rmV3">11</span><em>%</em></b></div>
+        <div><small id="rmK4">BALANCE</small><b style="font-size:.8em"><span id="rmV4">Sub +14.3 · Aire -21.8 dB</span></b></div>
+      </div>
+      <div class="rm-sub" style="margin:0;font-size:.82em" id="rmAdjT">AJUSTES PROPUESTOS</div>
+      <div class="rm-adj" id="rmAdj"></div>
+      <div class="rm-foot"><span class="rm-btn" id="rmB1">Cancelar</span><span class="rm-btn p" id="rmB2">Aplicar estimación</span></div>
+    </div></div>
+    <div class="rm-layer" id="rmL3"><div class="rm-plug">
+      <div class="lab"><s></s><span id="rmRef">REFERENCIA: Canción de referencia.mp3</span></div>
+      <canvas id="rmCv2"></canvas>
+    </div></div>
+    <div class="rm-badge" id="rmBadge">✓ ESTIMACIÓN APLICADA</div>
+  </div>
+  <div class="rm-cap" id="rmCap"></div>
+  <div class="rm-ctl">
+    <button class="rm-play" id="rmPlay" type="button" aria-label="Play/Pause"><i class="bi bi-pause-fill"></i></button>
+    <div class="rm-track" id="rmTrack"><div class="rm-fill" id="rmFill"></div></div>
+    <div class="rm-time" id="rmTime">0:00 / 0:20</div>
+  </div>
+</div>
+<script id="rm-js">
+(function(){
+  var root=document.getElementById('rmVideo');if(!root)return;
+  var $=function(i){return document.getElementById(i)};
+  var T=20,t=0,paused=false,vis=true,last=0,lastLang='',reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var L={
+    es:{drop:'SUELTA TU CANCIÓN AQUÍ',file:'Canción de referencia.mp3',t1:'ANALIZANDO REFERENCIA',choose:'Elige el archivo…',wait:'Esperando el archivo…',cancel:'Cancelar',
+      steps:['AUDIO','LUFS','PICOS','ESPECTRO','AJUSTES'],msgs:['Leyendo el audio…','Midiendo sonoridad (LUFS)…','Detectando picos…','Analizando espectro…','Calculando ajustes…'],
+      meta:'4:23 · 44.1 kHz · estéreo',k:['SONORIDAD','CRESTA','ANCHO','BALANCE'],bal:'Sub +14.3 · Aire -21.8 dB',adj:'AJUSTES PROPUESTOS',apply:'Aplicar estimación',ref:'REFERENCIA: Canción de referencia.mp3',badge:'✓ ESTIMACIÓN APLICADA',
+      caps:['1 · Arrastra tu canción de referencia','2 · Omni analiza volumen, picos y espectro','3 · Te propone los ajustes de cada perilla','4 · Aplica la estimación y tu mezcla se acerca a la referencia'],
+      names:['Volumen','Pegada','Calidez','Brillo','Transitorios','Ancho','Techo','Claridad','Espacio','Sub','Comp. glue','Armónicos','Maximizador']},
+    en:{drop:'DROP YOUR SONG HERE',file:'Reference song.mp3',t1:'ANALYZING REFERENCE',choose:'Choose the file…',wait:'Waiting for the file…',cancel:'Cancel',
+      steps:['AUDIO','LUFS','PEAKS','SPECTRUM','SETTINGS'],msgs:['Reading the audio…','Measuring loudness (LUFS)…','Detecting peaks…','Analyzing spectrum…','Calculating settings…'],
+      meta:'4:23 · 44.1 kHz · stereo',k:['LOUDNESS','CREST','WIDTH','BALANCE'],bal:'Sub +14.3 · Air -21.8 dB',adj:'PROPOSED SETTINGS',apply:'Apply estimate',ref:'REFERENCE: Reference song.mp3',badge:'✓ ESTIMATE APPLIED',
+      caps:['1 · Drop your reference song','2 · Omni analyzes loudness, peaks and spectrum','3 · It proposes the setting for every knob','4 · Apply the estimate and your mix moves toward the reference'],
+      names:['Loudness','Punch','Warmth','Air Shine','Transients','Stereo Width','Ceiling','Clarity','Space','Sub Weight','Glue Comp','Harmonics','Maximizer']}
+  };
+  var ADJ=[[64,1],[61,1],[53,1],[58,1],[66,1],[35,0],[95,1],[69,1],[30,0],[63,1],[56,1],[56,1],[61,1]];
+  var adjEls=[],i;
+  var adj=$('rmAdj');
+  for(i=0;i<ADJ.length;i++){var d=document.createElement('div');d.innerHTML='<em></em><span><i></i></span><b></b><u>'+(ADJ[i][1]?'▲':'▼')+'</u>';adj.appendChild(d);adjEls.push(d)}
+  var viz=$('rmViz'),bars=[];for(i=0;i<13;i++){var b=document.createElement('b');viz.appendChild(b);bars.push(b)}
+  var steps=$('rmSteps').children;
+  var tr=$('rmTrack'),chaps=[];
+  [0,2.4,9.2,15.2].forEach(function(x){var c=document.createElement('span');c.className='rm-chap';c.style.left=(x/T*100)+'%';tr.appendChild(c);chaps.push(c)});
+  function lang(){return (window.OMNI_PAGE_LANG&&window.OMNI_PAGE_LANG.get())||'es'}
+  function clamp(x,a,b){return Math.max(a,Math.min(b,x))}
+  function ease(x){x=clamp(x,0,1);return 1-Math.pow(1-x,3)}
+  function ramp(x,a,b){return clamp((x-a)/(b-a),0,1)}
+  function ref(u){return .62+.2*Math.exp(-Math.pow((u-.22)/.12,2))+.06*Math.sin(u*22)*(.6-u*.4)-.5*u*u*.9-.08*u+(u>.97?-.45*(u-.97)/.03:0)}
+  function live(u,m){
+    var flat=.34+.22*Math.exp(-Math.pow((u-.2)/.1,2))+.14*Math.exp(-Math.pow((u-.5)/.12,2))+.05*Math.exp(-Math.pow((u-.8)/.08,2))-.1*u;
+    return flat+(ref(u)-flat)*m;
+  }
+  function curve(cv,fn,prog,opt){
+    var dpr=Math.min(2,devicePixelRatio||1),w=cv.clientWidth,h=cv.clientHeight;
+    if(cv.width!==Math.round(w*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
+    var c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+    if(opt.clear)opt.clear(c,w,h);
+    var N=110,end=Math.floor(N*prog);
+    var pts=[];for(var k=0;k<=end;k++){var u=k/N;pts.push([u*w,h-clamp(fn(u),.02,1)*h*.9-h*.04])}
+    return {c:c,pts:pts,w:w,h:h};
+  }
+  function path(c,pts){c.beginPath();pts.forEach(function(p,k){k?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1])})}
+  function drawResult(p){
+    var o=curve($('rmCv'),ref,p,{clear:function(c,w,h){c.clearRect(0,0,w,h)}});
+    var c=o.c,pts=o.pts;if(pts.length<2)return;
+    var g=c.createLinearGradient(0,0,0,o.h);g.addColorStop(0,'rgba(168,85,247,.75)');g.addColorStop(1,'rgba(88,28,135,.25)');
+    c.beginPath();c.moveTo(pts[0][0],o.h);pts.forEach(function(q){c.lineTo(q[0],q[1])});c.lineTo(pts[pts.length-1][0],o.h);c.closePath();c.fillStyle=g;c.fill();
+    path(c,pts);c.strokeStyle='#c084fc';c.lineWidth=2;c.shadowColor='#a855f7';c.shadowBlur=8;c.stroke();c.shadowBlur=0;
+  }
+  function drawApplied(refP,match,now){
+    var cv=$('rmCv2');
+    var o=curve(cv,function(u){return live(u,match)+.015*Math.sin(u*40+now*3)*(.4+match)},1,{clear:function(c,w,h){c.fillStyle='#000';c.fillRect(0,0,w,h);
+      c.strokeStyle='rgba(255,255,255,.06)';c.fillStyle='#8a8a93';c.font=(h*.045)+'px Geist,sans-serif';c.textAlign='right';
+      ['+6','0','-6','-12','-24'].forEach(function(l,k){var y=h*.06+k*(h*.82/4);c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();c.fillText(l,w-6,y+4)})}});
+    var c=o.c,pts=o.pts;
+    var g=c.createLinearGradient(0,0,0,o.h);g.addColorStop(0,'rgba(168,85,247,.7)');g.addColorStop(1,'rgba(88,28,135,.1)');
+    c.beginPath();c.moveTo(0,o.h);pts.forEach(function(q){c.lineTo(q[0],q[1])});c.lineTo(o.w,o.h);c.closePath();c.fillStyle=g;c.fill();
+    path(c,pts);c.strokeStyle='#b026ff';c.lineWidth=2.4;c.shadowColor='#b026ff';c.shadowBlur=12;c.stroke();c.shadowBlur=0;
+    var r=curve(cv,ref,refP,{});
+    path(c,r.pts);c.setLineDash([7,6]);c.strokeStyle='rgba(255,255,255,.85)';c.lineWidth=1.6;c.stroke();c.setLineDash([]);
+  }
+  function show(el,a){el.style.opacity=a;el.style.visibility=a<=0.01?'hidden':'visible'}
+  function render(now){
+    var lg=lang(),S=L[lg];
+    if(lg!==lastLang){lastLang=lg;
+      $('rmDropT').textContent=S.drop;$('rmFileN').textContent=S.file;$('rmT1').textContent=S.t1;$('rmCancel').textContent=S.cancel;$('rmB1').textContent=S.cancel;
+      for(var k=0;k<5;k++)steps[k].textContent=S.steps[k];
+      $('rmMeta').textContent=S.meta;for(k=0;k<4;k++)$('rmK'+(k+1)).textContent=S.k[k];$('rmV4').textContent=S.bal;$('rmAdjT').textContent=S.adj;
+      $('rmB2').textContent=S.apply;$('rmRef').textContent=S.ref;$('rmBadge').textContent=S.badge;$('rmS2').textContent=S.file;
+      adjEls.forEach(function(d,j){d.children[0].textContent=S.names[j]});
+    }
+    var f=$('rmFile'),drop=$('rmDrop');
+    if(t<4.2){
+      var p=ease(t/2.0),out=ramp(t,2.4,3.4);
+      f.style.opacity=(t<.3?t/.3:1)*(1-out);
+      f.style.transform='translate(calc(-50% + '+((1-p)*26)+'cqw),calc(-50% + '+((1-p)*-16)+'cqw)) scale('+(1+.12*(1-p)-.1*out)+') rotate('+((1-p)*8)+'deg)';
+      drop.style.opacity=ramp(t,0,.5)*(1-ramp(t,2.2,2.8))*(.6+.4*Math.sin(now*4));
+    }else{f.style.opacity=0;drop.style.opacity=0}
+    var a1=ramp(t,2.4,3.0)*(1-ramp(t,9.2,9.7));
+    show($('rmL1'),a1);
+    $('rmL1').firstChild.style.transform='scale('+(.94+.06*ease(ramp(t,2.4,3.1)))+')';
+    var pr=ramp(t,4.2,9.0);
+    $('rmBar').style.width=(pr*100)+'%';
+    $('rmPct').textContent=Math.round(pr*100)+'%';
+    if(t<4.2){$('rmS1').textContent=S.choose;$('rmMsg').textContent=S.wait;for(var s2=0;s2<5;s2++)steps[s2].className=''}
+    else{$('rmS1').textContent=S.file;var si=Math.min(4,Math.floor(pr*5));$('rmMsg').textContent=S.msgs[si];
+      for(var s=0;s<5;s++)steps[s].className=s<si?'done':(s===si&&pr<1?'on':(pr>=1?'done':''))}
+    var act=t<4.2?.18:.35+.65*(.5+.5*Math.sin(pr*18));
+    bars.forEach(function(b,j){var u=j/12,e=Math.sin(now*3.2+j*.9)*.5+.5,h=(t<4.2?.2:.25+.75*e*(.4+.6*Math.sin(u*Math.PI)))*act;b.style.height=(h*7.5+.6)+'em'});
+    var a2=ramp(t,9.2,9.9)*(1-ramp(t,15.2,15.8));
+    show($('rmL2'),a2);
+    $('rmL2').firstChild.style.transform='scale('+(.95+.05*ease(ramp(t,9.2,10)))+')';
+    var q=ramp(t,9.6,14.0);
+    if(a2>0){
+      drawResult(ease(ramp(q,0,.45)));
+      var cnt=ease(ramp(q,.15,.6));
+      $('rmV1').textContent=(-30+(30-9.1)*cnt).toFixed(1);$('rmV2').textContent=(20-(20-13.3)*cnt).toFixed(1);$('rmV3').textContent=Math.round(40-(40-11)*cnt);
+      adjEls.forEach(function(d,j){var v=ADJ[j][0]*ease(ramp(q,.35+j*.025,.8+j*.02));d.children[1].firstChild.style.width=v+'%';d.children[2].textContent=Math.round(v)});
+      $('rmB2').classList.toggle('hit',t>14.4&&t<15.1);
+    }
+    var a3=ramp(t,15.4,16.0);
+    show($('rmL3'),a3);
+    if(a3>0)drawApplied(ease(ramp(t,15.6,17.4)),ease(ramp(t,16.8,19.0)),now);
+    $('rmBadge').style.opacity=t>15.4?1:0;
+    var ph=t<4.2?0:t<9.2?1:t<15.2?2:3;
+    $('rmCap').textContent=S.caps[ph];
+    chaps.forEach(function(c,j){c.classList.toggle('on',t>=[0,2.4,9.2,15.2][j])});
+    $('rmFill').style.width=(t/T*100)+'%';
+    var m=Math.floor(t);$('rmTime').textContent='0:'+(m<10?'0':'')+m+' / 0:20';
+  }
+  function frame(ts){
+    requestAnimationFrame(frame);
+    if(!vis)return;
+    var dt=Math.min(.1,(ts-last)/1000);last=ts;
+    if(!paused&&!reduce){t+=dt;if(t>=T)t=0}
+    render(ts/1000);
+  }
+  if(reduce)t=17;
+  $('rmPlay').onclick=function(){paused=!paused;this.firstChild.className=paused?'bi bi-play-fill':'bi bi-pause-fill'};
+  tr.addEventListener('click',function(e){var r=tr.getBoundingClientRect();t=clamp((e.clientX-r.left)/r.width,0,.999)*T});
+  if('IntersectionObserver' in window)new IntersectionObserver(function(en){vis=en[0].isIntersecting;if(vis)last=performance.now()},{threshold:.15}).observe(root);
+  requestAnimationFrame(frame);
+})();
+</script>
+
+            </div>
+        </section>
+
+        <!-- ==================== CÓMO SUENA (AUDIO + VIDEO INTEGRADO RESPONSIVE) ==================== -->
+
+        
+
+        <!-- WaveSurfer.js Engine -->
+        <script>
+            function toggleVideoMute(event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                const video = document.getElementById('demo-video');
+                const overlayText = document.getElementById('sound-overlay-text');
+                const overlayIcon = document.getElementById('sound-overlay-icon');
+                const overlay = document.getElementById('video-sound-overlay');
+
+                if (video) {
+                    if (video.muted) {
+                        video.muted = false;
+                        video.play().catch(e => console.log(e));
+                        if (overlayText) overlayText.innerText = 'SONIDO ACTIVO';
+                        if (overlayIcon) overlayIcon.className = 'bi bi-volume-up-fill';
+                        setTimeout(() => {
+                            if (overlay) overlay.style.opacity = '0';
+                        }, 2000);
+                    } else {
+                        video.muted = true;
+                        if (overlayText) overlayText.innerText = 'CLIC PARA SONIDO';
+                        if (overlayIcon) overlayIcon.className = 'bi bi-volume-mute-fill';
+                        if (overlay) overlay.style.opacity = '1';
+                    }
+                }
+            }
+
+            (function () {
+                // ── 1. Inject skeleton bars into every waveform wrap immediately ──
+                const BAR_COUNT = 60;
+                document.querySelectorAll('.ws-waveform-wrap').forEach(function (wrap) {
+                    var skel = document.createElement('div');
+                    skel.className = 'ws-skeleton';
+                    for (var i = 0; i < BAR_COUNT; i++) {
+                        var bar = document.createElement('div');
+                        bar.className = 'ws-skeleton-bar';
+                        var h = 18 + Math.round(Math.abs(Math.sin(i * 0.42 + 0.8)) * 30);
+                        bar.style.height = h + 'px';
+                        skel.appendChild(bar);
+                    }
+                    wrap.appendChild(skel);
+                });
+
+                // ── 2. Boot WaveSurfer ──
+                let wsInitialized = false;
+                const audioSection = document.getElementById('audio-comparison');
+                if (!audioSection) return;
+
+                function initWaveSurfer() {
+                    if (wsInitialized) return;
+                    wsInitialized = true;
+
+                    const wsScript = document.createElement('script');
+                    wsScript.src = '/libs/wavesurfer.min.js';
+                    wsScript.onload = function () {
+                        if (typeof WaveSurfer === 'undefined') return;
+
+                        const cards = document.querySelectorAll('.audio-glass-card');
+                        const tracks = [];
+                        window.__omniWsTracks = tracks;
+                        let currentlyPlaying = null;
+
+                        cards.forEach((card) => {
+                            const cardId = card.getAttribute('data-card-id');
+                            card.querySelectorAll('.ws-track-row').forEach((row) => {
+                                const playBtn = row.querySelector('.ws-play-btn');
+                                const waveWrap = row.querySelector('.ws-waveform-wrap');
+                                const audioSrc = waveWrap.getAttribute('data-audio-src');
+
+                                const ws = WaveSurfer.create({
+                                    container: waveWrap,
+                                    waveColor: 'rgba(255,255,255,0.45)',
+                                    progressColor: cardId === 'omni-demo-card-reggaeton' ? '#7f00ff' : '#f2379f',
+                                    cursorWidth: 0,
+                                    barWidth: 2,
+                                    barGap: 2,
+                                    barRadius: 2,
+                                    height: 48,
+                                    normalize: true,
+                                    url: audioSrc
+                                });
+
+                                ws.on('ready', () => {
+                                    waveWrap.classList.add('ws-loaded');
+                                });
+
+                                const trackObj = { cardId, playBtn, waveWrap, ws };
+                                tracks.push(trackObj);
+
+                                function setBtnState(isPlaying) {
+                                    const icon = playBtn.querySelector('i');
+                                    if (icon) icon.className = isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill';
+                                }
+
+                                function stopAllOtherTracks(exceptWs) {
+                                    tracks.forEach(t => {
+                                        if (t.ws !== exceptWs) {
+                                            if (t.ws.isPlaying()) t.ws.pause();
+                                            t.ws.seekTo(0);
+                                            const icon = t.playBtn.querySelector('i');
+                                            if (icon) icon.className = 'bi bi-play-fill';
+                                        }
+                                    });
+                                }
+
+                                function playTrack(seekTime = null) {
+                                    let transferTime = seekTime;
+                                    if (seekTime === null && currentlyPlaying && currentlyPlaying.cardId === cardId && currentlyPlaying.ws !== ws) {
+                                        transferTime = currentlyPlaying.ws.getCurrentTime();
+                                    }
+                                    stopAllOtherTracks(ws);
+                                    if (transferTime !== null && transferTime > 0) ws.setTime(transferTime);
+                                    ws.play()
+                                        .then(() => { setBtnState(true); currentlyPlaying = trackObj; })
+                                        .catch(err => { console.warn('Playback error:', err); setBtnState(false); currentlyPlaying = null; });
+                                }
+
+                                function pauseTrack() {
+                                    ws.pause(); setBtnState(false);
+                                    if (currentlyPlaying === trackObj) currentlyPlaying = null;
+                                }
+
+                                playBtn.addEventListener('click', (e) => {
+                                    e.stopPropagation();
+                                    ws.isPlaying() ? pauseTrack() : playTrack();
+                                });
+
+                                ws.on('interaction', () => {
+                                    stopAllOtherTracks(ws);
+                                    ws.play().then(() => { setBtnState(true); currentlyPlaying = trackObj; });
+                                });
+
+                                ws.on('finish', () => { ws.seekTo(0); setBtnState(false); if (currentlyPlaying === trackObj) currentlyPlaying = null; });
+                                ws.on('pause', () => { setBtnState(false); if (currentlyPlaying === trackObj) currentlyPlaying = null; });
+                            });
+                        });
+                    };
+                    document.head.appendChild(wsScript);
+                }
+
+                if ('IntersectionObserver' in window) {
+                    const wsObserver = new IntersectionObserver((entries, obs) => {
+                        if (entries[0].isIntersecting) { initWaveSurfer(); obs.disconnect(); }
+                    }, { rootMargin: '400px 0px 400px 0px', threshold: 0 });
+                    wsObserver.observe(audioSection);
+                }
+
+                setTimeout(initWaveSurfer, 1500);
+            })();
+        </script>
+
+        <!-- ==================== COMPATIBILITY SECTION (OFFICIAL DAWS GRID) ==================== -->
+        <section class="daw-showcase-section" id="compatibilidad-daws">
+            <div class="daw-container">
+                <h2 class="daw-section-title">DISPONIBLE EN TUS DAWS FAVORITOS</h2>
+
+                <!-- GRID LISTA -->
+                <div class="daw-grid-layout">
+                    <!-- 1. FL Studio -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/flstudio.png" alt="FL Studio">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">FL Studio</div>
+                            <div class="daw-grid-vendor">Image-Line</div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Ableton Live -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/ableton_icon.svg" alt="Ableton Live">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">Ableton Live</div>
+                            <div class="daw-grid-vendor">Ableton</div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Logic Pro -->
+                    <div class="daw-grid-card" style="opacity:.45">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/logic.png" alt="Logic Pro">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">Logic Pro</div>
+                            <div class="daw-grid-vendor">Apple · Próximamente</div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Pro Tools -->
+                    <div class="daw-grid-card" style="opacity:.45">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/protools.svg" alt="Pro Tools">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">Pro Tools</div>
+                            <div class="daw-grid-vendor">Avid Technology · Próximamente</div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Studio One -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/studioone_icon.svg" alt="Studio One">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">Studio One</div>
+                            <div class="daw-grid-vendor">PreSonus</div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Cockos REAPER -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/reaper.svg" alt="REAPER">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">REAPER</div>
+                            <div class="daw-grid-vendor">Cockos</div>
+                        </div>
+                    </div>
+
+                    <!-- 7. Steinberg Cubase -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/cubase_icon.svg" alt="Cubase">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">Cubase</div>
+                            <div class="daw-grid-vendor">Steinberg</div>
+                        </div>
+                    </div>
+
+                    <!-- 8. Apple GarageBand -->
+                    <div class="daw-grid-card" style="opacity:.45">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/garageband.png" alt="GarageBand">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">GarageBand</div>
+                            <div class="daw-grid-vendor">Apple · Próximamente</div>
+                        </div>
+                    </div>
+
+                    <!-- 9. Bitwig Studio -->
+                    <div class="daw-grid-card">
+                        <div class="daw-grid-icon-box">
+                            <img src="../images/daws/bitwig.svg" alt="Bitwig Studio">
+                        </div>
+                        <div class="daw-grid-info">
+                            <div class="daw-grid-title">Bitwig Studio</div>
+                            <div class="daw-grid-vendor">Bitwig</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SPECS BAR -->
+                <div class="daw-specs-bar">
+                    <div class="daw-spec-item">
+                        <i class="fa-brands fa-windows" style="color: #0078d4;"></i>
+                        <span><strong>Windows:</strong> VST3 (64 bits)</span>
+                    </div>
+                    <div class="daw-spec-divider"></div>
+                    <div class="daw-spec-item">
+                        <i class="fa-brands fa-apple" style="color: #ffffff;"></i>
+                        <span><strong>macOS:</strong> próximamente (AU / VST3)</span>
+                    </div>
+                    <div class="daw-spec-divider"></div>
+                    <div class="daw-spec-item">
+                        <i class="bi bi-lightning-charge-fill" style="color: #f2379f;"></i>
+                        <span><strong>LATENCIA:</strong> ~4 MS (COMPENSADA POR EL DAW)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TESTIMONIALS SECTION (CARRUSEL 2 LÍNEAS) ==================== -->
+        
+
+        <!-- Lightbox Overlay Component -->
+        <div id="lightbox-overlay" onclick="closeLightbox()"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 99999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; cursor: zoom-out;">
+            <img id="lightbox-img" src="" alt="Testimonio Zoom"
+                style="max-width: 90%; max-height: 85%; object-fit: contain; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 30px 70px rgba(0,0,0,0.9); transform: scale(0.92); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+            <button onclick="closeLightbox()"
+                style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 44px; height: 44px; color: #fff; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;"><i
+                    class="bi bi-x-lg"></i></button>
+        </div>
+
+        <script>
+            function openLightbox(src) {
+                const overlay = document.getElementById('lightbox-overlay');
+                const img = document.getElementById('lightbox-img');
+                if (overlay && img) {
+                    img.src = src;
+                    overlay.style.display = 'flex';
+                    overlay.offsetHeight;
+                    overlay.style.opacity = '1';
+                    img.style.transform = 'scale(1)';
+                }
+            }
+            function closeLightbox() {
+                const overlay = document.getElementById('lightbox-overlay');
+                const img = document.getElementById('lightbox-img');
+                if (overlay && img) {
+                    overlay.style.opacity = '0';
+                    img.style.transform = 'scale(0.92)';
+                    setTimeout(() => {
+                        overlay.style.display = 'none';
+                    }, 300);
+                }
+            }
+
+            /* ANIMACIÓN DE ESTRELLAS CÓSMICAS (TESTIMONIOS) */
+            (function () {
+                const canvas = document.getElementById('testimoniosStarsCanvas');
+                const section = document.getElementById('testimonios');
+                if (!canvas || !section) return;
+
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+
+                let width = 0;
+                let height = 0;
+                let dpr = 1;
+                let animationFrameId = null;
+                let isSectionVisible = true;
+                let stars = [];
+
+                const starColors = [
+                    '255, 255, 255',
+                    '255, 180, 230',
+                    '215, 232, 255',
+                    '242, 55, 159'
+                ];
+
+                function resize() {
+                    const rect = section.getBoundingClientRect();
+                    width = rect.width;
+                    height = rect.height;
+                    dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+                    canvas.width = Math.floor(width * dpr);
+                    canvas.height = Math.floor(height * dpr);
+                    canvas.style.width = width + 'px';
+                    canvas.style.height = height + 'px';
+
+                    ctx.scale(dpr, dpr);
+                    initStars();
+                }
+
+                function initStars() {
+                    stars = [];
+                    const count = Math.floor((width * height) / 8500);
+                    const finalCount = Math.max(50, Math.min(count, 150));
+
+                    for (let i = 0; i < finalCount; i++) {
+                        const isBeacon = Math.random() < 0.14;
+                        stars.push({
+                            x: Math.random() * width,
+                            y: Math.random() * height,
+                            radius: isBeacon ? (1.4 + Math.random() * 0.9) : (0.45 + Math.random() * 0.85),
+                            color: starColors[Math.floor(Math.random() * starColors.length)],
+                            baseAlpha: 0.25 + Math.random() * 0.55,
+                            twinkleSpeed: 0.0012 + Math.random() * 0.0028,
+                            twinklePhase: Math.random() * Math.PI * 2,
+                            isBeacon: isBeacon,
+                            vx: (Math.random() - 0.5) * 0.05,
+                            vy: -(0.035 + Math.random() * 0.075)
+                        });
+                    }
+                }
+
+                function animate(timestamp) {
+                    if (!isSectionVisible) return;
+                    animationFrameId = requestAnimationFrame(animate);
+
+                    ctx.clearRect(0, 0, width, height);
+
+                    for (let i = 0; i < stars.length; i++) {
+                        const s = stars[i];
+                        s.x += s.vx;
+                        s.y += s.vy;
+
+                        if (s.x < -10) s.x = width + 10;
+                        if (s.x > width + 10) s.x = -10;
+                        if (s.y < -10) s.y = height + 10;
+                        if (s.y > height + 10) s.y = -10;
+
+                        const twinkle = Math.sin(timestamp * s.twinkleSpeed + s.twinklePhase);
+                        const alpha = Math.max(0.12, Math.min(1, s.baseAlpha + twinkle * 0.35));
+
+                        ctx.beginPath();
+                        ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+
+                        if (s.isBeacon) {
+                            ctx.fillStyle = `rgba(${s.color}, ${alpha})`;
+                            ctx.shadowColor = `rgba(${s.color}, ${alpha * 0.75})`;
+                            ctx.shadowBlur = 6;
+                            ctx.fill();
+                            ctx.shadowBlur = 0;
+                        } else {
+                            ctx.fillStyle = `rgba(${s.color}, ${alpha})`;
+                            ctx.fill();
+                        }
+                    }
+                }
+
+                if ('IntersectionObserver' in window) {
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach((entry) => {
+                            if (entry.isIntersecting) {
+                                isSectionVisible = true;
+                                if (!animationFrameId) animationFrameId = requestAnimationFrame(animate);
+                            } else {
+                                isSectionVisible = false;
+                                if (animationFrameId) {
+                                    cancelAnimationFrame(animationFrameId);
+                                    animationFrameId = null;
+                                }
+                            }
+                        });
+                    }, { threshold: 0.05 });
+                    observer.observe(section);
+                } else {
+                    animationFrameId = requestAnimationFrame(animate);
+                }
+
+                if ('ResizeObserver' in window) {
+                    const ro = new ResizeObserver(() => resize());
+                    ro.observe(section);
+                } else {
+                    window.addEventListener('resize', resize, { passive: true });
+                }
+
+                resize();
+                animationFrameId = requestAnimationFrame(animate);
+            })();
+        </script>
+
+        <!-- ==================== SERIAL KEY SECTION ==================== -->
+        <section class="serial-section" id="serial-section">
+            <div class="container">
+                <h2 class="section-title">Descarga tu Plugin</h2>
+
+                <div class="serial-card" style="max-width: 800px; margin-bottom: 60px;">
+
+                    <!-- ESTADO 1: NO LOGUEADO (AUTH WALL) -->
+                    <div class="auth-wall" id="ui-auth-wall">
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.9rem; margin-bottom: 10px;">Crea tu cuenta o inicia sesión para descargar.</p>
+                        <a href="/pages/login.html?redirect=/plugins/omni" class="btn-auth"
+                            style="background: transparent; border: 1px solid #fff; color: #fff;">Crear Cuenta</a>
+                    </div>
+
+                    <!-- ESTADO 2: LOGUEADO Y LISTO -->
+                    <div class="serial-display" id="ui-serial-ready"
+                        style="display: none; flex-direction: column; align-items: center; gap: 20px; padding: 30px 20px;">
+                        <!-- BOTÓN DE DESCARGA -->
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%;">
+                            <a href="/downloads/Omni_Plugin_Setup.exe" download="Omni_Plugin_Setup.exe"
+                                class="btn-download" onclick="openDownloadModal()"
+                                style="display: inline-flex; align-items: center; gap: 8px;"><i
+                                    class="fa-brands fa-windows" style="color: #0078d4; font-size: 1.2rem;"></i>
+                                Descargar para Windows</a>
+                            <span class="btn-download" aria-disabled="true" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.45); cursor: not-allowed;"><i class="fa-brands fa-apple" style="font-size: 1.2rem;"></i> macOS: próximamente</span>
+                        </div>
+
+                        <!-- WhatsApp Help Link -->
+                        <div style="margin-top: 15px; font-size: 0.85rem; text-align: center;">
+                            <a href="https://wa.me/51993525005?text=Hola!%20Tengo%20problemas%20al%20instalar%20Omni%20Plugin"
+                                target="_blank" rel="noopener noreferrer"
+                                style="color: #f2379f; text-decoration: underline; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                                <i class="bi bi-whatsapp"></i> ¿Problemas de instalación? Contáctanos para ayudarte
+                            </a>
+                        </div>
+
+                        <!-- PANEL DE LICENCIA -->
+                        <div id="license-key-panel"
+                            style="display: none; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; margin-top: 10px;">
+                            <h3 style="margin:0 0 5px 0; font-size: 1.2rem;">Tu Licencia Actual</h3>
+                            <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 15px;">Pega esta clave dentro de Omni en tu DAW para validarlo.</p>
+                            <div class="serial-box" id="serial-key-text" title="Clic para copiar" onclick="copySerial()"
+                                style="border-color: #f2379f; color: #f2379f; max-width: 400px; margin: 0 auto;">
+                                Cargando...</div>
+                        </div>
+
+                        <!-- PANEL SIN LICENCIA: BOTÓN PARA GENERAR TRIAL -->
+                        <div id="no-license-panel"
+                            style="display: none; width: 100%; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 25px; margin-top: 10px; text-align: center;">
+                            <p style="color: rgba(255,255,255,0.55); font-size: 0.9rem; margin-bottom: 18px;">Aún no tienes ninguna licencia asociada a tu cuenta.</p>
+                            <button id="btn-generate-trial" onclick="generateTrialWeb()"
+                                style="background: linear-gradient(135deg, #f2379f 0%, #d81b80 100%); color: #ffffff; border: none; font-weight: 800; font-size: 0.95rem; padding: 12px 28px; border-radius: 100px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="bi bi-gift-fill"></i> Obtener Prueba Gratuita (3 Días)
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- ==================== COMPRAR LICENCIA (DOBLE COLUMNA DESKTOP) ==================== -->
+                <div class="pricing-double-layout" id="pricing-section">
+
+                    <!-- COLUMNA IZQUIERDA (TEXTO & CHECKS) -->
+                    <div class="pricing-text-col">
+                        <div class="pricing-header-area">
+                            <h2 class="pricing-headline">Obtener licencia de por vida de Omni</h2>
+                            <p class="pricing-subtext">
+                                Si ya lo probaste y te encantó, adquiere la licencia de por vida.
+                            </p>
+                        </div>
+
+                        <!-- Checks al estilo OFFSZN -->
+                        <div class="pricing-checks-area">
+                            <ul class="pricing-checks-list">
+                                <li class="pricing-check-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Pago Único — Sin mensualidades</span>
+                                </li>
+                                <li class="pricing-check-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>1 Computadora (Transferible)</span>
+                                </li>
+                                <li class="pricing-check-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Actualizaciones de por vida</span>
+                                </li>
+                                <li class="pricing-check-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>29 presets de beat por género y 5 de master</span>
+                                </li>
+                                <li class="pricing-check-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Serial Key por correo al instante</span>
+                                </li>
+                                <li class="pricing-check-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Soporte VIP 24/7</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA DERECHA (TARJETA DE PAGO) -->
+                    <div class="pricing-card-col">
+                        <div id="pricing-wall" class="pricing-card-inner">
+                            <div class="pricing-popular-badge">MÁS POPULAR</div>
+                            <h3 class="pricing-card-title">Licencia Full de Omni</h3>
+                            <p class="pricing-card-platform">Disponible en Windows (VST3 de 64 bits) · Mac próximamente</p>
+
+                            <div
+                                style="display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-bottom: 24px;">
+                                <span id="omni-original-price"
+                                    style="font-size: 1.3rem; text-decoration: line-through; color: rgba(255,255,255,0.3); font-weight: 500;">$25</span>
+                                <span id="omni-price-val"
+                                    style="font-size: 3rem; font-weight: 800; color: #fff;">$17</span>
+                                <span style="font-size: 1rem; color: #888;">único</span>
+                            </div>
+
+                            <!-- Direct PayPal Checkout -->
+                            <div id="plugin-paypal-button-container"
+                                style="margin-top: 0; min-height: 150px; width: 100%;"></div>
+
+                            <!-- Botón Mercado Pago -->
+                            <a href="https://wa.me/51993525005?text=Hola,%20quiero%20comprar%20el%20plugin%20Omni%20por%20Mercado%20Pago"
+                                target="_blank" rel="noopener noreferrer"
+                                style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #009EE3; color: #ffffff; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-top: 12px; margin-bottom: 12px; text-decoration: none; transition: opacity 0.2s ease;">
+                                <img src="/images/payments/mercadopago.png" alt="Mercado Pago"
+                                    style="width: 26px; height: 26px; object-fit: contain;">
+                                Pagar con Mercado Pago
+                            </a>
+
+                            <!-- Botón Yape (Modal Instantáneo) -->
+                            <button type="button" data-action="open-yape-checkout" id="btn-yape-checkout"
+                                class="btn-yape-white">
+                                <img src="/images/payments/yape.png" alt="Yape"
+                                    style="width: 22px; height: 22px; object-fit: contain; border-radius: 5px;">
+                                Pagar con Yape (Soles 🇵🇪)
+                            </button>
+
+                            <!-- Botón Binance -->
+                            <a href="https://wa.me/51993525005?text=Hola,%20quiero%20pagar%20con%20Binance%20el%20plugin%20Omni"
+                                target="_blank" rel="noopener noreferrer"
+                                style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #F0B90B; color: #000000; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-bottom: 0px; text-decoration: none; transition: opacity 0.2s ease;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                    fill="currentColor">
+                                    <path
+                                        d="M12 2L4.5 9.5L7.33 12.33L12 7.66L16.67 12.33L19.5 9.5L12 2ZM4.5 14.5L2 12L4.5 9.5L7.33 12.33L4.5 14.5ZM19.5 14.5L16.67 12.33L19.5 9.5L22 12L19.5 14.5ZM12 22L4.5 14.5L7.33 11.67L12 16.34L16.67 11.67L19.5 14.5L12 22ZM12 13.5L9.17 10.67L12 7.84L14.83 10.67L12 13.5Z" />
+                                </svg>
+                                Pagar con Binance
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ==================== FAQ SECTION ==================== -->
+        <section class="faq-section">
+            <div class="container">
+                <div class="faq-header">
+                    <div class="subtitle">SOPORTE</div>
+                    <h2>Preguntas</h2>
+                </div>
+                <div class="faq-container">
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Es compatible con mi DAW?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Sí, si tu DAW usa VST3 de 64 bits en Windows: FL Studio, Ableton Live, Cubase, Studio One, REAPER y Bitwig Studio. Logic Pro y GarageBand (que solo cargan AU) llegarán con la versión para Mac, y Pro Tools (que solo usa AAX) no está soportado por ahora.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Cómo obtengo mi licencia?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Al comprar la versión de por vida o activar tu prueba de 3 días, la licencia se vincula automáticamente a tu cuenta de OFFSZN. Podrás ver tu "Serial Key" aquí mismo y simplemente pegarla en Omni dentro de tu DAW la primera vez que lo abras.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Funciona en Mac y Windows?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Hoy Omni está disponible para Windows 10/11 (64 bits): plugin VST3 y versión independiente. La versión para macOS (VST3 y AU, Intel y Apple Silicon) está en desarrollo y se anunciará aquí cuando esté lista.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Puedo usarlo en más de un dispositivo?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Sí. Tu Serial Key personal te permite activar el plugin en hasta 2 computadoras simultáneamente (por ejemplo, tu PC de estudio y tu laptop para viajar).
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Tiene latencia para grabar en vivo?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Omni es un plugin de mastering: introduce unos 4 ms de latencia a 48 kHz (197 muestras), que tu DAW compensa automáticamente al mezclar y exportar. No está pensado para monitorear en vivo mientras grabas.
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question">
+                            ¿Por qué elegir el plugin Omni de OFFSZN para masterizar?
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            Omni simplifica el mastering al máximo. En lugar de lidiar con menús complejos y una cadena de varios plugins, Omni te entrega los controles esenciales con nombres claros y presets calibrados por género, con un sonido moderno, limpio e impactante para música urbana, trap, reggaeton, pop y más.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- TAGLINE (CTA FINAL) -->
+        <section class="tagline-section" style="padding: 70px 20px 30px; text-align: center; background: #0a0a0a;">
+            <div class="container" style="padding: 0 20px; max-width: 1060px; margin: 0 auto;">
+                <h2>Empieza Hoy con Omni.</h2>
+                <div style="margin: 28px 0 42px; display: flex; flex-direction: column; align-items: center; gap: 16px;">
+                    <a href="#serial-section" class="btn-free-download primary-large"><i class="bi bi-download"></i>
+                        Descargar Ahora</a>
+                </div>
+                <div class="em-reveal" style="max-width: 800px; margin: 0 auto;">
+                    <img src="/plugins/omni.png"
+                        alt="Omni - Diseñado para que escuches el resultado al instante"
+                        style="width: 100%; max-width: 720px; height: auto; border-radius: 18px; display: block; margin: 0 auto; box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 50px rgba(242, 55, 159, 0.2); border: 1px solid rgba(255,255,255,0.1);"
+                        loading="lazy">
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ==================== FOOTER ==================== -->
+    <div id="footer-placeholder"></div>
+
+    <!-- SCRIPTS -->
+    <script src="/script/id-obfuscator.js?v=1"></script>
+    <script src="/script/cart.js?v=21"></script>
+    <script src="/script/notifications.js?v=21"></script>
+    <script src="/script/footer.js?v=21"></script>
+
+    <!-- SERIAL KEY LOGIC -->
+    <script>
+        const UI_WALL = document.getElementById('ui-auth-wall');
+        const UI_READY = document.getElementById('ui-serial-ready');
+        const TEXT_SERIAL = document.getElementById('serial-key-text');
+        const BTN_GENERATE = document.getElementById('btn-generate-serial');
+
+        function copySerial() {
+            const text = TEXT_SERIAL.innerText;
+            if (text && text !== 'Cargando...' && text !== 'NO TIENES LICENCIA ACTIVA' && text !== 'GENERANDO...') {
+                navigator.clipboard.writeText(text);
+                const original = TEXT_SERIAL.innerText;
+                TEXT_SERIAL.innerText = '¡COPIADO!';
+                setTimeout(() => TEXT_SERIAL.innerText = original, 2000);
+            }
+        }
+
+        async function generateTrialWeb() {
+            const btn = document.getElementById('btn-generate-trial');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Generando...';
+            }
+
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) {
+                    alert('Por favor, inicia sesión para continuar.');
+                    window.location.href = '/pages/login.html?redirect=/plugins/omni';
+                    return;
+                }
+
+                const res = await fetch('/api/plugin/generate-trial-web', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({ plugin_name: 'Omni Plugin' })
+                });
+                const responseData = await res.json();
+
+                if (responseData && responseData.success && responseData.serial_key) {
+                    document.getElementById('no-license-panel').style.display = 'none';
+                    document.getElementById('license-key-panel').style.display = 'block';
+                    TEXT_SERIAL.innerText = responseData.serial_key;
+                } else {
+                    document.getElementById('license-key-panel').style.display = 'none';
+                    document.getElementById('no-license-panel').style.display = 'block';
+                    alert(responseData.error || 'Error al generar la prueba gratuita.');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-gift-fill"></i> Obtener Prueba Gratuita (3 Días)';
+                    }
+                }
+            } catch (err) {
+                console.error('Error generating trial:', err);
+                document.getElementById('license-key-panel').style.display = 'none';
+                document.getElementById('no-license-panel').style.display = 'block';
+                alert('Ocurrió un error al conectar con el servidor.');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-gift-fill"></i> Obtener Prueba Gratuita (3 Días)';
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            let retries = 0;
+            while (!window.supabaseClient && retries < 20) {
+                await new Promise(r => setTimeout(r, 200));
+                retries++;
+            }
+
+            if (!window.supabaseClient) {
+                console.warn('Supabase not loaded');
+                return;
+            }
+
+            const { data: { session } } = await window.supabaseClient.auth.getSession();
+
+            if (!session) {
+                UI_WALL.style.display = 'flex';
+                UI_READY.style.display = 'none';
+            } else {
+                UI_WALL.style.display = 'none';
+                UI_READY.style.display = 'flex';
+
+                const userId = session.user.id;
+
+                const { data, error } = await window.supabaseClient
+                    .from('plugin_licenses')
+                    .select('serial_key, status, license_type, expires_at')
+                    .eq('user_id', userId)
+                    .ilike('plugin_name', '%Omni%')
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (data && data.serial_key) {
+                    document.getElementById('license-key-panel').style.display = 'block';
+                    document.getElementById('no-license-panel').style.display = 'none';
+                    TEXT_SERIAL.innerText = data.serial_key;
+                } else {
+                    document.getElementById('license-key-panel').style.display = 'block';
+                    document.getElementById('no-license-panel').style.display = 'none';
+                    TEXT_SERIAL.innerText = 'Generando clave de prueba...';
+                    generateTrialWeb();
+                }
+            }
+        });
+    </script>
+
+    <!-- FAQ LOGIC -->
+    <script>
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const faqItem = button.parentElement;
+                const wasActive = faqItem.classList.contains('active');
+
+                document.querySelectorAll('.faq-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                if (!wasActive) {
+                    faqItem.classList.add('active');
+                }
+            });
+        });
+    </script>
+
+    <!-- WhatsApp Floating Widget with Bubble -->
+    <div class="whatsapp-widget-container" id="whatsapp-widget">
+        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20comprar%20el%20plugin%20Omni"
+            target="_blank" rel="noopener noreferrer" class="whatsapp-bubble-card" id="whatsapp-bubble-link"
+            aria-label="Envíanos un mensaje de WhatsApp">
+            <span>Envíanos un mensaje de<br>WhatsApp</span>
+            <button type="button" class="whatsapp-bubble-close"
+                onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('whatsapp-bubble-link').style.display='none';"
+                aria-label="Cerrar mensaje">&times;</button>
+        </a>
+        <a href="https://wa.me/51993525005?text=Hola,%20quiero%20comprar%20el%20plugin%20Omni"
+            target="_blank" rel="noopener noreferrer" class="whatsapp-floating-btn" id="whatsapp-floating-btn"
+            aria-label="Contactar por WhatsApp">
+            <i class="bi bi-whatsapp"></i>
+        </a>
+    </div>
+
+    <!-- MODAL DE LICENCIA AL DESCARGAR -->
+    <div id="download-license-modal" onclick="closeDownloadModal(event)"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 99999; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div onclick="event.stopPropagation()"
+            style="background: #0d0d0d; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; padding: 35px 28px; max-width: 500px; width: 92%; text-align: center; color: #fff; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9); position: relative; transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+
+            <button onclick="closeDownloadModal()"
+                style="position: absolute; top: 15px; right: 20px; font-size: 1.5rem; background: none; border: none; color: #888; cursor: pointer; transition: color 0.2s;"
+                onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">✕</button>
+
+            <div
+                style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px 20px;">
+                <h3 style="margin: 0 0 6px 0; font-size: 1.2rem; color: #ffffff; font-weight: 700;">Tu Licencia Actual
+                </h3>
+                <p style="color: rgba(255,255,255,0.55); font-size: 0.85rem; margin-bottom: 16px; line-height: 1.4;">
+                    Pega esta clave dentro de Omni en tu DAW para validarlo.
+                </p>
+                <div class="serial-box" id="modal-serial-key-text" title="Clic para copiar" onclick="copyModalSerial()"
+                    style="border-color: #f2379f; color: #f2379f; max-width: 400px; margin: 0 auto; padding: 14px 18px; border: 2px dashed #f2379f; border-radius: 12px; font-family: monospace; font-size: 1.25rem; font-weight: 800; letter-spacing: 2px; cursor: pointer; background: rgba(242,55,159,0.06); user-select: all;">
+                    Cargando...
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; font-size: 0.85rem; text-align: center;">
+                <a href="https://wa.me/51993525005?text=Hola!%20Tengo%20problemas%20al%20instalar%20Omni%20Plugin"
+                    target="_blank" rel="noopener noreferrer"
+                    style="color: #f2379f; text-decoration: underline; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                    <i class="bi bi-whatsapp"></i> ¿Problemas de instalación? Contáctanos para ayudarte
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function openDownloadModal() {
+            const mainSerial = document.getElementById('serial-key-text');
+            const modalSerial = document.getElementById('modal-serial-key-text');
+            if (mainSerial && modalSerial) {
+                modalSerial.innerText = mainSerial.innerText;
+            }
+            const modal = document.getElementById('download-license-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.style.opacity = '1';
+                    const card = modal.querySelector('div');
+                    if (card) card.style.transform = 'scale(1)';
+                }, 10);
+            }
+        }
+
+        function closeDownloadModal(e) {
+            if (e && e.target && e.target.id !== 'download-license-modal' && e.target.tagName !== 'BUTTON') {
+                return;
+            }
+            const modal = document.getElementById('download-license-modal');
+            if (modal) {
+                modal.style.opacity = '0';
+                const card = modal.querySelector('div');
+                if (card) card.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 300);
+            }
+        }
+
+        function copyModalSerial() {
+            const modalSerial = document.getElementById('modal-serial-key-text');
+            if (modalSerial) {
+                const text = modalSerial.innerText;
+                if (text && text !== 'Cargando...' && text !== 'NO TIENES LICENCIA ACTIVA' && text !== 'GENERANDO...') {
+                    navigator.clipboard.writeText(text);
+                    const original = text;
+                    modalSerial.innerText = '¡COPIADO!';
+                    setTimeout(() => modalSerial.innerText = original, 2000);
+                }
+            }
+        }
+    </script>
+
+    <!-- Direct Checkout Configuration and Loader with A/B Testing -->
+    <script src="/env.js"></script>
+    <script src="/script/meta-pixel.js"></script>
+    <script>
+        // ── REFERRAL TRACKING ENGINE ──
+        (function initReferrals() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const refParam = urlParams.get('ref') || urlParams.get('afiliado') || urlParams.get('r');
+                if (refParam) {
+                    const cleanRef = refParam.trim().toLowerCase();
+                    localStorage.setItem('offszn_ref', cleanRef);
+                    document.cookie = `offszn_ref=${cleanRef}; path=/; max-age=2592000; SameSite=Lax`;
+                    window.OFFSZN_AFFILIATE = cleanRef;
+                } else {
+                    const savedRef = localStorage.getItem('offszn_ref');
+                    if (savedRef) {
+                        window.OFFSZN_AFFILIATE = savedRef;
+                    }
+                }
+            } catch (e) {
+                console.warn('[Referrals] Error initializing referral tracking:', e);
+            }
+        })();
+
+        // ── A/B TESTING ENGINE: $17 vs $25 USD (IDÉNTICO A EASY MIX) ──
+        (function initABTesting() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
+            // A/B $17 vs $25 (50/50). Se asigna una vez por navegador y se mantiene
+            // ?price=17|25 fuerza una variante para pruebas.
+            const AB_KEY = 'offszn_ab_omni_17_25_v1';
+            const AB_TIERS = [17, 25];
+            const AB_ORIGINAL = { 17: 25, 25: 35 }; // precio tachado de cada variante (~30% de descuento)
+
+            let assignedPrice;
+            try {
+                const forced = parseInt(forcedPrice, 10);
+                const saved = parseInt(localStorage.getItem(AB_KEY), 10);
+                if (AB_TIERS.includes(forced)) {
+                    assignedPrice = forced;
+                } else if (AB_TIERS.includes(saved)) {
+                    assignedPrice = saved;
+                }
+                if (!assignedPrice) assignedPrice = Math.random() < 0.5 ? 17 : 25;
+                localStorage.setItem(AB_KEY, assignedPrice);
+            } catch (e) {
+                if (!assignedPrice) assignedPrice = Math.random() < 0.5 ? 17 : 25;
+            }
+
+            window.AB_VARIANT = 'price_' + assignedPrice;
+            window.AB_ORIGINAL_PRICE = AB_ORIGINAL[assignedPrice];
+            window.CURRENT_PROMO_PRICE = assignedPrice;
+            window.PLUGIN_ID = 5001;
+            window.PLUGIN_NAME = 'Omni Plugin';
+
+            // --- META PIXEL: VIEW CONTENT (DYNAMIC PROMO PRICE) ---
+            function dispatchViewContent() {
+                if (window.MetaPixel && typeof window.MetaPixel.trackViewContent === 'function') {
+                    window.MetaPixel.trackViewContent({
+                        content_ids: ['omni'],
+                        content_name: 'Omni Plugin',
+                        content_type: 'product',
+                        value: assignedPrice,
+                        currency: 'USD'
+                    });
+                }
+            }
+
+            if (window.MetaPixel) {
+                dispatchViewContent();
+            } else {
+                window.addEventListener('DOMContentLoaded', dispatchViewContent);
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const priceEl = document.getElementById('omni-price-val');
+                if (priceEl) priceEl.innerText = `$${assignedPrice}`;
+                const origEl = document.getElementById('omni-original-price');
+                if (origEl) origEl.innerText = `$${window.AB_ORIGINAL_PRICE}`;
+
+                const solesMap = { 17: 65, 25: 95 };
+                const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
+
+                const waLinks = document.querySelectorAll('a[href*="wa.me"]');
+                waLinks.forEach(link => {
+                    let currentHref = link.getAttribute('href');
+                    if (currentHref && currentHref.includes('text=')) {
+                        let parts = currentHref.split('text=');
+                        let rawDecoded = decodeURIComponent(parts[1]);
+                        let isHelp = rawDecoded.toLowerCase().includes('problema') || rawDecoded.toLowerCase().includes('instal') || rawDecoded.toLowerCase().includes('soporte');
+                        if (isHelp) return;
+
+                        let isYape = rawDecoded.toLowerCase().includes('yape') || link.innerText.toLowerCase().includes('yape');
+                        let isMp = rawDecoded.toLowerCase().includes('mercado') || link.innerText.toLowerCase().includes('mercado');
+                        let isBinance = rawDecoded.toLowerCase().includes('binance') || link.innerText.toLowerCase().includes('binance');
+
+                        if (isYape) {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero comprar el plugin Omni por Yape ($' + assignedPrice + ' USD / S/ ' + solesPrice + ' soles)')}`);
+                        } else if (isMp) {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola Willie, quiero comprar el plugin Omni por Mercado Pago ($' + assignedPrice + ' USD / S/ ' + solesPrice + ' soles)')}`);
+                        } else if (isBinance) {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero pagar con Binance el plugin Omni ($' + assignedPrice + ' USD)')}`);
+                        } else {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola Willie, quiero comprar el plugin Omni ($' + assignedPrice + ' USD / S/ ' + solesPrice + ' soles)')}`);
+                        }
+                    }
+                });
+            });
+        })();
+    </script>
+
+    <!-- ==================== SCROLL ENGINES & REVEALS ==================== -->
+    <script>
+        // 1. Navegación Inteligente
+        (function () {
+            const nav = document.getElementById('em-navbar');
+            const hero = document.querySelector('.hero-section');
+            const serial = document.getElementById('serial-section');
+            if (!nav || !hero || !serial) return;
+
+            let pastHero = false;
+            let reachedDownload = false;
+
+            function updateNavbarState() {
+                if (pastHero && !reachedDownload) {
+                    nav.classList.add('nav-visible');
+                } else {
+                    nav.classList.remove('nav-visible');
+                }
+            }
+
+            const heroObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    pastHero = !entry.isIntersecting;
+                    updateNavbarState();
+                });
+            }, {
+                threshold: 0,
+                rootMargin: "-40px 0px 0px 0px"
+            });
+            heroObserver.observe(hero);
+
+            const serialObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    reachedDownload = entry.isIntersecting || (entry.boundingClientRect.top <= 60);
+                    updateNavbarState();
+                });
+            }, {
+                threshold: [0, 0.05, 0.1],
+                rootMargin: "-60px 0px 0px 0px"
+            });
+            serialObserver.observe(serial);
+
+            // Segmented Control Pill (ScrollSpy & Click)
+            const linkSuena = document.getElementById('nav-link-suena');
+            const linkTesti = document.getElementById('nav-link-testimonios');
+            const sectionTesti = document.getElementById('testimonios');
+
+            function updateSegmentedState() {
+                if (!sectionTesti || !linkSuena || !linkTesti) return;
+                const testiRect = sectionTesti.getBoundingClientRect();
+                if (testiRect.top <= 200) {
+                    linkTesti.classList.add('active');
+                    linkSuena.classList.remove('active');
+                } else {
+                    linkSuena.classList.add('active');
+                    linkTesti.classList.remove('active');
+                }
+            }
+
+            if (linkSuena && linkTesti) {
+                linkSuena.addEventListener('click', () => {
+                    linkSuena.classList.add('active');
+                    linkTesti.classList.remove('active');
+                });
+                linkTesti.addEventListener('click', () => {
+                    linkTesti.classList.add('active');
+                    linkSuena.classList.remove('active');
+                });
+            }
+
+            let ticking = false;
+            window.addEventListener('scroll', () => {
+                if (!ticking) {
+                    window.requestAnimationFrame(() => {
+                        const heroRect = hero.getBoundingClientRect();
+                        const serialRect = serial.getBoundingClientRect();
+
+                        pastHero = heroRect.bottom <= 45;
+                        reachedDownload = serialRect.top <= 60;
+
+                        updateNavbarState();
+                        updateSegmentedState();
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            }, { passive: true });
+
+            updateNavbarState();
+            updateSegmentedState();
+        })();
+
+        // 2. Reveals
+        (function () {
+            const revealElements = document.querySelectorAll('.em-reveal');
+            if (!revealElements.length) return;
+
+            if (!('IntersectionObserver' in window)) {
+                revealElements.forEach(el => el.classList.add('is-revealed'));
+                return;
+            }
+
+            const revealObserver = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-revealed');
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.06,
+                rootMargin: "0px 0px -30px 0px"
+            });
+
+            revealElements.forEach(el => revealObserver.observe(el));
+        })();
+
+        // 3. Smooth Anchor Sliding
+        (function () {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    if (!href || href === '#' || href.length <= 1) return;
+                    const target = document.querySelector(href);
+                    if (!target) return;
+
+                    e.preventDefault();
+
+                    const isToDownload = (href === '#serial-section' || href === '#pricing-section');
+                    const navOffset = isToDownload ? 55 : 68;
+
+                    const targetTop = target.getBoundingClientRect().top + window.pageYOffset - navOffset;
+
+                    window.scrollTo({
+                        top: Math.max(0, targetTop),
+                        behavior: 'smooth'
+                    });
+
+                    if (history.pushState) {
+                        history.pushState(null, null, href);
+                    }
+                });
+            });
+        })();
+    </script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <script src="/script/plugin-checkout.js?v=20261011"></script>
+    <script src="/script/yape-checkout.js?v=20261011"></script>
+    <script src="/script/pay-click-tracker.js?v=20261011"></script>
+
+<style id="omni-motion">
+/* ===== Animaciones estilo AgentLab ===== */
+:root{--om-ease:cubic-bezier(0.16,1,0.3,1);--om-accent:#a855f7}
+#om-progress{position:fixed;top:0;left:0;height:2px;width:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,#7c3aed,#c084fc,#f2379f);z-index:10000;pointer-events:none;box-shadow:0 0 12px rgba(168,85,247,.7)}
+@keyframes omUp{from{opacity:0;transform:translateY(26px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes omGlow{0%,100%{opacity:.45;transform:scale(.94)}50%{opacity:.9;transform:scale(1.06)}}
+@keyframes omSheen{0%{transform:translateX(-130%) skewX(-18deg)}60%,100%{transform:translateX(230%) skewX(-18deg)}}
+@keyframes omTitle{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+@keyframes omRing{to{transform:rotate(360deg)}}
+.hero-text-content>*{opacity:0;animation:omUp .9s var(--om-ease) forwards}
+.hero-text-content>*:nth-child(1){animation-delay:.05s}.hero-text-content>*:nth-child(2){animation-delay:.15s}
+.hero-text-content>*:nth-child(3){animation-delay:.28s}.hero-text-content>*:nth-child(4){animation-delay:.4s}
+.hero-text-content>*:nth-child(5){animation-delay:.52s}.hero-text-content>*:nth-child(n+6){animation-delay:.64s}
+.hero-title{background:linear-gradient(110deg,#fff 0%,#c084fc 25%,#fff 50%,#888 75%,#fff 100%)!important;background-size:200% auto!important;-webkit-background-clip:text!important;background-clip:text!important;animation:omUp .9s var(--om-ease) .15s forwards,omTitle 7s linear 1s infinite}
+.hero-image-container{opacity:0;animation:omUp 1.1s var(--om-ease) .3s forwards,heroFloat 6s ease-in-out 1.4s infinite!important}
+.hero-image-container::before{content:"";position:absolute;inset:8% 4%;border-radius:50%;background:radial-gradient(closest-side,rgba(168,85,247,.55),rgba(124,58,237,.18) 60%,transparent 75%);filter:blur(40px);animation:omGlow 4.2s ease-in-out infinite;z-index:0;pointer-events:none}
+.hero-image-container::after{content:"";position:absolute;right:0;top:0;width:100%;max-width:600px;height:100%;border-radius:20px;overflow:hidden;pointer-events:none;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.14) 50%,transparent 60%);background-size:100% 100%;animation:omSheen 5.5s ease-in-out 1.6s infinite;mix-blend-mode:overlay;z-index:2}
+.hero-image-container .hero-mockup{position:relative;z-index:1}
+.em-reveal{filter:blur(4px);transition:opacity .9s var(--om-ease),transform .9s var(--om-ease),filter .9s var(--om-ease)!important;transition-delay:calc(var(--i,0)*70ms)!important}
+.em-reveal.is-revealed{filter:none}
+.em-reveal.om-left{transform:translateX(-28px)}.em-reveal.om-right{transform:translateX(28px)}
+.em-reveal.om-left.is-revealed,.em-reveal.om-right.is-revealed{transform:none}
+.om-hover{transition:transform .5s var(--om-ease),box-shadow .5s var(--om-ease),border-color .4s}
+.om-hover:hover{transform:translateY(-6px);box-shadow:0 22px 50px rgba(0,0,0,.6),0 0 40px rgba(168,85,247,.25);border-color:rgba(168,85,247,.45)!important}
+#om-spot{position:fixed;width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;background:radial-gradient(closest-side,rgba(168,85,247,.10),transparent 70%);pointer-events:none;z-index:0;left:0;top:0;will-change:transform}
+@media (prefers-reduced-motion:reduce){.hero-text-content>*,.hero-image-container,.hero-title{animation:none!important;opacity:1}.hero-image-container::before,.hero-image-container::after{animation:none}.em-reveal{opacity:1;transform:none;filter:none}#om-spot{display:none}}
+@media (hover:none){#om-spot{display:none}}
+</style>
+<script id="omni-motion-js">
+(function(){
+  var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var bar=document.createElement('div');bar.id='om-progress';document.body.appendChild(bar);
+  var spot=document.createElement('div');spot.id='om-spot';document.body.appendChild(spot);
+  var tx=0,ty=0,raf=0;
+  addEventListener('scroll',function(){var h=document.documentElement;var m=h.scrollHeight-h.clientHeight;bar.style.transform='scaleX('+(m>0?h.scrollTop/m:0)+')'},{passive:true});
+  addEventListener('pointermove',function(e){tx=e.clientX;ty=e.clientY;if(!raf)raf=requestAnimationFrame(function(){spot.style.transform='translate('+tx+'px,'+ty+'px)';raf=0})},{passive:true});
+  if(reduce)return;
+  // Sumar reveals escalonados a titulos, tarjetas y bloques sin em-reveal
+  var sel='.section-wrapper h2,.section-wrapper h3,.section-wrapper>.container>p,.pricing-card,.faq-item,.testimonial-card,.daw-card,.reference-match-section>*,.what-is-omni *[class*="card"],.serial-section .container>*,.daw-showcase-section .container>*,.testimonios-section .container>h2,.testimonios-section .container>p';
+  var els=[].slice.call(document.querySelectorAll(sel)).filter(function(el){return !el.closest('.hero-section')&&!el.classList.contains('em-reveal')&&!el.closest('.em-reveal')&&!el.closest('nav')});
+  var io=new IntersectionObserver(function(en,o){en.forEach(function(x){if(x.isIntersecting){x.target.classList.add('is-revealed');o.unobserve(x.target)}})},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
+  els.forEach(function(el,k){
+    el.classList.add('em-reveal');
+    var sib=el.parentElement?[].indexOf.call(el.parentElement.children,el):0;
+    el.style.setProperty('--i',Math.min(sib,6));
+    io.observe(el);
+  });
+  [].forEach.call(document.querySelectorAll('.pricing-card,.faq-item,.testimonial-card,.daw-card,[class*="feature-card"],[class*="bento"]'),function(c){c.classList.add('om-hover')});
+})();
+</script>
+
+<script id="omni-i18n-js">
+(function(){
+  var EN={"Omni VST | El Plugin Todo en Uno de OFFSZN": "Omni VST | The All-in-One Plugin by OFFSZN", "🚀 Obtén tu": "🚀 Get your", "licencia de por vida": "lifetime license", "de Omni": "of Omni", "Cómo Suena": "How It Sounds", "Descargar plugin": "Download plugin", "EL TODO EN UNO": "THE ALL-IN-ONE", "DEFINITIVO": "DEFINITIVE", "Controla Espectro, Volumen, Claridad, Pegada, Espacio y Calidez en un solo plugin. Cambia entre Modo Beat y Modo Master para adaptar la cadena a tus necesidades.": "Control Spectrum, Loudness, Clarity, Punch, Space and Warmth in a single plugin. Switch between Beat Mode and Master Mode to fit the chain to your needs.", "ADQUIRIR LICENCIA": "GET LICENSE", "Escucha el Antes y Después": "Hear the Before & After", "Comprueba cómo Omni transforma una mezcla plana en un master con pegada comercial, brillo analógico y volumen competitivo.": "Hear how Omni turns a flat mix into a master with commercial punch, analog sheen and competitive loudness.", "ANTES": "BEFORE", "SIN OMNI": "WITHOUT OMNI", "DESPUÉS": "AFTER", "CON OMNI": "WITH OMNI", "Volumen": "Loudness", "ANTES:": "BEFORE:", "DESPUÉS:": "AFTER:", "Sin Omni": "Without Omni", "Con Omni": "With Omni", "Boom bap": "Boom bap", "¿QUÉ ES OMNI?": "WHAT IS OMNI?", "El Todo-en-Uno Definitivo": "The Definitive All-in-One", "Un ecosistema de masterización que reemplaza cadenas infinitas de plugins. Combina EQ dinámica, compresión y saturación bajo una interfaz simple.": "A mastering ecosystem that replaces endless plugin chains. It combines dynamic EQ, compression and saturation under one simple interface.", "Modo Beat y Modo Master": "Beat Mode & Master Mode", "Modo Beat es para productores que hacen beats, en lugar de usar una cadena de master. Modo Master reemplaza tu master. Y Reference Match jala el master de una canción ya hecha.": "Beat Mode is for producers making beats, instead of using a mastering chain. Master Mode replaces your master. And Reference Match pulls the master from an existing song.", "Tu Ingeniero Personal": "Your Personal Engineer", "Un sistema DSP puro que analiza archivos de audio para extraer su curva de EQ y volumen, automatizando los parámetros por ti.": "A pure DSP system that analyzes audio files to extract their EQ curve and loudness, automating the parameters for you.", "LA TRAMPA LEGAL DE LA INDUSTRIA": "THE INDUSTRY'S LEGAL TRICK", "El Copiador de Masters Definitivo.": "The Ultimate Master Copier.", "¿Tu mezcla no suena como la de tus artistas favoritos? Róbales el sonido.": "Doesn't your mix sound like your favorite artists'? Steal their sound.", "Reference Match extrae la huella acústica de cualquier canción comercial. Arrastra tu pista de referencia a la interfaz y observa cómo Omni mueve sus perillas automáticamente para imitar ese volumen, pegada y brillo.": "Reference Match extracts the acoustic fingerprint of any commercial song. Drag your reference track into the interface and watch Omni move its knobs automatically to match that loudness, punch and shine.", "Arrastra un archivo .WAV o .MP3 aquí": "Drag a .WAV or .MP3 file here", "Omni analizará la curva de EQ y RMS instantáneamente.": "Omni will analyze the EQ curve and RMS instantly.", "Inicia sesión para ver o comprar tu licencia.": "Sign in to view or buy your license.", "¿En qué DAWs funciona Omni?": "Which DAWs does Omni work in?", "Funciona en FL Studio, Ableton Live, Cubase, Studio One, REAPER y Bitwig Studio en Windows (VST3 de 64 bits). La versión para Mac (AU y VST3, para Logic Pro y GarageBand) llegará próximamente.": "It works in FL Studio, Ableton Live, Cubase, Studio One, REAPER and Bitwig Studio on Windows (64-bit VST3). The Mac version (AU and VST3, for Logic Pro and GarageBand) is coming soon.", "¿Tiene latencia?": "Does it have latency?", "Omni es un plugin de mastering: introduce unos 4 ms de latencia a 48 kHz (197 muestras), que tu DAW compensa automáticamente al mezclar y exportar. No está pensado para monitorear en vivo mientras grabas.": "Omni is a mastering plugin: it adds about 4 ms of latency at 48 kHz (197 samples), which your DAW compensates automatically when mixing and exporting. It is not meant for live monitoring while recording.", "DISPONIBLE EN TUS DAWS FAVORITOS": "AVAILABLE IN YOUR FAVORITE DAWS", "Apple · Próximamente": "Apple · Coming soon", "Avid Technology · Próximamente": "Avid Technology · Coming soon", "Windows:": "Windows:", "VST3 (64 bits)": "VST3 (64-bit)", "macOS:": "macOS:", "próximamente (AU / VST3)": "coming soon (AU / VST3)", "LATENCIA:": "LATENCY:", "~4 MS (COMPENSADA POR EL DAW)": "~4 MS (COMPENSATED BY THE DAW)", "Descarga tu Plugin": "Download your Plugin", "Crea tu cuenta o inicia sesión para descargar.": "Create your account or sign in to download.", "Crear Cuenta": "Create Account", "Descargar para Windows": "Download for Windows", "macOS: próximamente": "macOS: coming soon", "¿Problemas de instalación? Contáctanos para ayudarte": "Installation problems? Contact us and we will help you", "Tu Licencia Actual": "Your Current License", "Pega esta clave dentro de Omni en tu DAW para validarlo.": "Paste this key inside Omni in your DAW to validate it.", "Cargando...": "Loading...", "Aún no tienes ninguna licencia asociada a tu cuenta.": "You do not have any license linked to your account yet.", "Obtener Prueba Gratuita (3 Días)": "Get Free Trial (3 Days)", "Obtener licencia de por vida de Omni": "Get the Omni lifetime license", "Si ya lo probaste y te encantó, adquiere la licencia de por vida.": "If you have tried it and loved it, get the lifetime license.", "Pago Único — Sin mensualidades": "One-time payment — No subscriptions", "1 Computadora (Transferible)": "1 Computer (Transferable)", "Actualizaciones de por vida": "Lifetime updates", "29 presets de beat por género y 5 de master": "29 beat presets by genre and 5 master presets", "Serial Key por correo al instante": "Serial Key by email instantly", "Soporte VIP 24/7": "VIP support 24/7", "MÁS POPULAR": "MOST POPULAR", "Licencia Full de Omni": "Omni Full License", "Disponible en Windows (VST3 de 64 bits) · Mac próximamente": "Available on Windows (64-bit VST3) · Mac coming soon", "único": "one-time", "Pagar con Mercado Pago": "Pay with Mercado Pago", "Pagar con Yape (Soles 🇵🇪)": "Pay with Yape (Soles 🇵🇪)", "Pagar con Binance": "Pay with Binance", "SOPORTE": "SUPPORT", "Preguntas": "Questions", "¿Es compatible con mi DAW?": "Is it compatible with my DAW?", "Sí, si tu DAW usa VST3 de 64 bits en Windows: FL Studio, Ableton Live, Cubase, Studio One, REAPER y Bitwig Studio. Logic Pro y GarageBand (que solo cargan AU) llegarán con la versión para Mac, y Pro Tools (que solo usa AAX) no está soportado por ahora.": "Yes, if your DAW uses 64-bit VST3 on Windows: FL Studio, Ableton Live, Cubase, Studio One, REAPER and Bitwig Studio. Logic Pro and GarageBand (AU only) will arrive with the Mac version, and Pro Tools (AAX only) is not supported for now.", "¿Cómo obtengo mi licencia?": "How do I get my license?", "Al comprar la versión de por vida o activar tu prueba de 3 días, la licencia se vincula automáticamente a tu cuenta de OFFSZN. Podrás ver tu \"Serial Key\" aquí mismo y simplemente pegarla en Omni dentro de tu DAW la primera vez que lo abras.": "When you buy the lifetime version or activate your 3-day trial, the license is linked automatically to your OFFSZN account. You will see your \"Serial Key\" right here and just paste it into Omni inside your DAW the first time you open it.", "¿Funciona en Mac y Windows?": "Does it work on Mac and Windows?", "Hoy Omni está disponible para Windows 10/11 (64 bits): plugin VST3 y versión independiente. La versión para macOS (VST3 y AU, Intel y Apple Silicon) está en desarrollo y se anunciará aquí cuando esté lista.": "Today Omni is available for Windows 10/11 (64-bit): VST3 plugin and standalone version. The macOS version (VST3 and AU, Intel and Apple Silicon) is in development and will be announced here when ready.", "¿Puedo usarlo en más de un dispositivo?": "Can I use it on more than one device?", "Sí. Tu Serial Key personal te permite activar el plugin en hasta 2 computadoras simultáneamente (por ejemplo, tu PC de estudio y tu laptop para viajar).": "Yes. Your personal Serial Key lets you activate the plugin on up to 2 computers at the same time (for example, your studio PC and your travel laptop).", "¿Tiene latencia para grabar en vivo?": "Does it have latency for live recording?", "¿Por qué elegir el plugin Omni de OFFSZN para masterizar?": "Why choose the OFFSZN Omni plugin for mastering?", "Omni simplifica el mastering al máximo. En lugar de lidiar con menús complejos y una cadena de varios plugins, Omni te entrega los controles esenciales con nombres claros y presets calibrados por género, con un sonido moderno, limpio e impactante para música urbana, trap, reggaeton, pop y más.": "Omni simplifies mastering as much as possible. Instead of dealing with complex menus and a chain of several plugins, Omni gives you the essential controls with clear names and genre-calibrated presets, with a modern, clean and impactful sound for urban music, trap, reggaeton, pop and more.", "Empieza Hoy con Omni.": "Start Today with Omni.", "Descargar Ahora": "Download Now", "Envíanos un mensaje de": "Send us a message on", "WhatsApp": "WhatsApp"};
+  var KEY='omni.lang', lang='es';
+  try{var sv=localStorage.getItem(KEY);if(sv==='en'||sv==='es')lang=sv}catch(e){}
+  var norm=function(t){return t.replace(/\s+/g,' ').trim()};
+  var DATA={
+    es:{'demo.badge':'Demo interactiva','demo.title':'Pruébalo aquí mismo','demo.sub':'Esta es la interfaz oficial de Omni. Mueve las perillas, cambia entre Modo Beat y Modo Master, elige presets y personaliza el skin.','demo.hint':'Arrastra las perillas en vertical · doble clic para reiniciar · el botón de paleta cambia chasis, color e idioma'},
+    en:{'demo.badge':'Interactive demo','demo.title':'Try it right here','demo.sub':'This is the official Omni interface. Turn the knobs, switch between Beat Mode and Master Mode, pick presets and customize the skin.','demo.hint':'Drag the knobs vertically · double-click to reset · the palette button changes chassis, color and language'}
+  };
+  var skip={SCRIPT:1,STYLE:1,NOSCRIPT:1,IFRAME:1,SVG:1,CANVAS:1,TEXTAREA:1};
+  var store=new WeakMap(), busy=false;
+  function walk(){
+    var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(n){var p=n.parentNode;if(!p||skip[p.nodeName.toUpperCase()])return NodeFilter.FILTER_REJECT;return n.nodeValue.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT}});
+    var n,out=[];while((n=w.nextNode()))out.push(n);return out;
+  }
+  function apply(){
+    busy=true;
+    walk().forEach(function(n){
+      var cur=n.nodeValue,st=store.get(n);
+      if(!st){st={es:cur,en:null};store.set(n,st)}
+      else if(cur!==st.es&&cur!==st.en){st={es:cur,en:null};store.set(n,st)} /* texto cambiado por la app */
+      var key=norm(st.es);
+      if(lang==='en'&&EN[key]){var lead=st.es.match(/^\s*/)[0],trail=st.es.match(/\s*$/)[0];st.en=lead+EN[key]+trail;if(n.nodeValue!==st.en)n.nodeValue=st.en}
+      else if(n.nodeValue!==st.es&&(lang==='es'||!EN[key]))n.nodeValue=st.es;
+    });
+    document.querySelectorAll('[data-t]').forEach(function(el){var k=el.getAttribute('data-t');if(DATA[lang][k])el.textContent=DATA[lang][k]});
+    document.documentElement.lang=lang;
+    document.title=lang==='en'?EN['Omni VST | El Plugin Todo en Uno de OFFSZN']:'Omni VST | El Plugin Todo en Uno de OFFSZN';
+    var b=document.getElementById('omLang');if(b)[].forEach.call(b.querySelectorAll('[data-l]'),function(x){x.classList.toggle('on',x.dataset.l===lang)});
+    busy=false;
+  }
+  function syncFrame(){
+    var f=document.getElementById('omniUiFrame');if(!f)return;
+    try{var I=f.contentWindow.OMNI_I18N;if(I&&I.lang!==lang)I.setLang(lang)}catch(e){}
+  }
+  function setLang(l,fromFrame){
+    if(l!=='es'&&l!=='en')return;lang=l;
+    try{localStorage.setItem(KEY,l)}catch(e){}
+    apply();if(!fromFrame)syncFrame();
+  }
+  // selector ES | EN
+  var css=document.createElement('style');
+  css.textContent='#omLang{position:fixed;left:16px;bottom:16px;z-index:9998;display:flex;gap:2px;padding:4px;border-radius:100px;background:rgba(12,12,16,.85);backdrop-filter:blur(10px);border:1px solid rgba(168,85,247,.45);box-shadow:0 8px 28px rgba(0,0,0,.5)}#omLang button{border:0;background:transparent;color:#a1a1aa;font:800 .72rem/1 Geist,system-ui,sans-serif;letter-spacing:1px;padding:9px 13px;border-radius:100px;cursor:pointer;transition:all .3s cubic-bezier(.16,1,.3,1)}#omLang button.on{background:#a855f7;color:#fff;box-shadow:0 0 14px rgba(168,85,247,.6)}#omLang button:not(.on):hover{color:#fff}';
+  document.head.appendChild(css);
+  var box=document.createElement('div');box.id='omLang';box.setAttribute('role','group');box.setAttribute('aria-label','Language');
+  box.innerHTML='<button type="button" data-l="es">ES</button><button type="button" data-l="en">EN</button>';
+  box.addEventListener('click',function(e){var b=e.target.closest('button');if(b)setLang(b.dataset.l)});
+  document.body.appendChild(box);
+  // el iframe de la UI sigue el idioma de la pagina (y viceversa)
+  function hookFrame(){
+    var f=document.getElementById('omniUiFrame');if(!f)return;
+    var go=function(){try{var I=f.contentWindow.OMNI_I18N;if(!I)return;if(I.lang!==lang)I.setLang(lang);I.onChange(function(l){if(l!==lang)setLang(l,true)})}catch(e){}};
+    f.addEventListener('load',go);go();
+  }
+  var mo=new MutationObserver(function(){if(busy||lang!=='en')return;clearTimeout(mo.t);mo.t=setTimeout(apply,120)});
+  function start(){apply();hookFrame();mo.observe(document.body,{childList:true,subtree:true,characterData:true})}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+  setTimeout(apply,1500);
+  window.OMNI_PAGE_LANG={set:setLang,get:function(){return lang}};
+})();
+</script>
+<script id="omni-genre-js">
+(function(){
+  var G={
+    trap:{b:'-22.4',a:'-9.4',lb:.34,la:.9},
+    reggaeton:{b:'-21.5',a:'-9.8',lb:.38,la:.85},
+    boombap:{b:'-19.8',a:'-11.2',lb:.45,la:.78}
+  };
+  var btns=[].slice.call(document.querySelectorAll('.audio-tab-btn[data-genre]'));
+  if(!btns.length)return;
+  function bars(wrap,lvl){
+    wrap.innerHTML='';var n=+wrap.dataset.n||28;
+    for(var i=0;i<n;i++){var u=i/(n-1),sh=.5+.5*Math.sin(u*Math.PI*1.1+.3)*(1-u*.35),h=Math.max(.12,Math.min(1,sh*lvl+Math.random()*.15*lvl)),e=document.createElement('i');
+      e.style.setProperty('--h',(h*100).toFixed(0)+'%');e.style.setProperty('--d',(0.5+Math.random()*0.9).toFixed(2)+'s');e.style.animationDelay=(-Math.random()).toFixed(2)+'s';wrap.appendChild(e)}
+  }
+  function select(g){
+    var d=G[g];if(!d)return;
+    btns.forEach(function(b){var on=b.dataset.genre===g;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on)});
+    var ab=document.getElementById('abx');
+    if(ab){var w=ab.querySelectorAll('.abx-bars');bars(w[0],d.lb);bars(w[1],d.la);
+      var pb=document.getElementById('abxB'),pa=document.getElementById('abxA');if(pb)pb.textContent=d.b+' LUFS';if(pa)pa.textContent=d.a+' LUFS';
+      [].forEach.call(ab.children,function(c){c.animate([{transform:'scale(.97)',opacity:.5},{transform:'none',opacity:1}],{duration:420,easing:'cubic-bezier(.16,1,.3,1)'})})}
+    var card=document.querySelector('.audio-glass-card');if(card)card.setAttribute('data-card-id','omni-demo-card-'+g);
+    var suf=g==='reggaeton'?'':'-'+g;
+    var T=window.__omniWsTracks||[];
+    T.forEach(function(t){
+      var isOff=t.playBtn.closest('.ws-track-row').getAttribute('data-track-id')==='omni-off';
+      var src='/plugins/omni-'+(isOff?'antes':'despues')+suf+'.mp3';
+      try{t.ws.pause();t.ws.load(src).catch(function(){})}catch(e){}
+      t.waveWrap.setAttribute('data-audio-src',src);
+    });
+    if(!T.length){document.querySelectorAll('.ws-waveform-wrap').forEach(function(w){var off=w.parentNode.getAttribute('data-track-id')==='omni-off';w.setAttribute('data-audio-src','/plugins/omni-'+(off?'antes':'despues')+suf+'.mp3')})}
+  }
+  btns.forEach(function(b){b.addEventListener('click',function(){select(b.dataset.genre)})});
+})();
+</script>
+</body>
+
+</html>

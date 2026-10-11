@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Omni - All-in-One Mastering VST3</title>
+  <!-- Google Fonts -->
+  <!-- Las fuentes NO bloquean el arranque: sin internet la UI aparece igual (con la fuente del sistema) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="theme-dark theme-purple">
+  <div class="plugin-container">
+    <!-- Fondo con Malla de Gradiente Fluido Animado (Mesh Aurora) -->
+    <div class="ambient-gradient-mesh" id="ambientGradientMesh"></div>
+    <!-- Capa de Mercurio / Líquido Cromático en Movimiento (Chrome Liquefy Overlay) -->
+    <div class="ambient-liquid-layer" id="ambientLiquidLayer"></div>
+    <!-- Canvas de Partículas Fluctuantes Animadas de Alta Definición -->
+    <canvas class="ambient-particles-canvas" id="ambientParticlesCanvas"></canvas>
+
+    <!-- Filtros SVG de Turbulencia Líquida Cromática (Chromium Liquefy Filter) -->
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+      <defs>
+        <filter id="liquidTurbulence">
+          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="3" result="noise">
+            <animate attributeName="baseFrequency" dur="12s" values="0.012 0.018;0.018 0.024;0.012 0.018" repeatCount="indefinite" />
+          </feTurbulence>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="38" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+      </defs>
+    </svg>
+    <!-- Header: Logo, Presets & Reference Match -->
+    <header class="plugin-header glass-card">
+      <div class="brand-section">
+        <div class="logo-wrapper">
+          <div class="logo-badge">
+            <svg class="omni-logo-svg" viewBox="0 0 250 56" height="28" fill="currentColor">
+              <!-- O: Slanted oval/block ring -->
+              <path d="M 0 42 L 18 0 L 58 0 L 40 42 Z M 18 32 L 36 32 L 40 10 L 22 10 Z" fill-rule="evenodd" />
+              <!-- M: Unified slanted 3-leg M with lower center sharp diamond point -->
+              <path d="M 50 42 L 68 0 L 85 0 L 92 18 L 99 0 L 116 0 L 134 0 L 116 42 L 99 42 L 92 56 L 85 42 Z" />
+              <!-- N: Unified slanted N with diagonal bridge -->
+              <path d="M 128 42 L 146 0 L 163 0 L 155 18 L 164 0 L 181 0 L 163 42 L 146 42 L 154 24 Z" fill-rule="evenodd" />
+              <!-- I: Slanted solid bar -->
+              <path d="M 174 42 L 192 0 L 209 0 L 191 42 Z" />
+            </svg>
+          </div>
+          <span class="brand-signature">BY SVNDALPHON</span>
+        </div>
+        <!-- Insignia de prueba (idéntica a Easy Mix): 3 → 2 → 1 días → bloqueo -->
+        <div id="trial-badge"><span class="trial-dot"></span><span><span data-i18n="trial">PRUEBA</span> · <span id="trial-time-left">--</span></span></div>
+      </div>
+
+      <!-- Global Switch: BEAT MODE vs MASTER MODE -->
+      <div class="global-mode-switch" id="globalModeSwitch">
+        <button class="mode-switch-btn active" data-global-mode="beat" type="button" data-i18n="mode.beat">MODO BEAT</button>
+        <button class="mode-switch-btn" data-global-mode="master" type="button" data-i18n="mode.master">MODO MASTER</button>
+      </div>
+
+      <div class="preset-section">
+        <div class="preset-stepper" id="presetStepper">
+          <!-- Botón Guardar (Extrema Izquierda) -->
+          <button class="stepper-btn save-btn" id="savePresetBtn" type="button" title="Guardar preset" data-i18n-title="tip.save">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+          </button>
+          
+          <div class="stepper-divider"></div>
+
+          <!-- Flecha Izquierda (<) -->
+          <button class="stepper-btn prev-btn" id="prevPresetBtn" type="button" title="Preset anterior" data-i18n-title="tip.prev">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 18l-6-6 6-6"></path>
+            </svg>
+          </button>
+
+          <div class="stepper-divider"></div>
+
+          <!-- Texto Central Interactivo que dispara el Dropdown -->
+          <div class="custom-dropdown" id="presetDropdown">
+            <button class="dropdown-trigger" id="dropdownTrigger" type="button">
+              <span id="selectedPresetText">No Preset</span>
+              <svg class="dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </button>
+            
+            <div class="dropdown-menu" id="dropdownMenu">
+              <!-- Categorías y Submenús inyectados por JavaScript -->
+            </div>
+          </div>
+
+          <div class="stepper-divider"></div>
+
+          <!-- Flecha Derecha (>) -->
+          <button class="stepper-btn next-btn" id="nextPresetBtn" type="button" title="Siguiente preset" data-i18n-title="tip.next">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18l6-6-6-6"></path>
+            </svg>
+          </button>
+
+          <div class="stepper-divider"></div>
+
+          <!-- Auto Volumen: ajusta el Maximizer al objetivo del preset / de la referencia -->
+          <button class="stepper-btn auto-level-btn" id="autoLevelBtn" type="button" title="Auto Volumen: dale play a la parte más fuerte y pulsa" data-i18n-title="tip.autoLevel">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="9"></circle>
+              <circle cx="12" cy="12" r="5"></circle>
+              <circle cx="12" cy="12" r="1.2" fill="currentColor"></circle>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Theme Customization Palette Button & Popover -->
+      <div class="theme-settings-wrapper" id="themeSettingsWrapper">
+        <button class="theme-settings-btn" id="themeSettingsBtn" type="button" title="Personalizar skin, colores e idioma" data-i18n-title="tip.skin">
+          <svg class="palette-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle>
+            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle>
+            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle>
+            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle>
+            <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 3.582 8 8 8 1.1 0 2-.9 2-2 0-.46-.16-.88-.43-1.22-.3-.37-.47-.84-.47-1.35 0-1.1.9-2 2-2h1.9c3.31 0 6-2.69 6-6 0-4.97-4.03-9-9-9z"></path>
+          </svg>
+        </button>
+
+        <!-- Popover de Configuración de Skin -->
+        <div class="theme-popover" id="themePopover">
+          <div class="popover-header">
+            <span data-i18n="skin.title">PERSONALIZAR SKIN</span>
+          </div>
+
+          <!-- Selección de Chasis -->
+          <div class="theme-section">
+            <span class="theme-section-label" data-i18n="skin.chassis">CHASIS</span>
+            <div class="chassis-toggle-group">
+              <button class="chassis-btn active" data-chassis="dark" type="button" title="Oscuro" data-i18n-title="chassis.dark">
+                <span class="chassis-preview dark-preview"></span>
+                <span data-i18n="chassis.dark">Oscuro</span>
+              </button>
+              <button class="chassis-btn" data-chassis="silver" type="button" title="Aluminio cepillado" data-i18n-title="chassis.silver.tip">
+                <span class="chassis-preview silver-preview"></span>
+                <span data-i18n="chassis.silver">Aluminio</span>
+              </button>
+              <button class="chassis-btn" data-chassis="glass" type="button" title="Cristal negro" data-i18n-title="chassis.glass.tip">
+                <span class="chassis-preview glass-preview"></span>
+                Glass
+              </button>
+            </div>
+          </div>
+
+          <!-- Selección de LEDs: Colores Principales -->
+          <div class="theme-section">
+            <span class="theme-section-label" data-i18n="skin.colors">COLORES PRINCIPALES</span>
+            <div class="led-color-grid">
+              <button class="led-color-btn" data-led="red" type="button" title="Rojo neón" data-i18n-title="led.red">
+                <span class="led-swatch red-swatch"></span>
+              </button>
+              <button class="led-color-btn active" data-led="purple" type="button" title="Morado ultra" data-i18n-title="led.purple">
+                <span class="led-swatch purple-swatch"></span>
+              </button>
+              <button class="led-color-btn" data-led="green" type="button" title="Verde neón" data-i18n-title="led.green">
+                <span class="led-swatch green-swatch"></span>
+              </button>
+              <button class="led-color-btn" data-led="white" type="button" title="Blanco puro" data-i18n-title="led.white">
+                <span class="led-swatch white-swatch"></span>
+              </button>
+              <button class="led-color-btn" data-led="fuchsia" type="button" title="Fucsia eléctrico" data-i18n-title="led.fuchsia">
+                <span class="led-swatch fuchsia-swatch"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Selección de LEDs: Gradientes Neo-Glow -->
+          <div class="theme-section">
+            <span class="theme-section-label" data-i18n="skin.gradients">GRADIENTES</span>
+            <div class="led-color-grid gradient-grid">
+              <button class="led-color-btn" data-led="gradient-aura" type="button" title="Aura Purple-Blue">
+                <span class="led-swatch gradient-aura-swatch"></span>
+              </button>
+              <button class="led-color-btn" data-led="gradient-cyberpunk" type="button" title="Cyberpunk Neon Pink">
+                <span class="led-swatch gradient-cyberpunk-swatch"></span>
+              </button>
+              <button class="led-color-btn" data-led="gradient-sunset" type="button" title="Sunset Coral Red">
+                <span class="led-swatch gradient-sunset-swatch"></span>
+              </button>
+              <button class="led-color-btn" data-led="gradient-crimson" type="button" title="Crimson Ember">
+                <span class="led-swatch gradient-crimson-swatch"></span>
+              </button>
+              <button class="led-color-btn" data-led="gradient-ocean" type="button" title="Ocean Cyan-Blue">
+                <span class="led-swatch gradient-ocean-swatch"></span>
+              </button>
+              <button class="led-color-btn" data-led="gradient-emerald" type="button" title="Emerald Mint Glow">
+                <span class="led-swatch gradient-emerald-swatch"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Idioma de la interfaz (preferencia del usuario, no del proyecto) -->
+          <div class="theme-section">
+            <span class="theme-section-label" data-i18n="skin.language">IDIOMA</span>
+            <div class="chassis-toggle-group lang-toggle-group">
+              <button class="chassis-btn lang-btn" data-lang="es" type="button">Español</button>
+              <button class="chassis-btn lang-btn" data-lang="en" type="button">English</button>
+            </div>
+          </div>
+
+          <!-- Licencia -->
+          <div class="theme-section lic-section">
+            <span class="theme-section-label" data-i18n="lic.title">LICENCIA</span>
+            <div class="lic-rows">
+              <div class="lic-row"><span data-i18n="lic.status">Estado</span><span id="setLic">—</span></div>
+              <div class="lic-row"><span data-i18n="lic.key">Clave</span><span id="setSerial">—</span></div>
+              <div class="lic-row"><span data-i18n="lic.version">Versión</span><span id="setVersion">—</span></div>
+              <div class="lic-row"><span data-i18n="lic.hwid">ID del equipo</span><span id="setHwid">—</span></div>
+            </div>
+            <button type="button" class="lic-link-btn" id="btnSetLicense" data-i18n="lic.change">CAMBIAR / ACTIVAR LICENCIA</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="reference-section" id="dropZone" style="display: none;">
+        <div class="drop-icon" id="dropIcon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <div class="drop-text">
+          <span class="drop-title" id="refTitle">Reference Match</span>
+          <span class="drop-sub" id="refFileName">WAV · MP3 · FLAC · OGG</span>
+        </div>
+        <!-- Botón X (Estado Match Activo) -->
+        <button type="button" class="remove-ref-btn" id="removeRefBtn" title="Quitar referencia" data-i18n-title="ref.remove" style="display: none;">&times;</button>
+      </div>
+    </header>
+
+    <!-- Bento Grid Content -->
+    <main class="bento-grid">
+      <!-- Visualizador Central Multi-Vista -->
+      <section class="visualizer-card glass-card">
+        <div class="visualizer-header">
+          <div class="mode-toggle glass-toggle">
+            <button class="toggle-btn active" data-mode="spectrum" data-i18n="vis.spectrum">Espectro</button>
+            <button class="toggle-btn" data-mode="stereo" data-i18n="vis.stereo">Estéreo</button>
+            <button class="toggle-btn" data-mode="waveform" data-i18n="vis.waveform">Onda</button>
+          </div>
+        </div>
+
+        <div class="canvas-wrapper">
+          <canvas id="visualizerCanvas"></canvas>
+
+          <!-- Overlay de Ejes de Medición Hardware (X e Y) -->
+          <div class="canvas-axis-overlay">
+            <!-- Eje X: Frecuencias -->
+            <div class="axis-x">
+              <span>20</span>
+              <span>100</span>
+              <span>1k</span>
+              <span>10k</span>
+              <span>20k</span>
+            </div>
+
+            <!-- Eje Y: Decibelios -->
+            <div class="axis-y">
+              <span>+6</span>
+              <span>0</span>
+              <span>-6</span>
+              <span>-12</span>
+              <span>-24</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Control Central Loudness (Knob Gigante) con Marcas de Calibración (Estilo Origin) -->
+      <section class="main-knob-card glass-card">
+        <div class="knob-container giant-knob" id="knob-loudness" data-param="loudness" data-value="50">
+          <!-- Marcas de Calibración / Ticks de Precisión (Estilo Origin) -->
+          <svg class="calibration-ticks-svg" viewBox="0 0 200 200">
+            <!-- 11 marcas distribuidas a lo largo del recorrido de 270 grados -->
+            <line x1="100" y1="8" x2="100" y2="18" transform="rotate(-135 100 100)" />
+            <line x1="100" y1="8" x2="100" y2="18" transform="rotate(-108 100 100)" />
+            <line x1="100" y1="8" x2="100" y2="18" transform="rotate(-81 100 100)" />
+            <line x1="100" y1="8" x2="100" y2="18" transform="rotate(-54 100 100)" />
+            <line x1="100" y1="8" x2="100" y2="18" transform="rotate(-27 100 100)" />
+            <line x1="100" y1="6" x2="100" y2="20" transform="rotate(0 100 100)" class="tick-center" />
+            <line x1="100" y1="8" x2="100" y2="18" transform="rotate(27 100 100)" />
+            <line x1="100" y1="8" x2="100" y2="18" transform="rotate(54 100 100)" />
+            <line x1="100" y1="8" x2="100" y2="18" transform="rotate(81 100 100)" />
+            <line x1="100" y1="8" x2="100" y2="18" transform="rotate(108 100 100)" />
+            <line x1="100" y1="8" x2="100" y2="18" transform="rotate(135 100 100)" />
+          </svg>
+
+          <div class="knob-outer-ring"></div>
+          <div class="knob-body">
+            <div class="knob-indicator"></div>
+            <div class="knob-value-display"><span class="val-num">50</span><span class="val-unit">%</span></div>
+          </div>
+        </div>
+        <div class="knob-label-container">
+          <span class="knob-title" data-i18n="p.loudness">VOLUMEN</span>
+          <span class="knob-subtitle" data-i18n="p.loudness.sub">Maximizador y techo</span>
+        </div>
+      </section>
+
+      <!-- Macro-Controles Secundarios (Beat Mode - 4 Knobs) -->
+      <section class="macro-row" id="macroRow">
+        <!-- Clarity (EQ / Air Icon) -->
+        <div class="macro-card glass-card">
+          <div class="macro-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M 2 8 Q 6 4, 10 8 T 18 8 T 22 8"></path>
+              <path d="M 2 13 Q 6 9, 10 13 T 18 13 T 22 13"></path>
+              <path d="M 2 18 Q 6 14, 10 18 T 18 18 T 22 18"></path>
+            </svg>
+          </div>
+          <div class="knob-container medium-knob" id="knob-clarity" data-param="clarity" data-value="50">
+            <div class="knob-outer-ring"></div>
+            <div class="knob-body">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <span class="macro-title" data-i18n="p.clarity">CLARIDAD</span>
+          <span class="macro-sub" data-i18n="p.clarity.sub">Aire y presencia</span>
+          <span class="macro-val" id="val-clarity">50%</span>
+        </div>
+
+        <!-- Punch (Compression / Transients Icon) -->
+        <div class="macro-card glass-card">
+          <div class="macro-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 3v18M6 9l6-6 6 6M6 15l6 6 6-6"></path>
+            </svg>
+          </div>
+          <div class="knob-container medium-knob" id="knob-punch" data-param="punch" data-value="50">
+            <div class="knob-outer-ring"></div>
+            <div class="knob-body">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <span class="macro-title" data-i18n="p.punch">PEGADA</span>
+          <span class="macro-sub" data-i18n="p.punch.sub">Transitorios graves</span>
+          <span class="macro-val" id="val-punch">50%</span>
+        </div>
+
+        <!-- Space (Stereo / Orbit Waves Icon) -->
+        <div class="macro-card glass-card">
+          <div class="macro-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M 5 12 A 7 7 0 0 1 19 12"></path>
+              <path d="M 2 12 A 10 10 0 0 1 22 12"></path>
+            </svg>
+          </div>
+          <div class="knob-container medium-knob" id="knob-space" data-param="space" data-value="50">
+            <div class="knob-outer-ring"></div>
+            <div class="knob-body">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <span class="macro-title" data-i18n="p.space">ESPACIO</span>
+          <span class="macro-sub" data-i18n="p.space.sub">Ancho estéreo</span>
+          <span class="macro-val" id="val-space">50%</span>
+        </div>
+
+        <!-- Warmth (Tube Saturation / Fire Icon) -->
+        <div class="macro-card glass-card">
+          <div class="macro-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M8.5 14.5A2.5 2.5 0 0 0 11 17c1.38 0 2.5-1.12 2.5-2.5 0-1.7-2-2.5-2-4.5 0-2.3 2-3 2-5-2.5 1.5-5 4-5 6.5 0 1.25.5 2.5 1 3z"></path>
+              <path d="M12 22a7.5 7.5 0 0 0 7.5-7.5c0-4.2-3.5-7.5-5-9.5-1.5 2-5 5.3-5 9.5A7.5 7.5 0 0 0 12 22z"></path>
+            </svg>
+          </div>
+          <div class="knob-container medium-knob" id="knob-warmth" data-param="warmth" data-value="50">
+            <div class="knob-outer-ring"></div>
+            <div class="knob-body">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <span class="macro-title" data-i18n="p.warmth">CALIDEZ</span>
+          <span class="macro-sub" data-i18n="p.warmth.sub">Saturación de válvula</span>
+          <span class="macro-val" id="val-warmth">50%</span>
+        </div>
+      </section>
+
+      <!-- Controles Avanzados (Master Mode - 8 Knobs Pro Row con Tooltips UX) -->
+      <section class="advanced-controls-row" id="advancedControlsRow" style="display: none;">
+        <!-- 1. SUB WEIGHT -->
+        <div class="macro-card glass-card compact-card" data-i18n-tip="tt.subweight" data-tooltip="Enhances deep sub-bass frequencies for a heavier, club-ready foundation.">
+          <span class="compact-label" data-i18n="p.subweight">SUB WEIGHT</span>
+          <div class="knob-container mini-knob" id="knob-subweight" data-param="subweight" data-value="50">
+            <div class="knob-outer-ring"></div>
+            <div class="knob-body">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <span class="macro-val" id="val-subweight">50%</span>
+        </div>
+
+        <!-- 2. AIR SHINE -->
+        <div class="macro-card glass-card compact-card" data-i18n-tip="tt.airshine" data-tooltip="Adds expensive, silky top-end presence without harshness.">
+          <span class="compact-label" data-i18n="p.airshine">AIR SHINE</span>
+          <div class="knob-container mini-knob" id="knob-airshine" data-param="airshine" data-value="50">
+            <div class="knob-outer-ring"></div>
+            <div class="knob-body">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <span class="macro-val" id="val-airshine">50%</span>
+        </div>
+
+        <!-- 3. GLUE COMP -->
+        <div class="macro-card glass-card compact-card" data-i18n-tip="tt.gluecomp" data-tooltip="Tightens the mix, making all track elements sit perfectly together.">
+          <span class="compact-label" data-i18n="p.gluecomp">GLUE COMP</span>
+          <div class="knob-container mini-knob" id="knob-gluecomp" data-param="gluecomp" data-value="50">
+            <div class="knob-outer-ring"></div>
+            <div class="knob-body">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <span class="macro-val" id="val-gluecomp">50%</span>
+        </div>
+
+        <!-- 4. TRANSIENTS -->
+        <div class="macro-card glass-card compact-card" data-i18n-tip="tt.transients" data-tooltip="Shapes the initial attack of drums and synths for maximum impact.">
+          <span class="compact-label" data-i18n="p.transients">TRANSIENTS</span>
+          <div class="knob-container mini-knob" id="knob-transients" data-param="transients" data-value="50">
+            <div class="knob-outer-ring"></div>
+            <div class="knob-body">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <span class="macro-val" id="val-transients">50%</span>
+        </div>
+
+        <!-- 5. HARMONICS -->
+        <div class="macro-card glass-card compact-card" data-i18n-tip="tt.harmonics" data-tooltip="Injects rich analog tube and tape saturation for commercial warmth.">
+          <span class="compact-label" data-i18n="p.harmonics">HARMONICS</span>
+          <div class="knob-container mini-knob" id="knob-harmonics" data-param="harmonics" data-value="50">
+            <div class="knob-outer-ring"></div>
+            <div class="knob-body">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <span class="macro-val" id="val-harmonics">50%</span>
+        </div>
+
+        <!-- 6. STEREO WIDTH -->
+        <div class="macro-card glass-card compact-card" data-i18n-tip="tt.stereowidth" data-tooltip="Expands the side channels for an immersive, wider stereo image.">
+          <span class="compact-label" data-i18n="p.stereowidth">STEREO WIDTH</span>
+          <div class="knob-container mini-knob" id="knob-stereowidth" data-param="stereowidth" data-value="50">
+            <div class="knob-outer-ring"></div>
+            <div class="knob-body">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <span class="macro-val" id="val-stereowidth">50%</span>
+        </div>
+
+        <!-- 7. MAXIMIZER -->
+        <div class="macro-card glass-card compact-card" data-i18n-tip="tt.maximizer" data-tooltip="Pushes the overall loudness of your track without introducing distortion.">
+          <span class="compact-label" data-i18n="p.maximizer">MAXIMIZER</span>
+          <div class="knob-container mini-knob" id="knob-maximizer" data-param="maximizer" data-value="50">
+            <div class="knob-outer-ring"></div>
+            <div class="knob-body">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <span class="macro-val" id="val-maximizer">50%</span>
+        </div>
+
+        <!-- 8. CEILING -->
+        <div class="macro-card glass-card compact-card" data-i18n-tip="tt.ceiling" data-tooltip="Sets the absolute maximum peak limit to prevent clipping on streaming platforms.">
+          <span class="compact-label" data-i18n="p.ceiling">CEILING</span>
+          <div class="knob-container mini-knob" id="knob-ceiling" data-param="ceiling" data-value="50">
+            <div class="knob-outer-ring"></div>
+            <div class="knob-body">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <span class="macro-val" id="val-ceiling">50%</span>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer: Medición LUFS -->
+    <footer class="plugin-footer glass-card">
+      <div class="meter-group">
+        <span class="meter-label" data-i18n="m.in">LUFS ENTRADA</span>
+        <div class="meter-bar-wrapper">
+          <div class="meter-fill" id="meterInFill" style="width: 65%;"></div>
+        </div>
+        <span class="meter-value" id="meterInVal">-14.2 LUFS</span>
+      </div>
+
+      <!-- Input Trim: el plugin siempre nace en -12 dB (doble clic = volver a -12 dB) -->
+      <div class="meter-group trim-group" title="Trim de entrada (doble clic: -12 dB)" data-i18n-title="m.trim.tip">
+        <span class="meter-label">TRIM</span>
+        <input type="range" id="trimSlider" class="trim-slider" min="-24" max="12" step="0.1" value="-12" aria-label="Input Trim">
+        <span class="meter-value trim-value" id="trimValue">-12.0 dB</span>
+      </div>
+
+      <div class="meter-group">
+        <span class="meter-label" data-i18n="m.out">LUFS SALIDA</span>
+        <div class="meter-bar-wrapper">
+          <div class="meter-fill output-fill" id="meterOutFill" style="width: 82%;"></div>
+        </div>
+        <span class="meter-value" id="meterOutVal">-9.1 LUFS</span>
+      </div>
+    </footer>
+
+    <!-- Modal de Guardado de Preset (Save to My Presets Modal) -->
+    <div class="modal-overlay" id="savePresetModal">
+      <div class="save-modal-card glass-card">
+        <div class="save-modal-header">
+          <div class="save-modal-title-group">
+            <svg class="save-modal-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span class="save-modal-title" data-i18n="save.title">Guardar en Mis Presets</span>
+          </div>
+          <button type="button" class="modal-close-btn" id="closeSaveModalBtn" aria-label="Close">&times;</button>
+        </div>
+
+        <div class="save-modal-body">
+          <label for="presetNameInput" class="save-input-label" data-i18n="save.name">NOMBRE DEL PRESET</label>
+          <div class="save-input-wrapper">
+            <input type="text" id="presetNameInput" class="save-preset-input" placeholder="p. ej. Mi preset…" data-i18n-ph="save.ph" maxlength="32" autocomplete="off" />
+          </div>
+          <span class="save-modal-hint" data-i18n="save.hint">Guarda la configuración actual de las perillas en Mis Presets.</span>
+        </div>
+
+        <div class="save-modal-footer">
+          <button type="button" class="modal-btn modal-btn-cancel" id="cancelSaveModalBtn" data-i18n="cancel">Cancelar</button>
+          <button type="button" class="modal-btn modal-btn-save" id="confirmSaveModalBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span data-i18n="save.btn">Guardar</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reference Match: progreso y resultado -->
+    <div class="modal-overlay" id="refModal" data-view="analyzing">
+      <div class="ref-card ref-view-analyzing">
+        <div class="ref-head"><span class="ref-title" id="refAnTitle" data-i18n="ref.analyzing">Analizando referencia</span></div>
+        <div class="ref-an-name" id="refAnName">—</div>
+        <!-- Animación "parametrando": 13 columnas (una por perilla) que ondulan durante el análisis y al final se asientan
+             en el valor propuesto de cada parámetro -->
+        <div class="ref-loader-wrap"><canvas class="ref-loader" id="refLoader" aria-hidden="true"></canvas></div>
+        <ol class="ref-steps" id="refSteps">
+          <li data-step="read" data-i18n="ref.step.read">Audio</li>
+          <li data-step="lufs">LUFS</li>
+          <li data-step="peak" data-i18n="ref.step.peak">Picos</li>
+          <li data-step="spec" data-i18n="ref.step.spec">Espectro</li>
+          <li data-step="param" data-i18n="ref.step.param">Ajustes</li>
+        </ol>
+        <div class="ref-bar"><i id="refAnBar"></i></div>
+        <div class="ref-an-row"><span id="refAnStage" data-i18n="ref.waiting">Esperando el archivo…</span><span id="refAnPct">0%</span></div>
+        <div class="ref-actions"><button type="button" class="modal-btn modal-btn-cancel" id="refAnCancel" data-i18n="cancel">Cancelar</button></div>
+      </div>
+
+      <div class="ref-card ref-card-wide ref-view-result">
+        <div class="ref-head">
+          <div><span class="ref-title">Reference Match</span><div class="ref-file" id="refResName">—</div></div>
+          <span class="ref-meta" id="refResMeta">—</span>
+        </div>
+        <canvas class="ref-chart" id="refChart"></canvas>
+        <div class="ref-metrics">
+          <div class="ref-metric"><small data-i18n="ref.loudness">SONORIDAD</small><b><span id="refMLufs">—</span> <em>LUFS</em></b></div>
+          <div class="ref-metric"><small data-i18n="ref.crest">CRESTA</small><b id="refMCrest">—</b></div>
+          <div class="ref-metric"><small data-i18n="ref.width">ANCHO</small><b id="refMWidth">—</b></div>
+          <div class="ref-metric ref-metric-wide"><small data-i18n="ref.balance">BALANCE</small><b id="refMBal">—</b></div>
+        </div>
+        <!-- Reference Match v2: comparar con TU mezcla -->
+        <div class="ref-compare" id="refCompare" data-state="idle">
+          <div class="ref-compare-row">
+            <div class="ref-compare-text">
+              <b data-i18n="ref.compare">Compara con tu mezcla</b>
+              <small id="refCmpHint">Dale play a la parte más fuerte de tu canción (coro o drop) y pulsa Escuchar.</small>
+            </div>
+            <button type="button" class="modal-btn ref-listen-btn" id="refListenBtn">Escuchar mi mezcla</button>
+          </div>
+          <div class="ref-bar ref-listen-bar"><i id="refListenBar"></i></div>
+          <div class="ref-compare-result">
+            <div class="ref-metric"><small data-i18n="ref.tone">DIFERENCIA TONAL</small><b id="refCmpTone">—</b></div>
+            <div class="ref-metric"><small data-i18n="ref.loudPart">PARTE FUERTE</small><b id="refCmpLoud">—</b></div>
+            <div class="ref-metric"><small data-i18n="ref.width">ANCHO</small><b id="refCmpWidth">—</b></div>
+            <label class="ref-amount"><small data-i18n="ref.amount">INTENSIDAD</small>
+              <input type="range" id="refAmount" min="0" max="100" step="1" value="80">
+              <b id="refAmountVal">80%</b>
+            </label>
+          </div>
+        </div>
+        <div class="ref-sub" data-i18n="ref.suggested">Ajustes propuestos</div>
+        <div class="ref-params" id="refParams"></div>
+        <div class="ref-actions">
+          <button type="button" class="modal-btn modal-btn-cancel" id="refResCancel" data-i18n="cancel">Cancelar</button>
+          <button type="button" class="modal-btn modal-btn-save" id="refResApply">Aplicar ajustes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Licencia (mismos modales que Easy Mix / Easy Pitch) -->
+    <div id="activation-modal" class="activation-modal">
+      <div class="act-container">
+        <button class="act-btn-close hide" id="btn-close-activation">×</button>
+        <h3 data-i18n="act.title">Ingresa tu Serial Key</h3>
+        <p class="dim" data-i18n="act.sub">Activa tu plugin para siempre. Consigue tu licencia en OFFSZN.</p>
+        <input type="text" class="act-input" placeholder="OMNI-XXXX-XXXX-XXXX" id="serial-input" spellcheck="false" autocomplete="off" maxlength="60">
+        <button class="act-btn act-btn-primary" id="act-submit-btn" data-i18n="act.btn">Activar Plugin</button>
+        <button class="act-btn act-btn-secondary" id="act-link-btn" data-i18n="act.get">CONSIGUE TU LICENCIA</button>
+      </div>
+    </div>
+
+    <div id="license-expired-overlay">
+      <div class="exp-icon" id="exp-icon">&#128274;</div>
+      <div class="exp-title" id="exp-title">Activar Licencia</div>
+      <div class="exp-subtitle" id="exp-subtitle">Ingresa tu serial para activarlo.</div>
+      <input class="exp-input" id="exp-serial-input" type="text" placeholder="OMNI-XXXX-XXXX-XXXX" spellcheck="false" autocomplete="off" maxlength="60">
+      <button class="exp-btn" id="exp-submit-btn" data-i18n="exp.btn">Activar Nueva Licencia</button>
+      <button class="exp-btn-secondary hide" id="exp-retry-btn" data-i18n="exp.retry">Reintentar</button>
+      <button class="exp-btn-secondary" id="exp-link-btn" data-i18n="exp.get">Consigue tu licencia →</button>
+    </div>
+
+    <div id="welcome-modal" class="activation-modal">
+      <div class="act-container" style="text-align:center">
+        <div style="font-size:30px;margin-bottom:10px">&#127881;</div>
+        <h3 data-i18n="wel.title">¡Bienvenido a Omni Plugin!</h3>
+        <p class="dim" data-i18n-html="wel.msg">El plugin ha sido activado exitosamente.<br>Prepárate para llevar tus masters al siguiente nivel.</p>
+        <button class="act-btn act-btn-primary" id="btn-welcome" data-i18n="wel.btn">Comenzar</button>
+      </div>
+    </div>
+
+    <div id="alert-modal" class="activation-modal" style="z-index:4000">
+      <div class="act-container" style="width:340px;text-align:center">
+        <div id="alert-icon" style="font-size:24px;margin-bottom:8px">&#10060;</div>
+        <h3 id="alert-title">Error</h3>
+        <p class="dim" id="alert-msg" style="margin-bottom:18px"></p>
+        <button class="act-btn act-btn-primary" id="alert-ok" style="width:auto;padding:10px 28px">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bloquear comportamiento de navegador para simular UI nativa -->
+  <script>
+    // 1. Deshabilitar menú contextual (click derecho)
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    // 2. Deshabilitar zoom con teclado (Ctrl +/- / Ctrl 0) y atajos de navegador
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) &&
+          (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0' ||
+           e.key === 'NumpadAdd' || e.key === 'NumpadSubtract')) {
+        e.preventDefault();
+      }
+      // Bloquear Ctrl+A (seleccionar todo)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        e.preventDefault();
+      }
+    });
+
+    // 3. Deshabilitar zoom con rueda del mouse (Ctrl + scroll)
+    document.addEventListener('wheel', e => {
+      if (e.ctrlKey || e.metaKey) e.preventDefault();
+    }, { passive: false });
+
+    // 4. Deshabilitar pinch-to-zoom en touch
+    document.addEventListener('touchstart', e => {
+      if (e.touches.length > 1) e.preventDefault();
+    }, { passive: false });
+
+    // 5. Deshabilitar arrastrar elementos (drag & drop nativo)
+    document.addEventListener('dragstart', e => e.preventDefault());
+  </script>
+
+  <script src="i18n.js"></script>
+  <script src="presets.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

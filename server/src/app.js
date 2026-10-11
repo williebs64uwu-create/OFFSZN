@@ -494,6 +494,11 @@ app.get(['/plugins/easy-pitch', '/plugins/easy-pitch.html'], (req, res) => {
     return res.sendFile(path.join(rootPath, 'plugins/easy-pitch.html'));
 });
 
+// Rutas directas para Omni: /plugin/ y /plugins/
+app.get(['/plugin/omni', '/plugin/omni.html', '/plugins/omni', '/plugins/omni.html'], (req, res) => {
+    return res.sendFile(path.join(rootPath, 'plugins/omni.html'));
+});
+
 // Rutas directas para Vocal Preset
 app.get(['/plugin/vocal-preset', '/plugin/vocal-preset.html', '/plugins/vocal-preset', '/plugins/vocal-preset.html'], (req, res) => {
     const pluginsLandingPath = path.join(rootPath, 'plugins/vocal-preset.html');
@@ -982,6 +987,7 @@ app.get('/sitemap.xml', async (req, res) => {
             { loc: 'https://offszn.lat/plugins/easy-master.html', priority: '0.9', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/inka-kola.html', priority: '0.9', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/easy-pitch.html', priority: '0.9', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/plugins/omni.html', priority: '0.9', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/offszn-recorder.html', priority: '0.8', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/x-flow-analyzer.html', priority: '0.8', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/legal/ayuda-y-contacto.html', priority: '0.5', changefreq: 'monthly' }

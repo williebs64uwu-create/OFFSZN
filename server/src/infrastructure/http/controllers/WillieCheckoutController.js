@@ -58,13 +58,14 @@ const WILLIE_CATALOG = {
     'plugin-inka-kola':   { name: 'INKA KOLA VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     'plugin-vocal-preset': { name: 'Vocal Preset VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     'plugin-easy-pitch':  { name: 'Easy Pitch VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/plugins/easy-pitch.png' },
-    'plugin-omni':        { name: 'Omni Plugin VST3 (OFFSZN)', price: 15, type: 'plugin', image: '/willieimages/HERO.png' },
+    'plugin-omni':        { name: 'Omni Plugin VST3 (OFFSZN)', price: 17, type: 'plugin', image: '/plugins/omni.png' },
     // Legacy numeric IDs (from offszn_cart compatibility)
     '899': { name: 'Easy Mix VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     '900': { name: 'Easy Master VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     '902': { name: 'INKA KOLA VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     '905': { name: 'Vocal Preset VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
-    '5000': { name: 'Easy Pitch VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/plugins/easy-pitch.png' }
+    '5000': { name: 'Easy Pitch VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/plugins/easy-pitch.png' },
+    '5001': { name: 'Omni Plugin VST3 (OFFSZN)', price: 17, type: 'plugin', image: '/plugins/omni.png' }
 };
 
 /**
