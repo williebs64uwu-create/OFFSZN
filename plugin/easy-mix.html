@@ -98,138 +98,436 @@
             padding: 0 20px;
         }
 
-        /* ==================== HERO ==================== */
-        .hero-section {
+        /* ==================== PRAXIS-INSPIRED LUXURY AUDIO TECH HERO ==================== */
+        .mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .hero-section.hero {
             position: relative;
-            margin-top: 0;
-            padding: 42px 0 38px;
-            text-align: center;
-            animation: heroFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #0e0f12;
+            height: 100svh;
+            min-height: 640px;
+            color: #f2f2f4;
             overflow: hidden;
-            transition: background 0.4s ease;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        @media (max-width: 768px) {
-            .hero-section {
-                padding: 28px 0 24px;
-            }
-        }
-
-        .hero-bg-layer {
+        .hero-svg {
+            width: 0;
+            height: 0;
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('/images/hero-bgs/hero-bg-5.png');
-            background-size: cover;
-            background-position: center top;
-            background-repeat: no-repeat;
-            opacity: 1;
             pointer-events: none;
-            z-index: 0;
-            transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-            will-change: transform;
         }
 
-        .hero-bg-layer.has-bg {
-            opacity: 1;
-        }
-
-        .hero-bg-layer::after {
-            content: '';
+        .hero-flow {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom,
-                    transparent 0%,
-                    transparent 60%,
-                    rgba(10, 10, 10, 0.25) 80%,
-                    rgba(5, 5, 5, 0.85) 94%,
-                    #000000 100%);
+            width: 100%;
+            height: 100%;
+            display: block;
             pointer-events: none;
+            z-index: 1;
         }
 
-        .hero-section>.container {
-            position: relative;
+        .hero-glow-layer {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse 70% 50% at 75% 35%, rgba(61, 91, 255, 0.25) 0%, transparent 65%),
+                radial-gradient(ellipse 60% 45% at 20% 60%, rgba(155, 77, 255, 0.20) 0%, transparent 60%),
+                radial-gradient(ellipse 55% 40% at 50% 85%, rgba(34, 211, 238, 0.15) 0%, transparent 55%),
+                radial-gradient(ellipse 45% 30% at 85% 75%, rgba(255, 77, 154, 0.12) 0%, transparent 50%);
+            pointer-events: none;
             z-index: 2;
         }
 
-        @keyframes heroFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .hero-grain {
+            pointer-events: none;
+            z-index: 15;
+            opacity: 0.045;
+            position: absolute;
+            inset: 0;
         }
 
-        .hero-top-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 40px;
+        /* 3D PERSPECTIVE VIEWPORT & FLOATING TILTED PLUGIN */
+        .hero-viewport {
+            perspective: 2000px;
+            place-items: center;
+            display: grid;
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .hero-canvas {
+            aspect-ratio: 1723 / 913;
+            width: min(840px, 66vw);
+            transform-style: preserve-3d;
+            will-change: transform;
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            transform: rotateX(55deg) rotateZ(-25deg) scale(1);
+        }
+
+        .hero-plate {
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 14px;
+            box-shadow: 0 40px 120px rgba(0, 0, 0, 0.95), 0 0 70px rgba(76, 141, 255, 0.22);
+            backface-visibility: hidden;
+            cursor: grab;
+            touch-action: pan-y;
+            user-select: none;
+            -webkit-user-select: none;
+            pointer-events: auto;
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            background: #121316;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .hero-plate:active {
+            cursor: grabbing;
+        }
+
+        .hero-track {
+            will-change: transform;
             width: 100%;
+            height: 100%;
+            display: flex;
+            transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .area-1 {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: flex-start;
+        .hero-slide {
+            flex: 0 0 100%;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
-        .area-2 {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            align-items: flex-end;
+        /* PRAXIS GEOMETRIC GRID OVERLAY */
+        .hero-grid {
+            padding: clamp(1.5rem, 4vw, 4rem);
+            padding-top: calc(var(--nav-h, 56px) + 2rem);
+            z-index: 20;
+            pointer-events: none;
+            grid-template-rows: auto 1fr auto;
+            grid-template-columns: 1fr 1fr;
+            display: grid;
+            position: absolute;
+            inset: 0;
+        }
+
+        .hero-meta {
+            text-align: right;
+            color: #4c8dff;
+            grid-column: 2;
+            line-height: 1.6;
+            font-size: 0.82rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .hero-was {
+            opacity: 0.5;
+            text-decoration: line-through;
+            margin-right: 3px;
+        }
+
+        .hero-price-now {
+            color: #ffffff;
+            font-weight: 800;
         }
 
         .hero-title {
-            font-size: clamp(2.2rem, 6vw, 4rem);
-            font-weight: 800;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, #fff 0%, #888 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.04em;
+            mix-blend-mode: difference;
+            grid-column: 1 / -1;
+            align-self: center;
+            margin: 0;
+            font-size: clamp(3.2rem, 9.8vw, 8.5rem);
+            font-weight: 900;
+            line-height: 0.88;
+            color: #ffffff;
+            text-transform: uppercase;
+            font-family: inherit;
         }
 
-        .hero-subtitle {
-            font-size: 1.1rem;
-            color: #888;
-            max-width: 550px;
-            margin: 0 auto 40px;
-            line-height: 1.5;
+        .hero-bottom {
+            grid-column: 1 / -1;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 1.5rem;
+            display: flex;
         }
 
-        .hero-image-container {
-            position: relative;
-            max-width: 600px;
-            margin: 0 auto;
-            animation: heroFloat 6s ease-in-out infinite;
+        .hero-bottom-caption {
+            pointer-events: auto;
         }
 
-        @keyframes heroFloat {
+        .hero-caption-tag {
+            color: #4c8dff;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            margin: 0 0 4px;
+        }
 
-            0%,
-            100% {
-                transform: translateY(0);
+        .hero-caption-sub {
+            color: #92939e;
+            font-size: 0.74rem;
+            letter-spacing: 0.05em;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .hero-bottom-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            pointer-events: auto;
+        }
+
+        .hero-try-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #dadbe1;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.95rem 1.4rem;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.06em;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .hero-try-btn:hover {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* SIGNATURE PRAXIS CHAMFERED CUT-CORNER CTA */
+        .hero-cta {
+            pointer-events: auto;
+            background: #ffffff;
+            color: #0c0d10 !important;
+            letter-spacing: 0.06em;
+            clip-path: polygon(0 0, 100% 0, 100% 70%, 85% 100%, 0 100%);
+            padding: 1rem 2.2rem;
+            font-weight: 900;
+            font-size: 0.92rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+            font-family: inherit;
+            white-space: nowrap;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .hero-cta:hover {
+            background: #4c8dff;
+            color: #000000 !important;
+            transform: translateY(-4px);
+            box-shadow: 0 14px 34px rgba(76, 141, 255, 0.45);
+        }
+
+        .hero-cta:active {
+            transform: translateY(-1px) scale(0.985);
+        }
+
+        /* CAROUSEL PAGINATION PILL DOTS */
+        .hero-dots {
+            z-index: 25;
+            gap: 4px;
+            display: flex;
+            position: absolute;
+            bottom: calc(2rem + 12px);
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .hero-dot {
+            cursor: pointer;
+            background: transparent;
+            border: 0;
+            place-items: center;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            display: grid;
+        }
+
+        .hero-dot::before {
+            content: "";
+            background: #50525a;
+            border-radius: 999px;
+            width: 8px;
+            height: 8px;
+            transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), background 0.35s ease;
+        }
+
+        .hero-dot:hover::before {
+            background: #92939e;
+        }
+
+        .hero-dot.is-on::before {
+            background: #4c8dff;
+            width: 24px;
+        }
+
+        /* ANIMATED VERTICAL FLOW LINE */
+        .hero-scroll {
+            background: linear-gradient(to bottom, #ffffff, transparent);
+            z-index: 20;
+            width: 1px;
+            height: 52px;
+            animation: 2s ease-in-out infinite heroFlowLine;
+            position: absolute;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @keyframes heroFlowLine {
+            0%, 100% {
+                transform-origin: top;
+                transform: scaleY(0);
             }
-
             50% {
-                transform: translateY(-10px);
+                transform-origin: top;
+                transform: scaleY(1);
+            }
+            51% {
+                transform-origin: bottom;
+                transform: scaleY(1);
             }
         }
 
-        .hero-mockup {
-            width: 100%;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+        /* RESPONSIVE DESIGN - PRAXIS MEDIA QUERIES */
+        @media (max-width: 1100px) {
+            .hero-section.hero::after {
+                content: "";
+                background: linear-gradient(to bottom, transparent, #0e0f12 78%);
+                z-index: 15;
+                pointer-events: none;
+                height: 32%;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+            }
+
+            .hero-title {
+                mix-blend-mode: normal;
+                text-shadow: 0 2px 30px rgba(0, 0, 0, 0.95);
+                align-self: start;
+            }
+
+            .hero-viewport {
+                place-items: end center;
+                padding-bottom: 8vh;
+            }
+
+            .hero-canvas {
+                width: min(740px, 94vw);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .hero-grid {
+                grid-template-rows: auto 1fr auto;
+                grid-template-columns: 1fr;
+                padding: 1.25rem;
+                padding-top: calc(var(--nav-h, 56px) + 0.75rem);
+            }
+
+            .hero-meta {
+                text-align: left;
+                grid-column: 1;
+                font-size: 0.75rem;
+                line-height: 1.5;
+            }
+
+            .hero-title {
+                margin-top: 0.5rem;
+                font-size: clamp(2.4rem, 11.5vw, 3.8rem);
+                line-height: 0.92;
+            }
+
+            .hero-bottom {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .hero-bottom-actions {
+                width: 100%;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .hero-cta {
+                width: 100%;
+                justify-content: center;
+                padding: 0.95rem 1.6rem;
+                font-size: 0.88rem;
+            }
+
+            .hero-try-btn {
+                width: 100%;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .hero-viewport {
+                padding-bottom: 14vh;
+            }
+
+            .hero-canvas {
+                width: 108vw;
+                max-width: 440px;
+                transform: rotateX(46deg) rotateZ(-20deg) scale(0.96);
+            }
+
+            .hero-scroll {
+                display: none;
+            }
+
+            .hero-dots {
+                left: auto;
+                right: 1.25rem;
+                bottom: 1.25rem;
+                transform: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hero-canvas,
+            .hero-track,
+            .hero-dot::before {
+                transition: none !important;
+            }
+            .hero-scroll {
+                animation: none;
+            }
         }
 
         /* CTA Buttons (Matching X Flow Analyzer) */
@@ -2020,37 +2318,418 @@
     <!-- ==================== MAIN CONTENT ==================== -->
     <main class="plugin-landing">
 
-        <!-- HERO SECTION -->
-        <section class="hero-section">
-            <div class="hero-bg-layer has-bg" id="hero-bg-layer"
-                style="background-image: url('/images/hero-bgs/hero-bg-5.png');"></div>
-            <div class="container">
-                <h1 class="hero-title"
-                    style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; background: none !important; font-size: clamp(2.4rem, 6.5vw, 4.2rem); line-height: 1.1; margin-bottom: 14px; font-weight: 800;">
-                    Voces pro al instante <br>
-                </h1>
-                <p class="hero-subtitle" style="font-size: 1.2rem; color: #aaa; max-width: 600px; margin: 0 auto 24px;">
-                    El mejor plugin y asistente de mezcla en 2026.</p>
+        <!-- ==================== PRAXIS-INSPIRED LUXURY AUDIO TECH HERO ==================== -->
+        <section class="hero-section hero" id="hero-section" aria-label="Easy Mix: Voces pro al instante">
+            <!-- SVG Film Grain Filter (Tactile studio gear texture) -->
+            <svg class="hero-svg" aria-hidden="true">
+                <filter id="hero-grain">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3"></feTurbulence>
+                    <feColorMatrix type="saturate" values="0"></feColorMatrix>
+                </filter>
+            </svg>
 
-                <!-- HERO DUAL CTAS (MAXIMIZAR COMPRA + OPCIÓN PROBAR) -->
-                <div class="hero-cta-group"
-                    style="display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; margin: 0 auto 28px;">
-                    <a href="#pricing-section" class="btn-hero-buy" id="hero-btn-buy">
-                        <i class="bi bi-bag-fill"></i>
-                        <span>COMPRAR PLUGIN</span>
-                    </a>
-                    <a href="#probar-plugin" class="btn-hero-trial" id="hero-btn-trial">
-                        <i class="bi bi-download"></i>
-                        <span>PROBAR PLUGIN</span>
-                    </a>
-                </div>
+            <!-- Interactive WebGL Aurora Flow Canvas (Cosmic Midnight Nebula) -->
+            <canvas class="hero-flow" id="hero-flow-canvas" aria-hidden="true"></canvas>
 
-                <div class="hero-image-container" style="max-width: 800px; margin: 16px auto 0;">
-                    <img src="/images/plugins/heronuevo.png" alt="Easy Mix VST" width="990" height="500"
-                        style="width: 100%; height: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 30px 70px rgba(0,0,0,0.7), 0 0 50px rgba(133, 44, 60, 0.2);">
+            <!-- CSS Gradient Fallback Glow Layers -->
+            <div class="hero-glow-layer" aria-hidden="true"></div>
+
+            <!-- Analogue Film Grain Overlay -->
+            <div class="hero-grain" style="filter:url(#hero-grain);" aria-hidden="true"></div>
+
+            <!-- 3D Perspective Viewport & Floating Tilted Plugin Card -->
+            <div class="hero-viewport" aria-hidden="true">
+                <div class="hero-canvas" id="hero-3d-canvas">
+                    <div class="hero-plate" id="hero-3d-plate">
+                        <div class="hero-track" id="hero-track" data-index="0">
+                            <div class="hero-slide" style="background-image: url('/images/plugins/heronuevo.png');"></div>
+                            <div class="hero-slide" style="background-image: url('/images/plugins/easy-mix-agente-poster.jpg');"></div>
+                            <div class="hero-slide" style="background-image: url('/images/plugins/easy-mix.png');"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Praxis Geometric Grid Overlay (Typography & Micro-metadata) -->
+            <div class="hero-grid">
+                <!-- 1. Top Right Micro-Meta (Retro-tech monospace) -->
+                <div class="hero-meta mono">
+                    <div>VST3 / AU</div>
+                    <div>WINDOWS / MACOS</div>
+                    <div>ONE-TIME / <s class="hero-was">$35</s> <span class="hero-price-now">25 USD</span></div>
+                </div>
+
+                <!-- 2. Massive Centre Headline (Layered & bold with mix-blend contrast) -->
+                <h1 class="hero-title">
+                    VOCES PRO.<br />
+                    AL INSTANTE.
+                </h1>
+
+                <!-- 3. Bottom Row: Micro-caption + Cut-Corner Chamfer CTA + Secondary Link -->
+                <div class="hero-bottom">
+                    <div class="mono hero-bottom-caption">
+                        <p class="hero-caption-tag">[ VOCAL MIXING SUITE ]</p>
+                        <p class="hero-caption-sub">MODO ASISTENTE INTELIGENTE, PRESETS & EFECTOS PRO</p>
+                    </div>
+
+                    <div class="hero-bottom-actions">
+                        <a href="#probar-plugin" class="hero-try-btn mono">
+                            <span>PROBAR PLUGIN</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                        <a href="#pricing-section" class="hero-cta" id="hero-btn-buy">
+                            <i class="bi bi-bag-fill"></i>
+                            <span>COMPRAR - <s class="hero-was">$35</s> 25 USD</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Carousel Pagination Dots -->
+            <div class="hero-dots" role="group" aria-label="Vistas del plugin">
+                <button type="button" class="hero-dot is-on" data-index="0" aria-label="Vista Principal" aria-current="true"></button>
+                <button type="button" class="hero-dot" data-index="1" aria-label="Modo Asistente"></button>
+                <button type="button" class="hero-dot" data-index="2" aria-label="Presets"></button>
+            </div>
+
+            <!-- Animated Flow Line Indicator -->
+            <div class="hero-scroll" aria-hidden="true"></div>
         </section>
+
+        <!-- ==================== PRAXIS HERO SCRIPT (WEBGL SHADER + 3D TILT + CAROUSEL) ==================== -->
+        <script>
+            (function () {
+                // 1. WebGL Aurora Flow Shader
+                const canvas = document.getElementById('hero-flow-canvas');
+                if (canvas) {
+                    const gl = canvas.getContext('webgl', {
+                        antialias: false,
+                        alpha: false,
+                        depth: false,
+                        stencil: false,
+                        preserveDrawingBuffer: false,
+                        powerPreference: 'low-power'
+                    });
+
+                    if (gl) {
+                        const vsSource = `
+                            attribute vec2 a_pos;
+                            varying vec2 vUv;
+                            void main() {
+                                vUv = a_pos * 0.5 + 0.5;
+                                gl_Position = vec4(a_pos, 0.0, 1.0);
+                            }
+                        `;
+
+                        const fsSource = `
+                            precision highp float;
+                            uniform float u_time;
+                            uniform float u_noise_scale;
+                            uniform float u_distortion;
+                            uniform float u_turbulence;
+                            uniform float u_intensity;
+                            uniform vec3 u_base;
+                            uniform vec3 u_c1;
+                            uniform vec3 u_c2;
+                            uniform vec3 u_c3;
+                            uniform vec3 u_c4;
+                            uniform vec3 u_c5;
+                            varying vec2 vUv;
+
+                            vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+                            vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+                            vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
+                            vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+
+                            float snoise(vec3 v) {
+                                const vec2 C = vec2(1.0 / 6.0, 1.0 / 3.0);
+                                const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+                                vec3 i = floor(v + dot(v, C.yyy));
+                                vec3 x0 = v - i + dot(i, C.xxx);
+                                vec3 g = step(x0.yzx, x0.xyz);
+                                vec3 l = 1.0 - g;
+                                vec3 i1 = min(g.xyz, l.zxy);
+                                vec3 i2 = max(g.xyz, l.zxy);
+                                vec3 x1 = x0 - i1 + C.xxx;
+                                vec3 x2 = x0 - i2 + C.yyy;
+                                vec3 x3 = x0 - D.yyy;
+                                i = mod289(i);
+                                vec4 p = permute(permute(permute(i.z + vec4(0.0, i1.z, i2.z, 1.0)) + i.y + vec4(0.0, i1.y, i2.y, 1.0)) + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+                                float n_ = 0.142857142857;
+                                vec3 ns = n_ * D.wyz - D.xzx;
+                                vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+                                vec4 x_ = floor(j * ns.z);
+                                vec4 y_ = floor(j - 7.0 * x_);
+                                vec4 x = x_ * ns.x + ns.yyyy;
+                                vec4 y = y_ * ns.x + ns.yyyy;
+                                vec4 h = 1.0 - abs(x) - abs(y);
+                                vec4 b0 = vec4(x.xy, y.xy);
+                                vec4 b1 = vec4(x.zw, y.zw);
+                                vec4 s0 = floor(b0) * 2.0 + 1.0;
+                                vec4 s1 = floor(b1) * 2.0 + 1.0;
+                                vec4 sh = -step(h, vec4(0.0));
+                                vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+                                vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+                                vec3 p0 = vec3(a0.xy, h.x);
+                                vec3 p1 = vec3(a0.zw, h.y);
+                                vec3 p2 = vec3(a1.xy, h.z);
+                                vec3 p3 = vec3(a1.zw, h.w);
+                                vec4 norm = taylorInvSqrt(vec4(dot(p0, p0), dot(p1, p1), dot(p2, p2), dot(p3, p3)));
+                                p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+                                vec4 m = max(0.6 - vec4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0);
+                                m = m * m;
+                                return 42.0 * dot(m * m, vec4(dot(p0, x0), dot(p1, x1), dot(p2, x2), dot(p3, x3)));
+                            }
+
+                            float fbm(vec3 p) {
+                                float value = 0.0;
+                                float amplitude = 0.5;
+                                float frequency = 0.6;
+                                for (int i = 0; i < 3; i++) {
+                                    value += amplitude * snoise(p * frequency);
+                                    amplitude *= 0.5;
+                                    frequency *= 2.0;
+                                }
+                                return value;
+                            }
+
+                            float turbulence(vec3 p) {
+                                float t = 0.0;
+                                float amplitude = 1.0;
+                                float frequency = 0.4;
+                                for (int i = 0; i < 3; i++) {
+                                    t += abs(snoise(p * frequency)) * amplitude;
+                                    amplitude *= 0.5;
+                                    frequency *= 2.0;
+                                }
+                                return t;
+                            }
+
+                            vec2 curl(vec2 p, float time) {
+                                float eps = 0.01;
+                                float n1 = snoise(vec3(p.x, p.y + eps, time));
+                                float n2 = snoise(vec3(p.x, p.y - eps, time));
+                                float n3 = snoise(vec3(p.x + eps, p.y, time));
+                                float n4 = snoise(vec3(p.x - eps, p.y, time));
+                                return vec2(n1 - n2, n4 - n3) / (2.0 * eps);
+                            }
+
+                            void main() {
+                                vec2 uv = vUv;
+                                float time = u_time * 0.5;
+                                vec3 pos = vec3(uv * u_noise_scale * 1.5, time * 0.1);
+
+                                float turb1 = turbulence(pos) * u_turbulence;
+                                float turb2 = turbulence(pos * 1.7 + vec3(100.0, 50.0, time * 0.3)) * u_turbulence * 0.3;
+                                float turb3 = fbm(pos * 0.8 + vec3(200.0, 100.0, time * 0.15)) * u_turbulence * 0.5;
+                                vec2 curlForce = curl(uv * 2.0, time * 0.5) * 0.25;
+                                vec2 distortedUV = uv + vec2(turb1 + turb2, turb2 + turb3) * u_distortion + curlForce;
+
+                                vec2 center1 = vec2(0.5 + sin(time * 0.4) * 0.3 + turb1 * 0.2, 0.75 + cos(time * 0.3) * 0.2 + turb2 * 0.3);
+                                vec2 center2 = vec2(0.75 + sin(time * 0.35) * 0.25 + turb2 * 0.8, 0.65 + cos(time * 0.45) * 0.3 + turb3 * 0.61);
+                                vec2 center3 = vec2(0.6 + sin(time * 0.5) * 0.2 + turb3 * 0.12, 0.25 + cos(time * 0.4) * 0.28 + turb1 * 0.09);
+                                vec2 center4 = vec2(0.15 + sin(time * 0.25) * 0.35 + turb1 * 0.11, 0.8 + cos(time * 0.55) * 0.22 + turb2 * 0.08);
+
+                                float grad1 = 1.0 - smoothstep(0.0, 0.6 - turb1 * 0.2, length(distortedUV - center1));
+                                float grad2 = 1.0 - smoothstep(0.0, 0.5 - turb2 * 0.15, length(distortedUV - center2));
+                                float grad3 = 1.0 - smoothstep(0.0, 0.55 - turb3 * 0.18, length(distortedUV - center3));
+                                float grad4 = 1.0 - smoothstep(0.0, 0.45 - turb1 * 0.12, length(distortedUV - center4));
+
+                                vec3 color = u_base;
+                                color += u_c1 * grad1 * (0.9 + turb1 * 0.3);
+                                color += u_c2 * grad2 * (0.8 + turb2 * 0.4);
+                                color += u_c3 * grad3 * (0.7 + turb3 * 0.3);
+                                color += u_c4 * grad4 * (0.6 + turb1 * 0.2);
+                                color += u_c5 * (grad1 * grad2 * 0.7);
+                                color += mix(u_c1, u_c2, 0.5) * (grad2 * grad3 * 0.93);
+                                color += mix(u_c3, u_c4, 0.6) * (grad3 * grad4 * 0.35);
+
+                                color = pow(max(color, 0.0), vec3(0.9));
+                                float vignette = smoothstep(0.11, 1.0, 1.0 - length(uv - 0.5) * 1.75);
+                                color = mix(u_base, color * vignette, u_intensity);
+
+                                gl_FragColor = vec4(color, 1.0);
+                            }
+                        `;
+
+                        function createShader(type, source) {
+                            const s = gl.createShader(type);
+                            if (!s) return null;
+                            gl.shaderSource(s, source);
+                            gl.compileShader(s);
+                            if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+                                gl.deleteShader(s);
+                                return null;
+                            }
+                            return s;
+                        }
+
+                        const vs = createShader(gl.VERTEX_SHADER, vsSource);
+                        const fs = createShader(gl.FRAGMENT_SHADER, fsSource);
+
+                        if (vs && fs) {
+                            const prog = gl.createProgram();
+                            gl.attachShader(prog, vs);
+                            gl.attachShader(prog, fs);
+                            gl.linkProgram(prog);
+
+                            if (gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+                                gl.useProgram(prog);
+
+                                const buf = gl.createBuffer();
+                                gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+                                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+
+                                const aPos = gl.getAttribLocation(prog, 'a_pos');
+                                gl.enableVertexAttribArray(aPos);
+                                gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+                                const p = (name) => gl.getUniformLocation(prog, name);
+
+                                // Palette: Midnight obsidian base + cosmic blue, purple, cyan, pink
+                                gl.uniform3f(p('u_base'), 0.055, 0.058, 0.070);
+                                gl.uniform3f(p('u_c1'), 0.24, 0.36, 1.0);
+                                gl.uniform3f(p('u_c2'), 0.30, 0.55, 1.0);
+                                gl.uniform3f(p('u_c3'), 0.61, 0.30, 1.0);
+                                gl.uniform3f(p('u_c4'), 0.13, 0.83, 0.93);
+                                gl.uniform3f(p('u_c5'), 1.00, 0.30, 0.60);
+                                gl.uniform1f(p('u_intensity'), 0.42);
+
+                                const uTime = p('u_time');
+                                const uNoise = p('u_noise_scale');
+                                const uDist = p('u_distortion');
+                                const uTurb = p('u_turbulence');
+
+                                function resizeCanvas() {
+                                    const w = Math.max(1, canvas.clientWidth);
+                                    const h = Math.max(1, canvas.clientHeight);
+                                    const scale = Math.min(1, 640 / w) * 0.5;
+                                    const pw = Math.max(1, Math.round(w * scale));
+                                    const ph = Math.max(1, Math.round(h * scale));
+                                    if (canvas.width !== pw || canvas.height !== ph) {
+                                        canvas.width = pw;
+                                        canvas.height = ph;
+                                        gl.viewport(0, 0, pw, ph);
+                                    }
+                                }
+                                resizeCanvas();
+                                window.addEventListener('resize', resizeCanvas, { passive: true });
+
+                                const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                                let isVisible = true;
+                                let animFrame = null;
+                                let elapsed = 0;
+                                let lastTime = performance.now();
+                                let lastDraw = 0;
+
+                                function render(now) {
+                                    if (!reducedMotion && isVisible) {
+                                        animFrame = requestAnimationFrame(render);
+                                    }
+                                    if (now - lastDraw < 1000 / 24) return;
+                                    lastDraw = now;
+                                    const delta = Math.min(0.1, (now - lastTime) / 1000);
+                                    lastTime = now;
+                                    elapsed += delta * 0.5;
+
+                                    gl.uniform1f(uTime, elapsed);
+                                    gl.uniform1f(uTurb, 0.8 + 0.4 * Math.sin(elapsed * 0.21));
+                                    gl.uniform1f(uNoise, 4.25 + 1.75 * Math.sin(elapsed * 0.13 + 1.0));
+                                    gl.uniform1f(uDist, 0.165 + 0.085 * Math.sin(elapsed * 0.17 + 2.0));
+                                    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                                }
+
+                                const heroSec = document.getElementById('hero-section');
+                                if ('IntersectionObserver' in window && heroSec) {
+                                    const obs = new IntersectionObserver(([entry]) => {
+                                        isVisible = entry.isIntersecting;
+                                        if (isVisible && !animFrame) {
+                                            lastTime = performance.now();
+                                            animFrame = requestAnimationFrame(render);
+                                        } else if (!isVisible && animFrame) {
+                                            cancelAnimationFrame(animFrame);
+                                            animFrame = null;
+                                        }
+                                    });
+                                    obs.observe(heroSec);
+                                } else {
+                                    animFrame = requestAnimationFrame(render);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 2. 3D Perspective Tilt and Slides
+                const heroCanvas = document.getElementById('hero-3d-canvas');
+                const plate = document.getElementById('hero-3d-plate');
+                const track = document.getElementById('hero-track');
+                const dots = document.querySelectorAll('.hero-dot');
+                if (!heroCanvas || !plate) return;
+
+                let currentIndex = 0;
+                const totalSlides = 3;
+
+                function setSlide(index) {
+                    currentIndex = Math.max(0, Math.min(totalSlides - 1, index));
+                    if (track) {
+                        track.style.transform = 'translateX(-' + (currentIndex * 100) + '%)';
+                    }
+                    dots.forEach((dot, idx) => {
+                        if (idx === currentIndex) {
+                            dot.classList.add('is-on');
+                            dot.setAttribute('aria-current', 'true');
+                        } else {
+                            dot.classList.remove('is-on');
+                            dot.removeAttribute('aria-current');
+                        }
+                    });
+                }
+
+                dots.forEach((dot) => {
+                    dot.addEventListener('click', () => {
+                        const idx = parseInt(dot.getAttribute('data-index') || '0', 10);
+                        setSlide(idx);
+                    });
+                });
+
+                // Desktop Mouse Tilt tracking
+                const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                const finePointer = window.matchMedia('(pointer: fine)').matches;
+
+                if (!reducedMotion && finePointer) {
+                    let mouseX = 0, mouseY = 0;
+                    let rafId = null;
+
+                    function updateTilt() {
+                        rafId = null;
+                        const rx = 55 + mouseY / 2;
+                        const rz = -25 + mouseX / 2;
+                        heroCanvas.style.transform = 'rotateX(' + rx + 'deg) rotateZ(' + rz + 'deg) scale(1)';
+                    }
+
+                    window.addEventListener('mousemove', (e) => {
+                        mouseX = (window.innerWidth / 2 - e.clientX) / 28;
+                        mouseY = (window.innerHeight / 2 - e.clientY) / 28;
+                        if (!rafId) rafId = requestAnimationFrame(updateTilt);
+                    }, { passive: true });
+                }
+
+                // Mobile Touch Swipe
+                let startX = 0;
+                plate.addEventListener('touchstart', (e) => {
+                    if (e.touches.length > 0) startX = e.touches[0].clientX;
+                }, { passive: true });
+
+                plate.addEventListener('touchend', (e) => {
+                    if (e.changedTouches.length > 0) {
+                        const diffX = e.changedTouches[0].clientX - startX;
+                        if (diffX < -45) setSlide(currentIndex + 1);
+                        else if (diffX > 45) setSlide(currentIndex - 1);
+                    }
+                }, { passive: true });
+            })();
+        </script>
 
         <!-- ==================== AUDIO COMPARISON SECTION (SECCIÓN 2: ANTES VS DESPUÉS) ==================== -->
         <section id="audio-comparison" class="audio-comparison-section">
