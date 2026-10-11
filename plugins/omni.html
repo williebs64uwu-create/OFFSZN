@@ -3832,14 +3832,15 @@
             }
         })();
 
-        // ── PRECIO: $10 USD fijo (Yape S/ 30). Antes: A/B $17 vs $25 ──
+        // ── A/B TESTING ENGINE: $10 vs $15 USD (Yape fijo S/ 35) ──
         (function initABTesting() {
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
-            // Precio fijo $10 (ya no hay A/B). El servidor acepta 10 en su lista de precios validos.
-            const AB_KEY = 'offszn_ab_omni_10_v1';
-            const AB_TIERS = [10];
-            const AB_ORIGINAL = { 10: 15 }; // precio tachado
+            // A/B $10 vs $15 (50/50). Se asigna una vez por navegador y se mantiene
+            // ?price=10|15 fuerza una variante para pruebas.
+            const AB_KEY = 'offszn_ab_omni_10_15_v1';
+            const AB_TIERS = [10, 15];
+            const AB_ORIGINAL = { 10: 15, 15: 20 }; // precio tachado de cada variante
 
             let assignedPrice;
             try {
@@ -3850,10 +3851,10 @@
                 } else if (AB_TIERS.includes(saved)) {
                     assignedPrice = saved;
                 }
-                if (!assignedPrice) assignedPrice = 10;
+                if (!assignedPrice) assignedPrice = Math.random() < 0.5 ? 10 : 15;
                 localStorage.setItem(AB_KEY, assignedPrice);
             } catch (e) {
-                if (!assignedPrice) assignedPrice = 10;
+                if (!assignedPrice) assignedPrice = Math.random() < 0.5 ? 10 : 15;
             }
 
             window.AB_VARIANT = 'price_' + assignedPrice;
@@ -3887,7 +3888,7 @@
                 const origEl = document.getElementById('omni-original-price');
                 if (origEl) origEl.innerText = `$${window.AB_ORIGINAL_PRICE}`;
 
-                const solesMap = { 10: 30 };
+                const solesMap = { 10: 35, 15: 35 };
                 const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
 
                 const waLinks = document.querySelectorAll('a[href*="wa.me"]');
@@ -4065,7 +4066,7 @@
     </script>
     <script src="https://sdk.mercadopago.com/js/v2"></script>
     <script src="/script/plugin-checkout.js?v=20261011"></script>
-    <script>window.YAPE_FIXED_PRICE_PEN = 30; /* Yape: S/ 30.00 exactos */</script>
+    <script>window.YAPE_FIXED_PRICE_PEN = 35; /* Yape: S/ 35.00 exactos */</script>
     <script src="/script/yape-checkout.js?v=20261011"></script>
     <script src="/script/pay-click-tracker.js?v=20261011"></script>
 
