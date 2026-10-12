@@ -4147,7 +4147,7 @@
 
 <style id="omni-hands">
 /* HERO: dos manos se acercan, se tocan en la esfera de luz y la fusion revela Omni */
-.hx-run{position:relative;height:320vh}
+.hx-run{position:relative;height:100vh;min-height:600px}
 .hx-stick{position:sticky;top:0;height:100vh;min-height:600px;overflow:hidden;background:radial-gradient(900px 520px at 50% 50%,rgba(76,29,149,.16),transparent 70%),#050506}
 .hx-hand{position:absolute;left:0;top:0;width:auto;max-width:none;pointer-events:none;user-select:none;will-change:transform,opacity,filter;filter:drop-shadow(0 0 22px rgba(196,181,253,.10));opacity:0}
 .hx-orb{position:absolute;left:0;top:0;border-radius:50%;background:radial-gradient(circle at 42% 38%,#fff 0%,#fff 46%,#f3e8ff 62%,rgba(233,213,255,.0) 72%);box-shadow:0 0 18px 6px rgba(255,255,255,.85),0 0 60px 18px rgba(216,180,254,.45),0 0 140px 50px rgba(124,58,237,.28);will-change:transform,opacity}
@@ -4167,7 +4167,7 @@
 .hx-hint .m{width:22px;height:34px;border:1.5px solid rgba(255,255,255,.35);border-radius:12px;position:relative}
 .hx-hint .m i{position:absolute;left:50%;top:7px;width:3px;height:7px;margin-left:-1.5px;border-radius:2px;background:#e9d5ff;animation:hxWheel 1.6s ease-in-out infinite}
 @keyframes hxWheel{0%{opacity:0;transform:translateY(0)}30%{opacity:1}100%{opacity:0;transform:translateY(10px)}}
-@media(max-width:760px){.hx-run{height:260vh}}
+
 @media(prefers-reduced-motion:reduce){.hx-run{height:auto}.hx-stick{position:relative;height:auto;min-height:0;padding:110px 16px 70px}.hx-hand,.hx-orb,.hx-ring,.hx-flash,.hx-hint{display:none}.hx-text{position:relative;left:auto;top:auto;transform:none;opacity:1;margin:0 auto 28px}.hx-plug{position:relative;opacity:1;width:min(900px,92vw);margin:0 auto}}
 </style>
 <script id="omni-hands-js">
@@ -4179,7 +4179,7 @@
       flash=document.getElementById('hxFlash'),plug=document.getElementById('hxPlug'),text=document.getElementById('hxText'),hint=document.getElementById('hxHint');
   // punta del indice de cada mano (fraccion de la imagen) y giro para que apunten al centro
   var HL={w:680,h:820,tx:.694,ty:.127,rot:46},HR={w:1010,h:538,tx:.0495,ty:.706,rot:28};
-  var W,H,k,cx,cy,orbR,plugW,plugH,plugCy,lit=false,raf=0;
+  var W,H,k,cx,cy,orbR,plugW,plugH,plugCy,lit=false,raf=0,t0=null,DUR=2000;
   function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
   function seg(p,a,b){return clamp((p-a)/(b-a),0,1)}
   function eo(t){return 1-Math.pow(1-t,3)}
@@ -4207,7 +4207,7 @@
   }
   function frame(t){
     raf=0;
-    var r=run.getBoundingClientRect(),total=Math.max(1,r.height-H),p=clamp(-r.top/total,0,1);
+    if(t0===null)t0=performance.now();var p=clamp((performance.now()-t0)/DUR,0,1);   // animacion por tiempo (2 s), sin scroll
     var now=(t||performance.now())/1000;
     // 1) acercamiento (0 - .44)
     var a=eio(seg(p,0,.44));
@@ -4219,7 +4219,7 @@
     var apart=eo(seg(p,.5,.64))*W*.10;           // las manos se retiran tras la fusion
     var hop=1-seg(p,.52,.64);
     var hblur=seg(p,.5,.64)*10;
-    var intro=eo(clamp(now/1.4,0,1));            // entrada al cargar
+    var intro=eo(clamp(p/.12,0,1));             // entrada
     place(L,HL,cx-g-apart-(1-intro)*60,cy+drift,HL.rot+ (1-a)*4,hop*intro,hblur);
     place(Rh,HR,cx+g+apart+(1-intro)*60,cy-drift,HR.rot- (1-a)*4,hop*intro,hblur);
     // esfera: late, crece al tocar y se convierte en Omni
@@ -4246,14 +4246,14 @@
     text.style.opacity=tt.toFixed(3);
     text.style.transform='translateX(-50%) translateY('+((1-tt)*24).toFixed(1)+'px)';
     text.style.pointerEvents=tt>.6?'auto':'none';
-    hint.style.opacity=clamp(1-p*8,0,1).toFixed(2);
-    if(p<.47||intro<1)req();                     // animacion continua mientras la esfera respira
+    hint.style.display='none';
+    if(p<1)req();
   }
   function req(){if(!raf)raf=requestAnimationFrame(frame)}
-  addEventListener('scroll',function(){req()},{passive:true});
   addEventListener('resize',function(){measure();req()});
-  [L,Rh].forEach(function(i){if(!i.complete)i.addEventListener('load',req)});
-  measure();req();
+  function go(){measure();t0=null;req()}
+  var pend=[L,Rh,plug.querySelector('img')].filter(function(i){return !i.complete});
+  if(!pend.length)go();else{var n=pend.length;pend.forEach(function(i){i.addEventListener('load',function(){if(--n===0)go()});i.addEventListener('error',function(){if(--n===0)go()})})}
 })();
 </script>
 </body>
