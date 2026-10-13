@@ -733,6 +733,11 @@ app.use('/music-raw-to-defined', express.static(musicPath, {
     }
 }));
 
+// Video Omni Beat hospedado en Cloudflare R2
+app.get(['/videos/omni-beat.mp4', '/videos/omni-beat'], (req, res) => {
+    res.redirect(307, '/api/r2-public/videos/omni-beat.mp4');
+});
+
 const videosPath = path.join(rootPath, 'videos');
 app.use('/videos', express.static(videosPath, {
     maxAge: '7d',
