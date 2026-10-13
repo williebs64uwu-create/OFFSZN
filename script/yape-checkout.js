@@ -898,8 +898,8 @@
 
                     <p style="font-size:0.8rem; color:#a1a1aa; margin:0 0 8px; font-weight:600;">📥 Descargar Easy Mix:</p>
                     <div class="yape-download-actions" style="margin-bottom:12px;">
-                        <a href="https://drive.google.com/file/d/1oHgJXJwirHDVvovbImJnBklEo-BIxlv4/view?usp=sharing" target="_blank" class="yape-download-btn yape-download-win">Windows</a>
-                        <a href="https://drive.google.com/file/d/1Yc5HIQfIbFpFM_W4OZgyoxR2ojIKg0je/view?usp=sharing" target="_blank" class="yape-download-btn yape-download-mac">macOS</a>
+                        <a href="https://drive.google.com/file/d/1FXEF4CsSlClVKTZ8lzfq7027-4Pa-Jh1/view?usp=sharing" target="_blank" class="yape-download-btn yape-download-win">Windows</a>
+                        <a href="https://drive.google.com/file/d/1Wd_NgGsuc_FG6kjQOTjnF0qIodnK-iO4/view?usp=sharing" target="_blank" class="yape-download-btn yape-download-mac">macOS</a>
                     </div>
 
                     <p style="font-size:0.8rem; color:#ff9f0a; margin:0 0 8px; font-weight:600;">📥 Descargar Easy Master:</p>

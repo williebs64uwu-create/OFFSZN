@@ -47,33 +47,13 @@ router.get('/download/vst-installer', async (req, res) => {
 });
 
 // 8. Descarga del Instalador VST3 (OFFSZN EASY MIX - Windows)
-router.get('/download/easymix-installer', async (req, res) => {
-    try {
-        const url = await getPresignedDownloadUrl('EASY_MIX_V1.exe', 3600, 'v3');
-        if (url) {
-            res.redirect(url);
-        } else {
-            res.status(404).send('Instalador no encontrado en el servidor.');
-        }
-    } catch (error) {
-        console.error('Error generando enlace de descarga de Easy Mix:', error);
-        res.status(500).send('Error interno al generar enlace de descarga.');
-    }
+router.get('/download/easymix-installer', (req, res) => {
+    res.redirect('https://drive.google.com/file/d/1FXEF4CsSlClVKTZ8lzfq7027-4Pa-Jh1/view?usp=sharing');
 });
 
 // 8b. Descarga del Instalador VST3 (OFFSZN EASY MIX - macOS)
-router.get('/download/easymix-mac-installer', async (req, res) => {
-    try {
-        const url = await getPresignedDownloadUrl('EASY_MIX_Mac_Installer_v1.0.0.pkg', 3600, 'v3');
-        if (url) {
-            res.redirect(url);
-        } else {
-            res.status(404).send('Instalador no encontrado en el servidor.');
-        }
-    } catch (error) {
-        console.error('Error generando enlace de descarga de Easy Mix Mac:', error);
-        res.status(500).send('Error interno al generar enlace de descarga.');
-    }
+router.get('/download/easymix-mac-installer', (req, res) => {
+    res.redirect('https://drive.google.com/file/d/1Wd_NgGsuc_FG6kjQOTjnF0qIodnK-iO4/view?usp=sharing');
 });
 
 export default router;
