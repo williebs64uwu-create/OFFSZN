@@ -56,4 +56,14 @@ router.get('/download/easymix-mac-installer', (req, res) => {
     res.redirect('https://drive.google.com/file/d/1Wd_NgGsuc_FG6kjQOTjnF0qIodnK-iO4/view?usp=sharing');
 });
 
+// 8c. Descarga del Instalador VST3 (OFFSZN OMNI - Windows)
+router.get(['/download/omni-installer', '/download/omni-win-installer'], (req, res) => {
+    res.redirect('https://drive.google.com/file/d/179OVCmWJowkrDiwSeFpC3lqPR7Qn_1Zk/view?usp=sharing');
+});
+
+// 8d. Descarga del Instalador VST3 (OFFSZN OMNI - macOS)
+router.get('/download/omni-mac-installer', (req, res) => {
+    res.redirect('https://drive.google.com/file/d/1suMJLf1y-Y06NuLetNGojvHXBt8yzz4D/view?usp=sharing');
+});
+
 export default router;

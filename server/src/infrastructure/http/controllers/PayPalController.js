@@ -1449,8 +1449,8 @@ export const capturePayPalOrder = async (req, res) => {
                                 };
                             } else if (isOmni) {
                                 downloadLinks = {
-                                    win: 'https://offszn.lat/downloads/Omni_Plugin_Setup.exe',
-                                    mac: ''
+                                    win: 'https://drive.google.com/file/d/179OVCmWJowkrDiwSeFpC3lqPR7Qn_1Zk/view?usp=sharing',
+                                    mac: 'https://drive.google.com/file/d/1suMJLf1y-Y06NuLetNGojvHXBt8yzz4D/view?usp=sharing'
                                 };
                             } else if (isVocalPreset) {
                                 downloadLinks = {
@@ -1469,8 +1469,8 @@ export const capturePayPalOrder = async (req, res) => {
                             <div style="margin:20px 0;">
                                 <p style="color:#aaa; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; font-weight:700; margin-bottom:12px;">Descargar Instaladores</p>
                                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                                    <a href="${downloadLinks.win}" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xea00; Windows</a>
-                                    ${downloadLinks.mac ? `<a href="${downloadLinks.mac}" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xf8ff; macOS</a>` : '<span style="color:#888; font-size:0.85rem; align-self:center; padding:10px 0;">(macOS próximamente)</span>'}
+                                    <a href="${downloadLinks.win}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xea00; Windows</a>
+                                    ${downloadLinks.mac ? `<a href="${downloadLinks.mac}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xf8ff; macOS</a>` : '<span style="color:#888; font-size:0.85rem; align-self:center; padding:10px 0;">(macOS próximamente)</span>'}
                                 </div>
                             </div>
                         ` : (isPlugin ? '' : `

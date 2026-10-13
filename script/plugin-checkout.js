@@ -45,8 +45,8 @@ class PluginDirectCheckout {
         } else if (isOmni) {
             this.downloads = {
                 name: 'Omni Plugin',
-                win: '/downloads/Omni_Plugin_Setup.exe',
-                mac: ''
+                win: 'https://drive.google.com/file/d/179OVCmWJowkrDiwSeFpC3lqPR7Qn_1Zk/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1suMJLf1y-Y06NuLetNGojvHXBt8yzz4D/view?usp=sharing'
             };
         } else if (isVocalPreset) {
             this.downloads = {
