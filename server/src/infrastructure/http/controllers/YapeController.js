@@ -18,14 +18,14 @@ const PLUGIN_INFO_MAP = {
         name: 'Easy Mix',
         downloads: {
             win: 'https://drive.google.com/file/d/1oHgJXJwirHDVvovbImJnBklEo-BIxlv4/view?usp=sharing',
-            mac: 'https://drive.google.com/file/d/1Yc5HIQfIbFpFM_W4OZgyoFyR2ojIKg0je/view?usp=sharing'
+            mac: 'https://drive.google.com/file/d/1Yc5HIQfIbFpFM_W4OZgyoxR2ojIKg0je/view?usp=sharing'
         }
     },
     '901': {
         name: 'Easy Mix',
         downloads: {
             win: 'https://drive.google.com/file/d/1oHgJXJwirHDVvovbImJnBklEo-BIxlv4/view?usp=sharing',
-            mac: 'https://drive.google.com/file/d/1Yc5HIQfIbFpFM_W4OZgyoFyR2ojIKg0je/view?usp=sharing'
+            mac: 'https://drive.google.com/file/d/1Yc5HIQfIbFpFM_W4OZgyoxR2ojIKg0je/view?usp=sharing'
         }
     },
     '900': {
