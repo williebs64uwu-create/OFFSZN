@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Cómo instalar tus plugins · Willie Inspired</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0c0c0d;--bar:rgba(12,12,13,.88);--card:#151517;--card2:#1c1c1f;--line:#2a2a2e;--text:#f3f3f4;--muted:#9b9ba3;--btn:#fff;--btnText:#0c0c0d}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-padding-top:130px}
+  body{font-family:'Geist',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+
+  header.top{position:sticky;top:0;z-index:30;background:var(--bar);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  .bar{max-width:880px;margin:0 auto;padding:12px 24px;display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+  .logo{font-weight:800;font-size:19px;letter-spacing:-.04em;text-transform:uppercase;text-decoration:none;white-space:nowrap}
+  nav.pills{display:flex;flex-wrap:wrap;gap:2px;padding:4px;border:1px solid var(--line);border-radius:22px;background:var(--card);max-width:100%}
+  nav.pills a{border-radius:99px;padding:7px 15px;font-size:14px;font-weight:500;color:var(--muted);text-decoration:none;white-space:nowrap;transition:.15s}
+  nav.pills a:hover{color:var(--text)}
+  nav.pills a.on{background:var(--btn);color:var(--btnText);font-weight:600}
+
+  main{max-width:880px;margin:0 auto;padding:48px 24px 60px}
+  h1{font-size:clamp(30px,5vw,44px);line-height:1.08;letter-spacing:-.035em;font-weight:800;margin-bottom:10px}
+  .lead{color:var(--muted);font-size:17px;margin-bottom:34px}
+  .lead b{color:var(--text)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:28px;margin-bottom:20px}
+  .card h2{font-size:24px;letter-spacing:-.02em;display:flex;align-items:center;gap:12px;margin-bottom:22px}
+  .num{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--btn);color:var(--btnText);font-size:14px;font-weight:700;flex:none}
+
+  /* Botones de descarga (dentro de los pasos) */
+  .btns{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--btn);color:var(--btnText);font-weight:600;font-size:14px;padding:10px 18px;border-radius:99px;text-decoration:none;white-space:nowrap}
+  .btn:hover{opacity:.86}
+  .btn small{font-weight:500;opacity:.6;font-size:12px}
+  .need{font-size:12px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:12px 0 0}
+
+  /* Lista de plugins (Waves) */
+  .wl{list-style:none;margin:12px 0 4px;border:1px solid var(--line);border-radius:16px;background:var(--card2);overflow:hidden;columns:2;column-gap:0}
+  .wl li{break-inside:avoid;padding:11px 16px;font-size:15px;font-weight:600;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .wl li::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--muted);flex:none}
+  .wl li small{color:var(--muted);font-weight:500;font-size:12.5px}
+
+  ol.steps{list-style:none;counter-reset:s}
+  ol.steps > li{counter-increment:s;position:relative;padding:3px 0 20px 44px}
+  ol.steps > li:last-child{padding-bottom:4px}
+  ol.steps > li::before{content:counter(s);position:absolute;left:0;top:0;width:29px;height:29px;border-radius:50%;background:var(--card2);border:1px solid #3a3a40;font-weight:700;font-size:13px;display:grid;place-items:center}
+  ol.steps ul{margin:8px 0 4px 18px;color:var(--muted)}
+  ol.steps ul li{margin:3px 0}
+  .note{margin:12px 0 4px;padding:13px 16px;border-radius:14px;background:#1e1a0f;border:1px solid #4d3f17;font-size:14px}
+  .note.ok{background:#0f1f18;border-color:#1e5a3d;color:#c4f5de;font-weight:600}
+  figure{margin:12px 0 4px}
+  figure img{display:block;max-width:100%;height:auto;border-radius:12px;border:1px solid var(--line);cursor:zoom-in}
+  figure.sm img{max-width:360px}
+
+  footer{border-top:1px solid var(--line);padding:24px;text-align:center;color:var(--muted);font-size:13px}
+  footer b{color:var(--text)}
+  #lb{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:60;cursor:zoom-out;padding:20px}
+  #lb.on{display:flex}#lb img{max-width:100%;max-height:100%;border-radius:10px}
+  @media(max-width:700px){.bar{align-items:stretch;padding:10px 14px}.logo{text-align:center}nav.pills{justify-content:center}nav.pills a{padding:6px 11px;font-size:13px}main{padding:30px 14px 40px}.card{padding:22px 16px}.wl{columns:1}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="bar">
+    <a class="logo" href="#">Willie Inspired</a>
+    <nav class="pills" id="nav">
+      <a href="#fl">FL Studio</a>
+      <a href="#waves">Waves</a>
+      <a href="#fabfilter">FabFilter</a>
+      <a href="#ozone">Ozone 12</a>
+      <a href="#soothe">Soothe 2</a>
+      <a href="#valhalla">Valhalla</a>
+      <a href="#freshair">Fresh Air</a>
+      <a href="#maag">Maag EQ</a>
+      <a href="#spectre">Spectre</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <h1>Cómo instalar tus plugins</h1>
+  <p class="lead">Instala en este orden y <b>con FL Studio cerrado</b>. Cada bloque tiene los pasos y, dentro, los botones de descarga.</p>
+
+  <!-- 1 FL STUDIO -->
+  <section class="card" id="fl">
+    <h2><span class="num">1</span>FL Studio 26</h2>
+    <ol class="steps">
+      <li>Instalar el archivo descargado de Fl studio v26 es un archivo .exe ejecutable para windows
+        <div class="btns">
+          <a class="btn" href="https://t.me/offszngang/212" target="_blank" rel="noopener">Descargar para Windows ↗</a>
+          <a class="btn" href="https://t.me/offszngang/229" target="_blank" rel="noopener">Descargar para Mac ↗</a>
+        </div>
+      </li>
+      <li>Ya estará activado listo para usar (NO se necesita activaciones, ya viene activado el instalador)</li>
+    </ol>
+    <div class="note"><b>PARA MAC:</b> (SEGUIR MISMOS PASOS, PRIMERO DESCOMPRIMIR EL .RAR CON WIN RAR)</div>
+  </section>
+
+  <!-- 2 WAVES -->
+  <section class="card" id="waves">
+    <h2><span class="num">2</span>Waves <small style="color:var(--muted);font-weight:500;font-size:15px">· versión V16</small></h2>
+    <ol class="steps">
+      <li>Crearte una cuenta en waves.com
+        <div class="btns"><a class="btn" href="https://www.waves.com/" target="_blank" rel="noopener">Ir a waves.com ↗</a></div>
+      </li>
+      <li>Descargar Waves Central
+        <div class="btns"><a class="btn" href="https://www.waves.com/downloads/central" target="_blank" rel="noopener">Descargar Waves Central ↗</a></div>
+      </li>
+      <li>Cerrar FL Studio</li>
+      <li>Abrir Waves Central</li>
+      <li>Iniciar session o Crear tu cuenta del Waves Central</li>
+      <li>Ir a “Install Products”<figure><img src="../images/manual-plugins/image4.webp" width="1400" height="754" alt="Install Products" loading="lazy"></figure></li>
+      <li>Clickear en All Products<figure><img src="../images/manual-plugins/image5.webp" width="1400" height="853" alt="All Products" loading="lazy"></figure></li>
+      <li>En View seleccionar solo V16 Version (¡y nada más!)<figure><img src="../images/manual-plugins/image6.webp" width="1400" height="753" alt="View V16" loading="lazy"></figure></li>
+      <li>Seleccionar todos los plugins que necesitas en V16, si no sale algun plugin tener en consideración lo siguiente:
+        <ul>
+          <li>Deeser = puedes buscarlo como “dee” o “de”</li>
+          <li>RVOX = puedes buscarlo como “Renaissance Vox” o “Renaissance”</li>
+          <li>SSL EQ = puedes buscarlo como “SSL” e instalas todos los que salen.</li>
+        </ul>
+        <p class="need">Plugins de Waves que necesitas:</p>
+        <ul class="wl">
+          <li>NS1</li>
+          <li>DeEsser</li>
+          <li>API-560</li>
+          <li>C6 Multiband Compressor</li>
+          <li>SSL EQ</li>
+          <li>Renaissance Vox <small>(RVox)</small></li>
+          <li>CLA Vocals</li>
+          <li>CLA-76</li>
+          <li>PuigTec EQs <small>(EQP1A)</small></li>
+          <li>L4 Ultramaximizer</li>
+          <li>H-Delay</li>
+          <li>Doubler</li>
+          <li>S1 Imager</li>
+          <li>Abbey Road Chambers</li>
+          <li>Abbey Road J37 Tape</li>
+        </ul>
+        <figure><img src="../images/manual-plugins/image7.webp" width="1400" height="748" alt="Buscador" loading="lazy"></figure></li>
+      <li>Click en “Install” se encontrará en la parte derecha</li>
+      <li>Despues de que termine de instalar todo, cerrar el waves central, <b>NO ABRIR EL FL STUDIO O TU DAW AÚN</b></li>
+      <li>Descargar este archivo para poder activar los plugins
+        <div class="btns"><a class="btn" href="https://www.mediafire.com/file/61c3qpud1pdw8lp/Waves_Ultimate_2025.3_patch.exe/file" target="_blank" rel="noopener">Descargar activador de Waves ↗</a></div>
+      </li>
+      <li>Darle doble click al archivo que descargaste de mediafire que se llama: <b>Waves_Ultimate_2025.3_patch.exe</b></li>
+      <li>Reiniciar la PC</li>
+      <li>Abrir el Fl studio o tu daw, escanea completamente los plugins con todas las opciones.</li>
+      <li>Ya estarán instalados y activados!</li>
+    </ol>
+  </section>
+
+  <!-- 3 FABFILTER -->
+  <section class="card" id="fabfilter">
+    <h2><span class="num">3</span>FabFilter</h2>
+    <ol class="steps">
+      <li><b>CIERRA FL STUDIO</b></li>
+      <li><b>INSTALAR PLUGINS QUE NECESITAS:</b>
+        <div class="btns">
+          <a class="btn" href="https://t.me/offszngang/30" target="_blank" rel="noopener">Pro-Q 4 ↗</a>
+          <a class="btn" href="https://t.me/offszngang/29" target="_blank" rel="noopener">Pro-MB ↗</a>
+          <a class="btn" href="https://t.me/offszngang/26" target="_blank" rel="noopener">Pro-DS ↗</a>
+        </div>
+      </li>
+      <li><b>USAR ESTE ACTIVADOR PARA TODOS LOS PLUGINS DE FAB FILTER:</b>
+        <div class="btns"><a class="btn" href="https://t.me/offszngang/37" target="_blank" rel="noopener">Descargar activador ↗</a></div>
+        <div class="note">Si bloquea al abrir: (dar click a "<b>más información</b> &gt; <b>ejecutar de todas maneras</b>"<figure><img src="../images/manual-plugins/image1.webp" width="519" height="491" alt="Archivo malintencionado" loading="lazy"></figure></div></li>
+      <li>DARLE A “<b>REGISTER</b>" luego a "<b>GENERATE</b>" &gt; luego puedes cerrar esa ventana.<figure class="sm"><img src="../images/manual-plugins/image2.webp" width="315" height="326" alt="Register y Generate" loading="lazy"></figure></li>
+    </ol>
+    <div class="note">Si instalas uno nuevo, repetir proceso de “register y generate”</div>
+  </section>
+
+  <!-- 4 OZONE -->
+  <section class="card" id="ozone">
+    <h2><span class="num">4</span>Ozone 12</h2>
+    <ol class="steps">
+      <li>CIERRA FL STUDIO</li>
+      <li>Descargar el instalador
+        <div class="btns">
+          <a class="btn" href="https://t.me/offszngang/42" target="_blank" rel="noopener">Descargar para Windows ↗</a>
+          <a class="btn" href="https://t.me/offszngang/244" target="_blank" rel="noopener">Descargar para Mac ↗</a>
+        </div>
+      </li>
+      <li>Dale doble click para abrir el instalador
+        <div class="note">Si bloquea al abrir: (dar click a "<b>más información</b> &gt; <b>ejecutar de todas maneras</b>"<figure><img src="../images/manual-plugins/image3.webp" width="692" height="345" alt="Archivo malintencionado" loading="lazy"></figure></div></li>
+      <li>Darle todo a “SIGUIENTE” o “NEXT”</li>
+      <li>luego de eso, el plugin estará instalado.</li>
+    </ol>
+    <div class="note ok">NO SE NECESITA NINGUNA ACTIVACIÓN EXTRA.</div>
+  </section>
+
+  <!-- 5 SOOTHE -->
+  <section class="card" id="soothe">
+    <h2><span class="num">5</span>Soothe 2</h2>
+    <div class="btns" style="margin-top:0"><a class="btn" href="https://t.me/offszngang/74" target="_blank" rel="noopener">Descargar Soothe 2 ↗</a></div>
+    <figure><img src="../images/manual-plugins/image8.webp" width="443" height="370" alt="Pasos a seguir" loading="lazy"></figure>
+  </section>
+
+  <!-- 6 VALHALLA -->
+  <section class="card" id="valhalla">
+    <h2><span class="num">6</span>Valhalla completo</h2>
+    <div class="btns" style="margin-top:0">
+      <a class="btn" href="https://t.me/offszngang/88" target="_blank" rel="noopener">Descargar para Windows ↗</a>
+      <a class="btn" href="https://t.me/offszngang/259" target="_blank" rel="noopener">Descargar para Mac ↗</a>
+    </div>
+    <figure><img src="../images/manual-plugins/image9.webp" width="443" height="370" alt="Pasos a seguir" loading="lazy"></figure>
+  </section>
+
+  <!-- 7 FRESH AIR -->
+  <section class="card" id="freshair">
+    <h2><span class="num">7</span>Fresh Air</h2>
+    <div class="btns" style="margin-top:0"><a class="btn" href="https://t.me/offszngang/108" target="_blank" rel="noopener">Descargar para Windows ↗</a></div>
+    <figure><img src="../images/manual-plugins/image9.webp" width="443" height="370" alt="Pasos a seguir" loading="lazy"></figure>
+  </section>
+
+  <!-- 8 MAAG EQ -->
+  <section class="card" id="maag">
+    <h2><span class="num">8</span>Maag EQ</h2>
+    <div class="btns" style="margin-top:0"><a class="btn" href="https://t.me/offszngang/178" target="_blank" rel="noopener">Descargar para Windows ↗</a></div>
+    <figure><img src="../images/manual-plugins/image9.webp" width="443" height="370" alt="Pasos a seguir" loading="lazy"></figure>
+    <ol class="steps" style="margin-top:18px">
+      <li>PASO PARA ACTIVARLO, USAR ESTE PATCH:
+        <div class="btns"><a class="btn" href="https://t.me/offszngang/179" target="_blank" rel="noopener">Descargar patch ↗</a></div>
+      </li>
+    </ol>
+    <div class="note">Recuerda si tienes problemas al abrir o el antivirus te elimina, descomprimir denuevo el .rar y cambiarle de nombre para evitar bloqueo por antivirus.</div>
+  </section>
+
+  <!-- 9 SPECTRE -->
+  <section class="card" id="spectre">
+    <h2><span class="num">9</span>Spectre</h2>
+    <div class="btns" style="margin-top:0"><a class="btn" href="https://t.me/offszngang/156" target="_blank" rel="noopener">Descargar para Windows ↗</a></div>
+    <figure><img src="../images/manual-plugins/image9.webp" width="443" height="370" alt="Pasos a seguir" loading="lazy"></figure>
+    <ol class="steps" style="margin-top:18px">
+      <li>PASO PARA ACTIVARLO, USAR ESTE KEYGEN:
+        <div class="btns"><a class="btn" href="https://t.me/offszngang/158" target="_blank" rel="noopener">Descargar keygen ↗</a></div>
+      </li>
+    </ol>
+    <div class="note">Recuerda si tienes problemas al abrir o el antivirus te elimina, descomprimir denuevo el .rar y cambiarle de nombre para evitar bloqueo por antivirus.</div>
+  </section>
+</main>
+
+<footer>Hecho con <b>OFFSZN</b></footer>
+<div id="lb"><img alt=""></div>
+
+<script>
+(function(){
+  /* Nav: resalta la sección visible */
+  var links={},nav=document.getElementById('nav');
+  nav.querySelectorAll('a').forEach(function(a){links[a.getAttribute('href').slice(1)]=a});
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(!e.isIntersecting)return;
+      Object.keys(links).forEach(function(k){links[k].classList.toggle('on',k===e.target.id)});
+    });
+  },{rootMargin:'-90px 0px -65% 0px'});
+  Object.keys(links).forEach(function(k){var s=document.getElementById(k);if(s)io.observe(s)});
+
+  /* Lightbox */
+  var lb=document.getElementById('lb'),li=lb.querySelector('img');
+  document.addEventListener('click',function(e){
+    if(e.target.matches('figure img')){li.src=e.target.src;lb.classList.add('on')}
+    else if(lb.classList.contains('on'))lb.classList.remove('on');
+  });
+})();
+</script>
+</body>
+</html>
