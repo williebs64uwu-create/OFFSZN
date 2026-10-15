@@ -3,83 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OFFSZN • Pagos Manuales</title>
+    <title>OFFSZN • Telemetría de Clics & Pagos</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        :root { --bg:#09090b; --surface:#121216; --border:rgba(255,255,255,.1); --text:#fff; --muted:#a1a1aa; --green:#10b981; --amber:#f59e0b; --blue:#38bdf8; }
-        * { box-sizing:border-box; margin:0; padding:0; }
-        body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Inter',sans-serif; padding:24px 16px; }
-        .wrap { max-width:1000px; margin:0 auto; }
-        h1 { font-size:1.3rem; margin-bottom:4px; }
-        p.sub { color:var(--muted); font-size:.85rem; margin-bottom:20px; }
-        .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
-        input, button { font:inherit; border-radius:8px; border:1px solid var(--border); background:#0e0e12; color:var(--text); padding:10px 12px; }
-        button { cursor:pointer; background:#fff; color:#000; font-weight:700; border:0; }
-        button.ghost { background:transparent; color:var(--text); border:1px solid var(--border); }
-        .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-        .row input { flex:1; min-width:180px; }
-        #auth { max-width:360px; margin:15vh auto 0; }
-        #auth input { width:100%; margin:12px 0; }
-        #err { color:#f43f5e; font-size:.8rem; display:none; margin-bottom:8px; }
-        .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:16px; }
-        .stat b { display:block; font-size:1.4rem; }
-        .stat span { color:var(--muted); font-size:.75rem; }
-        .table-wrap { overflow-x:auto; }
-        table { width:100%; border-collapse:collapse; font-size:.85rem; }
-        th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--border); white-space:nowrap; }
-        th { color:var(--muted); font-weight:600; font-size:.72rem; text-transform:uppercase; }
-        .ref { font-family:ui-monospace,Menlo,monospace; font-weight:800; letter-spacing:1px; color:var(--blue); }
-        .price { font-weight:800; color:var(--green); font-size:1rem; }
-        .pen { color:var(--muted); font-size:.78rem; }
-        .empty { color:var(--muted); text-align:center; padding:28px; }
-        .found { border-color:var(--green); }
+        :root {
+            --bg: #09090b;
+            --surface: #121216;
+            --surface-hover: #18181f;
+            --border: rgba(255,255,255,.08);
+            --border-strong: rgba(255,255,255,.18);
+            --text: #f4f4f5;
+            --muted: #a1a1aa;
+            --dim: #71717a;
+            --green: #10b981;
+            --amber: #f59e0b;
+            --blue: #38bdf8;
+            --purple: #a855f7;
+            --pink: #f2379f;
+            --cyan: #06b6d4;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+            padding: 24px 16px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .wrap { max-width: 1140px; margin: 0 auto; }
+        h1 { font-size: 1.35rem; font-weight: 700; letter-spacing: -0.3px; }
+        p.sub { color: var(--muted); font-size: .85rem; margin-top: 4px; margin-bottom: 20px; }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        input, button, select {
+            font: inherit;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #0e0e12;
+            color: var(--text);
+            padding: 8px 12px;
+        }
+        button {
+            cursor: pointer;
+            background: #fff;
+            color: #000;
+            font-weight: 700;
+            border: 0;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        button:hover { opacity: 0.9; }
+        button.ghost {
+            background: rgba(255,255,255,0.03);
+            color: var(--muted);
+            border: 1px solid var(--border);
+            font-weight: 500;
+            font-size: .8rem;
+            padding: 6px 12px;
+            border-radius: 999px;
+        }
+        button.ghost:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.08);
+            border-color: var(--border-strong);
+        }
+        button.ghost.active {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+            font-weight: 700;
+        }
+        .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .filter-label {
+            font-size: .75rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: .5px;
+            color: var(--dim);
+            margin-right: 4px;
+            font-family: var(--font-mono);
+        }
+        .filter-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        #auth { max-width: 380px; margin: 15vh auto 0; text-align: center; }
+        #auth input { width: 100%; margin: 14px 0; padding: 12px; font-size: 1rem; text-align: center; }
+        #err { color: #f43f5e; font-size: .85rem; display: none; margin-bottom: 12px; }
+        
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .stat-card b {
+            display: block;
+            font-size: 1.45rem;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: #fff;
+        }
+        .stat-card span {
+            color: var(--muted);
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+        
+        /* Table */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: .83rem; }
+        th, td { text-align: left; padding: 10px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        th { color: var(--dim); font-weight: 600; font-size: .7rem; text-transform: uppercase; letter-spacing: .5px; }
+        tbody tr:hover { background: var(--surface-hover); }
+        .ref-code {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--blue);
+            background: rgba(56, 189, 248, 0.1);
+            padding: 3px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+        }
+        .price { font-weight: 700; color: var(--green); font-size: .95rem; font-family: var(--font-mono); }
+        .pen { color: var(--muted); font-size: .75rem; font-family: var(--font-mono); }
+        .empty { color: var(--muted); text-align: center; padding: 36px 0; }
+        
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: .72rem;
+            font-weight: 600;
+            letter-spacing: .3px;
+        }
+        .badge-easymix { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+        .badge-omni { background: rgba(168, 85, 247, 0.14); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .badge-easypitch { background: rgba(242, 55, 159, 0.14); color: #f472b6; border: 1px solid rgba(242, 55, 159, 0.3); }
+        .badge-vocalpreset { background: rgba(129, 140, 248, 0.14); color: #a5b4fc; border: 1px solid rgba(129, 140, 248, 0.3); }
+        .badge-inkakola { background: rgba(234, 179, 8, 0.14); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
+        .badge-cocacola { background: rgba(239, 68, 68, 0.14); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-easymaster { background: rgba(249, 115, 22, 0.14); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.3); }
+        .badge-promo2x1 { background: rgba(16, 185, 129, 0.14); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-default { background: rgba(255, 255, 255, 0.08); color: #e4e4e7; border: 1px solid rgba(255, 255, 255, 0.15); }
+
+        .method-yape { color: #c084fc; font-weight: 600; }
+        .method-mp { color: #38bdf8; font-weight: 600; }
+        .method-binance { color: #facc15; font-weight: 600; }
+        .method-paypal { color: #60a5fa; font-weight: 600; }
+        .method-wa { color: #4ade80; font-weight: 600; }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+        .search-box i {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--dim);
+            font-size: 13px;
+        }
+        .search-box input {
+            width: 100%;
+            padding-left: 32px;
+        }
     </style>
 </head>
 <body>
     <div id="auth" class="card">
-        <h1>Pagos manuales</h1>
-        <p class="sub">Acceso administrativo OFFSZN</p>
+        <div style="font-size:2rem; margin-bottom:10px;">⚡</div>
+        <h1>Telemetría de Clics</h1>
+        <p class="sub">Acceso administrativo OFFSZN Master</p>
         <form id="auth-form">
             <input type="password" id="pin" placeholder="PIN maestro" autocomplete="current-password" autofocus>
-            <div id="err">Clave incorrecta</div>
-            <button type="submit" style="width:100%">Entrar</button>
+            <div id="err"><i class="bi bi-exclamation-triangle-fill"></i> Clave incorrecta</div>
+            <button type="submit" style="width:100%; justify-content:center; padding:12px;">Desbloquear Panel</button>
         </form>
     </div>
 
     <div id="app" class="wrap" style="display:none">
-        <div class="row" style="justify-content:space-between; margin-bottom:6px">
-            <h1>Pagos manuales · Yape, Mercado Pago, Binance, WhatsApp</h1>
-            <button class="ghost" id="logout">Salir</button>
-        </div>
-        <p class="sub">Cuando un cliente te escriba por WhatsApp, mira aquí el clic más reciente de ese método: la hora y el precio que vio.</p>
-
-        <div class="card">
-            <div class="row" id="filters">
-                <button class="ghost" data-m="">Todos</button>
-                <button class="ghost" data-m="Yape">Yape</button>
-                <button class="ghost" data-m="Mercado Pago">Mercado Pago</button>
-                <button class="ghost" data-m="Binance">Binance</button>
-                <button class="ghost" data-m="WhatsApp">WhatsApp</button>
+        <div class="row" style="justify-content:space-between; margin-bottom:8px">
+            <div>
+                <h1>Telemetría de Clics & Pagos · Todos los Plugins</h1>
+                <p class="sub">Auditoría en vivo de qué plugin vio el cliente, a qué precio (USD y Soles) y qué método tocó antes de comprar o escribir.</p>
+            </div>
+            <div class="row">
+                <a href="/owner/offszn.html" class="ghost" style="text-decoration:none; padding:8px 14px; border-radius:8px; display:inline-flex; align-items:center; gap:6px;">
+                    <i class="bi bi-speedometer2"></i> Command Center ↗
+                </a>
+                <button class="ghost" id="btn-refresh" style="border-radius:8px; padding:8px 12px;" title="Refrescar datos">
+                    <i class="bi bi-arrow-clockwise" id="refresh-icon"></i>
+                </button>
+                <button class="ghost" id="logout" style="border-radius:8px; padding:8px 12px;" title="Cerrar sesión">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
             </div>
         </div>
 
-        <div class="stats" id="stats"></div>
+        <!-- Filtros de Producto y Método -->
+        <div class="card" style="display:flex; flex-direction:column; gap:12px;">
+            <div class="row">
+                <span class="filter-label">Producto:</span>
+                <div class="filter-group" id="prod-filters">
+                    <button class="ghost active" data-prod="">Todos</button>
+                    <button class="ghost" data-prod="Easy Mix">Easy Mix</button>
+                    <button class="ghost" data-prod="Omni">Omni</button>
+                    <button class="ghost" data-prod="Easy Pitch">Easy Pitch</button>
+                    <button class="ghost" data-prod="Vocal Preset">Vocal Preset</button>
+                    <button class="ghost" data-prod="Inka Kola">Inka Kola</button>
+                    <button class="ghost" data-prod="Coca-Cola">Coca-Cola</button>
+                    <button class="ghost" data-prod="Easy Master">Easy Master</button>
+                    <button class="ghost" data-prod="Promo 2x1">Promo 2x1</button>
+                </div>
+            </div>
 
+            <div class="row">
+                <span class="filter-label">Método:</span>
+                <div class="filter-group" id="method-filters">
+                    <button class="ghost active" data-m="">Todos</button>
+                    <button class="ghost" data-m="Yape">Yape</button>
+                    <button class="ghost" data-m="Mercado Pago">Mercado Pago</button>
+                    <button class="ghost" data-m="Binance">Binance</button>
+                    <button class="ghost" data-m="PayPal">PayPal</button>
+                    <button class="ghost" data-m="WhatsApp">WhatsApp</button>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top:4px;">
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="search-input" placeholder="Buscar por email, ref o página...">
+                </div>
+                <span id="sync-indicator" style="color:var(--dim); font-size:.75rem; font-family:var(--font-mono);">
+                    <i class="bi bi-broadcast" style="color:var(--green)"></i> Auto-sync activo (15s)
+                </span>
+            </div>
+        </div>
+
+        <!-- Estadísticas Rápidas -->
+        <div class="stats-grid" id="stats"></div>
+
+        <!-- Tabla de Registros -->
         <div class="card">
             <div class="table-wrap">
                 <table>
-                    <thead><tr><th>Cuándo</th><th>Email</th><th>Producto</th><th>Método</th><th>Precio</th><th>Variante</th></tr></thead>
-                    <tbody id="rows"><tr><td colspan="6" class="empty">Cargando…</td></tr></tbody>
+                    <thead>
+                        <tr>
+                            <th>Cuándo</th>
+                            <th>Ref</th>
+                            <th>Producto</th>
+                            <th>Método</th>
+                            <th>Precio Visto</th>
+                            <th>Email / Cliente</th>
+                            <th>Variante</th>
+                            <th>Página</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rows">
+                        <tr><td colspan="8" class="empty">Cargando registros...</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
     </div>
 
 <script>
-    // Misma clave y misma sesión que el panel de licencias.
     const SESSION_KEY = 'offszn_owner_auth_token';
     const $ = (id) => document.getElementById(id);
     const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
     const getPin = () => sessionStorage.getItem(SESSION_KEY) || '';
+
+    let rawList = [];
+    let selectedMethod = '';
+    let selectedProduct = '';
+    let searchQuery = '';
 
     async function verifyPin(pin) {
         try {
@@ -88,17 +313,29 @@
         } catch (_) { return false; }
     }
 
-    async function load(ref) {
-        const url = '/api/plugin/admin/payment-clicks?limit=300&admin_key=' + encodeURIComponent(getPin()) + (ref ? '&ref=' + encodeURIComponent(ref) : '');
-        const r = await fetch(url);
-        if (r.status === 403) { logout(); return null; }
-        const j = await r.json();
-        return j.clicks || [];
+    async function loadData() {
+        const pin = getPin();
+        if (!pin) { logout(); return; }
+        
+        $('refresh-icon').classList.add('spin');
+        try {
+            const url = '/api/plugin/admin/payment-clicks?limit=350&admin_key=' + encodeURIComponent(pin);
+            const r = await fetch(url);
+            if (r.status === 403) { logout(); return; }
+            const j = await r.json();
+            rawList = j.clicks || [];
+            applyFilters();
+        } catch (err) {
+            console.error('Error fetching clicks:', err);
+        } finally {
+            setTimeout(() => $('refresh-icon').classList.remove('spin'), 400);
+        }
     }
 
     function fmtDate(iso) {
+        if (!iso) return '—';
         const d = new Date(iso);
-        const exact = d.toLocaleString('es-PE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+        const exact = d.toLocaleString('es-PE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', second:'2-digit' });
         const mins = Math.floor((Date.now() - d.getTime()) / 60000);
         const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
         const days = Math.round((startToday - new Date(d).setHours(0, 0, 0, 0)) / 86400000);
@@ -108,56 +345,212 @@
         else if (days <= 0) rel = 'hoy · hace ' + Math.floor(mins / 60) + ' h';
         else if (days === 1) rel = 'ayer';
         else rel = 'hace ' + days + ' días';
-        return '<b>' + rel + '</b> <span class="pen">' + exact + '</span>';
+        return '<b>' + rel + '</b><br><span class="pen">' + exact + '</span>';
     }
+
+    function productBadge(name) {
+        const n = (name || '').toLowerCase();
+        let cls = 'badge-default';
+        let label = name || 'Plugin';
+
+        if (n.includes('pitch')) cls = 'badge-easypitch';
+        else if (n.includes('vocal')) cls = 'badge-vocalpreset';
+        else if (n.includes('inka')) cls = 'badge-inkakola';
+        else if (n.includes('coca')) cls = 'badge-cocacola';
+        else if (n.includes('master')) cls = 'badge-easymaster';
+        else if (n.includes('omni')) cls = 'badge-omni';
+        else if (n.includes('promo')) cls = 'badge-promo2x1';
+        else if (n.includes('mix')) cls = 'badge-easymix';
+
+        return `<span class="badge ${cls}">${esc(label)}</span>`;
+    }
+
+    function methodHtml(m) {
+        const method = (m || 'WhatsApp').trim();
+        const low = method.toLowerCase();
+        let icon = 'bi-chat-dots';
+        let cls = 'method-wa';
+
+        if (low.includes('yape')) { icon = 'bi-qr-code'; cls = 'method-yape'; }
+        else if (low.includes('mercado')) { icon = 'bi-credit-card'; cls = 'method-mp'; }
+        else if (low.includes('binance')) { icon = 'bi-currency-bitcoin'; cls = 'method-binance'; }
+        else if (low.includes('paypal')) { icon = 'bi-paypal'; cls = 'method-paypal'; }
+        else if (low.includes('whats')) { icon = 'bi-whatsapp'; cls = 'method-wa'; }
+
+        return `<span class="${cls}"><i class="bi ${icon}"></i> ${esc(method)}</span>`;
+    }
+
     function priceHtml(c) {
         const usd = c.price_usd ? '$' + Number(c.price_usd) : '—';
-        const pen = c.price_pen ? ' <span class="pen">/ S/ ' + Number(c.price_pen) + '</span>' : '';
+        const pen = c.price_pen ? '<br><span class="pen">S/ ' + Number(c.price_pen) + '</span>' : '';
         return '<span class="price">' + usd + '</span>' + pen;
     }
 
     function renderStats(list) {
-        const by = {};
-        list.forEach(c => { const k = c.price_usd ? '$' + Number(c.price_usd) : 'sin precio'; by[k] = (by[k] || 0) + 1; });
-        const entries = Object.entries(by);
-        $('stats').innerHTML = '<div class="card stat"><b>' + list.length + '</b><span>clics (mostrados)</span></div>' +
-            entries.map(([k, n]) => '<div class="card stat"><b>' + n + '</b><span>vieron ' + esc(k) + '</span></div>').join('');
+        const byPrice = {};
+        const byMethod = {};
+        const byProd = {};
+
+        list.forEach(c => {
+            const pKey = c.price_usd ? '$' + Number(c.price_usd) : 'sin precio';
+            byPrice[pKey] = (byPrice[pKey] || 0) + 1;
+
+            const mKey = c.method || 'WhatsApp';
+            byMethod[mKey] = (byMethod[mKey] || 0) + 1;
+
+            const prKey = c.product || 'Otros';
+            byProd[prKey] = (byProd[prKey] || 0) + 1;
+        });
+
+        const priceEntries = Object.entries(byPrice).sort((a,b) => b[1] - a[1]);
+        const methodEntries = Object.entries(byMethod).sort((a,b) => b[1] - a[1]);
+
+        let html = `
+            <div class="stat-card">
+                <b>${list.length}</b>
+                <span>Clics (Filtrados)</span>
+            </div>
+        `;
+
+        priceEntries.slice(0, 4).forEach(([k, n]) => {
+            html += `
+                <div class="stat-card">
+                    <b style="color:var(--green)">${n}</b>
+                    <span>Vieron ${esc(k)}</span>
+                </div>
+            `;
+        });
+
+        methodEntries.slice(0, 3).forEach(([k, n]) => {
+            html += `
+                <div class="stat-card">
+                    <b>${n}</b>
+                    <span>${esc(k)}</span>
+                </div>
+            `;
+        });
+
+        $('stats').innerHTML = html;
     }
 
     function renderRows(list) {
-        $('rows').innerHTML = list.length ? list.map(c =>
-            '<tr><td>' + fmtDate(c.created_at) + '</td><td>' + (c.email ? esc(c.email) : '<span class="pen">anónimo</span>') + '</td><td>' + esc(c.product) +
-            '</td><td>' + esc(c.method) + '</td><td>' + priceHtml(c) + '</td><td>' + esc(c.variant) + '</td></tr>'
-        ).join('') : '<tr><td colspan="6" class="empty">Sin registros</td></tr>';
+        if (!list.length) {
+            $('rows').innerHTML = '<tr><td colspan="8" class="empty">No se encontraron clics con los filtros seleccionados.</td></tr>';
+            return;
+        }
+
+        $('rows').innerHTML = list.map(c => `
+            <tr>
+                <td>${fmtDate(c.created_at)}</td>
+                <td><span class="ref-code">${esc(c.ref || '—')}</span></td>
+                <td>${productBadge(c.product)}</td>
+                <td>${methodHtml(c.method)}</td>
+                <td>${priceHtml(c)}</td>
+                <td>${c.email ? `<span style="font-weight:600; color:#fff;">${esc(c.email)}</span>` : '<span class="pen">anónimo</span>'}</td>
+                <td><span class="pen">${esc(c.variant || '—')}</span></td>
+                <td><span class="pen" style="font-size:.72rem;">${esc(c.page || '—')}</span></td>
+            </tr>
+        `).join('');
     }
 
-    let method = '';
-    async function showAll() {
-        const list = await load();
-        if (!list) return;
-        const shown = method ? list.filter(c => c.method === method) : list;
-        renderStats(shown); renderRows(shown);
+    function applyFilters() {
+        let list = rawList;
+
+        if (selectedProduct) {
+            const pLow = selectedProduct.toLowerCase();
+            list = list.filter(c => (c.product || '').toLowerCase().includes(pLow));
+        }
+
+        if (selectedMethod) {
+            const mLow = selectedMethod.toLowerCase();
+            list = list.filter(c => (c.method || '').toLowerCase().includes(mLow));
+        }
+
+        if (searchQuery) {
+            const q = searchQuery.toLowerCase();
+            list = list.filter(c => 
+                (c.ref || '').toLowerCase().includes(q) ||
+                (c.email || '').toLowerCase().includes(q) ||
+                (c.product || '').toLowerCase().includes(q) ||
+                (c.page || '').toLowerCase().includes(q) ||
+                (c.variant || '').toLowerCase().includes(q)
+            );
+        }
+
+        renderStats(list);
+        renderRows(list);
     }
 
-    function logout() { sessionStorage.removeItem(SESSION_KEY); location.reload(); }
+    function logout() {
+        sessionStorage.removeItem(SESSION_KEY);
+        location.reload();
+    }
 
     async function unlock() {
         $('auth').style.display = 'none';
         $('app').style.display = 'block';
-        showAll();
+        loadData();
     }
 
+    // Event Listeners
     $('auth-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const pin = $('pin').value.trim();
-        if (pin && await verifyPin(pin)) { sessionStorage.setItem(SESSION_KEY, pin); unlock(); }
-        else $('err').style.display = 'block';
+        if (pin && await verifyPin(pin)) {
+            sessionStorage.setItem(SESSION_KEY, pin);
+            unlock();
+        } else {
+            $('err').style.display = 'block';
+        }
     });
-    document.querySelectorAll('#filters button').forEach(btn => btn.addEventListener('click', () => { method = btn.dataset.m; showAll(); }));
-    setInterval(() => { if ($('app').style.display !== 'none') showAll(); }, 20000);
-    $('logout').addEventListener('click', logout);
 
-    (async () => { const pin = getPin(); if (pin && await verifyPin(pin)) unlock(); })();
+    $('logout').addEventListener('click', logout);
+    $('btn-refresh').addEventListener('click', loadData);
+
+    // Product Filter Buttons
+    document.querySelectorAll('#prod-filters button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#prod-filters button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedProduct = btn.dataset.prod || '';
+            applyFilters();
+        });
+    });
+
+    // Method Filter Buttons
+    document.querySelectorAll('#method-filters button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#method-filters button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedMethod = btn.dataset.m || '';
+            applyFilters();
+        });
+    });
+
+    // Search Input
+    $('search-input').addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim();
+        applyFilters();
+    });
+
+    // Auto-refresh interval
+    setInterval(() => {
+        if ($('app').style.display !== 'none') {
+            loadData();
+        }
+    }, 15000);
+
+    // Auto-unlock if session key exists
+    (async () => {
+        const pin = getPin();
+        if (pin && await verifyPin(pin)) {
+            unlock();
+        }
+    })();
 </script>
+<style>
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    .spin { animation: spin 0.6s linear infinite; display: inline-block; }
+</style>
 </body>
 </html>

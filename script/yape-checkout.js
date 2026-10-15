@@ -137,20 +137,21 @@
                     opacity: 1;
                 }
 
-                /* Modal Card - Clean Black & White */
+                /* Modal Card - Clean White High-Trust Banking Style */
                 .yape-modal-card {
-                    background: #09090b;
-                    border: 1px solid #27272a;
-                    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
-                    border-radius: 16px;
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.04);
+                    border-radius: 20px;
                     width: 100%;
-                    max-width: 420px;
-                    color: #ffffff;
-                    font-family: 'Geist', 'Plus Jakarta Sans', -apple-system, sans-serif;
+                    max-width: 410px;
+                    color: #0f172a;
+                    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                     overflow: hidden;
                     position: relative;
                     transform: scale(0.96);
                     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                    box-sizing: border-box;
                 }
 
                 .yape-modal-overlay.active .yape-modal-card {
@@ -160,10 +161,11 @@
                 /* Header */
                 .yape-modal-header {
                     padding: 18px 22px;
-                    border-bottom: 1px solid #27272a;
+                    border-bottom: 1px solid #f1f5f9;
                     display: flex;
                     align-items: center;
                     justify-content: space-between;
+                    background: #ffffff;
                 }
 
                 .yape-brand-group {
@@ -172,143 +174,161 @@
                     gap: 10px;
                 }
 
+                .yape-brand-badge-img {
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 6px;
+                    object-fit: contain;
+                }
+
                 .yape-modal-title {
-                    font-size: 1.05rem;
-                    font-weight: 700;
+                    font-size: 1.08rem;
+                    font-weight: 800;
                     margin: 0;
-                    color: #ffffff;
-                    letter-spacing: -0.2px;
+                    color: #0f172a;
+                    letter-spacing: -0.3px;
                 }
 
                 .yape-close-btn {
-                    background: transparent;
-                    border: 1px solid #27272a;
-                    color: #71717a;
-                    width: 30px;
-                    height: 30px;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    color: #64748b;
+                    width: 32px;
+                    height: 32px;
                     border-radius: 8px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
-                    font-size: 1rem;
+                    font-size: 1.1rem;
                     transition: all 0.15s;
                 }
 
                 .yape-close-btn:hover {
-                    background: #18181b;
-                    color: #ffffff;
-                    border-color: #3f3f46;
-                }
-
-                /* Price summary bar */
-                .yape-price-badge-bar {
-                    background: #121215;
-                    border-bottom: 1px solid #27272a;
-                    padding: 12px 22px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-
-                .yape-price-label {
-                    font-size: 0.82rem;
-                    color: #a1a1aa;
-                    font-weight: 500;
-                }
-
-                .yape-price-highlight {
-                    font-size: 1.15rem;
-                    font-weight: 800;
-                    color: #ffffff;
-                    letter-spacing: -0.3px;
+                    background: #f1f5f9;
+                    color: #0f172a;
+                    border-color: #cbd5e1;
                 }
 
                 .yape-modal-body {
-                    padding: 22px;
+                    padding: 22px 22px 26px;
+                    background: #ffffff;
+                    box-sizing: border-box;
                 }
 
                 .yape-form-group {
-                    margin-bottom: 16px;
+                    margin-bottom: 18px;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+
+                .yape-label-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    margin-bottom: 8px;
                 }
 
                 .yape-form-label {
                     display: block;
-                    font-size: 0.8rem;
-                    font-weight: 600;
-                    color: #a1a1aa;
-                    margin-bottom: 6px;
+                    font-size: 0.84rem;
+                    font-weight: 700;
+                    color: #1e293b;
+                    margin: 0;
+                    letter-spacing: -0.1px;
                 }
 
-                /* Input Styles - Solid Minimal Dark */
-                .yape-input {
-                    width: 100% !important;
-                    padding: 12px 14px !important;
-                    background: #121215 !important;
-                    border: 1px solid #27272a !important;
-                    border-radius: 8px !important;
-                    color: #ffffff !important;
-                    font-family: inherit !important;
-                    font-size: 0.92rem !important;
-                    transition: border-color 0.15s ease !important;
-                    outline: none !important;
-                    box-sizing: border-box !important;
+                .yape-info-circle {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 17px;
+                    height: 17px;
+                    border-radius: 50%;
+                    background: #e2e8f0;
+                    color: #475569;
+                    font-size: 0.68rem;
+                    font-weight: 700;
+                    cursor: help;
+                    transition: all 0.15s ease;
                 }
 
-                .yape-input:focus {
-                    background: #18181b !important;
-                    border-color: #ffffff !important;
-                    color: #ffffff !important;
+                .yape-info-circle:hover {
+                    background: #cbd5e1;
+                    color: #0f172a;
                 }
 
-                .yape-input::placeholder {
-                    color: #52525b !important;
+                /* Phone Input Container with +51 prefix - Perfectly Aligned */
+                .yape-phone-wrap {
+                    display: flex;
+                    align-items: center;
+                    width: 100%;
+                    height: 50px;
+                    background: #f8fafc;
+                    border: 1.5px solid #e2e8f0;
+                    border-radius: 12px;
+                    padding: 0 14px;
+                    box-sizing: border-box;
+                    transition: all 0.2s ease;
                 }
 
-                /* Phone Input */
+                .yape-phone-wrap:focus-within {
+                    background: #ffffff;
+                    border-color: #0f172a;
+                    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+                }
+
+                .yape-phone-prefix {
+                    color: #475569;
+                    font-weight: 700;
+                    font-size: 1.02rem;
+                    margin-right: 10px;
+                    user-select: none;
+                    letter-spacing: 0.5px;
+                    display: flex;
+                    align-items: center;
+                }
+
                 .yape-input-phone {
+                    flex: 1;
                     width: 100% !important;
-                    padding: 12px 14px !important;
-                    background: #121215 !important;
-                    border: 1px solid #27272a !important;
-                    border-radius: 8px !important;
-                    color: #ffffff !important;
-                    font-family: monospace, inherit !important;
-                    font-size: 1.05rem !important;
+                    height: 100% !important;
+                    padding: 0 !important;
+                    background: transparent !important;
+                    border: none !important;
+                    color: #0f172a !important;
+                    font-family: inherit !important;
+                    font-size: 1.02rem !important;
                     font-weight: 700 !important;
                     letter-spacing: 1.5px !important;
-                    transition: border-color 0.15s ease !important;
                     outline: none !important;
                     box-sizing: border-box !important;
-                }
-
-                .yape-input-phone:focus {
-                    background: #18181b !important;
-                    border-color: #ffffff !important;
-                    color: #ffffff !important;
                 }
 
                 .yape-input-phone::placeholder {
-                    color: #52525b !important;
+                    color: #94a3b8 !important;
+                    font-weight: 500 !important;
                 }
 
-                /* 6 OTP Boxes Container */
+                /* 6 OTP Boxes Grid - Perfectly Aligned to Full Width */
                 .yape-otp-grid {
                     display: grid;
-                    grid-template-columns: repeat(6, 1fr);
+                    grid-template-columns: repeat(6, minmax(0, 1fr));
                     gap: 8px;
-                    margin-top: 4px;
+                    width: 100%;
+                    box-sizing: border-box;
+                    margin-top: 2px;
                 }
 
                 .yape-otp-box {
                     width: 100%;
-                    height: 48px;
-                    background: #121215;
-                    border: 1px solid #27272a;
-                    border-radius: 8px;
-                    color: #ffffff;
-                    font-family: monospace, inherit;
-                    font-size: 1.25rem;
+                    height: 50px;
+                    background: #f8fafc;
+                    border: 1.5px solid #e2e8f0;
+                    border-radius: 12px;
+                    color: #0f172a;
+                    font-family: inherit;
+                    font-size: 1.35rem;
                     font-weight: 800;
                     text-align: center;
                     outline: none;
@@ -318,13 +338,14 @@
                 }
 
                 .yape-otp-box:focus {
-                    background: #18181b;
-                    border-color: #ffffff;
+                    background: #ffffff;
+                    border-color: #0f172a;
+                    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
                 }
 
                 .yape-otp-box.filled {
-                    border-color: #52525b;
-                    background: #18181b;
+                    border-color: #64748b;
+                    background: #ffffff;
                 }
 
                 /* Neutralize browser autofill white background */
@@ -334,61 +355,112 @@
                 .yape-input:-webkit-autofill:active,
                 .yape-input-phone:-webkit-autofill,
                 .yape-input-phone:-webkit-autofill:focus {
-                    -webkit-text-fill-color: #ffffff !important;
-                    -webkit-box-shadow: 0 0 0px 1000px #121215 inset !important;
-                    box-shadow: 0 0 0px 1000px #121215 inset !important;
+                    -webkit-text-fill-color: #0f172a !important;
+                    -webkit-box-shadow: 0 0 0px 1000px #f8fafc inset !important;
+                    box-shadow: 0 0 0px 1000px #f8fafc inset !important;
                     transition: background-color 5000s ease-in-out 0s !important;
                 }
 
-                /* Minimalist helper guide */
+                /* Minimalist helper guide matching native Yape */
                 .yape-otp-guide-clean {
-                    margin-top: 8px;
-                    font-size: 0.76rem;
-                    color: #71717a;
+                    display: flex;
+                    align-items: center;
+                    gap: 7px;
+                    margin-top: 9px;
+                    font-size: 0.8rem;
+                    color: #64748b;
+                    font-weight: 500;
                     line-height: 1.4;
                 }
 
-                .yape-otp-guide-clean strong {
-                    color: #a1a1aa;
+                .yape-otp-guide-clean svg {
+                    flex-shrink: 0;
+                    stroke: #0284c7;
                 }
 
-                /* Submit Button (Clean solid white, black bold text) */
+                /* Email Input - Solid Crisp Light */
+                .yape-input {
+                    width: 100% !important;
+                    height: 50px !important;
+                    padding: 0 14px !important;
+                    background: #f8fafc !important;
+                    border: 1.5px solid #e2e8f0 !important;
+                    border-radius: 12px !important;
+                    color: #0f172a !important;
+                    font-family: inherit !important;
+                    font-size: 0.95rem !important;
+                    font-weight: 600 !important;
+                    transition: all 0.2s ease !important;
+                    outline: none !important;
+                    box-sizing: border-box !important;
+                }
+
+                .yape-input:focus {
+                    background: #ffffff !important;
+                    border-color: #0f172a !important;
+                    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08) !important;
+                }
+
+                .yape-input::placeholder {
+                    color: #94a3b8 !important;
+                    font-weight: 400 !important;
+                }
+
+                .yape-field-helper {
+                    font-size: 0.76rem;
+                    color: #64748b;
+                    margin-top: 6px;
+                    display: block;
+                    line-height: 1.35;
+                    font-weight: 400;
+                }
+
+                /* Submit Button (Clean solid jet black, bold white text) */
                 .yape-btn-submit {
                     width: 100%;
-                    padding: 14px;
-                    background: #ffffff;
-                    color: #000000;
+                    height: 52px;
+                    background: #0f172a;
+                    color: #ffffff;
                     border: none;
-                    border-radius: 8px;
+                    border-radius: 12px;
                     font-family: inherit;
-                    font-size: 1rem;
+                    font-size: 1.02rem;
                     font-weight: 800;
                     cursor: pointer;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     gap: 8px;
-                    margin-top: 20px;
-                    transition: all 0.15s ease;
+                    margin-top: 22px;
+                    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                    letter-spacing: -0.2px;
+                    box-sizing: border-box;
+                    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
                 }
 
                 .yape-btn-submit:hover:not(:disabled) {
-                    background: #e4e4e7;
+                    background: #000000;
+                    transform: translateY(-1px);
+                    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
                 }
 
                 .yape-btn-submit:disabled {
-                    opacity: 0.5;
+                    background: #e2e8f0;
+                    color: #94a3b8;
                     cursor: not-allowed;
+                    transform: none;
+                    box-shadow: none;
                 }
 
                 .yape-error-box {
-                    background: rgba(239, 68, 68, 0.1);
-                    border: 1px solid rgba(239, 68, 68, 0.3);
-                    color: #f87171;
-                    border-radius: 8px;
-                    padding: 10px 12px;
-                    font-size: 0.8rem;
-                    margin-top: 12px;
+                    background: #fef2f2;
+                    border: 1px solid #fecaca;
+                    color: #b91c1c;
+                    border-radius: 10px;
+                    padding: 10px 14px;
+                    font-size: 0.82rem;
+                    font-weight: 600;
+                    margin-top: 14px;
                     display: none;
                     line-height: 1.4;
                 }
@@ -397,8 +469,8 @@
                 .yape-spinner {
                     width: 16px;
                     height: 16px;
-                    border: 2px solid rgba(0, 0, 0, 0.2);
-                    border-top-color: #000000;
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                    border-top-color: #ffffff;
                     border-radius: 50%;
                     animation: yapeSpin 0.7s linear infinite;
                     display: inline-block;
@@ -413,26 +485,27 @@
                     text-align: center;
                     padding: 24px 20px;
                     display: none;
+                    background: #ffffff;
                 }
 
                 .yape-success-icon-wrap {
                     width: 52px;
                     height: 52px;
-                    background: rgba(255, 255, 255, 0.08);
-                    border: 1px solid #ffffff;
+                    background: rgba(34, 197, 94, 0.12);
+                    border: 2px solid #22c55e;
                     border-radius: 50%;
                     display: inline-flex;
                     align-items: center;
                     justify-content: center;
                     font-size: 1.5rem;
-                    color: #ffffff;
+                    color: #16a34a;
                     margin-bottom: 14px;
                 }
 
                 .yape-license-card {
-                    background: #121215;
-                    border: 1px solid #27272a;
-                    border-radius: 10px;
+                    background: #f8fafc;
+                    border: 1.5px solid #e2e8f0;
+                    border-radius: 12px;
                     padding: 16px;
                     margin: 16px 0;
                     text-align: center;
@@ -442,19 +515,19 @@
                     font-family: monospace;
                     font-size: 1.15rem;
                     font-weight: 800;
-                    color: #ffffff;
+                    color: #0f172a;
                     letter-spacing: 1px;
                     margin: 8px 0;
                     word-break: break-all;
                 }
 
                 .yape-btn-copy {
-                    background: #ffffff;
+                    background: #0f172a;
                     border: none;
-                    color: #000000;
+                    color: #ffffff;
                     padding: 8px 16px;
-                    border-radius: 6px;
-                    font-size: 0.8rem;
+                    border-radius: 8px;
+                    font-size: 0.82rem;
                     font-weight: 700;
                     cursor: pointer;
                     margin-top: 6px;
@@ -462,7 +535,7 @@
                 }
 
                 .yape-btn-copy:hover {
-                    background: #e4e4e7;
+                    background: #000000;
                 }
 
                 .yape-download-actions {
@@ -473,8 +546,8 @@
                 }
 
                 .yape-download-btn {
-                    padding: 11px;
-                    border-radius: 8px;
+                    padding: 12px;
+                    border-radius: 10px;
                     text-decoration: none;
                     font-weight: 700;
                     font-size: 0.85rem;
@@ -485,14 +558,14 @@
                 }
 
                 .yape-download-win {
-                    background: #ffffff;
-                    color: #000000;
+                    background: #0f172a;
+                    color: #ffffff;
                 }
 
                 .yape-download-mac {
-                    background: #18181b;
-                    border: 1px solid #27272a;
-                    color: #ffffff;
+                    background: #f1f5f9;
+                    border: 1.5px solid #e2e8f0;
+                    color: #0f172a;
                 }
             `;
             document.head.appendChild(style);
@@ -507,35 +580,31 @@
                         <!-- Header -->
                         <div class="yape-modal-header">
                             <div class="yape-brand-group">
+                                <img src="/images/payments/yape.png" alt="Yape" class="yape-brand-badge-img" onerror="this.style.display='none'">
                                 <h3 class="yape-modal-title">Pagar con Yape</h3>
                             </div>
                             <button id="yape-modal-close" class="yape-close-btn" aria-label="Cerrar">&times;</button>
                         </div>
 
-                        <!-- Price Banner -->
-                        <div class="yape-price-badge-bar">
-                            <span class="yape-price-label">Total a pagar:</span>
-                            <span id="yape-modal-price" class="yape-price-highlight">S/. 16.50</span>
-                        </div>
-
                         <!-- Form View -->
                         <div id="yape-form-view" class="yape-modal-body">
                             <form id="yape-checkout-form" onsubmit="return false;">
+                                <!-- 1. Celular Yape -->
                                 <div class="yape-form-group">
-                                    <label class="yape-form-label" for="yape-email">Correo Electrónico</label>
-                                    <input type="email" id="yape-email" name="yape_email" class="yape-input" placeholder="tu@correo.com" required autocomplete="email">
-                                    <span style="font-size:0.72rem; color:#71717a; margin-top:4px; display:block;">Aquí recibirás tu licencia y links de descarga.</span>
+                                    <div class="yape-label-row">
+                                        <label class="yape-form-label" for="yape-phone">Ingresa tu celular Yape</label>
+                                        <span class="yape-info-circle" title="Número de celular registrado en tu cuenta de Yape">?</span>
+                                    </div>
+                                    <div class="yape-phone-wrap">
+                                        <span class="yape-phone-prefix">+51</span>
+                                        <input type="tel" id="yape-phone" name="yape_phone" class="yape-input-phone" placeholder="000 000 000" maxlength="11" required autocomplete="tel">
+                                    </div>
                                 </div>
 
+                                <!-- 2. Código de aprobación -->
                                 <div class="yape-form-group">
-                                    <label class="yape-form-label" for="yape-phone">Celular Yape</label>
-                                    <input type="tel" id="yape-phone" name="yape_phone" class="yape-input-phone" placeholder="9XX XXX XXX" maxlength="11" required>
-                                </div>
-
-                                <div class="yape-form-group">
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                                        <label class="yape-form-label" for="yape-otp-0" style="margin-bottom:0;">Código de aprobación</label>
-                                        <span style="font-size:0.72rem; color:#71717a;">6 dígitos</span>
+                                    <div class="yape-label-row">
+                                        <label class="yape-form-label" for="yape-otp-0">Código de aprobación</label>
                                     </div>
                                     
                                     <!-- 6 Individual OTP Boxes -->
@@ -549,14 +618,22 @@
                                     </div>
 
                                     <div class="yape-otp-guide-clean">
-                                        Encuéntralo en tu <strong>app Yape &gt; Menú &gt; Código de aprobación</strong>.
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                        <span>Encuéntralo en el menú de Yape.</span>
                                     </div>
+                                </div>
+
+                                <!-- 3. Correo Electrónico (al final) -->
+                                <div class="yape-form-group">
+                                    <label class="yape-form-label" for="yape-email">Correo Electrónico</label>
+                                    <input type="email" id="yape-email" name="yape_email" class="yape-input" placeholder="tu@correo.com" required autocomplete="email">
+                                    <span class="yape-field-helper">Aquí recibirás tu licencia y links de descarga.</span>
                                 </div>
 
                                 <div id="yape-error-box" class="yape-error-box"></div>
 
                                 <button type="submit" id="yape-submit-btn" class="yape-btn-submit">
-                                    <span id="yape-submit-text">Yapear S/. 16.50</span>
+                                    <span id="yape-submit-text">Yapear S/ 65.00</span>
                                 </button>
                             </form>
                         </div>
@@ -566,18 +643,18 @@
                             <div class="yape-success-icon-wrap">
                                 <i class="bi bi-check-lg"></i>
                             </div>
-                            <h2 style="font-size:1.25rem; font-weight:800; margin:0 0 6px;">¡Pago con Yape Exitoso!</h2>
-                            <p style="color:#a1a1aa; font-size:0.82rem; margin:0 0 16px;">Tu compra ha sido verificada y tu licencia está lista.</p>
+                            <h2 style="font-size:1.25rem; font-weight:800; margin:0 0 6px; color:#0f172a;">¡Pago con Yape Exitoso!</h2>
+                            <p style="color:#64748b; font-size:0.82rem; margin:0 0 16px;">Tu compra ha sido verificada y tu licencia está lista.</p>
 
                             <div class="yape-license-card">
-                                <span style="font-size:0.72rem; color:#71717a; text-transform:uppercase; letter-spacing:1px; font-weight:700;">🔑 Tu Clave de Activación</span>
+                                <span style="font-size:0.72rem; color:#64748b; text-transform:uppercase; letter-spacing:1px; font-weight:700;">🔑 Tu Clave de Activación</span>
                                 <div id="yape-success-serial" class="yape-key-text">CARGANDO...</div>
                                 <button type="button" id="yape-copy-serial-btn" class="yape-btn-copy">
                                     Copiar Clave
                                 </button>
                             </div>
 
-                            <p style="font-size:0.8rem; color:#a1a1aa; margin:0 0 10px; font-weight:600;">📥 Descarga tu plugin:</p>
+                            <p style="font-size:0.8rem; color:#475569; margin:0 0 10px; font-weight:600;">📥 Descarga tu plugin:</p>
                             <div class="yape-download-actions">
                                 <a id="yape-download-win" href="#" target="_blank" class="yape-download-btn yape-download-win">
                                     Windows (.exe)
@@ -587,7 +664,7 @@
                                 </a>
                             </div>
 
-                            <p style="color:#71717a; font-size:0.75rem; margin-top:16px;">
+                            <p style="color:#64748b; font-size:0.75rem; margin-top:16px;">
                                 Hemos enviado una copia con tus accesos a tu correo.
                             </p>
                         </div>
@@ -630,12 +707,26 @@
             if (!phoneInput) return;
 
             phoneInput.addEventListener('input', (e) => {
-                let raw = e.target.value.replace(/\D/g, '').substring(0, 9);
+                let raw = e.target.value.replace(/\D/g, '');
+                if (raw.length === 11 && raw.startsWith('51')) {
+                    raw = raw.substring(2);
+                }
+                raw = raw.substring(0, 9);
+
                 let formatted = '';
                 if (raw.length > 0) formatted = raw.substring(0, 3);
                 if (raw.length > 3) formatted += ' ' + raw.substring(3, 6);
                 if (raw.length > 6) formatted += ' ' + raw.substring(6, 9);
                 e.target.value = formatted;
+
+                // Auto-advance to OTP when 9 digits are typed
+                if (raw.length === 9) {
+                    const firstOtp = document.getElementById('yape-otp-0');
+                    if (firstOtp && !firstOtp.value) {
+                        firstOtp.focus();
+                        firstOtp.select();
+                    }
+                }
             });
         }
 
@@ -651,6 +742,12 @@
                     if (val && idx < boxes.length - 1) {
                         boxes[idx + 1].focus();
                         boxes[idx + 1].select();
+                    } else if (val && idx === boxes.length - 1) {
+                        // Auto-advance to email when 6th OTP digit is completed
+                        const emailInput = document.getElementById('yape-email');
+                        if (emailInput && !emailInput.value) {
+                            emailInput.focus();
+                        }
                     }
                     this.updateBoxState(boxes);
                 });
@@ -659,6 +756,12 @@
                     if (e.key === 'Backspace' && !box.value && idx > 0) {
                         boxes[idx - 1].focus();
                         boxes[idx - 1].select();
+                    } else if (e.key === 'ArrowLeft' && idx > 0) {
+                        boxes[idx - 1].focus();
+                        boxes[idx - 1].select();
+                    } else if (e.key === 'ArrowRight' && idx < boxes.length - 1) {
+                        boxes[idx + 1].focus();
+                        boxes[idx + 1].select();
                     }
                 });
 
@@ -666,12 +769,17 @@
                     e.preventDefault();
                     const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').substring(0, 6);
                     if (text) {
-                        for (let i = 0; i < text.length && i < boxes.length; i++) {
-                            boxes[i].value = text[i];
+                        const startIdx = (text.length >= 6) ? 0 : idx;
+                        for (let i = 0; i < text.length && (startIdx + i) < boxes.length; i++) {
+                            boxes[startIdx + i].value = text[i];
                         }
-                        const nextIdx = Math.min(text.length, boxes.length - 1);
+                        const nextIdx = Math.min(startIdx + text.length, boxes.length - 1);
                         boxes[nextIdx].focus();
                         this.updateBoxState(boxes);
+                        if (text.length >= 6) {
+                            const emailInput = document.getElementById('yape-email');
+                            if (emailInput && !emailInput.value) emailInput.focus();
+                        }
                     }
                 });
 
@@ -697,8 +805,11 @@
             if (!this.modalElement) return;
 
             const pricePEN = this.getPricePEN();
-            document.getElementById('yape-modal-price').innerText = `S/. ${pricePEN}`;
-            document.getElementById('yape-submit-text').innerText = `Yapear S/. ${pricePEN}`;
+            const priceEl = document.getElementById('yape-modal-price');
+            if (priceEl) priceEl.innerText = `S/. ${pricePEN}`;
+            
+            const submitText = document.getElementById('yape-submit-text');
+            if (submitText) submitText.innerText = `Yapear S/ ${pricePEN}`;
 
             // Reset views
             document.getElementById('yape-form-view').style.display = 'block';
@@ -712,9 +823,9 @@
             this.modalElement.classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // Auto focus email or phone
-            const emailInput = document.getElementById('yape-email');
-            if (emailInput && !emailInput.value) emailInput.focus();
+            // Auto focus phone since it's the first field now
+            const phoneInput = document.getElementById('yape-phone');
+            if (phoneInput) setTimeout(() => phoneInput.focus(), 100);
         }
 
         closeModal() {
@@ -856,7 +967,7 @@
                 this.showError(err.message || 'Error al procesar el pago.');
             } finally {
                 submitBtn.disabled = false;
-                submitText.innerText = `Yapear S/. ${this.getPricePEN()}`;
+                submitText.innerText = `Yapear S/ ${this.getPricePEN()}`;
             }
         }
 
@@ -872,43 +983,43 @@
                 const masterKey = data.bonusSerialKey || 'Activo en tu cuenta';
 
                 successView.innerHTML = `
-                    <div class="yape-success-icon-wrap" style="border-color:#ff9f0a; color:#ff9f0a; background:rgba(255,159,10,0.1);">
+                    <div class="yape-success-icon-wrap" style="border-color:#f59e0b; color:#d97706; background:rgba(245,158,11,0.12);">
                         <i class="bi bi-gift-fill"></i>
                     </div>
-                    <h2 style="font-size:1.25rem; font-weight:800; margin:0 0 6px;">¡Promo 2x1 Activada! 🎁</h2>
-                    <p style="color:#a1a1aa; font-size:0.82rem; margin:0 0 16px;">Tus 2 licencias vitalicias han sido generadas con éxito.</p>
+                    <h2 style="font-size:1.25rem; font-weight:800; margin:0 0 6px; color:#0f172a;">¡Promo 2x1 Activada! 🎁</h2>
+                    <p style="color:#64748b; font-size:0.82rem; margin:0 0 16px;">Tus 2 licencias vitalicias han sido generadas con éxito.</p>
 
                     <!-- KEY 1: EASY MIX -->
-                    <div class="yape-license-card" style="margin-bottom:12px; border-color:rgba(255,255,255,0.1);">
-                        <span style="font-size:0.72rem; color:#a1a1aa; text-transform:uppercase; letter-spacing:1px; font-weight:700;">1. Clave Easy Mix VST</span>
-                        <div class="yape-key-text" style="font-size:0.95rem; color:#fff;">${mixKey}</div>
-                        <button type="button" class="yape-btn-copy" onclick="navigator.clipboard.writeText('${mixKey}'); this.innerText='¡Copiado!'; setTimeout(()=>this.innerText='Copiar', 2000)">
+                    <div class="yape-license-card" style="margin-bottom:12px; border-color:#e2e8f0; background:#f8fafc;">
+                        <span style="font-size:0.72rem; color:#64748b; text-transform:uppercase; letter-spacing:1px; font-weight:700;">1. Clave Easy Mix VST</span>
+                        <div class="yape-key-text" style="font-size:0.95rem; color:#0f172a;">${mixKey}</div>
+                        <button type="button" class="yape-btn-copy" onclick="navigator.clipboard.writeText('${mixKey}'); this.innerText='¡Copiado!'; setTimeout(()=>this.innerText='Copiar Clave', 2000)">
                             Copiar Clave
                         </button>
                     </div>
 
                     <!-- KEY 2: EASY MASTER -->
-                    <div class="yape-license-card" style="margin-bottom:16px; border-color:rgba(255,159,10,0.3); background:rgba(255,159,10,0.03);">
-                        <span style="font-size:0.72rem; color:#ff9f0a; text-transform:uppercase; letter-spacing:1px; font-weight:800;">2. Clave Easy Master VST (REGALO)</span>
-                        <div class="yape-key-text" style="font-size:0.95rem; color:#ff9f0a;">${masterKey}</div>
-                        <button type="button" class="yape-btn-copy" style="background:#ff9f0a; color:#000;" onclick="navigator.clipboard.writeText('${masterKey}'); this.innerText='¡Copiado!'; setTimeout(()=>this.innerText='Copiar', 2000)">
+                    <div class="yape-license-card" style="margin-bottom:16px; border-color:#fed7aa; background:#fffbeb;">
+                        <span style="font-size:0.72rem; color:#d97706; text-transform:uppercase; letter-spacing:1px; font-weight:800;">2. Clave Easy Master VST (REGALO)</span>
+                        <div class="yape-key-text" style="font-size:0.95rem; color:#b45309;">${masterKey}</div>
+                        <button type="button" class="yape-btn-copy" style="background:#d97706; color:#ffffff;" onclick="navigator.clipboard.writeText('${masterKey}'); this.innerText='¡Copiado!'; setTimeout(()=>this.innerText='Copiar Clave', 2000)">
                             Copiar Clave
                         </button>
                     </div>
 
-                    <p style="font-size:0.8rem; color:#a1a1aa; margin:0 0 8px; font-weight:600;">📥 Descargar Easy Mix:</p>
+                    <p style="font-size:0.8rem; color:#475569; margin:0 0 8px; font-weight:600;">📥 Descargar Easy Mix:</p>
                     <div class="yape-download-actions" style="margin-bottom:12px;">
                         <a href="https://drive.google.com/file/d/1FXEF4CsSlClVKTZ8lzfq7027-4Pa-Jh1/view?usp=sharing" target="_blank" class="yape-download-btn yape-download-win">Windows</a>
                         <a href="https://drive.google.com/file/d/1Wd_NgGsuc_FG6kjQOTjnF0qIodnK-iO4/view?usp=sharing" target="_blank" class="yape-download-btn yape-download-mac">macOS</a>
                     </div>
 
-                    <p style="font-size:0.8rem; color:#ff9f0a; margin:0 0 8px; font-weight:600;">📥 Descargar Easy Master:</p>
+                    <p style="font-size:0.8rem; color:#d97706; margin:0 0 8px; font-weight:600;">📥 Descargar Easy Master:</p>
                     <div class="yape-download-actions">
                         <a href="https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view" target="_blank" class="yape-download-btn yape-download-win">Windows</a>
                         <a href="https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing" target="_blank" class="yape-download-btn yape-download-mac">macOS</a>
                     </div>
 
-                    <p style="color:#71717a; font-size:0.75rem; margin-top:16px;">
+                    <p style="color:#64748b; font-size:0.75rem; margin-top:16px;">
                         Hemos enviado una copia con ambas licencias e instaladores a tu correo.
                     </p>
                 `;
