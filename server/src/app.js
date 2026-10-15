@@ -273,7 +273,7 @@ app.get('/env.js', (req, res) => {
         window.EMAILJS_PUBLIC_KEY = "${EMAILJS_PUBLIC_KEY || 'If_WAVcuXiGSPp2SB'}";
         window.PAYPAL_CLIENT_ID = "${process.env.PAYPAL_CLIENT_ID || ''}";
         window.IMAGEKIT_URL_ENDPOINT = "${process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/offszn/'}";
-        window.META_PIXEL_ID = "${META_PIXEL_ID || ''}";
+        window.META_PIXEL_ID = "${META_PIXEL_ID || '1608823860672348'}";
     `);
 });
 
