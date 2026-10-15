@@ -921,7 +921,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let sum = 0;
     for (let i = 0; i < data.length; i++) sum += data[i];
     const avg = sum / data.length;
-    const loudnessFactor = state.params.loudness / 100;
+    const safeLoudness = Math.min(100, Math.max(0, Number(state.params.loudness) || 50));
+    const loudnessFactor = safeLoudness / 100;
 
     const inLufs = -24 + (avg / 255) * 12;
     const outLufs = inLufs + (loudnessFactor * 6);
@@ -1205,6 +1206,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Función centralizada para aplicar el renderizado gráfico de la perilla
   function applyKnobUI(knob, val, fromNative = false, notifyNative = true) {
+    val = Math.min(100, Math.max(0, Math.round(Number(val) || 0)));
     knob.dataset.value = val;
     const param = knob.dataset.param;
     state.params[param] = val;
@@ -1245,20 +1247,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (knobAnimFrame) cancelAnimationFrame(knobAnimFrame);
 
     const startParams = { ...state.params };
-    const startTime = performance.now();
-    const duration = 400; // ms
+    let startTime = null;
+    const duration = 300; // ms
 
     function step(now) {
-      const elapsed = now - startTime;
-      const progress = Math.min(1, elapsed / duration);
+      if (startTime === null) startTime = now;
+      const elapsed = Math.max(0, now - startTime);
+      const progress = Math.min(1, Math.max(0, elapsed / duration));
       const ease = 1 - Math.pow(1 - progress, 3); // Ease Out Cubic
 
       document.querySelectorAll('.knob-container').forEach(knob => {
         const param = knob.dataset.param;
         if (targetParams[param] !== undefined) {
-          const startVal = startParams[param] ?? 50;
-          const endVal = targetParams[param];
-          const currentVal = Math.round(startVal + (endVal - startVal) * ease);
+          const startVal = Math.min(100, Math.max(0, Number(startParams[param]) || 50));
+          const endVal = Math.min(100, Math.max(0, Number(targetParams[param]) || 50));
+          const currentVal = Math.min(100, Math.max(0, Math.round(startVal + (endVal - startVal) * ease)));
           applyKnobUI(knob, currentVal, false, false);
         }
       });
@@ -1266,11 +1269,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (progress < 1) {
         knobAnimFrame = requestAnimationFrame(step);
       } else {
-        // En el frame final, asegurar los valores exactos en la UI
+        // En el frame final, asegurar los valores exactos en la UI dentro de 0..100
         document.querySelectorAll('.knob-container').forEach(knob => {
           const param = knob.dataset.param;
           if (targetParams[param] !== undefined) {
-            applyKnobUI(knob, targetParams[param], false, false);
+            const endVal = Math.min(100, Math.max(0, Number(targetParams[param]) || 50));
+            applyKnobUI(knob, endVal, false, false);
           }
         });
       }
