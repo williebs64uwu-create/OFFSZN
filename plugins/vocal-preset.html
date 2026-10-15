@@ -3068,7 +3068,7 @@
                                 <span id="vocal-preset-original-price"
                                     style="font-size: 1.3rem; text-decoration: line-through; color: rgba(255,255,255,0.3); font-weight: 500;">$25</span>
                                 <span id="vocal-preset-price-val"
-                                    style="font-size: 3rem; font-weight: 800; color: #fff;">$5</span>
+                                    style="font-size: 3rem; font-weight: 800; color: #fff;">$17</span>
                                 <span style="font-size: 1rem; color: #888;">único</span>
                             </div>
 
@@ -3472,12 +3472,12 @@
             }
         })();
 
-        // ── A/B TESTING ENGINE: $5, $17 y $25 USD (respetando caché previa de compradores recientes) ──
+        // ── A/B TESTING ENGINE: $17 y $25 USD (respetando caché previa de compradores recientes) ──
         (function initABTesting() {
             const STORAGE_KEY = 'offszn_ab_vocal_preset_price_v1';
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
-            const validTiers = [5, 17, 25];
+            const validTiers = [17, 25];
             const originalMap = { 5: 25, 10: 25, 17: 25, 25: 35 };
 
             let assignedPrice;
@@ -3492,15 +3492,8 @@
                 if (Number.isFinite(parsedSaved) && parsedSaved > 0) {
                     assignedPrice = parsedSaved;
                 } else {
-                    // Nuevos visitantes: distribución equilibrada entre $5, $17 y $25 USD
-                    const r = Math.random();
-                    if (r < 0.34) {
-                        assignedPrice = 5;
-                    } else if (r < 0.67) {
-                        assignedPrice = 17;
-                    } else {
-                        assignedPrice = 25;
-                    }
+                    // Nuevos visitantes: 17 y 25 USD (50/50)
+                    assignedPrice = Math.random() < 0.5 ? 17 : 25;
                     localStorage.setItem(STORAGE_KEY, assignedPrice);
                 }
             }
