@@ -950,10 +950,10 @@
         
         <div class="price-box">
             <div class="original-price-wrap">
-                <span class="original-price" id="promo-original-display">Antes: $35 USD</span>
+                <span class="original-price" id="promo-original-display">Antes: $25 USD</span>
             </div>
             <div class="promo-price-main">
-                <span class="promo-price" id="promo-price-display">$25.00 <span>USD</span></span>
+                <span class="promo-price" id="promo-price-display">$17.00 <span>USD</span></span>
             </div>
             <p class="price-details">Pago único de por vida · 2 licencias incluidas</p>
         </div>
@@ -1042,9 +1042,8 @@
             }
         }
 
-        // ── A/B TESTING ENGINE (4 TIERS: $5, $10, $15, $20 USD - Preferencia $10 USD) ──
+        // ── A/B TESTING ENGINE: $17 vs $25 USD (50/50 SPLIT) ──
         (function initABTesting() {
-            const STORAGE_KEY = 'offszn_ab_promo_2x1_price_v5';
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
             // A/B $17 vs $25 (50/50). Se asigna una vez por navegador y se mantiene
@@ -1070,7 +1069,9 @@
             window.AB_VARIANT = 'price_' + assignedPrice;
             window.AB_ORIGINAL_PRICE = AB_ORIGINAL[assignedPrice];
 
+            const solesPrice = (assignedPrice === 17 ? 65 : 95);
             window.CURRENT_PROMO_PRICE = assignedPrice;
+            window.YAPE_FIXED_PRICE_PEN = solesPrice;
             window.PLUGIN_ID = 899;
             window.PLUGIN_NAME = 'Promo 2x1 (Easy Mix + Easy Master)';
             window.IS_PROMO_2X1 = true;
@@ -1094,7 +1095,7 @@
                 window.addEventListener('DOMContentLoaded', dispatchViewContent);
             }
 
-            // Render initial price
+            // Render initial price & WhatsApp links
             document.addEventListener('DOMContentLoaded', () => {
                 const priceEl = document.querySelector('.promo-price');
                 if (priceEl) {
@@ -1102,6 +1103,30 @@
                 }
                 const origEl = document.getElementById('promo-original-display');
                 if (origEl) origEl.innerText = `Antes: $${window.AB_ORIGINAL_PRICE} USD`;
+
+                const waLinks = document.querySelectorAll('a[href*="wa.me"]');
+                waLinks.forEach(link => {
+                    let currentHref = link.getAttribute('href');
+                    if (currentHref && currentHref.includes('text=')) {
+                        let parts = currentHref.split('text=');
+                        let rawDecoded = decodeURIComponent(parts[1]);
+                        let isYape = rawDecoded.toLowerCase().includes('yape') || link.innerText.toLowerCase().includes('yape');
+                        let isMp = rawDecoded.toLowerCase().includes('mercado') || link.innerText.toLowerCase().includes('mercado');
+                        let isBinance = rawDecoded.toLowerCase().includes('binance') || link.innerText.toLowerCase().includes('binance');
+
+                        let baseText = rawDecoded.replace(/por\s+\$?\d+(\s*USD)?(\s*\/\s*S\/\s*\d+\s*soles)?/gi, '').replace(/\(\$?\d+(\s*USD)?(\s*\/\s*S\/\s*\d+\s*soles)?\)/gi, '').trim();
+
+                        if (isYape) {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero comprar la promo 2x1 por Yape ($' + assignedPrice + ' USD / S/ ' + solesPrice + ' soles)')}`);
+                        } else if (isMp) {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero comprar la promo 2x1 por Mercado Pago ($' + assignedPrice + ' USD)')}`);
+                        } else if (isBinance) {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent('Hola, quiero pagar con Binance la promo 2x1 ($' + assignedPrice + ' USD)')}`);
+                        } else {
+                            link.setAttribute('href', `${parts[0]}text=${encodeURIComponent(baseText + ' por $' + assignedPrice + ' USD')}`);
+                        }
+                    }
+                });
             });
         })();
 

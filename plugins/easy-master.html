@@ -1432,8 +1432,8 @@
                         <h3 style="font-size: 1.6rem; margin-bottom: 6px;">De Por Vida</h3>
                         <p style="color: #888; font-size: 0.85rem; margin-bottom: 18px;">Pago único. Sin suscripciones. Para siempre.</p>
                         <div style="display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-bottom: 24px;">
-                            <span style="font-size: 1.3rem; text-decoration: line-through; color: rgba(255,255,255,0.3); font-weight: 500;">$25</span>
-                            <span id="easy-master-price-val" style="font-size: 3rem; font-weight: 800; color: #fff;">$5</span>
+                            <span id="easy-master-original-price" style="font-size: 1.3rem; text-decoration: line-through; color: rgba(255,255,255,0.3); font-weight: 500;">$25</span>
+                            <span id="easy-master-price-val" style="font-size: 3rem; font-weight: 800; color: #fff;">$17</span>
                             <span style="font-size: 1rem; color: #888;">único</span>
                         </div>
                         <ul style="list-style: none; padding: 0; margin: 0 0 28px 0; text-align: left; color: #aaa; flex-grow: 1;">
@@ -1841,41 +1841,71 @@
 
     <!-- Direct Checkout Configuration and Loader with A/B Testing -->
     <script>
-        // ── A/B TESTING ENGINE (50/50 SPLIT: $5.00 USD vs $10.00 USD) ──
+        // ── A/B TESTING ENGINE: $17 vs $25 USD (50/50 SPLIT) ──
         (function initABTesting() {
-            const STORAGE_KEY = 'offszn_ab_easy_master_price';
+            const STORAGE_KEY = 'offszn_ab_easy_master_price_v2';
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
+            const validTiers = [17, 25];
+            const originalMap = { 17: 25, 25: 35 };
 
             let assignedPrice;
-            if (forcedPrice === '5' || forcedPrice === '10') {
-                assignedPrice = parseInt(forcedPrice, 10);
+            const parsedForced = parseInt(forcedPrice, 10);
+            if (forcedPrice && validTiers.includes(parsedForced)) {
+                assignedPrice = parsedForced;
                 localStorage.setItem(STORAGE_KEY, assignedPrice);
             } else {
                 let saved = localStorage.getItem(STORAGE_KEY);
-                if (saved === '5' || saved === '10') {
-                    assignedPrice = parseInt(saved, 10);
+                let parsedSaved = parseInt(saved, 10);
+                if (validTiers.includes(parsedSaved)) {
+                    assignedPrice = parsedSaved;
                 } else {
-                    assignedPrice = Math.random() < 0.5 ? 5 : 10;
+                    assignedPrice = Math.random() < 0.5 ? 17 : 25;
                     localStorage.setItem(STORAGE_KEY, assignedPrice);
                 }
             }
 
+            const originalPrice = originalMap[assignedPrice] || 25;
+            const solesMap = { 17: 65, 25: 95 };
+            const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
+
+            window.AB_VARIANT = 'price_' + assignedPrice;
+            window.AB_ORIGINAL_PRICE = originalPrice;
             window.CURRENT_PROMO_PRICE = assignedPrice;
+            window.YAPE_FIXED_PRICE_PEN = solesPrice;
             window.PLUGIN_ID = 900;
             window.PLUGIN_NAME = 'Easy Master';
+
+            // --- META PIXEL: VIEW CONTENT (DYNAMIC PROMO PRICE) ---
+            function dispatchViewContent() {
+                if (window.MetaPixel && typeof window.MetaPixel.trackViewContent === 'function') {
+                    window.MetaPixel.trackViewContent({
+                        content_ids: ['easy_master'],
+                        content_name: 'Easy Master',
+                        content_type: 'product',
+                        value: assignedPrice,
+                        currency: 'USD'
+                    });
+                }
+            }
+
+            if (window.MetaPixel) {
+                dispatchViewContent();
+            } else {
+                window.addEventListener('DOMContentLoaded', dispatchViewContent);
+            }
 
             document.addEventListener('DOMContentLoaded', () => {
                 const priceEl = document.getElementById('easy-master-price-val');
                 if (priceEl) priceEl.innerText = `$${assignedPrice}`;
 
-                const solesMap = { 5: 19, 10: 38, 15: 57, 20: 76 };
-                const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
+                const origEl = document.getElementById('easy-master-original-price');
+                if (origEl) origEl.innerText = `$${originalPrice}`;
 
                 const waLinks = document.querySelectorAll('a[href*="wa.me"]');
                 waLinks.forEach(link => {
                     let currentHref = link.getAttribute('href');
-                    if (currentHref.includes('text=')) {
+                    if (currentHref && currentHref.includes('text=')) {
                         let parts = currentHref.split('text=');
                         let rawDecoded = decodeURIComponent(parts[1]);
                         let isYape = rawDecoded.toLowerCase().includes('yape') || link.innerText.toLowerCase().includes('yape');
