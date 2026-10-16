@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Cambios y notas · OFFSZN</title>
+<style>
+:root{
+  --bg:#0b0b0e; --panel:#14141a; --panel2:#1b1b23; --line:#26262f; --txt:#ececf1; --mut:#8b8b98;
+  --acc:#a78bfa; --azul:#60a5fa; --verde:#4ade80; --amarillo:#fbbf24; --rojo:#f87171; --morado:#c084fc;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--acc)}
+.hidden{display:none!important}
+
+/* login */
+#login{min-height:100vh;display:grid;place-items:center;padding:16px}
+.login-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px;width:100%;max-width:340px;display:grid;gap:14px}
+.login-card h1{font-size:20px}
+.login-card p{color:var(--mut);font-size:13px}
+.who{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.who button{padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2)}
+.who button.on{border-color:var(--acc);background:#2a2240}
+input,select,textarea{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 10px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc)}
+.btn{background:var(--acc);color:#12091f;border:0;border-radius:8px;padding:9px 14px;font-weight:600}
+.btn.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line);font-weight:500}
+.err{color:var(--rojo);font-size:13px;min-height:18px}
+
+/* layout */
+header{position:sticky;top:0;z-index:5;background:rgba(11,11,14,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+header h1{font-size:16px;margin-right:6px}
+.sp{flex:1}
+.pill{padding:6px 11px;border-radius:99px;border:1px solid var(--line);background:var(--panel);font-size:13px;color:var(--mut)}
+.pill.on{color:var(--txt);border-color:var(--acc);background:#241d38}
+.pill small{opacity:.7;margin-left:4px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px 0}
+main{display:grid;grid-template-columns:1fr 320px;gap:16px;padding:16px;align-items:start}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+
+/* board */
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:700px){.board{grid-template-columns:1fr}}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;min-height:140px}
+.col.over{border-color:var(--acc)}
+.col h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:2px 4px 10px;display:flex;justify-content:space-between}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px;cursor:grab}
+.card:hover{border-color:#3a3a48}
+.card .t{font-weight:600;word-break:break-word}
+.card .m{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;font-size:12px;color:var(--mut);align-items:center}
+.tag{padding:2px 7px;border-radius:6px;background:#23232d;font-size:11px}
+.tag.high{background:#3a1a1a;color:var(--rojo)}
+.tag.low{opacity:.7}
+.tag.willie{background:#1d2a44;color:var(--azul)}
+.tag.gian{background:#1c3326;color:var(--verde)}
+.tag.late{background:#3a1a1a;color:var(--rojo)}
+.card.done .t{text-decoration:line-through;opacity:.55}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.empty{color:var(--mut);text-align:center;padding:30px 10px}
+
+/* feed */
+aside{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;position:sticky;top:64px;max-height:calc(100vh - 80px);display:flex;flex-direction:column}
+aside h2{font-size:13px;color:var(--mut);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
+#feed{overflow:auto;display:flex;flex-direction:column-reverse;gap:6px;flex:1;min-height:120px;max-height:55vh}
+.msg{border-left:3px solid var(--c,var(--azul));background:var(--panel2);border-radius:6px;padding:6px 9px;word-break:break-word}
+.msg b{font-size:12px;color:var(--c,var(--azul))}
+.msg time{font-size:11px;color:var(--mut);margin-left:6px}
+.msg.azul{--c:var(--azul)}.msg.verde{--c:var(--verde)}.msg.amarillo{--c:var(--amarillo)}.msg.rojo{--c:var(--rojo)}.msg.morado{--c:var(--morado)}
+.compose{margin-top:10px;display:grid;gap:8px}
+.dots{display:flex;gap:8px}
+.dot{width:20px;height:20px;border-radius:50%;border:2px solid transparent;background:var(--c)}
+.dot.on{border-color:#fff}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:grid;place-items:center;padding:16px;z-index:20}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;width:100%;max-width:480px;display:grid;gap:10px;max-height:92vh;overflow:auto}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label{font-size:12px;color:var(--mut);display:grid;gap:4px}
+
+/* toasts */
+#toasts{position:fixed;right:14px;bottom:14px;display:grid;gap:8px;z-index:30}
+.toast{background:var(--panel2);border:1px solid var(--acc);border-radius:10px;padding:10px 14px;max-width:300px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <form class="login-card" id="loginForm">
+    <h1>Cambios y notas</h1>
+    <p>Panel interno OFFSZN. ¿Quién eres?</p>
+    <div class="who">
+      <button type="button" data-who="willie">Willie</button>
+      <button type="button" data-who="gian">Gian</button>
+    </div>
+    <input type="password" id="pin" placeholder="PIN" autocomplete="current-password">
+    <div class="err" id="loginErr"></div>
+    <button class="btn" type="submit">Entrar</button>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <h1>OFFSZN · Cambios y notas</h1>
+    <span class="pill on" id="meBadge"></span>
+    <span class="sp"></span>
+    <button class="pill" id="notifBtn">🔔 Activar avisos</button>
+    <button class="btn" id="newBtn">+ Nuevo</button>
+    <button class="pill" id="logoutBtn">Salir</button>
+  </header>
+  <div class="tabs" id="tabs"></div>
+  <main>
+    <section>
+      <div class="toolbar">
+        <button class="pill" data-view="tasks">Tareas</button>
+        <button class="pill" data-view="ideas">Ideas y links</button>
+        <span class="sp"></span>
+        <label style="display:flex;align-items:center;gap:6px;flex-direction:row"><input type="checkbox" id="onlyMine" style="width:auto"> Solo lo mío</label>
+      </div>
+      <div id="content"></div>
+    </section>
+    <aside>
+      <h2>Muro rápido</h2>
+      <div id="feed"></div>
+      <form class="compose" id="feedForm">
+        <div class="dots" id="dots"></div>
+        <input id="feedText" placeholder="Escribe algo rápido y Enter…" maxlength="1000" autocomplete="off">
+      </form>
+    </aside>
+  </main>
+</div>
+
+<div id="modal" class="modal hidden">
+  <form class="sheet" id="itemForm">
+    <h3 id="modalTitle">Nuevo</h3>
+    <div class="row2">
+      <label>Tipo
+        <select id="f_kind">
+          <option value="task">Tarea</option><option value="idea">Idea</option>
+          <option value="link">Link</option><option value="note">Nota</option>
+        </select>
+      </label>
+      <label>Carpeta <select id="f_folder"></select></label>
+    </div>
+    <label>Título <input id="f_title" maxlength="200" required></label>
+    <label>Link (opcional) <input id="f_link" placeholder="https://…"></label>
+    <label>Detalle <textarea id="f_body" rows="3" maxlength="4000"></textarea></label>
+    <div class="row2">
+      <label>Asignado a
+        <select id="f_assignee"><option value="">Nadie</option><option value="willie">Willie</option><option value="gian">Gian</option></select>
+      </label>
+      <label>Prioridad
+        <select id="f_priority"><option value="normal">Normal</option><option value="high">Alta</option><option value="low">Baja</option></select>
+      </label>
+    </div>
+    <div class="row2">
+      <label>Fecha límite <input type="date" id="f_due"></label>
+      <label>Estado
+        <select id="f_status"><option value="todo">Por hacer</option><option value="doing">En proceso</option><option value="done">Listo</option></select>
+      </label>
+    </div>
+    <div class="err" id="itemErr"></div>
+    <div style="display:flex;gap:8px;justify-content:space-between">
+      <button type="button" class="btn ghost" id="delBtn" style="color:var(--rojo)">Borrar</button>
+      <span style="display:flex;gap:8px">
+        <button type="button" class="btn ghost" id="cancelBtn">Cancelar</button>
+        <button class="btn" type="submit">Guardar</button>
+      </span>
+    </div>
+  </form>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+const FOLDERS = [
+  ['todo','Todo'],['plugins','Plugins'],['contenido','Contenido'],['ventas','Ventas'],
+  ['disenos','Diseños'],['ideas','Ideas'],['otro','Otro']
+];
+const COLS = [['todo','Por hacer'],['doing','En proceso'],['done','Listo']];
+const COLORS = ['azul','verde','amarillo','rojo','morado'];
+const KIND_LABEL = {task:'Tarea',idea:'Idea',link:'Link',note:'Nota'};
+const NAME = {willie:'Willie',gian:'Gian'};
+const POLL_MS = 4000;
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safeUrl = (u) => /^https?:\/\//i.test(u || '') ? u : '';
+const store = {
+  get(k){ try{ return localStorage.getItem(k) }catch(_){ return null } },
+  set(k,v){ try{ localStorage.setItem(k,v) }catch(_){} },
+  del(k){ try{ localStorage.removeItem(k) }catch(_){} }
+};
+
+let pin = store.get('cn_pin') || '';
+let me = store.get('cn_who') || '';
+let state = { items: [], feed: [] };
+let prev = null;
+let folder = store.get('cn_folder') || 'todo';
+let view = store.get('cn_view') || 'tasks';
+let feedColor = 'azul';
+let editing = null;
+let timer = null;
+
+async function api(path, opts = {}) {
+  const res = await fetch('/api/cambios' + path, {
+    method: opts.method || 'GET',
+    headers: { 'Content-Type': 'application/json', 'x-admin-key': pin, 'x-user': me },
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { const e = new Error(data.error || ('Error ' + res.status)); e.status = res.status; throw e; }
+  return data;
+}
+
+/* ---------- login ---------- */
+function markWho(){ document.querySelectorAll('.who button').forEach(b => b.classList.toggle('on', b.dataset.who === me)); }
+document.querySelectorAll('.who button').forEach(b => b.onclick = () => { me = b.dataset.who; markWho(); });
+$('#loginForm').onsubmit = async (e) => {
+  e.preventDefault();
+  if (!me) { $('#loginErr').textContent = 'Elige si eres Willie o Gian.'; return; }
+  pin = $('#pin').value.trim();
+  try {
+    await api('/state');
+    store.set('cn_pin', pin); store.set('cn_who', me);
+    start();
+  } catch (err) { $('#loginErr').textContent = err.status === 403 ? 'PIN incorrecto.' : err.message; }
+};
+$('#logoutBtn').onclick = () => { store.del('cn_pin'); location.reload(); };
+
+function start(){
+  $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
+  $('#meBadge').textContent = NAME[me];
+  buildUI(); refresh(true);
+  schedule();
+}
+function schedule(){
+  clearTimeout(timer);
+  timer = setTimeout(async () => { await refresh(); schedule(); }, document.hidden ? 15000 : POLL_MS);
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && pin) { refresh(); schedule(); } });
+
+/* ---------- datos + avisos ---------- */
+async function refresh(first){
+  try {
+    const data = await api('/state');
+    if (!first && prev) diffNotify(prev, data);
+    prev = data; state = data;
+    render();
+    checkDue();
+  } catch (err) {
+    if (err.status === 403) { store.del('cn_pin'); location.reload(); }
+    else if (first) toast('No pude cargar: ' + err.message + ' (¿ya corriste el SQL?)');
+  }
+}
+
+function diffNotify(a, b){
+  const old = new Map(a.items.map(i => [i.id, i]));
+  const oldFeed = new Set(a.feed.map(m => m.id));
+  b.items.forEach(i => {
+    const o = old.get(i.id);
+    const other = i.updated_by && i.updated_by !== me;
+    if (!o && i.created_by && i.created_by !== me) {
+      notify(`${NAME[i.created_by]} agregó: ${i.title}`, i.assignee === me ? 'Te la asignó a ti' : KIND_LABEL[i.kind]);
+    } else if (o && other && i.updated_at !== o.updated_at) {
+      if (i.assignee === me && o.assignee !== me) notify('Te asignaron una tarea', i.title);
+      else if (i.status === 'done' && o.status !== 'done') notify(`${NAME[i.updated_by]} terminó`, i.title);
+      else notify(`${NAME[i.updated_by]} cambió`, i.title);
+    }
+  });
+  b.feed.forEach(m => { if (!oldFeed.has(m.id) && m.author !== me) notify(`${NAME[m.author]} en el muro`, m.text); });
+}
+
+function checkDue(){
+  const today = new Date().toISOString().slice(0,10);
+  if (store.get('cn_due_day') === today) return;
+  const mine = state.items.filter(i => i.assignee === me && i.status !== 'done' && i.due_date && i.due_date <= today);
+  if (mine.length) { store.set('cn_due_day', today); notify(`Tienes ${mine.length} tarea(s) para hoy o atrasadas`, mine[0].title); }
+}
+
+function notify(title, body){
+  toast(`<b>${esc(title)}</b><br>${esc(body || '')}`, true);
+  if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
+    try { new Notification(title, { body: body || '', tag: 'offszn-cambios' }); } catch(_) {}
+  }
+  if (document.hidden) document.title = '● Cambios y notas · OFFSZN';
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) document.title = 'Cambios y notas · OFFSZN'; });
+
+function toast(msg, html){
+  const t = document.createElement('div'); t.className = 'toast';
+  if (html) t.innerHTML = msg; else t.textContent = msg;
+  $('#toasts').appendChild(t); setTimeout(() => t.remove(), 6000);
+}
+function notifLabel(){
+  const p = 'Notification' in window ? Notification.permission : 'denied';
+  $('#notifBtn').textContent = p === 'granted' ? '🔔 Avisos activos' : p === 'denied' ? '🔕 Avisos bloqueados' : '🔔 Activar avisos';
+}
+$('#notifBtn').onclick = async () => {
+  if (!('Notification' in window)) return toast('Este navegador no soporta avisos.');
+  if (Notification.permission === 'denied') return toast('Chrome los bloqueó: candado de la barra de direcciones → Notificaciones → Permitir.');
+  await Notification.requestPermission(); notifLabel();
+};
+
+/* ---------- UI ---------- */
+function buildUI(){
+  $('#f_folder').innerHTML = FOLDERS.filter(f => f[0] !== 'todo').map(f => `<option value="${f[0]}">${f[1]}</option>`).join('');
+  $('#dots').innerHTML = COLORS.map(c => `<button type="button" class="dot ${c==='azul'?'on':''}" data-c="${c}" style="--c:var(--${c})" aria-label="${c}"></button>`).join('');
+  $('#dots').onclick = (e) => { const d = e.target.closest('.dot'); if (!d) return; feedColor = d.dataset.c; document.querySelectorAll('.dot').forEach(x => x.classList.toggle('on', x === d)); };
+  document.querySelectorAll('[data-view]').forEach(b => b.onclick = () => { view = b.dataset.view; store.set('cn_view', view); render(); });
+  $('#onlyMine').checked = store.get('cn_mine') === '1';
+  $('#onlyMine').onchange = () => { store.set('cn_mine', $('#onlyMine').checked ? '1' : '0'); render(); };
+  notifLabel();
+}
+
+function visible(){
+  const mine = $('#onlyMine').checked;
+  return state.items.filter(i => (folder === 'todo' || i.folder === folder) && (!mine || i.assignee === me));
+}
+
+function render(){
+  $('#tabs').innerHTML = FOLDERS.map(([k,l]) => {
+    const n = state.items.filter(i => (k === 'todo' || i.folder === k) && !(i.kind === 'task' && i.status === 'done')).length;
+    return `<button class="pill ${k===folder?'on':''}" data-f="${k}">${l}<small>${n}</small></button>`;
+  }).join('');
+  $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { folder = b.dataset.f; store.set('cn_folder', folder); render(); });
+  document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('on', b.dataset.view === view));
+
+  const items = visible();
+  if (view === 'tasks') {
+    const tasks = items.filter(i => i.kind === 'task');
+    $('#content').innerHTML = `<div class="board">${COLS.map(([k,l]) => {
+      const list = tasks.filter(t => t.status === k);
+      return `<div class="col" data-s="${k}"><h3>${l}<span>${list.length}</span></h3>${list.map(card).join('') || ''}</div>`;
+    }).join('')}</div>` + (tasks.length ? '' : '<div class="empty">No hay tareas aquí. Dale a “+ Nuevo”.</div>');
+    wireDnD();
+  } else {
+    const list = items.filter(i => i.kind !== 'task');
+    $('#content').innerHTML = list.length ? `<div class="grid">${list.map(card).join('')}</div>` : '<div class="empty">Aún no hay ideas ni links aquí.</div>';
+  }
+  $('#content').querySelectorAll('.card').forEach(c => c.onclick = (e) => { if (e.target.closest('a')) return; openModal(state.items.find(i => i.id == c.dataset.id)); });
+
+  $('#feed').innerHTML = state.feed.map(m =>
+    `<div class="msg ${esc(m.color)}"><b>${esc(NAME[m.author] || m.author)}</b><time>${new Date(m.created_at).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})}</time><div>${esc(m.text)}</div></div>`
+  ).join('');
+}
+
+function card(i){
+  const today = new Date().toISOString().slice(0,10);
+  const late = i.due_date && i.status !== 'done' && i.due_date < today;
+  const url = safeUrl(i.link);
+  return `<div class="card ${i.status==='done'?'done':''}" draggable="${i.kind==='task'}" data-id="${i.id}">
+    <div class="t">${esc(i.title)}</div>
+    ${i.body ? `<div style="color:var(--mut);font-size:12px;margin-top:4px">${esc(i.body.slice(0,110))}${i.body.length>110?'…':''}</div>` : ''}
+    <div class="m">
+      ${i.kind !== 'task' ? `<span class="tag">${KIND_LABEL[i.kind]}</span>` : ''}
+      ${folder === 'todo' ? `<span class="tag">${esc((FOLDERS.find(f=>f[0]===i.folder)||[0,i.folder])[1])}</span>` : ''}
+      ${i.assignee ? `<span class="tag ${i.assignee}">${NAME[i.assignee]}</span>` : ''}
+      ${i.priority !== 'normal' ? `<span class="tag ${i.priority}">${i.priority==='high'?'Alta':'Baja'}</span>` : ''}
+      ${i.due_date ? `<span class="tag ${late?'late':''}">${esc(i.due_date)}</span>` : ''}
+      ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">abrir link ↗</a>` : ''}
+    </div></div>`;
+}
+
+function wireDnD(){
+  let dragId = null;
+  document.querySelectorAll('.card[draggable="true"]').forEach(c => {
+    c.ondragstart = () => { dragId = c.dataset.id; };
+  });
+  document.querySelectorAll('.col').forEach(col => {
+    col.ondragover = (e) => { e.preventDefault(); col.classList.add('over'); };
+    col.ondragleave = () => col.classList.remove('over');
+    col.ondrop = async (e) => {
+      e.preventDefault(); col.classList.remove('over');
+      const it = state.items.find(i => i.id == dragId);
+      if (!it || it.status === col.dataset.s) return;
+      it.status = col.dataset.s; render();
+      try { await api('/items/' + it.id, { method: 'PATCH', body: { status: col.dataset.s } }); refresh(true); }
+      catch (err) { toast(err.message); refresh(true); }
+    };
+  });
+}
+
+/* ---------- modal ---------- */
+function openModal(it){
+  editing = it || null;
+  $('#modalTitle').textContent = it ? 'Editar' : 'Nuevo';
+  $('#delBtn').classList.toggle('hidden', !it);
+  $('#f_kind').value = it?.kind || (view === 'ideas' ? 'idea' : 'task');
+  $('#f_folder').value = it?.folder || (folder !== 'todo' ? folder : 'ideas');
+  $('#f_title').value = it?.title || '';
+  $('#f_link').value = it?.link || '';
+  $('#f_body').value = it?.body || '';
+  $('#f_assignee').value = it?.assignee || '';
+  $('#f_priority').value = it?.priority || 'normal';
+  $('#f_due').value = it?.due_date || '';
+  $('#f_status').value = it?.status || 'todo';
+  $('#itemErr').textContent = '';
+  $('#modal').classList.remove('hidden'); $('#f_title').focus();
+}
+function closeModal(){ $('#modal').classList.add('hidden'); }
+$('#newBtn').onclick = () => openModal(null);
+$('#cancelBtn').onclick = closeModal;
+$('#modal').onclick = (e) => { if (e.target.id === 'modal') closeModal(); };
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+$('#itemForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const body = {
+    kind: $('#f_kind').value, folder: $('#f_folder').value, title: $('#f_title').value,
+    link: $('#f_link').value.trim(), body: $('#f_body').value, assignee: $('#f_assignee').value,
+    priority: $('#f_priority').value, due_date: $('#f_due').value || null, status: $('#f_status').value
+  };
+  if (body.link && !safeUrl(body.link)) { $('#itemErr').textContent = 'El link debe empezar con http:// o https://'; return; }
+  try {
+    if (editing) await api('/items/' + editing.id, { method: 'PATCH', body });
+    else await api('/items', { method: 'POST', body });
+    closeModal(); refresh(true);
+  } catch (err) { $('#itemErr').textContent = err.message; }
+};
+$('#delBtn').onclick = async () => {
+  if (!editing || !confirm('¿Borrar “' + editing.title + '”?')) return;
+  try { await api('/items/' + editing.id, { method: 'DELETE' }); closeModal(); refresh(true); }
+  catch (err) { $('#itemErr').textContent = err.message; }
+};
+
+/* ---------- muro ---------- */
+$('#feedForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const text = $('#feedText').value.trim(); if (!text) return;
+  $('#feedText').value = '';
+  try { await api('/feed', { method: 'POST', body: { text, color: feedColor } }); refresh(true); }
+  catch (err) { toast(err.message); $('#feedText').value = text; }
+};
+
+/* ---------- inicio ---------- */
+markWho();
+if (pin && me) { api('/state').then(start).catch(() => { store.del('cn_pin'); }); }
+</script>
+</body>
+</html>

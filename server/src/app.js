@@ -40,6 +40,7 @@ import yapeRoutes from './infrastructure/http/routes/yape.routes.js';
 import willieRoutes from './infrastructure/http/routes/willie.routes.js';
 import licensePanelRoutes from './infrastructure/http/routes/license-panel.routes.js';
 import kanbanRoutes from './infrastructure/http/routes/kanban.routes.js';
+import cambiosRoutes from './infrastructure/http/routes/cambios.routes.js';
 import bookingRoutes from './infrastructure/http/routes/booking.routes.js';
 import creatorApplicationRoutes from './infrastructure/http/routes/creator-application.routes.js';
 import { checkAndSendRemindersInternal } from './infrastructure/http/controllers/CalendarController.js';
@@ -298,6 +299,8 @@ app.get('/api/health', (req, res) => {
 // --- 2.3 GLOBAL RATE LIMITING ---
 // Protege toda la aplicación contra ataques de fuerza bruta básicos o Ddos
 app.use('/api', r2Routes);
+// Panel interno Willie+Gian: antes del limiter global porque la pagina consulta cada pocos segundos (protegido por clave admin)
+app.use('/api/cambios', cambiosRoutes);
 app.use('/api', globalLimiter);
 
 // --- RESTO DE RUTAS API (Omitidas para evitar borrado accidental) ---
@@ -426,6 +429,8 @@ app.use((req, res, next) => {
             pathLower === '/owner/pagos-manuales' ||
             pathLower === '/owner/content-calendar.html' ||
             pathLower === '/owner/content-calendar' ||
+            pathLower === '/owner/cambios-notas' ||
+            pathLower === '/owner/cambios-notas.html' ||
             pathLower === '/owner/audience-data.js' ||
             pathLower === '/owner/payhip-sales-data.js' ||
             pathLower === '/server/public/recovery_dashboard.html' ||
@@ -589,6 +594,13 @@ app.get(['/owner/content-calendar', '/owner/content-calendar.html'], (req, res) 
     const p = path.join(rootPath, 'owner/content-calendar.html');
     if (fs.existsSync(p)) return res.sendFile(p);
     return res.status(404).send('Content calendar not found');
+});
+
+// --- 3.0.5.0 CAMBIOS / NOTAS (panel interno Willie + Gian) ---
+app.get(['/cambios', '/cambios/notas', '/owner/cambios-notas', '/owner/cambios-notas.html'], (req, res) => {
+    const p = path.join(rootPath, 'owner/cambios-notas.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Cambios/notas not found');
 });
 
 // --- 3.0.5.1 KANBAN STUDIO DIRECT ROUTES ---
