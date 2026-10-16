@@ -47,7 +47,7 @@ export const createItem = async (req, res) => {
         kind: pick(b.kind, KINDS, 'task'),
         folder: pick(b.folder, FOLDERS, 'ideas'),
         title,
-        body: clip(b.body, 4000) || null,
+        body: clip(b.body, 10000) || null,
         link: clip(b.link, 1000) || null,
         status: pick(b.status, STATUSES, 'todo'),
         assignee: pick(b.assignee, PEOPLE, null),
@@ -74,7 +74,7 @@ export const updateItem = async (req, res) => {
         if (!t) return res.status(400).json({ error: 'Falta el titulo' });
         patch.title = t;
     }
-    if ('body' in b) patch.body = clip(b.body, 4000) || null;
+    if ('body' in b) patch.body = clip(b.body, 10000) || null;
     if ('link' in b) patch.link = clip(b.link, 1000) || null;
     if ('status' in b) patch.status = pick(b.status, STATUSES, 'todo');
     if ('assignee' in b) patch.assignee = pick(b.assignee, PEOPLE, null);
