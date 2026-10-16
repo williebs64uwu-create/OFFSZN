@@ -1,6 +1,8 @@
 import { supabase } from '../../database/connection.js';
 import { isAdminKey } from '../../../shared/config/adminKey.js';
 
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../../../shared/config/config.js';
+
 const clip = (v, n) => String(v ?? '').slice(0, n);
 const pick = (v, list, def) => (list.includes(v) ? v : def);
 
@@ -11,40 +13,19 @@ const PRIORITIES = ['low', 'normal', 'high'];
 const PEOPLE = ['willie', 'gian'];
 const COLORS = ['azul', 'verde', 'amarillo', 'rojo', 'morado'];
 
-// Correos autorizados (login con Google via Supabase). Se pueden sumar mas en CAMBIOS_EXTRA_EMAILS="mail:nombre,mail:nombre".
-const EMAIL_TO_PERSON = {
-    'williebs64uwu@gmail.com': 'willie',
-    'giancarlogarcia09011@gmail.com': 'gian'
-};
-for (const pair of String(process.env.CAMBIOS_EXTRA_EMAILS || '').split(',')) {
-    const [mail, person] = pair.split(':').map(s => (s || '').trim().toLowerCase());
-    if (mail && PEOPLE.includes(person)) EMAIL_TO_PERSON[mail] = person;
-}
-
-// Dos formas de entrar: sesion de Google (Authorization: Bearer) con correo autorizado,
-// o la misma clave de los paneles owner (header x-admin-key).
-export const cambiosAuth = async (req, res, next) => {
-    try {
-        const bearer = (req.headers.authorization || '').split(' ')[1];
-        if (bearer && bearer !== 'undefined' && bearer !== 'null') {
-            const { data, error } = await supabase.auth.getUser(bearer);
-            const email = String(data?.user?.email || '').toLowerCase();
-            const person = !error && data?.user?.email_confirmed_at ?EMAIL_TO_PERSON[email] : null;
-            if (!person) return res.status(403).json({ error: 'Ese correo no tiene acceso.' });
-            req.who = person;
-            return next();
-        }
-        const key = req.headers['x-admin-key'] || req.query.admin_key;
-        if (!isAdminKey(key)) return res.status(403).json({ error: 'Unauthorized' });
-        const who = String(req.headers['x-user'] || '').toLowerCase();
-        req.who = PEOPLE.includes(who) ? who : null;
-        next();
-    } catch (err) {
-        return res.status(403).json({ error: 'Unauthorized' });
-    }
+// Misma clave que los demas paneles owner (header x-admin-key).
+export const cambiosAuth = (req, res, next) => {
+    const key = req.headers['x-admin-key'] || req.query.admin_key;
+    if (!isAdminKey(key)) return res.status(403).json({ error: 'Unauthorized' });
+    const who = String(req.headers['x-user'] || '').toLowerCase();
+    req.who = PEOPLE.includes(who) ? who : null;
+    next();
 };
 
 const cleanDate = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? v : null);
+
+// ─── GET /api/cambios/config ─ URL y anon key publicas para el canal Broadcast (solo avisos, sin datos)
+export const getConfig = (req, res) => res.json({ url: SUPABASE_URL || null, anon: SUPABASE_ANON_KEY || null });
 
 // ─── GET /api/cambios/state ─ todo lo que necesita la pagina en una sola llamada
 export const getState = async (req, res) => {
@@ -54,7 +35,7 @@ export const getState = async (req, res) => {
     ]);
     const error = items.error || feed.error;
     if (error) return res.status(500).json({ error: error.message });
-    return res.json({ items: items.data, feed: feed.data, who: req.who, serverTime: new Date().toISOString() });
+    return res.json({ items: items.data, feed: feed.data, serverTime: new Date().toISOString() });
 };
 
 // ─── POST /api/cambios/items

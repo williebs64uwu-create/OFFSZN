@@ -39,8 +39,8 @@ header h1{font-size:16px;margin-right:6px}
 .pill.on{color:var(--txt);border-color:var(--acc);background:#241d38}
 .pill small{opacity:.7;margin-left:4px}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 16px 0}
-main{display:grid;grid-template-columns:1fr 320px;gap:16px;padding:16px;align-items:start}
-@media(max-width:900px){main{grid-template-columns:1fr}}
+main{display:grid;grid-template-columns:minmax(0,1fr) 460px;gap:16px;padding:16px;align-items:start}
+@media(max-width:1000px){main{grid-template-columns:1fr}}
 .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
 
 /* board */
@@ -64,16 +64,24 @@ main{display:grid;grid-template-columns:1fr 320px;gap:16px;padding:16px;align-it
 .empty{color:var(--mut);text-align:center;padding:30px 10px}
 
 /* feed */
-aside{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;position:sticky;top:64px;max-height:calc(100vh - 80px);display:flex;flex-direction:column}
-aside h2{font-size:13px;color:var(--mut);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
-#feed{overflow:auto;display:flex;flex-direction:column-reverse;gap:6px;flex:1;min-height:120px;max-height:55vh}
-.msg{border-left:3px solid var(--c,var(--azul));background:var(--panel2);border-radius:6px;padding:6px 9px;word-break:break-word}
-.msg b{font-size:12px;color:var(--c,var(--azul))}
-.msg time{font-size:11px;color:var(--mut);margin-left:6px}
+aside{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;position:sticky;top:64px;height:calc(100vh - 80px);display:flex;flex-direction:column}
+@media(max-width:1000px){aside{position:static;height:70vh}}
+aside h2{font-size:13px;color:var(--mut);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:8px}
+.live{width:8px;height:8px;border-radius:50%;background:var(--mut)}
+.live.on{background:var(--verde);box-shadow:0 0 8px var(--verde)}
+#feed{overflow:auto;display:flex;flex-direction:column-reverse;gap:8px;flex:1;min-height:0;padding:2px 4px 8px 2px}
+.msg{--c:var(--azul);align-self:flex-start;max-width:90%;font-size:15px;line-height:1.4;word-break:break-word;
+  background:color-mix(in srgb,var(--c) 15%,var(--panel2));border:1px solid color-mix(in srgb,var(--c) 38%,transparent);
+  border-radius:16px 16px 16px 4px;padding:8px 13px}
+.msg.me{align-self:flex-end;border-radius:16px 16px 4px 16px}
+.msg b{display:block;font-size:12px;color:var(--c);margin-bottom:1px}
+.msg time{font-size:11px;color:var(--mut);margin-left:6px;font-weight:400}
 .msg.azul{--c:var(--azul)}.msg.verde{--c:var(--verde)}.msg.amarillo{--c:var(--amarillo)}.msg.rojo{--c:var(--rojo)}.msg.morado{--c:var(--morado)}
 .compose{margin-top:10px;display:grid;gap:8px}
-.dots{display:flex;gap:8px}
-.dot{width:20px;height:20px;border-radius:50%;border:2px solid transparent;background:var(--c)}
+.compose .line{display:flex;gap:8px}
+.compose input{font-size:15px;padding:12px 14px;border-radius:12px}
+.dots{display:flex;gap:10px}
+.dot{width:22px;height:22px;border-radius:50%;border:2px solid transparent;background:var(--c)}
 .dot.on{border-color:#fff}
 
 /* modal */
@@ -92,9 +100,7 @@ label{font-size:12px;color:var(--mut);display:grid;gap:4px}
 <div id="login">
   <form class="login-card" id="loginForm">
     <h1>Cambios y notas</h1>
-    <p>Panel interno OFFSZN.</p>
-    <button type="button" class="btn" id="googleBtn">Continuar con Google</button>
-    <p style="text-align:center">o entra con el PIN de owner</p>
+    <p>Panel interno OFFSZN. ¿Quién eres?</p>
     <div class="who">
       <button type="button" data-who="willie">Willie</button>
       <button type="button" data-who="gian">Gian</button>
@@ -126,11 +132,14 @@ label{font-size:12px;color:var(--mut);display:grid;gap:4px}
       <div id="content"></div>
     </section>
     <aside>
-      <h2>Muro rápido</h2>
+      <h2><span class="live" id="liveDot" title="Conexión en vivo"></span>Chat Willie + Gian</h2>
       <div id="feed"></div>
       <form class="compose" id="feedForm">
         <div class="dots" id="dots"></div>
-        <input id="feedText" placeholder="Escribe algo rápido y Enter…" maxlength="1000" autocomplete="off">
+        <div class="line">
+          <input id="feedText" placeholder="Escribe y Enter…" maxlength="1000" autocomplete="off">
+          <button class="btn" type="submit">Enviar</button>
+        </div>
       </form>
     </aside>
   </main>
@@ -178,7 +187,6 @@ label{font-size:12px;color:var(--mut);display:grid;gap:4px}
 
 <div id="toasts"></div>
 
-<script src="/env.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const FOLDERS = [
@@ -189,7 +197,9 @@ const COLS = [['todo','Por hacer'],['doing','En proceso'],['done','Listo']];
 const COLORS = ['azul','verde','amarillo','rojo','morado'];
 const KIND_LABEL = {task:'Tarea',idea:'Idea',link:'Link',note:'Nota'};
 const NAME = {willie:'Willie',gian:'Gian'};
-const POLL_MS = 4000;
+const POLL_LIVE_MS = 12000;   // respaldo cuando el canal en vivo funciona
+const POLL_FALLBACK_MS = 3000; // si el canal en vivo no conecta
+let rtOk = false, chan = null;
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -210,20 +220,10 @@ let feedColor = 'azul';
 let editing = null;
 let timer = null;
 
-let sb = null;
-try { if (window.supabase && window.SUPABASE_URL) sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY); } catch (_) {}
-
-async function authHeaders(){
-  if (sb && !pin) {
-    try { const { data } = await sb.auth.getSession(); if (data?.session) return { Authorization: 'Bearer ' + data.session.access_token }; } catch (_) {}
-  }
-  return { 'x-admin-key': pin, 'x-user': me };
-}
-
 async function api(path, opts = {}) {
   const res = await fetch('/api/cambios' + path, {
     method: opts.method || 'GET',
-    headers: { 'Content-Type': 'application/json', ...(await authHeaders()) },
+    headers: { 'Content-Type': 'application/json', 'x-admin-key': pin, 'x-user': me },
     body: opts.body ? JSON.stringify(opts.body) : undefined
   });
   const data = await res.json().catch(() => ({}));
@@ -244,40 +244,49 @@ $('#loginForm').onsubmit = async (e) => {
     start();
   } catch (err) { $('#loginErr').textContent = err.status === 403 ? 'PIN incorrecto.' : err.message; }
 };
-$('#logoutBtn').onclick = async () => {
-  store.del('cn_pin'); store.del('cn_who');
-  try { if (sb) await sb.auth.signOut(); } catch (_) {}
-  location.reload();
-};
-$('#googleBtn').onclick = async () => {
-  if (!sb) { $('#loginErr').textContent = 'No cargó el login de Google, recarga la página.'; return; }
-  const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/cambios/notas' } });
-  if (error) $('#loginErr').textContent = error.message;
-};
+$('#logoutBtn').onclick = () => { store.del('cn_pin'); location.reload(); };
 
 function start(){
   $('#login').classList.add('hidden'); $('#app').classList.remove('hidden');
   $('#meBadge').textContent = NAME[me];
   buildUI(); refresh(true);
+  initRealtime();
   schedule();
 }
 function schedule(){
   clearTimeout(timer);
-  timer = setTimeout(async () => { await refresh(); schedule(); }, document.hidden ? 15000 : POLL_MS);
+  const ms = document.hidden ? 15000 : (rtOk ? POLL_LIVE_MS : POLL_FALLBACK_MS);
+  timer = setTimeout(async () => { await refresh(); schedule(); }, ms);
 }
+
+/* Canal en vivo (Supabase Broadcast): solo manda un aviso "hubo cambios"; los datos siguen protegidos por el PIN. */
+async function initRealtime(){
+  try {
+    const cfg = await api('/config');
+    if (!window.supabase || !cfg.url || !cfg.anon) return;
+    const rt = window.supabase.createClient(cfg.url, cfg.anon);
+    chan = rt.channel('offszn-cambios');
+    chan.on('broadcast', { event: 'sync' }, () => refresh());
+    chan.subscribe((status) => {
+      rtOk = status === 'SUBSCRIBED';
+      $('#liveDot').classList.toggle('on', rtOk);
+      schedule();
+    });
+  } catch (_) { /* queda el respaldo por consulta */ }
+}
+function ping(){ try { if (chan && rtOk) chan.send({ type: 'broadcast', event: 'sync', payload: { by: me } }); } catch (_) {} }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && pin) { refresh(); schedule(); } });
 
 /* ---------- datos + avisos ---------- */
 async function refresh(first){
   try {
     const data = await api('/state');
-    if (data.who && data.who !== me) { me = data.who; $('#meBadge').textContent = NAME[me]; }
     if (!first && prev) diffNotify(prev, data);
     prev = data; state = data;
     render();
     checkDue();
   } catch (err) {
-    if (err.status === 403) { store.del('cn_pin'); try { if (sb) await sb.auth.signOut(); } catch (_) {} location.reload(); }
+    if (err.status === 403) { store.del('cn_pin'); location.reload(); }
     else if (first) toast('No pude cargar: ' + err.message + ' (¿ya corriste el SQL?)');
   }
 }
@@ -369,7 +378,7 @@ function render(){
   $('#content').querySelectorAll('.card').forEach(c => c.onclick = (e) => { if (e.target.closest('a')) return; openModal(state.items.find(i => i.id == c.dataset.id)); });
 
   $('#feed').innerHTML = state.feed.map(m =>
-    `<div class="msg ${esc(m.color)}"><b>${esc(NAME[m.author] || m.author)}</b><time>${new Date(m.created_at).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})}</time><div>${esc(m.text)}</div></div>`
+    `<div class="msg ${esc(m.color)} ${m.author === me ? 'me' : ''}"><b>${esc(NAME[m.author] || m.author)}</b><time>${new Date(m.created_at).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})}</time><div>${esc(m.text)}</div></div>`
   ).join('');
 }
 
@@ -403,7 +412,7 @@ function wireDnD(){
       const it = state.items.find(i => i.id == dragId);
       if (!it || it.status === col.dataset.s) return;
       it.status = col.dataset.s; render();
-      try { await api('/items/' + it.id, { method: 'PATCH', body: { status: col.dataset.s } }); refresh(true); }
+      try { await api('/items/' + it.id, { method: 'PATCH', body: { status: col.dataset.s } }); ping(); refresh(true); }
       catch (err) { toast(err.message); refresh(true); }
     };
   });
@@ -443,12 +452,12 @@ $('#itemForm').onsubmit = async (e) => {
   try {
     if (editing) await api('/items/' + editing.id, { method: 'PATCH', body });
     else await api('/items', { method: 'POST', body });
-    closeModal(); refresh(true);
+    closeModal(); ping(); refresh(true);
   } catch (err) { $('#itemErr').textContent = err.message; }
 };
 $('#delBtn').onclick = async () => {
   if (!editing || !confirm('¿Borrar “' + editing.title + '”?')) return;
-  try { await api('/items/' + editing.id, { method: 'DELETE' }); closeModal(); refresh(true); }
+  try { await api('/items/' + editing.id, { method: 'DELETE' }); closeModal(); ping(); refresh(true); }
   catch (err) { $('#itemErr').textContent = err.message; }
 };
 
@@ -457,28 +466,16 @@ $('#feedForm').onsubmit = async (e) => {
   e.preventDefault();
   const text = $('#feedText').value.trim(); if (!text) return;
   $('#feedText').value = '';
-  try { await api('/feed', { method: 'POST', body: { text, color: feedColor } }); refresh(true); }
-  catch (err) { toast(err.message); $('#feedText').value = text; }
+  // se ve al instante; el servidor lo confirma enseguida
+  state.feed.unshift({ id: 'tmp' + Date.now(), author: me, color: feedColor, text, created_at: new Date().toISOString() });
+  render();
+  try { await api('/feed', { method: 'POST', body: { text, color: feedColor } }); ping(); refresh(true); }
+  catch (err) { toast(err.message); $('#feedText').value = text; refresh(true); }
 };
 
 /* ---------- inicio ---------- */
 markWho();
-(async () => {
-  // 1) PIN guardado  2) sesion de Google (supabase-js la toma sola al volver del login)
-  if (pin && me) { try { await api('/state'); return start(); } catch (_) { store.del('cn_pin'); pin = ''; } }
-  if (sb) {
-    try {
-      const { data } = await sb.auth.getSession();
-      if (data?.session) {
-        const s = await api('/state');
-        me = s.who; return start();
-      }
-    } catch (err) {
-      $('#loginErr').textContent = err.message || 'Ese correo no tiene acceso.';
-      try { await sb.auth.signOut(); } catch (_) {}
-    }
-  }
-})();
+if (pin && me) { api('/state').then(start).catch(() => { store.del('cn_pin'); }); }
 </script>
 </body>
 </html>

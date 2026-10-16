@@ -1,8 +1,9 @@
 import express from 'express';
-import { cambiosAuth, getState, createItem, updateItem, deleteItem, postFeed } from '../controllers/CambiosController.js';
+import { cambiosAuth, getConfig, getState, createItem, updateItem, deleteItem, postFeed } from '../controllers/CambiosController.js';
 
 const router = express.Router();
 router.use(cambiosAuth);
+router.get('/config', getConfig);
 router.get('/state', getState);
 router.post('/items', createItem);
 router.patch('/items/:id', updateItem);
