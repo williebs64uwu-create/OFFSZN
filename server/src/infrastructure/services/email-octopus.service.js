@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+// Uses native globalThis.fetch in Node 18+
 import { EMAILOCTOPUS_API_KEY, EMAILOCTOPUS_LIST_ID } from '../../shared/config/config.js';
 import crypto from 'crypto';
 

@@ -7,7 +7,7 @@
  * order recording in Supabase, and instant customer fulfillment.
  */
 
-import fetch from 'node-fetch';
+// Uses globalThis.fetch available in Node 18+
 import { supabase } from '../../database/connection.js';
 import { generatePluginLicense } from './PluginLicensingController.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
@@ -69,6 +69,20 @@ const PLUGIN_INFO_MAP = {
             win: 'https://drive.google.com/file/d/179OVCmWJowkrDiwSeFpC3lqPR7Qn_1Zk/view?usp=sharing',
             mac: 'https://drive.google.com/file/d/1suMJLf1y-Y06NuLetNGojvHXBt8yzz4D/view?usp=sharing'
         }
+    },
+    '5002': {
+        name: 'Cassette',
+        downloads: {
+            win: 'https://wa.me/51952467395?text=Hola,%20acabo%20de%20comprar%20Cassette%20por%20Yape%20y%20quiero%20el%20instalador',
+            mac: '#'
+        }
+    },
+    'cassette': {
+        name: 'Cassette',
+        downloads: {
+            win: 'https://wa.me/51952467395?text=Hola,%20acabo%20de%20comprar%20Cassette%20por%20Yape%20y%20quiero%20el%20instalador',
+            mac: '#'
+        }
     }
 };
 
@@ -121,7 +135,7 @@ export const chargeYape = async (req, res) => {
 
         const isPromo2x1 = Boolean(req.body.isPromo2x1 || req.body.is_promo_2x1 || String(productId) === 'promo-2x1' || (req.body.pluginName || '').toLowerCase().includes('2x1'));
         const strProdId = String(productId || '');
-        const prodInfo = PLUGIN_INFO_MAP[strProdId] || (strProdId === 'promo-2x1' ? PLUGIN_INFO_MAP['899'] : (productId ? PLUGIN_INFO_MAP['899'] : null));
+        const prodInfo = PLUGIN_INFO_MAP[strProdId] || ((req.body.pluginName || '').toLowerCase().includes('cassette') ? PLUGIN_INFO_MAP['5002'] : null) || (strProdId === 'promo-2x1' ? PLUGIN_INFO_MAP['899'] : (productId ? PLUGIN_INFO_MAP['899'] : null));
         const pluginName = prodInfo ? (isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : prodInfo.name) : (req.body.pluginName || 'Presets');
 
         console.log(`[YapeCharge] Initiating charge: S/. ${amountPEN} PEN ($${validUsdPrice} USD @ T.C. ${exchangeRate}) for ${email} (${pluginName}) | 2x1: ${isPromo2x1}`);

@@ -1,5 +1,5 @@
 import { supabase } from '../../database/connection.js';
-import fetch from 'node-fetch'; // Requires node-fetch or native fetch in node 18+
+// Uses native globalThis.fetch in Node 18+
 import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../../shared/config/config.js';
 import { syncUserStatsToEmailOctopus } from '../../services/email-octopus.service.js';
 

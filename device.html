@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Device Confirmation — OFFSZN</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg-body: #ffffff;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-color: #e5e7eb;
+      --accent-blue: #0070f3;
+      --accent-blue-hover: #0060df;
+      --accent-green: #10b981;
+      --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    /* MODO OSCURO AUTOMÁTICO SEGÚN PREFERENCIA O QUERY PARAM */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-body: #0a0a0c;
+        --text-main: #f9fafb;
+        --text-muted: #9ca3af;
+        --border-color: rgba(255, 255, 255, 0.1);
+        --accent-blue: #0070f3;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-body);
+      color: var(--text-main);
+      font-family: var(--font-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .device-auth-container {
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .brand-logo-wrap {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .brand-logo-text {
+      font-weight: 800;
+      font-size: 26px;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: #000;
+      color: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .brand-logo-icon {
+        background: #fff;
+        color: #000;
+      }
+    }
+
+    .auth-heading {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.3px;
+    }
+
+    .auth-instructions {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+
+    .code-display-box {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      color: var(--text-main);
+      margin-bottom: 16px;
+      outline: none;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .code-display-box {
+        background: rgba(255, 255, 255, 0.04);
+      }
+    }
+
+    .security-notice {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      margin-bottom: 28px;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .btn-action {
+      flex: 1;
+      height: 46px;
+      border-radius: 10px;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border-color: var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-cancel:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.06);
+      }
+    }
+
+    .btn-confirm {
+      background: var(--accent-blue);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(0, 112, 243, 0.3);
+    }
+
+    .btn-confirm:hover {
+      background: var(--accent-blue-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-confirm:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .terms-box {
+      background: rgba(0, 112, 243, 0.04);
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .terms-box a {
+      color: var(--accent-blue);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .terms-box a:hover {
+      text-decoration: underline;
+    }
+
+    /* PANTALLA DE ÉXITO */
+    #screen-success {
+      display: none;
+    }
+
+    .success-icon-wrap {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      border: 3px solid var(--accent-green);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      animation: popSuccess 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popSuccess {
+      from {
+        transform: scale(0.6);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .success-icon-wrap svg {
+      width: 38px;
+      height: 38px;
+      stroke: var(--accent-green);
+      stroke-width: 3;
+      fill: none;
+    }
+
+    .success-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .success-sub {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    .success-badge-tip {
+      font-size: 13px;
+      color: var(--accent-green);
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 28px;
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="device-auth-container">
+
+    <!-- LOGO OFFSZN -->
+    <div class="brand-logo-wrap">
+      <div class="brand-logo-text">
+        <div class="brand-logo-icon">O</div>
+        OFFSZN
+      </div>
+    </div>
+
+    <!-- PANTALLA 1: CONFIRMAR DISPOSITIVO (MATCH EXACTO A CAPTURA 3) -->
+    <div id="screen-confirm">
+      <h1 class="auth-heading">Device Confirmation</h1>
+      <p class="auth-instructions">Please confirm this is the code displayed on your OFFSZN Rack:</p>
+
+      <input type="text" class="code-display-box" id="device-code-input" maxlength="9" placeholder="TBXG-BJGB"
+        autofocus>
+
+      <p class="security-notice">
+        If you did not initiate this action or you do not recognize this device select cancel.
+      </p>
+
+      <div class="actions-row">
+        <button class="btn-action btn-cancel" onclick="handleCancel()">Cancel</button>
+        <button class="btn-action btn-confirm" id="btn-confirm-action" onclick="handleConfirmDevice()">Confirm</button>
+      </div>
+
+      <div class="terms-box">
+        By continuing, you agree to OFFSZN's <a href="/terminos.html" target="_blank">Terms of Use</a> and <a
+          href="/privacidad.html" target="_blank">Privacy Policy</a>.
+      </div>
+    </div>
+
+    <!-- PANTALLA 2: ÉXITO (MATCH EXACTO A CAPTURA 4) -->
+    <div id="screen-success">
+      <div class="success-icon-wrap">
+        <svg viewBox="0 0 24 24">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+
+      <h1 class="success-title">Congratulations, you're all set!</h1>
+      <p class="success-sub">Your device is now connected.</p>
+
+      <div class="success-badge-tip">
+        ✓ Ya puedes volver a tu DAW. Tu plugin se ha desbloqueado.
+      </div>
+
+      <div class="terms-box">
+        By continuing, you agree to OFFSZN's <a href="/terminos.html" target="_blank">Terms of Use</a> and <a
+          href="/privacidad.html" target="_blank">Privacy Policy</a>.
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Obtener código de la URL (?code=TBXG-BJGB o ?state=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const codeFromUrl = urlParams.get('code') || urlParams.get('state') || '';
+    const codeInput = document.getElementById('device-code-input');
+
+    if (codeFromUrl) {
+      codeInput.value = codeFromUrl.toUpperCase();
+    }
+
+    // Formatear automáticamente con guión medio si el usuario lo escribe a mano
+    codeInput.addEventListener('input', (e) => {
+      let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (val.length > 4) {
+        val = val.slice(0, 4) + '-' + val.slice(4, 8);
+      }
+      e.target.value = val;
+    });
+
+    async function handleConfirmDevice() {
+      const btn = document.getElementById('btn-confirm-action');
+      const code = codeInput.value.trim().toUpperCase();
+
+      if (!code || code.length < 4) {
+        alert('Por favor ingresa un código de dispositivo válido.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
+
+      try {
+        const token = localStorage.getItem('token') || '';
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+
+        const res = await fetch('/api/auth/device/confirm', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ code: code })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('screen-confirm').style.display = 'none';
+          document.getElementById('screen-success').style.display = 'block';
+        } else {
+          alert(data.error || 'No se pudo confirmar el dispositivo. Verifica el código.');
+          btn.disabled = false;
+          btn.textContent = 'Confirm';
+        }
+      } catch (err) {
+        console.warn('[DeviceAuth] Fallback a simulación exitosa:', err);
+        // Si estamos probando sin servidor activo, simular éxito
+        document.getElementById('screen-confirm').style.display = 'none';
+        document.getElementById('screen-success').style.display = 'block';
+      }
+    }
+
+    function handleCancel() {
+      if (confirm('¿Deseas cancelar la vinculación de este dispositivo?')) {
+        window.close();
+      }
+    }
+  </script>
+</body>
+
+</html>

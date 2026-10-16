@@ -41,6 +41,7 @@
     <script>window.supabaseClient = null;</script>
     <script src="/script/config.js"></script>
     <script src="/script/auth-utils.js?v=12"></script>
+    <script src="/script/meta-pixel.js"></script>
 
     <style>
         :root {
@@ -181,6 +182,32 @@
             background: rgba(255, 255, 255, 0.05);
             border-color: rgba(255, 255, 255, 0.4);
             opacity: 1;
+        }
+
+        .btn-yape-white {
+            width: 100%;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-sizing: border-box;
+            background: #ffffff;
+            color: #000000;
+            border: none;
+            font-weight: 800;
+            font-size: 1rem;
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: opacity 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-yape-white:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
         }
 
         /* ==================== CONTENT SECTIONS ==================== */
@@ -906,9 +933,34 @@
                 <p class="section-subtitle">Inicia sesión para descargar el plugin y ver tus licencias.</p>
 
                 <div class="serial-card" style="max-width: 800px; margin-bottom: 60px;">
-                    <div style="padding: 30px 20px; text-align: center;">
-                        <p style="color: rgba(255,255,255,0.7); font-size: 1rem; margin-bottom: 18px;">La descarga de Cassette se activa al adquirir tu licencia.</p>
-                        <a href="#pricing-section" class="btn-auth" style="background: transparent; border: 1px solid #fff; color: #fff;">Ver licencia</a>
+                    <!-- ESTADO 1: NO LOGUEADO (AUTH WALL) -->
+                    <div class="auth-wall" id="ui-auth-wall">
+                        <p style="color: rgba(255,255,255,0.6); font-size: 0.95rem; margin-bottom: 12px;">Inicia sesión para descargar Cassette y ver tus licencias.</p>
+                        <a href="/pages/login.html?redirect=/plugins/cassette" class="btn-auth"
+                            style="background: transparent; border: 1px solid #fff; color: #fff;">Iniciar Sesión / Registrarse</a>
+                    </div>
+
+                    <!-- ESTADO 2: LOGUEADO Y LISTO -->
+                    <div class="serial-display" id="ui-serial-ready"
+                        style="display: none; flex-direction: column; align-items: center; gap: 20px; padding: 20px 10px;">
+                        <!-- PANEL DE LICENCIA -->
+                        <div id="license-key-panel"
+                            style="display: none; width: 100%; text-align: center;">
+                            <h3 style="margin:0 0 6px 0; font-size: 1.3rem; color: #fff;">Tu Licencia de Cassette</h3>
+                            <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 15px;">Pega esta clave dentro de Cassette en tu DAW para activarlo.</p>
+                            <div class="serial-box" id="serial-key-text" title="Clic para copiar" onclick="copySerial()"
+                                style="border-color: #e61b2b; color: #fff; max-width: 440px; margin: 0 auto; letter-spacing: 2px; font-family: monospace;">
+                                Cargando...</div>
+                        </div>
+
+                        <!-- PANEL SIN LICENCIA -->
+                        <div id="no-license-panel"
+                            style="display: none; width: 100%; text-align: center;">
+                            <p style="color: rgba(255,255,255,0.6); font-size: 0.95rem; margin-bottom: 18px;">Aún no tienes una licencia de Cassette en tu cuenta.</p>
+                            <a href="#pricing-section" class="btn-free-download" style="display: inline-flex; align-items: center; gap: 8px;">
+                                <i class="bi bi-cart-fill"></i> Adquirir Licencia ($8 USD)
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -936,17 +988,28 @@
                             <li style="margin-bottom: 12px; display: flex; align-items: center; gap: 8px;"><i class="bi bi-check-circle-fill" style="color: #ffffff; font-size: 1rem;"></i> Actualizaciones de por vida</li>
                             <li style="margin-bottom: 0; display: flex; align-items: center; gap: 8px;"><i class="bi bi-check-circle-fill" style="color: #ffffff; font-size: 1rem;"></i> Serial Key se envía a tu correo</li>
                         </ul>
+
+                        <!-- Direct PayPal Checkout -->
+                        <div id="plugin-paypal-button-container"
+                            style="margin-top: 0; min-height: 150px; width: 100%;"></div>
+
                         <!-- Botón Mercado Pago -->
-                        <a href="https://wa.me/51952467395?text=Hola,%20quiero%20comprar%20el%20plugin%20Cassette%20por%20Mercado%20Pago%20(25%20soles)" target="_blank" rel="noopener noreferrer"
-                            style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #009EE3; color: #ffffff; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-top: 12px; margin-bottom: 12px; text-decoration: none;">
+                        <a href="https://wa.me/51952467395?text=Hola,%20quiero%20comprar%20el%20plugin%20Cassette%20por%20Mercado%20Pago" target="_blank" rel="noopener noreferrer"
+                            style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #009EE3; color: #ffffff; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-top: 12px; margin-bottom: 12px; text-decoration: none; transition: opacity 0.2s ease;">
                             <img src="/images/payments/mercadopago.png" alt="Mercado Pago" style="width: 26px; height: 26px; object-fit: contain;">
                             Pagar con Mercado Pago
                         </a>
+
                         <!-- Botón Yape (Modal Instantáneo Mercado Pago Perú) -->
-                        <a href="https://wa.me/51952467395?text=Hola,%20quiero%20comprar%20el%20plugin%20Cassette%20por%20Yape%20(25%20soles)" target="_blank" rel="noopener noreferrer" style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #ffffff; color: #6a1b9a; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-bottom: 12px; text-decoration: none;"><img src="/images/payments/yape.png" alt="Yape" style="width: 22px; height: 22px; object-fit: contain; border-radius: 5px;"> Pagar con Yape (Soles 🇵🇪)</a>
+                        <button type="button" data-action="open-yape-checkout" id="btn-yape-checkout"
+                            class="btn-yape-white">
+                            <img src="/images/payments/yape.png" alt="Yape" style="width: 22px; height: 22px; object-fit: contain; border-radius: 5px;">
+                            Pagar con Yape (Soles 🇵🇪)
+                        </button>
+
                         <!-- Botón Binance -->
-                        <a href="https://wa.me/51952467395?text=Hola,%20quiero%20pagar%20con%20Binance%20el%20plugin%20Cassette%20(25%20soles)" target="_blank" rel="noopener noreferrer"
-                            style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #F0B90B; color: #000000; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-bottom: 0px; text-decoration: none;">
+                        <a href="https://wa.me/51952467395?text=Hola,%20quiero%20pagar%20con%20Binance%20el%20plugin%20Cassette" target="_blank" rel="noopener noreferrer"
+                            style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; background: #F0B90B; color: #000000; border: none; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 10px; margin-bottom: 0px; text-decoration: none; transition: opacity 0.2s ease;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L4.5 9.5L7.33 12.33L12 7.66L16.67 12.33L19.5 9.5L12 2ZM4.5 14.5L2 12L4.5 9.5L7.33 12.33L4.5 14.5ZM19.5 14.5L16.67 12.33L19.5 9.5L22 12L19.5 14.5ZM12 22L4.5 14.5L7.33 11.67L12 16.34L16.67 11.67L19.5 14.5L12 22ZM12 13.5L9.17 10.67L12 7.84L14.83 10.67L12 13.5Z"/></svg>
                             Pagar con Binance
                         </a>
@@ -1113,6 +1176,96 @@
         <a href="#pricing-section" class="sticky-offer-btn" style="background: #ffffff !important; color: #000000 !important; font-weight: 800; border-radius: 100px; padding: 8px 24px; text-decoration: none;">Lo quiero!</a>
         <a href="#pricing-section" class="sticky-offer-mobile-link" style="color: #ffffff !important; font-weight: 800;">Obtén tu licencia de por vida ➔</a>
     </div>
-    </body>
+
+    <!-- ==================== CASSETTE LICENSE & CHECKOUT ENGINE ==================== -->
+    <script>
+        window.PLUGIN_NAME = 'Cassette';
+        window.PLUGIN_ID = 5002;
+        window.CURRENT_PROMO_PRICE = 8;
+        window.YAPE_FIXED_PRICE_PEN = 25;
+
+        function copySerial() {
+            const el = document.getElementById('serial-key-text');
+            if (el) {
+                const text = el.innerText.trim();
+                if (text && text !== 'Cargando...' && text !== '¡COPIADO!') {
+                    navigator.clipboard.writeText(text);
+                    const orig = el.innerText;
+                    el.innerText = '¡COPIADO!';
+                    setTimeout(() => el.innerText = orig, 2000);
+                }
+            }
+        }
+
+        // Meta Pixel ViewContent
+        function dispatchViewContent() {
+            if (window.MetaPixel && typeof window.MetaPixel.trackViewContent === 'function') {
+                window.MetaPixel.trackViewContent({
+                    content_ids: ['cassette'],
+                    content_name: 'Cassette VST',
+                    content_type: 'product',
+                    value: 8,
+                    currency: 'USD'
+                });
+            }
+        }
+        if (window.MetaPixel) {
+            dispatchViewContent();
+        } else {
+            window.addEventListener('DOMContentLoaded', dispatchViewContent);
+        }
+
+        // Check user session & load Cassette license
+        document.addEventListener('DOMContentLoaded', async () => {
+            let retries = 0;
+            while (!window.supabaseClient && retries < 25) {
+                await new Promise(r => setTimeout(r, 200));
+                retries++;
+            }
+            if (!window.supabaseClient) return;
+
+            try {
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                const uiWall = document.getElementById('ui-auth-wall');
+                const uiReady = document.getElementById('ui-serial-ready');
+                const licPanel = document.getElementById('license-key-panel');
+                const noLicPanel = document.getElementById('no-license-panel');
+                const keyText = document.getElementById('serial-key-text');
+
+                if (!session) {
+                    if (uiWall) uiWall.style.display = 'flex';
+                    if (uiReady) uiReady.style.display = 'none';
+                } else {
+                    if (uiWall) uiWall.style.display = 'none';
+                    if (uiReady) uiReady.style.display = 'flex';
+
+                    const { data: license } = await window.supabaseClient
+                        .from('plugin_licenses')
+                        .select('serial_key, status, license_type, expires_at')
+                        .eq('user_id', session.user.id)
+                        .or('plugin_name.ilike.%cassette%,serial_key.ilike.CASSETTE%')
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (license && license.serial_key) {
+                        if (licPanel) licPanel.style.display = 'block';
+                        if (noLicPanel) noLicPanel.style.display = 'none';
+                        if (keyText) keyText.innerText = license.serial_key;
+                    } else {
+                        if (licPanel) licPanel.style.display = 'none';
+                        if (noLicPanel) noLicPanel.style.display = 'block';
+                    }
+                }
+            } catch (e) {
+                console.warn('[CassetteLicense] Auth check failed:', e);
+            }
+        });
+    </script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <script src="/script/plugin-checkout.js?v=20261016"></script>
+    <script src="/script/yape-checkout.js?v=20261016"></script>
+    <script src="/script/pay-click-tracker.js?v=20261016"></script>
+</body>
 
 </html>

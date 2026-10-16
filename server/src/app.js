@@ -31,6 +31,7 @@ import youtubeRoutes from './infrastructure/http/routes/youtube.routes.js';
 import youtubeSyncRoutes from './infrastructure/http/routes/youtube-sync.routes.js';
 import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
 import pluginLicensingRoutes from './infrastructure/http/routes/plugin-licensing.routes.js';
+import deviceAuthRoutes from './infrastructure/http/routes/device-auth.routes.js';
 import cokeCheckoutRoutes from './infrastructure/http/routes/coke-checkout.routes.js';
 import promo2x1CheckoutRoutes from './infrastructure/http/routes/promo2x1-checkout.routes.js';
 import calendarRoutes from './infrastructure/http/routes/calendar.routes.js';
@@ -60,7 +61,7 @@ app.set('trust proxy', 1); // Confiar en el proxy de Render para express-rate-li
 app.use((req, res, next) => {
     const rawUrl = req.url || '';
     const origUrl = req.originalUrl || '';
-    
+
     // Reject any path traversal attempt with '..' or URL-encoded '%2e%2e'
     if (
         rawUrl.includes('..') ||
@@ -110,7 +111,7 @@ app.use((req, res, next) => {
     if (host && (host.endsWith('.offszn.lat') || host.endsWith('.localhost:3000'))) {
         const parts = host.split('.');
         const subdomain = parts[0];
-        
+
         // Exclude reserved subdomains
         const reserved = ['www', 'api', 'admin', 'offszn', 'studio', 'cuenta', 'explorar'];
         if (!reserved.includes(subdomain) && parts.length >= (host.includes('localhost') ? 2 : 3)) {
@@ -131,11 +132,11 @@ const allowedOrigins = [
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
-        
+
         // Permite el dominio principal, localhost y cualquier subdominio de offszn.lat
         const isMainDomain = allowedOrigins.indexOf(origin) !== -1;
         const isSubdomain = origin.endsWith('.offszn.lat') || origin.endsWith('.localhost:3000');
-        
+
         if (isMainDomain || isSubdomain || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1') || origin.endsWith('.vercel.app')) {
             callback(null, true);
         } else if (origin === 'null') {
@@ -284,7 +285,7 @@ app.use(cookieParser());
 app.get('/system/v2/config/dump', (req, res, next) => {
     const accessKey = req.headers['x-offszn-agent-access'] || req.cookies['offszn_agent_access'];
     if (!AGENT_ACCESS_KEY || accessKey !== AGENT_ACCESS_KEY) return res.status(404).send('Not found');
-    
+
     const agentHubPath = path.join(__dirname, '../public/system-logs.html');
     if (fs.existsSync(agentHubPath)) return res.sendFile(agentHubPath);
     res.status(200).json({ status: 'diagnostic_mode', message: 'System logs placeholder' });
@@ -365,6 +366,7 @@ app.use('/api/imagekit', imagekitRoutes);
 app.use('/api', subscriptionRoutes);
 app.use('/api', subscriptionV2Routes);
 app.use('/api/plugin', pluginLicensingRoutes);
+app.use('/api/auth/device', deviceAuthRoutes);
 app.use('/api', r2Routes);
 app.use('/api/imagekit', imagekitRoutes);
 app.use('/api', paypalRoutes);
@@ -651,7 +653,7 @@ app.get(['/recovery-dashboard', '/recovery-dashboard.html', '/recovery_dashboard
 app.get(['/system-logs', '/system-logs.html', '/server/public/system-logs.html'], (req, res) => {
     const key = req.query.admin_key || req.query.pin || req.headers['x-admin-key'] || req.cookies?.offszn_owner_key;
     const isAuth = isAdminKey(key);
-    
+
     // If not authenticated via query/header/cookie, redirect to owner dashboard
     if (!isAuth) {
         return res.redirect('/owner/offszn.html#telemetria');
@@ -1097,7 +1099,7 @@ app.get('/api/og-image/:productId', async (req, res) => {
     try {
         const { supabase: db } = await import('./infrastructure/database/connection.js');
         const { getPresignedDownloadUrl } = await import('./infrastructure/services/r2-storage.service.js');
-        
+
         const productId = parseInt(req.params.productId, 10);
         if (isNaN(productId)) return res.status(400).send('Invalid product ID');
 
@@ -1106,7 +1108,7 @@ app.get('/api/og-image/:productId', async (req, res) => {
 
         let imageUrl = product.image_url;
         const version = product.storage_version || 'v2';
-        
+
         if (imageUrl.startsWith('http')) {
             if (imageUrl.includes('r2.cloudflarestorage.com')) {
                 // Private R2 URL — extract key and sign it
@@ -1115,21 +1117,21 @@ app.get('/api/og-image/:productId', async (req, res) => {
                     const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
                     const signedUrl = await getPresignedDownloadUrl(key, 600, version);
                     if (signedUrl) return res.redirect(signedUrl);
-                } catch (e) {}
+                } catch (e) { }
             }
             // Already a public URL (ImageKit, etc.)
             return res.redirect(imageUrl);
         }
-        
+
         // Relative path
         if (version === 'supabase') {
             return res.redirect(`https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/${imageUrl}`);
         }
-        
+
         // R2 v1/v2 — sign it
         const signedUrl = await getPresignedDownloadUrl(imageUrl, 600, version);
         if (signedUrl) return res.redirect(signedUrl);
-        
+
         // Last fallback — try Supabase public
         return res.redirect(`https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products/${imageUrl}`);
     } catch (err) {
@@ -1184,14 +1186,14 @@ app.get([
         const producerName = product.users?.nickname || 'Productor';
         const title = `${product.name} - ${producerName} | OFFSZN`;
         const price = product.is_free ? 'GRATIS' : `$${product.price_basic || '0.00'}`;
-        const description = product.description 
+        const description = product.description
             ? product.description.substring(0, 300) + '...'
             : `Descarga "${product.name}" por ${producerName}. ${price} en OFFSZN.lat`;
-        
+
         const SUPABASE_PUBLIC_STORAGE = 'https://qtjpvztpgfymjhhpoouq.supabase.co/storage/v1/object/public/products';
         let image = product.image_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
         const version = product.storage_version || 'v2';
-        
+
         if (image.startsWith('http')) {
             if (image.includes('r2.cloudflarestorage.com')) {
                 try {
@@ -1279,7 +1281,7 @@ app.get('/servicio/:slug', async (req, res, next) => {
 
     try {
         const { supabase: db } = await import('./infrastructure/database/connection.js');
-        
+
         // Extract parts: [title]-[code]-[nickname]
         const segments = slug.split('-').filter(p => p.trim());
         if (segments.length < 2) return res.sendFile(servicePagePath);
@@ -1300,13 +1302,13 @@ app.get('/servicio/:slug', async (req, res, next) => {
         if (user) {
             const services = user.socials?.custom_services || [];
             const service = services.find(s => s.id === targetId || s.id === `servicios_offszn_${targetId}`);
-            
+
             if (service) {
                 const title = `${service.title} | ${user.nickname} - OFFSZN`;
-                const description = service.description 
+                const description = service.description
                     ? service.description.substring(0, 160) + '...'
                     : `Contrata el servicio "${service.title}" de ${user.nickname} en OFFSZN.lat`;
-                
+
                 let image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
                 const url = `https://offszn.lat/servicio/${slug}`;
 
@@ -1378,7 +1380,7 @@ app.get([
                         const urlObj = new URL(image);
                         const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
                         image = `https://offszn.lat/api/r2-public/${key}`;
-                    } catch (e) {}
+                    } catch (e) { }
                 }
             } else if (image && !image.startsWith('http')) {
                 // Relative path, use proxy
@@ -1452,7 +1454,7 @@ app.get(['/@:username/:slug', '/:username/:slug'], async (req, res, next) => {
 
     try {
         const { supabase: db } = await import('./infrastructure/database/connection.js');
-        
+
         // Fetch user data
         const { data: user } = await db
             .from('users')
@@ -1467,14 +1469,14 @@ app.get(['/@:username/:slug', '/:username/:slug'], async (req, res, next) => {
         if (user) {
             const playlists = user.socials?.playlists || [];
             // Try to match by slug field, then by slugified title
-            const playlist = playlists.find(p => p.slug === slug) || 
-                           playlists.find(p => {
-                               const autoSlug = p.title.toLowerCase()
-                                   .replace(/[^a-z0-9]+/g, '-')
-                                   .replace(/(^-|-$)+/g, '');
-                               return autoSlug === slug;
-                           });
-            
+            const playlist = playlists.find(p => p.slug === slug) ||
+                playlists.find(p => {
+                    const autoSlug = p.title.toLowerCase()
+                        .replace(/[^a-z0-9]+/g, '-')
+                        .replace(/(^-|-$)+/g, '');
+                    return autoSlug === slug;
+                });
+
             if (playlist) {
                 const title = `${playlist.title} | @${user.nickname} - OFFSZN`;
                 const description = `Escucha la playlist "${playlist.title}" de ${user.nickname} en OFFSZN.lat`;
@@ -1575,7 +1577,7 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
         } else if (user.template === 'editor_tienda') {
             templateFile = 'plantilla-editor-tienda.html';
         }
-        
+
         const profilePagePath = path.join(rootPath, templateFile);
         if (!fs.existsSync(profilePagePath)) {
             // Fallback if premium template not found
@@ -1586,10 +1588,10 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
 
         // --- OG TAGS & INJECTION ---
         const title = `${user.nickname} | ${user.role || 'Productor'} - OFFSZN`;
-        const description = user.bio 
+        const description = user.bio
             ? user.bio.substring(0, 160) + '...'
             : `Escucha los últimos beats y recursos de ${user.nickname} en OFFSZN.lat`;
-        
+
         let image = user.avatar_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
         if (image && image.startsWith('http')) {
             if (image.includes('r2.cloudflarestorage.com')) {
@@ -1597,7 +1599,7 @@ app.get(['/@:username', '/:username', '/'], async (req, res, next) => {
                     const urlObj = new URL(image);
                     const key = urlObj.pathname.startsWith('/') ? urlObj.pathname.substring(1) : urlObj.pathname;
                     image = `https://offszn.lat/api/r2-public/${key}`;
-                } catch (e) {}
+                } catch (e) { }
             }
         } else if (image && !image.startsWith('http')) {
             image = `https://offszn.lat/api/r2-public/${image}`;

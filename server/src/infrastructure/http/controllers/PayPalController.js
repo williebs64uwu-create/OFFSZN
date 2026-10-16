@@ -266,6 +266,8 @@ export const createPayPalOrder = async (req, res) => {
                 productObj = { id: 5000, name: 'Easy Pitch', price_basic: 5, producer_id: null };
             } else if (String(directProductId) === '5001' || String(directProductId).toLowerCase().includes('omni')) {
                 productObj = { id: 5001, name: 'Omni Plugin', price_basic: 17, producer_id: null };
+            } else if (String(directProductId) === '5002' || String(directProductId).toLowerCase().includes('cassette')) {
+                productObj = { id: 5002, name: 'Cassette', price_basic: 8, producer_id: null };
             } else if (String(directProductId) === '905') {
                 productObj = { id: 905, name: 'Vocal Preset', price_basic: 10, producer_id: null };
             } else if (String(directProductId) === '902') {
@@ -857,6 +859,8 @@ export const capturePayPalOrder = async (req, res) => {
                     productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' };
                 } else if (String(directProductId) === '5001' || String(directProductId).toLowerCase().includes('omni')) {
                     productObj = { id: 5001, name: 'Omni Plugin', price_basic: 17, producer_id: null };
+                } else if (String(directProductId) === '5002' || String(directProductId).toLowerCase().includes('cassette')) {
+                    productObj = { id: 5002, name: 'Cassette', price_basic: 8, producer_id: null };
                 } else if (String(directProductId) === '5000') {
                     productObj = { id: 5000, name: 'Easy Pitch', price_basic: 5, producer_id: null };
                 } else if (String(directProductId) === '905') {
@@ -886,7 +890,7 @@ export const capturePayPalOrder = async (req, res) => {
                 } else {
                     let variantPrice = productObj.price_basic || 10;
                     const requestedCustomPrice = parseFloat(req.body.customPrice || req.body.abPrice);
-                    if (requestedCustomPrice && [5, 10, 15, 17, 20, 25].includes(requestedCustomPrice)) {
+                    if (requestedCustomPrice && [5, 8, 10, 15, 17, 20, 25].includes(requestedCustomPrice)) {
                         variantPrice = requestedCustomPrice;
                     }
 
@@ -1243,14 +1247,15 @@ export const capturePayPalOrder = async (req, res) => {
                 const isVocalPreset = prodName.toLowerCase().includes('vocal') || prodId === '905';
                 const isEasyPitch = prodName.toLowerCase().includes('easy pitch') || prodName.toLowerCase().includes('easypitch') || prodId === '5000';
                 const isOmni = prodName.toLowerCase().includes('omni') || prodId === '5001';
+                const isCassette = prodName.toLowerCase().includes('cassette') || prodId === '5002';
                 const isEasyLevel = prodName.toLowerCase().includes('easy level') || prodName.toLowerCase().includes('easylevel');
                 const isEasyDeeser = /de-?e?s?ser/.test(prodName.toLowerCase()) && prodName.toLowerCase().includes('easy');
                 const isEasyClean = prodName.toLowerCase().includes('easy clean') || prodName.toLowerCase().includes('easyclean');
                 const isPromo2x1 = item.is_promo_2x1 === true || item.product?.is_promo_2x1 === true || prodName.toLowerCase().includes('2x1') || (item.license_name || '').toLowerCase().includes('2x1') || req.body.isPromo2x1 === true;
                 
-                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isEasyLevel || isEasyDeeser || isEasyClean) {
+                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette || isEasyLevel || isEasyDeeser || isEasyClean) {
                     try {
-                        const pluginName = isEasyClean ? 'Easy Clean' : isEasyDeeser ? 'Easy Deeser' : isEasyLevel ? 'Easy Level' : isOmni ? 'Omni Plugin' : (isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix'))));
+                        const pluginName = isCassette ? 'Cassette' : (isEasyClean ? 'Easy Clean' : isEasyDeeser ? 'Easy Deeser' : isEasyLevel ? 'Easy Level' : isOmni ? 'Omni Plugin' : (isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix')))));
                         const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
                                                (item.product?.product_type && item.product.product_type === 'subscription');
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';

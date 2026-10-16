@@ -12,29 +12,31 @@ function idsFromEnv(name) {
 }
 
 export const PLUGINS = [
-    { id: 'easy-mix',    prefix: 'EASY',   displayName: 'Easy Mix',     names: ['easy mix'],                 keywords: ['mix'],             productIds: [899, 901], trialDays: 3, exclusive: false },
-    { id: 'easy-master', prefix: 'MASTER', displayName: 'Easy Master',  names: ['easy master'],              keywords: ['master'],          productIds: [900],      trialDays: 3, exclusive: false },
-    { id: 'coca-cola',   prefix: 'COKE',   displayName: 'Coca-Cola', dbName: 'Coca Cola',    names: ['coca cola', 'coca-cola'],   keywords: ['coca', 'coke'],    productIds: [903],      trialDays: 3, exclusive: true  },
-    { id: 'inka-kola',   prefix: 'INKA',   displayName: 'Inka Kola',    names: ['inka kola'],                keywords: ['inka'],            productIds: [902],      trialDays: 7, exclusive: true  },
-    { id: 'vocal-preset',prefix: 'VOCA',   displayName: 'Vocal Preset', names: ['vocal preset'],             keywords: ['vocal', 'voca'],   productIds: [905],      trialDays: 3, exclusive: true  },
-    { id: 'easy-pitch',  prefix: 'PITCH',  displayName: 'Easy Pitch',   names: ['easy pitch'],               keywords: ['pitch'],           productIds: [906, 907], trialDays: 3, exclusive: true  },
-    { id: 'omni',        prefix: 'OMNI',   displayName: 'Omni Plugin',  names: ['omni plugin', 'omni'],      keywords: ['omni'],            productIds: idsFromEnv('OMNI_PRODUCT_IDS').length ? idsFromEnv('OMNI_PRODUCT_IDS') : [5001], trialDays: 3, exclusive: true },
+    { id: 'easy-mix', prefix: 'EASY', displayName: 'Easy Mix', names: ['easy mix'], keywords: ['mix'], productIds: [899, 901], trialDays: 3, exclusive: false },
+    { id: 'easy-master', prefix: 'MASTER', displayName: 'Easy Master', names: ['easy master'], keywords: ['master'], productIds: [900], trialDays: 3, exclusive: false },
+    { id: 'coca-cola', prefix: 'COKE', displayName: 'Coca-Cola', dbName: 'Coca Cola', names: ['coca cola', 'coca-cola'], keywords: ['coca', 'coke'], productIds: [903], trialDays: 3, exclusive: true },
+    { id: 'inka-kola', prefix: 'INKA', displayName: 'Inka Kola', names: ['inka kola'], keywords: ['inka'], productIds: [902], trialDays: 7, exclusive: true },
+    { id: 'vocal-preset', prefix: 'VOCA', displayName: 'Vocal Preset', names: ['vocal preset'], keywords: ['vocal', 'voca'], productIds: [905], trialDays: 3, exclusive: true },
+    { id: 'easy-pitch', prefix: 'PITCH', displayName: 'Easy Pitch', names: ['easy pitch'], keywords: ['pitch'], productIds: [906, 907], trialDays: 3, exclusive: true },
+    { id: 'omni', prefix: 'OMNI', displayName: 'Omni Plugin', names: ['omni plugin', 'omni'], keywords: ['omni'], productIds: idsFromEnv('OMNI_PRODUCT_IDS').length ? idsFromEnv('OMNI_PRODUCT_IDS') : [5001], trialDays: 3, exclusive: true },
     // Easy Level (nivelador de voces con Clover): IDs de tienda con LEVEL_PRODUCT_IDS (coma-separados) cuando exista en `products`.
-    { id: 'easy-level',  prefix: 'LEVEL',  displayName: 'Easy Level',   names: ['easy level'],               keywords: ['level'],           productIds: idsFromEnv('LEVEL_PRODUCT_IDS'), trialDays: 3, exclusive: true },
+    { id: 'easy-level', prefix: 'LEVEL', displayName: 'Easy Level', names: ['easy level'], keywords: ['level'], productIds: idsFromEnv('LEVEL_PRODUCT_IDS'), trialDays: 3, exclusive: true },
     // Easy Deeser (de-esser por partes con Clover): IDs de tienda con DEESER_PRODUCT_IDS (coma-separados) cuando exista en `products`.
-    { id: 'easy-deeser', prefix: 'DEESER', displayName: 'Easy Deeser',  names: ['easy deeser', 'easy de esser', 'easy deesser'], keywords: ['deeser', 'deesser', 'de esser'], productIds: idsFromEnv('DEESER_PRODUCT_IDS'), trialDays: 3, exclusive: true },
+    { id: 'easy-deeser', prefix: 'DEESER', displayName: 'Easy Deeser', names: ['easy deeser', 'easy de esser', 'easy deesser'], keywords: ['deeser', 'deesser', 'de esser'], productIds: idsFromEnv('DEESER_PRODUCT_IDS'), trialDays: 3, exclusive: true },
     // Easy Clean (quitar ruido de fondo con Clover): IDs de tienda con CLEAN_PRODUCT_IDS (coma-separados) cuando exista en `products`.
-    { id: 'easy-clean',  prefix: 'CLEAN',  displayName: 'Easy Clean',   names: ['easy clean'],               keywords: ['clean'],           productIds: idsFromEnv('CLEAN_PRODUCT_IDS'), trialDays: 3, exclusive: true },
+    { id: 'easy-clean', prefix: 'CLEAN', displayName: 'Easy Clean', names: ['easy clean'], keywords: ['clean'], productIds: idsFromEnv('CLEAN_PRODUCT_IDS'), trialDays: 3, exclusive: true },
     // GHOST (agente de mastering): IDs de tienda con GHOST_PRODUCT_IDS (coma-separados) cuando exista en `products`.
-    { id: 'ghost',       prefix: 'GHOST',  displayName: 'GHOST',        names: ['ghost', 'offszn ghost'],    keywords: ['ghost'],           productIds: idsFromEnv('GHOST_PRODUCT_IDS'), trialDays: 3, exclusive: true },
-    // CASSETTE (cinta lo-fi y espacio): IDs de tienda con CASSETTE_PRODUCT_IDS (coma-separados) cuando exista en `products`.
-    { id: 'cassette', prefix: 'CASSETTE', displayName: 'Cassette', names: ['cassette'], keywords: ['cassette'], productIds: idsFromEnv('CASSETTE_PRODUCT_IDS'), trialDays: 3, exclusive: true }
+    { id: 'ghost', prefix: 'GHOST', displayName: 'GHOST', names: ['ghost', 'offszn ghost'], keywords: ['ghost'], productIds: idsFromEnv('GHOST_PRODUCT_IDS'), trialDays: 3, exclusive: true },
+    // OFFSZN RACK (Rack y Hub de Presets vocales y mezcla):
+    { id: 'offszn-rack', prefix: 'RACK', displayName: 'OFFSZN Rack', names: ['offszn rack', 'rack', 'offszn hub'], keywords: ['rack', 'hub'], productIds: idsFromEnv('RACK_PRODUCT_IDS'), trialDays: 3, exclusive: true },
+    // CASSETTE (cinta lo-fi y espacio): IDs de tienda con CASSETTE_PRODUCT_IDS (coma-separados) o default [5002].
+    { id: 'cassette', prefix: 'CASSETTE', displayName: 'Cassette', names: ['cassette', 'cassette vst', 'cassette plugin'], keywords: ['cassette'], productIds: idsFromEnv('CASSETTE_PRODUCT_IDS').length ? idsFromEnv('CASSETTE_PRODUCT_IDS') : [5002], trialDays: 3, exclusive: true }
 ];
 
 export const DEFAULT_PLUGIN = PLUGINS[0]; // Easy Mix: comportamiento histórico cuando no se indica plugin
 
 // Orden de evaluación de palabras clave: los específicos primero ("Easy Master"/"Easy Pitch" contienen "easy"; "mix" va al final)
-const KEYWORD_ORDER = ['omni', 'ghost', 'cassette', 'easy-clean', 'easy-deeser', 'easy-level', 'easy-pitch', 'easy-master', 'coca-cola', 'inka-kola', 'vocal-preset', 'easy-mix'];
+const KEYWORD_ORDER = ['offszn-rack', 'omni', 'ghost', 'cassette', 'easy-clean', 'easy-deeser', 'easy-level', 'easy-pitch', 'easy-master', 'coca-cola', 'inka-kola', 'vocal-preset', 'easy-mix'];
 
 export function normalizeName(name) {
     return String(name || '').toLowerCase().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();

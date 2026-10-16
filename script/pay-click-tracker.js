@@ -2,7 +2,7 @@
 // Registra el precio exacto (USD y Soles) que vio el cliente en su variante A/B al tocar cualquier método de pago.
 // Se consulta en /owner/pagos-manuales y se cruza por hora, método y producto.
 (function () {
-    var SOLES = { 5: 19, 10: 38, 15: 57, 17: 65, 20: 76, 25: 95, 30: 114, 35: 133 };
+    var SOLES = { 5: 19, 8: 25, 10: 38, 15: 57, 17: 65, 20: 76, 25: 95, 30: 114, 35: 133 };
 
     // Si el cliente tiene sesión iniciada, se manda su token para que el servidor registre su email.
     var authToken = null;
@@ -29,6 +29,7 @@
         if (p.indexOf('coca-cola') !== -1) return 'Coca-Cola';
         if (p.indexOf('easy-master') !== -1) return 'Easy Master';
         if (p.indexOf('omni') !== -1) return 'Omni Plugin';
+        if (p.indexOf('cassette') !== -1) return 'Cassette';
         if (p.indexOf('promo-2x1') !== -1) return 'Promo 2x1';
         if (p.indexOf('easy-youtube') !== -1) return 'Easy YouTube';
         if (p.indexOf('offszn-recorder') !== -1) return 'OFFSZN Recorder';
@@ -40,7 +41,7 @@
             return window.CURRENT_PROMO_PRICE;
         }
         var ids = [
-            'omni-price-val', 'easy-pitch-price-val', 'vocal-preset-price-val',
+            'cassette-price-val', 'omni-price-val', 'easy-pitch-price-val', 'vocal-preset-price-val',
             'inka-kola-price-val', 'coca-cola-price-val', 'easy-master-price-val',
             'promo-price-val', 'plugin-price-val'
         ];
@@ -54,6 +55,7 @@
         var pr = detectProduct();
         if (pr === 'Easy Mix' || pr === 'Omni Plugin') return 17;
         if (pr === 'Promo 2x1') return 25;
+        if (pr === 'Cassette') return 8;
         return 5;
     }
 

@@ -17,6 +17,7 @@ class PluginDirectCheckout {
         const isVocalPreset = this.productId === 905 || window.PLUGIN_NAME === 'Vocal Preset';
         const isPitch = this.productId === 5000 || window.PLUGIN_NAME === 'Easy Pitch' || window.PLUGIN_NAME === 'EASY PITCH';
         const isOmni = this.productId === 5001 || window.PLUGIN_NAME === 'Omni Plugin' || window.PLUGIN_NAME === 'Omni' || window.PLUGIN_NAME === 'OMNI';
+        const isCassette = this.productId === 5002 || (window.PLUGIN_NAME && window.PLUGIN_NAME.toLowerCase().includes('cassette'));
 
         if (isCoke) {
             this.downloads = {
@@ -53,6 +54,12 @@ class PluginDirectCheckout {
                 name: 'Vocal Preset',
                 win: 'https://drive.google.com/file/d/11Zw_4w-vWUjq3b2bImlyQjO2rzXitqLO/view?usp=sharing',
                 mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
+            };
+        } else if (isCassette) {
+            this.downloads = {
+                name: 'Cassette',
+                win: 'https://wa.me/51952467395?text=Hola,%20acabo%20de%20comprar%20Cassette%20por%20PayPal%20y%20quiero%20el%20instalador',
+                mac: '#'
             };
         } else {
             this.downloads = {
@@ -177,7 +184,8 @@ class PluginDirectCheckout {
                     // --- META PIXEL: INITIATE CHECKOUT ---
                     if (window.MetaPixel) {
                         const isOmni = this.productId === 5001 || window.PLUGIN_NAME === 'Omni Plugin' || window.PLUGIN_NAME === 'Omni' || window.PLUGIN_NAME === 'OMNI';
-                        const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : (isPitch ? 'easy_pitch' : (isOmni ? 'omni' : 'easy_mix'))))));
+                        const isCassette = this.productId === 5002 || (window.PLUGIN_NAME && window.PLUGIN_NAME.toLowerCase().includes('cassette'));
+                        const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : (isPitch ? 'easy_pitch' : (isOmni ? 'omni' : (isCassette ? 'cassette' : 'easy_mix')))))));
                         window.MetaPixel.trackInitiateCheckout({
                             content_ids: [pluginCode],
                             content_name: isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : this.downloads.name,
@@ -256,7 +264,8 @@ class PluginDirectCheckout {
                         // --- META PIXEL: PURCHASE (DEDUPLICATED WITH SERVER CAPI) ---
                         if (window.MetaPixel) {
                             const isOmni = this.productId === 5001 || window.PLUGIN_NAME === 'Omni Plugin' || window.PLUGIN_NAME === 'Omni' || window.PLUGIN_NAME === 'OMNI';
-                            const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : (isPitch ? 'easy_pitch' : (isOmni ? 'omni' : 'easy_mix'))))));
+                            const isCassette = this.productId === 5002 || (window.PLUGIN_NAME && window.PLUGIN_NAME.toLowerCase().includes('cassette'));
+                            const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : (isPitch ? 'easy_pitch' : (isOmni ? 'omni' : (isCassette ? 'cassette' : 'easy_mix')))))));
                             const paidAmount = result.total_price || result.amount || window.CURRENT_PROMO_PRICE || 10;
                             window.MetaPixel.trackPurchase({
                                 content_ids: [pluginCode],
