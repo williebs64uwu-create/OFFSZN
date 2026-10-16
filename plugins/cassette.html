@@ -758,7 +758,7 @@
 
                             <!-- Click Interceptor (Prevents pausing, toggles mute) -->
                             <div onclick="toggleVideoMute(event)"
-                                style="position: absolute; top: 0; left: 0; right: 0; bottom: 50px; z-index: 4; cursor: pointer;">
+                                style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 4; cursor: pointer;">
                             </div>
 
                             <!-- Unmute Overlay Badge -->
@@ -769,7 +769,13 @@
                                 <span id="sound-overlay-text">CLIC PARA SONIDO</span>
                             </div>
 
-                            <video id="demo-video" poster="/plugins/cassette-poster.jpg" autoplay muted loop playsinline controls
+                            <!-- Boton unico: sonido / silencio -->
+                            <button type="button" id="video-mute-btn" onclick="toggleVideoMute(event)" aria-label="Activar o silenciar el sonido"
+                                style="position: absolute; right: 14px; bottom: 14px; z-index: 6; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.35); background: rgba(0,0,0,0.75); color: #fff; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="bi bi-volume-mute-fill" id="mute-btn-icon"></i>
+                            </button>
+
+                            <video id="demo-video" poster="/plugins/cassette-poster.jpg" autoplay muted loop playsinline disablepictureinpicture disableremoteplayback controlslist="nodownload noplaybackrate noremoteplayback" oncontextmenu="return false;"
                                 style="width: 100%; height: auto; display: block; object-fit: contain; border-radius: 18px;"
                                 preload="auto">
                                 <source src="/plugins/cassette.mp4" type="video/mp4">
@@ -791,6 +797,7 @@
                 const overlayText = document.getElementById('sound-overlay-text');
                 const overlayIcon = document.getElementById('sound-overlay-icon');
                 const overlay = document.getElementById('video-sound-overlay');
+                const btnIcon = document.getElementById('mute-btn-icon');
 
                 if (video) {
                     if (video.muted) {
@@ -798,6 +805,7 @@
                         video.play().catch(e => console.log(e));
                         overlayText.innerText = 'SONIDO ACTIVO';
                         overlayIcon.className = 'bi bi-volume-up-fill';
+                        btnIcon.className = 'bi bi-volume-up-fill';
                         setTimeout(() => {
                             overlay.style.opacity = '0';
                         }, 1200);
@@ -807,6 +815,7 @@
                         overlay.style.opacity = '1';
                         overlayText.innerText = 'CLIC PARA SONIDO';
                         overlayIcon.className = 'bi bi-volume-mute-fill';
+                        btnIcon.className = 'bi bi-volume-mute-fill';
                     }
                 }
             }
