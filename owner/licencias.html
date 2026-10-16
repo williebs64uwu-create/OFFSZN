@@ -1247,6 +1247,10 @@
                             <span class="product-card-name">GHOST</span>
                             <span class="product-card-badge" id="badge-stock-ghost">-- disp</span>
                         </div>
+                        <div class="product-card-btn" data-value="cassette" onclick="selectProductChip('cassette')">
+                            <span class="product-card-name">Cassette</span>
+                            <span class="product-card-badge" id="badge-stock-cassette">-- disp</span>
+                        </div>
                     </div>
                     <input type="hidden" id="gen-product" value="easy-mix">
 
@@ -1450,6 +1454,7 @@
                     <button class="filter-pill" id="btn-prod-easydeeser" onclick="setPluginProduct('Easy Deeser', this)">Easy Deeser</button>
                     <button class="filter-pill" id="btn-prod-easyclean" onclick="setPluginProduct('Easy Clean', this)">Easy Clean</button>
                     <button class="filter-pill" id="btn-prod-ghost" onclick="setPluginProduct('GHOST', this)">GHOST</button>
+                    <button class="filter-pill" id="btn-prod-cassette" onclick="setPluginProduct('Cassette', this)">Cassette</button>
                 </div>
             </div>
 
@@ -1696,6 +1701,7 @@
                         <option value="Easy Deeser">Easy Deeser</option>
                         <option value="Easy Clean">Easy Clean</option>
                         <option value="GHOST">GHOST</option>
+                        <option value="Cassette">Cassette</option>
                     </select>
                 </div>
 
@@ -1931,6 +1937,10 @@
             'ghost': {
                 win: '#',   // poner el enlace del instalador cuando exista (GHOST es solo Windows por ahora)
                 mac: '#'
+            },
+            'cassette': {
+                win: '#',   // poner el enlace del instalador cuando exista (Cassette es solo Windows por ahora)
+                mac: '#'
             }
         };
 
@@ -1946,7 +1956,8 @@
             'easy-level': 'Easy Level (Win/Mac)',
             'easy-deeser': 'Easy Deeser (Win/Mac)',
             'easy-clean': 'Easy Clean (Win/Mac)',
-            'ghost': 'GHOST (Windows)'
+            'ghost': 'GHOST (Windows)',
+            'cassette': 'Cassette (Windows)'
         };
 
         // GLOBAL APP STATE
@@ -1985,6 +1996,7 @@
             if (/de-?e?s?ser/.test(s)) return 'Easy Deeser';
             if (s.includes('clean')) return 'Easy Clean';
             if (s.includes('ghost')) return 'GHOST';
+            if (s.includes('cassette')) return 'Cassette';
             if (s.includes('coca') || s.includes('coke')) return 'Coca Cola';
             if (s.includes('inka')) return 'Inka Kola';
             if (s.includes('mix')) return 'Easy Mix';
@@ -2297,7 +2309,8 @@
                 'easy-level': pool.filter(l => !l.used && (l.plugin === 'Easy Level' || l.plugin === 'EASY LEVEL')).length,
                 'easy-deeser': pool.filter(l => !l.used && (l.plugin === 'Easy Deeser' || l.plugin === 'EASY DEESER')).length,
                 'easy-clean': pool.filter(l => !l.used && (l.plugin === 'Easy Clean' || l.plugin === 'EASY CLEAN')).length,
-                'ghost': pool.filter(l => !l.used && (l.plugin === 'GHOST' || l.plugin === 'Ghost')).length
+                'ghost': pool.filter(l => !l.used && (l.plugin === 'GHOST' || l.plugin === 'Ghost')).length,
+                'cassette': pool.filter(l => !l.used && (l.plugin === 'Cassette' || l.plugin === 'CASSETTE')).length
             };
 
             Object.entries(counts).forEach(([k, cnt]) => {
@@ -2338,6 +2351,7 @@
                 else if (val === 'easy-deeser') targetPlugin = 'Easy Deeser';
                 else if (val === 'easy-clean') targetPlugin = 'Easy Clean';
                 else if (val === 'ghost') targetPlugin = 'GHOST';
+                else if (val === 'cassette') targetPlugin = 'Cassette';
 
                 const avail = pool.filter(l => !l.used && l.plugin === targetPlugin);
                 if (avail.length > 0 && (!k1Input.value || !avail.some(l => l.serial === k1Input.value))) {
@@ -2368,6 +2382,7 @@
                 else if (val === 'easy-deeser') targetPlugin = 'Easy Deeser';
                 else if (val === 'easy-clean') targetPlugin = 'Easy Clean';
                 else if (val === 'ghost') targetPlugin = 'GHOST';
+                else if (val === 'cassette') targetPlugin = 'Cassette';
             }
 
             const avail = pool.filter(l => !l.used && l.plugin === targetPlugin);
@@ -3335,6 +3350,7 @@
                 else if (pVal === 'easy-deeser') targetPlugin = 'Easy Deeser';
                 else if (pVal === 'easy-clean') targetPlugin = 'Easy Clean';
                 else if (pVal === 'ghost') targetPlugin = 'GHOST';
+                else if (pVal === 'cassette') targetPlugin = 'Cassette';
             }
 
             titleEl.innerText = 'Elegir Clave (' + targetPlugin + ')';
@@ -3546,6 +3562,7 @@
                 else if (plugin.includes('Deeser')) prefix = 'DEESER';
                 else if (plugin.includes('Clean')) prefix = 'CLEAN';
                 else if (plugin.includes('GHOST') || plugin.includes('Ghost')) prefix = 'GHOST';
+                else if (plugin.includes('CASSETTE') || plugin.includes('Cassette')) prefix = 'CASSETTE';
 
                 const rnd1 = Math.random().toString(16).substring(2, 6).toUpperCase();
                 const rnd2 = Math.random().toString(16).substring(2, 6).toUpperCase();
@@ -3641,6 +3658,7 @@
             else if (pluginName.includes('Deeser')) slug = 'easy-deeser';
             else if (pluginName.includes('Clean')) slug = 'easy-clean';
             else if (pluginName.includes('GHOST') || pluginName.includes('Ghost')) slug = 'ghost';
+            else if (pluginName.includes('CASSETTE') || pluginName.includes('Cassette')) slug = 'cassette';
 
             const links = DOWNLOAD_LINKS[slug] || DOWNLOAD_LINKS['easy-mix'];
 
