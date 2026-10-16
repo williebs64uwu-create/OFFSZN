@@ -930,37 +930,33 @@
         <section class="serial-section" id="serial-section">
             <div class="container">
                 <h2 class="section-title">Descarga tu Plugin</h2>
-                <p class="section-subtitle">Inicia sesión para descargar el plugin y ver tus licencias.</p>
+                <p class="section-subtitle">Descarga el instalador para Windows y prueba Cassette con la clave trial. Inicia sesión para ver tu licencia.</p>
 
                 <div class="serial-card" style="max-width: 800px; margin-bottom: 60px;">
-                    <!-- ESTADO 1: NO LOGUEADO (AUTH WALL) -->
-                    <div class="auth-wall" id="ui-auth-wall">
-                        <p style="color: rgba(255,255,255,0.6); font-size: 0.95rem; margin-bottom: 12px;">Inicia sesión para descargar Cassette y ver tus licencias.</p>
-                        <a href="/pages/login.html?redirect=/plugins/cassette" class="btn-auth"
-                            style="background: transparent; border: 1px solid #fff; color: #fff;">Iniciar Sesión / Registrarse</a>
+                    <!-- DESCARGA + CLAVE TRIAL (visible para todos) -->
+                    <div id="download-trial" style="display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 10px 10px 28px; margin-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                        <a href="https://drive.google.com/file/d/1-SUwo3lwjG75coa9njn6u3gQl8Hg1-Dm/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn-auth" id="download-cassette"><i class="bi bi-download"></i> Descargar Cassette (.exe)</a>
+                        <p style="color: rgba(255,255,255,0.6); font-size: 0.95rem; margin: 8px 0 0;">Clave de prueba (trial)</p>
+                        <div class="serial-box" id="trial-key" role="button" tabindex="0" title="Clic para copiar" style="font-size: clamp(0.95rem, 4vw, 1.4rem); letter-spacing: 2px; text-align: center; max-width: 440px;" onclick="copyTrialKey()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyTrialKey();}">CASSETTE-TRIAL-1D6D-DED7</div>
+                        <p id="trial-key-hint" style="color: #888; font-size: 0.85rem; margin: 0;">Haz clic para copiarla y pégala dentro de Cassette en tu DAW.</p>
                     </div>
+                    <script>
+                        function copyTrialKey() {
+                            var key = 'CASSETTE-TRIAL-1D6D-DED7', hint = document.getElementById('trial-key-hint');
+                            var done = function () { hint.textContent = '¡Clave copiada!'; };
+                            if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(key).then(done, function () {});
+                            else { var r = document.createRange(); r.selectNodeContents(document.getElementById('trial-key')); var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); try { document.execCommand('copy'); done(); } catch (e) {} }
+                        }
+                    </script>
 
-                    <!-- ESTADO 2: LOGUEADO Y LISTO -->
-                    <div class="serial-display" id="ui-serial-ready"
-                        style="display: none; flex-direction: column; align-items: center; gap: 20px; padding: 20px 10px;">
-                        <!-- PANEL DE LICENCIA -->
-                        <div id="license-key-panel"
-                            style="display: none; width: 100%; text-align: center;">
-                            <h3 style="margin:0 0 6px 0; font-size: 1.3rem; color: #fff;">Tu Licencia de Cassette</h3>
-                            <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 15px;">Pega esta clave dentro de Cassette en tu DAW para activarlo.</p>
-                            <div class="serial-box" id="serial-key-text" title="Clic para copiar" onclick="copySerial()"
-                                style="border-color: #e61b2b; color: #fff; max-width: 440px; margin: 0 auto; letter-spacing: 2px; font-family: monospace;">
-                                Cargando...</div>
-                        </div>
-
-                        <!-- PANEL SIN LICENCIA -->
-                        <div id="no-license-panel"
-                            style="display: none; width: 100%; text-align: center;">
-                            <p style="color: rgba(255,255,255,0.6); font-size: 0.95rem; margin-bottom: 18px;">Aún no tienes una licencia de Cassette en tu cuenta.</p>
-                            <a href="#pricing-section" class="btn-free-download" style="display: inline-flex; align-items: center; gap: 8px;">
-                                <i class="bi bi-cart-fill"></i> Adquirir Licencia ($8 USD)
-                            </a>
-                        </div>
+                    <!-- PANEL DE LICENCIA DE POR VIDA (solo si el usuario ya la compró) -->
+                    <div id="license-key-panel"
+                        style="display: none; width: 100%; text-align: center; padding: 20px 10px 10px; border-top: 1px solid rgba(255,255,255,0.08); margin-top: 10px;">
+                        <h3 style="margin:0 0 6px 0; font-size: 1.3rem; color: #fff;">Tu Licencia de Cassette</h3>
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.85rem; margin-bottom: 15px;">Pega esta clave dentro de Cassette en tu DAW para activarlo de por vida.</p>
+                        <div class="serial-box" id="serial-key-text" title="Clic para copiar" onclick="copySerial()"
+                            style="border-color: #e61b2b; color: #fff; max-width: 440px; margin: 0 auto; letter-spacing: 2px; font-family: monospace;">
+                            Cargando...</div>
                     </div>
                 </div>
 
@@ -1226,19 +1222,10 @@
 
             try {
                 const { data: { session } } = await window.supabaseClient.auth.getSession();
-                const uiWall = document.getElementById('ui-auth-wall');
-                const uiReady = document.getElementById('ui-serial-ready');
                 const licPanel = document.getElementById('license-key-panel');
-                const noLicPanel = document.getElementById('no-license-panel');
                 const keyText = document.getElementById('serial-key-text');
 
-                if (!session) {
-                    if (uiWall) uiWall.style.display = 'flex';
-                    if (uiReady) uiReady.style.display = 'none';
-                } else {
-                    if (uiWall) uiWall.style.display = 'none';
-                    if (uiReady) uiReady.style.display = 'flex';
-
+                if (session && session.user) {
                     const { data: license } = await window.supabaseClient
                         .from('plugin_licenses')
                         .select('serial_key, status, license_type, expires_at')
@@ -1250,11 +1237,7 @@
 
                     if (license && license.serial_key) {
                         if (licPanel) licPanel.style.display = 'block';
-                        if (noLicPanel) noLicPanel.style.display = 'none';
                         if (keyText) keyText.innerText = license.serial_key;
-                    } else {
-                        if (licPanel) licPanel.style.display = 'none';
-                        if (noLicPanel) noLicPanel.style.display = 'block';
                     }
                 }
             } catch (e) {
