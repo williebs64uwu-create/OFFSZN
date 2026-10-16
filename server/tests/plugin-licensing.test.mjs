@@ -405,9 +405,9 @@ test('trial por clave: arranca al activar (3 días; Inka 7) y un equipo con prue
 });
 
 // ── Web: generar licencia tras comprar ────────────────────────────────────────────────────────────────────────────
-test('generate-web de Omni: sin producto configurado no emite licencias', async () => {
+test('generate-web de plugin sin producto configurado no emite licencias', async () => {
     const res = { code: 200, body: null, status(c) { this.code = c; return this; }, json(o) { this.body = o; return this; } };
-    await C.generateWebLicense({ body: { plugin_name: 'Omni Plugin' }, user: { id: 'u1' } }, res);
+    await C.generateWebLicense({ body: { plugin_name: 'Easy Level' }, user: { id: 'u1' } }, res);
     assert.equal(res.code, 403);
     assert.match(res.body.error, /no está disponible/i);
     const res2 = { code: 200, body: null, status(c) { this.code = c; return this; }, json(o) { this.body = o; return this; } };

@@ -255,6 +255,14 @@ export class GoogleWalletService {
                     defaultValue: { language: 'es', value: 'OFFSZN' }
                 }
             },
+            heroImage: {
+                sourceUri: {
+                    uri: customData.heroImageUrl || 'https://ik.imagekit.io/6gzqp4xam/wallet/wallet_hero_banner_tvmQwYhjZ.png'
+                },
+                contentDescription: {
+                    defaultValue: { language: 'es', value: 'Banner OFFSZN VIP' }
+                }
+            },
             cardTitle: {
                 defaultValue: { language: 'es', value: customData.cardTitle || 'WILLIE INSPIRED' }
             },
@@ -264,7 +272,7 @@ export class GoogleWalletService {
             subheader: {
                 defaultValue: { language: 'es', value: 'TARJETA DE SELLOS & VIP' }
             },
-            hexBackgroundColor: customData.hexBackgroundColor || '#0a0a0f',
+            hexBackgroundColor: customData.hexBackgroundColor || '#071614',
             textModulesData: [
                 {
                     id: 'stamps_module',
@@ -295,18 +303,23 @@ export class GoogleWalletService {
             linksModuleData: {
                 uris: [
                     {
-                        uri: 'https://offszn.lat/@willieinspired',
-                        description: 'Tienda Oficial Willie Inspired',
-                        id: 'store_link'
+                        uri: 'https://wa.me/51993525005?text=Hola%20Willie!%20Tengo%20mi%20pase%20VIP%20OFFSZN',
+                        description: '💬 WhatsApp VIP Directo (+51 993 525 005)',
+                        id: 'whatsapp_link'
                     },
                     {
                         uri: 'https://offszn.lat/willieinspired/regalos',
-                        description: 'Portal de Recompensas & Regalos',
+                        description: '🎁 Portal de Recompensas & Regalos',
                         id: 'rewards_portal'
                     },
                     {
+                        uri: 'https://offszn.lat/@willieinspired',
+                        description: '🛒 Tienda Oficial Willie Inspired',
+                        id: 'store_link'
+                    },
+                    {
                         uri: 'https://instagram.com/willieinspired',
-                        description: 'Instagram @willieinspired',
+                        description: '📸 Instagram @willieinspired',
                         id: 'social_ig'
                     }
                 ]

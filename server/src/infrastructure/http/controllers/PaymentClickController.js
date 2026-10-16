@@ -12,10 +12,9 @@ export const paymentClickLimiter = rateLimit({
 
 const clip = (v, n) => String(v ?? '').slice(0, n);
 const num = (v) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : null);
-const KNOWN_PRICES_USD = new Set([17, 25]);
 
 // ─── POST /api/plugin/payment-click ───────────────────────────────────────────
-// Registra el precio que vio el cliente al tocar un metodo de pago manual.
+// Registra el precio que vio el cliente al tocar un metodo de pago (WhatsApp, Yape, PayPal, MP, Binance).
 // Body: { ref, product, method, price_usd, price_pen, variant, page }
 export const receivePaymentClick = async (req, res) => {
     try {
@@ -26,9 +25,9 @@ export const receivePaymentClick = async (req, res) => {
         const priceUsd = num(b.price_usd);
         const row = {
             ref,
-            product: clip(b.product, 80),
-            method: clip(b.method, 30),
-            price_usd: priceUsd && KNOWN_PRICES_USD.has(priceUsd) ? priceUsd : null,
+            product: clip(b.product, 80) || 'Plugin OFFSZN',
+            method: clip(b.method, 30) || 'WhatsApp',
+            price_usd: priceUsd && priceUsd > 0 && priceUsd < 10000 ? priceUsd : null,
             price_pen: num(b.price_pen),
             variant: clip(b.variant, 30),
             page: clip(b.page, 120),
@@ -53,7 +52,7 @@ export const receivePaymentClick = async (req, res) => {
     }
 };
 
-// ─── GET /api/plugin/admin/payment-clicks?admin_key=...&ref=...&limit=100 ─────
+// ─── GET /api/plugin/admin/payment-clicks?admin_key=...&ref=...&product=...&method=...&limit=300 ─────
 export const adminListPaymentClicks = async (req, res) => {
     const key = req.query.admin_key || req.query.pin || req.headers['x-admin-key'];
     if (!isAdminKey(key)) return res.status(403).json({ error: 'Unauthorized' });
@@ -66,6 +65,12 @@ export const adminListPaymentClicks = async (req, res) => {
         .limit(limit);
     const ref = clip(req.query.ref, 12).toUpperCase().replace(/[^A-Z0-9]/g, '');
     if (ref) query = query.ilike('ref', `%${ref}%`);
+    if (req.query.product) {
+        query = query.ilike('product', `%${clip(req.query.product, 80)}%`);
+    }
+    if (req.query.method) {
+        query = query.ilike('method', `%${clip(req.query.method, 30)}%`);
+    }
 
     const { data, error } = await query;
     if (error) return res.status(500).json({ error: error.message });

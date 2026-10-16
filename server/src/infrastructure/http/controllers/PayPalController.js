@@ -379,10 +379,10 @@ export const createPayPalOrder = async (req, res) => {
         console.log('[PayPalOrder] Producer Map entries:', Array.from(producerMap.entries()).map(([id, p]) => ({ id, email: p.email, nickname: p.nickname })));
 
         // --- NEW: Identify Producers without PayPal ---
-        // Plugin IDs 899-905 are OFFSZN-owned plugins (Easy Mix, Easy Master, Inka Kola, Coca-Cola, Vocal Preset).
+        // Plugin IDs 899-905 are OFFSZN-owned plugins (Easy Mix, Easy Master, Inka Kola, Coca-Cola, Vocal Preset, Easy Pitch, Omni).
         // They have producer_id = null or are owned by OFFSZN and are handled by the plugin override
         // logic below — they don't require a third-party producer PayPal email.
-        const OFFSZN_PLUGIN_IDS = new Set(['899', '900', '901', '902', '903', '905', '5000']);
+        const OFFSZN_PLUGIN_IDS = new Set(['899', '900', '901', '902', '903', '905', '5000', '5001']);
         const missingPaymentProducers = [];
         cartItems.forEach(item => {
             const prodId = String(item.product?.id || '');
@@ -468,10 +468,10 @@ export const createPayPalOrder = async (req, res) => {
                 return; // Skip regular DB price logic for this product
             }
 
-            // EASY MIX / EASY MASTER / INKA KOLA / VOCAL PRESET / EASY PITCH OVERRIDE (IDs 899/900/901/902/905/906):
+            // EASY MIX / EASY MASTER / INKA KOLA / VOCAL PRESET / EASY PITCH / OMNI OVERRIDE (IDs 899/900/901/902/905/5000/5001):
             // 100% goes to OFFSZN — no split, no partner. Price comes from A/B test (variant_price).
             // Do NOT use DB price_basic — it may be wrong or outdated.
-            if (['899', '900', '901', '902', '905', '5000'].includes(prodIdToFind)) {
+            if (['899', '900', '901', '902', '905', '5000', '5001'].includes(prodIdToFind)) {
                 const pluginPrice = parseFloat(item.variant_price) || 10;
                 const validPluginPrice = [5, 10, 15, 17, 20, 25].includes(pluginPrice) ? pluginPrice : 10;
 
@@ -683,7 +683,7 @@ export const createPayPalOrder = async (req, res) => {
 
         verifiedCartItems.forEach(item => {
             const prodIdStr = String(item.product?.id || '');
-            const OFFSZN_PLUGIN_IDS_SET = new Set(['899', '900', '901', '902', '903', '905', '5000']);
+            const OFFSZN_PLUGIN_IDS_SET = new Set(['899', '900', '901', '902', '903', '905', '5000', '5001']);
 
             // OFFSZN Plugins (899-905): producer_id is null — assign directly to OFFSZN merchant ID.
             // Coca-Cola (903) split was already resolved above (subtotal=partnerShare, serviceFee=offsznShare).
@@ -791,6 +791,7 @@ export const createPayPalOrder = async (req, res) => {
             if (idStr === '900' || (item.product?.name || '').toLowerCase().includes('easy master')) return 'easy_master';
             if (idStr === '902' || (item.product?.name || '').toLowerCase().includes('inka kola')) return 'inka_kola';
             if (idStr === '903' || (item.product?.name || '').toLowerCase().includes('coca')) return 'coca_cola';
+            if (idStr === '5001' || (item.product?.name || '').toLowerCase().includes('omni')) return 'omni';
             if (idStr === '5000' || (item.product?.name || '').toLowerCase().includes('easy pitch')) return 'easy_pitch';
             if (idStr === '905' || (item.product?.name || '').toLowerCase().includes('vocal')) return 'vocal_preset';
             return `product_${idStr}`;
@@ -854,9 +855,11 @@ export const capturePayPalOrder = async (req, res) => {
                 // Intercept special plugin IDs first
                 if (String(directProductId) === '903') {
                     productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' };
+                } else if (String(directProductId) === '5001' || String(directProductId).toLowerCase().includes('omni')) {
+                    productObj = { id: 5001, name: 'Omni Plugin', price_basic: 17, producer_id: null };
                 } else if (String(directProductId) === '5000') {
-                productObj = { id: 5000, name: 'Easy Pitch', price_basic: 5, producer_id: null };
-            } else if (String(directProductId) === '905') {
+                    productObj = { id: 5000, name: 'Easy Pitch', price_basic: 5, producer_id: null };
+                } else if (String(directProductId) === '905') {
                     productObj = { id: 905, name: 'Vocal Preset', price_basic: 10, producer_id: null };
                 } else if (String(directProductId) === '902') {
                     productObj = { id: 902, name: 'INKA KOLA', price_basic: 5, producer_id: null };
@@ -1239,7 +1242,7 @@ export const capturePayPalOrder = async (req, res) => {
                 const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola') || prodId === '902';
                 const isVocalPreset = prodName.toLowerCase().includes('vocal') || prodId === '905';
                 const isEasyPitch = prodName.toLowerCase().includes('easy pitch') || prodName.toLowerCase().includes('easypitch') || prodId === '5000';
-                const isOmni = prodName.toLowerCase().includes('omni');
+                const isOmni = prodName.toLowerCase().includes('omni') || prodId === '5001';
                 const isEasyLevel = prodName.toLowerCase().includes('easy level') || prodName.toLowerCase().includes('easylevel');
                 const isEasyDeeser = /de-?e?s?ser/.test(prodName.toLowerCase()) && prodName.toLowerCase().includes('easy');
                 const isEasyClean = prodName.toLowerCase().includes('easy clean') || prodName.toLowerCase().includes('easyclean');
@@ -1404,8 +1407,9 @@ export const capturePayPalOrder = async (req, res) => {
                         const isEasyMaster = prodName.toLowerCase().includes('easy master') || prodName.toLowerCase().includes('easymaster') || prodId === '900';
                         const isInkaKola = prodName.toLowerCase().includes('inka kola') || prodName.toLowerCase().includes('inkakola') || prodId === '902';
                         const isVocalPreset = prodName.toLowerCase().includes('vocal') || prodId === '905';
-                const isEasyPitch = prodName.toLowerCase().includes('easy pitch') || prodName.toLowerCase().includes('easypitch') || prodId === '5000';
-                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch;
+                        const isEasyPitch = prodName.toLowerCase().includes('easy pitch') || prodName.toLowerCase().includes('easypitch') || prodId === '5000';
+                        const isOmni = prodName.toLowerCase().includes('omni') || prodId === '5001';
+                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni;
 
                         // A. Notify Client (Receipt) — includes serial key for plugin purchases
                         const serialKeySection = (isPlugin && keysGenerated.length > 0) ? `
@@ -1421,34 +1425,52 @@ export const capturePayPalOrder = async (req, res) => {
                             </div>
                         ` : '';
 
-                        const downloadLinks = isPlugin ? (
-                            isCoke ? {
-                                win: 'https://drive.google.com/file/d/1cFKYYabnqLkVLeJDQYtWLixh93KzPwbN/view?usp=sharing',
-                                mac: 'https://drive.google.com/file/d/1741Z3uG8amQ5boK1il5Ffj136sW2WHPY/view?usp=sharing'
-                            } : (isInkaKola ? {
-                                win: '/installer_output/INKA_KOLA_Setup.exe',
-                                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
-                            } : (isEasyMaster ? {
-                                win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view?usp=sharing',
-                                mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
-                            } : (isEasyPitch ? {
-                                win: 'https://drive.google.com/file/d/1K58LeAnNJKUVJVKZ6kmm_xI8R9XHyQ0C/view?usp=sharing',
-                                mac: 'https://drive.google.com/file/d/1Say1PQ7AqdpI_10k5IT8hqgeGvpptRNW/view?usp=sharing'
-                            } : (isVocalPreset ? {
-                                win: 'https://drive.google.com/file/d/11Zw_4w-vWUjq3b2bImlyQjO2rzXitqLO/view?usp=sharing',
-                                mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
-                            } : {
-                                win: 'https://drive.google.com/file/d/1oHgJXJwirHDVvovbImJnBklEo-BIxlv4/view?usp=sharing',
-                                mac: 'https://drive.google.com/file/d/1Yc5HIQfIbFpFM_W4OZgyoFyR2ojIKg0je/view?usp=sharing'
-                            }))))
-                        ) : null;
+                        let downloadLinks = null;
+                        if (isPlugin) {
+                            if (isCoke) {
+                                downloadLinks = {
+                                    win: 'https://drive.google.com/file/d/1cFKYYabnqLkVLeJDQYtWLixh93KzPwbN/view?usp=sharing',
+                                    mac: 'https://drive.google.com/file/d/1741Z3uG8amQ5boK1il5Ffj136sW2WHPY/view?usp=sharing'
+                                };
+                            } else if (isInkaKola) {
+                                downloadLinks = {
+                                    win: '/installer_output/INKA_KOLA_Setup.exe',
+                                    mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+                                };
+                            } else if (isEasyMaster) {
+                                downloadLinks = {
+                                    win: 'https://drive.google.com/file/d/1JF4oDN_beOOxnOO5ca3TLGDCEQyOeWjh/view?usp=sharing',
+                                    mac: 'https://drive.google.com/file/d/14Lc6-vOtEYgw7IbQcpBe7h2kIiGTrP6Q/view?usp=sharing'
+                                };
+                            } else if (isEasyPitch) {
+                                downloadLinks = {
+                                    win: 'https://drive.google.com/file/d/1K58LeAnNJKUVJVKZ6kmm_xI8R9XHyQ0C/view?usp=sharing',
+                                    mac: 'https://drive.google.com/file/d/1Say1PQ7AqdpI_10k5IT8hqgeGvpptRNW/view?usp=sharing'
+                                };
+                            } else if (isOmni) {
+                                downloadLinks = {
+                                    win: 'https://drive.google.com/file/d/179OVCmWJowkrDiwSeFpC3lqPR7Qn_1Zk/view?usp=sharing',
+                                    mac: 'https://drive.google.com/file/d/1suMJLf1y-Y06NuLetNGojvHXBt8yzz4D/view?usp=sharing'
+                                };
+                            } else if (isVocalPreset) {
+                                downloadLinks = {
+                                    win: 'https://drive.google.com/file/d/11Zw_4w-vWUjq3b2bImlyQjO2rzXitqLO/view?usp=sharing',
+                                    mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
+                                };
+                            } else {
+                                downloadLinks = {
+                                    win: 'https://drive.google.com/file/d/1FXEF4CsSlClVKTZ8lzfq7027-4Pa-Jh1/view?usp=sharing',
+                                    mac: 'https://drive.google.com/file/d/1Wd_NgGsuc_FG6kjQOTjnF0qIodnK-iO4/view?usp=sharing'
+                                };
+                            }
+                        }
 
                         const downloadSection = (isPlugin && downloadLinks) ? `
                             <div style="margin:20px 0;">
                                 <p style="color:#aaa; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; font-weight:700; margin-bottom:12px;">Descargar Instaladores</p>
                                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                                    <a href="${downloadLinks.win}" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xea00; Windows</a>
-                                    <a href="${downloadLinks.mac}" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xf8ff; macOS</a>
+                                    <a href="${downloadLinks.win}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xea00; Windows</a>
+                                    ${downloadLinks.mac ? `<a href="${downloadLinks.mac}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xf8ff; macOS</a>` : '<span style="color:#888; font-size:0.85rem; align-self:center; padding:10px 0;">(macOS próximamente)</span>'}
                                 </div>
                             </div>
                         ` : (isPlugin ? '' : `
@@ -1632,8 +1654,9 @@ export const capturePayPalOrder = async (req, res) => {
                         if (idStr === '900' || (item.product?.name || '').toLowerCase().includes('easy master')) return 'easy_master';
                         if (idStr === '902' || (item.product?.name || '').toLowerCase().includes('inka kola')) return 'inka_kola';
                         if (idStr === '903' || (item.product?.name || '').toLowerCase().includes('coca')) return 'coca_cola';
+                        if (idStr === '5001' || (item.product?.name || '').toLowerCase().includes('omni')) return 'omni';
                         if (idStr === '5000' || (item.product?.name || '').toLowerCase().includes('easy pitch')) return 'easy_pitch';
-            if (idStr === '905' || (item.product?.name || '').toLowerCase().includes('vocal')) return 'vocal_preset';
+                        if (idStr === '905' || (item.product?.name || '').toLowerCase().includes('vocal')) return 'vocal_preset';
                         return `product_${idStr}`;
                     });
 
@@ -2442,7 +2465,7 @@ export const handlePayPalWebhook = async (req, res) => {
                 matchedUserId = matchedUser.id;
             }
 
-            const productId = pluginToGenerate === 'Easy Pitch' ? 5000 : (pluginToGenerate === 'Easy Master' ? 900 : (pluginToGenerate === 'Vocal Preset' ? 905 : 899));
+            const productId = pluginToGenerate === 'Omni Plugin' ? 5001 : (pluginToGenerate === 'Easy Pitch' ? 5000 : (pluginToGenerate === 'Easy Master' ? 900 : (pluginToGenerate === 'Vocal Preset' ? 905 : 899)));
 
             // Create Order Record to prevent double-processing and show in "Mis Compras"
             let { data: newOrder, error: orderError } = await supabase

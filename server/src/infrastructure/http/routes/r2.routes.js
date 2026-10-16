@@ -5,6 +5,7 @@ import fs from 'fs';
 import {
     getPresignedUploadUrl,
     getPresignedDownloadUrl,
+    getPresignedPublicMediaUrl,
     getPublicUrl,
     deleteFromR2,
     copyFileInR2,
@@ -394,7 +395,7 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
             });
         }
 
-        // 0. LOCAL ASSET DIRECT HANDLER: If key is a local file (e.g. willieimages/, images/, plugins/), serve directly from disk
+        // 0. LOCAL ASSET DIRECT HANDLER: If key is a local file (e.g. willieimages/, images/, plugins/), redirect to static URL
         if (key.startsWith('willieimages/') || key.startsWith('images/') || key.startsWith('plugins/') || key.startsWith('plugin/') || key.startsWith('videos/') || key.startsWith('metodo/')) {
             let rootPath = process.env.VERCEL ? process.cwd() : process.cwd();
             if (!fs.existsSync(path.join(rootPath, 'willieimages')) && fs.existsSync(path.join(rootPath, '../willieimages'))) {
@@ -406,9 +407,8 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
                 return res.status(403).json({ error: 'Acceso denegado: Ruta no permitida.' });
             }
             if (fs.existsSync(localFile)) {
-                res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=604800');
-                res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=604800');
-                return res.sendFile(localFile);
+                // Redirect to static asset URL so Vercel CDN serves it directly without serverless origin cost
+                return res.redirect(301, `/${key}`);
             }
         }
 
@@ -417,6 +417,20 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         if (cacheHit) {
             // Found in cache - SKIP DISCOVERY!
             const { version: foundVersion, key: foundKey } = cacheHit;
+
+            // 🔥 FAST EGRESS-FREE REDIRECT: Redirect directly to Cloudflare R2 presigned URL.
+            // Eliminates Fast Origin Transfer on Vercel (R2 bandwidth is free & unlimited).
+            try {
+                const publicMediaUrl = await getPresignedPublicMediaUrl(foundKey, 86400, foundVersion);
+                if (publicMediaUrl) {
+                    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+                    res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=86400');
+                    return res.redirect(307, publicMediaUrl);
+                }
+            } catch (redirErr) {
+                console.warn('[R2 Cache Hit Redirect Failed, falling back to stream]:', redirErr.message);
+            }
+
             const { client, bucket } = getClientAndBucket(foundVersion);
             const range = req.headers.range;
             const getParams = { Bucket: bucket, Key: foundKey };
@@ -568,7 +582,20 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
             return res.status(404).send('Asset not found in R2 V1 or V2');
         }
 
-        // 5. STREAMING CON SOPORTE PARA RANGE (Crucial para Audio)
+        // 🔥 FAST EGRESS-FREE REDIRECT: Redirect directly to Cloudflare R2 presigned URL.
+        // Preserves Range headers (206 Partial Content) and offloads audio/video streaming to R2.
+        try {
+            const publicMediaUrl = await getPresignedPublicMediaUrl(foundKey, 86400, foundVersion);
+            if (publicMediaUrl) {
+                res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+                res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=86400');
+                return res.redirect(307, publicMediaUrl);
+            }
+        } catch (redirErr) {
+            console.warn('[R2 Main Redirect Failed, falling back to stream]:', redirErr.message);
+        }
+
+        // 5. STREAMING FALLBACK CON SOPORTE PARA RANGE (Solo si falla redirect)
         const { client, bucket } = getClientAndBucket(foundVersion);
         const range = req.headers.range;
 

@@ -1,0 +1,3108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OFFSZN • Consolidado de Negocio &amp; Funnel 1K</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000;
+      --surface: #0a0a0a;
+      --surface-elevated: #121212;
+      --surface-hover: #191919;
+      --surface-accent: #202020;
+      --border: #222222;
+      --border-light: #333333;
+      --border-focus: #777777;
+      --text: #ffffff;
+      --text-muted: #8e8e8e;
+      --text-dim: #555555;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Scroll progress bar */
+    #scrollProgress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: #ffffff;
+      width: 0%;
+      z-index: 1001;
+      transition: width 0.1s linear;
+    }
+
+    /* Minimal Top Navigation */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.94);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      text-decoration: none;
+    }
+
+    .brand-tag {
+      background: #ffffff;
+      color: #000000;
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 0.75rem;
+      padding: 0.22rem 0.55rem;
+      border-radius: 4px;
+      letter-spacing: 0.06em;
+    }
+
+    .brand-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      white-space: nowrap;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 0.2rem;
+      list-style: none;
+      align-items: center;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: #ffffff;
+      background: var(--surface-elevated);
+    }
+
+    .nav-link.active {
+      border: 1px solid var(--border-light);
+    }
+
+    /* Sub-nav Sticky Pill Bar for Quick Jump */
+    .quick-subnav {
+      position: sticky;
+      top: 53px;
+      z-index: 990;
+      background: rgba(10, 10, 10, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.5rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .quick-subnav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .quick-pill {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      padding: 0.28rem 0.65rem;
+      border-radius: 20px;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .quick-pill:hover, .quick-pill.active {
+      color: #fff;
+      border-color: var(--border-light);
+      background: var(--surface-hover);
+    }
+
+    .quick-pill span {
+      color: var(--text-dim);
+      font-size: 0.65rem;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 6rem;
+    }
+
+    /* Hero Component */
+    .hero {
+      border: 1px solid var(--border);
+      background: radial-gradient(circle at 100% 0%, #161616 0%, var(--surface) 60%);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      margin-bottom: 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+    }
+
+    .hero-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 1.25rem;
+      color: #ffffff;
+    }
+
+    /* Hero Subtitle structured as operational channels */
+    .hero-channels {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .channel-item {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      transition: var(--transition);
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .channel-item:hover {
+      border-color: var(--border-light);
+      background: var(--surface-hover);
+      transform: translateY(-1px);
+    }
+
+    .channel-code {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.4;
+      word-break: break-all;
+    }
+
+    .channel-icon {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    /* KPI Component Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .kpi-card {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1.25rem;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .kpi-card:hover {
+      border-color: var(--border-light);
+      background: var(--surface-hover);
+    }
+
+    .kpi-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .kpi-val {
+      font-size: 1.55rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .kpi-val span {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+
+    .kpi-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+      line-height: 1.45;
+    }
+
+    /* Section Components */
+    section {
+      margin-bottom: 4rem;
+      scroll-margin-top: 6.5rem;
+    }
+
+    .section-head {
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .section-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-num {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #000;
+      background: #fff;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .section-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+    }
+
+    /* Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* Card Component */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.6rem;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .card:hover {
+      border-color: var(--border-light);
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+    }
+
+    /* Executive Quote Box */
+    .quote-block {
+      border-left: 3px solid #ffffff;
+      background: var(--surface-elevated);
+      padding: 1.2rem 1.4rem;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      margin-bottom: 1.25rem;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    .quote-badge-row {
+      margin-top: 0.85rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .quote-badge {
+      display: inline-flex;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: #000000;
+      border: 1px solid var(--border-light);
+      padding: 0.25rem 0.65rem;
+      border-radius: 4px;
+    }
+
+    /* Item Lists */
+    .item-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .item-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+
+    .item-row:hover {
+      border-color: var(--border-light);
+      background: var(--surface-hover);
+    }
+
+    .item-row strong {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      background: #ffffff;
+      border-radius: 50%;
+      margin-top: 0.55rem;
+      flex-shrink: 0;
+    }
+
+    /* Feature Boxes (Diferenciación) */
+    .feature-card {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1.2rem;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-light);
+      background: var(--surface-hover);
+    }
+
+    .feature-title {
+      font-weight: 700;
+      color: #ffffff;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .feature-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .feature-why {
+      margin-top: 0.85rem;
+      padding: 0.65rem 0.85rem;
+      background: #000000;
+      border: 1px dashed var(--border-light);
+      border-radius: 4px;
+      font-size: 0.78rem;
+      color: #ffffff;
+      font-family: var(--font-mono);
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--surface);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      text-align: left;
+    }
+
+    th {
+      padding: 0.85rem 1.1rem;
+      background: var(--surface-elevated);
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.9rem 1.1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: var(--surface-elevated);
+      color: #ffffff;
+    }
+
+    .price-pill {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #ffffff;
+      background: #141414;
+      border: 1px solid var(--border-light);
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .status-badge {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border-light);
+      background: var(--surface-elevated);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .type-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      background: #000000;
+      display: inline-block;
+    }
+
+    /* Visual Tree for Plugins */
+    .plugin-visual-tree {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .tree-block {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+    }
+
+    .tree-main {
+      border-color: #555555;
+      background: #111111;
+    }
+
+    .tree-badge {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #888888;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.55rem;
+    }
+
+    .tree-nodes {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .tree-node {
+      flex: 1;
+      background: #000000;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.65rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tree-node.full-width {
+      width: 100%;
+    }
+
+    .tree-plus {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .tree-node-title {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .tree-node-sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+
+    .tree-grid-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .tree-sub-block {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem;
+    }
+
+    .tree-chips {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .tree-chips span {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      background: #000000;
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    /* Artist Catalog Cloud & Filter */
+    .artist-search-bar {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      flex: 1;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem 0.75rem 2.2rem;
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .search-input:focus {
+      border-color: var(--border-focus);
+      background: #000000;
+    }
+
+    .search-icon-hint {
+      position: absolute;
+      left: 0.8rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    .artist-count-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .artist-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      max-height: 250px;
+      overflow-y: auto;
+      padding: 0.75rem;
+      background: #050505;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .artist-item {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      cursor: default;
+      transition: var(--transition);
+    }
+
+    .artist-item:hover {
+      border-color: var(--border-light);
+      color: #fff;
+      background: var(--surface-hover);
+    }
+
+    /* Meta Ads Targeting Blocks */
+    .targeting-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.85rem;
+    }
+
+    .targeting-pill {
+      background: #000000;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 0.95rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .targeting-rank {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+
+    .targeting-countries {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* Funnel Flow Components */
+    .flow-step-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .flow-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      display: flex;
+      gap: 1.25rem;
+      align-items: flex-start;
+      transition: var(--transition);
+    }
+
+    .flow-card:hover {
+      border-color: var(--border-light);
+    }
+
+    .flow-num {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #ffffff;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-light);
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .flow-body {
+      flex: 1;
+    }
+
+    .flow-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .flow-desc {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* Structured Email Phases inside Flow 1-2 */
+    .email-phases-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 0.85rem;
+      margin-top: 1rem;
+    }
+
+    .phase-block {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+    }
+
+    .phase-label {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.45rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.35rem;
+      text-transform: uppercase;
+    }
+
+    .phase-items {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Split Component: No compró vs Compró */
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .split-card {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 1.25rem;
+    }
+
+    .split-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #ffffff;
+      border: 1px solid #444;
+      background: #000;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 0.85rem;
+      text-transform: uppercase;
+    }
+
+    /* Tags CRM Component */
+    .tags-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.85rem;
+    }
+
+    .tag-item {
+      border: 1px solid var(--border);
+      background: #000000;
+      border-radius: var(--radius-sm);
+      padding: 0.85rem;
+      transition: var(--transition);
+    }
+
+    .tag-item:hover {
+      border-color: var(--border-light);
+    }
+
+    .tag-title {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 0.3rem;
+    }
+
+    .tag-sub {
+      font-size: 0.76rem;
+      color: var(--text-dim);
+    }
+
+    /* Operations: 1 to 1 Pipeline & Scripts */
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.85rem;
+    }
+
+    .pipeline-step {
+      background: #000000;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem;
+    }
+
+    .pipeline-step-num {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #ffffff;
+      background: var(--surface-elevated);
+      padding: 0.15rem 0.45rem;
+      border-radius: 3px;
+      display: inline-block;
+      margin-bottom: 0.4rem;
+    }
+
+    .pipeline-step-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Dialogue & Playbook Components */
+    .dialogue-filter-nav {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+      align-items: center;
+    }
+
+    .dialogue-filter-btn {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      background: var(--surface-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .dialogue-filter-btn:hover, .dialogue-filter-btn.active {
+      color: #ffffff;
+      border-color: #ffffff;
+      background: var(--surface-hover);
+    }
+
+    .dialogue-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.4rem;
+      margin-bottom: 1.25rem;
+      transition: var(--transition);
+    }
+
+    .dialogue-card:hover {
+      border-color: var(--border-light);
+    }
+
+    .dialogue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.85rem;
+      margin-bottom: 1.1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .dialogue-client-tag {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #ffffff;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-light);
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    .dialogue-meta {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .chat-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .chat-msg {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      padding: 0.85rem 1.1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.86rem;
+      line-height: 1.6;
+    }
+
+    .chat-msg.buyer {
+      background: #090909;
+      border: 1px solid var(--border);
+      border-left: 3px solid #777777;
+    }
+
+    .chat-msg.willie {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-light);
+      border-left: 3px solid #ffffff;
+    }
+
+    .chat-sender {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .chat-msg.buyer .chat-sender {
+      color: #aaaaaa;
+    }
+
+    .chat-msg.willie .chat-sender {
+      color: #ffffff;
+    }
+
+    .chat-body {
+      color: var(--text);
+    }
+
+    .dialogue-insight {
+      margin-top: 1.1rem;
+      padding: 0.9rem 1.1rem;
+      background: #000000;
+      border: 1px dashed var(--border-light);
+      border-radius: var(--radius-sm);
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .dialogue-insight strong {
+      color: #ffffff;
+    }
+
+    /* Script snippet box with copy action */
+    .script-snippet {
+      background: #000000;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 1rem;
+      margin: 0.5rem 0;
+      position: relative;
+    }
+
+    .script-snippet-header {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #888888;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .copy-btn {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .copy-btn:hover {
+      color: #ffffff;
+      border-color: #ffffff;
+    }
+
+    /* Insight Block Component */
+    .insight-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid #ffffff;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 1.4rem 1.6rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .insight-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #ffffff;
+      margin-bottom: 0.5rem;
+      font-family: var(--font-mono);
+    }
+
+    .insight-text {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    /* Reference & Competitor Links */
+    .ref-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .ref-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.8rem 1rem;
+      text-decoration: none;
+      transition: var(--transition);
+      gap: 0.75rem;
+    }
+
+    .ref-item:hover {
+      border-color: #ffffff;
+      background: #181818;
+      transform: translateY(-1px);
+    }
+
+    .ref-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 0;
+    }
+
+    .ref-header-line {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .ref-handle {
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+
+    .ref-type {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      background: #000000;
+      border: 1px solid var(--border-light);
+      color: #bbbbbb;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .ref-type.highlight {
+      border-color: #666;
+      color: #ffffff;
+    }
+
+    .ref-url {
+      font-family: var(--font-mono);
+      font-size: 0.73rem;
+      color: var(--text-dim);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .ref-icon {
+      font-size: 0.85rem;
+      color: #888888;
+      flex-shrink: 0;
+      font-family: var(--font-mono);
+    }
+
+    .ref-item:hover .ref-icon {
+      color: #ffffff;
+    }
+
+    /* Back to Top Floating Button */
+    #backToTop {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface-elevated);
+      color: #ffffff;
+      border: 1px solid var(--border-light);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+    }
+
+    #backToTop.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #backToTop:hover {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+      transform: translateY(-2px);
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #141414;
+      color: #ffffff;
+      border: 1px solid var(--border-light);
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-family: var(--font-mono);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      z-index: 1002;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition);
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      background: var(--surface);
+    }
+
+    /* Hamburger Button */
+    .nav-hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 0.4rem;
+      background: none;
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .nav-hamburger span {
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: #ffffff;
+      border-radius: 2px;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .nav-hamburger.open span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+    .nav-hamburger.open span:nth-child(2) {
+      opacity: 0;
+    }
+    .nav-hamburger.open span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+      .tree-grid-row {
+        grid-template-columns: 1fr;
+      }
+      .split-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero {
+        padding: 2rem 1.5rem;
+      }
+    }
+
+    @media (max-width: 680px) {
+      header {
+        padding: 0.65rem 1rem;
+        flex-wrap: nowrap;
+      }
+
+      .brand-title {
+        font-size: 0.82rem;
+      }
+
+      .nav-hamburger {
+        display: flex;
+        margin-left: auto;
+      }
+
+      nav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.98);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border-light);
+        overflow: hidden;
+        max-height: 0;
+        transition: max-height 0.28s ease, padding 0.28s ease;
+        z-index: 99;
+        padding: 0 1rem;
+      }
+
+      nav.nav-open {
+        max-height: 480px;
+        padding: 0.75rem 1rem 1rem;
+      }
+
+      .nav-links {
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .nav-link {
+        display: block;
+        font-size: 0.9rem;
+        padding: 0.65rem 0.75rem;
+      }
+
+      .quick-subnav {
+        top: 51px;
+        padding: 0.4rem 1rem;
+      }
+
+      .hero {
+        padding: 1.5rem 1.25rem;
+        margin-bottom: 2rem;
+      }
+
+      .hero-title {
+        font-size: 1.5rem;
+      }
+
+      .container {
+        padding: 1.5rem 1rem 5rem;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .kpi-val {
+        font-size: 1.2rem;
+      }
+
+      section {
+        margin-bottom: 3rem;
+        scroll-margin-top: 5rem;
+      }
+
+      .section-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+
+      .section-title {
+        font-size: 1.15rem;
+      }
+
+      .grid-2, .grid-3, .split-grid, .tree-grid-row {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        padding: 1.2rem;
+      }
+
+      .dialogue-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .chat-msg {
+        padding: 0.75rem 0.95rem;
+        font-size: 0.84rem;
+      }
+
+      .flow-card {
+        flex-direction: column;
+        gap: 0.85rem;
+      }
+
+      .tree-nodes {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero-title {
+        font-size: 1.35rem;
+      }
+      .ref-url {
+        display: none;
+      }
+    }
+
+    /* Print styles */
+    @media print {
+      header, .quick-subnav, #backToTop, #scrollProgress {
+        display: none !important;
+      }
+      body {
+        background: #fff !important;
+        color: #000 !important;
+      }
+      .card, .flow-card, .dialogue-card, .kpi-card {
+        border-color: #ccc !important;
+        background: #fff !important;
+        color: #000 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Progress Bar -->
+  <div id="scrollProgress"></div>
+
+  <!-- Top Main Navigation -->
+  <header>
+    <a href="#" class="brand">
+      <span class="brand-tag">OFFSZN</span>
+      <span class="brand-title">willieinspired • Consolidado</span>
+    </a>
+
+    <button class="nav-hamburger" id="navHamburger" aria-label="Abrir menú" aria-expanded="false" onclick="toggleNav()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <nav id="mainNav">
+      <ul class="nav-links">
+        <li><a href="#posicionamiento" class="nav-link" onclick="closeNav()">Posicionamiento</a></li>
+        <li><a href="#catalogo" class="nav-link" onclick="closeNav()">Catálogo</a></li>
+        <li><a href="#anuncios" class="nav-link" onclick="closeNav()">Meta Ads</a></li>
+        <li><a href="#funnel" class="nav-link" onclick="closeNav()">Funnel 1K</a></li>
+        <li><a href="#operaciones" class="nav-link" onclick="closeNav()">Operaciones</a></li>
+        <li><a href="#espacios" class="nav-link" onclick="closeNav()">Clientes / Chats</a></li>
+        <li><a href="#referentes" class="nav-link" onclick="closeNav()">Competidores / Referentes</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Sticky Sub-Nav Quick Jumps -->
+  <div class="quick-subnav" id="subnav">
+    <a href="#posicionamiento" class="quick-pill"><span>01</span> Posicionamiento</a>
+    <a href="#catalogo" class="quick-pill"><span>02</span> Catálogo &amp; Precios</a>
+    <a href="#anuncios" class="quick-pill"><span>03</span> Meta Ads</a>
+    <a href="#funnel" class="quick-pill"><span>04</span> Funnel 1K</a>
+    <a href="#operaciones" class="quick-pill"><span>05</span> Operaciones</a>
+    <a href="#espacios" class="quick-pill"><span>06</span> Clientes / Chats</a>
+    <a href="#referentes" class="quick-pill"><span>07</span> Referentes</a>
+  </div>
+
+  <div class="container" id="mainContainer">
+
+    <!-- HERO COMPONENT -->
+    <div class="hero">
+      <div class="eyebrow">OFFSZN BUSINESS ROADMAP</div>
+      <h1 class="hero-title">PORQUE, CUANDO Y COMO HACER EL NEGOCIO</h1>
+      
+      <!-- Canales Operativos -->
+      <div class="hero-channels">
+        <a href="https://payhip.com/WillieInspiredbeats" target="_blank" rel="noopener noreferrer" class="channel-item">
+          <div class="channel-code"><code>1-TIENDA EN PAYHIP: https://payhip.com/WillieInspiredbeats</code></div>
+          <span class="channel-icon">↗</span>
+        </a>
+        <a href="https://offszn.lat/willieinspired" target="_blank" rel="noopener noreferrer" class="channel-item">
+          <div class="channel-code"><code>2-PÁGINA EN DESAROLLO CON CONTROL ABSOLUTO: offszn.lat/willieinspired</code></div>
+          <span class="channel-icon">↗</span>
+        </a>
+        <a href="https://offszn.lat/" target="_blank" rel="noopener noreferrer" class="channel-item">
+          <div class="channel-code"><code>3-INGRESO POR COMISIONES DE OFFSZN: https://offszn.lat/</code></div>
+          <span class="channel-icon">↗</span>
+        </a>
+      </div>
+
+      <!-- KPI Component Grid -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Inversión Meta Ads</div>
+          <div class="kpi-val">320 soles</div>
+          <div class="kpi-desc">Gasto total acumulado (+ IGV)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Formato en Anuncios</div>
+          <div class="kpi-val">SOLO PLUGINS</div>
+          <div class="kpi-desc">Aún NO se han probado presets ni plantillas</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Próxima Prueba</div>
+          <div class="kpi-val">40-50 SOLES</div>
+          <div class="kpi-desc">SEGMENTANDO CON PÚBLICO OBJETIVO.&nbsp;</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Presupuesto Objetivo</div>
+          <div class="kpi-val">150 <span>PEN/mes</span></div>
+          <div class="kpi-desc">~50 USD mensuales para Meta Ads</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 1: POSICIONAMIENTO Y AVATAR -->
+    <section id="posicionamiento">
+      <div class="section-head">
+        <div class="section-left">
+          <span class="section-num">01</span>
+          <h2 class="section-title">ESTO NOS HACE ÚNICOS&nbsp;</h2>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Propuesta de Posicionamiento -->
+        <div class="card">
+          <h3 class="card-title">Propuesta de Posicionamiento</h3>
+          
+          <div class="quote-block">
+            <em>"Para las personas que quieren mejorar sus voces al grabar desde su casa con un equipo de kit básico-precio-calidad, donde nosotros facilitamos el uso fácil de presets / plantillas / plugins, donde los procesos cubren la necesidad de sonar mejor, problemas comunes de ruido, calidad intermedia, demostrando que se puede mezclar rápido y ahorrar tiempo usando presets."</em>
+            <div style="margin-top: 0.85rem; color: #fff; font-weight: 500;">
+              Esto es un uso rápido-fácil, con resultados inmediatos.&nbsp;
+            </div>
+            <div class="quote-badge-row">
+              <span class="quote-badge">- Curva de aprendizaje = es casi nula</span>
+            </div>
+          </div>
+
+          <div class="item-row" style="border-left: 3px solid #ffffff;">
+            <span class="dot"></span>
+            <div>
+              <strong style="color: #ffffff;">ANTES VS DESPUÉS:</strong> en todos los presets, se ha estado formando previos para tener suficiente prueba de como suenan cada uno de los presets / plantillas.&nbsp;
+            </div>
+          </div>
+        </div>
+
+        <!-- Psicología de los Compradores Ganadores -->
+        <div class="card">
+          <h3 class="card-title">Psicología de los Compradores Ganadores</h3>
+          <ul class="item-list">
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>No quieren hacerlo de 0:</strong> Necesitan una configuración lista y fácil de usar.
+              </div>
+            </li>
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>Le frena aprender:</strong> Prefieren sistemas completos para uso simple: nombres fáciles, todo en español y sin curva de aprendizaje larga como 1 mes de mínimo para sonar "algo bien"&nbsp; y seguir frustrado por no obtener el resultado como otras personas que ya tenemos mucho más tiempo mezclando.&nbsp;
+              </div>
+            </li>
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>Controlar como suena:</strong> Quieren aprender, pero los tutoriales los limitan, no explican claro y no son visuales para explicar, es bastante pobre ya que como profesores, nosotros suponemos que el 50% de las cosas ya están grabadas en una persona, cuando si no se inicia de una base consolidada, no se puede avanzar a la siguiente fase o se tiene una idea errónea de conceptos y técnicas para sonar mejor (información muy dispersa y mucha controversia por saber quien tiene la razón sobre muchos temas técnicos que confunden a los usuarios nuevos-intermedios)
+              </div>
+            </li>
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>"Quiero sonar como":</strong> Muchos artistas no tienen identidad musical definida; es fácil guiarlos por referencia de su artista favorito.
+                <div style="margin-top: 0.4rem;">
+                  Esto es una oportunidad para poder tener mayor ventas, las personas quieren tener el sonido como "x persona"
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Diferenciación: ESTO TENEMOS QUE LA MAYORIA LO IGNORA -->
+      <div class="card" style="margin-top: 1.25rem;">
+        <h3 class="card-title">ESTO TENEMOS QUE LA MAYORIA LO IGNORA</h3>
+        
+        <div class="grid-3" style="margin-top: 1rem;">
+          <!-- Col 1 -->
+          <div class="feature-card">
+            <div>
+              <div class="feature-title">Plugins Incluidos</div>
+              <div class="feature-desc">
+                Ofrecemos los plugins necesarios para usar la plantilla o preset sin compras extras inesperadas.
+              </div>
+            </div>
+            <div class="feature-why">
+              porque lo hago = Solo se vende instalación en algunos casos donde los usuarios no logran instalarlos. (extra de 10-15 USD)
+            </div>
+          </div>
+
+          <!-- Col 2 -->
+          <div class="feature-card">
+            <div>
+              <div class="feature-title">Guía Word con Capturas</div>
+              <div class="feature-desc">
+                Word con capturas paso a paso e índice para guiar instalaciones en DAWs recientes (2026) o antiguos.
+                <div style="margin-top: 0.35rem;">Incluye imagenes para entender los pasos.&nbsp;</div>
+              </div>
+            </div>
+            <div class="feature-why">
+              porque lo hago = Esto cubre parte de soporte en un 80% de los casos que tengo que lidiar.&nbsp;
+            </div>
+          </div>
+
+          <!-- Col 3 -->
+          <div class="feature-card">
+            <div>
+              <div class="feature-title">Try Before Purchase</div>
+              <div class="feature-desc">
+                Para presets/plantillas: probarlo en su voz antes de comprar. Para plugins: 3 días free de prueba.
+                <div style="margin-top: 0.35rem;">Las pruebas suelen durar 10 - 30 minutos por persona.&nbsp;</div>
+              </div>
+            </div>
+            <div class="feature-why">
+              porque lo hago = muchas personas tienen buena voz pero no suenan como quieren (yo veo el potencial), entonces gracias a eso, se tienen muchas más cosas para sumar a catálogo.&nbsp;
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 2: CATÁLOGO Y ESTRUCTURA DE PRECIOS -->
+    <section id="catalogo">
+      <div class="section-head">
+        <div class="section-left">
+          <span class="section-num">02</span>
+          <h2 class="section-title">MANEJO DE PRECIOS / LOW - HIGH TICKET</h2>
+        </div>
+        <span class="status-badge">offszn.lat/willieinspired</span>
+      </div>
+
+      <!-- Tabla de Precios Validados -->
+      <div class="table-container" style="margin-bottom: 1.5rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>Producto / Servicio</th>
+              <th>Rango Validado</th>
+              <th>Comportamiento en el Mercado</th>
+              <th>Tipo de Ganancia</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>PLUGINS</strong></td>
+              <td><span class="price-pill">5, 10, 15 USD</span></td>
+              <td><span class="status-badge" style="margin-right: 0.4rem;">Venta casi diaria</span> 20 USD no funcionó</td>
+              <td><span class="type-badge">Dinámica</span></td>
+            </tr>
+            <tr>
+              <td><strong>Presets de Artistas</strong></td>
+              <td><span class="price-pill">5 - 10 USD</span></td>
+              <td>En Payhip a 5 USD con "run sell" (tachado de 15 a 5) se vio muy bien</td>
+              <td><span class="type-badge">Dinámica</span></td>
+            </tr>
+            <tr>
+              <td><strong>Plantillas Completas</strong></td>
+              <td><span class="price-pill">15 - 25 USD</span></td>
+              <td>Precio base 15 USD, pagables hasta 20 y 25 USD</td>
+              <td><span class="type-badge">Dinámica</span></td>
+            </tr>
+            <tr>
+              <td><strong>PRESET O PLANTILLA PERSONALIZADA</strong></td>
+              <td><span class="price-pill">15, 20, 25 USD</span></td>
+              <td>Normalmente ofrecido como plantilla&nbsp;</td>
+              <td><span class="type-badge">Fija (1 a 1)</span></td>
+            </tr>
+            <tr>
+              <td><strong>Servicios de Mix y Master</strong></td>
+              <td><span class="price-pill">25 - 30 USD</span></td>
+              <td>Servicio propio con recompras recurrentes (en web hasta 50 USD)</td>
+              <td><span class="type-badge">Fija (Servicio)</span></td>
+            </tr>
+            <tr>
+              <td><strong>Servicios de Beat &amp; Remakes</strong></td>
+              <td><span class="price-pill">30 - 40 USD</span></td>
+              <td>Remakes que son hechos en base a beats de youtube o una maqueta en 30-40 USD, Beats 50-60 USD dependerá del tipo de comprador.</td>
+              <td><span class="type-badge">Fija (Servicio)</span></td>
+            </tr>
+            <tr>
+              <td><strong>Producción Completa</strong></td>
+              <td><span class="price-pill">50 - 60 USD</span></td>
+              <td>Validada hasta 50-60 USD (proyectada a 80 USD)</td>
+              <td><span class="type-badge">Fija (High Ticket)</span></td>
+            </tr>
+            <tr>
+              <td><strong>Comunidad Skool</strong></td>
+              <td><span class="price-pill">9 / 19 / 29 USD/m</span></td>
+              <td>Basic (9$), Starter (19$), Pro (29$ con trial 3 días)<br>Se esta pensando en hacer alguna prueba también de 7-17-27 USD respectivamente.</td>
+              <td><span class="type-badge">Continuidad / Mensual</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid-2">
+        <!-- Plugins y Rutas -->
+        <div class="card">
+          <h3 class="card-title">Plugins &amp; Bundles Desarrollados</h3>
+          <ul class="item-list">
+            <li class="item-row"><span class="dot"></span><div><strong>Easy Mix VST:</strong> Producto más valorado, venta recurrente.</div></li>
+            <li class="item-row"><span class="dot"></span><div><strong>Easy Master VST:</strong>&nbsp;producto valorado por promoción 2x1</div></li>
+            <li class="item-row"><span class="dot"></span><div><strong>Promo 2x1:</strong> Easy Mix + Easy Master (mejor oferta, mucha gente le interesa este tipo de ofertas)</div></li>
+            <li class="item-row"><span class="dot"></span><div><strong>Vocal Preset VST:</strong>&nbsp;tuvo 3 ventas en la primera semana, sin mucha promoción, con oportunidad si se hace más contenido.</div></li>
+            <li class="item-row"><span class="dot"></span><div><strong>Micro-herramientas ($1 USD):</strong> Sample VST ($1), Easy YouTube ($1), Easy Acordes.&nbsp;</div></li>
+            <li class="item-row"><span class="dot"></span><div><strong>DRUMKITS / EXPANSIONES DE PLUGINS:</strong> <br>20 presets de Easy Mix a 1 USD, drumkits a 5 USD&nbsp;</div></li>
+          </ul>
+        </div>
+
+        <!-- Mapa Visual de Plugins & Expansiones -->
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <h3 class="card-title">Mapa Visual de Plugins &amp; Expansiones</h3>
+          
+          <div class="plugin-visual-tree">
+            <!-- Nivel 1: Oferta Core / 2x1 -->
+            <div class="tree-block tree-main">
+              <div class="tree-badge">PROMO 2x1 (MEJOR OFERTA)</div>
+              <div class="tree-nodes">
+                <div class="tree-node">
+                  <span class="tree-node-title">EASY MIX VST</span>
+                  <span class="tree-node-sub">Más valorado • Venta recurrente</span>
+                </div>
+                <div class="tree-plus">+</div>
+                <div class="tree-node">
+                  <span class="tree-node-title">EASY MASTER VST</span>
+                  <span class="tree-node-sub">Valorado por promoción 2x1</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Nivel 2: Vocal Preset -->
+            <div class="tree-block">
+              <div class="tree-badge">NUEVO LANZAMIENTO</div>
+              <div class="tree-node full-width">
+                <span class="tree-node-title">VOCAL PRESET VST</span>
+                <span class="tree-node-sub">3 ventas en primera semana • Oportunidad con más contenido</span>
+              </div>
+            </div>
+
+            <!-- Nivel 3: Micro-herramientas & Expansiones -->
+            <div class="tree-grid-row">
+              <div class="tree-sub-block">
+                <div class="tree-badge">MICRO-HERRAMIENTAS ($1 USD)</div>
+                <div class="tree-chips">
+                  <span>Sample VST ($1)</span>
+                  <span>Easy YouTube ($1)</span>
+                  <span>Easy Acordes</span>
+                </div>
+              </div>
+
+              <div class="tree-sub-block">
+                <div class="tree-badge">EXPANSIONES &amp; DRUMKITS</div>
+                <div class="tree-chips">
+                  <span>20 Presets Easy Mix (1 USD)</span>
+                  <span>Drumkits (5 USD)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Presets de Artistas (50+ Artistas) -->
+      <div class="card" style="margin-top: 1.25rem;">
+        <h3 class="card-title" style="margin-bottom: 0.85rem;">
+          CATALOGO QUE SE PUEDE EXTENDER MUCHO MÁS, SEGMENTAR POR PAISES DE ARTISTAS Y NICHOS (ARGENTINA, MÉXICO, PUERTO RICO O LA NEW WAVE MÁS CONOCIDO)
+        </h3>
+        
+        <div class="artist-search-bar">
+          <div class="search-input-wrapper">
+            <span class="search-icon-hint">⌕</span>
+            <input type="text" id="artistSearch" class="search-input" placeholder="Filtrar por artista (Bad Bunny, Dei V, Feid, Duki, Ysy A)..." onkeyup="filterArtists()">
+          </div>
+          <span class="artist-count-badge" id="artistCount">53 artistas</span>
+        </div>
+
+        <div class="artist-box" id="artistCloud">
+          <span class="artist-item">Bad Bunny</span><span class="artist-item">Blagh</span><span class="artist-item">Zell</span><span class="artist-item">Frozouda</span><span class="artist-item">Bhavi</span><span class="artist-item">Cosmic kid</span><span class="artist-item">Roa</span><span class="artist-item">Dei v</span><span class="artist-item">Creo</span><span class="artist-item">Kid voddo</span><span class="artist-item">Saiko</span><span class="artist-item">Ysy A</span><span class="artist-item">Alejo</span><span class="artist-item">Gonzalo genek</span><span class="artist-item">Lil naay</span><span class="artist-item">Jhayco</span><span class="artist-item">Juice world</span><span class="artist-item">Kid laroi</span><span class="artist-item">Yeat</span><span class="artist-item">Conep</span><span class="artist-item">Oney1</span><span class="artist-item">JoJi</span><span class="artist-item">Roku</span><span class="artist-item">Lolo</span><span class="artist-item">Khea</span><span class="artist-item">Slimesanti</span><span class="artist-item">Hades66</span><span class="artist-item">Youngcister</span><span class="artist-item">Duki</span><span class="artist-item">Paco amoroso</span><span class="artist-item">Dvd</span><span class="artist-item">Ober</span><span class="artist-item">MiloJ</span><span class="artist-item">Trueno</span><span class="artist-item">Yan block</span><span class="artist-item">Latin mafia</span><span class="artist-item">Enzocerobulto</span><span class="artist-item">Cero</span><span class="artist-item">Karol g</span><span class="artist-item">Natan</span><span class="artist-item">Myke towers</span><span class="artist-item">Suei</span><span class="artist-item">Gloosito</span><span class="artist-item">Reamers</span><span class="artist-item">Easykid</span><span class="artist-item">Omar courtz</span><span class="artist-item">Skisia2</span><span class="artist-item">Young beef</span><span class="artist-item">Yeyo</span><span class="artist-item">Feid</span><span class="artist-item">Kuraimokha</span><span class="artist-item">Jovaan</span><span class="artist-item">Fanta Rosario</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 3: META ADS E INVERSIÓN -->
+    <section id="anuncios">
+      <div class="section-head">
+        <div class="section-left">
+          <span class="section-num">03</span>
+          <h2 class="section-title">Inversión &amp; Publicidad en Meta Ads</h2>
+        </div>
+        <span class="status-badge">320 PEN ACUMULADOS</span>
+      </div>
+
+      <div class="grid-2">
+        <!-- Métricas de Campañas -->
+        <div class="card">
+          <h3 class="card-title">Métricas de Campañas</h3>
+          <ul class="item-list">
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>Gasto total de 2 meses:</strong> <strong>320 soles</strong> aproximado (con IGV aplicado), unos 100 dólares.&nbsp;
+              </div>
+            </li>
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>Campañas corridas:</strong> Se hizo campaña de 60 soles, campaña de 120 soles y campaña de 30 soles.
+              </div>
+            </li>
+            <li class="item-row" style="flex-direction: column; align-items: stretch; gap: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="dot" style="margin-top: 0;"></span>
+                <div><strong>Segmentaciones probadas:</strong></div>
+              </div>
+              <div class="targeting-grid">
+                <div class="targeting-pill">
+                  <span class="targeting-rank">🥇 TOP 1</span>
+                  <span class="targeting-countries">México, Argentina</span>
+                </div>
+                <div class="targeting-pill">
+                  <span class="targeting-rank">🥈 TOP 2</span>
+                  <span class="targeting-countries">Estados Unidos, Chile</span>
+                </div>
+                <div class="targeting-pill">
+                  <span class="targeting-rank">🥉 TOP 3</span>
+                  <span class="targeting-countries">Perú</span>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Formato Probado -->
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <h3 class="card-title">FORMATO PROBADO HASTA AHORA</h3>
+          
+          <div style="background: var(--surface-elevated); border: 1px solid var(--border-light); padding: 1.4rem; border-radius: var(--radius-sm); border-left: 4px solid #ffffff;">
+            <p style="font-size: 0.88rem; color: #ffffff; line-height: 1.6;">
+              <strong>NO se ha probado aún formato de preset ni de plantilla en anuncios.</strong>
+              <div style="margin-top: 0.65rem; color: var(--text-muted);">
+                Hasta la fecha, únicamente se ha probado en el formato de&nbsp;<strong style="color: #fff;">PLUGINS</strong> en anuncios de Meta Ads.
+              </div>
+            </p>
+          </div>
+
+          <div style="margin-top: 1rem; padding: 0.85rem 1rem; background: #000000; border: 1px dashed var(--border-light); border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">
+            💡 Recordatorio: La próxima prueba será de 40-50 SOLES segmentando con público objetivo.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 4: FUNNEL SISTEMA 1K -->
+    <section id="funnel">
+      <div class="section-head">
+        <div class="section-left">
+          <span class="section-num">04</span>
+          <h2 class="section-title">COMO FUNCIONA MI PROCESO</h2>
+        </div>
+        <span class="status-badge">FUNNEL 1K</span>
+      </div>
+
+      <div class="flow-step-wrapper">
+        <!-- Paso 1-2 -->
+        <div class="flow-card">
+          <div class="flow-num">1-2</div>
+          <div class="flow-body">
+            <div class="flow-title">
+              <div>
+                LEAD MAGNET - GRATIS PARA FILTRAR PERSONAS&nbsp;
+                <div style="font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-muted); font-weight: normal; margin-top: 0.35rem; line-height: 1.5;">
+                  - en offszn = los correos se mandan a nombre de: soporte@offszn.lat", "no-reply@offszn.lat", "marketing@offszn.lat"<br>
+                  - en payhip = correos se envian a nombre de : williebeatsyt@gmail.com
+                </div>
+              </div>
+              <span class="status-badge">FREE</span>
+            </div>
+
+            <div class="email-phases-grid">
+              <!-- Fase 1 -->
+              <div class="phase-block">
+                <div class="phase-label">PRIMERA FASE DE EMAILS:</div>
+                <div class="phase-items">
+                  <div>- Se agrega a la persona a mi lista de correos</div>
+                  <div>- Se envía email de bienvenida (en OFFSZN)</div>
+                  <div>- Email para "subir tu primer producto"</div>
+                  <div style="margin-top: 0.35rem;">- Email final de bienvenida para incentivar a tener primer producto<br><span style="font-size: 0.72rem; color: var(--text-dim);">(CONDICIÓN ANTES QUE SE ENVIE = se espera 24 horas y PRODUCTOS = no se ha subido aún nada)</span></div>
+                </div>
+              </div>
+
+              <!-- Fase 2 -->
+              <div class="phase-block">
+                <div class="phase-label">SEGUNDA FASE EN PARALELO DE EMAILS:</div>
+                <div class="phase-items">
+                  <div>- PRODUCTOS: 0&nbsp;</div>
+                  <div>- ENTONCES SE MANDA EMAIL INCENTIVO + MINI VIDEO EXPLICANDO UNA FUNCIÓN INTERESANTE&nbsp;</div>
+                </div>
+              </div>
+
+              <!-- Fase 3 -->
+              <div class="phase-block">
+                <div class="phase-label">TERCERA FASE EN PARALELO DE EMAILS:</div>
+                <div class="phase-items">
+                  <div>- DESPUÉS DE 2 DÍAS DE CREAR UNA CUENTA</div>
+                  <div>- EMAIL PARA UNIRTE A LA COMUNIDAD DE PLUGINS (TELEGRAM)</div>
+                </div>
+              </div>
+
+              <!-- Fase 4 -->
+              <div class="phase-block">
+                <div class="phase-label">CUARTA FASE EN PARALELO DE EMAILS:</div>
+                <div class="phase-items">
+                  <div>- INVITACIÓN A USAR PLUGIN EASY MASTER&nbsp;</div>
+                  <div style="margin-top: 0.35rem;">- SE ESPERA 4 HORAS, INVITACIÓN A USAR LA PROMOCIÓN DE 2X1 PARA EASY MIX + EASY MASTER</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 3 -->
+        <div class="flow-card">
+          <div class="flow-num">3</div>
+          <div class="flow-body">
+            <div class="flow-title">
+              <span>PRÓXIMAS MEJORAS EN EMAIL MARKETING Y LANDING PERSONALIZADA (SOLO APLICA EN OFFSZN)</span>
+              <span class="status-badge">A/B TEST</span>
+            </div>
+            <div class="flow-desc">
+              Saldrá un video corto de <em>"CÓMO SE USA"</em>.&nbsp;
+              <div style="margin-top: 0.5rem;">
+                Luego se puede dar <strong>20% de bienvenida</strong>&nbsp;en primera compra o&nbsp;<strong>2x1</strong> para probar cuál da más clicks/ventas.
+              </div>
+              <ul class="item-list" style="margin-top: 0.75rem;">
+                <li class="item-row" style="padding: 0.6rem 0.85rem;">
+                  <span class="dot"></span>
+                  <div>• Si aplicas 2x1 a un producto de $5, el otro debe ser de $5 USD.</div>
+                </li>
+                <li class="item-row" style="padding: 0.6rem 0.85rem;">
+                  <span class="dot"></span>
+                  <div>• Al ser 20% es de <strong>uso único</strong>, donde debe crear cuenta primero y saldrán los productos seleccionados (normalmente un high ticket)</div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 4-5 -->
+        <div class="flow-card">
+          <div class="flow-num">4-5</div>
+          <div class="flow-body">
+            <div class="flow-title">
+              <span>Onboarding de 1 Pregunta &amp; Precios Dinámicos por País</span>
+              <span class="status-badge">GEO PRICING</span>
+            </div>
+            <div class="flow-desc">
+              <div>
+                SE PEDIRÁ:&nbsp;<strong>Nombre de usuario y país (que luego se valida con la VPN, solo para información no para uso de trata de datos)</strong>
+              </div>
+              <ul class="item-list" style="margin-top: 0.75rem;">
+                <li class="item-row">
+                  <span class="dot"></span>
+                  <div>• <strong>Países Tier ($10 USD en vez de $5 USD):</strong> Argentina, México, Estados Unidos, Alemania, Chile, República Dominicana, Perú.</div>
+                </li>
+                <li class="item-row">
+                  <span class="dot"></span>
+                  <div>• <strong>Otros países:</strong> Siempre saldrá 5 USD.</div>
+                </li>
+                <li class="item-row">
+                  <span class="dot"></span>
+                  <div>• <strong>Cuidado con Venezuela y Cuba:</strong> El precio es de 5 USD siempre; a veces piden a familiares de EE.UU.&nbsp; Ante la duda, poner siempre otros métodos de pago en el checkout.</div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 6 -->
+        <div class="flow-card" style="display: block;">
+          <div style="display: flex; gap: 1.25rem; align-items: center; margin-bottom: 0.75rem;">
+            <div class="flow-num">6</div>
+            <div class="flow-title" style="margin-bottom: 0; width: 100%;">
+              <span>NO COMPRÓ vs COMPRÓ</span>
+              <span class="status-badge">CONVERSIÓN</span>
+            </div>
+          </div>
+
+          <div class="split-grid">
+            <!-- NO COMPRÓ -->
+            <div class="split-card">
+              <span class="split-tag">Camino 1: NO COMPRÓ</span>
+              <div style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.6;">
+                <div>Según el país se decide la oferta dinámica (5, 10 o 15 USD solo para plugins)&nbsp;</div>
+                <div style="margin-top: 0.65rem; padding: 0.75rem; background: #000000; border: 1px solid var(--border); border-radius: 4px; color: #fff; font-family: var(--font-mono); font-size: 0.76rem;">
+                  SEGUIMIENTO EN LAS PRIMERAS 4 HORAS = SI NO SE CONCRETA NADA = MANDARLO A LA COMUNIDAD DE SKOOL PARA EDUCAR CON CONTENIDO = HASTA QUE SE CONVIERTA EN CLIENTE POTENCIAL.
+                </div>
+                <div style="margin-top: 0.65rem;">
+                  ESTO TAMBIÉN ES DECIDIDO PARA EL ABANDONO DE CHECKOUTS CUANDO NO TERMINAN DE COMPRAR (24 HORAS DESPUÉS DE NO COMPRAR)&nbsp;
+                </div>
+              </div>
+            </div>
+
+            <!-- COMPRÓ -->
+            <div class="split-card">
+              <span class="split-tag">Camino 2: COMPRÓ</span>
+              <div style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.6;">
+                <div>• <strong>Sin cuenta:</strong> Mini carga del logo solo para detectar VPN/país sin malograr el proceso de compra; queda en caché para no repetir.</div>
+                <div style="margin-top: 0.5rem;">• <strong>Si fue 2x1:</strong> En el checkout se elige estilo UAD Audio <em>("Pick your free one")</em> de mismo precio dinámico.&nbsp;</div>
+                <div style="margin-top: 0.5rem;">• <strong>Upselling Post-Compra:</strong> Arriba archivos de compra y licencias.</div>
+                <div style="margin-top: 0.75rem; padding: 0.75rem; background: #000000; border: 1px dashed var(--border-light); border-radius: 4px; font-family: var(--font-mono); font-size: 0.74rem; color: #fff;">
+                  DEBAJO SE PONEN OFERTAS OBTENIDAS, Y REGALO COMO RULETA O COFRE (ALGO EXTRA PARA DARLE POR LA COMPRA, MODELO DE TEMU, QUE AUN DEBE DE SER PROBADO PROXIMAMENTE DE AQUI UNOS MESES.)
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paso 7 -->
+        <div class="flow-card">
+          <div class="flow-num">7</div>
+          <div class="flow-body">
+            <div class="flow-title">
+              <span>Definiendo Tags en CRM</span>
+              <span class="status-badge">SEGMENTACIÓN</span>
+            </div>
+            <div class="tags-grid">
+              <div class="tag-item">
+                <div class="tag-title">FREE</div>
+                <div class="tag-sub">Persona que solo usa gratis</div>
+              </div>
+              <div class="tag-item">
+                <div class="tag-title">COMPRADOR V1</div>
+                <div class="tag-sub">Compró 1 vez</div>
+              </div>
+              <div class="tag-item">
+                <div class="tag-title">COMPRADOR V2</div>
+                <div class="tag-sub">Compró 2 o más veces</div>
+              </div>
+              <div class="tag-item">
+                <div class="tag-title">PAÍS</div>
+                <div class="tag-sub">Por VPN o registro Lead Magnet</div>
+              </div>
+              <div class="tag-item">
+                <div class="tag-title">DINERO</div>
+                <div class="tag-sub">Suma de monto total gastado</div>
+              </div>
+              <div class="tag-item">
+                <div class="tag-title">HORARIO</div>
+                <div class="tag-sub">Hora (13:34) y frescura (Hoy, Ayer, 2d, 3d)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 5: OPERACIONES (WHATSAPP, BREVO Y TIKTOK) -->
+    <section id="operaciones">
+      <div class="section-head">
+        <div class="section-left">
+          <span class="section-num">05</span>
+          <h2 class="section-title">OPERACIONES MEJORADAS ACTUALES QUE SE ESTAN USANDO Y FUNCIONANDO PERFECTO</h2>
+        </div>
+        <span class="status-badge">SISTEMAS 1 A 1</span>
+      </div>
+
+      <div class="grid-2">
+        <!-- Venta 1 a 1 -->
+        <div class="card">
+          <h3 class="card-title">FLUJO DE VENTA 1 A 1</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Mejoras en ventas por creación de dashboard de licencias cuando las compras son por WhatsApp (Argentina y Perú en mayoria)
+          </p>
+          
+          <div class="pipeline-grid">
+            <div class="pipeline-step">
+              <span class="pipeline-step-num">PASO 1</span>
+              <div class="pipeline-step-text">Mensaje ya puesto</div>
+            </div>
+            <div class="pipeline-step">
+              <span class="pipeline-step-num">PASO 2</span>
+              <div class="pipeline-step-text">Pones qué plugin o promoción 2x1</div>
+            </div>
+            <div class="pipeline-step">
+              <span class="pipeline-step-num">PASO 3</span>
+              <div class="pipeline-step-text">Correo del comprador</div>
+            </div>
+            <div class="pipeline-step">
+              <span class="pipeline-step-num">PASO 4</span>
+              <div class="pipeline-step-text">Botón de enviar directo por Brevo Send API y marcar como usadas para que no se repitan licencias y sean únicas</div>
+            </div>
+            <div class="pipeline-step" style="grid-column: span 2;">
+              <span class="pipeline-step-num">PASO 5</span>
+              <div class="pipeline-step-text">Listo todo y facilitado sin problemas</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flujo TikTok -->
+        <div class="card">
+          <h3 class="card-title">Flujo en TikTok (Try Before Purchase)</h3>
+          
+          <ul class="item-list">
+            <li class="item-row"><span class="dot"></span><div><strong>1 =</strong> Persona comenta en el video.</div></li>
+            <li class="item-row"><span class="dot"></span><div><strong>2 =</strong> Respondo manual.</div></li>
+            <li class="item-row" style="flex-direction: column; align-items: stretch;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span class="dot" style="margin-top: 0;"></span>
+                <div><strong>3 =</strong> Hago mis pasos de preguntas:&nbsp;</div>
+              </div>
+              <div style="font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-dim); margin: 0.35rem 0;">
+                TENGO DOS OPCIONES SEGUN PERSONA / CASO DE ESTUDIO PENDIENTE:&nbsp;
+              </div>
+
+              <!-- Scripts list -->
+              <div class="script-snippet">
+                <div class="script-snippet-header">
+                  <span>PRIMER MENSAJE (OBLIGATORIO PARA PLANTILLAS / PRESETS)</span>
+                  <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+                </div>
+                <div class="script-snippet-text" style="font-size: 0.82rem; color: #fff;">
+                  Hola bro, cuéntame que es lo que necesitas en tus voces actualmente?&nbsp;
+                  <div style="margin-top: 0.2rem; color: var(--text-muted);">Asi te digo que preset o plantilla&nbsp; funciona en tu estilo</div>
+                </div>
+              </div>
+
+              <div class="script-snippet">
+                <div class="script-snippet-header">
+                  <span>SEGUNDO MENSAJE (DECIDIR SEGUN RESPUESTA)</span>
+                  <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+                </div>
+                <div class="script-snippet-text" style="font-size: 0.82rem; color: #fff;">
+                  <div>-&nbsp;Entiendo, has probado con plugins nativos o externos como fab filter , waves?</div>
+                  <div style="margin-top: 0.35rem;">- Entiendo, con esa descripción este preset es el mejor, te mando un video para que puedas escuchar el resultado&nbsp;</div>
+                </div>
+              </div>
+
+              <div class="script-snippet">
+                <div class="script-snippet-header">
+                  <span>SEGUIDO TERCER MENSAJE DESPUES DE ENVIAR EL VIDEO ENSEÑANDO ANTES VS DESPUÉS</span>
+                  <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+                </div>
+                <div class="script-snippet-text" style="font-size: 0.82rem; color: #fff;">
+                  -Dime que te parece?
+                </div>
+              </div>
+
+              <div class="script-snippet">
+                <div class="script-snippet-header">
+                  <span>CUARTO MENSAJE&nbsp; (depende de la respuesta)</span>
+                  <button class="copy-btn" onclick="copyText(this)">Copiar</button>
+                </div>
+                <div class="script-snippet-text" style="font-size: 0.82rem; color: #fff;">
+                  <div>-&nbsp;Quisieras que lo pruebe en tus voces o alguna maqueta tuya, asi escuchas el resultado, dime que te parece?</div>
+                  <div style="margin-top: 0.35rem;">- Dale bro, te mando el link asi lo revisas?&nbsp;</div>
+                </div>
+              </div>
+            </li>
+            <li class="item-row"><span class="dot"></span><div><strong>4 =</strong> Persona acepta la prueba free.</div></li>
+            <li class="item-row"><span class="dot"></span><div><strong>5 =</strong> Hacemos la prueba, gano un proyecto si es suficientemente bueno para usarlo en videos/página, la persona escucha el resultado y se manda link de compra.&nbsp;</div></li>
+            <li class="item-row"><span class="dot"></span><div><strong>6 =</strong> Lo adquiere al escucharlo en su propia voz.</div></li>
+          </ul>
+
+          <div style="margin-top: 1rem; padding: 0.85rem 1rem; background: var(--surface-elevated); border: 1px solid var(--border-light); border-radius: var(--radius-sm); font-size: 0.84rem; color: var(--text-muted); line-height: 1.55;">
+            ⚠️ <em>"Antes hacía solo enviar mensaje de la plantilla = no convierte, he perdido como 100 ventas por eso. El Try Before Purchase en su voz es lo que realmente funciona."</em>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN 06: ANÁLISIS DE CONVERSACIONES CON CLIENTES (42+ CASOS REALES) -->
+    <section id="espacios">
+      <div class="section-head">
+        <div class="section-left">
+          <span class="section-num">06</span>
+          <h2 class="section-title">ANÁLISIS DE CONVERSACIONES CON CLIENTES (42+ CASOS REALES)</h2>
+        </div>
+        <span class="status-badge">PLAYBOOK WILLIE VS CLIENTE</span>
+      </div>
+
+      <!-- Métricas y Radiografía de las Conversaciones Analizadas -->
+      <div class="kpi-grid" style="margin-bottom: 1.5rem;">
+        <div class="kpi-card">
+          <div class="kpi-label">Muestra Analizada</div>
+          <div class="kpi-val">42 Chats</div>
+          <div class="kpi-desc">Instagram DMs, TikTok DMs &amp; WhatsApp</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">DAW Dominante</div>
+          <div class="kpi-val">92% FL Studio</div>
+          <div class="kpi-desc">Predominio absoluto de FL 20 y FL 21</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Equipamiento Común</div>
+          <div class="kpi-val">Micrófono USB</div>
+          <div class="kpi-desc">Fifine, Blue Yeti, Samson en cuartos sin tratar</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Fricción #1 Resuelta</div>
+          <div class="kpi-val">Plugins &amp; Pago</div>
+          <div class="kpi-desc">Instaladores en Telegram + Mercado Pago</div>
+        </div>
+      </div>
+
+      <!-- Bloque 1: Dolores Vocales & Arquetipos de Compradores -->
+      <div class="grid-2" style="margin-bottom: 1.5rem;">
+        <!-- Dolores Vocales -->
+        <div class="card">
+          <h3 class="card-title">Los 5 Dolores Vocales Más Repetidos</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.85rem;">
+            Problemas exactos que verbalizan los artistas en el chat antes de pedir una solución:
+          </p>
+          <ul class="item-list">
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>1. Voz Opaca / Sin Brillo / Encajonada:</strong> Graban tomas secas que se sienten "lejanas" o tapadas por el beat. No saben ecualizar los medios-graves ni dar aire (10k-12kHz) sin que sea estridente.
+              </div>
+            </li>
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>2. Ruido Blanco y Soplido de Cuarto:</strong> Micrófonos USB en habitaciones sin acondicionar captando ventiladores, calle y ruido eléctrico. Intentan solucionarlo cortando graves a lo loco, arruinando el cuerpo de la voz.
+              </div>
+            </li>
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>3. La Voz "Flota" (Falta de Pegamento):</strong> La voz suena pegada por encima de la pista como un sticker. Les falta compresión en serie y pegamento en el bus vocal para integrarla al ritmo.
+              </div>
+            </li>
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>4. Autotune Mal Calibrado o Robótico Sucio:</strong> No dominan la escala ni el tiempo de respuesta (retune speed); o desafinan feo o suena a robot metálico sucio en vez de la afinación moderna y comercial del género.
+              </div>
+            </li>
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>5. Reverbs y Delays que Ensucian:</strong> Ponen efectos espaciales por defecto sin filtro paso alto ni sidechain/ducking, generando colas graves que ahogan las palabras y hacen ininteligible el fraseo.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Arquetipos de Compradores -->
+        <div class="card">
+          <h3 class="card-title">Los 4 Arquetipos de Compradores Reales</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.85rem;">
+            Perfiles psicológicos identificados en las más de 40 conversaciones:
+          </p>
+          <ul class="item-list">
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>A. El Maquetero Pragmático (ej. Alex Wyck, Wayne):</strong> Tiene un productor principal para canciones oficiales, pero graba maquetas solo en casa. No quiere aprender ingeniería ni perder horas; necesita que la toma suene brillante y con vibra inmediata para cantar y componer.
+              </div>
+            </li>
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>B. El Grabador de Cuarto con Micrófono USB (ej. 12.8, Nano, alejandro_fitnesss):</strong> Equipo de bajo presupuesto, cuarto con eco y ruido de ventilador. Teme que su música suene amateur y busca una cadena ya configurada que "haga magia" sin gastar en interfaz cara.
+              </div>
+            </li>
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>C. El Seguidor de Referencias (ej. Elivan, Krespo, killaboiiiii):</strong> No razona en hercios ni decibelios; razona en artistas: <em>"Quiero sonar estilo Yeyo, estilo Cris MJ, Dei V o Cero Under"</em>. Necesita el preset con el nombre del artista que admira como atajo mental de confianza.
+              </div>
+            </li>
+            <li class="item-row">
+              <span class="dot"></span>
+              <div>
+                <strong>D. El Principiante con Miedo Técnico (ej. NIK):</strong> Inseguro de compatibilidad: <em>"¿Sirve para FL 21?", "¿Se instalan aparte los plugins?", "¿Viene con adlibs?", "¿Tiene costo la prueba?"</em>. Si le resuelves la instalación y la prueba gratis, compra inmediatamente.
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bloque 2: Playbook de Casos Reales en Formato Diálogo (WILLIE vs POSIBLE COMPRADOR) -->
+      <div style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+          <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff;">
+            Playbook de Casos Reales: WILLIE vs POSIBLE COMPRADOR
+          </h3>
+          <div class="dialogue-filter-nav">
+            <button class="dialogue-filter-btn active" onclick="filterCase('all', this)">Ver Todos (5)</button>
+            <button class="dialogue-filter-btn" onclick="filterCase('caso1', this)">Caso 01: Home Studio</button>
+            <button class="dialogue-filter-btn" onclick="filterCase('caso2', this)">Caso 02: Ref. Artista</button>
+            <button class="dialogue-filter-btn" onclick="filterCase('caso3', this)">Caso 03: Mercado Pago</button>
+            <button class="dialogue-filter-btn" onclick="filterCase('caso4', this)">Caso 04: Maquetero</button>
+            <button class="dialogue-filter-btn" onclick="filterCase('caso5', this)">Caso 05: Principiante</button>
+          </div>
+        </div>
+
+        <!-- CASO 01 -->
+        <div class="dialogue-card" id="caso1">
+          <div class="dialogue-header">
+            <div>
+              <span class="dialogue-client-tag">CASO 01: EL HOME STUDIO CON RUIDO BLANCO Y FALTA DE BRILLO</span>
+              <span class="dialogue-meta" style="margin-left: 0.5rem;">• Cliente: Nano / 12.8 (Habitación casera, micrófono con soplido)</span>
+            </div>
+            <span class="status-badge">CERRADO VÍA TIKTOK/IG</span>
+          </div>
+
+          <div class="chat-stream">
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Hola bro, cuéntame que es lo que necesitas en tus voces actualmente? Así te digo que preset o plantilla funciona en tu estilo
+              </div>
+            </div>
+
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Busco eliminar el ruido y empezar a usar autotune y que se escuche clara la voz p. Lo que pasa es que mi mic tiene ruido blanco y quiero darle brillo a la voz.
+              </div>
+            </div>
+
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Entiendo, has probado con plugins nativos o externos como fab filter , waves?
+              </div>
+            </div>
+
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Quería saber dónde descargar el waves de hecho. Para reducir el ruido y eso.
+              </div>
+            </div>
+
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Dale bro, si eso siempre doy con los presets + instaladores de plugins. Te muestro uno donde se escucha la voz clara que es lo que buscas. [Envía video de FL Studio mostrando Antes vs Después en solo y con beat]. Dime que te parece?
+              </div>
+            </div>
+
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Si así, eso busco. ¿Viene con plantilla y todo? ¿Cuáles son los más baratos que tengas?
+              </div>
+            </div>
+
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Los más baratos y de calidad son los de 5 usd. La plantilla ya viene configurada con los efectos, canal para poner el beat y grabar con tutorial. ¿Qué género estás buscando y te recomiendo el mejor en esa categoría?
+              </div>
+            </div>
+          </div>
+
+          <div class="dialogue-insight">
+            💡 <strong>Clave del Patrón:</strong> El cliente cree que necesita "descargar Waves" como fórmula mágica para el ruido. Willie no le debate teoría: le asegura que los instaladores vienen incluidos, le muestra el resultado en video de FL Studio y ancla el precio accesible ($5 USD) recomendándole el preset ideal para su género.
+          </div>
+        </div>
+
+        <!-- CASO 02 -->
+        <div class="dialogue-card" id="caso2">
+          <div class="dialogue-header">
+            <div>
+              <span class="dialogue-client-tag">CASO 02: BÚSQUEDA POR REFERENCIA DE ARTISTA &amp; OBJECIÓN DE COSTO POR PRUEBA</span>
+              <span class="dialogue-meta" style="margin-left: 0.5rem;">• Cliente: Elivan (Género Reggaeton / Referencia Artista Yeyo)</span>
+            </div>
+            <span class="status-badge">DERIVACIÓN A WHATSAPP</span>
+          </div>
+
+          <div class="chat-stream">
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Hola bro, cuéntame que es lo que necesitas en tus voces actualmente? Así te digo que preset o plantilla funciona en tu estilo
+              </div>
+            </div>
+
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Por supuesto que sí bro, ya tengo unas cadenas que uso usualmente en mis voces y queda bien. Pero quiero hacer algo estilo YEYO, Y TODOS ELLOS COMO ESE TIPO DE VOCES EN ESOS REGUETONES, y quisiera ver una plantilla para eso para ir entendiendo más o menos cómo podría usarse.
+              </div>
+            </div>
+
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Entiendo, has probado con plugins nativos o externos como fab filter , waves?
+              </div>
+            </div>
+
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                He probado con plugins nativos, pero estoy utilizando los de waves, y pues como ecualizador uso fab filter.
+              </div>
+            </div>
+
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Quisieras que pruebe la plantilla en tus voces o alguna maqueta tuya, asi escuchas el resultado, dime que te parece?
+              </div>
+            </div>
+
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                ¿Tendrá un costo extra por eso? ¿O solamente el de la plantilla?
+              </div>
+            </div>
+
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Es de la plantilla bro, de probarlo para que escuches en tus voces se hace gratis. Escríbeme por WhatsApp +51 993 525 005
+              </div>
+            </div>
+
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Va gracias hermano, ya te escribo.
+              </div>
+            </div>
+          </div>
+
+          <div class="dialogue-insight">
+            💡 <strong>Clave del Patrón:</strong> El artista teme que la personalización o la prueba tenga costo sorpresa. Decir con firmeza: <em>"De probarlo para que escuches en tus voces se hace gratis"</em> desactiva el 100% de la resistencia y lo pasa de la red social fría a WhatsApp caliente.
+          </div>
+        </div>
+
+        <!-- CASO 03 -->
+        <div class="dialogue-card" id="caso3">
+          <div class="dialogue-header">
+            <div>
+              <span class="dialogue-client-tag">CASO 03: FRICCIÓN DE PAGO LOCAL (MERCADO PAGO) &amp; DUDAS DE INSTALACIÓN</span>
+              <span class="dialogue-meta" style="margin-left: 0.5rem;">• Cliente: 12.8 / Gonza (Artista de Argentina, limitación de método de pago)</span>
+            </div>
+            <span class="status-badge">VENTA CERRADA VÍA LINK</span>
+          </div>
+
+          <div class="chat-stream">
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Que onda bro perdón la hora pero como sería eso del vocal chain? Cuánto vale o como? ¿Sirve para FL 21?
+              </div>
+            </div>
+
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Esta es la que sale en mis videos bro: [Link Payhip]. Ya viene todo configurado solo lo abres e inicias a grabar con el tutorial que tiene. Ahora mismo está de oferta. Y sí bro, sirve desde FL 21 👌
+              </div>
+            </div>
+
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Pasa que yo soy de Argentina y tengo un solo método de pago en Mercado Pago, no sé de dónde sos vos.
+              </div>
+            </div>
+
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Sí tenemos Mercado Pago bro, por la misma página me contactas o en la web sale el botón para adquirir con Mercado Pago y se envía directo a tu correo al instante.
+              </div>
+            </div>
+
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Bueno. ¿Los plugins cómo los instalo los que faltan? ¿Qué autotune usa?
+              </div>
+            </div>
+
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Viene un Word con instrucciones para instalar bro. Se usa el de Waves de autotune. Del Telegram mismo puedes instalar los plugins si te falta alguno al abrirlo, está todo fijado con los pasos.
+              </div>
+            </div>
+
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Bro ya lo puedo comprar? Ahí te mandé por Mercado Pago.
+              </div>
+            </div>
+          </div>
+
+          <div class="dialogue-insight">
+            💡 <strong>Clave del Patrón:</strong> Argentina representa uno de los mayores volúmenes de consultas pero con alta fricción cambiaria (Paypal no es accesible para muchos). Habilitar Mercado Pago y brindar la certeza de que los plugins faltantes se consiguen en el grupo fijado de Telegram cierra ventas en el acto.
+          </div>
+        </div>
+
+        <!-- CASO 04 -->
+        <div class="dialogue-card" id="caso4">
+          <div class="dialogue-header">
+            <div>
+              <span class="dialogue-client-tag">CASO 04: EL MAQUETERO PRAGMÁTICO (SOLO QUIERE GRABAR, NO MEZCLAR)</span>
+              <span class="dialogue-meta" style="margin-left: 0.5rem;">• Cliente: Alex Wyck / Wayne (Home studio, tiene productor externo)</span>
+            </div>
+            <span class="status-badge">VENTA AL INSTANTE</span>
+          </div>
+
+          <div class="chat-stream">
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Bro qué onda, yo tengo mi productor que me mezcla los temas finales, pero en mi casa grabo todas mis maquetas solo. El tema es que cuando grabo la voz me suena re apagada y tapada por el beat, y no me da vibra para cantar. ¿Tenés algo rápido que suene bien ya?
+              </div>
+            </div>
+
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Claro bro, la idea de la plantilla es justamente esa: no perder tiempo ecualizando ni aprendiendo plugins difíciles. Lo abres, arrastras tu beat en el canal asignado y la voz ya sale con brillo, compresión y el autotune puesto. Mirá este video de cómo levanta una voz cruda sin tocar perillas.
+              </div>
+            </div>
+
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Uff hermano suena durísimo. O sea curva de aprendizaje cero? Pásame el link que me lo llevo ya para probarlo en una maqueta hoy a la noche.
+              </div>
+            </div>
+          </div>
+
+          <div class="dialogue-insight">
+            💡 <strong>Clave del Patrón:</strong> Este avatar no busca ser productor ni aprender ingeniería en audio. Compra <strong>tiempo y vibra de grabación inmediata</strong>. La promesa de "curva de aprendizaje casi nula" y "poner el beat y cantar" resuena 100% con su necesidad.
+          </div>
+        </div>
+
+        <!-- CASO 05 -->
+        <div class="dialogue-card" id="caso5">
+          <div class="dialogue-header">
+            <div>
+              <span class="dialogue-client-tag">CASO 05: EL PRINCIPIANTE CON DUDAS DE ADLIBS, SEGUNDAS Y CANALES</span>
+              <span class="dialogue-meta" style="margin-left: 0.5rem;">• Cliente: NIK (Cantante novato armando su primera sesión formal en FL)</span>
+            </div>
+            <span class="status-badge">RESOLUCIÓN TÉCNICA</span>
+          </div>
+
+          <div class="chat-stream">
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Bro una consulta de la plantilla, ¿viene solo para la voz principal o también tiene canales ruteados para adlibs y segundas voces? ¿Y si ya tengo mi autotune se puede cambiar?
+              </div>
+            </div>
+
+            <div class="chat-msg willie">
+              <div class="chat-sender">WILLIE</div>
+              <div class="chat-body">
+                Viene con todo ruteado hermano: canal de Lead Vocal con afinación y compresión, canales separados para adlibs con delays espaciales, canal de segundas con panorama abierto y canal para el beat nivelado. Si tienes tu propio autotune, solo reemplazas ese slot y todo el resto de la cadena queda intacto funcionando.
+              </div>
+            </div>
+
+            <div class="chat-msg buyer">
+              <div class="chat-sender">POSIBLE COMPRADOR</div>
+              <div class="chat-body">
+                Qué golazo bro, pensaba que solo era un preset de canal único. Pásame el link de la plantilla de FL Studio.
+              </div>
+            </div>
+          </div>
+
+          <div class="dialogue-insight">
+            💡 <strong>Clave del Patrón:</strong> Explicar que la plantilla es un <strong>proyecto completo multicanal</strong> (Lead + Adlibs + Segundas + Beat + Máster) multiplica el valor percibido del producto frente a un simple "preset .fst de un solo canal".
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bloque 3: Playbook de Manejo de Objeciones Frecuentes -->
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <h3 class="card-title">Matriz de Manejo de Objeciones Más Frecuentes</h3>
+        <div class="split-grid" style="margin-top: 0.75rem;">
+          <div class="split-card">
+            <span class="split-tag">Objeción 1: "¿Y si no tengo los plugins?"</span>
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.6;">
+              <strong>Solución Willie:</strong> <em>"No te preocupes bro, todos los presets vienen acompañados con los instaladores e instrucciones paso a paso en Word, además del soporte y archivos fijados en el grupo de Telegram de OFFSZN."</em>
+            </p>
+          </div>
+
+          <div class="split-card">
+            <span class="split-tag">Objeción 2: "¿Cobras por la prueba en mi voz?"</span>
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.6;">
+              <strong>Solución Willie:</strong> <em>"Probarlo en tu voz para que escuches el resultado es 100% gratis bro. Solo pagas si decides quedarte con la plantilla. Mándame tu acapella por WhatsApp y te paso el demo."</em>
+            </p>
+          </div>
+
+          <div class="split-card">
+            <span class="split-tag">Objeción 3: "Solo tengo Mercado Pago / Pesos Argentinos"</span>
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.6;">
+              <strong>Solución Willie:</strong> <em>"Sí aceptamos Mercado Pago bro. Te paso el botón directo o por WhatsApp te envío el link en moneda local y te llega a tu correo en el acto con las licencias."</em>
+            </p>
+          </div>
+
+          <div class="split-card">
+            <span class="split-tag">Objeción 4: "¿Sirve para maquetas si grabo con mic barato?"</span>
+            <p style="font-size: 0.84rem; color: var(--text-muted); line-height: 1.6;">
+              <strong>Solución Willie:</strong> <em>"Está calibrado justamente para micrófonos caseros y USB (Fifine, Samson, AT2020). Limpia el soplido de fondo y le da el brillo y presencia que le falta a los micros sin cabina."</em>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bloque 4: La Gran Revelación Operativa: Link Directo vs Try Before Purchase -->
+      <div class="insight-row">
+        <div class="insight-title">
+          ⚡ LA GRAN REVELACIÓN OPERATIVA: LINK DIRECTO VS "TRY BEFORE PURCHASE"
+        </div>
+        <div class="insight-text">
+          <p style="margin-bottom: 0.65rem;">
+            <strong>El error de los 100 clientes perdidos:</strong> Al inicio, cuando alguien preguntaba por una plantilla o preset, el reflejo natural era enviar de inmediato el link de Payhip/web. <em>Resultado: Más de 100 ventas perdidas por falta de confianza, fricción técnica y duda de si funcionaría en su voz particular.</em>
+          </p>
+          <p>
+            <strong>La regla de oro de conversión actual:</strong> Escuchar el resultado en una voz de prueba ajena o en su propia maqueta destruye la objeción técnica. Cuando el comprador se escucha a sí mismo sonando profesional en cuestión de segundos, la compra deja de ser una decisión racional de $5 o $10 USD y se convierte en una necesidad emocional inmediata.
+          </p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SECCIÓN 07: COMPETIDORES Y REFERENTES -->
+    <section id="referentes">
+      <div class="section-head">
+        <div class="section-left">
+          <span class="section-num">07</span>
+          <h2 class="section-title">COMPETIDORES Y REFERENTES</h2>
+        </div>
+        <span class="status-badge">BENCHMARK DE MERCADO</span>
+      </div>
+
+      <div class="grid-3">
+        <!-- Bloque 1: Referentes Directos, Parciales & Coaching -->
+        <div class="card" style="grid-column: span 1;">
+          <div class="status-badge" style="margin-bottom: 0.75rem;">REFERENTES DE INDUSTRIA</div>
+          <h3 class="card-title">Referentes &amp; Coaching</h3>
+          <p style="font-size: 0.83rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
+            Cuentas modelo a nivel de posicionamiento, contenido, sonido y coaching de la industria:
+          </p>
+
+          <div class="ref-list">
+            <a href="https://www.instagram.com/eis.ssa/" target="_blank" rel="noopener noreferrer" class="ref-item">
+              <div class="ref-left">
+                <div class="ref-header-line">
+                  <span class="ref-handle">@eis.ssa</span>
+                  <span class="ref-type highlight">Referente</span>
+                </div>
+                <span class="ref-url">instagram.com/eis.ssa/</span>
+              </div>
+              <span class="ref-icon">↗</span>
+            </a>
+
+            <a href="https://www.instagram.com/pure.noise.audio/" target="_blank" rel="noopener noreferrer" class="ref-item">
+              <div class="ref-left">
+                <div class="ref-header-line">
+                  <span class="ref-handle">@pure.noise.audio</span>
+                  <span class="ref-type">Ref. Parcial</span>
+                </div>
+                <span class="ref-url">instagram.com/pure.noise.audio/</span>
+              </div>
+              <span class="ref-icon">↗</span>
+            </a>
+
+            <a href="https://www.instagram.com/sonitirecords/" target="_blank" rel="noopener noreferrer" class="ref-item">
+              <div class="ref-left">
+                <div class="ref-header-line">
+                  <span class="ref-handle">@sonitirecords</span>
+                  <span class="ref-type">Ref. Relativo</span>
+                </div>
+                <span class="ref-url">instagram.com/sonitirecords/</span>
+              </div>
+              <span class="ref-icon">↗</span>
+            </a>
+
+            <a href="https://www.instagram.com/mixlab.flores/" target="_blank" rel="noopener noreferrer" class="ref-item">
+              <div class="ref-left">
+                <div class="ref-header-line">
+                  <span class="ref-handle">@mixlab.flores</span>
+                  <span class="ref-type highlight">Referente</span>
+                </div>
+                <span class="ref-url">instagram.com/mixlab.flores/</span>
+              </div>
+              <span class="ref-icon">↗</span>
+            </a>
+
+            <a href="https://www.instagram.com/baileyofficial___/" target="_blank" rel="noopener noreferrer" class="ref-item">
+              <div class="ref-left">
+                <div class="ref-header-line">
+                  <span class="ref-handle">@baileyofficial___</span>
+                  <span class="ref-type highlight">Referente</span>
+                </div>
+                <span class="ref-url">instagram.com/baileyofficial___/</span>
+              </div>
+              <span class="ref-icon">↗</span>
+            </a>
+
+            <a href="https://www.instagram.com/hocusk/" target="_blank" rel="noopener noreferrer" class="ref-item">
+              <div class="ref-left">
+                <div class="ref-header-line">
+                  <span class="ref-handle">@hocusk</span>
+                  <span class="ref-type highlight">Ref. Coaching</span>
+                </div>
+                <span class="ref-url">instagram.com/hocusk/</span>
+              </div>
+              <span class="ref-icon">↗</span>
+            </a>
+
+            <a href="https://www.instagram.com/po9t.wav/" target="_blank" rel="noopener noreferrer" class="ref-item">
+              <div class="ref-left">
+                <div class="ref-header-line">
+                  <span class="ref-handle">@po9t.wav</span>
+                  <span class="ref-type highlight">Referente</span>
+                </div>
+                <span class="ref-url">instagram.com/po9t.wav/</span>
+              </div>
+              <span class="ref-icon">↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Bloque 2: Mi Nivel Aproximado -->
+        <div class="card" style="grid-column: span 1;">
+          <div class="status-badge" style="margin-bottom: 0.75rem;">BENCHMARK DIRECTO</div>
+          <h3 class="card-title">Mi Nivel Aproximado</h3>
+          <p style="font-size: 0.83rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
+            Cuentas y perfiles que se encuentran en un nivel técnico, volumen y etapa similar al proyecto actual:
+          </p>
+
+          <div class="ref-list">
+            <a href="https://www.instagram.com/soyadryano/" target="_blank" rel="noopener noreferrer" class="ref-item">
+              <div class="ref-left">
+                <div class="ref-header-line">
+                  <span class="ref-handle">@soyadryano</span>
+                  <span class="ref-type highlight">Nivel Actual</span>
+                </div>
+                <span class="ref-url">instagram.com/soyadryano/</span>
+              </div>
+              <span class="ref-icon">↗</span>
+            </a>
+
+            <a href="https://www.instagram.com/prodbymaykko/" target="_blank" rel="noopener noreferrer" class="ref-item">
+              <div class="ref-left">
+                <div class="ref-header-line">
+                  <span class="ref-handle">@prodbymaykko</span>
+                  <span class="ref-type highlight">Nivel Actual</span>
+                </div>
+                <span class="ref-url">instagram.com/prodbymaykko/</span>
+              </div>
+              <span class="ref-icon">↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Bloque 3: Nivel Intermedio -->
+        <div class="card" style="grid-column: span 1;">
+          <div class="status-badge" style="margin-bottom: 0.75rem;">ESCALA DE CRECIMIENTO</div>
+          <h3 class="card-title">Nivel Intermedio</h3>
+          <p style="font-size: 0.83rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.5;">
+            Cuentas posicionadas en una etapa intermedia de tracción, comunidad y volumen de lanzamientos:
+          </p>
+
+          <div class="ref-list">
+            <a href="https://www.instagram.com/_pineapplemusic/" target="_blank" rel="noopener noreferrer" class="ref-item">
+              <div class="ref-left">
+                <div class="ref-header-line">
+                  <span class="ref-handle">@_pineapplemusic</span>
+                  <span class="ref-type">Intermedio</span>
+                </div>
+                <span class="ref-url">instagram.com/_pineapplemusic/</span>
+              </div>
+              <span class="ref-icon">↗</span>
+            </a>
+
+            <a href="https://www.instagram.com/yezu.ve/" target="_blank" rel="noopener noreferrer" class="ref-item">
+              <div class="ref-left">
+                <div class="ref-header-line">
+                  <span class="ref-handle">@yezu.ve</span>
+                  <span class="ref-type">Intermedio</span>
+                </div>
+                <span class="ref-url">instagram.com/yezu.ve/</span>
+              </div>
+              <span class="ref-icon">↗</span>
+            </a>
+
+            <a href="https://www.instagram.com/yanzielpr/" target="_blank" rel="noopener noreferrer" class="ref-item">
+              <div class="ref-left">
+                <div class="ref-header-line">
+                  <span class="ref-handle">@yanzielpr</span>
+                  <span class="ref-type">Intermedio</span>
+                </div>
+                <span class="ref-url">instagram.com/yanzielpr/</span>
+              </div>
+              <span class="ref-icon">↗</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Botón Volver Arriba -->
+  <button id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" aria-label="Volver arriba">↑</button>
+
+  <!-- Notificación Toast -->
+  <div id="toast">Copiado al portapapeles</div>
+
+  <footer>
+    OFFSZN • Consolidado de Negocio &amp; Funnel 1K • willieinspired
+  </footer>
+
+  <script>
+    // Scroll progress bar indicator
+    window.addEventListener('scroll', () => {
+      const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      document.getElementById('scrollProgress').style.width = scrolled + '%';
+
+      // Back to top visibility
+      const btn = document.getElementById('backToTop');
+      if (winScroll > 400) {
+        btn.classList.add('visible');
+      } else {
+        btn.classList.remove('visible');
+      }
+
+      // Highlight active subnav pill based on scroll position
+      const sections = document.querySelectorAll('section');
+      const pills = document.querySelectorAll('.quick-pill');
+      let currentId = '';
+
+      sections.forEach(sec => {
+        const top = sec.offsetTop - 120;
+        if (winScroll >= top) {
+          currentId = sec.getAttribute('id');
+        }
+      });
+
+      pills.forEach(pill => {
+        pill.classList.remove('active');
+        if (pill.getAttribute('href') === '#' + currentId) {
+          pill.classList.add('active');
+        }
+      });
+    });
+
+    // Search filter for artists
+    function filterArtists() {
+      const input = document.getElementById('artistSearch');
+      if (!input) return;
+      const filter = input.value.toLowerCase();
+      const cloud = document.getElementById('artistCloud');
+      if (!cloud) return;
+      const chips = cloud.getElementsByClassName('artist-item');
+      let visibleCount = 0;
+
+      for (let i = 0; i < chips.length; i++) {
+        const text = chips[i].textContent || chips[i].innerText;
+        const matches = text.toLowerCase().indexOf(filter) > -1;
+        chips[i].style.display = matches ? '' : 'none';
+        if (matches) visibleCount++;
+      }
+
+      const countBadge = document.getElementById('artistCount');
+      if (countBadge) {
+        countBadge.innerText = visibleCount + ' de 53 artistas';
+      }
+    }
+
+    // Filter Playbook Cases
+    function filterCase(caseId, btn) {
+      const buttons = document.querySelectorAll('.dialogue-filter-btn');
+      buttons.forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+
+      const allCases = ['caso1', 'caso2', 'caso3', 'caso4', 'caso5'];
+      if (caseId === 'all') {
+        allCases.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = 'block';
+        });
+      } else {
+        allCases.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+            el.style.display = (id === caseId) ? 'block' : 'none';
+          }
+        });
+        const target = document.getElementById(caseId);
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    }
+
+    // Copy script snippet to clipboard
+    function copyText(btn) {
+      const snippet = btn.closest('.script-snippet');
+      if (!snippet) return;
+      const textEl = snippet.querySelector('.script-snippet-text');
+      if (!textEl) return;
+
+      const text = textEl.innerText.trim();
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('✓ Mensaje copiado');
+        const oldText = btn.innerText;
+        btn.innerText = 'Copiado!';
+        setTimeout(() => {
+          btn.innerText = oldText;
+        }, 1800);
+      }).catch(() => {
+        showToast('Error al copiar');
+      });
+    }
+
+    // Toast helper
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2200);
+    }
+
+    // Mobile Nav Toggle
+    function toggleNav() {
+      const nav = document.getElementById('mainNav');
+      const btn = document.getElementById('navHamburger');
+      const isOpen = nav.classList.toggle('nav-open');
+      btn.classList.toggle('open', isOpen);
+      btn.setAttribute('aria-expanded', isOpen);
+    }
+
+    function closeNav() {
+      const nav = document.getElementById('mainNav');
+      const btn = document.getElementById('navHamburger');
+      nav.classList.remove('nav-open');
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+
+    // Close nav when clicking outside
+    document.addEventListener('click', function(e) {
+      const nav = document.getElementById('mainNav');
+      const btn = document.getElementById('navHamburger');
+      if (!nav || !btn) return;
+      if (nav.classList.contains('nav-open') && !nav.contains(e.target) && !btn.contains(e.target)) {
+        closeNav();
+      }
+    });
+  </script>
+</body>
+</html>

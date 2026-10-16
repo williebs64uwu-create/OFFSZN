@@ -273,7 +273,7 @@ app.get('/env.js', (req, res) => {
         window.EMAILJS_PUBLIC_KEY = "${EMAILJS_PUBLIC_KEY || 'If_WAVcuXiGSPp2SB'}";
         window.PAYPAL_CLIENT_ID = "${process.env.PAYPAL_CLIENT_ID || ''}";
         window.IMAGEKIT_URL_ENDPOINT = "${process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/offszn/'}";
-        window.META_PIXEL_ID = "${META_PIXEL_ID || ''}";
+        window.META_PIXEL_ID = "${META_PIXEL_ID || '1608823860672348'}";
     `);
 });
 
@@ -732,6 +732,11 @@ app.use('/music-raw-to-defined', express.static(musicPath, {
         res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=2592000');
     }
 }));
+
+// Video Omni Beat hospedado en Cloudflare R2
+app.get(['/videos/omni-beat.mp4', '/videos/omni-beat'], (req, res) => {
+    res.redirect(307, '/api/r2-public/videos/omni-beat.mp4');
+});
 
 const videosPath = path.join(rootPath, 'videos');
 app.use('/videos', express.static(videosPath, {

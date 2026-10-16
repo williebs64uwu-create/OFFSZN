@@ -84,7 +84,7 @@ export const IMAGEKIT_URL_ENDPOINT = cleanConfigValue(process.env.IMAGEKIT_URL_E
 export const R2_CURRENT_VERSION = 'v4';
 
 // META PIXEL & CONVERSIONS API (CAPI)
-export const META_PIXEL_ID = cleanConfigValue(process.env.META_PIXEL_ID);
+export const META_PIXEL_ID = cleanConfigValue(process.env.META_PIXEL_ID) || '1608823860672348';
 export const META_CAPI_ACCESS_TOKEN = cleanConfigValue(process.env.META_CAPI_ACCESS_TOKEN);
 export const META_GRAPH_API_VERSION = cleanConfigValue(process.env.META_GRAPH_API_VERSION) || 'v21.0';
 export const META_TEST_EVENT_CODE = cleanConfigValue(process.env.META_TEST_EVENT_CODE);

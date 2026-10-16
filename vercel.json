@@ -1,12 +1,49 @@
 {
+  "cleanUrls": true,
+  "trailingSlash": false,
   "functions": {
     "api/index.js": {
-      "includeFiles": "{*.html,*.txt,*.xml,_headers,favicon*,css/**,script/**,components/**,images/**,libs/**,pages/**,plugin*/**,legal/**,metodo/**,owner/**,recursos/**,upload/**,ayuda/**,willie*/**,cuenta/**,comunidad/**,store-builder/**,videos/**}",
-      "excludeFiles": "{**/*.wav,**/*.docx,**/*.psd,**/*.map,**/*.pkg,videos/video_para_modal.mp4}",
+      "includeFiles": "{*.html,*.xml,server/public/**,willieinspired/**}",
+      "excludeFiles": "{**/*.wav,**/*.docx,**/*.psd,**/*.map,**/*.pkg,plugins/**,videos/**,images/**,willieimages/**,downloads/**,cursos/**,music-raw-to-defined/**,Carrusel_Instagram/**,scratch/**}",
       "maxDuration": 60
     }
   },
+  "headers": [
+    {
+      "source": "/(css|script|images|willieimages|libs|components|recursos|videos|pages)/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(ico|png|jpg|jpeg|webp|svg|woff2|woff|ttf|mp4|mp3|m4a)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800, s-maxage=2592000, immutable"
+        }
+      ]
+    }
+  ],
   "rewrites": [
+    { "source": "/login", "destination": "/pages/login" },
+    { "source": "/register", "destination": "/pages/register" },
+    { "source": "/cart", "destination": "/pages/cart" },
+    { "source": "/product", "destination": "/producto" },
+    { "source": "/recursos/x-flow-analyzer", "destination": "/plugins/x-flow-analyzer" },
+    { "source": "/plugin/easy-mix", "destination": "/plugins/easy-mix" },
+    { "source": "/plugin/easy-pitch", "destination": "/plugins/easy-pitch" },
+    { "source": "/plugin/omni", "destination": "/plugins/omni" },
+    { "source": "/plugin/vocal-preset", "destination": "/plugins/vocal-preset" },
+    { "source": "/kanban", "destination": "/metodo/etapa-inicial/metodo-kanban/kanban" },
+    { "source": "/kanban-offszn", "destination": "/metodo/etapa-inicial/metodo-kanban/kanban-offszn" },
+    { "source": "/kanban-upc", "destination": "/metodo/etapa-inicial/metodo-kanban/kanban-upc" },
+    { "source": "/kanban-pendientes", "destination": "/metodo/etapa-inicial/metodo-kanban/kanban-pendientes" },
+    { "source": "/videos/omni-beat.mp4", "destination": "/api/r2-public/videos/omni-beat.mp4" },
+    { "source": "/videos/omni-beat", "destination": "/api/r2-public/videos/omni-beat.mp4" },
     { "source": "/(.*)", "destination": "/api" }
   ]
 }

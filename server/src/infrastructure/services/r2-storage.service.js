@@ -395,6 +395,35 @@ export const getPresignedDownloadUrl = async (key, expiresIn = 3600, version = R
 };
 
 /**
+ * Genera una URL firmada de R2 optimizada para streaming público inline (audio/video/imágenes).
+ * Sin Content-Disposition: attachment, para que el navegador reproduzca audio/video
+ * o muestre imágenes directamente desde Cloudflare R2 sin consumir Fast Origin Transfer de Vercel.
+ */
+export const getPresignedPublicMediaUrl = async (key, expiresIn = 86400, version = R2_CURRENT_VERSION) => {
+    try {
+        if (version === 'supabase') {
+            return getPublicUrl(key, 'supabase');
+        }
+
+        const { client, bucket } = getClientAndBucket(version);
+        if (!client) throw new Error(`R2 Client for version ${version} not found`);
+
+        let cleanKey = key;
+        while (cleanKey.startsWith('/')) cleanKey = cleanKey.substring(1);
+
+        const command = new GetObjectCommand({
+            Bucket: bucket,
+            Key: cleanKey
+        });
+
+        return await getSignedUrl(client, command, { expiresIn });
+    } catch (error) {
+        console.error(`Error in getPresignedPublicMediaUrl (R2 ${version}) for ${key}:`, error.message);
+        return null;
+    }
+};
+
+/**
  * URL pública (Solo para V2 por ahora si está público, o V1 si tiene dominio, o Supabase)
  */
 export const getPublicUrl = (key, version = R2_CURRENT_VERSION) => {

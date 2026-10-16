@@ -3065,10 +3065,10 @@
 
                             <div
                                 style="display: flex; align-items: baseline; justify-content: center; gap: 8px; margin-bottom: 24px;">
-                                <span
+                                <span id="vocal-preset-original-price"
                                     style="font-size: 1.3rem; text-decoration: line-through; color: rgba(255,255,255,0.3); font-weight: 500;">$25</span>
                                 <span id="vocal-preset-price-val"
-                                    style="font-size: 3rem; font-weight: 800; color: #fff;">$5</span>
+                                    style="font-size: 3rem; font-weight: 800; color: #fff;">$17</span>
                                 <span style="font-size: 1rem; color: #888;">único</span>
                             </div>
 
@@ -3472,31 +3472,40 @@
             }
         })();
 
-        // ── A/B TESTING ENGINE (2 TIERS: $5 y $10 USD) ──
+        // ── A/B TESTING ENGINE: $17 y $25 USD (respetando caché previa de compradores recientes) ──
         (function initABTesting() {
             const STORAGE_KEY = 'offszn_ab_vocal_preset_price_v1';
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
-            const validTiers = [5, 10];
+            const validTiers = [17, 25];
+            const originalMap = { 5: 25, 10: 25, 17: 25, 25: 35 };
 
             let assignedPrice;
             const parsedForced = parseInt(forcedPrice, 10);
-            if (forcedPrice && validTiers.includes(parsedForced)) {
+            if (forcedPrice && (validTiers.includes(parsedForced) || parsedForced > 0)) {
                 assignedPrice = parsedForced;
                 localStorage.setItem(STORAGE_KEY, assignedPrice);
             } else {
                 let saved = localStorage.getItem(STORAGE_KEY);
                 let parsedSaved = parseInt(saved, 10);
-                if (validTiers.includes(parsedSaved)) {
+                // Si el visitante ya tiene un precio guardado en su navegador (compradores recientes), NO se borra
+                if (Number.isFinite(parsedSaved) && parsedSaved > 0) {
                     assignedPrice = parsedSaved;
                 } else {
-                    // Ponderación: 50% para $5, 50% para $10
-                    assignedPrice = Math.random() < 0.5 ? 5 : 10;
+                    // Nuevos visitantes: 17 y 25 USD (50/50)
+                    assignedPrice = Math.random() < 0.5 ? 17 : 25;
                     localStorage.setItem(STORAGE_KEY, assignedPrice);
                 }
             }
 
+            const originalPrice = originalMap[assignedPrice] || 25;
+            const solesMap = { 5: 19, 10: 38, 17: 65, 25: 95 };
+            const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
+
+            window.AB_VARIANT = 'price_' + assignedPrice;
+            window.AB_ORIGINAL_PRICE = originalPrice;
             window.CURRENT_PROMO_PRICE = assignedPrice;
+            window.YAPE_FIXED_PRICE_PEN = solesPrice;
             window.PLUGIN_ID = 905;
             window.PLUGIN_NAME = 'Vocal Preset';
 
@@ -3523,13 +3532,13 @@
                 const priceEl = document.getElementById('vocal-preset-price-val');
                 if (priceEl) priceEl.innerText = '$' + assignedPrice;
 
-                const solesMap = { 5: 19, 10: 38 };
-                const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
+                const origEl = document.getElementById('vocal-preset-original-price');
+                if (origEl) origEl.innerText = '$' + originalPrice;
 
                 const waLinks = document.querySelectorAll('a[href*="wa.me"]');
                 waLinks.forEach(link => {
                     let currentHref = link.getAttribute('href');
-                    if (currentHref.includes('text=')) {
+                    if (currentHref && currentHref.includes('text=')) {
                         let parts = currentHref.split('text=');
                         let rawDecoded = decodeURIComponent(parts[1]);
                         let isYape = rawDecoded.toLowerCase().includes('yape') || link.innerText.toLowerCase().includes('yape');
@@ -3541,7 +3550,7 @@
                         if (isYape) {
                             link.setAttribute('href', parts[0] + 'text=' + encodeURIComponent('Hola, quiero comprar el plugin Vocal Preset por Yape ($' + assignedPrice + ' USD / S/ ' + solesPrice + ' soles)'));
                         } else if (isMp) {
-                            link.setAttribute('href', parts[0] + 'text=' + encodeURIComponent('Hola Willie, quiero comprar el plugin Vocal Preset por Mercado Pago'));
+                            link.setAttribute('href', parts[0] + 'text=' + encodeURIComponent('Hola Willie, quiero comprar el plugin Vocal Preset por Mercado Pago ($' + assignedPrice + ' USD)'));
                         } else if (isBinance) {
                             link.setAttribute('href', parts[0] + 'text=' + encodeURIComponent('Hola, quiero pagar con Binance el plugin Vocal Preset ($' + assignedPrice + ' USD)'));
                         } else {
@@ -3674,6 +3683,7 @@
     <script src="https://sdk.mercadopago.com/js/v2"></script>
     <script src="/script/plugin-checkout.js?v=20261002"></script>
     <script src="/script/yape-checkout.js?v=20261002"></script>
+    <script src="/script/pay-click-tracker.js?v=20261015"></script>
 </body>
 
 </html>
