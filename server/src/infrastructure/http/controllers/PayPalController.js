@@ -295,7 +295,7 @@ export const createPayPalOrder = async (req, res) => {
 
             let variantPrice = productObj.price_basic || 10;
             const requestedCustomPrice = parseFloat(req.body.customPrice || req.body.abPrice);
-            if (requestedCustomPrice && [5, 10, 15, 17, 20, 25].includes(requestedCustomPrice)) {
+            if (requestedCustomPrice && [5, 8, 10, 15, 17, 20, 25].includes(requestedCustomPrice)) {
                 variantPrice = requestedCustomPrice;
             }
 
@@ -381,10 +381,10 @@ export const createPayPalOrder = async (req, res) => {
         console.log('[PayPalOrder] Producer Map entries:', Array.from(producerMap.entries()).map(([id, p]) => ({ id, email: p.email, nickname: p.nickname })));
 
         // --- NEW: Identify Producers without PayPal ---
-        // Plugin IDs 899-905 are OFFSZN-owned plugins (Easy Mix, Easy Master, Inka Kola, Coca-Cola, Vocal Preset, Easy Pitch, Omni).
+        // Plugin IDs 899-905, 5000-5002 are OFFSZN-owned plugins (Easy Mix, Easy Master, Inka Kola, Coca-Cola, Vocal Preset, Easy Pitch, Omni, Cassette).
         // They have producer_id = null or are owned by OFFSZN and are handled by the plugin override
         // logic below — they don't require a third-party producer PayPal email.
-        const OFFSZN_PLUGIN_IDS = new Set(['899', '900', '901', '902', '903', '905', '5000', '5001']);
+        const OFFSZN_PLUGIN_IDS = new Set(['899', '900', '901', '902', '903', '905', '5000', '5001', '5002']);
         const missingPaymentProducers = [];
         cartItems.forEach(item => {
             const prodId = String(item.product?.id || '');
@@ -470,12 +470,13 @@ export const createPayPalOrder = async (req, res) => {
                 return; // Skip regular DB price logic for this product
             }
 
-            // EASY MIX / EASY MASTER / INKA KOLA / VOCAL PRESET / EASY PITCH / OMNI OVERRIDE (IDs 899/900/901/902/905/5000/5001):
+            // EASY MIX / EASY MASTER / INKA KOLA / VOCAL PRESET / EASY PITCH / OMNI / CASSETTE OVERRIDE (IDs 899/900/901/902/905/5000/5001/5002):
             // 100% goes to OFFSZN — no split, no partner. Price comes from A/B test (variant_price).
             // Do NOT use DB price_basic — it may be wrong or outdated.
-            if (['899', '900', '901', '902', '905', '5000', '5001'].includes(prodIdToFind)) {
-                const pluginPrice = parseFloat(item.variant_price) || 10;
-                const validPluginPrice = [5, 10, 15, 17, 20, 25].includes(pluginPrice) ? pluginPrice : 10;
+            if (['899', '900', '901', '902', '905', '5000', '5001', '5002'].includes(prodIdToFind)) {
+                const defaultPluginPrice = prodIdToFind === '5002' ? 8 : (['900', '902', '5000'].includes(prodIdToFind) ? 5 : (prodIdToFind === '5001' ? 17 : 10));
+                const pluginPrice = parseFloat(item.variant_price) || defaultPluginPrice;
+                const validPluginPrice = [5, 8, 10, 15, 17, 20, 25].includes(pluginPrice) ? pluginPrice : defaultPluginPrice;
 
                 subtotal += validPluginPrice;    // 100% to OFFSZN
                 verifiedCartItems.push({ ...item, variant_price: validPluginPrice });
@@ -685,7 +686,7 @@ export const createPayPalOrder = async (req, res) => {
 
         verifiedCartItems.forEach(item => {
             const prodIdStr = String(item.product?.id || '');
-            const OFFSZN_PLUGIN_IDS_SET = new Set(['899', '900', '901', '902', '903', '905', '5000', '5001']);
+            const OFFSZN_PLUGIN_IDS_SET = new Set(['899', '900', '901', '902', '903', '905', '5000', '5001', '5002']);
 
             // OFFSZN Plugins (899-905): producer_id is null — assign directly to OFFSZN merchant ID.
             // Coca-Cola (903) split was already resolved above (subtotal=partnerShare, serviceFee=offsznShare).
@@ -793,6 +794,7 @@ export const createPayPalOrder = async (req, res) => {
             if (idStr === '900' || (item.product?.name || '').toLowerCase().includes('easy master')) return 'easy_master';
             if (idStr === '902' || (item.product?.name || '').toLowerCase().includes('inka kola')) return 'inka_kola';
             if (idStr === '903' || (item.product?.name || '').toLowerCase().includes('coca')) return 'coca_cola';
+            if (idStr === '5002' || (item.product?.name || '').toLowerCase().includes('cassette')) return 'cassette';
             if (idStr === '5001' || (item.product?.name || '').toLowerCase().includes('omni')) return 'omni';
             if (idStr === '5000' || (item.product?.name || '').toLowerCase().includes('easy pitch')) return 'easy_pitch';
             if (idStr === '905' || (item.product?.name || '').toLowerCase().includes('vocal')) return 'vocal_preset';
@@ -1414,7 +1416,8 @@ export const capturePayPalOrder = async (req, res) => {
                         const isVocalPreset = prodName.toLowerCase().includes('vocal') || prodId === '905';
                         const isEasyPitch = prodName.toLowerCase().includes('easy pitch') || prodName.toLowerCase().includes('easypitch') || prodId === '5000';
                         const isOmni = prodName.toLowerCase().includes('omni') || prodId === '5001';
-                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni;
+                        const isCassette = prodName.toLowerCase().includes('cassette') || prodId === '5002';
+                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette;
 
                         // A. Notify Client (Receipt) — includes serial key for plugin purchases
                         const serialKeySection = (isPlugin && keysGenerated.length > 0) ? `
@@ -1461,6 +1464,11 @@ export const capturePayPalOrder = async (req, res) => {
                                 downloadLinks = {
                                     win: 'https://drive.google.com/file/d/11Zw_4w-vWUjq3b2bImlyQjO2rzXitqLO/view?usp=sharing',
                                     mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
+                                };
+                            } else if (isCassette) {
+                                downloadLinks = {
+                                    win: 'https://wa.me/51952467395?text=Hola,%20acabo%20de%20comprar%20Cassette%20por%20PayPal%20y%20quiero%20el%20instalador',
+                                    mac: '#'
                                 };
                             } else {
                                 downloadLinks = {
@@ -1659,6 +1667,7 @@ export const capturePayPalOrder = async (req, res) => {
                         if (idStr === '900' || (item.product?.name || '').toLowerCase().includes('easy master')) return 'easy_master';
                         if (idStr === '902' || (item.product?.name || '').toLowerCase().includes('inka kola')) return 'inka_kola';
                         if (idStr === '903' || (item.product?.name || '').toLowerCase().includes('coca')) return 'coca_cola';
+                        if (idStr === '5002' || (item.product?.name || '').toLowerCase().includes('cassette')) return 'cassette';
                         if (idStr === '5001' || (item.product?.name || '').toLowerCase().includes('omni')) return 'omni';
                         if (idStr === '5000' || (item.product?.name || '').toLowerCase().includes('easy pitch')) return 'easy_pitch';
                         if (idStr === '905' || (item.product?.name || '').toLowerCase().includes('vocal')) return 'vocal_preset';
@@ -2431,12 +2440,16 @@ export const handlePayPalWebhook = async (req, res) => {
             const hasDeeserInItems = items.some(item => isDeeserText(item.name));
             const isCleanText = (t) => /easy ?clean/.test(String(t || '').toLowerCase());
             const hasCleanInItems = items.some(item => isCleanText(item.name));
+            const isCassetteText = (t) => /cassette/.test(String(t || '').toLowerCase());
+            const hasCassetteInItems = items.some(item => isCassetteText(item.name));
             if (isCleanText(description) || hasCleanInItems) {
                 pluginToGenerate = 'Easy Clean';
             } else if (isDeeserText(description) || hasDeeserInItems) {
                 pluginToGenerate = 'Easy Deeser';
             } else if (description.toLowerCase().includes('easy level') || description.toLowerCase().includes('easylevel') || hasLevelInItems) {
                 pluginToGenerate = 'Easy Level';
+            } else if (isCassetteText(description) || hasCassetteInItems) {
+                pluginToGenerate = 'Cassette';
             } else if (description.toLowerCase().includes('omni') || hasOmniInItems) {
                 pluginToGenerate = 'Omni Plugin';
             } else if (description.toLowerCase().includes('easy pitch') || description.toLowerCase().includes('easypitch') || hasPitchInItems) {
@@ -2470,7 +2483,7 @@ export const handlePayPalWebhook = async (req, res) => {
                 matchedUserId = matchedUser.id;
             }
 
-            const productId = pluginToGenerate === 'Omni Plugin' ? 5001 : (pluginToGenerate === 'Easy Pitch' ? 5000 : (pluginToGenerate === 'Easy Master' ? 900 : (pluginToGenerate === 'Vocal Preset' ? 905 : 899)));
+            const productId = pluginToGenerate === 'Cassette' ? 5002 : (pluginToGenerate === 'Omni Plugin' ? 5001 : (pluginToGenerate === 'Easy Pitch' ? 5000 : (pluginToGenerate === 'Easy Master' ? 900 : (pluginToGenerate === 'Vocal Preset' ? 905 : 899))));
 
             // Create Order Record to prevent double-processing and show in "Mis Compras"
             let { data: newOrder, error: orderError } = await supabase
