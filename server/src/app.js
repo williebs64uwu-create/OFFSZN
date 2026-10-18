@@ -1719,7 +1719,9 @@ app.use((req, res, next) => {
         return res.status(404).type('text/plain').send('Image Not Found');
     }
 
-    // Servir 404.html con status 404 real
+    // Servir 404.html con status 404 real y cache en Edge para que los bots no despierten a Lambda
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+    res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=86400');
     res.status(404).sendFile(path.join(rootPath, '404.html'));
 });
 
