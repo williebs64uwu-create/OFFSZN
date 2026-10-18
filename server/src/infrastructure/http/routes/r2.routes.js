@@ -396,7 +396,9 @@ router.get(/\/r2-public\/(.*)/, async (req, res) => {
         }
 
         // 0. LOCAL ASSET DIRECT HANDLER: If key is a local file (e.g. willieimages/, images/, plugins/), redirect to static URL
-        if (key.startsWith('willieimages/') || key.startsWith('images/') || key.startsWith('plugins/') || key.startsWith('plugin/') || key.startsWith('videos/') || key.startsWith('metodo/')) {
+        // (NOTE: .mp4 videos are strictly excluded so they stream from Cloudflare R2 presigned URLs with 0 origin bandwidth)
+        const isVideoFile = key.toLowerCase().endsWith('.mp4');
+        if (!isVideoFile && (key.startsWith('willieimages/') || key.startsWith('images/') || key.startsWith('plugins/') || key.startsWith('plugin/') || key.startsWith('videos/') || key.startsWith('metodo/'))) {
             let rootPath = process.env.VERCEL ? process.cwd() : process.cwd();
             if (!fs.existsSync(path.join(rootPath, 'willieimages')) && fs.existsSync(path.join(rootPath, '../willieimages'))) {
                 rootPath = path.resolve(rootPath, '../');

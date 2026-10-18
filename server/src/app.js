@@ -747,9 +747,21 @@ app.use('/music-raw-to-defined', express.static(musicPath, {
     }
 }));
 
-// Video Omni Beat hospedado en Cloudflare R2
+// Videos hospedados en Cloudflare R2 (cero consumo de Fast Origin Transfer en Vercel)
 app.get(['/videos/omni-beat.mp4', '/videos/omni-beat'], (req, res) => {
     res.redirect(307, '/api/r2-public/videos/omni-beat.mp4');
+});
+app.get('/videos/:file', (req, res, next) => {
+    if (req.params.file.endsWith('.mp4')) {
+        return res.redirect(307, `/api/r2-public/videos/${req.params.file}`);
+    }
+    next();
+});
+app.get('/plugins/:file', (req, res, next) => {
+    if (req.params.file.endsWith('.mp4')) {
+        return res.redirect(307, `/api/r2-public/plugins/${req.params.file}`);
+    }
+    next();
 });
 
 const videosPath = path.join(rootPath, 'videos');
@@ -889,7 +901,8 @@ app.use(express.static(rootPath, {
     maxAge: '1d',
     setHeaders: (res, filePath) => {
         if (filePath.endsWith('.html')) {
-            res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+            res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=86400, stale-while-revalidate=86400');
+            res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400');
         } else {
             if (filePath.endsWith('.css')) {
                 res.setHeader('Content-Type', 'text/css; charset=utf-8');
