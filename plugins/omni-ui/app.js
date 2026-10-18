@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const state = {
     mode: 'spectrum', // 'spectrum' | 'stereo' | 'waveform'
     globalMode: 'beat', // 'beat' | 'master'
-    phaseMeterMode: 'multiband', // 'multiband' | 'single'
+    phaseMeterMode: 'single', // 'multiband' | 'single' (clic en las barras para alternar)
     simulating: true,
     params: {
       loudness: 50,
@@ -28,8 +28,17 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // --- Inicialización de Canvas del Visualizador ---
+  // Página web: la portada fuerza un tema con ?theme=silver&led=purple (no toca el tema guardado del visitante)
+  const FORCED_THEME = (function () {
+    try {
+      const q = new URLSearchParams(location.search), c = q.get('theme'), l = q.get('led');
+      return c && l ? [c, l] : null;
+    } catch (e) { return null; }
+  })();
+
   const canvas = document.getElementById('visualizerCanvas');
   const ctx = canvas.getContext('2d');
+  let stereoReady = false;   // el goniómetro conserva la estela: no se borra el lienzo entre cuadros
 
   // Alternar modo del medidor de correlación (Multibanda / Banda Única Master) al hacer clic sobre su zona
   canvas.addEventListener('click', (e) => {
@@ -40,13 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const w = rect.width;
     const h = rect.height;
 
-    const meterW = 46;
-    const meterH = Math.min(185, h * 0.78);
-    const meterX = w - meterW - 12;
-    const meterY = (h - meterH) / 2;
-
-    if (x >= meterX && x <= meterX + meterW && y >= meterY && y <= meterY + meterH) {
+    // Zona de las barras de correlación (parte inferior del visor estéreo)
+    if (y >= h - stereoCorrBarsHeight() && x >= 0 && x <= w) {
       state.phaseMeterMode = (state.phaseMeterMode === 'multiband') ? 'single' : 'multiband';
+      stereoReady = false;
     }
   });
 
@@ -60,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rect = canvas.parentElement.getBoundingClientRect();
     canvas.width = rect.width * window.devicePixelRatio;
     canvas.height = rect.height * window.devicePixelRatio;
+    stereoReady = false;
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 
     if (particleCanvas) {
@@ -92,7 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // El espectro se remapea a 256 puntos en escala LOGARÍTMICA 20 Hz–20 kHz (coincide con los rótulos del eje) y se suaviza.
   // ===========================================================================
   const SPEC_POINTS = 256;
-  const specSmooth = new Float32Array(SPEC_POINTS);
+  const specSmooth = new Float32Array(SPEC_POINTS);   // valor mostrado (se mueve cada fotograma, 60 fps)
+  const specTarget = new Float32Array(SPEC_POINTS);   // último espectro recibido (llega a 30 Hz)
+  const specOut = new Uint8Array(SPEC_POINTS);
+  let haveSpecTarget = false;
+  let frameDt = 1 / 60;                               // segundos entre fotogramas del visor
   window.__OMNI_TEL__ = null;
 
   function onTelemetry(t) {
@@ -102,17 +113,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (Array.isArray(t.fft) && t.fft.length > 1 && t.sr > 0) {
       const bins = t.fft.length;
       const binHz = (t.sr / 2) / bins;
-      const out = new Uint8Array(SPEC_POINTS);
       for (let i = 0; i < SPEC_POINTS; i++) {
         const f = 20 * Math.pow(1000, i / (SPEC_POINTS - 1));        // 20 Hz → 20 kHz
         const pos = Math.min(bins - 1, f / binHz);
         const i0 = Math.floor(pos), i1 = Math.min(bins - 1, i0 + 1), fr = pos - i0;
-        const v = t.fft[i0] * (1 - fr) + t.fft[i1] * fr;
-        // Ataque rápido / caída lenta (aspecto de analizador profesional)
-        specSmooth[i] = v > specSmooth[i] ? specSmooth[i] + (v - specSmooth[i]) * 0.6 : specSmooth[i] + (v - specSmooth[i]) * 0.18;
-        out[i] = specSmooth[i];
+        specTarget[i] = t.fft[i0] * (1 - fr) + t.fft[i1] * fr;
       }
-      window.__OMNI_CURRENT_FFT__ = out;
+      if (!haveSpecTarget) { specSmooth.set(specTarget); haveSpecTarget = true; window.__OMNI_CURRENT_FFT__ = specOut; }
     }
 
     if (typeof t.lufsIn === 'number' && typeof t.lufsOut === 'number')
@@ -364,9 +371,46 @@ document.addEventListener('DOMContentLoaded', () => {
   const spectrogramHistory = [];
   const maxHistory = 100;
 
+  // Suavizado por fotograma hacia el último espectro recibido: ataque rápido / caída lenta (analizador profesional),
+  // independiente de la tasa de fotogramas, para que el movimiento sea continuo aunque la telemetría llegue a 30 Hz.
+  function stepSpectrum(dt) {
+    if (!haveSpecTarget) return;
+    const up = 1 - Math.exp(-dt / 0.030), down = 1 - Math.exp(-dt / 0.150);
+    for (let i = 0; i < SPEC_POINTS; i++) {
+      const d = specTarget[i] - specSmooth[i];
+      specSmooth[i] += d * (d > 0 ? up : down);
+      specOut[i] = specSmooth[i] + 0.5;
+    }
+  }
+
+  // Contador de fotogramas de diagnóstico (Ctrl+Shift+F): para comparar la fluidez dentro de FL Studio
+  let fpsEl = null, fpsN = 0, fpsT0 = 0, fpsWorst = 0, fpsLast = 0;
+  function fpsTick(t) {
+    if (fpsLast) fpsWorst = Math.max(fpsWorst, t - fpsLast);
+    fpsLast = t; fpsN++;
+    if (!fpsT0) fpsT0 = t;
+    if (t - fpsT0 >= 1000) {
+      fpsEl.textContent = `${Math.round(fpsN * 1000 / (t - fpsT0))} fps · peor ${Math.round(fpsWorst)} ms`;
+      fpsN = 0; fpsT0 = t; fpsWorst = 0;
+    }
+  }
+  document.addEventListener('keydown', (e) => {
+    if (!(e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f')) return;
+    if (fpsEl) { fpsEl.remove(); fpsEl = null; return; }
+    fpsEl = document.createElement('div');
+    fpsEl.style.cssText = 'position:fixed;left:8px;bottom:6px;z-index:99999;font:600 10px monospace;color:#fff;background:#000c;padding:2px 6px;border-radius:4px;pointer-events:none';
+    document.body.appendChild(fpsEl); fpsN = 0; fpsT0 = 0; fpsWorst = 0; fpsLast = 0;
+  });
+
   // --- Bucle Principal de Animación (60 FPS) ---
+  let lastFrameT = 0;
   function renderVisualizer() {
     requestAnimationFrame(renderVisualizer);
+    const tNow = performance.now();
+    frameDt = lastFrameT ? Math.min(0.1, Math.max(0.001, (tNow - lastFrameT) / 1000)) : 1 / 60;
+    lastFrameT = tNow;
+    stepSpectrum(frameDt);
+    if (fpsEl) fpsTick(tNow);
 
     // Animación continua de partículas de fondo si la skin gradiente está activa
     updateAndRenderParticles();
@@ -375,9 +419,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const w = canvas.width / window.devicePixelRatio;
     const h = canvas.height / window.devicePixelRatio;
 
-    // Fondo negro absoluto para el visor del canvas
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, w, h);
+    // Fondo negro absoluto para el visor del canvas (en Estéreo se conserva la estela del cuadro anterior)
+    if (state.mode !== 'stereo') stereoReady = false;
+    if (!(state.mode === 'stereo' && stereoReady)) {
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, w, h);
+    }
 
     let freqData;
     if (window.__OMNI_CURRENT_FFT__) {
@@ -427,71 +474,93 @@ document.addEventListener('DOMContentLoaded', () => {
   function mixRgb(a, b, t) { return [0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * t)); }
   const isGradientTheme = () => (state.theme && typeof state.theme.led === 'string' && state.theme.led.startsWith('gradient-'));
 
-  function drawSpectrum(ctx, w, h, data) {
-    drawTechnicalGrid(ctx, w, h);
+  // ===========================================================================
+  // MEDIDORES (Espectro y Estéreo) — diseño tomado de Orb, con los colores del tema de Omni.
+  // Espectro: telemetría de 256 puntos log 20 Hz–20 kHz; byte 0..255 = -100…+6 dB (ver SpectrumAnalyzer.cpp).
+  // Estéreo: nube M/S "escalada" con estela, guías circulares + diagonales L/R y barras de correlación.
+  // ===========================================================================
+  const SPEC_DB_LO = -100, SPEC_DB_HI = 6, SPEC_DB_SPAN = SPEC_DB_HI - SPEC_DB_LO;
+  const specByteToDb = (v) => v / 255 * SPEC_DB_SPAN + SPEC_DB_LO;
+  const mClamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const specHoldDb = new Float32Array(SPEC_POINTS).fill(SPEC_DB_LO);
+  const METER_FONT = '"Space Grotesk", system-ui, sans-serif';
 
+  function drawSpectrum(ctx, w, h, data) {
     const accentColor = getActiveAccentColor();
     const c1 = hexRgb(accentColor), c2 = hexRgb(getActiveAccentColor2());
-    // Deriva lenta (~20 s por ciclo) para que el degradado "respire" sin distraer; en colores lisos no cambia nada
-    const drift = isGradientTheme() ? 0.18 * Math.sin(performance.now() / 3200) : 0;
+    const N = Math.min(data.length, SPEC_POINTS);
+    const top = 8, bot = h - 18, hh = bot - top;
+    const yOf = (db) => top + (SPEC_DB_HI - mClamp(db, SPEC_DB_LO, SPEC_DB_HI)) / SPEC_DB_SPAN * hh;
+    const xOfHz = (f) => Math.log(f / 20) / Math.log(1000) * w;
 
+    // Cuadrícula: dB (horizontales) y frecuencias (verticales, escala log)
     ctx.save();
-    ctx.shadowBlur = 5;
-    ctx.shadowColor = accentColor;
-
-    ctx.beginPath();
-    ctx.moveTo(0, h);
-
-    const points = [];
-    const len = data.length;
-    for (let i = 0; i < len; i++) {
-      const x = (i / len) * w;
-      const v = data[i] / 255;
-      const y = h - v * (h * 0.82) - 10;
-      points.push({ x, y });
+    ctx.font = `10px ${METER_FONT}`;
+    ctx.lineWidth = 1;
+    for (let d = -80; d <= 0; d += 20) {
+      const y = yOf(d);
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.textAlign = 'left';
+      ctx.fillText(String(d), 4, y - 3);
     }
-
-    // Dibujar Curva Suave
-    ctx.moveTo(0, h);
-    for (let i = 0; i < points.length - 1; i++) {
-      const xc = (points[i].x + points[i + 1].x) / 2;
-      const yc = (points[i].y + points[i + 1].y) / 2;
-      ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
-    }
-
-    ctx.lineTo(w, h);
-    ctx.closePath();
-
-    // Relleno: color del tema de izquierda (graves) a derecha (agudos) y desvanecido hacia abajo
-    const hGrad = ctx.createLinearGradient(-w * drift, 0, w * (1 - drift), 0);
-    hGrad.addColorStop(0, rgba(c1, 0.75));
-    hGrad.addColorStop(1, rgba(c2, 0.75));
-    ctx.fillStyle = hGrad;
-    ctx.fill();
-    const fade = ctx.createLinearGradient(0, 0, 0, h);
-    fade.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    fade.addColorStop(0.45, 'rgba(0, 0, 0, 0.45)');
-    fade.addColorStop(1, 'rgba(0, 0, 0, 0.95)');
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = fade;
-    ctx.fill();
-
-    const sGrad = ctx.createLinearGradient(-w * drift, 0, w * (1 - drift), 0);
-    sGrad.addColorStop(0, rgba(c1, 1));
-    sGrad.addColorStop(1, rgba(c2, 1));
-    ctx.shadowBlur = 5;
-    ctx.strokeStyle = sGrad;
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
+    const narrow = w < 420;
+    [[50, '50'], [100, '100'], [200, '200'], [500, '500'], [1000, '1k'], [2000, '2k'], [5000, '5k'], [10000, '10k']].forEach(([fr, lb]) => {
+      const x = xOfHz(fr);
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bot); ctx.stroke();
+      if (narrow && (fr === 50 || fr === 200 || fr === 2000)) return;
+      ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.textAlign = 'center';
+      ctx.fillText(lb, x, h - 5);
+    });
     ctx.restore();
 
-    // Curva REAL de la canción de referencia (espectro promedio calculado por el motor C++), dibujada como línea punteada.
-    // Se ancla al nivel medio de tu señal (100 Hz–10 kHz) para comparar la FORMA del espectro, no el volumen.
+    // Curva suave del espectro
+    const pts = [];
+    for (let i = 0; i < N; i++) pts.push({ x: i / (N - 1) * w, db: specByteToDb(data[i]) });
+    pts.forEach((p) => { p.y = yOf(p.db); });
+    const path = () => {
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 0; i < pts.length - 1; i++) {
+        const xc = (pts[i].x + pts[i + 1].x) / 2, yc = (pts[i].y + pts[i + 1].y) / 2;
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
+      }
+      ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+    };
+
+    ctx.save();
+    path();
+    ctx.lineTo(w, bot); ctx.lineTo(0, bot); ctx.closePath();
+    const fill = ctx.createLinearGradient(0, top, 0, bot);
+    fill.addColorStop(0, rgba(c1, 0.30));
+    fill.addColorStop(1, rgba(c1, 0.01));
+    ctx.fillStyle = fill;
+    ctx.fill();
+
+    // Retención de picos (línea tenue que cae despacio)
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      specHoldDb[i] = Math.max(pts[i].db, specHoldDb[i] - 0.12);
+      const y = yOf(specHoldDb[i]);
+      if (i) ctx.lineTo(pts[i].x, y); else ctx.moveTo(pts[i].x, y);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 1; ctx.stroke();
+
+    const lg = ctx.createLinearGradient(0, 0, w, 0);
+    lg.addColorStop(0, rgba(c1, 1)); lg.addColorStop(1, rgba(c2, 1));
+    path();
+    ctx.strokeStyle = lg; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke();
+    ctx.restore();
+
+    // Curva REAL de la canción de referencia (promedio calculado por el motor C++), punteada. Se ancla al nivel medio
+    // de tu señal (100 Hz–10 kHz) para comparar la FORMA, no el volumen.
     if (state.referenceTrackLoaded && state.refCurve && state.refCurve.length === 256) {
       let sum = 0, cnt = 0;
-      for (let i = 59; i <= 229 && i < len; i++) { sum += data[i]; cnt++; }
+      for (let i = 59; i <= 229 && i < N; i++) { sum += data[i]; cnt++; }
       const liveMean = cnt ? sum / cnt / 255 : 0;
       const anchor = (window.__OMNI_REF_ANCHOR__ = (window.__OMNI_REF_ANCHOR__ === undefined ? 0.55 : window.__OMNI_REF_ANCHOR__) * 0.94 + (liveMean > 0.05 ? liveMean : 0.55) * 0.06);
+      const anchorDb = anchor * SPEC_DB_SPAN + SPEC_DB_LO;
       const curve = state.refCurve;
 
       ctx.save();
@@ -501,9 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.lineWidth = 1.4;
       for (let i = 0; i < curve.length; i++) {
         const x = (i / (curve.length - 1)) * w;
-        const dbRel = (curve[i] / 255) * 60 - 40;                         // -40 … +20 dB respecto a la media
-        const v = Math.max(0, Math.min(1, anchor + dbRel / 106));         // 1 unidad del analizador = 106 dB (-100 … +6)
-        const y = h - v * (h * 0.82) - 10;
+        const y = yOf(anchorDb + (curve[i] / 255) * 60 - 40);              // -40 … +20 dB respecto a la media
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       }
       ctx.stroke();
@@ -511,320 +578,124 @@ document.addEventListener('DOMContentLoaded', () => {
 
       ctx.save();
       ctx.fillStyle = 'rgba(245, 242, 237, 0.6)';
-      ctx.font = '9px "Space Grotesk", monospace';
+      ctx.font = `9px ${METER_FONT}`;
       ctx.textAlign = 'left';
-      ctx.fillText('- - -  REFERENCIA: ' + (state.refName || ''), 10, 14);
+      ctx.fillText('- - -  REFERENCIA: ' + (state.refName || ''), 28, 14);
       ctx.restore();
     }
   }
 
-  // --- Modo 2: Estereómetro / Goniómetro Polar + Medidor de Correlación de Fase Multibanda ---
+  // --- Estéreo (rombo M/S) ---
+  // El lienzo conserva la estela entre cuadros: cada fotograma atenúa el anterior y redibuja la nube (igual que Orb).
+  let lastStereoTel = null, lastStereoSimT = 0;
+  const simPairs = new Float32Array(160 * 2);
+  const stereoCorrSm = [1, 1, 1];
+
+  function stereoCorrBarsHeight() { return state.phaseMeterMode === 'single' ? 34 : 4 * 26 + 4; }
+
+  function drawCorrBar(ctx, x, y, w, label, v, silent, strong, accent) {
+    ctx.fillStyle = 'rgba(255,255,255,0.07)'; ctx.fillRect(x, y, w, 5);
+    ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.fillRect(x + w / 2 - 0.5, y - 2, 1, 9);
+    const px = x + (v + 1) / 2 * w;
+    const col = silent ? 'rgba(255,255,255,0.25)' : v < 0 ? '#e0605a' : (strong ? accent : '#cfd3d8');
+    ctx.fillStyle = col;
+    if (v >= 0) ctx.fillRect(x + w / 2, y, px - x - w / 2, 5); else ctx.fillRect(px, y, x + w / 2 - px, 5);
+    ctx.beginPath(); ctx.arc(px, y + 2.5, 3.6, 0, Math.PI * 2); ctx.fill();
+    ctx.font = `10px ${METER_FONT}`;
+    ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.textAlign = 'left'; ctx.fillText(label, x, y - 5);
+    ctx.textAlign = 'right'; ctx.fillStyle = silent ? 'rgba(255,255,255,0.3)' : '#e6e8ea';
+    ctx.fillText(silent ? '—' : (v >= 0 ? '+' : '') + v.toFixed(2), x + w, y - 5);
+  }
+
   function drawStereometer(ctx, w, h, data) {
-    drawTechnicalGrid(ctx, w, h);
-
-    // Shift Goniometer slightly left to make room for the Phase Correlation Meter on the right
-    const meterBoxWidth = 52;
-    const cx = (w - (meterBoxWidth + 15)) / 2;
-    const cy = h / 2;
-    const radius = Math.min(w - 70, h) * 0.37;
-
-    // 1. Dibujar Cuadrícula de Diamante Exterior y Ejes de Fase (Sutil y Elegante)
-    ctx.save();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-    ctx.lineWidth = 1.2;
-
-    // Diamante Exterior (45 grados)
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - radius);
-    ctx.lineTo(cx + radius, cy);
-    ctx.lineTo(cx, cy + radius);
-    ctx.lineTo(cx - radius, cy);
-    ctx.closePath();
-    ctx.stroke();
-
-    // Diamantes Interiores Concentricos (Escala)
-    for (let rFactor of [0.66, 0.33]) {
-      const rInner = radius * rFactor;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy - rInner);
-      ctx.lineTo(cx + rInner, cy);
-      ctx.lineTo(cx, cy + rInner);
-      ctx.lineTo(cx - rInner, cy);
-      ctx.closePath();
-      ctx.stroke();
-    }
-
-    // Ejes Cruzados (L/R y Mid/Side)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - radius * 1.1); ctx.lineTo(cx, cy + radius * 1.1); // M (Mid / Vertical)
-    ctx.moveTo(cx - radius * 1.1, cy); ctx.lineTo(cx + radius * 1.1, cy); // S (Side / Horizontal)
-
-    // Diagonal 45° L / R
-    const diag = radius * 0.78;
-    ctx.moveTo(cx - diag, cy - diag); ctx.lineTo(cx + diag, cy + diag); // L
-    ctx.moveTo(cx + diag, cy - diag); ctx.lineTo(cx - diag, cy + diag); // R
-    ctx.stroke();
-    ctx.restore();
-
-    // 2. Generación y Renderizado de Nube de Puntos de Fase Estéreo (Goniómetro con Glow)
-    const spaceSpread = ((state.params.space !== undefined ? state.params.space : 50) / 100);
-
-    // Con el plugin cargado en un DAW se dibujan las muestras L/R reales de la salida; en la vista previa (navegador)
-    // se mantiene la simulación.
     const tel = window.__OMNI_TEL__;
     const realScope = IS_HOST && tel && Array.isArray(tel.scope) && tel.scope.length >= 4 ? tel.scope : null;
-    const pointsCount = realScope ? realScope.length / 2 : 140;
+    const now = performance.now();
 
-    // Autoescala suave: el goniómetro ocupa el diamante aunque el material esté a bajo nivel
-    if (realScope) {
-      let pk = 0.05;
-      for (let k = 0; k < realScope.length; k++) pk = Math.max(pk, Math.abs(realScope[k]));
-      window.__OMNI_SCOPE_PK__ = (window.__OMNI_SCOPE_PK__ || pk) * 0.92 + pk * 0.08;
+    // ¿Hay datos nuevos? (en la vista previa del navegador se simula a 30 Hz)
+    let pairs, fresh;
+    if (realScope) { pairs = realScope; fresh = tel !== lastStereoTel; lastStereoTel = tel; }
+    else {
+      fresh = now - lastStereoSimT >= 33;
+      if (fresh) {
+        lastStereoSimT = now;
+        const spread = ((state.params.space !== undefined ? state.params.space : 50) / 100);
+        for (let i = 0; i < 160; i++) {
+          const sample = data[(i * 3) % data.length] / 255;
+          const phase = (i * 0.18) + (Date.now() * 0.003);
+          simPairs[i * 2] = Math.sin(phase) * sample;
+          simPairs[i * 2 + 1] = Math.cos(phase * 1.1) * sample * spread;
+        }
+      }
+      pairs = simPairs;
     }
-    const scopeGain = realScope ? 1 / Math.max(0.12, window.__OMNI_SCOPE_PK__ || 0.5) : 1;
 
+    const accent = getActiveAccentColor();
+    const ac = hexRgb(accent);
+    const multi = state.phaseMeterMode !== 'single';
+    const cr = stereoCorrBarsHeight();
+    const sh = h - cr - 4, cx = w / 2, cy = sh / 2 + 7, R = Math.min(w * 0.46, sh * 0.44);
+
+    if (!stereoReady) { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h); stereoReady = true; }
+    // Estela: velo translúcido sobre la zona del goniómetro; la zona de barras se repinta opaca
+    ctx.fillStyle = 'rgba(0,0,0,0.26)'; ctx.fillRect(0, 0, w, sh + 4);
+    ctx.fillStyle = '#000'; ctx.fillRect(0, sh + 4, w, h - sh - 4);
+
+    // Guías
     ctx.save();
-    ctx.shadowBlur = 8;
-
-    for (let i = 0; i < pointsCount; i++) {
-      let left, right;
-      if (realScope) {
-        left = realScope[i * 2] * scopeGain * 0.9;
-        right = realScope[i * 2 + 1] * scopeGain * 0.9;
-      } else {
-        const sample = data[i % data.length] / 255;
-        const phase = (i * 0.18) + (Date.now() * 0.003);
-        left = Math.sin(phase) * sample;
-        right = Math.cos(phase * 1.1) * sample * spaceSpread;
-      }
-
-      // Transformación de coordenadas estéreo a rotación de 45° (Goniometer Polar Matrix)
-      const mid = (left + right) * 0.7071;
-      const side = (left - right) * 0.7071;
-
-      const px = cx + side * radius * 0.85;
-      const py = cy - mid * radius * 0.85;
-      const pointDist = Math.hypot(side, mid);
-
-      // Color dinámico según la correlación de fase y energía
-      let dotColor;
-      if (pointDist > 0.65) {
-        dotColor = '#e74c3c'; // Rojo Neón / Alerta Picos
-      } else if (pointDist > 0.4) {
-        dotColor = '#f1c40f'; // Amarillo Neón
-      } else if (pointDist > 0.2) {
-        dotColor = '#2ecc71'; // Verde Neón
-      } else {
-        dotColor = '#B7B4AE'; // Ashes
-      }
-
-      ctx.shadowColor = dotColor;
-      ctx.fillStyle = dotColor;
-      ctx.beginPath();
-      ctx.arc(px, py, Math.random() * 1.5 + 1.2, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.09)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, R * 0.5, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx - R, cy); ctx.lineTo(cx + R, cy); ctx.moveTo(cx, cy - R); ctx.lineTo(cx, cy + R);
+    ctx.moveTo(cx - R * 0.7, cy - R * 0.7); ctx.lineTo(cx + R * 0.7, cy + R * 0.7);
+    ctx.moveTo(cx + R * 0.7, cy - R * 0.7); ctx.lineTo(cx - R * 0.7, cy + R * 0.7);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.font = `10px ${METER_FONT}`; ctx.textAlign = 'center';
+    ctx.fillText('M', cx, cy - R - 5); ctx.fillText('S', cx + R + 9, cy + 3);
+    ctx.fillText('L', cx - R * 0.7 - 9, cy - R * 0.7 - 2); ctx.fillText('R', cx + R * 0.7 + 9, cy - R * 0.7 - 2);
     ctx.restore();
 
-    // 3. Medidor de Correlación de Fase Multibanda Integrado (Estilo Imagen de Referencia)
-    drawPhaseCorrelationMeter(ctx, w, h, data, spaceSpread);
-  }
+    // Autoescala suave (el material a bajo nivel también ocupa el rombo)
+    let pk = 0.05;
+    for (let k = 0; k < pairs.length; k++) pk = Math.max(pk, Math.abs(pairs[k]));
+    const silent = realScope ? pk < 0.0501 : false;
+    if (realScope) window.__OMNI_SCOPE_PK__ = (window.__OMNI_SCOPE_PK__ || pk) * 0.92 + pk * 0.08;
+    const gain = realScope ? 1 / Math.max(0.12, window.__OMNI_SCOPE_PK__ || 0.5) : 1;
 
-  // --- Renderizado del Medidor de Correlación de Fase (Multibanda / Banda Única con Estética SVNDVLPHON) ---
-  function drawPhaseCorrelationMeter(ctx, w, h, data, spaceSpread) {
-    const meterW = 46;
-    const meterH = Math.min(185, h * 0.78);
-    const meterX = w - meterW - 12;
-    const meterY = (h - meterH) / 2;
-    const zeroY = meterY + meterH / 2;
-
-    const isSingle = (state.phaseMeterMode === 'single');
-
+    // Nube M/S "escalada": x = (R-L)/2, y = (L+R)/2 con compresión de radio para ver también lo suave
+    const sz = 2, dot = mixRgb([214, 222, 236], ac, 0.3);
     ctx.save();
-
-    // 1. Panel de Vidrio Biselado Hardware (Gradient Metallic Glass)
-    const panelGrad = ctx.createLinearGradient(meterX, meterY, meterX + meterW, meterY + meterH);
-    panelGrad.addColorStop(0, 'rgba(18, 16, 24, 0.92)');
-    panelGrad.addColorStop(0.5, 'rgba(10, 9, 14, 0.95)');
-    panelGrad.addColorStop(1, 'rgba(16, 14, 22, 0.92)');
-
-    ctx.fillStyle = panelGrad;
-    ctx.strokeStyle = 'rgba(215, 222, 235, 0.38)';
-    ctx.lineWidth = 1.2;
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = rgba(dot, 0.85);
     ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(meterX, meterY, meterW, meterH, 7);
-    } else {
-      ctx.rect(meterX, meterY, meterW, meterH);
+    for (let i = 0; i + 1 < pairs.length; i += 2) {
+      const l = pairs[i] * gain * 0.9, r = pairs[i + 1] * gain * 0.9;
+      let x = (r - l) * 0.5, y = (l + r) * 0.5;
+      const m = Math.hypot(x, y);
+      if (m > 1e-5) { const k = Math.pow(Math.min(m, 1), 0.42) / m; x *= k; y *= k; }
+      ctx.rect(cx + x * R - sz / 2, cy - y * R - sz / 2, sz, sz);
     }
     ctx.fill();
-    ctx.stroke();
+    ctx.restore();
 
-    // 2. Encabezado de Modo (MULTI / MSTR)
-    ctx.fillStyle = 'rgba(245, 242, 237, 0.55)';
-    ctx.font = '7.5px "Space Grotesk", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(isSingle ? 'MSTR' : 'MULTI', meterX + meterW / 2, meterY + 11);
-
-    // Escala Lateral (+1, 0, -1)
-    ctx.fillStyle = 'rgba(245, 242, 237, 0.75)';
-    ctx.font = '9px "Space Grotesk", monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText('+1', meterX - 3, meterY + 9);
-    ctx.fillText('0', meterX - 3, zeroY + 3);
-    ctx.fillText('-1', meterX - 3, meterY + meterH - 2);
-
-    // Ticks Intermedios de Escala (+0.5 y -0.5)
-    const tickPlusY = meterY + meterH * 0.25;
-    const tickMinusY = meterY + meterH * 0.75;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-    ctx.lineWidth = 1;
-    [tickPlusY, tickMinusY].forEach(ty => {
-      ctx.beginPath();
-      ctx.moveTo(meterX, ty);
-      ctx.lineTo(meterX + 4, ty);
-      ctx.moveTo(meterX + meterW - 4, ty);
-      ctx.lineTo(meterX + meterW, ty);
-      ctx.stroke();
-    });
-
-    // Línea de Referencia Neutra 0 (Cero Correlación con Glow)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([2, 2]);
-    ctx.beginPath();
-    ctx.moveTo(meterX, zeroY);
-    ctx.lineTo(meterX + meterW, zeroY);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // 3. Cálculo de Correlación de Fase Multibanda
-    let lowSum = 0, midSum = 0, highSum = 0;
-    const len = data.length;
-    for (let i = 0; i < len; i++) {
-      const val = data[i] / 255;
-      if (i < len * 0.25) lowSum += val;
-      else if (i < len * 0.65) midSum += val;
-      else highSum += val;
+    // Correlación (real dentro del DAW; simulada en el navegador)
+    const telC = tel && tel.corr;
+    let corr;
+    if (IS_HOST && Array.isArray(telC) && telC.length === 3) corr = telC;
+    else {
+      const t = Date.now() * 0.003, sp = ((state.params.space !== undefined ? state.params.space : 50) / 100);
+      corr = [Math.min(0.98, Math.max(0.2, 0.95 - sp * 0.12 + Math.sin(t) * 0.04)),
+              Math.min(0.95, Math.max(-0.35, 0.72 - sp * 0.45 + Math.cos(t * 1.3) * 0.06)),
+              Math.min(0.90, Math.max(-0.65, 0.50 - sp * 0.70 + Math.sin(t * 1.7) * 0.1))];
     }
-    const lowAvg = lowSum / (len * 0.25);
-    const midAvg = midSum / (len * 0.40);
-    const highAvg = highSum / (len * 0.35);
+    for (let k = 0; k < 3; k++) stereoCorrSm[k] += (corr[k] - stereoCorrSm[k]) * (1 - Math.exp(-frameDt / 0.06));
+    const master = stereoCorrSm[0] * 0.5 + stereoCorrSm[1] * 0.3 + stereoCorrSm[2] * 0.2;
 
-    const time = Date.now() * 0.003;
-
-    // Correlación de fase (-1 a +1): REAL (calculada por el motor C++ sobre la salida) dentro del DAW; simulada en el navegador
-    const telC = window.__OMNI_TEL__ && window.__OMNI_TEL__.corr;
-    const useReal = IS_HOST && Array.isArray(telC) && telC.length === 3;
-    let lowCorr, midCorr, highCorr;
-    if (useReal) {
-      // Suavizado visual para que las barras no vibren
-      const sm = (window.__OMNI_CORR_SM__ = window.__OMNI_CORR_SM__ || [telC[0], telC[1], telC[2]]);
-      for (let k = 0; k < 3; k++) sm[k] += (telC[k] - sm[k]) * 0.25;
-      lowCorr = sm[0]; midCorr = sm[1]; highCorr = sm[2];
-    } else {
-      lowCorr = Math.min(0.98, Math.max(0.2, 0.95 - (spaceSpread * 0.12) + Math.sin(time) * 0.05 * lowAvg));
-      midCorr = Math.min(0.95, Math.max(-0.35, 0.72 - (spaceSpread * 0.45) + Math.cos(time * 1.3) * 0.09 * midAvg));
-      highCorr = Math.min(0.90, Math.max(-0.65, 0.50 - (spaceSpread * 0.70) + Math.sin(time * 1.7) * 0.14 * highAvg));
-    }
-
-    function getValY(c) {
-      const norm = (c + 1) / 2; // -1 -> 0 (bottom), 1 -> 1 (top)
-      return meterY + 16 + (1 - norm) * (meterH - 32);
-    }
-
-    const effZeroY = getValY(0);
-
-    if (isSingle) {
-      // --- Modo Banda Única Master ---
-      const masterCorr = (lowCorr * 0.5) + (midCorr * 0.3) + (highCorr * 0.2);
-      const masterY = getValY(masterCorr);
-      const barW = 16;
-      const barX = meterX + (meterW - barW) / 2;
-
-      let masterColor = '#2ECC71';
-      if (masterCorr < 0) masterColor = '#FF0055';
-      else if (masterCorr < 0.4) masterColor = '#FFB703';
-
-      ctx.save();
-      ctx.fillStyle = masterColor + '40';
-      if (masterY <= effZeroY) {
-        ctx.fillRect(barX, masterY, barW, effZeroY - masterY);
-      } else {
-        ctx.fillRect(barX, effZeroY, barW, masterY - effZeroY);
-      }
-
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = masterColor;
-      ctx.fillStyle = masterColor;
-      ctx.fillRect(barX - 2, masterY - 2, barW + 4, 5);
-      ctx.restore();
-
-      ctx.fillStyle = 'rgba(245, 242, 237, 0.6)';
-      ctx.font = '7.5px "Space Grotesk", monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('MSTR', meterX + meterW / 2, meterY + meterH - 5);
-
-    } else {
-      // --- Modo Multibanda (LOW, MID, HIGH) ---
-      const bands = [
-        { label: 'L', corr: lowCorr, defaultColor: '#FF3B30', x: meterX + 6 },  // LOW (Red)
-        { label: 'M', corr: midCorr, defaultColor: '#2ECC71', x: meterX + 19 }, // MID (Green)
-        { label: 'H', corr: highCorr, defaultColor: '#00F0FF', x: meterX + 32 } // HIGH (Cyan/Blue)
-      ];
-
-      const barW = 8;
-
-      bands.forEach(band => {
-        const yVal = getValY(band.corr);
-
-        // Cambio dinámico a color de advertencia magenta/rojo (#FF0055) si la correlación es negativa
-        const activeColor = band.corr < 0 ? '#FF0055' : band.defaultColor;
-
-        // Canal Semitransparente de Relleno desde Cero (0) hasta el Valor
-        ctx.save();
-        ctx.fillStyle = activeColor + '45';
-        if (yVal <= effZeroY) {
-          ctx.fillRect(band.x, yVal, barW, effZeroY - yVal);
-        } else {
-          ctx.fillRect(band.x, effZeroY, barW, yVal - effZeroY);
-        }
-
-        // Bloque / Indicador LED Principal con Glow
-        ctx.shadowBlur = (band.corr < 0) ? 10 : 6;
-        ctx.shadowColor = activeColor;
-        ctx.fillStyle = activeColor;
-        ctx.fillRect(band.x - 1, yVal - 2, barW + 2, 4);
-        ctx.restore();
-
-        // Etiquetas Micro de Banda (L, M, H) en la parte inferior del medidor
-        ctx.fillStyle = 'rgba(245, 242, 237, 0.6)';
-        ctx.font = '7.5px "Space Grotesk", monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(band.label, band.x + barW / 2, meterY + meterH - 5);
-      });
-
-      // Indicador General Master (Línea Blanca en el Promedio General)
-      const masterCorr = (lowCorr * 0.5) + (midCorr * 0.3) + (highCorr * 0.2);
-      const masterY = getValY(masterCorr);
-      ctx.save();
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = '#FFFFFF';
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      ctx.moveTo(meterX + 3, masterY);
-      ctx.lineTo(meterX + meterW - 3, masterY);
-      ctx.stroke();
-      ctx.restore();
-    }
-
+    const y = sh + 22, pad = 10, bw = w - pad * 2;
+    ctx.save();
+    drawCorrBar(ctx, pad, y, bw, 'Correlación', master, silent, true, accent);
+    if (multi) ['Graves', 'Medios', 'Agudos'].forEach((nme, i) => drawCorrBar(ctx, pad, y + 26 * (i + 1), bw, nme, stereoCorrSm[i], silent, false, accent));
     ctx.restore();
   }
 
@@ -1185,7 +1056,7 @@ document.addEventListener('DOMContentLoaded', () => {
   onNative('telemetry', onTelemetry);
 
   // ---- Input Trim (dB) ------------------------------------------------------------------------------------------
-  const TRIM_DEFAULT = -12;
+  const TRIM_DEFAULT = -15.5;
   const trimSlider = document.getElementById('trimSlider');
   const trimValue = document.getElementById('trimValue');
   function setTrimUI(db, fromNative) {
@@ -1204,6 +1075,43 @@ document.addEventListener('DOMContentLoaded', () => {
     trimSlider.addEventListener('keydown', (e) => e.stopPropagation());
   }
 
+  // Dibujo de la perilla en una posición (0-100, con decimales)
+  function paintKnob(knob, v) {
+    const ring = knob.querySelector('.knob-outer-ring');
+    const activeDeg = (v / 100) * 270;
+    if (ring) {
+      ring.style.background = `conic-gradient(from 225deg, var(--display-accent, var(--accent-color)) 0deg, var(--display-accent-2, var(--accent-color-2)) ${activeDeg.toFixed(2)}deg, rgba(255, 255, 255, 0.07) ${activeDeg.toFixed(2)}deg 270deg, transparent 270deg 360deg)`;
+    }
+    const indicator = knob.querySelector('.knob-indicator');
+    if (indicator) indicator.style.transform = `rotate(${(activeDeg - 135).toFixed(2)}deg)`;
+  }
+
+  // Suavizado visual de todas las perillas (constante de tiempo ~85 ms, independiente de los fps)
+  let knobVisRaf = 0, knobVisLast = 0;
+  function kickKnobVisuals() {
+    if (knobVisRaf) return;
+    knobVisLast = performance.now();
+    knobVisRaf = requestAnimationFrame(knobVisStep);
+  }
+  function knobVisStep(now) {
+    const dt = Math.min(0.05, Math.max(0.001, (now - knobVisLast) / 1000));
+    knobVisLast = now;
+    const k = 1 - Math.exp(-dt / 0.085);
+    let moving = false;
+    document.querySelectorAll('.knob-container').forEach((knob) => {
+      if (knob._visTarget === undefined) return;
+      const d = knob._visTarget - knob._visCur;
+      if (Math.abs(d) < 0.02) {
+        if (d !== 0) { knob._visCur = knob._visTarget; paintKnob(knob, knob._visCur); }
+        return;
+      }
+      knob._visCur += d * k;
+      paintKnob(knob, knob._visCur);
+      moving = true;
+    });
+    knobVisRaf = moving ? requestAnimationFrame(knobVisStep) : 0;
+  }
+
   // Función centralizada para aplicar el renderizado gráfico de la perilla
   function applyKnobUI(knob, val, fromNative = false, notifyNative = true) {
     val = Math.min(100, Math.max(0, Math.round(Number(val) || 0)));
@@ -1215,19 +1123,10 @@ document.addEventListener('DOMContentLoaded', () => {
       sendParamToNative(param, val);
     }
 
-    // 1. Relleno dinámico del anillo LED desde la izquierda (0% / 225°) hacia la derecha (100% / 495°)
-    const ring = knob.querySelector('.knob-outer-ring');
-    const activeDeg = (val / 100) * 270;
-    if (ring) {
-      ring.style.background = `conic-gradient(from 225deg, var(--display-accent, var(--accent-color)) 0deg, var(--display-accent-2, var(--accent-color-2)) ${activeDeg}deg, rgba(255, 255, 255, 0.07) ${activeDeg}deg 270deg, transparent 270deg 360deg)`;
-    }
-
-    // 2. Rotación de la aguja indicadora (-135° a +135°)
-    const indicator = knob.querySelector('.knob-indicator');
-    const deg = (val / 100) * 270 - 135;
-    if (indicator) {
-      indicator.style.transform = `rotate(${deg}deg)`;
-    }
+    // 1-2. Anillo LED y aguja: el valor es entero (lo que va al DAW) pero el dibujo se desliza hacia él fotograma a fotograma
+    if (knob._visCur === undefined) { knob._visCur = val; paintKnob(knob, val); }   // primera vez: sin animación
+    knob._visTarget = val;
+    kickKnobVisuals();
 
     // 3. Actualizar Displays de Texto
     if (param === 'loudness') {
@@ -2611,7 +2510,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Guardar en el estado del proyecto DAW (nunca durante el arranque, para no pisar lo guardado)
     if (persist) persistUi();
     // Último tema usado: solo sirve para que el plugin abra ya con ese color mientras llega el estado del DAW
-    try { localStorage.setItem('omni.lastTheme', chassis + '|' + led); } catch (e) { /* almacenamiento no disponible */ }
+    if (!FORCED_THEME) { try { localStorage.setItem('omni.lastTheme', chassis + '|' + led); } catch (e) { /* almacenamiento no disponible */ } }
 
     // Remove all previous theme- classes from body
     Array.from(document.body.classList).forEach(cls => {
@@ -2681,6 +2580,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const saved = (localStorage.getItem('omni.lastTheme') || '').split('|');
       if (saved.length === 2) { chassis = saved[0]; led = saved[1]; }
     } catch (e) { /* almacenamiento no disponible */ }
+    if (FORCED_THEME) { chassis = FORCED_THEME[0]; led = FORCED_THEME[1]; }
     applyTheme(chassis, led, false);
   })();
 

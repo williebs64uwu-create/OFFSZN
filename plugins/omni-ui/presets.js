@@ -2,7 +2,7 @@
 // (tests/OmniTests.cpp renderiza audio con CADA preset y comprueba nivel, techo, cresta y consistencia).
 //
 // Reglas de diseño de un preset (los 13 valores SIEMPRE completos; 50 = neutro):
-//   · Gain staging: el Input Trim nace en -12 dB y el Maximizer suma 0…+24 dB (50 % = +12 dB = devuelve el nivel).
+//   · Gain staging: el Input Trim nace en -15.5 dB y el Maximizer suma 0…+24 dB (50 % = +12 dB = devuelve el nivel).
 //     Por eso 50/50 es neutro; los presets nunca tocan el trim (lo decide el usuario según lo caliente que venga su mezcla).
 //   · Maximizer: 0-50 % = 0…+12 dB, 50-100 % = +12…+36 dB (presets 50-64) · Loudness 50-60 · Ceiling 94-98 (-0.6 … -0.2 dB). Sonoridad de salida orientativa con un beat
 //     caliente (-15,5 LUFS de entrada): suave -16…-14 · medio -14…-11 · fuerte -11…-9 LUFS (validado en OmniTests).
