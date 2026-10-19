@@ -49,7 +49,7 @@
         "@type": "Offer",
         "url": "https://offszn.lat/plugins/omni",
         "priceCurrency": "USD",
-        "price": "10.00",
+        "price": "9.00",
         "priceValidUntil": "2026-12-31",
         "availability": "https://schema.org/InStock",
         "itemCondition": "https://schema.org/NewCondition"
@@ -4149,35 +4149,41 @@
             }
         })();
 
-        // ── A/B TESTING ENGINE: $17 vs $25 USD (según desempeño de ventas de Easy Mix) ──
+        // ── A/B TESTING ENGINE: $9 vs $15 USD (Omni, prueba en curso) ──
         (function initABTesting() {
             const urlParams = new URLSearchParams(window.location.search);
             const forcedPrice = urlParams.get('price') || urlParams.get('p') || urlParams.get('v');
-            // A/B $17 vs $25 (50/50). Se asigna una vez por navegador y se mantiene
-            // ?price=17|25 fuerza una variante para pruebas.
-            const AB_KEY = 'offszn_ab_omni_17_25_v1';
-            const AB_TIERS = [17, 25];
-            const AB_ORIGINAL = { 17: 25, 25: 35 }; // precio tachado de cada variante
+            // Desde ahora los visitantes NUEVOS ven $9 o $15 (50/50).
+            // Quien ya tenia un precio asignado (17 o 25 de la prueba anterior) lo conserva.
+            // ?price=9|15 fuerza una variante para pruebas.
+            const AB_KEY = 'offszn_ab_omni_9_15_v1';
+            const LEGACY_KEY = 'offszn_ab_omni_17_25_v1';
+            const AB_NEW = [9, 15];
+            const AB_ALL = [9, 15, 17, 25];
+            const AB_ORIGINAL = { 9: 15, 15: 25, 17: 25, 25: 35 }; // precio tachado de cada variante
 
             let assignedPrice;
             try {
                 const forced = parseInt(forcedPrice, 10);
                 const saved = parseInt(localStorage.getItem(AB_KEY), 10);
-                if (AB_TIERS.includes(forced)) {
+                const legacy = parseInt(localStorage.getItem(LEGACY_KEY), 10);
+                if (AB_NEW.includes(forced)) {
                     assignedPrice = forced;
-                } else if (AB_TIERS.includes(saved)) {
+                } else if (AB_ALL.includes(saved)) {
                     assignedPrice = saved;
+                } else if (AB_ALL.includes(legacy)) {
+                    assignedPrice = legacy; // ya le salio un precio: se queda
                 }
-                if (!assignedPrice) assignedPrice = Math.random() < 0.5 ? 17 : 25;
+                if (!assignedPrice) assignedPrice = Math.random() < 0.5 ? 9 : 15;
                 localStorage.setItem(AB_KEY, assignedPrice);
             } catch (e) {
-                if (!assignedPrice) assignedPrice = Math.random() < 0.5 ? 17 : 25;
+                if (!assignedPrice) assignedPrice = Math.random() < 0.5 ? 9 : 15;
             }
 
             window.AB_VARIANT = 'price_' + assignedPrice;
             window.AB_ORIGINAL_PRICE = AB_ORIGINAL[assignedPrice];
             window.CURRENT_PROMO_PRICE = assignedPrice;
-            window.YAPE_FIXED_PRICE_PEN = (assignedPrice === 17 ? 65 : 95);
+            window.YAPE_FIXED_PRICE_PEN = ({ 9: 34, 15: 57, 17: 65, 25: 95 })[assignedPrice] || Math.round(assignedPrice * 3.8);
             window.PLUGIN_ID = 5001;
             window.PLUGIN_NAME = 'Omni Plugin';
 
@@ -4216,7 +4222,7 @@
                 document.querySelectorAll('.hero-price-now').forEach(el => el.innerText = `${assignedPrice} USD`);
                 document.querySelectorAll('.hero-was').forEach(el => el.innerText = `$${window.AB_ORIGINAL_PRICE}`);
 
-                const solesMap = { 17: 65, 25: 95 };
+                const solesMap = { 9: 34, 15: 57, 17: 65, 25: 95 };
                 const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
 
                 const waLinks = document.querySelectorAll('a[href*="wa.me"]');
@@ -4400,7 +4406,7 @@
     </script>
     <script src="https://sdk.mercadopago.com/js/v2"></script>
     <script src="/script/plugin-checkout.js?v=20261011"></script>
-    <script>if (!window.YAPE_FIXED_PRICE_PEN) { window.YAPE_FIXED_PRICE_PEN = (window.CURRENT_PROMO_PRICE === 25 ? 95 : 65); }</script>
+    <script>if (!window.YAPE_FIXED_PRICE_PEN) { window.YAPE_FIXED_PRICE_PEN = ({ 9: 34, 15: 57, 17: 65, 25: 95 })[window.CURRENT_PROMO_PRICE] || Math.round((window.CURRENT_PROMO_PRICE || 15) * 3.8); }</script>
     <script src="/script/yape-checkout.js?v=20261011"></script>
     <script src="/script/pay-click-tracker.js?v=20261011"></script>
 
