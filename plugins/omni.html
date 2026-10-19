@@ -4200,7 +4200,7 @@
                 window.addEventListener('DOMContentLoaded', dispatchViewContent);
             }
 
-            document.addEventListener('DOMContentLoaded', () => {
+            function applyOmniPriceToDOM() {
                 const priceEl = document.getElementById('omni-price-val');
                 if (priceEl) priceEl.innerText = `$${assignedPrice}`;
                 const origEl = document.getElementById('omni-original-price');
@@ -4211,6 +4211,10 @@
                 if (heroNowEl) heroNowEl.innerText = `${assignedPrice} USD`;
                 const heroWasEl = document.getElementById('hero-was-price');
                 if (heroWasEl) heroWasEl.innerText = `$${window.AB_ORIGINAL_PRICE}`;
+
+                // Sincronizar todos los elementos con clases compartidas
+                document.querySelectorAll('.hero-price-now').forEach(el => el.innerText = `${assignedPrice} USD`);
+                document.querySelectorAll('.hero-was').forEach(el => el.innerText = `$${window.AB_ORIGINAL_PRICE}`);
 
                 const solesMap = { 17: 65, 25: 95 };
                 const solesPrice = solesMap[assignedPrice] || Math.round(assignedPrice * 3.8);
@@ -4239,7 +4243,13 @@
                         }
                     }
                 });
-            });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', applyOmniPriceToDOM);
+            } else {
+                applyOmniPriceToDOM();
+            }
         })();
     </script>
 

@@ -2422,7 +2422,7 @@
                 <div class="hero-meta mono">
                     <div>VST3 / AU</div>
                     <div>WINDOWS / MACOS</div>
-                    <div>ONE-TIME / <s class="hero-was">$35</s> <span class="hero-price-now">25 USD</span></div>
+                    <div>ONE-TIME / <s class="hero-was" id="hero-meta-was">$35</s> <span class="hero-price-now" id="hero-meta-now">25 USD</span></div>
                 </div>
 
                 <!-- 2. Massive Centre Headline (Layered & bold with mix-blend contrast) -->
@@ -2445,7 +2445,7 @@
                         </a>
                         <a href="#pricing-section" class="hero-cta" id="hero-btn-buy">
                             <i class="bi bi-bag-fill"></i>
-                            <span>COMPRAR - <s class="hero-was">$35</s> 25 USD</span>
+                            <span>COMPRAR - <s class="hero-was" id="hero-was-price">$35</s> <span id="hero-now-price">25 USD</span></span>
                         </a>
                     </div>
                 </div>
@@ -4954,12 +4954,33 @@
                 window.addEventListener('DOMContentLoaded', dispatchViewContent);
             }
 
-            document.addEventListener('DOMContentLoaded', () => {
+            function applyPriceToDOM() {
                 const priceEl = document.getElementById('easy-mix-price-val');
                 if (priceEl) priceEl.innerText = `$${assignedPrice}`;
                 const origEl = document.getElementById('easy-mix-original-price');
                 if (origEl) origEl.innerText = `$${window.AB_ORIGINAL_PRICE}`;
-            });
+
+                // Sincronizar botones Hero (Comprar) y Meta
+                const heroNowEl = document.getElementById('hero-now-price');
+                if (heroNowEl) heroNowEl.innerText = `${assignedPrice} USD`;
+                const heroWasEl = document.getElementById('hero-was-price');
+                if (heroWasEl) heroWasEl.innerText = `$${window.AB_ORIGINAL_PRICE}`;
+
+                const heroMetaNow = document.getElementById('hero-meta-now');
+                if (heroMetaNow) heroMetaNow.innerText = `${assignedPrice} USD`;
+                const heroMetaWas = document.getElementById('hero-meta-was');
+                if (heroMetaWas) heroMetaWas.innerText = `$${window.AB_ORIGINAL_PRICE}`;
+
+                // Sincronizar todos los elementos con clases compartidas
+                document.querySelectorAll('.hero-price-now').forEach(el => el.innerText = `${assignedPrice} USD`);
+                document.querySelectorAll('.hero-was').forEach(el => el.innerText = `$${window.AB_ORIGINAL_PRICE}`);
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', applyPriceToDOM);
+            } else {
+                applyPriceToDOM();
+            }
         })();
     </script>
     <!-- ==================== SCROLL ENGINES & REVEALS ==================== -->
