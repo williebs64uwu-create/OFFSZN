@@ -2,7 +2,7 @@
 // Registra el precio exacto (USD y Soles) que vio el cliente en su variante A/B al tocar cualquier método de pago.
 // Se consulta en /owner/pagos-manuales y se cruza por hora, método y producto.
 (function () {
-    var SOLES = { 5: 19, 8: 25, 10: 38, 15: 57, 17: 65, 20: 76, 25: 95, 30: 114, 35: 133 };
+    var SOLES = { 5: 19, 8: 25, 9: 34, 10: 38, 15: 57, 17: 65, 20: 76, 25: 95, 30: 114, 35: 133 };
 
     // Si el cliente tiene sesión iniciada, se manda su token para que el servidor registre su email.
     var authToken = null;
