@@ -94,6 +94,13 @@ export async function runSubscriptionScavenger() {
                 continue;
             }
 
+            // Las suscripciones de plugins (Orb Pro/Max: plan_id 'orb_*') no son el plan del sitio:
+            // se calculan en vivo desde esta tabla, así que solo se marcan como vencidas y NO se toca users.plan.
+            if (String(sub.plan_id || '').startsWith('orb_')) {
+                console.log(`  - ✅ Plugin sub ${sub.plan_id} of user ${sub.user_id} expired (site plan untouched)`);
+                continue;
+            }
+
             // B. Downgrade user plan to free in users and profiles
             const { error: userUpdateError } = await supabase
                 .from('users')
