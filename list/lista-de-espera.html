@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FAST MIX BETA · Lista de espera · OFFSZN</title>
+<meta name="description" content="Tu vocal chain, efectos, bus y paralelos en un solo plugin. Controla Waves, FabFilter, Ozone y cualquier VST3, y pide cambios por chat. Entra a la lista de espera.">
+<meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="FAST MIX BETA · Lista de espera">
+<meta property="og:description" content="Vocal chain, efectos, bus y paralelos. Todo&nbsp;en&nbsp;1. Controla tus plugins y pide cambios por chat.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://offszn.lat/list/lista-de-espera">
+<meta property="og:site_name" content="OFFSZN">
+<link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/willieimages/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fbfbfd; --card:#ffffff; --soft:#f5f5f7; --line:rgba(0,0,0,.08);
+  --txt:#1d1d1f; --mut:#6e6e73; --acc:#1d1d1f; --acc-txt:#ffffff;
+  --brand:#e11d74; --ok:#188038; --err:#d93025;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 30px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#000; --card:#111113; --soft:#1c1c1e; --line:rgba(255,255,255,.1);
+    --txt:#f5f5f7; --mut:#98989d; --acc:#f5f5f7; --acc-txt:#000;
+    --brand:#ff4d9d; --ok:#4ade80; --err:#ff6b6b;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.5);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font:17px/1.5 Inter,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+
+/* nav */
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+.logo{font-weight:800;letter-spacing:.14em;font-size:14px;text-decoration:none}
+.nav-cta{font-size:14px;font-weight:500;color:var(--mut);text-decoration:none}
+.nav-cta:hover{color:var(--txt)}
+
+/* hero */
+.hero{text-align:center;padding:56px 0 40px}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--mut);background:var(--soft);border:1px solid var(--line);padding:6px 14px;border-radius:99px}
+.badge i{width:7px;height:7px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 20%,transparent)}
+h1{font-size:clamp(40px,8vw,76px);line-height:1.04;letter-spacing:-.035em;font-weight:800;margin:22px auto 0;max-width:12ch}
+h1 span{color:var(--mut)}
+.sub{font-size:clamp(18px,2.4vw,22px);color:var(--mut);max-width:38ch;margin:22px auto 0;line-height:1.4;letter-spacing:-.01em}
+
+/* form */
+.join{max-width:460px;margin:36px auto 0}
+.field{display:flex;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px;box-shadow:var(--shadow);transition:border-color .15s}
+.field:focus-within{border-color:color-mix(in srgb,var(--txt) 40%,transparent)}
+.field input{flex:1;min-width:0;border:0;background:transparent;color:var(--txt);font:inherit;font-size:17px;padding:12px 14px;outline:none}
+.field input::placeholder{color:var(--mut)}
+.btn{border:0;cursor:pointer;background:var(--acc);color:var(--acc-txt);font:inherit;font-size:16px;font-weight:600;padding:12px 22px;border-radius:12px;white-space:nowrap;transition:transform .1s,opacity .15s}
+.btn:hover{opacity:.88}
+.btn:active{transform:scale(.97)}
+.btn[disabled]{opacity:.5;cursor:default}
+.fine{font-size:13px;color:var(--mut);margin-top:12px}
+.err{color:var(--err);font-size:14px;margin-top:10px;min-height:20px}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+@media(max-width:480px){.field{flex-direction:column}.btn{width:100%}}
+
+/* success */
+.done{display:none;max-width:460px;margin:36px auto 0;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px 24px;box-shadow:var(--shadow);text-align:left}
+.done .check{width:44px;height:44px;border-radius:50%;background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok);display:grid;place-items:center;font-size:22px;margin-bottom:14px}
+.done h2{font-size:22px;letter-spacing:-.02em}
+.done p{color:var(--mut);font-size:15px;margin-top:6px}
+.extra{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);display:grid;gap:12px}
+.extra label{font-size:13px;font-weight:600;color:var(--mut)}
+.extra small{font-weight:400}
+.wa{display:flex;gap:8px}
+.extra input,.extra select{width:100%;background:var(--soft);color:var(--txt);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font:inherit;font-size:16px;outline:none}
+.extra input:focus,.extra select:focus{border-color:color-mix(in srgb,var(--txt) 40%,transparent)}
+.wa select{width:116px;flex:none}
+.extra .btn{width:100%}
+.skip{background:none;border:0;color:var(--mut);font:inherit;font-size:14px;cursor:pointer;margin-top:4px;text-align:center;width:100%}
+.skip:hover{color:var(--txt)}
+
+/* proof */
+.proof{display:none;font-size:14px;color:var(--mut);margin-top:18px}
+.proof b{color:var(--txt)}
+
+/* mock */
+.mock{margin:20px auto 0;max-width:720px;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:18px;text-align:left}
+.mock-top{display:flex;align-items:center;gap:6px;margin-bottom:14px}
+.mock-top i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.mock-top span{margin-left:auto;font-size:12px;font-weight:700;letter-spacing:.12em;color:var(--mut)}
+.chain{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.node{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:600}
+.node.ext{border-style:dashed;color:var(--mut);font-weight:500}
+.node.on{background:var(--acc);color:var(--acc-txt);border-color:transparent}
+.arrow{color:var(--mut);font-size:14px}
+.mock-row{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:560px){.mock-row{grid-template-columns:1fr}}
+.chat{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:14px}
+.chat em{font-style:normal;color:var(--mut);font-size:12px;display:block;margin-bottom:2px}
+.chat.me{background:var(--acc);color:var(--acc-txt)}
+.chat.me em{color:inherit;opacity:.6}
+
+/* features */
+.features{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:70px 0 20px}
+@media(max-width:700px){.features{grid-template-columns:1fr;padding-top:50px}}
+.f{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px 24px}
+.f .ico{font-size:26px;margin-bottom:12px}
+.f h3{font-size:20px;letter-spacing:-.02em;font-weight:700}
+.f p{color:var(--mut);font-size:15px;margin-top:6px}
+.f.wide{grid-column:1/-1}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.tags span{background:var(--soft);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:13px;font-weight:500}
+
+/* bottom cta + footer */
+.bottom{text-align:center;padding:70px 0 30px}
+.bottom h2{font-size:clamp(28px,5vw,44px);letter-spacing:-.03em;font-weight:800;line-height:1.1}
+.bottom .btn{display:inline-block;text-decoration:none;margin-top:22px;padding:14px 28px}
+footer{text-align:center;color:var(--mut);font-size:13px;padding:30px 0 40px;border-top:1px solid var(--line)}
+footer a{text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="logo" href="/">OFFSZN</a>
+    <a class="nav-cta" href="#unete">Unirme</a>
+  </nav>
+
+  <header class="hero" id="unete">
+    <span class="badge"><i></i> FAST MIX · Beta cerrada</span>
+    <h1>Tu mezcla vocal. <span>En un solo plugin.</span></h1>
+    <p class="sub">Vocal chain, efectos, bus y paralelos. Todo&nbsp;en&nbsp;1. Controla tus plugins y pide cambios por chat.</p>
+
+    <form class="join" id="form" novalidate>
+      <div class="field">
+        <input type="email" id="email" name="email" placeholder="tu@correo.com" autocomplete="email" inputmode="email" autocapitalize="off" required aria-label="Correo electrónico">
+        <button class="btn" id="go" type="submit">Unirme</button>
+      </div>
+      <input class="hp" type="text" name="website" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="err" id="err" role="alert"></div>
+      <p class="fine" id="fine">Solo tu correo. Te avisamos cuando abramos accesos. Sin spam.</p>
+    </form>
+
+    <div class="done" id="done">
+      <div class="check">✓</div>
+      <h2>Estás en la lista.</h2>
+      <p>Te escribimos apenas abramos la beta. Mientras tanto, si quieres, ayúdanos a priorizar (10 segundos):</p>
+      <div class="extra" id="extra">
+        <div>
+          <label for="wa">WhatsApp <small>(opcional, para avisarte más rápido)</small></label>
+          <div class="wa">
+            <select id="dial" aria-label="Código de país"></select>
+            <input type="tel" id="wa" placeholder="Número" inputmode="tel" autocomplete="tel-national">
+          </div>
+        </div>
+        <div>
+          <label for="daw">¿Qué DAW usas? <small>(opcional)</small></label>
+          <select id="daw">
+            <option value="">Elegir…</option>
+            <option value="fl-studio">FL Studio</option>
+            <option value="ableton">Ableton Live</option>
+            <option value="logic">Logic Pro</option>
+            <option value="pro-tools">Pro Tools</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        <button class="btn" id="save" type="button">Guardar</button>
+        <button class="skip" id="skip" type="button">Ahora no</button>
+      </div>
+      <p id="thanks" style="display:none;margin-top:18px;color:var(--txt);font-weight:600">Listo, gracias. Te hablamos pronto. 🙌</p>
+    </div>
+
+    <p class="proof" id="proof"><b id="n">0</b> productores ya están en la lista</p>
+
+    <div class="mock" aria-hidden="true">
+      <div class="mock-top"><i></i><i></i><i></i><span>FAST MIX</span></div>
+      <div class="chain">
+        <div class="node on">Entrada</div><span class="arrow">→</span>
+        <div class="node">Limpieza</div><span class="arrow">→</span>
+        <div class="node ext">FabFilter Pro-Q</div><span class="arrow">→</span>
+        <div class="node">Compresión</div><span class="arrow">→</span>
+        <div class="node ext">Waves</div><span class="arrow">→</span>
+        <div class="node">Bus + Paralelo</div>
+      </div>
+      <div class="mock-row">
+        <div class="chat me"><em>Tú</em>Más aire en la voz y menos brillo en las “s”.</div>
+        <div class="chat"><em>FAST MIX</em>Listo. Subí el shelf a 12 kHz y activé el de-esser.</div>
+      </div>
+    </div>
+  </header>
+
+  <section class="features">
+    <div class="f">
+      <div class="ico">🎛️</div>
+      <h3>Tu vocal chain, a tu manera</h3>
+      <p>Arma la cadena completa con efectos, bus y paralelos sin abrir diez ventanas.</p>
+    </div>
+    <div class="f">
+      <div class="ico">💬</div>
+      <h3>Chat personalizado</h3>
+      <p>Pide cambios como se los pedirías a un ingeniero: “más grave”, “más espacio”, “más limpia”.</p>
+    </div>
+    <div class="f wide">
+      <div class="ico">🔌</div>
+      <h3>Controla los plugins que ya tienes</h3>
+      <p>FAST MIX maneja plugins externos para que construyas tu propia cadena con el sonido que ya conoces.</p>
+      <div class="tags"><span>Waves</span><span>FabFilter</span><span>Ozone</span><span>Cualquier VST3</span></div>
+    </div>
+  </section>
+
+  <section class="bottom">
+    <h2>Entra antes que los demás.</h2>
+    <a class="btn" href="#unete">Unirme a la lista</a>
+  </section>
+
+  <footer>© OFFSZN · <a href="/legal/politicas-de-privacidad">Privacidad</a> · Puedes salirte cuando quieras.</footer>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var form = $('form'), email = $('email'), go = $('go'), err = $('err');
+  var signupId = null;
+
+  // Prefijos por país (LATAM + los más comunes). Se preselecciona el detectado.
+  var DIAL = [
+    ['PE','🇵🇪 +51'],['MX','🇲🇽 +52'],['CO','🇨🇴 +57'],['AR','🇦🇷 +54'],['CL','🇨🇱 +56'],
+    ['EC','🇪🇨 +593'],['BO','🇧🇴 +591'],['VE','🇻🇪 +58'],['UY','🇺🇾 +598'],['PY','🇵🇾 +595'],
+    ['CR','🇨🇷 +506'],['PA','🇵🇦 +507'],['GT','🇬🇹 +502'],['SV','🇸🇻 +503'],['HN','🇭🇳 +504'],
+    ['NI','🇳🇮 +505'],['DO','🇩🇴 +1'],['PR','🇵🇷 +1'],['US','🇺🇸 +1'],['ES','🇪🇸 +34'],['BR','🇧🇷 +55']
+  ];
+  var dial = $('dial');
+  DIAL.forEach(function(d){
+    var o = document.createElement('option');
+    o.value = d[1].split(' ')[1]; o.textContent = d[1]; o.dataset.cc = d[0];
+    dial.appendChild(o);
+  });
+  function pickDial(cc){
+    for (var i = 0; i < dial.options.length; i++) {
+      if (dial.options[i].dataset.cc === cc) { dial.selectedIndex = i; return; }
+    }
+  }
+
+  // Contador (solo se muestra si ya es creíble)
+  fetch('/api/waitlist/count').then(function(r){ return r.json(); }).then(function(d){
+    if (d && d.count >= 25) { $('n').textContent = d.count; $('proof').style.display = 'block'; }
+  }).catch(function(){});
+
+  var src = (new URLSearchParams(location.search)).get('utm_source') || (new URLSearchParams(location.search)).get('ref') || '';
+
+  function post(url, body){
+    return fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) })
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ if(!r.ok) throw new Error(d.error || 'Error'); return d; }); });
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    err.textContent = '';
+    var v = email.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) { err.textContent = 'Ese correo no se ve bien. Revísalo.'; email.focus(); return; }
+    go.disabled = true; go.textContent = 'Uniendo…';
+    post('/api/waitlist', { email: v, website: $('website').value, source: src }).then(function(d){
+      signupId = d.id || null;
+      pickDial(d.country);
+      form.style.display = 'none';
+      $('done').style.display = 'block';
+      if (!signupId) { $('extra').style.display = 'none'; }
+      $('done').scrollIntoView({ behavior:'smooth', block:'center' });
+    }).catch(function(ex){
+      err.textContent = ex.message || 'No pudimos guardarte. Intenta otra vez.';
+      go.disabled = false; go.textContent = 'Unirme';
+    });
+  });
+
+  function finish(){ $('extra').style.display = 'none'; $('thanks').style.display = 'block'; }
+  $('skip').addEventListener('click', function(){ $('extra').style.display = 'none'; });
+  $('save').addEventListener('click', function(){
+    var num = $('wa').value.replace(/[^\d]/g, '').replace(/^0+/, '');
+    var payload = { id: signupId, daw: $('daw').value };
+    if (num) payload.whatsapp = dial.value + num;
+    if (!payload.whatsapp && !payload.daw) { finish(); return; }
+    $('save').disabled = true;
+    post('/api/waitlist/details', payload).then(finish).catch(finish);
+  });
+})();
+</script>
+</body>
+</html>
