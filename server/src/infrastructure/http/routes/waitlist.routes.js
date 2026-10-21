@@ -1,6 +1,6 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { geo, count, join, details, waitlistAdminAuth, adminList, adminUpdate, adminDelete } from '../controllers/WaitlistController.js';
+import { count, join, waitlistAdminAuth, adminList, adminUpdate, adminDelete } from '../controllers/WaitlistController.js';
 
 const router = express.Router();
 
@@ -12,10 +12,8 @@ const joinLimiter = rateLimit({
     message: { error: 'Demasiados intentos. Prueba en un rato.' }
 });
 
-router.get('/geo', geo);
 router.get('/count', count);
 router.post('/', joinLimiter, join);
-router.post('/details', joinLimiter, details);
 
 router.get('/admin/list', waitlistAdminAuth, adminList);
 router.patch('/admin/:id', waitlistAdminAuth, adminUpdate);
