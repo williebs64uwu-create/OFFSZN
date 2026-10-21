@@ -47,9 +47,9 @@ const countryOf = (req) => {
 const confirmationHtml = () => `<!DOCTYPE html>
 <html lang="es"><body style="margin:0;padding:24px;background:#ffffff;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.55">
 <div style="max-width:480px;margin:0 auto">
-<p style="font-size:20px;font-weight:700;margin:0 0 12px">¡Tu registro ha sido enviado! ✅</p>
-<p style="margin:0 0 12px">Este <b>miércoles 28</b> enviaremos la invitación por el grupo de acceso anticipado, únete aquí ➡️</p>
-<p style="margin:0 0 20px"><a href="${WA_GROUP.replace(/&/g, '&amp;')}" style="color:#1d1d1f;font-weight:600">${WA_GROUP.replace(/&/g, '&amp;')}</a></p>
+<p style="font-size:20px;font-weight:700;margin:0 0 12px">¡Tu registro fue enviado! ✅</p>
+<p style="margin:0 0 16px">Únete al grupo de acceso anticipado donde daremos novedades esta semana ⤵️</p>
+<p style="margin:0 0 20px"><a href="${WA_GROUP.replace(/&/g, '&amp;')}" style="display:inline-block;background:#25d366;color:#ffffff;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:12px">Unirme al grupo de WhatsApp</a></p>
 <p style="margin:0;color:#6e6e73;font-size:14px">STAR CHAIN BETA · OFFSZN</p>
 </div></body></html>`;
 
@@ -90,7 +90,7 @@ export const join = async (req, res) => {
     try {
         await sendOffsznEmail({
             to: email,
-            subject: '¡Tu registro ha sido enviado! · STAR CHAIN BETA',
+            subject: '¡Tu registro fue enviado! · STAR CHAIN BETA',
             html: confirmationHtml(),
             fromName: 'OFFSZN'
         });
