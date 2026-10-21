@@ -50,7 +50,7 @@ const confirmationHtml = () => `<!DOCTYPE html>
 <p style="font-size:20px;font-weight:700;margin:0 0 12px">¡Tu registro fue enviado! ✅</p>
 <p style="margin:0 0 16px">Únete al grupo de acceso anticipado donde daremos novedades esta semana ⤵️</p>
 <p style="margin:0 0 20px"><a href="${WA_GROUP.replace(/&/g, '&amp;')}" style="display:inline-block;background:#25d366;color:#ffffff;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:12px">Unirme al grupo de WhatsApp</a></p>
-<p style="margin:0;color:#6e6e73;font-size:14px">STAR CHAIN BETA · OFFSZN</p>
+<p style="margin:0;color:#6e6e73;font-size:14px">OFFSZN</p>
 </div></body></html>`;
 
 // ─── GET /api/waitlist/count
@@ -90,7 +90,7 @@ export const join = async (req, res) => {
     try {
         await sendOffsznEmail({
             to: email,
-            subject: '¡Tu registro fue enviado! · STAR CHAIN BETA',
+            subject: '¡Tu registro fue enviado!',
             html: confirmationHtml(),
             fromName: 'OFFSZN'
         });
