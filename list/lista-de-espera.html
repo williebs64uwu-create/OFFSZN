@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>STAR CHAIN BETA · Lista de espera · OFFSZN</title>
+<meta name="description" content="Tu vocal chain, efectos, bus y paralelos en un solo plugin. Controla Waves, FabFilter, Ozone y cualquier VST3, y pide cambios por chat. Entra a la lista de espera.">
+<meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta property="og:title" content="STAR CHAIN BETA · Lista de espera">
+<meta property="og:description" content="Vocal chain, efectos, bus y paralelos. Todo&nbsp;en&nbsp;1. Controla tus plugins y pide cambios por chat.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://offszn.lat/list/lista-de-espera">
+<meta property="og:site_name" content="OFFSZN">
+<link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/willieimages/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fbfbfd; --card:#ffffff; --soft:#f5f5f7; --line:rgba(0,0,0,.08);
+  --txt:#1d1d1f; --mut:#6e6e73; --acc:#1d1d1f; --acc-txt:#ffffff;
+  --brand:#e11d74; --ok:#188038; --err:#d93025;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 30px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#000; --card:#111113; --soft:#1c1c1e; --line:rgba(255,255,255,.1);
+    --txt:#f5f5f7; --mut:#98989d; --acc:#f5f5f7; --acc-txt:#000;
+    --brand:#ff4d9d; --ok:#4ade80; --err:#ff6b6b;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.5);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font:17px/1.5 Inter,-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:inherit}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+
+/* nav */
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
+.logo{font-weight:800;letter-spacing:.14em;font-size:14px;text-decoration:none}
+.nav-cta{font-size:14px;font-weight:500;color:var(--mut);text-decoration:none}
+.nav-cta:hover{color:var(--txt)}
+
+/* hero */
+.hero{text-align:center;padding:56px 0 40px}
+.badge{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--mut);background:var(--soft);border:1px solid var(--line);padding:6px 14px;border-radius:99px}
+.badge i{width:7px;height:7px;border-radius:50%;background:var(--brand);box-shadow:0 0 0 4px color-mix(in srgb,var(--brand) 20%,transparent)}
+h1{font-size:clamp(40px,8vw,76px);line-height:1.04;letter-spacing:-.035em;font-weight:800;margin:22px auto 0;max-width:12ch}
+h1 span{color:var(--mut)}
+.sub{font-size:clamp(18px,2.4vw,22px);color:var(--mut);max-width:40ch;margin:22px auto 0;line-height:1.4;letter-spacing:-.01em}
+
+/* form */
+.join{max-width:460px;margin:36px auto 0}
+.field{display:flex;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px;box-shadow:var(--shadow);transition:border-color .15s}
+.field:focus-within{border-color:color-mix(in srgb,var(--txt) 40%,transparent)}
+.field input{flex:1;min-width:0;border:0;background:transparent;color:var(--txt);font:inherit;font-size:17px;padding:12px 14px;outline:none}
+.field input::placeholder{color:var(--mut)}
+.btn{border:0;cursor:pointer;background:var(--acc);color:var(--acc-txt);font:inherit;font-size:16px;font-weight:600;padding:12px 22px;border-radius:12px;white-space:nowrap;transition:transform .1s,opacity .15s}
+.btn:hover{opacity:.88}
+.btn:active{transform:scale(.97)}
+.btn[disabled]{opacity:.5;cursor:default}
+.fine{font-size:13px;color:var(--mut);margin-top:12px}
+.err{color:var(--err);font-size:14px;margin-top:10px;min-height:20px}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+@media(max-width:480px){.field{flex-direction:column}.btn{width:100%}}
+
+/* star */
+.star{width:112px;height:auto;display:block;margin:0 auto 18px;filter:drop-shadow(0 14px 22px rgba(225,170,0,.28));animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media(prefers-reduced-motion:reduce){.star{animation:none}}
+
+/* checks */
+.checks{list-style:none;display:inline-grid;gap:10px;margin:28px auto 0;text-align:left;font-size:17px;letter-spacing:-.01em}
+.checks li{display:flex;gap:10px;align-items:flex-start}
+.checks li:before{content:"✓";flex:none;width:22px;height:22px;border-radius:50%;background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok);font-size:13px;font-weight:700;display:grid;place-items:center;margin-top:1px}
+
+/* success */
+.done{display:none;max-width:460px;margin:36px auto 0;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px 24px;box-shadow:var(--shadow);text-align:left}
+.done h2{font-size:22px;letter-spacing:-.02em}
+.done p{color:var(--mut);font-size:16px;margin-top:10px}
+.done p b{color:var(--txt)}
+.done .btn{display:inline-block;text-decoration:none;margin-top:18px;width:100%;text-align:center}
+
+footer{text-align:center;color:var(--mut);font-size:13px;padding:50px 0 40px}
+footer a{text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="logo" href="/">OFFSZN</a>
+    <a class="nav-cta" href="#unete">Unirme</a>
+  </nav>
+
+  <header class="hero" id="unete">
+    <img class="star" src="/list/star.png" alt="" width="112" height="107">
+    <span class="badge"><i></i> STAR CHAIN · Beta</span>
+    <h1>Tu mezcla vocal. <span>En un solo plugin.</span></h1>
+    <p class="sub">Hace tu vocal chain, efectos, bus y paralelos. Todo&nbsp;en&nbsp;1.</p>
+
+    <ul class="checks">
+      <li>Controla Waves, FabFilter y más</li>
+      <li>Arma tu propia vocal chain y efectos</li>
+      <li>Chat personalizado para pedir cambios</li>
+    </ul>
+
+    <form class="join" id="form" novalidate>
+      <div class="field">
+        <input type="email" id="email" name="email" placeholder="tu@correo.com" autocomplete="email" inputmode="email" autocapitalize="off" required aria-label="Correo electrónico">
+        <button class="btn" id="go" type="submit">Unirme</button>
+      </div>
+      <input class="hp" type="text" name="website" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <div class="err" id="err" role="alert"></div>
+      <p class="fine">Solo tu correo. Sin spam.</p>
+    </form>
+
+    <div class="done" id="done">
+      <h2>¡Tu registro ha sido enviado! ✅</h2>
+      <p>Este <b>miércoles 28</b> enviaremos la invitación por el grupo de acceso anticipado. Únete aquí ➡️</p>
+      <a class="btn" id="wa" href="https://chat.whatsapp.com/EvH7uNHj5gWGrKu9mvg51g?s=cl&amp;p=a&amp;mlu=4&amp;ilr=4" target="_blank" rel="noopener">Unirme al grupo de WhatsApp</a>
+      <p style="font-size:14px">También te enviamos esto a tu correo.</p>
+    </div>
+  </header>
+
+  <footer>© OFFSZN · <a href="/legal/politicas-de-privacidad">Privacidad</a></footer>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var form = $('form'), email = $('email'), go = $('go'), err = $('err');
+  var q = new URLSearchParams(location.search);
+  var src = q.get('utm_source') || q.get('ref') || '';
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    err.textContent = '';
+    var v = email.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) { err.textContent = 'Ese correo no se ve bien. Revísalo.'; email.focus(); return; }
+    go.disabled = true; go.textContent = 'Enviando…';
+    fetch('/api/waitlist', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: v, website: $('website').value, source: src }) })
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ if (!r.ok) throw new Error(d.error || 'Error'); return d; }); })
+      .then(function(){
+        form.style.display = 'none';
+        $('done').style.display = 'block';
+        $('done').scrollIntoView({ behavior:'smooth', block:'center' });
+      })
+      .catch(function(ex){
+        err.textContent = ex.message || 'No pudimos guardarte. Intenta otra vez.';
+        go.disabled = false; go.textContent = 'Unirme';
+      });
+  });
+})();
+</script>
+</body>
+</html>

@@ -41,6 +41,7 @@ import willieRoutes from './infrastructure/http/routes/willie.routes.js';
 import licensePanelRoutes from './infrastructure/http/routes/license-panel.routes.js';
 import kanbanRoutes from './infrastructure/http/routes/kanban.routes.js';
 import cambiosRoutes from './infrastructure/http/routes/cambios.routes.js';
+import waitlistRoutes from './infrastructure/http/routes/waitlist.routes.js';
 import bookingRoutes from './infrastructure/http/routes/booking.routes.js';
 import creatorApplicationRoutes from './infrastructure/http/routes/creator-application.routes.js';
 import { checkAndSendRemindersInternal } from './infrastructure/http/controllers/CalendarController.js';
@@ -301,6 +302,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api', r2Routes);
 // Panel interno Willie+Gian: antes del limiter global porque la pagina consulta cada pocos segundos (protegido por clave admin)
 app.use('/api/cambios', cambiosRoutes);
+// Lista de espera STAR CHAIN BETA (publica con limiter propio + admin por clave)
+app.use('/api/waitlist', waitlistRoutes);
 app.use('/api', globalLimiter);
 
 // --- RESTO DE RUTAS API (Omitidas para evitar borrado accidental) ---
@@ -431,6 +434,8 @@ app.use((req, res, next) => {
             pathLower === '/owner/content-calendar' ||
             pathLower === '/owner/cambios-notas' ||
             pathLower === '/owner/cambios-notas.html' ||
+            pathLower === '/owner/correos-lista-de-espera' ||
+            pathLower === '/owner/correos-lista-de-espera.html' ||
             pathLower === '/owner/audience-data.js' ||
             pathLower === '/owner/payhip-sales-data.js' ||
             pathLower === '/server/public/recovery_dashboard.html' ||
@@ -601,6 +606,20 @@ app.get(['/cambios', '/cambios/notas', '/owner/cambios-notas', '/owner/cambios-n
     const p = path.join(rootPath, 'owner/cambios-notas.html');
     if (fs.existsSync(p)) return res.sendFile(p);
     return res.status(404).send('Cambios/notas not found');
+});
+
+// --- 3.0.5.0b CORREOS LISTA DE ESPERA (panel owner, protegido por clave en la API) ---
+app.get(['/owner/correos-lista-de-espera', '/owner/correos-lista-de-espera.html'], (req, res) => {
+    const p = path.join(rootPath, 'owner/correos-lista-de-espera.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Panel de lista de espera not found');
+});
+
+// --- 3.0.5.0c LANDING LISTA DE ESPERA STAR CHAIN BETA ---
+app.get(['/list/lista-de-espera', '/list/lista-de-espera.html'], (req, res) => {
+    const p = path.join(rootPath, 'list/lista-de-espera.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Lista de espera not found');
 });
 
 // --- 3.0.5.1 KANBAN STUDIO DIRECT ROUTES ---

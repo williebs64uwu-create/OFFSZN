@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Correos · Lista de espera · OFFSZN</title>
+<style>
+:root{--bg:#0b0b0e;--panel:#14141a;--panel2:#1b1b23;--line:#26262f;--txt:#ececf1;--mut:#8b8b98;--acc:#a78bfa;--verde:#4ade80;--rojo:#f87171;--azul:#60a5fa}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+input,select{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 10px}
+input:focus,select:focus{outline:none;border-color:var(--acc)}
+.btn{background:var(--acc);color:#12091f;border:0;border-radius:8px;padding:9px 14px;font-weight:600}
+.btn.ghost{background:var(--panel2);color:var(--txt);border:1px solid var(--line);font-weight:500}
+.err{color:var(--rojo);font-size:13px;min-height:18px}
+#login{min-height:100vh;display:grid;place-items:center;padding:16px}
+.login-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px;width:100%;max-width:340px;display:grid;gap:14px}
+.login-card h1{font-size:20px}.login-card p{color:var(--mut);font-size:13px}
+header{position:sticky;top:0;z-index:5;background:rgba(11,11,14,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+header h1{font-size:16px}.sp{flex:1}
+main{padding:16px;max-width:1100px;margin:0 auto}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat b{font-size:24px;display:block}.stat span{color:var(--mut);font-size:12px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.toolbar input[type=search]{flex:1;min-width:180px}
+.wrapt{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+th{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.06em;position:sticky;top:0;background:var(--panel)}
+tr:last-child td{border-bottom:0}
+td.em{font-weight:600;word-break:break-all}
+.tag{padding:2px 7px;border-radius:6px;background:#23232d;font-size:11px}
+.tag.ok{background:#14281c;color:var(--verde)}
+.mut{color:var(--mut)}
+a{color:var(--azul);text-decoration:none}
+.x{background:none;border:0;color:var(--mut);font-size:16px;padding:2px 8px}.x:hover{color:var(--rojo)}
+.empty{color:var(--mut);text-align:center;padding:40px 10px}
+#toast{position:fixed;right:14px;bottom:14px;background:var(--panel2);border:1px solid var(--acc);border-radius:10px;padding:10px 14px;z-index:30}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <form class="login-card" id="loginForm">
+    <h1>Lista de espera</h1>
+    <p>STAR CHAIN BETA · correos registrados. Ingresa tu clave.</p>
+    <input type="password" id="pin" placeholder="Clave" autocomplete="current-password">
+    <div class="err" id="loginErr"></div>
+    <button class="btn" type="submit">Entrar</button>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <h1>📬 Lista de espera · STAR CHAIN BETA</h1>
+    <span class="sp"></span>
+    <button class="btn ghost" id="refreshBtn">Actualizar</button>
+    <button class="btn ghost" id="logoutBtn">Salir</button>
+  </header>
+  <main>
+    <div class="stats">
+      <div class="stat"><b id="sTotal">0</b><span>Total</span></div>
+      <div class="stat"><b id="sToday">0</b><span>Últimas 24 h</span></div>
+      <div class="stat"><b id="sWa">0</b><span>Con WhatsApp</span></div>
+      <div class="stat"><b id="sTop">–</b><span>País principal</span></div>
+    </div>
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="Buscar correo, país, WhatsApp…">
+      <select id="fCountry"><option value="">Todos los países</option></select>
+      <select id="fState"><option value="">Todos</option><option value="new">Sin contactar</option><option value="done">Contactados</option><option value="wa">Con WhatsApp</option></select>
+      <button class="btn ghost" id="copyBtn">Copiar correos</button>
+      <button class="btn" id="csvBtn">Exportar CSV</button>
+    </div>
+    <div class="wrapt">
+      <table>
+        <thead><tr><th>Fecha</th><th>Correo</th><th>País</th><th>WhatsApp</th><th>DAW</th><th>Origen</th><th>Contactado</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty hidden" id="empty">Aún no hay registros.</div>
+    </div>
+  </main>
+</div>
+<div id="toast" class="hidden"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = {
+  get(k){ try{ return localStorage.getItem(k) }catch(_){ return null } },
+  set(k,v){ try{ localStorage.setItem(k,v) }catch(_){} },
+  del(k){ try{ localStorage.removeItem(k) }catch(_){} }
+};
+const DAW = {'fl-studio':'FL Studio','ableton':'Ableton','logic':'Logic','pro-tools':'Pro Tools','otro':'Otro'};
+let pin = store.get('wl_pin') || '';
+let items = [];
+
+async function api(path, opts = {}) {
+  const res = await fetch('/api/waitlist/admin' + path, {
+    method: opts.method || 'GET',
+    headers: { 'Content-Type': 'application/json', 'x-admin-key': pin },
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) { const e = new Error(data.error || ('Error ' + res.status)); e.status = res.status; throw e; }
+  return data;
+}
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.add('hidden'), 2200); }
+
+$('#loginForm').onsubmit = async (e) => {
+  e.preventDefault();
+  pin = $('#pin').value.trim();
+  try { await load(); store.set('wl_pin', pin); start(); }
+  catch (err) { $('#loginErr').textContent = err.status === 403 ? 'Clave incorrecta.' : err.message; }
+};
+$('#logoutBtn').onclick = () => { store.del('wl_pin'); location.reload(); };
+$('#refreshBtn').onclick = () => refresh();
+
+function start(){ $('#login').classList.add('hidden'); $('#app').classList.remove('hidden'); render(); }
+async function load(){ const d = await api('/list'); items = d.items || []; }
+async function refresh(){ try { await load(); render(); toast('Actualizado'); } catch (e) { toast(e.message); } }
+
+function filtered(){
+  const q = $('#q').value.trim().toLowerCase(), c = $('#fCountry').value, s = $('#fState').value;
+  return items.filter(r => {
+    if (c && r.country !== c) return false;
+    if (s === 'new' && r.contacted) return false;
+    if (s === 'done' && !r.contacted) return false;
+    if (s === 'wa' && !r.whatsapp) return false;
+    if (q && !`${r.email} ${r.country || ''} ${r.whatsapp || ''} ${r.source || ''}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function render(){
+  // stats
+  const day = Date.now() - 864e5;
+  const byC = {};
+  items.forEach(r => { if (r.country) byC[r.country] = (byC[r.country] || 0) + 1; });
+  const top = Object.entries(byC).sort((a, b) => b[1] - a[1])[0];
+  $('#sTotal').textContent = items.length;
+  $('#sToday').textContent = items.filter(r => new Date(r.created_at).getTime() > day).length;
+  $('#sWa').textContent = items.filter(r => r.whatsapp).length;
+  $('#sTop').textContent = top ? `${top[0]} (${top[1]})` : '–';
+  // country filter (keep selection)
+  const cur = $('#fCountry').value;
+  $('#fCountry').innerHTML = '<option value="">Todos los países</option>' +
+    Object.keys(byC).sort().map(c => `<option value="${esc(c)}">${esc(c)} (${byC[c]})</option>`).join('');
+  $('#fCountry').value = cur;
+
+  const list = filtered();
+  $('#empty').classList.toggle('hidden', list.length > 0);
+  $('#rows').innerHTML = list.map(r => `
+    <tr>
+      <td class="mut">${new Date(r.created_at).toLocaleString('es', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</td>
+      <td class="em">${esc(r.email)}</td>
+      <td>${r.country ? `<span class="tag">${esc(r.country)}</span>` : '<span class="mut">–</span>'}</td>
+      <td>${r.whatsapp ? `<a href="https://wa.me/${esc(r.whatsapp.replace(/\D/g, ''))}" target="_blank" rel="noopener">${esc(r.whatsapp)}</a>` : '<span class="mut">–</span>'}</td>
+      <td>${esc(DAW[r.daw] || '') || '<span class="mut">–</span>'}</td>
+      <td class="mut">${esc(r.source || '')}</td>
+      <td><input type="checkbox" data-c="${esc(r.id)}" ${r.contacted ? 'checked' : ''} style="accent-color:#4ade80;width:16px;height:16px"></td>
+      <td><button class="x" data-d="${esc(r.id)}" title="Borrar">✕</button></td>
+    </tr>`).join('');
+}
+
+['#q', '#fCountry', '#fState'].forEach(s => $(s).addEventListener('input', render));
+
+$('#rows').addEventListener('change', async (e) => {
+  const id = e.target.dataset.c; if (!id) return;
+  const row = items.find(r => r.id === id); if (!row) return;
+  row.contacted = e.target.checked;
+  try { await api('/' + id, { method: 'PATCH', body: { contacted: row.contacted } }); } catch (err) { toast(err.message); }
+});
+$('#rows').addEventListener('click', async (e) => {
+  const id = e.target.dataset.d; if (!id) return;
+  const row = items.find(r => r.id === id);
+  if (!row || !confirm('¿Borrar ' + row.email + '?')) return;
+  try { await api('/' + id, { method: 'DELETE' }); items = items.filter(r => r.id !== id); render(); toast('Borrado'); }
+  catch (err) { toast(err.message); }
+});
+
+$('#copyBtn').onclick = async () => {
+  const txt = filtered().map(r => r.email).join('\n');
+  try { await navigator.clipboard.writeText(txt); toast(filtered().length + ' correos copiados'); }
+  catch (_) { toast('No se pudo copiar'); }
+};
+$('#csvBtn').onclick = () => {
+  const cell = (v) => { let s = String(v ?? ''); if (/^[=+\-@]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
+  const head = ['fecha', 'correo', 'pais', 'whatsapp', 'daw', 'origen', 'contactado'];
+  const lines = [head.join(',')].concat(filtered().map(r =>
+    [r.created_at, r.email, r.country, r.whatsapp, r.daw, r.source, r.contacted ? 'si' : 'no'].map(cell).join(',')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'lista-de-espera-star-chain-beta.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+if (pin) load().then(start).catch(() => store.del('wl_pin'));
+</script>
+</body>
+</html>
