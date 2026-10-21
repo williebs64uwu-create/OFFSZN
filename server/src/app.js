@@ -302,7 +302,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api', r2Routes);
 // Panel interno Willie+Gian: antes del limiter global porque la pagina consulta cada pocos segundos (protegido por clave admin)
 app.use('/api/cambios', cambiosRoutes);
-// Lista de espera FAST MIX BETA (publica con limiter propio + admin por clave)
+// Lista de espera STAR CHAIN BETA (publica con limiter propio + admin por clave)
 app.use('/api/waitlist', waitlistRoutes);
 app.use('/api', globalLimiter);
 
@@ -615,7 +615,7 @@ app.get(['/owner/correos-lista-de-espera', '/owner/correos-lista-de-espera.html'
     return res.status(404).send('Panel de lista de espera not found');
 });
 
-// --- 3.0.5.0c LANDING LISTA DE ESPERA FAST MIX BETA ---
+// --- 3.0.5.0c LANDING LISTA DE ESPERA STAR CHAIN BETA ---
 app.get(['/list/lista-de-espera', '/list/lista-de-espera.html'], (req, res) => {
     const p = path.join(rootPath, 'list/lista-de-espera.html');
     if (fs.existsSync(p)) return res.sendFile(p);

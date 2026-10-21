@@ -19,7 +19,7 @@ const confirmationHtml = () => `<!DOCTYPE html>
 <p style="font-size:20px;font-weight:700;margin:0 0 12px">¡Tu registro ha sido enviado! ✅</p>
 <p style="margin:0 0 12px">Este <b>miércoles 28</b> enviaremos la invitación por el grupo de acceso anticipado, únete aquí ➡️</p>
 <p style="margin:0 0 20px"><a href="${WA_GROUP.replace(/&/g, '&amp;')}" style="color:#1d1d1f;font-weight:600">${WA_GROUP.replace(/&/g, '&amp;')}</a></p>
-<p style="margin:0;color:#6e6e73;font-size:14px">FAST MIX BETA · OFFSZN</p>
+<p style="margin:0;color:#6e6e73;font-size:14px">STAR CHAIN BETA · OFFSZN</p>
 </div></body></html>`;
 
 // ─── GET /api/waitlist/count
@@ -53,7 +53,7 @@ export const join = async (req, res) => {
     try {
         await sendOffsznEmail({
             to: email,
-            subject: '¡Tu registro ha sido enviado! · FAST MIX BETA',
+            subject: '¡Tu registro ha sido enviado! · STAR CHAIN BETA',
             html: confirmationHtml(),
             fromName: 'OFFSZN'
         });

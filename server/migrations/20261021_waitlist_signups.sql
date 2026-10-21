@@ -1,4 +1,4 @@
--- Lista de espera de FAST MIX BETA: offszn.lat/list/lista-de-espera
+-- Lista de espera de STAR CHAIN BETA: offszn.lat/list/lista-de-espera
 -- Panel de correos: offszn.lat/owner/correos-lista-de-espera
 -- Solo el backend (service role) lee/escribe.
 create table if not exists public.waitlist_signups (
