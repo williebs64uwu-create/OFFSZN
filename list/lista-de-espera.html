@@ -53,6 +53,7 @@ h1 span{color:var(--mut)}
 
 /* form */
 .join{max-width:460px;margin:36px auto 0}
+.lbl{display:block;font-size:16px;font-weight:600;letter-spacing:-.01em;margin-bottom:12px}
 .field{display:flex;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px;box-shadow:var(--shadow);transition:border-color .15s}
 .field:focus-within{border-color:color-mix(in srgb,var(--txt) 40%,transparent)}
 .field input{flex:1;min-width:0;border:0;background:transparent;color:var(--txt);font:inherit;font-size:17px;padding:12px 14px;outline:none}
@@ -83,6 +84,8 @@ h1 span{color:var(--mut)}
 .done p b{color:var(--txt)}
 .done .btn{display:inline-block;text-decoration:none;margin-top:18px;width:100%;text-align:center}
 
+.skip{background:none;border:0;color:var(--mut);font:inherit;font-size:14px;cursor:pointer;margin-top:10px;width:100%;text-align:center}
+.skip:hover{color:var(--txt)}
 footer{text-align:center;color:var(--mut);font-size:13px;padding:50px 0 40px}
 footer a{text-decoration:none}
 </style>
@@ -106,8 +109,9 @@ footer a{text-decoration:none}
     </ul>
 
     <form class="join" id="form" novalidate>
+      <label class="lbl" for="email">Ingresa tu correo para unirte:</label>
       <div class="field">
-        <input type="email" id="email" name="email" placeholder="tu@correo.com" autocomplete="email" inputmode="email" autocapitalize="off" required aria-label="Correo electrónico">
+        <input type="email" id="email" name="email" placeholder="tucorreo@gmail.com" autocomplete="email" inputmode="email" autocapitalize="off" required >
         <button class="btn" id="go" type="submit">Unirme</button>
       </div>
       <input class="hp" type="text" name="website" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
@@ -116,10 +120,11 @@ footer a{text-decoration:none}
     </form>
 
     <div class="done" id="done">
-      <h2>¡Tu registro ha sido enviado! ✅</h2>
-      <p>Este <b>miércoles 28</b> enviaremos la invitación por el grupo de acceso anticipado. Únete aquí ➡️</p>
+      <h2 id="doneTitle">¡Tu registro ha sido enviado! ✅</h2>
+      <p id="doneText">Este <b>miércoles 28</b> enviaremos la invitación por el grupo de acceso anticipado. Únete aquí ➡️</p>
       <a class="btn" id="wa" href="https://chat.whatsapp.com/EvH7uNHj5gWGrKu9mvg51g?s=cl&amp;p=a&amp;mlu=4&amp;ilr=4" target="_blank" rel="noopener">Unirme al grupo de WhatsApp</a>
-      <p style="font-size:14px">También te enviamos esto a tu correo.</p>
+      <p style="font-size:14px" id="doneNote">También te enviamos esto a tu correo.</p>
+      <button class="skip" id="other" type="button" style="display:none">Registrar otro correo</button>
     </div>
   </header>
 
@@ -133,6 +138,31 @@ footer a{text-decoration:none}
   var q = new URLSearchParams(location.search);
   var src = q.get('utm_source') || q.get('ref') || '';
 
+  var store = {
+    get: function(k){ try { return localStorage.getItem(k); } catch(_) { return null; } },
+    set: function(k,v){ try { localStorage.setItem(k,v); } catch(_) {} },
+    del: function(k){ try { localStorage.removeItem(k); } catch(_) {} }
+  };
+
+  function showDone(already){
+    form.style.display = 'none';
+    $('doneTitle').textContent = already ? '¡Ya estás dentro! 🙌' : '¡Tu registro ha sido enviado! ✅';
+    $('doneNote').style.display = already ? 'none' : 'block';
+    $('other').style.display = 'block';
+    $('done').style.display = 'block';
+  }
+
+  // Si este dispositivo ya se registró, no se vuelve a pedir el correo.
+  if (store.get('sc_joined')) showDone(true);
+
+  $('other').addEventListener('click', function(){
+    store.del('sc_joined');
+    $('done').style.display = 'none';
+    form.style.display = 'block';
+    go.disabled = false; go.textContent = 'Unirme';
+    email.value = ''; email.focus();
+  });
+
   form.addEventListener('submit', function(e){
     e.preventDefault();
     err.textContent = '';
@@ -141,9 +171,9 @@ footer a{text-decoration:none}
     go.disabled = true; go.textContent = 'Enviando…';
     fetch('/api/waitlist', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: v, website: $('website').value, source: src }) })
       .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ if (!r.ok) throw new Error(d.error || 'Error'); return d; }); })
-      .then(function(){
-        form.style.display = 'none';
-        $('done').style.display = 'block';
+      .then(function(d){
+        store.set('sc_joined', '1');
+        showDone(!!d.already);
         $('done').scrollIntoView({ behavior:'smooth', block:'center' });
       })
       .catch(function(ex){
