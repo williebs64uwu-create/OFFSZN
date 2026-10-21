@@ -4,7 +4,7 @@ import { isAdminKey } from '../../../shared/config/adminKey.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 
 const LIST = 'fast-mix-beta';
-const WA_GROUP = 'https://chat.whatsapp.com/EvH7uNHj5gWGrKu9mvg51g?s=cl&p=a&mlu=4&ilr=4';
+const WA_GROUP = 'https://chat.whatsapp.com/GAd2Na1h04c0ntUQ6G681X?s=cl&p=a&mlu=4&ilr=4';
 const EMAIL_RE = /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,24}$/;
 
 // Errores de tipeo comunes: se rechazan sugiriendo el dominio correcto.
