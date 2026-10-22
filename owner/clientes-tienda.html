@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Clientes · Tienda Willie</title>
+    <link rel="stylesheet" href="/willieinspired/assets/store.css">
+</head>
+<body>
+    <main class="wi-container wi-section--tight">
+        <div class="wi-head">
+            <div>
+                <p class="wi-eyebrow">CRM · Tienda Willie</p>
+                <h1 class="wi-h2" style="margin-top:6px">Clientes y embudo</h1>
+                <p class="wi-muted" id="status">Ingresa la clave del panel para cargar.</p>
+            </div>
+            <form class="wi-row" id="keyForm">
+                <input class="wi-input" type="password" id="key" placeholder="Clave del panel" autocomplete="off" style="min-height:44px;border-radius:999px;width:220px">
+                <button class="wi-btn wi-btn--dark wi-btn--sm" type="submit">Entrar</button>
+            </form>
+        </div>
+
+        <section class="wi-panel" style="margin-bottom:20px">
+            <h2 class="wi-h3">A/B del popup · 50% vs 2x1</h2>
+            <div class="wi-row" style="margin:12px 0"><select class="wi-select" id="days" style="width:auto;min-height:44px;border-radius:999px"><option value="7">7 días</option><option value="30" selected>30 días</option><option value="90">90 días</option></select></div>
+            <div class="wi-scroll-x"><table class="wi-table" id="ab"></table></div>
+        </section>
+
+        <section class="wi-panel">
+            <div class="wi-row" style="margin-bottom:12px">
+                <select class="wi-select" id="segment" style="width:auto;min-height:44px;border-radius:999px">
+                    <option value="">Todos los segmentos</option><option>FREE</option><option>COMPRADOR V1</option><option>COMPRADOR V2</option>
+                </select>
+                <input class="wi-input" id="country" placeholder="País (PE, MX…)" maxlength="2" style="width:160px;min-height:44px;border-radius:999px">
+                <button class="wi-btn wi-btn--ghost wi-btn--sm" id="reload" type="button">Actualizar</button>
+                <button class="wi-btn wi-btn--ghost wi-btn--sm" id="csv" type="button">Exportar CSV</button>
+            </div>
+            <div class="wi-scroll-x"><table class="wi-table" id="customers"></table></div>
+        </section>
+    </main>
+
+    <script src="/willieinspired/assets/store.js"></script>
+    <script>
+    (async () => {
+        const $ = (s) => document.querySelector(s);
+        const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        let rows = [];
+        const headers = () => ({ 'x-admin-key': sessionStorage.getItem('wi_admin_key') || '' });
+
+        async function get(path) {
+            const res = await fetch(path, { headers: headers() });
+            if (res.status === 403) throw new Error('Clave incorrecta');
+            return res.json();
+        }
+        async function load() {
+            $('#status').textContent = 'Cargando…';
+            try {
+                const q = new URLSearchParams();
+                if ($('#segment').value) q.set('segment', $('#segment').value);
+                if ($('#country').value) q.set('country', $('#country').value.trim());
+                const [cust, ab] = await Promise.all([get(`/api/store/admin/customers?${q}`), get(`/api/store/admin/ab-report?days=${$('#days').value}`)]);
+                rows = cust.items || [];
+                renderAb(ab.report || {});
+                renderCustomers();
+                const dinero = rows.reduce((a, r) => a + (r.dinero || 0), 0);
+                $('#status').textContent = `${rows.length} clientes · US$${dinero.toFixed(2)} acumulado`;
+            } catch (e) {
+                $('#status').textContent = e.message;
+            }
+        }
+        function renderAb(report) {
+            const keys = ['popup_view', 'popup_click', 'lead', 'purchases', 'revenueUsd', 'ctr', 'conversion'];
+            const names = { popup_view: 'Vistas', popup_click: 'Clics', lead: 'Leads', purchases: 'Compras', revenueUsd: 'Ingreso US$', ctr: 'CTR %', conversion: 'Conversión %' };
+            $('#ab').innerHTML = `<thead><tr><th>Métrica</th>${Object.keys(report).map((v) => `<th>${v === 'welcome50' ? '50% bienvenida' : '2x1'}</th>`).join('')}</tr></thead>
+                <tbody>${keys.map((k) => `<tr><td>${names[k]}</td>${Object.values(report).map((r) => `<td>${r[k] ?? 0}</td>`).join('')}</tr>`).join('')}</tbody>`;
+        }
+        function renderCustomers() {
+            $('#customers').innerHTML = `<thead><tr><th>Correo</th><th>Usuario</th><th>País</th><th>VPN</th><th>Segmento</th><th>Compras</th><th>Dinero</th><th>Hora</th><th>Cuándo</th><th>Fuente</th><th>Variante</th></tr></thead>
+                <tbody>${rows.map((r) => `<tr>
+                    <td>${esc(r.email)}</td><td>${esc(r.username)}</td><td>${esc(r.pais)}</td><td>${r.vpn ? '⚠️' : ''}</td>
+                    <td>${esc(r.segmento)}</td><td>${r.compras}</td><td>US$${Number(r.dinero || 0).toFixed(2)}</td>
+                    <td>${esc(r.horario?.hora)}</td><td>${esc(r.horario?.dia)}</td><td>${esc(r.fuente)}</td><td>${esc(r.variante)}</td></tr>`).join('')}</tbody>`;
+        }
+        $('#keyForm').addEventListener('submit', (e) => { e.preventDefault(); sessionStorage.setItem('wi_admin_key', $('#key').value.trim()); load(); });
+        $('#reload').onclick = load;
+        $('#segment').onchange = load;
+        $('#days').onchange = load;
+        $('#country').onchange = load;
+        $('#csv').onclick = () => {
+            const cols = ['email', 'username', 'pais', 'vpn', 'segmento', 'compras', 'dinero', 'fuente', 'variante'];
+            const lines = [cols.join(','), ...rows.map((r) => cols.map((c) => `"${String(r[c] ?? '').replace(/"/g, '""')}"`).join(','))];
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv' }));
+            a.download = `clientes-tienda-${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+        };
+        if (sessionStorage.getItem('wi_admin_key')) load();
+    })();
+    </script>
+</body>
+</html>

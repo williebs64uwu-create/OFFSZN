@@ -42,6 +42,8 @@ import licensePanelRoutes from './infrastructure/http/routes/license-panel.route
 import kanbanRoutes from './infrastructure/http/routes/kanban.routes.js';
 import cambiosRoutes from './infrastructure/http/routes/cambios.routes.js';
 import waitlistRoutes from './infrastructure/http/routes/waitlist.routes.js';
+import storeRoutes from './infrastructure/http/routes/store.routes.js';
+import { storePageFor } from './shared/store/pages.js';
 import bookingRoutes from './infrastructure/http/routes/booking.routes.js';
 import creatorApplicationRoutes from './infrastructure/http/routes/creator-application.routes.js';
 import { checkAndSendRemindersInternal } from './infrastructure/http/controllers/CalendarController.js';
@@ -304,6 +306,8 @@ app.use('/api', r2Routes);
 app.use('/api/cambios', cambiosRoutes);
 // Lista de espera STAR CHAIN BETA (publica con limiter propio + admin por clave)
 app.use('/api/waitlist', waitlistRoutes);
+// Tienda Willie Inspired (catálogo, quote, leads, eventos A/B, ofertas, cron) con limiters propios
+app.use('/api/store', storeRoutes);
 app.use('/api', globalLimiter);
 
 // --- RESTO DE RUTAS API (Omitidas para evitar borrado accidental) ---
@@ -436,6 +440,8 @@ app.use((req, res, next) => {
             pathLower === '/owner/cambios-notas.html' ||
             pathLower === '/owner/correos-lista-de-espera' ||
             pathLower === '/owner/correos-lista-de-espera.html' ||
+            pathLower === '/owner/clientes-tienda' ||
+            pathLower === '/owner/clientes-tienda.html' ||
             pathLower === '/owner/audience-data.js' ||
             pathLower === '/owner/payhip-sales-data.js' ||
             pathLower === '/server/public/recovery_dashboard.html' ||
@@ -548,6 +554,13 @@ app.get(['/willieinspired', '/@willieinspired'], (req, res) => {
     return res.redirect(301, '/perfilpro.html?user=willieinspired');
 });
 
+// Páginas de la tienda (presets, plantillas, plugins, servicios, oferta, bienvenida, gracias, perfil, comunidad...)
+app.get(/^\/@?willieinspired\/(.+?)\/?$/, (req, res, next) => {
+    const template = storePageFor(req.params[0]);
+    if (!template) return next();
+    return res.sendFile(path.join(rootPath, 'willieinspired', template));
+});
+
 app.get(['/willieinspired/:slug', '/@willieinspired/:slug'], (req, res, next) => {
     const { slug } = req.params;
     const cleanSlug = slug.replace(/\.html$/, '');
@@ -613,6 +626,13 @@ app.get(['/owner/correos-lista-de-espera', '/owner/correos-lista-de-espera.html'
     const p = path.join(rootPath, 'owner/correos-lista-de-espera.html');
     if (fs.existsSync(p)) return res.sendFile(p);
     return res.status(404).send('Panel de lista de espera not found');
+});
+
+// --- 3.0.5.0d CLIENTES DE LA TIENDA WILLIE (tags, A/B; protegido por clave en la API) ---
+app.get(['/owner/clientes-tienda', '/owner/clientes-tienda.html'], (req, res) => {
+    const p = path.join(rootPath, 'owner/clientes-tienda.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Panel de clientes not found');
 });
 
 // --- 3.0.5.0c LANDING LISTA DE ESPERA STAR CHAIN BETA ---
