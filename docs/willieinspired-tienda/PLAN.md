@@ -99,7 +99,7 @@ Migraciones (correr en este orden en Supabase → SQL Editor; idempotentes, RLS 
 
 Panel: **`offszn.lat/crm`**. Diseño con la estructura de HighLevel (barra lateral oscura, pipeline, automatizaciones) y componentes al estilo shadcn/ui (tokens zinc, tarjetas, badges, tablas, panel lateral, diálogos, paleta ⌘K, tema claro/oscuro), hecho en CSS puro para no depender de un build. Todo vive en tu base y en tu servidor, sin pagar otra herramienta.
 
-**Acceso:** pantalla de clave (la misma `OFFSZN_VARIABLE_PANEL` de tus otros paneles). Se verifica en el servidor, bloquea 15 minutos tras 8 intentos fallidos y la clave se guarda solo en esta sesión del navegador, o en el dispositivo si marcas "Recordar".
+**Acceso:** pantalla de clave. Hay **una sola clave para todos los paneles** (CRM, licencias, pagos manuales, lista de espera, notas, diagnóstico, logs): la variable de entorno `OFFSZN_VARIABLE_PANEL`. Ya no existen claves escritas en el código; si la variable no está definida, nadie entra. Si en el servidor sigue la variable antigua `PLUGIN_ADMIN_KEY`, bórrala: mientras exista cuenta como una segunda clave (el CRM lo avisa en *Estado del sistema*). Se verifica en el servidor, bloquea 15 minutos tras 8 intentos fallidos y la clave se guarda solo en esta sesión del navegador, o en el dispositivo si marcas "Recordar".
 
 **Archivos:** `crm/index.html` (estructura), `crm/crm.css` (sistema de diseño), `crm/js/core.js` (acceso, router, panel lateral, diálogos, búsqueda) y `crm/js/pages.js` (cada pantalla).
 
@@ -149,9 +149,9 @@ Panel: **`offszn.lat/crm`**. Diseño con la estructura de HighLevel (barra later
 - Envío real de correos (Brevo) y creación de licencias contra la base real.
 - Migración SQL aplicada.
 
-## 8. Referencias de diseño (pendiente de acceso)
+## 8. Referencias de diseño
 
-Intenté navegar `https://waveatmos.com` y `https://www.vocalessential.com`, pero el contenedor no puede abrir esos dominios (el proxy responde 403 y DNS no resuelve). Para revisarlos hay que agregar ambos hosts en **Network access → Allowed domains** de la configuración del entorno. Mientras tanto, el diseño está hecho a partir de lo que describiste (blanco texturizado, hero con reproductor antes/después, selector de artistas en avatares, escalera de valor y prueba en tu voz).
+Análisis comparado de The Vox Box, Vocal Essential y WaveAtmos, con veredicto y estructura propuesta: ver `docs/willieinspired-tienda/DISENO-REFERENCIAS.md`.
 
 ## 9. Pruebas y verificación
 

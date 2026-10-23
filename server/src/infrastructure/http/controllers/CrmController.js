@@ -209,6 +209,7 @@ export const system = async (req, res) => {
     const has = (...names) => names.every((n) => Boolean(String(process.env[n] || '').trim()));
     const integrations = [
         { key: 'panel', name: 'Clave del panel', ok: has('OFFSZN_VARIABLE_PANEL'), fix: 'Define OFFSZN_VARIABLE_PANEL en el servidor.' },
+        { key: 'single_key', name: 'Una sola clave de acceso', ok: !has('PLUGIN_ADMIN_KEY'), fix: 'Borra la variable antigua PLUGIN_ADMIN_KEY del servidor: mientras exista, es una segunda clave válida.' },
         { key: 'supabase', name: 'Base de datos (Supabase)', ok: has('SUPABASE_URL', 'SUPABASE_SERVICE_KEY'), fix: 'Define SUPABASE_URL y SUPABASE_SERVICE_KEY.' },
         { key: 'brevo', name: 'Correos (Brevo)', ok: has('BREVO_API_KEY'), fix: 'Define BREVO_API_KEY.' },
         { key: 'brevo_list', name: 'Lista de contactos en Brevo', ok: has('STORE_BREVO_LIST_ID'), fix: 'Define STORE_BREVO_LIST_ID (opcional, para sincronizar contactos).' },
