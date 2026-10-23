@@ -10,6 +10,7 @@ const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
 process.env.PLUGIN_PRIVATE_KEY = privateKey.export({ format: 'der', type: 'pkcs8' }).toString('base64');
 process.env.OFFSZN_VARIABLE_PANEL = 'clave-de-prueba';
 process.env.OMNI_PRODUCT_IDS = '';               // Omni aún sin producto en la tienda
+process.env.WIDGET_PRODUCT_IDS = '7777';         // OFFSZN Widget: id de producto de prueba
 
 // ── Supabase en memoria (solo lo que usa PluginLicensingController) ───────────────────────────────────────────────
 function makeFakeSupabase() {
@@ -295,6 +296,52 @@ test('CASSETTE: prefijo CASSETTE, firma v2 y exclusiva (no sirve en otros plugin
     assert.equal(x.code, 403); assert.equal(x.body.code, 'wrong_product');
     const fixed = await call(C.adminGenerateFullKey, { admin_key: ADMIN, plugin_name: 'Cassette', serial_key: 'EASY-FULL-1234ABCD-5678ABCD' });
     assert.match(fixed.body.serial_key, /^CASSETTE-FULL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+});
+
+// ── OFFSZN WIDGET ─────────────────────────────────────────────────────────────────────────────────────────────────
+test('OFFSZN Widget: prefijo WIDGET, prueba de 3 días, firma v2 y exclusiva (no sirve en otros plugins ni al revés)', async () => {
+    const R = await import('../src/shared/config/pluginRegistry.js');
+    assert.equal(R.prefixForName('OFFSZN Widget'), 'WIDGET');
+    assert.equal(R.prefixForName('offszn-widget'), 'WIDGET');
+    assert.equal(R.findPluginBySerial('WIDGET-FULL-AB12CD34-EF56AB78').id, 'offszn-widget');
+    assert.equal(R.extractSerial('OFFSZN Widget: widget-trial-ab12cd34-ef56ab78'), 'WIDGET-TRIAL-AB12CD34-EF56AB78');
+    // el plugin "Rack" (palabra clave "hub") y los demás no se confunden con el widget
+    assert.equal(R.findPluginByName('OFFSZN Rack').id, 'offszn-rack');
+
+    // compra: el checkout reconoce el producto por ID (WIDGET_PRODUCT_IDS) o por nombre
+    assert.equal(R.isProductOfPlugin('offszn-widget', { id: 7777, name: 'lo-que-sea' }), true);
+    assert.equal(R.isProductOfPlugin('offszn-widget', { id: '7777' }), true);
+    assert.equal(R.isProductOfPlugin('offszn-widget', { name: 'OFFSZN Widget (Windows)' }), true);
+    assert.equal(R.isProductOfPlugin('offszn-widget', { id: 899, name: 'Easy Mix' }), false);
+    assert.equal(R.isProductOfPlugin('offszn-widget', { id: 5002, name: 'Cassette VST' }), false);
+    assert.equal(R.firstProductIdOf('offszn-widget'), 7777);
+
+    // clave completa (la que se emite al comprar)
+    const key = await newKey('OFFSZN Widget');
+    assert.match(key, /^WIDGET-FULL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    const hwid = HW('PC-WILLIE', DEV_A), nonce = 'n-widget';
+    const ok = await call(C.activateSerial, { serial_key: key, hwid, plugin_name: 'OFFSZN Widget', nonce });
+    assert.equal(ok.code, 200, JSON.stringify(ok.body));
+    assert.ok(verifyV2(ok, { serial: key, hwid, nonce }));
+    const v = await call(C.validateLicense, { serial_key: key, hwid, plugin_name: 'OFFSZN Widget', nonce: 'n-widget-2' });
+    assert.equal(v.code, 200, JSON.stringify(v.body));
+    for (const other of ['Easy Clean', 'Easy Pitch', 'EASY MIX', 'Omni Plugin', 'GHOST', 'Cassette']) {
+        const r = await call(C.activateSerial, { serial_key: key, hwid, plugin_name: other });
+        assert.equal(r.code, 403, `WIDGET no debe activarse en ${other}`); assert.equal(r.body.code, 'wrong_product');
+    }
+    const ghost = await newKey('GHOST');
+    const x = await call(C.activateSerial, { serial_key: ghost, hwid, plugin_name: 'OFFSZN Widget' });
+    assert.equal(x.code, 403); assert.equal(x.body.code, 'wrong_product');
+
+    // prueba gratis: una por equipo, clave WIDGET-TRIAL, arranca al activar
+    const hwidT = HW('PC-NUEVO', DEV_B);
+    const t = await call(C.requestTrial, { hwid: hwidT, device_name: 'PC-NUEVO', plugin_name: 'OFFSZN Widget' });
+    assert.equal(t.code, 200, JSON.stringify(t.body));
+    assert.match(t.body.serial_key, /^WIDGET-TRIAL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    const ta = await call(C.activateSerial, { serial_key: t.body.serial_key, hwid: hwidT, plugin_name: 'OFFSZN Widget', nonce: 'n-trial' });
+    assert.equal(ta.code, 200, JSON.stringify(ta.body));
+    assert.equal(ta.body.license_type, 'trial');
+    assert.ok(verifyV2(ta, { serial: t.body.serial_key, hwid: hwidT, nonce: 'n-trial' }));
 });
 
 test('admin: si el panel manda un serial con el prefijo de otro plugin, el servidor lo corrige', async () => {
