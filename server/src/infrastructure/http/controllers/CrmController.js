@@ -1,0 +1,202 @@
+// ─── CRM de la tienda Willie · endpoints del panel owner (todos con x-admin-key) ─────────────────────────────────
+import { supabase } from '../../database/connection.js';
+import { buildOverview } from '../../../shared/store/analytics.js';
+import { RULES } from '../../../shared/store/automations.js';
+import { resolveRegion, quoteCart } from '../../../shared/store/pricing.js';
+import { getProduct } from '../../../shared/store/catalog.js';
+import { fulfillOrder } from '../../services/storeService.js';
+import { runAutomations } from '../../services/crmService.js';
+
+const clip = (v, n) => String(v ?? '').slice(0, n).trim();
+const email = (v) => clip(v, 200).toLowerCase();
+const STAGES = ['lead', 'prueba', 'cotizado', 'pagado', 'perdido'];
+const fail = (res, error, status = 500) => res.status(status).json({ error: typeof error === 'string' ? error : error?.message || 'Error' });
+
+// ─── GET /admin/overview?days=30
+export const overview = async (req, res) => {
+    const days = Math.min(180, Math.max(1, parseInt(req.query.days, 10) || 30));
+    const since = new Date(Date.now() - days * 86400000).toISOString();
+    const [orders, events, customers, trials, carts] = await Promise.all([
+        supabase.from('store_orders').select('status, created_at, total_usd, country, payment_method, utm, offer_type, lines').gte('created_at', since).limit(5000),
+        supabase.from('store_events').select('event, session_id').gte('created_at', since).in('event', ['page_view', 'add_to_cart', 'checkout_start', 'purchase']).limit(50000),
+        supabase.from('store_customers').select('purchase_count, segment').limit(20000),
+        supabase.from('store_trials').select('converted_at').gte('created_at', since).limit(5000),
+        supabase.from('store_carts').select('recovered_at, reminder_sent_at').gte('created_at', since).limit(5000)
+    ]);
+    const failed = [orders, events, customers, trials, carts].find((r) => r.error);
+    if (failed) return fail(res, failed.error);
+    return res.json(buildOverview({ orders: orders.data, events: events.data, customers: customers.data, trials: trials.data, carts: carts.data }, days));
+};
+
+// ─── GET /admin/contacts?q=&segment=&country=&tag=
+export const contacts = async (req, res) => {
+    let q = supabase.from('store_customers').select('*').order('last_purchase_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(500);
+    if (req.query.segment) q = q.eq('segment', clip(req.query.segment, 20));
+    if (req.query.tag) q = q.contains('tags', [clip(req.query.tag, 40)]);
+    if (req.query.country) { const c = clip(req.query.country, 2).toUpperCase(); q = q.or(`country.eq.${c},ip_country.eq.${c}`); }
+    if (req.query.q) {
+        const term = clip(req.query.q, 60).replace(/[^a-zA-Z0-9@._+-]/g, '');
+        if (term) q = q.or(`email.ilike.%${term}%,username.ilike.%${term}%`);
+    }
+    const { data, error } = await q;
+    if (error) return fail(res, error);
+    return res.json({ items: data });
+};
+
+// ─── GET /admin/contacts/:email → ficha completa con línea de tiempo
+export const contact = async (req, res) => {
+    const e = email(req.params.email);
+    if (!e) return fail(res, 'Correo requerido', 400);
+    const [customer, orders, trials, deals, notes, cart, evByEmail] = await Promise.all([
+        supabase.from('store_customers').select('*').eq('email', e).maybeSingle(),
+        supabase.from('store_orders').select('created_at, status, payment_method, total_usd, offer_type, country, lines, delivery_token').eq('email', e).order('created_at', { ascending: false }).limit(50),
+        supabase.from('store_trials').select('*').eq('email', e).order('created_at', { ascending: false }),
+        supabase.from('store_deals').select('*').eq('email', e).order('created_at', { ascending: false }),
+        supabase.from('store_notes').select('*').eq('email', e).order('created_at', { ascending: false }).limit(100),
+        supabase.from('store_carts').select('*').eq('email', e).maybeSingle(),
+        supabase.from('store_events').select('created_at, event, page, product_id, variant, session_id, meta').eq('email', e).order('created_at', { ascending: false }).limit(100)
+    ]);
+    // Eventos anónimos de las mismas sesiones (antes de dejar el correo)
+    const sessions = [...new Set((evByEmail.data || []).map((x) => x.session_id).filter(Boolean))].slice(0, 10);
+    const evBySession = sessions.length
+        ? await supabase.from('store_events').select('created_at, event, page, product_id, variant, session_id, meta').in('session_id', sessions).order('created_at', { ascending: false }).limit(200)
+        : { data: [] };
+    const seen = new Set();
+    const events = [...(evByEmail.data || []), ...(evBySession.data || [])].filter((x) => {
+        const k = `${x.created_at}|${x.event}|${x.session_id}`;
+        return seen.has(k) ? false : seen.add(k);
+    }).sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 150);
+
+    const { data: log } = await supabase.from('store_automation_log').select('created_at, rule').eq('email', e).order('created_at', { ascending: false }).limit(30);
+    return res.json({
+        customer: customer.data, orders: orders.data || [], trials: trials.data || [], deals: deals.data || [],
+        notes: notes.data || [], cart: cart.data, events, automations: log || []
+    });
+};
+
+// ─── PATCH /admin/contacts/:email  { tags, unsubscribed, whatsapp }
+export const updateContact = async (req, res) => {
+    const e = email(req.params.email);
+    const b = req.body || {};
+    const patch = { updated_at: new Date().toISOString() };
+    if (Array.isArray(b.tags)) patch.tags = [...new Set(b.tags.map((t) => clip(t, 40).toLowerCase()).filter(Boolean))].slice(0, 30);
+    if (typeof b.unsubscribed === 'boolean') patch.unsubscribed = b.unsubscribed;
+    if (b.whatsapp !== undefined) patch.whatsapp = clip(b.whatsapp, 30).replace(/[^\d+]/g, '') || null;
+    const { data, error } = await supabase.from('store_customers').update(patch).eq('email', e).select('*').maybeSingle();
+    if (error) return fail(res, error);
+    if (!data) return fail(res, 'Contacto no encontrado', 404);
+    return res.json({ ok: true, customer: data });
+};
+
+// ─── POST /admin/contacts/:email/notes  { body, kind: note|task, dueAt }  ·  PATCH /admin/notes/:id { done }
+export const addNote = async (req, res) => {
+    const b = req.body || {};
+    const body = clip(b.body, 1000);
+    if (!body) return fail(res, 'Escribe la nota', 400);
+    const kind = b.kind === 'task' ? 'task' : 'note';
+    const due = kind === 'task' && b.dueAt && !Number.isNaN(Date.parse(b.dueAt)) ? new Date(b.dueAt).toISOString() : null;
+    const { data, error } = await supabase.from('store_notes').insert({ email: email(req.params.email), kind, body, due_at: due }).select('*').single();
+    if (error) return fail(res, error);
+    return res.json({ ok: true, note: data });
+};
+export const updateNote = async (req, res) => {
+    const { error } = await supabase.from('store_notes').update({ done: Boolean(req.body?.done) }).eq('id', clip(req.params.id, 64));
+    if (error) return fail(res, error);
+    return res.json({ ok: true });
+};
+export const tasks = async (req, res) => {
+    const { data, error } = await supabase.from('store_notes').select('*').eq('kind', 'task').eq('done', false).order('due_at', { ascending: true, nullsFirst: false }).limit(200);
+    if (error) return fail(res, error);
+    return res.json({ items: data });
+};
+
+// ─── Pipeline
+export const deals = async (req, res) => {
+    const { data, error } = await supabase.from('store_deals').select('*').order('updated_at', { ascending: false }).limit(500);
+    if (error) return fail(res, error);
+    return res.json({ stages: STAGES, items: data });
+};
+export const createDeal = async (req, res) => {
+    const b = req.body || {};
+    const e = email(b.email);
+    const title = clip(b.title, 120);
+    if (!e.includes('@') || !title) return fail(res, 'Correo y título requeridos', 400);
+    const stage = STAGES.includes(b.stage) ? b.stage : 'lead';
+    const value = Number(b.valueUsd);
+    const { data, error } = await supabase.from('store_deals').insert({
+        email: e, title, stage, value_usd: Number.isFinite(value) && value >= 0 ? value : null,
+        source: clip(b.source, 80) || 'manual', notes: clip(b.notes, 1000) || null, product_id: clip(b.productId, 80) || null
+    }).select('*').single();
+    if (error) return fail(res, error);
+    return res.json({ ok: true, deal: data });
+};
+export const updateDeal = async (req, res) => {
+    const b = req.body || {};
+    const patch = { updated_at: new Date().toISOString() };
+    if (b.stage !== undefined) {
+        if (!STAGES.includes(b.stage)) return fail(res, 'Etapa no válida', 400);
+        patch.stage = b.stage;
+        patch.closed_at = ['pagado', 'perdido'].includes(b.stage) ? new Date().toISOString() : null;
+    }
+    if (b.valueUsd !== undefined) { const v = Number(b.valueUsd); patch.value_usd = Number.isFinite(v) && v >= 0 ? v : null; }
+    if (b.notes !== undefined) patch.notes = clip(b.notes, 1000) || null;
+    if (b.lostReason !== undefined) patch.lost_reason = clip(b.lostReason, 200) || null;
+    const { data, error } = await supabase.from('store_deals').update(patch).eq('id', clip(req.params.id, 64)).select('*').maybeSingle();
+    if (error) return fail(res, error);
+    if (!data) return fail(res, 'Venta no encontrada', 404);
+    return res.json({ ok: true, deal: data });
+};
+
+// ─── Automatizaciones
+export const automations = async (req, res) => {
+    const since = new Date(Date.now() - 30 * 86400000).toISOString();
+    const [rules, log] = await Promise.all([
+        supabase.from('store_automation_rules').select('key, enabled'),
+        supabase.from('store_automation_log').select('rule').gte('created_at', since).limit(20000)
+    ]);
+    const enabled = new Map((rules.data || []).map((r) => [r.key, r.enabled]));
+    const sent = {};
+    for (const l of log.data || []) sent[l.rule] = (sent[l.rule] || 0) + 1;
+    return res.json({ items: RULES.map((r) => ({ ...r, enabled: enabled.has(r.key) ? enabled.get(r.key) : true, sent30d: sent[r.key] || 0 })) });
+};
+export const toggleAutomation = async (req, res) => {
+    const rule = RULES.find((r) => r.key === req.params.key);
+    if (!rule) return fail(res, 'Regla no encontrada', 404);
+    const { error } = await supabase.from('store_automation_rules').upsert({ key: rule.key, name: rule.name, enabled: Boolean(req.body?.enabled), updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error) return fail(res, error);
+    return res.json({ ok: true });
+};
+export const runNow = async (req, res) => {
+    try { return res.json({ ok: true, results: await runAutomations() }); } catch (e) { return fail(res, e); }
+};
+
+// ─── POST /admin/manual-sale { email, items:[{id,os}], country, priceUsd?, note }
+// Venta cerrada por WhatsApp: entrega archivos/licencias, manda el correo y queda en el CRM igual que una compra web.
+export const manualSale = async (req, res) => {
+    const b = req.body || {};
+    const e = email(b.email);
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e)) return fail(res, 'Correo no válido', 400);
+    const country = clip(b.country, 2).toUpperCase() || null;
+    const region = resolveRegion({ declaredCountry: country });
+    const quote = quoteCart({ items: (Array.isArray(b.items) ? b.items : []).slice(0, 30), getProduct, region });
+    if (!quote.lines.length) return fail(res, 'Elige al menos un producto vendible', 400);
+
+    // Precio acordado distinto al de lista (descuento por WhatsApp): se registra tal cual.
+    const agreed = Number(b.priceUsd);
+    if (Number.isFinite(agreed) && agreed > 0 && agreed <= quote.subtotalUsd) {
+        quote.totalUsd = Math.round(agreed * 100) / 100;
+        quote.discountUsd = Math.round((quote.subtotalUsd - quote.totalUsd) * 100) / 100;
+        quote.offerApplied = { type: 'manual' };
+    }
+    try {
+        const result = await fulfillOrder({
+            lines: quote.lines, email: e, paymentMethod: 'whatsapp', paymentRef: `WA-${Date.now().toString(36).toUpperCase()}`,
+            quote, region, tracking: { sourceUrl: 'https://offszn.lat/willieinspired' }
+        });
+        if (clip(b.note, 500)) await supabase.from('store_notes').insert({ email: e, kind: 'note', body: `Venta manual: ${clip(b.note, 500)}` });
+        return res.json({ ok: true, totalUsd: quote.totalUsd, licenses: result.licenses.map((l) => l.name), delivery: Boolean(result.delivery) });
+    } catch (err) {
+        console.error('[CRM manual-sale]', err);
+        return fail(res, 'No se pudo registrar la venta');
+    }
+};

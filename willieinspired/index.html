@@ -79,12 +79,33 @@
                     <div><p class="wi-eyebrow">Lo más pedido</p><h2 class="wi-h2" style="margin-top:6px">Más vendidos</h2></div>
                     <a class="wi-link" href="/willieinspired/presets">Ver todo <i class="bi bi-arrow-right"></i></a>
                 </div>
+                <div class="wi-chips" id="bestTabs" style="margin-bottom:18px">
+                    <button type="button" class="wi-chip is-active" data-cat="all">Todo</button>
+                    <button type="button" class="wi-chip" data-cat="presets">Presets</button>
+                    <button type="button" class="wi-chip" data-cat="plantillas">Plantillas</button>
+                    <button type="button" class="wi-chip" data-cat="plugins">Plugins</button>
+                    <button type="button" class="wi-chip" data-cat="servicios">Servicios</button>
+                </div>
                 <div class="wi-grid wi-grid--4" id="bestSellers"></div>
             </div>
         </section>
 
+        <!-- ── DAWs compatibles (logos pendientes de subir) ── -->
+        <section class="wi-section--tight">
+            <div class="wi-container">
+                <p class="wi-center wi-subtle" style="margin-bottom:14px">Presets y plantillas en FL Studio y BandLab · plugins VST3 / AU en tu DAW</p>
+                <div class="wi-daws">
+                    <div data-ph="LOGO · FL Studio" data-ratio="3 / 1"></div>
+                    <div data-ph="LOGO · BandLab" data-ratio="3 / 1"></div>
+                    <div data-ph="LOGO · Ableton Live" data-ratio="3 / 1"></div>
+                    <div data-ph="LOGO · Logic Pro" data-ratio="3 / 1"></div>
+                    <div data-ph="LOGO · Studio One" data-ratio="3 / 1"></div>
+                </div>
+            </div>
+        </section>
+
         <!-- ── 4. Cómo funciona (solución paso a paso) ── -->
-        <section class="wi-section" style="background:rgba(255,255,255,.55)">
+        <section class="wi-section wi-alt">
             <div class="wi-container">
                 <div class="wi-center" style="margin-bottom:32px">
                     <p class="wi-eyebrow">Sin curva de aprendizaje</p>
@@ -113,8 +134,26 @@
             </div>
         </section>
 
+        <!-- ── Escucha cada efecto (nombres explícitos, sin curva de aprendizaje) ── -->
+        <section class="wi-section">
+            <div class="wi-container">
+                <div class="wi-center" style="margin-bottom:28px">
+                    <p class="wi-eyebrow">Sin misterio</p>
+                    <h2 class="wi-h2" style="margin-top:6px">Escucha qué hace cada efecto</h2>
+                    <p class="wi-lead" style="margin-top:10px">Cada control dice lo que hace. Toca uno y escucha tu voz con y sin ese efecto.</p>
+                </div>
+                <div class="wi-fx">
+                    <div class="wi-fx__tabs" id="fxTabs"></div>
+                    <div>
+                        <div id="fxAb"></div>
+                        <div data-ph="VIDEO · Efecto en pantalla" data-ratio="16 / 9" data-icon="camera-video" style="margin-top:18px"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- ── 6. Diferenciación ── -->
-        <section class="wi-section" style="background:rgba(255,255,255,.55)">
+        <section class="wi-section wi-alt">
             <div class="wi-container">
                 <div class="wi-head"><div><p class="wi-eyebrow">Por qué funciona</p><h2 class="wi-h2" style="margin-top:6px">Todo lo que necesitas, nada que adivinar</h2></div></div>
                 <div class="wi-features">
@@ -164,7 +203,7 @@
         </section>
 
         <!-- ── 9. Testimonios ── -->
-        <section class="wi-section" style="background:rgba(255,255,255,.55)">
+        <section class="wi-section wi-alt">
             <div class="wi-container">
                 <div class="wi-head"><div><p class="wi-eyebrow">Lo que dicen</p><h2 class="wi-h2" style="margin-top:6px">Artistas que ya suenan mejor</h2></div></div>
                 <div class="wi-testis">
@@ -256,6 +295,36 @@
         const best = ['bundle-promo-2x1', 'plugin-easy-mix', 'preset-bad-bunny', 'preset-definitivo', 'plantilla-trap-definitivo', 'preset-feid', 'plantilla-grabacion-y-mezcla-profesional', 'preset-duki']
             .map((id) => cat.byId.get(id)).filter(Boolean);
         $('#bestSellers').innerHTML = best.map(WI.card).join('');
+
+        // Pestañas por categoría: "Todo" es la selección editorial; el resto, lo mejor de cada colección
+        const byCategory = (c) => cat.products
+            .filter((p) => p.category === c && p.status === 'active' && p.kind !== 'lead_magnet' && p.kind !== 'subscription')
+            .sort((a, b) => (!!b.media.cover - !!a.media.cover) || (!!b.media.audioAfter - !!a.media.audioAfter))
+            .slice(0, 8);
+        $('#bestTabs').addEventListener('click', (e) => {
+            const c = e.target.closest('.wi-chip'); if (!c) return;
+            WI.$$('.wi-chip', $('#bestTabs')).forEach((x) => x.classList.toggle('is-active', x === c));
+            $('#bestSellers').innerHTML = (c.dataset.cat === 'all' ? best : byCategory(c.dataset.cat)).map(WI.card).join('');
+        });
+
+        // Escucha cada efecto: rutas de audio vacías = placeholder con el nombre. Cuando subas los audios, llena before/after.
+        const EFFECTS = [
+            { name: 'Auto-Tune', tag: 'tono', before: null, after: null },
+            { name: 'EQ', tag: 'tono y claridad', before: null, after: null },
+            { name: 'Compresión', tag: 'control', before: null, after: null },
+            { name: 'Saturación', tag: 'calidez', before: null, after: null },
+            { name: 'Doblador', tag: 'ancho', before: null, after: null },
+            { name: 'Reverb + delay', tag: 'espacio', before: null, after: null }
+        ];
+        let fxAb = null;
+        const showFx = (i) => {
+            if (fxAb) fxAb.pause();
+            fxAb = WI.abPlayer($('#fxAb'), { before: EFFECTS[i].before, after: EFFECTS[i].after, labels: ['Sin efecto', `Con ${EFFECTS[i].name}`] });
+            WI.$$('.wi-fx__tab', $('#fxTabs')).forEach((t) => t.classList.toggle('is-active', +t.dataset.i === i));
+        };
+        $('#fxTabs').innerHTML = EFFECTS.map((f, i) => `<button type="button" class="wi-fx__tab" data-i="${i}">${f.name}<small>${f.tag}</small></button>`).join('');
+        $('#fxTabs').addEventListener('click', (e) => { const t = e.target.closest('.wi-fx__tab'); if (t) showFx(+t.dataset.i); });
+        showFx(0);
 
         // Demos antes/después
         const demos = artists.filter((p) => p.media.audioAfter);

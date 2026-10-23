@@ -113,7 +113,18 @@
 
         const email = () => $('#email').value.trim().toLowerCase();
         const validEmail = () => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email());
-        $('#email').addEventListener('change', () => WI.store.set('wi_email', email()));
+        // Guarda el carrito con el correo para poder recordártelo si no terminas (carrito abandonado)
+        let lastSaved = '';
+        async function saveCartForEmail() {
+            if (!validEmail() || !WI.cart.count()) return;
+            const key = email() + JSON.stringify(WI.cart.items());
+            if (key === lastSaved) return;
+            lastSaved = key;
+            WI.api('/cart', { method: 'POST', auth: false, body: { email: email(), items: WI.cart.items(), sessionId: WI.sid, timezone: WI.tz } });
+        }
+        $('#email').addEventListener('change', () => { WI.store.set('wi_email', email()); saveCartForEmail(); });
+        $('#email').addEventListener('blur', saveCartForEmail);
+        if (validEmail()) saveCartForEmail();
 
         function selectPay(kind) {
             WI.$$('#payTabs [data-pay]').forEach((b) => b.classList.toggle('is-active', b.dataset.pay === kind));

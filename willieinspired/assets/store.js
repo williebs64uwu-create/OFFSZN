@@ -18,7 +18,17 @@
         set(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (_) { /* modo privado */ } }
     };
 
+    // Tema claro/oscuro: lo elegido por la persona; si no eligió, el del sistema. Se aplica antes de pintar nada.
+    const readTheme = () => { try { return localStorage.getItem('wi_theme'); } catch (_) { return null; } };
+    const systemDark = () => { try { return matchMedia('(prefers-color-scheme: dark)').matches; } catch (_) { return false; } };
+    const applyTheme = (t) => document.documentElement.setAttribute('data-theme', t);
+    applyTheme(readTheme() || (systemDark() ? 'dark' : 'light'));
+
     const WI = (window.WI = { BASE, store, session });
+    WI.theme = {
+        get: () => document.documentElement.getAttribute('data-theme'),
+        toggle() { const next = WI.theme.get() === 'dark' ? 'light' : 'dark'; applyTheme(next); try { localStorage.setItem('wi_theme', next); } catch (_) { /* modo privado */ } }
+    };
     WI.params = new URLSearchParams(location.search);
     WI.tz = (() => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (_) { return ''; } })();
     WI.sid = store.get('wi_sid') || (() => { const id = 's_' + Math.random().toString(36).slice(2) + Date.now().toString(36); store.set('wi_sid', id); return id; })();
@@ -446,6 +456,7 @@
         const up = e.target.closest('[data-add-upsell]');
         if (up) { WI.cart.add(up.dataset.addUpsell, { open: false }); WI.track('upsell_click', { productId: up.dataset.addUpsell, meta: { where: 'cart' } }); return; }
         if (e.target.closest('[data-clear-offer]')) { WI.offer.clear(); return; }
+        if (e.target.closest('[data-theme-toggle]')) { WI.theme.toggle(); return; }
         if (e.target.closest('[data-checkout]')) WI.track('checkout_start');
         if (e.target.closest('[data-open]')) { WI.drawer.open(e.target.closest('[data-open]').dataset.open); return; }
         if (e.target.closest('[data-close]')) WI.drawer.close();
@@ -459,7 +470,7 @@
     // ── Layout común ────────────────────────────────────────────────────────
     const NAV = [
         ['presets', 'Presets', 'mic'], ['plantillas', 'Plantillas', 'sliders'], ['plugins', 'Plugins', 'soundwave'],
-        ['servicios', 'Servicios', 'headphones'], ['comunidad', 'Comunidad', 'people']
+        ['servicios', 'Servicios', 'headphones'], ['comunidad', 'Comunidad', 'people'], ['crea-tu-preset', 'Crea tu preset', 'magic']
     ];
     WI.layout = ({ active = '', announce = true, footer = true } = {}) => {
         const n = WI.cart.count();
@@ -470,6 +481,7 @@
                 <a href="${BASE}" class="wi-brand">Willie Inspired</a>
                 <nav class="wi-nav" aria-label="Principal">${NAV.map(([k, l]) => `<a href="${BASE}/${k}" class="${active === k ? 'is-active' : ''}">${l}</a>`).join('')}</nav>
                 <div class="wi-header__actions">
+                    <button type="button" class="wi-icon-btn wi-theme" data-theme-toggle aria-label="Cambiar entre tema claro y oscuro"><i class="bi bi-moon"></i><i class="bi bi-sun"></i></button>
                     <a href="${BASE}/mi-perfil" class="wi-icon-btn" aria-label="Mi perfil"><i class="bi bi-person"></i></a>
                     <button type="button" class="wi-icon-btn" data-open="cart" aria-label="Ver carrito"><i class="bi bi-bag"></i><span class="wi-count" data-cart-count data-n="${n}">${n || ''}</span></button>
                 </div>
@@ -480,7 +492,6 @@
                 <div class="wi-drawer__head"><span class="wi-brand">Willie Inspired</span><button type="button" class="wi-icon-btn" data-close aria-label="Cerrar"><i class="bi bi-x-lg"></i></button></div>
                 <div class="wi-drawer__body"><nav class="wi-mnav">
                     ${NAV.map(([k, l, i]) => `<a href="${BASE}/${k}"><i class="bi bi-${i}"></i>${l}</a>`).join('')}
-                    <a href="${BASE}/crea-tu-preset"><i class="bi bi-magic"></i>Crea tu preset</a>
                     <a href="${BASE}/presets/graba-maquetas-con-nativos"><i class="bi bi-gift"></i>Preset gratis</a>
                     <a href="${BASE}/mi-perfil"><i class="bi bi-person"></i>Mi perfil</a>
                 </nav></div>
@@ -529,8 +540,22 @@
         document.body.insertAdjacentHTML('beforeend', drawers + (footer ? foot : ''));
     };
 
+    // Enlace del correo de carrito abandonado: ?cart=<id> recupera los productos que había dejado.
+    WI.restoreCart = async () => {
+        const id = WI.params.get('cart');
+        if (!id || !/^[0-9a-f-]{36}$/i.test(id) || session.get('wi_cart_restored_' + id)) return;
+        session.set('wi_cart_restored_' + id, 1);
+        const { ok, data } = await WI.api(`/cart/${id}`, { auth: false });
+        if (ok && data.items?.length) {
+            const merged = WI.cart.items();
+            data.items.forEach((i) => { if (!merged.some((m) => m.id === i.id)) merged.push(i); });
+            WI.cart.save(merged);
+        }
+    };
+
     // Inicializa la página: layout, región y vista. Devuelve el catálogo.
     WI.init = async (opts = {}) => {
+        await WI.restoreCart();
         WI.layout(opts);
         WI.track('page_view');
         await WI.geo();

@@ -6,12 +6,12 @@ import { supabase } from '../../database/connection.js';
 import { isAdminKey } from '../../../shared/config/adminKey.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { checkEmail } from '../../../shared/utils/emailValidation.js';
-import { priceFor, trialFollowupPrice, OFFERS } from '../../../shared/store/pricing.js';
+import { priceFor, trialFollowupPrice, quoteCart, OFFERS } from '../../../shared/store/pricing.js';
 import { loadCatalog, getProduct, publicProduct } from '../../../shared/store/catalog.js';
 import { prefixForName } from '../../../shared/config/pluginRegistry.js';
 import {
     regionForRequest, quoteForRequest, upsertCustomer, syncBrevoContact, getCustomerByUser, getCustomerByEmail,
-    newCode, WHATSAPP
+    newCode, WHATSAPP, ensureDeal, verifyEmailSig
 } from '../../services/storeService.js';
 
 const SITE = 'https://offszn.lat';
@@ -115,6 +115,7 @@ export const lead = async (req, res) => {
         console.error('[Store] correo de lead falló:', e.message);
     }
 
+    await ensureDeal({ email, title: kind === 'lead_magnet' ? `Regalo: ${product.title}` : `${kind}: ${product.title}`, stage: 'lead', productId: product.id, source: clip(b.source, 80) || tag });
     await supabase.from('store_events').insert({
         session_id: clip(b.sessionId, 64) || null, email, event: 'lead', variant, product_id: product.id,
         country: region.country, page: clip(b.page, 200) || null
@@ -269,6 +270,7 @@ export const requestTrial = async (req, res) => {
     } catch (e) {
         console.error('[Store] correo de prueba falló:', e.message);
     }
+    await ensureDeal({ email, title: `Prueba: ${pluginName}`, stage: 'prueba', productId, source: clip(b.source, 80) || 'prueba-plugin' });
     await supabase.from('store_events').insert({ email, event: 'trial_request', product_id: productId, country: region.country, session_id: clip(b.sessionId, 64) || null });
     return res.json({ ok: true });
 };
@@ -399,4 +401,41 @@ export const adminAbReport = async (req, res) => {
         r.conversion = r.popup_view ? Math.round((r.purchases / r.popup_view) * 1000) / 10 : 0;
     }
     return res.json({ days, report });
+};
+
+// ─── GET /api/store/unsubscribe?e=&t= (enlace firmado en cada correo de marketing)
+export const unsubscribe = async (req, res) => {
+    const email = String(req.query.e || '').trim().toLowerCase();
+    const page = (msg) => `<!DOCTYPE html><html lang="es"><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:-apple-system,Arial,sans-serif;max-width:440px;margin:15vh auto;padding:0 24px;text-align:center"><h1 style="font-size:1.4rem">${msg}</h1><p style="color:#5e5c64">Willie Inspired</p></body></html>`;
+    if (!email || !verifyEmailSig(email, req.query.t)) return res.status(400).send(page('Enlace no válido'));
+    await supabase.from('store_customers').update({ unsubscribed: true, updated_at: new Date().toISOString() }).eq('email', email);
+    return res.send(page('Listo, no te enviaremos más correos de promociones'));
+};
+
+// ─── POST /api/store/cart  { email, items, sessionId }  (el checkout lo manda al escribir el correo)
+export const saveCart = async (req, res) => {
+    const b = req.body || {};
+    const checked = await checkEmail(b.email);
+    if (checked.error) return res.status(400).json({ error: checked.error });
+    const { email } = checked;
+    const region = await regionForRequest(req, b.timezone);
+    const items = (Array.isArray(b.items) ? b.items : []).slice(0, 30).map((i) => ({ id: String(i?.id || ''), os: i?.os === 'mac' ? 'mac' : i?.os === 'win' ? 'win' : null })).filter((i) => i.id && getProduct(i.id));
+    if (!items.length) return res.json({ ok: true, saved: false });
+    const q = quoteCart({ items, getProduct, region });
+    const { data, error } = await supabase.from('store_carts').upsert({
+        email, items, total_usd: q.totalUsd, country: region.country, session_id: clip(b.sessionId, 64) || null,
+        updated_at: new Date().toISOString(), reminder_sent_at: null, recovered_at: null
+    }, { onConflict: 'email' }).select('id').single();
+    if (error) return res.status(500).json({ error: 'No se pudo guardar el carrito.' });
+    await upsertCustomer(email, { ip_country: region.ipCountry, first_source: 'checkout' });
+    return res.json({ ok: true, saved: true, id: data?.id });
+};
+
+// ─── GET /api/store/cart/:id  (carrito guardado, para el enlace del correo de carrito abandonado)
+export const getCart = async (req, res) => {
+    const id = clip(req.params.id, 64);
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return res.status(404).json({ error: 'No encontrado' });
+    const { data } = await supabase.from('store_carts').select('items').eq('id', id).maybeSingle();
+    if (!data) return res.status(404).json({ error: 'No encontrado' });
+    return res.json({ items: (data.items || []).filter((i) => getProduct(i.id)) });
 };

@@ -81,7 +81,9 @@ Todas aisladas en sus propios archivos. Nada de lo nuevo reemplaza lo que ya usa
 
 ## 5. Base de datos
 
-Migración: `server/migrations/20261022_willie_store.sql` (idempotente, RLS activo sin políticas: solo el backend).
+Migraciones (correr en este orden en Supabase → SQL Editor; idempotentes, RLS sin políticas: solo el backend):
+1. `server/migrations/20261022_willie_store.sql`
+2. `server/migrations/20261023_willie_crm.sql` (carritos, pipeline, notas, reglas y registro de automatizaciones, baja de correos)
 
 - `store_customers` → tags: segmento (FREE / COMPRADOR V1 / V2), país, IP, VPN, compras, dinero, fuente, lead magnets, variante A/B, username, onboarding.
 - `store_orders` → cada orden con líneas, oferta, región, token de entrega y licencias.
@@ -89,24 +91,35 @@ Migración: `server/migrations/20261022_willie_store.sql` (idempotente, RLS acti
 - `store_trials` → pruebas de plugin con correo; `nudge_sent_at`, `followup_sent_at`, `converted_at`.
 - `store_events` → embudo y A/B.
 - `willie_orders` → entregas (se crea si no existe).
+- CRM: `store_carts`, `store_deals`, `store_notes`, `store_automation_rules`, `store_automation_log` (+ columnas `tags`, `unsubscribed`, `whatsapp` en clientes).
 
 **Pendiente:** ejecutar la migración en Supabase (SQL Editor). Hasta entonces, las rutas nuevas responden error de BD, pero el checkout de PayPal sigue cobrando y entregando (los registros de tienda se loguean sin bloquear).
 
-## 6. Automatización y CRM (hoja de ruta)
+## 6. CRM propio (estilo HighLevel, a la medida de tu nicho)
 
-Hecho:
-- Tags automáticos en cada lead, compra y prueba (segmento, país, VPN, dinero, horario tipo "13:34 PM · hace 2 días").
-- Sincronización a Brevo con atributos (`SEGMENTO`, `PAIS`, `COMPRAS`, `TOTAL_GASTADO`, `ULTIMA_COMPRA`, `FUENTE`) si hay `BREVO_API_KEY` y `STORE_BREVO_LIST_ID`.
-- Cron horario de seguimiento de pruebas.
-- Aviso al owner en cada venta, resaltando lo que hay que entregar a mano.
-- Panel de clientes con filtros y CSV; reporte A/B por variante.
+Panel: `/owner/clientes-tienda` (clave owner). Todo vive en tu base y en tu servidor, sin pagar otra herramienta.
 
-Siguiente (para decidir juntos):
-1. Secuencias de email (bienvenida, nutrición, carrito abandonado, post-compra) en Brevo con los mismos tags.
-2. Carrito abandonado: evento `checkout_start` sin `purchase` a las 2 h.
-3. Pipeline de ventas 1 a 1 por WhatsApp (estados: lead → prueba → cotizado → pagado), con seguimiento.
-4. Dashboard de ingresos por país, fuente y campaña de Meta Ads (costo por venta real).
-5. Afiliados y comisiones (ya existe la página `mi-perfil/ganar-comisiones`, sin construir).
+| Pestaña | Qué hace |
+|---|---|
+| **Resumen** | Ingresos, ventas, ticket medio, recompra, embudo por sesiones (visitan → carrito → checkout → compran), ingresos por país / fuente (utm) / método, productos más vendidos, uso de ofertas, pruebas → compra, carritos recuperados y tareas pendientes |
+| **Contactos** | Búsqueda y filtros (segmento, país, etiqueta), CSV. Al abrir uno: segmento, país y VPN, etiquetas propias, WhatsApp, notas y tareas con fecha, y **línea de tiempo** (lo que vio, añadió al carrito, compró, pruebas y correos automáticos que recibió) |
+| **Pipeline** | Lead → Prueba → Cotizado → Pagado → Perdido. Se crea y avanza solo (regalo o "avísame" = lead, prueba de plugin = prueba, pago = pagado) y también a mano para tus ventas 1 a 1 por WhatsApp |
+| **Automatizaciones** | Prender/pausar cada una, ver cuántos correos salieron en 30 días y ejecutar ahora |
+| **Venta manual** | Registras una venta cerrada por WhatsApp (productos, país, precio acordado): entrega archivos y licencias, manda el correo y queda en el CRM y en Meta como cualquier compra |
+| **A/B popup** | 50% de bienvenida vs 2x1: vistas, clics, leads, compras e ingreso por variante |
+
+**Automatizaciones activas** (cada hora; cada persona recibe cada correo una sola vez, con enlace de baja firmado):
+1. Carrito abandonado a las 2 h (si dejó su correo en el checkout), con enlace que recupera el carrito.
+2. Lead que pidió un regalo y no compró en 3 días, con su oferta de bienvenida.
+3. Upsell a las 24 h de una compra, según la escalera de valor del producto.
+4. Recompra a los 45 días, con 2x1.
+5. Pruebas de plugin: recordatorio a las 48 h sin activar y oferta por país al vencer.
+
+**Tracking:** Meta Pixel y Conversions API con `event_id` común (compra deduplicada), `_fbp`/`_fbc`, UTM guardadas en cada orden, tags automáticos (segmento, país, VPN, dinero, horario "13:34 PM · hace 2 días") y sincronización a Brevo.
+
+**Para después (con IA, cuando quieras):** respuesta sugerida a comentarios y WhatsApp, resumen de la conversación de cada lead, texto de correos por segmento, detección de qué video/CTA convierte, y puntaje de probabilidad de compra.
+
+**Más adelante sin IA:** secuencias de varios pasos editables desde el panel, afiliados y comisiones (`mi-perfil/ganar-comisiones`), y costo por venta real cruzando el gasto de Meta Ads.
 
 ## 7. Qué falta para publicar (acción tuya)
 
@@ -136,7 +149,7 @@ Intenté navegar `https://waveatmos.com` y `https://www.vocalessential.com`, per
 
 ## 9. Pruebas y verificación
 
-- `server/tests/store-pricing.test.mjs` (17 pruebas): región, VPN, VE/CU, 2x1 elige-tu-gratis, bienvenida con tope, código de prueba, cupón, total en soles, catálogo sin rutas expuestas. Ejecutar: `npm run test:store` dentro de `server/`.
+- `server/tests/store-pricing.test.mjs` (17 pruebas; más 9 de automatizaciones y CRM): región, VPN, VE/CU, 2x1 elige-tu-gratis, bienvenida con tope, código de prueba, cupón, total en soles, catálogo sin rutas expuestas. Ejecutar: `npm run test:store` dentro de `server/` (incluye reglas de automatización, resumen del dashboard y el motor de envío contra una base falsa: no repite correos, respeta bajas y pausas, reintenta si falla).
 - `npm run test:licensing` (existente) sin cambios de comportamiento.
 - Smoke local: todas las páginas de la tienda responden 200; APIs de admin, cron y create-session rechazan sin clave.
 - Navegador (Chromium, móvil y escritorio): sin errores de JavaScript ni desbordamiento horizontal en las 15 páginas auditadas; flujo añadir → 2x1 → checkout verificado.

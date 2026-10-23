@@ -18,6 +18,56 @@ const SITE = 'https://offszn.lat';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// ── Correo de marketing: plantilla con baja firmada (HMAC) ──────────────────────────────────────────────────────
+const sigSecret = () => process.env.STORE_CRON_SECRET || process.env.JWT_SECRET || 'offszn-store';
+export const signEmail = (email) => crypto.createHmac('sha256', sigSecret()).update(String(email).toLowerCase()).digest('hex').slice(0, 32);
+export const verifyEmailSig = (email, sig) => {
+    const a = Buffer.from(signEmail(email));
+    const b = Buffer.from(String(sig || ''));
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+};
+export const unsubscribeUrl = (email) => `${SITE}/api/store/unsubscribe?e=${encodeURIComponent(email)}&t=${signEmail(email)}`;
+export { esc };
+
+export const mailShell = (inner, { email = null } = {}) => `<!DOCTYPE html><html lang="es"><body style="margin:0;padding:24px;background:#f3f3f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#0a0a0a;font-size:16px;line-height:1.55">
+<div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:18px;padding:28px;border:1px solid #e5e5ea">
+<p style="font-weight:900;letter-spacing:-0.03em;font-size:18px;margin:0 0 18px">WILLIE INSPIRED</p>${inner}
+<p style="margin:24px 0 0;color:#8e8c95;font-size:13px">¿Dudas? Respóndeme por <a href="${WHATSAPP}" style="color:#ec4899">WhatsApp</a>.${email ? ` · <a href="${unsubscribeUrl(email)}" style="color:#8e8c95">No quiero más correos</a>` : ''}</p></div></body></html>`;
+export const mailButton = (href, label) => `<p style="margin:18px 0"><a href="${href}" style="display:inline-block;background:#0a0a0a;color:#ffffff;font-weight:700;text-decoration:none;padding:14px 22px;border-radius:999px">${label}</a></p>`;
+
+// ── Pipeline: se crea/mueve solo según lo que hace la persona ───────────────────────────────────────────────────
+export async function ensureDeal({ email, title, stage = 'lead', productId = null, source = null, valueUsd = null }) {
+    const clean = String(email || '').trim().toLowerCase();
+    if (!clean) return null;
+    try {
+        const { data: open } = await supabase.from('store_deals').select('id, stage')
+            .eq('email', clean).not('stage', 'in', '(pagado,perdido)').order('created_at', { ascending: false }).limit(1).maybeSingle();
+        const order = ['lead', 'prueba', 'cotizado'];
+        if (open) {
+            // Solo avanza, nunca retrocede una venta que ya va más adelante.
+            if (order.indexOf(stage) > order.indexOf(open.stage)) {
+                await supabase.from('store_deals').update({ stage, updated_at: new Date().toISOString() }).eq('id', open.id);
+            }
+            return open.id;
+        }
+        const { data } = await supabase.from('store_deals').insert({ email: clean, title, stage, product_id: productId, source, value_usd: valueUsd }).select('id').single();
+        return data?.id || null;
+    } catch (e) {
+        console.warn('[Store] deal:', e.message);
+        return null;
+    }
+}
+
+async function closeDealsAsPaid(email, valueUsd) {
+    const now = new Date().toISOString();
+    const { data: open } = await supabase.from('store_deals').select('id').eq('email', email).not('stage', 'in', '(pagado,perdido)');
+    if (open?.length) {
+        await supabase.from('store_deals').update({ stage: 'pagado', value_usd: valueUsd, closed_at: now, updated_at: now }).in('id', open.map((d) => d.id));
+    } else {
+        await supabase.from('store_deals').insert({ email, title: 'Compra en la tienda', stage: 'pagado', value_usd: valueUsd, source: 'tienda', closed_at: now });
+    }
+}
+
 export const segmentFor = (purchaseCount) => (purchaseCount >= 2 ? 'COMPRADOR V2' : purchaseCount === 1 ? 'COMPRADOR V1' : 'FREE');
 
 export async function getCustomerByUser(userId) {
@@ -331,7 +381,11 @@ async function recordBookkeeping({ lines, buyer, paymentMethod, paymentRef, quot
     });
     if (legacyErr) console.warn('[Store] orders:', legacyErr.message);
 
-    if (buyer) await recordPurchase({ email: buyer, userId, totalUsd: quote.totalUsd, region });
+    if (buyer) {
+        await recordPurchase({ email: buyer, userId, totalUsd: quote.totalUsd, region });
+        await closeDealsAsPaid(buyer, quote.totalUsd).catch((e) => console.warn('[Store] deal pagado:', e.message));
+        await supabase.from('store_carts').update({ recovered_at: new Date().toISOString() }).eq('email', buyer).is('recovered_at', null);
+    }
     await supabase.from('store_events').insert({
         session_id: sessionId, user_id: userId, email: buyer, event: 'purchase', variant: abVariant,
         country: region?.country || null, meta: { total_usd: quote.totalUsd, method: paymentMethod, offer: quote.offerApplied?.type || null }
