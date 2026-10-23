@@ -17,7 +17,6 @@ import paypalClient from '../paypalClient.js';
 import { supabase } from '../../database/connection.js';
 import { getProduct } from '../../../shared/store/catalog.js';
 import { regionForRequest, quoteForRequest, fulfillOrder } from '../../services/storeService.js';
-import MetaCapiService from '../../services/MetaCapiService.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const OFFSZN_MERCHANT_ID = 'MXV5F6X8JXG4S';
@@ -29,6 +28,15 @@ const cleanEmail = (raw) => {
     return e.replace(/@gmsil\.com$/, '@gmail.com').replace(/@gmai\.com$/, '@gmail.com')
         .replace(/@gmial\.com$/, '@gmail.com').replace(/@hotmial\.com$/, '@hotmail.com');
 };
+
+// Datos de atribución para Meta (cookies _fbp/_fbc que manda el navegador + IP y navegador del request).
+const trackingOf = (req) => ({
+    fbp: String(req.body?.attribution?.fbp || '').slice(0, 200) || undefined,
+    fbc: String(req.body?.attribution?.fbc || '').slice(0, 300) || undefined,
+    ip: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip,
+    userAgent: req.headers['user-agent'],
+    sourceUrl: req.headers.referer
+});
 
 // custom_id de PayPal (máx. 127): oferta, referencia de la oferta, variante A/B y región al crear.
 const packMeta = ({ offerType, offerRef, variant, region }) =>
@@ -167,7 +175,9 @@ export const captureWilliePayPalOrder = async (req, res) => {
             offerRef: meta.r || null,
             userId: req.user?.userId || null,
             abVariant: meta.v || null,
-            sessionId: req.body?.sessionId || null
+            sessionId: req.body?.sessionId || null,
+            utm: req.body?.attribution?.utm || null,
+            tracking: trackingOf(req)
         });
 
         console.log(`[WillieCheckout Capture] ${orderID} entregado a ${buyerEmail} | $${captured.toFixed(2)}`);
@@ -180,6 +190,7 @@ export const captureWilliePayPalOrder = async (req, res) => {
             itemCount: lines.length,
             lines: lines.map((l) => ({ id: l.id, title: l.title, delivery: l.delivery })),
             licenses: result.licenses.map((l) => ({ name: l.name, key: l.key })),
+            eventId: result.eventId,
             deliveryToken: result.delivery?.token || null,
             portalUrl: result.delivery?.portalUrl || null
         });
@@ -263,19 +274,10 @@ export const chargeWillieYape = async (req, res) => {
             offerRef,
             userId: req.user?.userId || null,
             abVariant: req.body?.abVariant || null,
-            sessionId: req.body?.sessionId || null
+            sessionId: req.body?.sessionId || null,
+            utm: req.body?.attribution?.utm || null,
+            tracking: { ...trackingOf(req), sourceUrl: req.headers.referer }
         });
-
-        try {
-            await MetaCapiService.sendEvent({
-                eventName: 'Purchase',
-                eventSourceUrl: req.headers.referer || 'https://offszn.lat/willieinspired/checkout',
-                userData: { email, phone: phoneNumber, fbc: attribution.fbc, fbp: attribution.fbp, ip: req.ip, userAgent: req.headers['user-agent'] },
-                customData: { currency: 'USD', value: quote.totalUsd, content_type: 'product', content_ids: quote.lines.map((l) => l.id), order_id: String(mpData.id) }
-            });
-        } catch (capiErr) {
-            console.warn('[WillieYape] Meta CAPI:', capiErr?.message);
-        }
 
         return res.json({
             success: true,
@@ -285,6 +287,7 @@ export const chargeWillieYape = async (req, res) => {
             totalUSD: quote.totalUsd,
             lines: quote.lines.map((l) => ({ id: l.id, title: l.title, delivery: l.delivery })),
             licenses: result.licenses.map((l) => ({ name: l.name, key: l.key })),
+            eventId: result.eventId,
             deliveryToken: result.delivery?.token || null,
             portalUrl: result.delivery?.portalUrl || null
         });

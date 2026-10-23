@@ -145,7 +145,9 @@
     // ── Tracking (eventos del embudo y del A/B) ─────────────────────────────
     const queue = [];
     let flushTimer = null;
+    const META_MAP = { add_to_cart: 'AddToCart', checkout_start: 'InitiateCheckout', lead: 'Lead' };
     WI.track = (event, data = {}) => {
+        if (META_MAP[event]) WI.pixel(META_MAP[event], data.productId ? { content_ids: [data.productId], content_type: 'product' } : {});
         queue.push({ event, page: location.pathname, variant: data.variant || WI.ab.peek(), productId: data.productId, meta: data.meta });
         clearTimeout(flushTimer);
         flushTimer = setTimeout(WI.flush, 2500);
@@ -157,6 +159,36 @@
         else fetch('/api/store/events', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => {});
     };
     addEventListener('pagehide', () => WI.flush(true));
+
+    // ── Meta Pixel (mismo píxel de OFFSZN). Los eventos de compra llevan event_id para deduplicar con la API del servidor ──
+    const cookie = (n) => { const m = document.cookie.match(new RegExp('(?:^|; )' + n + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : undefined; };
+    (() => {
+        const fbclid = WI.params.get('fbclid');
+        if (fbclid && !cookie('_fbc')) {
+            const fbc = `fb.1.${Date.now()}.${fbclid}`;
+            document.cookie = `_fbc=${encodeURIComponent(fbc)}; max-age=${90 * 86400}; path=/; SameSite=Lax`;
+        }
+    })();
+    WI.attribution = () => ({ fbp: cookie('_fbp'), fbc: cookie('_fbc'), utm: WI.utm() });
+    let pixelReady = null;
+    WI.pixel = (name, data = {}, eventId) => {
+        pixelReady = pixelReady || (async () => {
+            try {
+                if (!window.META_PIXEL_ID) await WI.load('/env.js');
+                if (!window.META_PIXEL_ID) return false;
+                if (!window.fbq) {
+                    /* eslint-disable */
+                    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+                    /* eslint-enable */
+                    window.fbq('init', window.META_PIXEL_ID);
+                    window.fbq('track', 'PageView');
+                }
+                return true;
+            } catch (_) { return false; }
+        })();
+        pixelReady.then((ok) => { if (ok && name !== 'PageView') window.fbq('track', name, data, eventId ? { eventID: eventId } : undefined); });
+    };
+    WI.pixel('PageView');
 
     // ── A/B del popup: 50% de bienvenida vs 2x1 (fijo por visitante; ?ab=2x1 para forzar) ──
     WI.ab = {

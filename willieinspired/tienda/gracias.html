@@ -75,6 +75,10 @@
         $('#waBtn').href = WI.wa(`Hola Willie! Compré en la tienda (correo: ${last.email || ''}). Tengo una duda.`);
         $('#waBtn').classList.remove('wi-hidden');
         WI.track('purchase', { meta: { method: last.method, total: last.totalUsd } });
+        if (last.eventId && !WI.session.get('wi_purchase_sent_' + last.eventId)) {
+            WI.session.set('wi_purchase_sent_' + last.eventId, 1);
+            WI.pixel('Purchase', { currency: 'USD', value: last.totalUSD || 0, content_type: 'product', content_ids: (last.lines || []).map((l) => l.id) }, last.eventId);
+        }
 
         // Upsell: el primer producto comprado sugiere su upsell (o un default de escalera)
         const first = (last.lines || []).map((l) => cat.byId.get(l.id)).find(Boolean);

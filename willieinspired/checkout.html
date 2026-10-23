@@ -195,7 +195,7 @@
             WI.flush();
             location.href = '/willieinspired/gracias';
         }
-        const body = (extra = {}) => ({ cartItems: WI.cart.items(), offer: WI.offer.get(), email: email(), timezone: WI.tz, abVariant: WI.ab.peek(), sessionId: WI.sid, ...extra });
+        const body = (extra = {}) => ({ cartItems: WI.cart.items(), offer: WI.offer.get(), email: email(), timezone: WI.tz, abVariant: WI.ab.peek(), sessionId: WI.sid, attribution: WI.attribution(), ...extra });
 
         // ── PayPal
         try {
@@ -217,7 +217,7 @@
                 },
                 onApprove: async (d) => {
                     WI.toast('Confirmando tu pago…');
-                    const { ok, data } = await WI.api('/api/willie/paypal/capture', { method: 'POST', body: { orderID: d.orderID, email: email(), timezone: WI.tz, sessionId: WI.sid } });
+                    const { ok, data } = await WI.api('/api/willie/paypal/capture', { method: 'POST', body: { orderID: d.orderID, email: email(), timezone: WI.tz, sessionId: WI.sid, attribution: WI.attribution() } });
                     if (!ok || !data.success) { alert(`Tu pago no se pudo confirmar: ${data.error || 'error'}. Si se cobró, escríbeme por WhatsApp con tu correo.`); return; }
                     done(data, 'paypal');
                 },

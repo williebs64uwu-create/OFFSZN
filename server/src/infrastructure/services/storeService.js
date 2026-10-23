@@ -8,6 +8,7 @@ import { countryOf } from '../../shared/utils/emailValidation.js';
 import { BREVO_API_KEY } from '../../shared/config/config.js';
 import { resolveRegion, quoteCart } from '../../shared/store/pricing.js';
 import { getProduct } from '../../shared/store/catalog.js';
+import MetaCapiService from './MetaCapiService.js';
 import { generatePluginLicense } from '../http/controllers/PluginLicensingController.js';
 import { createDeliverySessionRecord } from '../http/controllers/WilliePresetDeliveryController.js';
 
@@ -214,9 +215,10 @@ function buyerEmailHtml({ lines, totalUsd, totalPen, paymentMethod, delivery, li
 /**
  * Cumple una orden YA PAGADA. Las líneas salen del servidor (quote o items de PayPal), nunca del navegador.
  */
-export async function fulfillOrder({ lines, email, extraEmails = [], paymentMethod, paymentRef, quote, region, offerRef, userId = null, abVariant = null, sessionId = null, utm = null }) {
+export async function fulfillOrder({ lines, email, extraEmails = [], paymentMethod, paymentRef, quote, region, offerRef, userId = null, abVariant = null, sessionId = null, utm = null, tracking = null }) {
     const buyer = String(email || '').trim().toLowerCase() || null;
-    const result = { delivery: null, licenses: [] };
+    const eventId = `purchase_${paymentMethod}_${paymentRef}`;
+    const result = { delivery: null, licenses: [], eventId };
 
     try {
         result.delivery = await createDeliverySessionRecord({ email: buyer, lines, paymentMethod, orderId: paymentRef });
@@ -264,6 +266,19 @@ export async function fulfillOrder({ lines, email, extraEmails = [], paymentMeth
         });
     } catch (e) {
         console.warn('[Store] Aviso al owner falló:', e.message);
+    }
+
+    // Meta Conversions API: mismo event_id que el Pixel de la página de gracias, así Meta deduplica.
+    try {
+        await MetaCapiService.sendEvent({
+            eventName: 'Purchase',
+            eventId,
+            eventSourceUrl: tracking?.sourceUrl || 'https://offszn.lat/willieinspired/gracias',
+            userData: { email: buyer, fbc: tracking?.fbc, fbp: tracking?.fbp, ip: tracking?.ip, userAgent: tracking?.userAgent },
+            customData: { currency: 'USD', value: quote.totalUsd, content_type: 'product', content_ids: lines.map((l) => l.id), order_id: String(paymentRef) }
+        });
+    } catch (e) {
+        console.warn('[Store] Meta CAPI:', e?.message);
     }
 
     // Contabilidad: si algo de aquí falla, el cliente ya tiene su compra; solo se registra el error.
