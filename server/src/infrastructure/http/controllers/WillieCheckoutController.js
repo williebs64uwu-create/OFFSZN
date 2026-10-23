@@ -60,6 +60,8 @@ const WILLIE_CATALOG = {
     'plugin-easy-pitch':  { name: 'Easy Pitch VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/plugins/easy-pitch.png' },
     'plugin-omni':        { name: 'Omni Plugin VST3 (OFFSZN)', price: 17, type: 'plugin', image: '/plugins/omni.png' },
     'plugin-cassette':    { name: 'Cassette VST (OFFSZN)', price: 8, type: 'plugin', image: '/plugins/cassette.png' },
+    // OFFSZN Widget (app de escritorio, Windows). La licencia sale del registro central (prefijo WIDGET).
+    'plugin-offszn-widget': { name: 'OFFSZN Widget (Windows)', price: 5, type: 'plugin', image: '/plugins/offszn-widget.png' },
     // Legacy numeric IDs (from offszn_cart compatibility)
     '899': { name: 'Easy Mix VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
     '900': { name: 'Easy Master VST/AU (OFFSZN)', price: 10, type: 'plugin', image: '/willieimages/HERO.png' },
