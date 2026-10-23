@@ -40,7 +40,10 @@ router.get('/unsubscribe', unsubscribe);
 // Todas las automatizaciones (carrito abandonado, nutrición, upsell, recompra). Se llama cada hora junto a las pruebas.
 router.all('/cron/automations', cronAuth, async (req, res) => res.json({ ok: true, results: await runAutomations() }));
 
-// ── CRM del owner (x-admin-key)
+// ── CRM del owner (x-admin-key). Solo cuentan los intentos fallidos: 30 cada 15 min en todo /admin y 8 en la pantalla de acceso.
+router.use('/admin', rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, skipSuccessfulRequests: true, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Demasiados intentos. Prueba en 15 minutos.' } }));
+router.post('/admin/verify', rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, skipSuccessfulRequests: true, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Demasiados intentos. Prueba en 15 minutos.' } }), adminAuth, crm.verify);
+router.get('/admin/system', adminAuth, crm.system);
 router.get('/admin/overview', adminAuth, crm.overview);
 router.get('/admin/contacts', adminAuth, crm.contacts);
 router.get('/admin/contacts/:email', adminAuth, crm.contact);

@@ -22,7 +22,7 @@ Este documento describe lo construido, cómo se conecta, lo que falta para ir a 
 | `/willieinspired/mi-perfil` · `/mi-perfil/mis-compras` | `tienda/perfil.html` | Cuenta: tags (segmento, compras, dinero, país), compras y descargas |
 | `/willieinspired/comunidad` · `/comunidad/suscribirse` | `tienda/comunidad.html` | Planes Basic 9 USD / Starter 19 / Pro 29 (3 días) |
 | `/willieinspired/descargas?token=` | `descargas.html` (existente) | Portal de créditos de descarga (4 por producto) |
-| `/owner/clientes-tienda` | `owner/clientes-tienda.html` | CRM básico: clientes con tags, export CSV, reporte A/B (clave owner) |
+| `/crm` | `crm/index.html` | CRM con acceso por clave (ver sección 6). `/owner/clientes-tienda` redirige aquí |
 
 Las rutas de la tienda se resuelven en `server/src/shared/store/pages.js` (una sola fuente), montadas en `server/src/app.js` antes de las páginas sueltas.
 
@@ -97,7 +97,11 @@ Migraciones (correr en este orden en Supabase → SQL Editor; idempotentes, RLS 
 
 ## 6. CRM propio (estilo HighLevel, a la medida de tu nicho)
 
-Panel: `/owner/clientes-tienda` (clave owner). Todo vive en tu base y en tu servidor, sin pagar otra herramienta.
+Panel: **`offszn.lat/crm`**. Diseño con la estructura de HighLevel (barra lateral oscura, pipeline, automatizaciones) y componentes al estilo shadcn/ui (tokens zinc, tarjetas, badges, tablas, panel lateral, diálogos, paleta ⌘K, tema claro/oscuro), hecho en CSS puro para no depender de un build. Todo vive en tu base y en tu servidor, sin pagar otra herramienta.
+
+**Acceso:** pantalla de clave (la misma `OFFSZN_VARIABLE_PANEL` de tus otros paneles). Se verifica en el servidor, bloquea 15 minutos tras 8 intentos fallidos y la clave se guarda solo en esta sesión del navegador, o en el dispositivo si marcas "Recordar".
+
+**Archivos:** `crm/index.html` (estructura), `crm/crm.css` (sistema de diseño), `crm/js/core.js` (acceso, router, panel lateral, diálogos, búsqueda) y `crm/js/pages.js` (cada pantalla).
 
 | Pestaña | Qué hace |
 |---|---|
@@ -106,7 +110,9 @@ Panel: `/owner/clientes-tienda` (clave owner). Todo vive en tu base y en tu serv
 | **Pipeline** | Lead → Prueba → Cotizado → Pagado → Perdido. Se crea y avanza solo (regalo o "avísame" = lead, prueba de plugin = prueba, pago = pagado) y también a mano para tus ventas 1 a 1 por WhatsApp |
 | **Automatizaciones** | Prender/pausar cada una, ver cuántos correos salieron en 30 días y ejecutar ahora |
 | **Venta manual** | Registras una venta cerrada por WhatsApp (productos, país, precio acordado): entrega archivos y licencias, manda el correo y queda en el CRM y en Meta como cualquier compra |
-| **A/B popup** | 50% de bienvenida vs 2x1: vistas, clics, leads, compras e ingreso por variante |
+| **Experimentos** | 50% de bienvenida vs 2x1: vistas, clics, leads, compras e ingreso por variante, y quién va ganando (con mínimo de 30 vistas) |
+| **Tareas** | Lo pendiente de todos tus contactos, agrupado en vencidas, hoy y próximas |
+| **Estado del sistema** | Qué está conectado (Brevo, PayPal, Yape, Meta, R2), qué tablas faltan correr en Supabase y qué portadas, audios y videos faltan subir |
 
 **Automatizaciones activas** (cada hora; cada persona recibe cada correo una sola vez, con enlace de baja firmado):
 1. Carrito abandonado a las 2 h (si dejó su correo en el checkout), con enlace que recupera el carrito.

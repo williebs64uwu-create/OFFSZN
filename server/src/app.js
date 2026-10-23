@@ -575,6 +575,13 @@ app.get(['/willieinspired/:slug', '/@willieinspired/:slug'], (req, res, next) =>
     next();
 });
 
+// --- 3.0.1b CRM DE LA TIENDA (pantalla de acceso por clave; los datos los protege la API con x-admin-key) ---
+app.get(['/crm', '/crm/'], (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.sendFile(path.join(rootPath, 'crm/index.html'));
+});
+app.use('/crm', express.static(path.join(rootPath, 'crm'), { index: false, maxAge: '10m' }));
+
 // --- 3.0.2 OFFSZN LICENSE PANEL DIRECT ROUTE ---
 app.get(['/pan/lic', '/pan/lic/', '/pan/lic/index.html'], (req, res) => {
     const panelPath = path.join(rootPath, 'pan/lic/index.html');
@@ -629,11 +636,7 @@ app.get(['/owner/correos-lista-de-espera', '/owner/correos-lista-de-espera.html'
 });
 
 // --- 3.0.5.0d CLIENTES DE LA TIENDA WILLIE (tags, A/B; protegido por clave en la API) ---
-app.get(['/owner/clientes-tienda', '/owner/clientes-tienda.html'], (req, res) => {
-    const p = path.join(rootPath, 'owner/clientes-tienda.html');
-    if (fs.existsSync(p)) return res.sendFile(p);
-    return res.status(404).send('Panel de clientes not found');
-});
+app.get(['/owner/clientes-tienda', '/owner/clientes-tienda.html'], (req, res) => res.redirect(301, '/crm'));
 
 // --- 3.0.5.0c LANDING LISTA DE ESPERA STAR CHAIN BETA ---
 app.get(['/list/lista-de-espera', '/list/lista-de-espera.html'], (req, res) => {

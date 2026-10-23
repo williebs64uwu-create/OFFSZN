@@ -3,7 +3,7 @@ import { supabase } from '../../database/connection.js';
 import { buildOverview } from '../../../shared/store/analytics.js';
 import { RULES } from '../../../shared/store/automations.js';
 import { resolveRegion, quoteCart } from '../../../shared/store/pricing.js';
-import { getProduct } from '../../../shared/store/catalog.js';
+import { getProduct, loadCatalog } from '../../../shared/store/catalog.js';
 import { fulfillOrder } from '../../services/storeService.js';
 import { runAutomations } from '../../services/crmService.js';
 
@@ -199,4 +199,48 @@ export const manualSale = async (req, res) => {
         console.error('[CRM manual-sale]', err);
         return fail(res, 'No se pudo registrar la venta');
     }
+};
+
+// ─── POST /admin/verify → la pantalla de acceso del CRM comprueba la clave sin pedir datos
+export const verify = (req, res) => res.json({ ok: true });
+
+// ─── GET /admin/system → qué está conectado, qué tablas faltan y qué contenido falta subir (nunca devuelve valores secretos)
+export const system = async (req, res) => {
+    const has = (...names) => names.every((n) => Boolean(String(process.env[n] || '').trim()));
+    const integrations = [
+        { key: 'panel', name: 'Clave del panel', ok: has('OFFSZN_VARIABLE_PANEL'), fix: 'Define OFFSZN_VARIABLE_PANEL en el servidor.' },
+        { key: 'supabase', name: 'Base de datos (Supabase)', ok: has('SUPABASE_URL', 'SUPABASE_SERVICE_KEY'), fix: 'Define SUPABASE_URL y SUPABASE_SERVICE_KEY.' },
+        { key: 'brevo', name: 'Correos (Brevo)', ok: has('BREVO_API_KEY'), fix: 'Define BREVO_API_KEY.' },
+        { key: 'brevo_list', name: 'Lista de contactos en Brevo', ok: has('STORE_BREVO_LIST_ID'), fix: 'Define STORE_BREVO_LIST_ID (opcional, para sincronizar contactos).' },
+        { key: 'cron', name: 'Cron de automatizaciones', ok: has('STORE_CRON_SECRET'), fix: 'Define STORE_CRON_SECRET en el servidor y el mismo valor como secret de GitHub.' },
+        { key: 'paypal', name: 'PayPal', ok: has('PAYPAL_CLIENT_ID', 'PAYPAL_CLIENT_SECRET'), fix: 'Define PAYPAL_CLIENT_ID y PAYPAL_CLIENT_SECRET.' },
+        { key: 'yape', name: 'Yape (Mercado Pago)', ok: has('MERCADOPAGO_ACCESS_TOKEN'), fix: 'Define MERCADOPAGO_ACCESS_TOKEN.' },
+        { key: 'meta', name: 'Meta Conversions API', ok: has('META_CAPI_ACCESS_TOKEN'), fix: 'Define META_CAPI_ACCESS_TOKEN (el Pixel del navegador ya funciona sin esto).' },
+        { key: 'r2', name: 'Archivos (Cloudflare R2, bucket 4)', ok: has('R2_ENDPOINT_V4', 'R2_ACCESS_KEY_ID_V4', 'R2_SECRET_ACCESS_KEY_V4'), fix: 'Define las variables R2_*_V4.' }
+    ];
+
+    const tables = ['store_customers', 'store_orders', 'store_offers', 'store_trials', 'store_events', 'willie_orders',
+        'store_carts', 'store_deals', 'store_notes', 'store_automation_rules', 'store_automation_log'];
+    const checked = await Promise.all(tables.map(async (name) => {
+        const { error } = await supabase.from(name).select('*', { count: 'exact', head: true }).limit(1);
+        return { name, ok: !error, migration: ['store_carts', 'store_deals', 'store_notes', 'store_automation_rules', 'store_automation_log'].includes(name) ? '20261023_willie_crm.sql' : '20261022_willie_store.sql' };
+    }));
+
+    const { products } = loadCatalog();
+    const active = products.filter((p) => p.status === 'active' && p.kind !== 'subscription');
+    const artists = active.filter((p) => p.subcategory === 'artistas');
+    return res.json({
+        integrations,
+        tables: checked,
+        catalog: {
+            products: products.length,
+            active: active.length,
+            withoutCover: active.filter((p) => !p.media?.cover).slice(0, 120).map((p) => ({ id: p.id, title: p.title, category: p.category })),
+            withoutCoverCount: active.filter((p) => !p.media?.cover).length,
+            artistsWithoutAudio: artists.filter((p) => !p.media?.audioAfter).length,
+            artists: artists.length,
+            withoutVideo: active.filter((p) => !p.media?.video).length
+        },
+        time: new Date().toISOString()
+    });
 };
