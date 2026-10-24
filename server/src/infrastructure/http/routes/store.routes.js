@@ -59,6 +59,7 @@ router.patch('/admin/automations/:key', adminAuth, crm.toggleAutomation);
 router.post('/admin/automations/run', adminAuth, crm.runNow);
 router.post('/admin/manual-sale', adminAuth, crm.manualSale);
 router.get('/admin/sales', adminAuth, crm.sales);
+router.post('/admin/payhip-import', adminAuth, express.text({ type: '*/*', limit: '5mb' }), crm.payhipImport);
 router.get('/admin/product-prices', adminAuth, crm.productPrices);
 
 router.get('/admin/customers', adminAuth, adminCustomers);

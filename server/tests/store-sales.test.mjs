@@ -3,6 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildSalesReport, buildProductPrices, classify } from '../src/shared/store/salesReport.js';
+import { parsePayhipPlugins, parseCsv, pluginNameOf } from '../src/shared/store/payhip.js';
 
 const ME = 'me';
 const products = [
@@ -55,4 +56,39 @@ test('precios: marca lo cobrado a un precio distinto al de lista y deja fuera lo
     assert.equal(mix.maxPaidUsd, 10);
     assert.equal(mix.mismatch, true);
     assert.ok(!list.some((p) => p.name === 'Beat mío' || p.name === 'Preset de otro'));
+});
+
+const CSV = [
+    '"Order ID",Email,Status,"Items In Cart","Num of Items In Cart","Amount Gross","Payhip Collected Sales Tax Amount","Payhip Fee","Coupon Code",Date',
+    'a1,x@x.com,COMPLETED,"EASY MIX PLUGIN - WIN Y MAC",1,5.00,0.00,0.25,,2026-09-21',
+    'a2,x@x.com,COMPLETED,"EASY MASTER PLUGIN - WIN Y MAC",1,5.35,0.35,0.25,,2026-10-08',
+    'a3,x@x.com,COMPLETED,"PRESET de Zell",1,5.00,0,0.25,,2026-10-09',
+    'a4,x@x.com,COMPLETED,"INSTALACIÓN DE PLUGINS",1,5.00,0,0.25,,2026-10-09',
+    'a5,x@x.com,COMPLETED,"PLANTILLA PROFESIONAL DE MEZCLA - FL STUDIO, EASY MIX PLUGIN - WIN Y MAC",2,28.00,0,1.40,voces,2026-08-31',
+    'a6,x@x.com,COMPLETED,"EASY MIX PLUGIN - WIN Y MAC",1,50.00,0,2.5,,2026-10-10',
+    'a7,x@x.com,REFUNDED,"EASY MIX PLUGIN - WIN Y MAC",1,5.00,0,0.25,,2026-10-11'
+].join('\n');
+
+test('payhip: solo plugins reales (no presets, plantillas ni instalaciones), sin impuestos y sin reembolsos', () => {
+    const r = parsePayhipPlugins(CSV);
+    assert.equal(r.totalOrders, 7);
+    assert.deepEqual(r.rows.map((x) => [x.order_id, x.plugin, x.unit_price_usd, x.mixed]), [['a1', 'Easy Mix', 5, false], ['a2', 'Easy Master', 5, false], ['a5', 'Easy Mix', null, true], ['a6', 'Easy Mix', 50, false]]);
+    assert.equal(pluginNameOf('INSTALACIÓN DE PLUGINS'), null);
+    assert.equal(pluginNameOf('COCA COLA PLUGIN - WIN Y MAC'), 'Coca Cola');
+    assert.equal(parseCsv('a,"b,c","d ""e"""\n1,2,3').length, 2);
+});
+
+test('plugins: precio entre 2 y 30 US$ la unidad, Payhip se suma y los pedidos mixtos no llevan monto', () => {
+    const payhip = parsePayhipPlugins(CSV).rows;
+    const r = buildSalesReport({ orders, items, products, producerIds: [ME], payhip });
+    // OFFSZN: Easy Mix 10 + 5 y plantilla 25 = 40 · Payhip: Easy Mix 5 + Easy Master 5 = 10 (el de 50 US$ queda fuera de rango)
+    assert.equal(r.sources.offszn.revenueUsd, 40);
+    assert.equal(r.sources.payhip.revenueUsd, 10);
+    assert.equal(r.sources.payhip.units, 2);
+    assert.equal(r.sources.payhip.mixedOrders, 1);
+    assert.equal(r.totals.revenueUsd, 50);
+    assert.deepEqual(r.outOfRange.map((x) => [x.source, x.price]), [['Payhip', 50]]);
+    const mix = r.best.find((p) => p.name === 'Easy Mix');
+    assert.equal(mix.units, 3, 'Easy Mix de OFFSZN y de Payhip se junta en una sola fila');
+    assert.equal(r.byMonth.find((m) => m.month === '2026-09').payhip, 5);
 });
