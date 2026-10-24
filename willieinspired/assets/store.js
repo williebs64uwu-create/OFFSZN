@@ -145,12 +145,11 @@
         if (!pr) return '';
         if (!pr.usd) return '<span class="wi-price"><span class="wi-price__now">Gratis</span></span>';
         const local = pr.local || { amount: pr.usd, currency: 'USD' };
-        const usdNote = local.currency !== 'USD' ? `<span class="wi-price__usd">US$${pr.usd}</span>` : '';
         const was = pr.compareAtLocal ? `<span class="wi-price__was">${WI.fmt(pr.compareAtLocal.amount, pr.compareAtLocal.currency)}</span>` : '';
         const save = showSave && WI.savePct(pr) ? `<span class="wi-save">-${WI.savePct(pr)}%</span>` : '';
-        return `<span class="wi-price${lg ? ' wi-price--lg' : ''}"><span class="wi-price__now">${WI.fmt(local.amount, local.currency)}</span>${was}${usdNote}${save}</span>`;
+        return `<span class="wi-price${lg ? ' wi-price--lg' : ''}"><span class="wi-price__now">${WI.fmt(local.amount, local.currency)}</span>${was}${save}</span>`;
     };
-    WI.quoteMoney = (q) => (q?.local && q.local.currency !== 'USD' ? `${WI.fmt(q.local.amount, q.local.currency)} <span class="wi-price__usd">US$${q.totalUsd}</span>` : WI.fmt(q?.totalUsd || 0));
+    WI.quoteMoney = (q) => (q?.local && q.local.currency !== 'USD' ? WI.fmt(q.local.amount, q.local.currency) : WI.fmt(q?.totalUsd || 0));
 
     // ── Tracking (eventos del embudo y del A/B) ─────────────────────────────
     const queue = [];

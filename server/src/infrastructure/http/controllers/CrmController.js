@@ -6,6 +6,8 @@ import { resolveRegion, quoteCart } from '../../../shared/store/pricing.js';
 import { getProduct, loadCatalog } from '../../../shared/store/catalog.js';
 import { fulfillOrder } from '../../services/storeService.js';
 import { runAutomations } from '../../services/crmService.js';
+import { buildSalesReport, buildProductPrices } from '../../../shared/store/salesReport.js';
+import { parsePayhipPlugins } from '../../../shared/store/payhip.js';
 
 const clip = (v, n) => String(v ?? '').slice(0, n).trim();
 const email = (v) => clip(v, 200).toLowerCase();
@@ -244,4 +246,65 @@ export const system = async (req, res) => {
         },
         time: new Date().toISOString()
     });
+};
+
+
+// ─── Ventas de Willie (solo productos propios y de pago; tablas de OFFSZN) ────────────────────────────────────────
+// Supabase devuelve máximo 1000 filas por consulta: se pide por páginas.
+async function fetchAll(table, columns, { order = 'id' } = {}) {
+    const out = [];
+    for (let from = 0; from < 50000; from += 1000) {
+        const { data, error } = await supabase.from(table).select(columns).order(order, { ascending: true }).range(from, from + 999);
+        if (error) throw error;
+        out.push(...data);
+        if (data.length < 1000) break;
+    }
+    return out;
+}
+
+// Cuenta(s) de productor de Willie en OFFSZN (ids separados por coma). Solo se cuentan productos de estas cuentas.
+const OWNER_PRODUCER_IDS = () => String(process.env.OFFSZN_OWNER_PRODUCER_IDS || '0382a813-85c7-46c3-8d2c-61a5692adffd').split(',').map((x) => x.trim()).filter(Boolean);
+
+async function loadSalesData() {
+    const [orders, items, products, clicks] = await Promise.all([
+        fetchAll('orders', 'id, status, created_at'),
+        fetchAll('order_items', 'id, order_id, product_id, quantity, price_at_purchase'),
+        fetchAll('products', 'id, name, product_type, status, price_basic, producer_id'),
+        fetchAll('manual_payment_clicks', 'id, method, product')
+    ]);
+    // Ventas de plugins de Payhip (se importan desde el CSV). Si la tabla aún no existe, el reporte sigue con OFFSZN solo.
+    let payhip = [];
+    try { payhip = await fetchAll('store_payhip_sales', 'order_id, sold_on, plugin, unit_price_usd, mixed, price_estimated', { order: 'order_id' }); } catch (_) { payhip = []; }
+    return { orders, items, products, clicks, payhip, producerIds: OWNER_PRODUCER_IDS() };
+}
+
+// ─── GET /admin/sales
+export const sales = async (req, res) => {
+    try { return res.json(buildSalesReport(await loadSalesData())); } catch (e) { return fail(res, e); }
+};
+
+// ─── GET /admin/product-prices → precio de lista vs. lo cobrado + precios del catálogo de la tienda
+export const productPrices = async (req, res) => {
+    try {
+        const d = await loadSalesData();
+        const all = loadCatalog().products;
+        const row = (p) => ({ id: p.id, title: p.title, category: p.category, status: p.status, baseUsd: p.price?.base ?? null, highUsd: p.price?.high ?? null, compareAtUsd: p.price?.compareAt ?? null });
+        const artists = all.filter((p) => p.subcategory === 'artistas');
+        const catalog = all.filter((p) => p.subcategory !== 'artistas').map(row);
+        if (artists.length) catalog.unshift({ ...row(artists[0]), id: 'artistas', title: `Presets de artistas (${artists.length} productos, mismo precio)` });
+        return res.json({ products: buildProductPrices(d).slice(0, 300), catalog });
+    } catch (e) { return fail(res, e); }
+};
+
+// ─── POST /admin/payhip-import  (cuerpo: el texto del CSV de clientes de Payhip)
+// Guarda solo los plugins, sin correos ni datos personales. Volver a importar no duplica ni pisa precios corregidos a mano.
+export const payhipImport = async (req, res) => {
+    const text = typeof req.body === 'string' ? req.body : '';
+    if (!text.trim()) return fail(res, 'Sube el archivo CSV de clientes de Payhip.', 400);
+    let parsed;
+    try { parsed = parsePayhipPlugins(text); } catch (e) { return fail(res, e.message, 400); }
+    if (!parsed.rows.length) return res.json({ imported: 0, totalOrders: parsed.totalOrders, ignoredOrders: parsed.ignoredOrders, mixed: 0 });
+    const { error } = await supabase.from('store_payhip_sales').upsert(parsed.rows, { onConflict: 'order_id', ignoreDuplicates: true });
+    if (error) return fail(res, error.code === '42P01' || /store_payhip_sales/.test(error.message) ? 'Falta crear la tabla store_payhip_sales (migración 20261025).' : error);
+    return res.json({ imported: parsed.rows.length, mixed: parsed.rows.filter((r) => r.mixed).length, totalOrders: parsed.totalOrders, ignoredOrders: parsed.ignoredOrders });
 };

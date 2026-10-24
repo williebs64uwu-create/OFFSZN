@@ -14,7 +14,8 @@ export const HIGH_TIER = new Set(['AR', 'MX', 'US', 'DE', 'CL', 'DO']);
 // Siempre precio base aunque la IP diga EE. UU.: a veces paga un familiar desde fuera.
 export const ALWAYS_BASE = new Set(['VE', 'CU']);
 
-// Moneda que se muestra por país. Se cobra en USD (PayPal) o en PEN (Yape); esto es solo referencia visual.
+// Moneda que se muestra: dólares para todos, soles solo en Perú (Yape). Se cobra en USD (PayPal) o en PEN (Yape).
+// El resto de monedas queda como referencia por si algún día se vuelve a mostrar precio local.
 // Tipos de cambio editables por variable de entorno (STORE_FX_MXN=18.5, etc.). ARS cambia rápido: revisarlo.
 export const CURRENCIES = {
     AR: { code: 'ARS', rate: num(process.env.STORE_FX_ARS, 1450), step: 100 },
@@ -106,7 +107,7 @@ export function resolveRegion({ ipCountry, timezone, declaredCountry } = {}) {
         }
     }
 
-    const currency = (tier === 'high' && CURRENCIES[country]) || (country === 'PE' ? CURRENCIES.PE : USD);
+    const currency = country === 'PE' ? CURRENCIES.PE : USD;
     return { country, ipCountry: ip, tzCountry: tz, declaredCountry: declared, tier, vpnSuspected, currency, reasons };
 }
 
