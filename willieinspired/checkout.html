@@ -12,46 +12,67 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/willieinspired/assets/store.css">
     <style>
-        .co { display: grid; gap: 24px; padding: clamp(20px, 4vw, 44px) 0; }
-        @media (min-width: 960px) { .co { grid-template-columns: 1.1fr 0.9fr; align-items: start; } .co__summary { position: sticky; top: 88px; } }
-        .co h2 { font-size: 1.05rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .co h2 .n { width: 26px; height: 26px; border-radius: 50%; background: var(--ink); color: #fff; font-size: .8rem; display: inline-flex; align-items: center; justify-content: center; }
-        .co .wi-panel + .wi-panel { margin-top: 16px; }
+        /* Checkout claro tipo Stripe: siempre blanco, una columna de datos y un resumen a la derecha */
+        body.co-page { --bg:#fff; --surface:#fff; --surface-2:#fafafa; --ink:#0f172a; --muted:#475569; --subtle:#64748b; --line:#e5e7eb; --line-strong:#cbd5e1; --header-bg:#fff; --soft:#f1f5f9; --on-ink:#fff; --noise:none; --ph-a:#f1f5f9; --ph-b:#e2e8f0; --radius:10px; --radius-sm:8px; --shadow:none; color-scheme:light; background:#fff; }
+        .co-page .wi-announce, .co-page .wi-nav, .co-page .wi-burger, .co-page .wi-theme, .co-page [aria-label="Mi perfil"] { display:none !important; }
+        .co-page .wi-header { border-bottom:1px solid var(--line); background:#fff; backdrop-filter:none; }
+        .co-page .wi-header__inner { position:relative; justify-content:space-between; max-width:1040px; }
+        .co-page .wi-brand { position:absolute; left:50%; transform:translateX(-50%); font-size:1.05rem; }
+        .co-back { color:var(--subtle); font-size:.9rem; font-weight:600; }
+        .co { display:grid; gap:0; padding:0; max-width:1040px; margin:0 auto; }
+        @media (min-width: 900px) { .co { grid-template-columns: 1fr 0.9fr; } .co__summary { position:sticky; top:0; align-self:start; min-height:calc(100vh - 64px); } }
+        .co__main { padding:36px 0 56px; }
+        @media (min-width: 900px) { .co__main { padding-right:56px; } }
+        .co h1 { font-size:1.5rem; font-weight:800; letter-spacing:-.02em; margin:0 0 22px; }
+        .co h2 { font-size:1rem; font-weight:700; margin:28px 0 10px; display:flex; align-items:center; gap:8px; }
+        .co .wi-panel { background:none; border:0; box-shadow:none; padding:0; border-radius:0; }
+        .co .wi-panel + .wi-panel { margin-top:0; }
+        .co .wi-input { border-radius:8px; min-height:44px; border:1px solid var(--line-strong); background:#fff; }
+        .co .wi-input:focus { outline:2px solid rgba(99,91,255,.35); border-color:#635bff; }
+        .co__summary { background:#fafafa; border:0; border-left:1px solid var(--line); border-radius:0 !important; padding:36px 0 56px 40px !important; }
+        @media (max-width: 899px) { .co__summary { order:-1; border-left:0; border-bottom:1px solid var(--line); padding:20px var(--gutter) !important; min-height:0; } .co__main { padding:24px var(--gutter) 48px; } }
+        .co__summary h2 { margin-top:0; }
         .pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; max-height: 420px; overflow-y: auto; padding: 2px; }
-        .pick button { text-align: left; background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: var(--radius-sm); padding: 8px; display: grid; gap: 6px; transition: border-color .2s; }
-        .pick button:hover { border-color: var(--ink); }
-        .pick img, .pick .wi-ph { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 10px; padding: 4px; }
+        .pick button { text-align: left; background: #fff; border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px; display: grid; gap: 6px; transition: border-color .2s; }
+        .pick button:hover { border-color: #635bff; }
+        .pick img, .pick .wi-ph { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 6px; }
         .pick .wi-ph span, .pick .wi-ph i { display: none; }
         .pick b { font-size: .8rem; line-height: 1.2; }
         .pay-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+        .co .pay-tabs .wi-chip { border-radius:8px; background:#fff; border:1px solid var(--line-strong); color:var(--ink); }
+        .co .pay-tabs .wi-chip.is-active { border-color:#635bff; box-shadow:0 0 0 1px #635bff; background:#fff; color:var(--ink); }
+        .co .wi-sumline { font-size:.92rem; }
+        .co .wi-sumline--total { font-size:1.1rem; border-top:1px solid var(--line); padding-top:12px; margin-top:8px; }
+        .co .wi-cart-line__title { font-weight:700; }
+        .co-secure { margin-top:28px; text-align:center; color:var(--subtle); font-size:.78rem; }
         #paypalButtons { min-height: 50px; }
         .otp { letter-spacing: .5em; font-weight: 800; text-align: center; font-size: 1.3rem; }
     </style>
 </head>
-<body>
+<body class="co-page">
     <main class="wi-container">
         <div class="wi-empty wi-hidden" id="emptyState" style="padding:60px 0"><i class="bi bi-bag"></i><h1 class="wi-h3">Tu carrito está vacío</h1><a class="wi-btn wi-btn--dark" style="margin-top:16px" href="/willieinspired/presets">Ver presets</a></div>
         <div class="co" id="coMain">
-            <div>
-                <a href="/willieinspired" class="wi-subtle"><i class="bi bi-arrow-left"></i> Seguir comprando</a>
-                <h1 class="wi-h2" style="margin:10px 0 20px">Finaliza tu compra</h1>
+            <div class="co__main">
+                <a href="/willieinspired" class="co-back"><i class="bi bi-arrow-left"></i> Seguir comprando</a>
+                <h1 style="margin-top:14px">Finaliza tu compra</h1>
 
                 <section class="wi-panel">
-                    <h2><span class="n">1</span> Tu correo</h2>
+                    <h2>Dirección de correo electrónico</h2>
                     <p class="wi-subtle" style="margin-bottom:10px">Aquí te llegan tus archivos y licencias.</p>
                     <label class="wi-field"><input class="wi-input" id="email" type="email" autocomplete="email" placeholder="tucorreo@gmail.com" required></label>
                     <p class="wi-subtle" id="sessionNote" style="margin-top:8px"></p>
                 </section>
 
                 <section class="wi-panel wi-hidden" id="pickBox">
-                    <h2><span class="n"><i class="bi bi-gift" style="font-size:.8rem"></i></span> Elige tu producto gratis</h2>
+                    <h2><i class="bi bi-gift"></i> Elige tu producto gratis</h2>
                     <p class="wi-subtle" style="margin-bottom:12px" id="pickHint"></p>
                     <input class="wi-input" id="pickSearch" type="search" placeholder="Buscar…" style="margin-bottom:12px;border-radius:999px;min-height:44px">
                     <div class="pick" id="pickList"></div>
                 </section>
 
                 <section class="wi-panel">
-                    <h2><span class="n">2</span> Pago</h2>
+                    <h2>Método de pago</h2>
                     <div class="pay-tabs" id="payTabs">
                         <button type="button" class="wi-chip is-active" data-pay="paypal"><i class="bi bi-paypal"></i> PayPal / tarjeta</button>
                         <button type="button" class="wi-chip" data-pay="yape" id="yapeTab">Yape (Perú)</button>
@@ -74,6 +95,7 @@
                         <a class="wi-btn wi-btn--whatsapp wi-btn--block" id="waOther" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Pagar con otro método</a>
                     </div>
                 </section>
+                <p class="co-secure"><i class="bi bi-lock-fill"></i> Todas las transacciones están protegidas y cifradas</p>
             </div>
 
             <aside class="co__summary wi-panel">
@@ -157,10 +179,11 @@
             $('#offerNote').innerHTML = quote?.error
                 ? `<div class="wi-note"><i class="bi bi-info-circle"></i><div>${WI.esc(quote.error)}${quote.code === 'login_required' ? ` <a class="wi-link" href="${WI.auth.loginUrl()}">Iniciar sesión</a>` : ''} <button type="button" class="wi-link" data-clear-offer>Quitar oferta</button></div></div>`
                 : quote?.offerApplied ? `<div class="wi-note wi-note--success"><i class="bi bi-gift"></i><div><b>${WI.esc(WI.offer.label(offer))}</b> <button type="button" class="wi-link" data-clear-offer>Quitar</button></div></div>` : '';
+            const pe = cat.region?.country === 'PE';
             const save = quote?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Descuento</span><span>-US$${quote.discountUsd}</span></div>` : '';
-            const yapeLine = cat.region?.country === 'PE' ? `<p class="wi-subtle" style="text-align:right">Con Yape: <b>S/ ${quote?.totalPen ?? '—'}</b></p>` : '';
-            $('#totals').innerHTML = `<div class="wi-sumline"><span>Subtotal</span><span>US$${quote?.subtotalUsd ?? 0}</span></div>${save}
-                <div class="wi-sumline wi-sumline--total"><span>Total</span><span>${WI.quoteMoney(quote)}</span></div>${yapeLine}`;
+            const usdNote = pe ? `<p class="wi-subtle" style="text-align:right">Con PayPal o tarjeta pagas <b>US$${quote?.totalUsd ?? '—'}</b>. Con Yape pagas <b>S/ ${quote?.totalPen ?? '—'}</b>.</p>` : '';
+            $('#totals').innerHTML = `${pe ? '' : `<div class="wi-sumline"><span>Subtotal</span><span>US$${quote?.subtotalUsd ?? 0}</span></div>${save}`}
+                <div class="wi-sumline wi-sumline--total"><span>Total</span><span>${WI.quoteMoney(quote)}</span></div>${usdNote}`;
             $('#yapePay').textContent = `Pagar S/ ${quote?.totalPen ?? ''} con Yape`;
             $('#waOther').href = WI.wa(`Hola Willie! Quiero pagar con otro método:\n${(quote?.lines || []).map((l) => `• ${l.title}`).join('\n')}\nTotal: US$${quote?.totalUsd}\nMi correo: ${email()}`);
             renderPicker();

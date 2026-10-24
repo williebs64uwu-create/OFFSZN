@@ -38,14 +38,14 @@ test('región: Perú es base y se muestra en soles', () => {
     assert.equal(priceFor(preset, r).usd, 5);
 });
 
-test('región: México es high (5 → 10 USD) y se muestra en pesos', () => {
+test('región: México es high (5 → 10 USD) y se muestra en dólares', () => {
     const r = resolveRegion({ ipCountry: 'MX', timezone: 'America/Mexico_City' });
     assert.equal(r.tier, 'high');
-    assert.equal(r.currency.code, 'MXN');
+    assert.equal(r.currency.code, 'USD');
     const p = priceFor(preset, r);
     assert.equal(p.usd, 10);
     assert.equal(p.compareAtUsd, 30);
-    assert.equal(p.local.currency, 'MXN');
+    assert.equal(p.local.currency, 'USD');
 });
 
 test('región: VPN a un país barato no baja el precio', () => {
