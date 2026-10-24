@@ -10,6 +10,7 @@
 // Uses globalThis.fetch available in Node 18+
 import { supabase } from '../../database/connection.js';
 import { generatePluginLicense } from './PluginLicensingController.js';
+import { PLUGINS } from '../../../shared/config/pluginRegistry.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import MetaCapiService from '../../services/MetaCapiService.js';
 
@@ -85,6 +86,19 @@ const PLUGIN_INFO_MAP = {
         }
     }
 };
+
+// OFFSZN Widget: se registra con los IDs de WIDGET_PRODUCT_IDS (registro central). Sin esto, un ID de producto
+// desconocido cae al mapa de Easy Mix y se emitiría la licencia equivocada.
+const WIDGET_PLUGIN = PLUGINS.find((p) => p.id === 'offszn-widget');
+for (const id of WIDGET_PLUGIN?.productIds || []) {
+    PLUGIN_INFO_MAP[String(id)] = {
+        name: 'OFFSZN Widget',
+        downloads: {
+            win: process.env.WIDGET_DOWNLOAD_URL || 'https://offszn.lat/mis-compras',
+            mac: '#'
+        }
+    };
+}
 
 /**
  * GET /api/orders/yape/config

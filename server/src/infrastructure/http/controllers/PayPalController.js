@@ -6,6 +6,7 @@ import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { v4 as uuidv4 } from 'uuid';
 import { getPresignedDownloadUrl } from '../../services/r2-storage.service.js';
 import { generatePluginLicense } from './PluginLicensingController.js';
+import { isProductOfPlugin, firstProductIdOf } from '../../../shared/config/pluginRegistry.js';
 import MetaCapiService from '../../services/MetaCapiService.js';
 
 // --- PayPal OAuth Config ---
@@ -1253,11 +1254,12 @@ export const capturePayPalOrder = async (req, res) => {
                 const isEasyLevel = prodName.toLowerCase().includes('easy level') || prodName.toLowerCase().includes('easylevel');
                 const isEasyDeeser = /de-?e?s?ser/.test(prodName.toLowerCase()) && prodName.toLowerCase().includes('easy');
                 const isEasyClean = prodName.toLowerCase().includes('easy clean') || prodName.toLowerCase().includes('easyclean');
+                const isWidget = isProductOfPlugin('offszn-widget', { name: prodName, id: prodId }); // OFFSZN Widget (WIDGET_PRODUCT_IDS)
                 const isPromo2x1 = item.is_promo_2x1 === true || item.product?.is_promo_2x1 === true || prodName.toLowerCase().includes('2x1') || (item.license_name || '').toLowerCase().includes('2x1') || req.body.isPromo2x1 === true;
                 
-                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette || isEasyLevel || isEasyDeeser || isEasyClean) {
+                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette || isEasyLevel || isEasyDeeser || isEasyClean || isWidget) {
                     try {
-                        const pluginName = isCassette ? 'Cassette' : (isEasyClean ? 'Easy Clean' : isEasyDeeser ? 'Easy Deeser' : isEasyLevel ? 'Easy Level' : isOmni ? 'Omni Plugin' : (isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix')))));
+                        const pluginName = isWidget ? 'OFFSZN Widget' : isCassette ? 'Cassette' : (isEasyClean ? 'Easy Clean' : isEasyDeeser ? 'Easy Deeser' : isEasyLevel ? 'Easy Level' : isOmni ? 'Omni Plugin' : (isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix')))));
                         const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
                                                (item.product?.product_type && item.product.product_type === 'subscription');
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';
@@ -1417,7 +1419,8 @@ export const capturePayPalOrder = async (req, res) => {
                         const isEasyPitch = prodName.toLowerCase().includes('easy pitch') || prodName.toLowerCase().includes('easypitch') || prodId === '5000';
                         const isOmni = prodName.toLowerCase().includes('omni') || prodId === '5001';
                         const isCassette = prodName.toLowerCase().includes('cassette') || prodId === '5002';
-                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette;
+                        const isWidget = isProductOfPlugin('offszn-widget', { name: prodName, id: prodId });
+                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette || isWidget;
 
                         // A. Notify Client (Receipt) — includes serial key for plugin purchases
                         const serialKeySection = (isPlugin && keysGenerated.length > 0) ? `
@@ -1435,7 +1438,13 @@ export const capturePayPalOrder = async (req, res) => {
 
                         let downloadLinks = null;
                         if (isPlugin) {
-                            if (isCoke) {
+                            if (isWidget) {
+                                // Instalador del widget (solo Windows): WIDGET_DOWNLOAD_URL en Vercel; si falta, "Mis compras"
+                                downloadLinks = {
+                                    win: process.env.WIDGET_DOWNLOAD_URL || 'https://offszn.lat/mis-compras',
+                                    mac: null
+                                };
+                            } else if (isCoke) {
                                 downloadLinks = {
                                     win: 'https://drive.google.com/file/d/1cFKYYabnqLkVLeJDQYtWLixh93KzPwbN/view?usp=sharing',
                                     mac: 'https://drive.google.com/file/d/1741Z3uG8amQ5boK1il5Ffj136sW2WHPY/view?usp=sharing'
@@ -2442,7 +2451,11 @@ export const handlePayPalWebhook = async (req, res) => {
             const hasCleanInItems = items.some(item => isCleanText(item.name));
             const isCassetteText = (t) => /cassette/.test(String(t || '').toLowerCase());
             const hasCassetteInItems = items.some(item => isCassetteText(item.name));
-            if (isCleanText(description) || hasCleanInItems) {
+            const isWidgetText = (t) => /offszn\s*widget/.test(String(t || '').toLowerCase());
+            const hasWidgetInItems = items.some(item => isWidgetText(item.name));
+            if (isWidgetText(description) || hasWidgetInItems) {
+                pluginToGenerate = 'OFFSZN Widget';
+            } else if (isCleanText(description) || hasCleanInItems) {
                 pluginToGenerate = 'Easy Clean';
             } else if (isDeeserText(description) || hasDeeserInItems) {
                 pluginToGenerate = 'Easy Deeser';
@@ -2483,7 +2496,7 @@ export const handlePayPalWebhook = async (req, res) => {
                 matchedUserId = matchedUser.id;
             }
 
-            const productId = pluginToGenerate === 'Cassette' ? 5002 : (pluginToGenerate === 'Omni Plugin' ? 5001 : (pluginToGenerate === 'Easy Pitch' ? 5000 : (pluginToGenerate === 'Easy Master' ? 900 : (pluginToGenerate === 'Vocal Preset' ? 905 : 899))));
+            const productId = pluginToGenerate === 'OFFSZN Widget' ? firstProductIdOf('offszn-widget') : pluginToGenerate === 'Cassette' ? 5002 : (pluginToGenerate === 'Omni Plugin' ? 5001 : (pluginToGenerate === 'Easy Pitch' ? 5000 : (pluginToGenerate === 'Easy Master' ? 900 : (pluginToGenerate === 'Vocal Preset' ? 905 : 899))));
 
             // Create Order Record to prevent double-processing and show in "Mis Compras"
             let { data: newOrder, error: orderError } = await supabase
