@@ -15,3 +15,6 @@ create table if not exists public.store_payhip_sales (
 );
 create index if not exists store_payhip_sales_date_idx on public.store_payhip_sales (sold_on desc);
 alter table public.store_payhip_sales enable row level security;
+
+-- Precio del plugin dentro de un pedido mixto, deducido a mano (cupón y precios de lista). Un reimport no lo pisa.
+alter table public.store_payhip_sales add column if not exists price_estimated boolean not null default false;

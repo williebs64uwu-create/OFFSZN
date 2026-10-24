@@ -43,7 +43,7 @@ export function buildSalesReport({ orders = [], items = [], products = [], click
     const names = new Map();
     let revenueUsd = 0;
     let units = 0;
-    const src = { offszn: { units: 0, revenueUsd: 0 }, payhip: { units: 0, revenueUsd: 0, mixedOrders: 0 } };
+    const src = { offszn: { units: 0, revenueUsd: 0 }, payhip: { units: 0, revenueUsd: 0, mixedOrders: 0, estimatedUnits: 0 } };
     for (const it of paid) {
         const qty = num(it.quantity) || 1;
         const price = num(it.price_at_purchase);
@@ -70,8 +70,9 @@ export function buildSalesReport({ orders = [], items = [], products = [], click
 
     // Payhip: solo plugins. Los pedidos "mixtos" (plugin + otras cosas) cuentan como venta pero sin monto, porque no se sabe cuánto fue del plugin.
     for (const h of payhip) {
-        if (h.mixed || h.unit_price_usd == null) { src.payhip.mixedOrders += 1; continue; }
+        if (h.unit_price_usd == null) { src.payhip.mixedOrders += 1; continue; }
         const price = Number(h.unit_price_usd);
+        if (h.price_estimated) src.payhip.estimatedUnits += 1;
         if (price < PLUGIN_MIN_USD || price > PLUGIN_MAX_USD) { outOfRange.push({ name: h.plugin, price, source: 'Payhip' }); continue; }
         revenueUsd += price; units += 1; orderIds.add(`payhip:${h.order_id}`);
         src.payhip.units += 1; src.payhip.revenueUsd += price;
@@ -114,7 +115,7 @@ export function buildSalesReport({ orders = [], items = [], products = [], click
             byMethod: [...interestMethod.values()].sort((a, b) => b.clicks - a.clicks),
             byProduct: [...interestProduct.values()].sort((a, b) => b.clicks - a.clicks).slice(0, 10)
         },
-        sources: { offszn: { units: src.offszn.units, revenueUsd: round2(src.offszn.revenueUsd) }, payhip: { units: src.payhip.units, revenueUsd: round2(src.payhip.revenueUsd), mixedOrders: src.payhip.mixedOrders } },
+        sources: { offszn: { units: src.offszn.units, revenueUsd: round2(src.offszn.revenueUsd) }, payhip: { units: src.payhip.units, revenueUsd: round2(src.payhip.revenueUsd), mixedOrders: src.payhip.mixedOrders, estimatedUnits: src.payhip.estimatedUnits } },
         outOfRange,
         scope: { producerIds: [...new Set((producerIds || []).map(String))], productsOwned: mine.size, pluginRangeUsd: [PLUGIN_MIN_USD, PLUGIN_MAX_USD] }
     };

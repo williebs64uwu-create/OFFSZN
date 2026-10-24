@@ -274,7 +274,7 @@ async function loadSalesData() {
     ]);
     // Ventas de plugins de Payhip (se importan desde el CSV). Si la tabla aún no existe, el reporte sigue con OFFSZN solo.
     let payhip = [];
-    try { payhip = await fetchAll('store_payhip_sales', 'order_id, sold_on, plugin, unit_price_usd, mixed', { order: 'order_id' }); } catch (_) { payhip = []; }
+    try { payhip = await fetchAll('store_payhip_sales', 'order_id, sold_on, plugin, unit_price_usd, mixed, price_estimated', { order: 'order_id' }); } catch (_) { payhip = []; }
     return { orders, items, products, clicks, payhip, producerIds: OWNER_PRODUCER_IDS() };
 }
 
@@ -297,14 +297,14 @@ export const productPrices = async (req, res) => {
 };
 
 // ─── POST /admin/payhip-import  (cuerpo: el texto del CSV de clientes de Payhip)
-// Guarda solo los plugins, sin correos ni datos personales. Volver a importar el mismo CSV no duplica nada.
+// Guarda solo los plugins, sin correos ni datos personales. Volver a importar no duplica ni pisa precios corregidos a mano.
 export const payhipImport = async (req, res) => {
     const text = typeof req.body === 'string' ? req.body : '';
     if (!text.trim()) return fail(res, 'Sube el archivo CSV de clientes de Payhip.', 400);
     let parsed;
     try { parsed = parsePayhipPlugins(text); } catch (e) { return fail(res, e.message, 400); }
     if (!parsed.rows.length) return res.json({ imported: 0, totalOrders: parsed.totalOrders, ignoredOrders: parsed.ignoredOrders, mixed: 0 });
-    const { error } = await supabase.from('store_payhip_sales').upsert(parsed.rows, { onConflict: 'order_id' });
+    const { error } = await supabase.from('store_payhip_sales').upsert(parsed.rows, { onConflict: 'order_id', ignoreDuplicates: true });
     if (error) return fail(res, error.code === '42P01' || /store_payhip_sales/.test(error.message) ? 'Falta crear la tabla store_payhip_sales (migración 20261025).' : error);
     return res.json({ imported: parsed.rows.length, mixed: parsed.rows.filter((r) => r.mixed).length, totalOrders: parsed.totalOrders, ignoredOrders: parsed.ignoredOrders });
 };

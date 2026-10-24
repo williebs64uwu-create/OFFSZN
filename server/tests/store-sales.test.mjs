@@ -92,3 +92,11 @@ test('plugins: precio entre 2 y 30 US$ la unidad, Payhip se suma y los pedidos m
     assert.equal(mix.units, 3, 'Easy Mix de OFFSZN y de Payhip se junta en una sola fila');
     assert.equal(r.byMonth.find((m) => m.month === '2026-09').payhip, 5);
 });
+
+test('payhip: un pedido mixto con precio estimado a mano sí suma y se marca como estimado', () => {
+    const payhip = [{ order_id: 'm1', sold_on: '2026-08-31', plugin: 'Easy Mix', unit_price_usd: 12, mixed: true, price_estimated: true }, { order_id: 'm2', sold_on: '2026-08-01', plugin: 'Easy Mix', unit_price_usd: null, mixed: true }];
+    const r = buildSalesReport({ orders: [], items: [], products: [], producerIds: [ME], payhip });
+    assert.equal(r.sources.payhip.revenueUsd, 12);
+    assert.equal(r.sources.payhip.estimatedUnits, 1);
+    assert.equal(r.sources.payhip.mixedOrders, 1);
+});
