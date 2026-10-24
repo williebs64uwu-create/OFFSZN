@@ -8,9 +8,9 @@ delete process.env.OFFSZN_VARIABLE_PANEL;
 delete process.env.PLUGIN_ADMIN_KEY;
 const { isAdminKey, getAdminKeys, adminKeyConfigured } = await import('../src/shared/config/adminKey.js');
 
-test('sin variable de entorno nadie entra, ni con las claves que antes estaban en el código', () => {
+test('sin variable de entorno nadie entra', () => {
     assert.equal(adminKeyConfigured(), false);
-    for (const k of ['bpaxh-ua88t-97wpb-rrngs', 'gian2030upc', 'gian2030', '', undefined, null]) assert.equal(isAdminKey(k), false, String(k));
+    for (const k of ['admin', '1234', 'cualquier-clave', '', undefined, null]) assert.equal(isAdminKey(k), false, String(k));
 });
 
 test('con OFFSZN_VARIABLE_PANEL entra solo esa clave (acepta comillas del .env y espacios)', () => {
@@ -18,11 +18,12 @@ test('con OFFSZN_VARIABLE_PANEL entra solo esa clave (acepta comillas del .env y
     assert.equal(isAdminKey('mi-clave-unica'), true);
     assert.equal(isAdminKey('  mi-clave-unica '), true);
     assert.equal(isAdminKey('mi-clave-unic'), false);
-    assert.equal(isAdminKey('gian2030'), false);
+    assert.equal(isAdminKey('otra-clave'), false);
     assert.equal(getAdminKeys().length, 1);
 });
 
 test('el código fuente no contiene claves de administrador escritas', () => {
     const src = fs.readFileSync(new URL('../src/shared/config/adminKey.js', import.meta.url), 'utf8');
-    assert.ok(!/gian2030|bpaxh-ua88t/.test(src));
+    const literals = (src.match(/(?<![\w\]])'[A-Za-z0-9_.-]{8,}'/g) || []).filter((l) => !/^'[A-Z_]+'$/.test(l));
+    assert.deepEqual(literals, [], 'no debe haber claves escritas, solo nombres de variables de entorno');
 });
