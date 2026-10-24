@@ -42,7 +42,7 @@ Las rutas de la tienda se resuelven en `server/src/shared/store/pages.js` (una s
 - País efectivo = país de la cuenta (onboarding) > IP del CDN (`x-vercel-ip-country`) > zona horaria del navegador.
 - **VPN:** si IP y zona horaria no coinciden se marca `vpn_suspected` y se cobra el **nivel más alto** de los dos: una VPN nunca baja el precio.
 - Moneda local solo informativa (ARS, MXN, CLP, DOP, EUR); PEN para Yape en enteros de soles. El cobro siempre se calcula en el servidor.
-- Ofertas (validadas en servidor): bienvenida 50% (tope 10 USD, una por cuenta), 2x1 (el de menor precio gratis, el cliente elige entre iguales o menores), código de prueba vencida, cupones heredados (`WILLIE10`, `OFFSZN`, `SPECIAL`).
+- Ofertas (validadas en servidor): bienvenida 50% (tope 10 USD, una por cuenta), 2x1 (el de menor precio gratis, el cliente elige entre iguales o menores), código de prueba vencida, cupones heredados (`WILLIE10`, `OFFSZN`, `SPECIAL`) y `VOCES` (20%).
 - Oferta de prueba vencida por país: premium (US, DE) 15 · high 10 · base 5 (**hipótesis inicial**, validar con las ventas reales).
 - Tipos de cambio por env: `STORE_FX_ARS`, `STORE_FX_MXN`, `STORE_FX_EUR`, `STORE_FX_CLP`, `STORE_FX_DOP`, `YAPE_EXCHANGE_RATE_PEN`.
 

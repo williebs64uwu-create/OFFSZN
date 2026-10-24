@@ -139,6 +139,12 @@ test('carrito: cupón antiguo y total en soles', () => {
     assert.equal(q.totalPen, Math.round(13.5 * 3.3), 'soles enteros, igual a lo que se muestra');
 });
 
+test('cupón VOCES = 20% (sin distinguir mayúsculas)', () => {
+    const q = quoteCart({ items: [{ id: 'preset-definitivo' }], getProduct, region: base, offer: { type: 'coupon', code: 'voces' } });
+    assert.equal(q.totalUsd, 12);
+    assert.equal(q.discountUsd, 3);
+});
+
 test('oferta de prueba vencida según país', () => {
     assert.equal(trialFollowupPrice('US'), 15);
     assert.equal(trialFollowupPrice('MX'), 10);

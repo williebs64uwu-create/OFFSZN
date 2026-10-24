@@ -40,6 +40,7 @@ export const OFFERS = {
 // Cupones manuales que ya circulaban en el checkout anterior.
 export const LEGACY_COUPONS = {
     WILLIE10: { type: 'percent', value: 10 },
+    VOCES: { type: 'percent', value: 20 },
     OFFSZN: { type: 'amount', value: 5 },
     SPECIAL: { type: 'percent', value: 15 }
 };
