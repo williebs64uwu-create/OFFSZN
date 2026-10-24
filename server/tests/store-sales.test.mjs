@@ -46,6 +46,11 @@ test('clasificación: plugins, plantillas y presets por nombre', () => {
     assert.equal(classify({ name: 'Omni Plugin' }), 'plugin');
     assert.equal(classify({ name: 'PEACE - VOCAL MIXING TEMPLATE  + MASTER' }), 'plantilla');
     assert.equal(classify({ name: 'PRESET DE TORRES', product_type: 'preset' }), 'preset');
+    assert.equal(classify({ name: 'Easy Level' }), 'plugin');
+    assert.equal(classify({ name: 'EASY MIX PLUGIN - WIN Y MAC' }), 'plugin');
+    assert.equal(classify({ name: 'Inka Kola' }), 'plugin');
+    assert.equal(classify({ name: 'PRESET DE EASY KID', product_type: 'preset' }), 'preset', 'un preset de un artista no es plugin');
+    assert.equal(classify({ name: 'PLANTILLA DE GRABACIÓN Y MEZCLA - CON PLUGINS NATIVOS' }), 'plantilla');
 });
 
 test('precios: marca lo cobrado a un precio distinto al de lista y deja fuera lo ajeno', () => {

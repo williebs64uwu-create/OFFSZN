@@ -9,7 +9,8 @@ const monthOf = (iso) => String(iso || '').slice(0, 7);
 export const EXCLUDED_TYPES = new Set(['beat']);
 
 // En la base todo lo que no es beat/drumkit/loopkit está como "preset", incluso los plugins y las plantillas: se separan por nombre.
-const PLUGIN_RE = /easy\s*(mix|master|pitch|clean|deeser|level|acordes|youtube)|omni|cassette|coca.?cola|inka.?kola|ghost|widget|rack|^vocal preset$|vocal preset fl native/i;
+// Plugins: cualquier nombre que empiece por "Easy ..." (Easy Mix, Easy Level, Easy Clean…) más los demás conocidos. "Preset de Easy Kid" NO es plugin.
+const PLUGIN_RE = /^(easy\s+\w+|coca.?cola|inka.?kola|omni|cassette|ghost|star\s*chain|offszn\s+(rack|widget)|widget|vocal preset)\b|\bvst\b|win y mac/i;
 const TEMPLATE_RE = /template|plantilla|mixing/i;
 export function classify(product) {
     const name = String(product?.name || '');
