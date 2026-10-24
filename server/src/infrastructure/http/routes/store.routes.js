@@ -60,10 +60,6 @@ router.post('/admin/automations/run', adminAuth, crm.runNow);
 router.post('/admin/manual-sale', adminAuth, crm.manualSale);
 router.get('/admin/sales', adminAuth, crm.sales);
 router.get('/admin/product-prices', adminAuth, crm.productPrices);
-router.get('/admin/commissions', adminAuth, crm.commissions);
-router.post('/admin/commissions', adminAuth, crm.createCommission);
-router.patch('/admin/commissions/:id', adminAuth, crm.updateCommission);
-router.delete('/admin/commissions/:id', adminAuth, crm.deleteCommission);
 
 router.get('/admin/customers', adminAuth, adminCustomers);
 router.get('/admin/ab-report', adminAuth, adminAbReport);
