@@ -37,7 +37,6 @@
                     ${kpi('Ingresos', usd(t.revenueUsd), `${num(t.units)} productos vendidos`, 'trend')}
                     ${kpi('OFFSZN', usd(so.offszn.revenueUsd), `${num(so.offszn.units)} productos`, 'bag')}
                     ${kpi('Payhip (plugins)', usd(so.payhip.revenueUsd), `${num(so.payhip.units)} plugins${so.payhip.estimatedUnits ? ` · ${so.payhip.estimatedUnits} con precio estimado` : ''}${so.payhip.mixedOrders ? ` · +${so.payhip.mixedOrders} mixtos sin monto` : ''}`, 'cart')}
-                    ${kpi('Ticket medio', usd(t.avgTicketUsd), 'por venta', 'users')}
                 </div>
                 ${odd}
                 <div class="grid grid-2">
