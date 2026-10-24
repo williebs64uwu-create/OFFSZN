@@ -6,6 +6,7 @@ import { resolveRegion, quoteCart } from '../../../shared/store/pricing.js';
 import { getProduct, loadCatalog } from '../../../shared/store/catalog.js';
 import { fulfillOrder } from '../../services/storeService.js';
 import { runAutomations } from '../../services/crmService.js';
+import { buildSalesReport, buildProductPrices, summarizeCommissions } from '../../../shared/store/salesReport.js';
 
 const clip = (v, n) => String(v ?? '').slice(0, n).trim();
 const email = (v) => clip(v, 200).toLowerCase();
@@ -244,4 +245,86 @@ export const system = async (req, res) => {
         },
         time: new Date().toISOString()
     });
+};
+
+
+// ─── Ventas históricas (tablas de OFFSZN: orders, order_items, products…) ────────────────────────────────────────
+// Supabase devuelve máximo 1000 filas por consulta: se pide por páginas.
+async function fetchAll(table, columns, { order = 'id' } = {}) {
+    const out = [];
+    for (let from = 0; from < 50000; from += 1000) {
+        const { data, error } = await supabase.from(table).select(columns).order(order, { ascending: true }).range(from, from + 999);
+        if (error) throw error;
+        out.push(...data);
+        if (data.length < 1000) break;
+    }
+    return out;
+}
+
+async function loadSalesData() {
+    const [orders, items, products, transactions, clicks, referrals, subscriptions] = await Promise.all([
+        fetchAll('orders', 'id, status, total_price, created_at'),
+        fetchAll('order_items', 'id, order_id, product_id, quantity, price_at_purchase'),
+        fetchAll('products', 'id, name, product_type, status, is_free, price_basic, price_premium'),
+        fetchAll('transactions', 'id, amount, type, created_at'),
+        fetchAll('manual_payment_clicks', 'id, method, product'),
+        fetchAll('referrals', 'id, status', { order: 'id' }),
+        fetchAll('subscriptions', 'id, plan_id, status', { order: 'id' })
+    ]);
+    return { orders, items, products, transactions, clicks, referrals, subscriptions };
+}
+
+// ─── GET /admin/sales
+export const sales = async (req, res) => {
+    try { return res.json(buildSalesReport(await loadSalesData())); } catch (e) { return fail(res, e); }
+};
+
+// ─── GET /admin/product-prices → precio de lista vs. lo cobrado + precios del catálogo de la tienda
+export const productPrices = async (req, res) => {
+    try {
+        const d = await loadSalesData();
+        const all = loadCatalog().products;
+        const row = (p) => ({ id: p.id, title: p.title, category: p.category, status: p.status, baseUsd: p.price?.base ?? null, highUsd: p.price?.high ?? null, compareAtUsd: p.price?.compareAt ?? null });
+        const artists = all.filter((p) => p.subcategory === 'artistas');
+        const catalog = all.filter((p) => p.subcategory !== 'artistas').map(row);
+        if (artists.length) catalog.unshift({ ...row(artists[0]), id: 'artistas', title: `Presets de artistas (${artists.length} productos, mismo precio)` });
+        return res.json({ products: buildProductPrices(d).slice(0, 300), catalog });
+    } catch (e) { return fail(res, e); }
+};
+
+// ─── Comisiones ganadas (por productos que vendieron otros)
+const COMMISSION_STATUS = ['pendiente', 'cobrada'];
+export const commissions = async (req, res) => {
+    const { data, error } = await supabase.from('store_commissions').select('*').order('earned_at', { ascending: false }).limit(1000);
+    if (error) return fail(res, error);
+    return res.json({ items: data, summary: summarizeCommissions(data) });
+};
+export const createCommission = async (req, res) => {
+    const amount = Number(req.body?.amountUsd);
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 100000) return fail(res, 'El monto debe ser mayor a 0', 400);
+    const row = {
+        source: clip(req.body?.source, 120) || 'Otro',
+        product: clip(req.body?.product, 160) || null,
+        amount_usd: Math.round(amount * 100) / 100,
+        earned_at: /^\d{4}-\d{2}-\d{2}$/.test(req.body?.earnedAt || '') ? req.body.earnedAt : new Date().toISOString().slice(0, 10),
+        status: COMMISSION_STATUS.includes(req.body?.status) ? req.body.status : 'pendiente',
+        notes: clip(req.body?.notes, 500) || null
+    };
+    const { data, error } = await supabase.from('store_commissions').insert(row).select().single();
+    if (error) return fail(res, error);
+    return res.json({ item: data });
+};
+export const updateCommission = async (req, res) => {
+    const patch = {};
+    if (COMMISSION_STATUS.includes(req.body?.status)) patch.status = req.body.status;
+    if (req.body?.notes !== undefined) patch.notes = clip(req.body.notes, 500) || null;
+    if (!Object.keys(patch).length) return fail(res, 'Nada que actualizar', 400);
+    const { data, error } = await supabase.from('store_commissions').update(patch).eq('id', clip(req.params.id, 60)).select().single();
+    if (error) return fail(res, error);
+    return res.json({ item: data });
+};
+export const deleteCommission = async (req, res) => {
+    const { error } = await supabase.from('store_commissions').delete().eq('id', clip(req.params.id, 60));
+    if (error) return fail(res, error);
+    return res.json({ ok: true });
 };
