@@ -122,6 +122,28 @@ export function buildSalesReport({ orders = [], items = [], products = [], click
     };
 }
 
+// Ventas del marketplace como "órdenes" para el Resumen del CRM: una por orden completada, sumando solo las líneas propias y de pago
+// (mismas reglas que el Historial: sin beats, sin regalos, sin productos de otros productores, plugins entre 2 y 30 US$).
+// `orders` lleva las órdenes ya filtradas por fecha; `items` sus líneas. Las ventas de /willieinspired no tienen líneas en order_items, así que no se duplican.
+export function marketplaceOrders({ orders = [], items = [], products = [], producerIds = [] }) {
+    const mine = new Map(ownProducts(products, producerIds).map((p) => [p.id, p]));
+    const done = new Map(orders.filter((o) => o.status === 'completed').map((o) => [o.id, o]));
+    const byOrder = new Map();
+    for (const it of items) {
+        const p = mine.get(it.product_id);
+        const o = done.get(it.order_id);
+        const price = num(it.price_at_purchase);
+        if (!p || !o || price <= 0) continue;
+        if (classify(p) === 'plugin' && (price < PLUGIN_MIN_USD || price > PLUGIN_MAX_USD)) continue;
+        const qty = num(it.quantity) || 1;
+        const r = byOrder.get(o.id) || { status: 'completed', created_at: o.created_at, total_usd: 0, country: null, payment_method: /^MP-YAPE/i.test(String(o.transaction_id || '')) ? 'yape' : 'paypal', offer_type: null, utm: { utm_source: 'marketplace' }, source: 'marketplace', lines: [] };
+        r.total_usd = round2(r.total_usd + price * qty);
+        for (let i = 0; i < qty; i++) r.lines.push({ id: p.id, title: p.name });
+        byOrder.set(o.id, r);
+    }
+    return [...byOrder.values()];
+}
+
 // Productos propios con su precio de lista y lo que de verdad se cobró (para revisar que los precios registrados son los reales).
 export function buildProductPrices({ products = [], items = [], orders = [], producerIds = [] }) {
     const doneIds = new Set(orders.filter((o) => o.status === 'completed').map((o) => o.id));
