@@ -1251,6 +1251,10 @@
                             <span class="product-card-name">Cassette</span>
                             <span class="product-card-badge" id="badge-stock-cassette">-- disp</span>
                         </div>
+                        <div class="product-card-btn" data-value="orb" onclick="selectProductChip('orb')">
+                            <span class="product-card-name">Orb</span>
+                            <span class="product-card-badge" id="badge-stock-orb">-- disp</span>
+                        </div>
                     </div>
                     <input type="hidden" id="gen-product" value="easy-mix">
 
@@ -1455,6 +1459,7 @@
                     <button class="filter-pill" id="btn-prod-easyclean" onclick="setPluginProduct('Easy Clean', this)">Easy Clean</button>
                     <button class="filter-pill" id="btn-prod-ghost" onclick="setPluginProduct('GHOST', this)">GHOST</button>
                     <button class="filter-pill" id="btn-prod-cassette" onclick="setPluginProduct('Cassette', this)">Cassette</button>
+                    <button class="filter-pill" id="btn-prod-orb" onclick="setPluginProduct('Orb', this)">Orb</button>
                 </div>
             </div>
 
@@ -1702,6 +1707,7 @@
                         <option value="Easy Clean">Easy Clean</option>
                         <option value="GHOST">GHOST</option>
                         <option value="Cassette">Cassette</option>
+                        <option value="Orb">Orb</option>
                     </select>
                 </div>
 
@@ -1941,6 +1947,10 @@
             'cassette': {
                 win: '#',   // poner el enlace del instalador cuando exista (Cassette es solo Windows por ahora)
                 mac: '#'
+            },
+            'orb': {
+                win: '#',   // poner el enlace del instalador cuando exista (Orb es solo Windows por ahora)
+                mac: '#'
             }
         };
 
@@ -1957,7 +1967,8 @@
             'easy-deeser': 'Easy Deeser (Win/Mac)',
             'easy-clean': 'Easy Clean (Win/Mac)',
             'ghost': 'GHOST (Windows)',
-            'cassette': 'Cassette (Windows)'
+            'cassette': 'Cassette (Windows)',
+            'orb': 'Orb (Windows)'
         };
 
         // GLOBAL APP STATE
@@ -1997,6 +2008,7 @@
             if (s.includes('clean')) return 'Easy Clean';
             if (s.includes('ghost')) return 'GHOST';
             if (s.includes('cassette')) return 'Cassette';
+            if (/\borb\b/.test(s)) return 'Orb';
             if (s.includes('coca') || s.includes('coke')) return 'Coca Cola';
             if (s.includes('inka')) return 'Inka Kola';
             if (s.includes('mix')) return 'Easy Mix';
@@ -2310,7 +2322,8 @@
                 'easy-deeser': pool.filter(l => !l.used && (l.plugin === 'Easy Deeser' || l.plugin === 'EASY DEESER')).length,
                 'easy-clean': pool.filter(l => !l.used && (l.plugin === 'Easy Clean' || l.plugin === 'EASY CLEAN')).length,
                 'ghost': pool.filter(l => !l.used && (l.plugin === 'GHOST' || l.plugin === 'Ghost')).length,
-                'cassette': pool.filter(l => !l.used && (l.plugin === 'Cassette' || l.plugin === 'CASSETTE')).length
+                'cassette': pool.filter(l => !l.used && (l.plugin === 'Cassette' || l.plugin === 'CASSETTE')).length,
+                'orb': pool.filter(l => !l.used && (l.plugin === 'Orb' || l.plugin === 'ORB')).length
             };
 
             Object.entries(counts).forEach(([k, cnt]) => {
@@ -2352,6 +2365,7 @@
                 else if (val === 'easy-clean') targetPlugin = 'Easy Clean';
                 else if (val === 'ghost') targetPlugin = 'GHOST';
                 else if (val === 'cassette') targetPlugin = 'Cassette';
+                else if (val === 'orb') targetPlugin = 'Orb';
 
                 const avail = pool.filter(l => !l.used && l.plugin === targetPlugin);
                 if (avail.length > 0 && (!k1Input.value || !avail.some(l => l.serial === k1Input.value))) {
@@ -2383,6 +2397,7 @@
                 else if (val === 'easy-clean') targetPlugin = 'Easy Clean';
                 else if (val === 'ghost') targetPlugin = 'GHOST';
                 else if (val === 'cassette') targetPlugin = 'Cassette';
+                else if (val === 'orb') targetPlugin = 'Orb';
             }
 
             const avail = pool.filter(l => !l.used && l.plugin === targetPlugin);
@@ -3351,6 +3366,7 @@
                 else if (pVal === 'easy-clean') targetPlugin = 'Easy Clean';
                 else if (pVal === 'ghost') targetPlugin = 'GHOST';
                 else if (pVal === 'cassette') targetPlugin = 'Cassette';
+                else if (pVal === 'orb') targetPlugin = 'Orb';
             }
 
             titleEl.innerText = 'Elegir Clave (' + targetPlugin + ')';
@@ -3563,6 +3579,7 @@
                 else if (plugin.includes('Clean')) prefix = 'CLEAN';
                 else if (plugin.includes('GHOST') || plugin.includes('Ghost')) prefix = 'GHOST';
                 else if (plugin.includes('CASSETTE') || plugin.includes('Cassette')) prefix = 'CASSETTE';
+                else if (plugin === 'Orb' || plugin === 'ORB') prefix = 'ORB';
 
                 const rnd1 = Math.random().toString(16).substring(2, 6).toUpperCase();
                 const rnd2 = Math.random().toString(16).substring(2, 6).toUpperCase();
@@ -3659,6 +3676,7 @@
             else if (pluginName.includes('Clean')) slug = 'easy-clean';
             else if (pluginName.includes('GHOST') || pluginName.includes('Ghost')) slug = 'ghost';
             else if (pluginName.includes('CASSETTE') || pluginName.includes('Cassette')) slug = 'cassette';
+            else if (pluginName === 'Orb' || pluginName === 'ORB') slug = 'orb';
 
             const links = DOWNLOAD_LINKS[slug] || DOWNLOAD_LINKS['easy-mix'];
 
