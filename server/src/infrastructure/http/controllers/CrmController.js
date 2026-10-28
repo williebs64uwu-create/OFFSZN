@@ -6,7 +6,7 @@ import { resolveRegion, quoteCart } from '../../../shared/store/pricing.js';
 import { getProduct, loadCatalog } from '../../../shared/store/catalog.js';
 import { fulfillOrder } from '../../services/storeService.js';
 import { runAutomations } from '../../services/crmService.js';
-import { buildSalesReport, buildProductPrices } from '../../../shared/store/salesReport.js';
+import { buildSalesReport, buildProductPrices, marketplaceOrders } from '../../../shared/store/salesReport.js';
 import { parsePayhipPlugins } from '../../../shared/store/payhip.js';
 
 const clip = (v, n) => String(v ?? '').slice(0, n).trim();
@@ -27,7 +27,10 @@ export const overview = async (req, res) => {
     ]);
     const failed = [orders, events, customers, trials, carts].find((r) => r.error);
     if (failed) return fail(res, failed.error);
-    return res.json(buildOverview({ orders: orders.data, events: events.data, customers: customers.data, trials: trials.data, carts: carts.data }, days));
+    // Ventas propias del marketplace (orders / order_items). Si falla, el Resumen sigue con la tienda sola.
+    let marketplace = [];
+    try { marketplace = await loadMarketplaceOrders(since); } catch (e) { console.warn('[CRM overview] marketplace:', e.message); }
+    return res.json(buildOverview({ orders: orders.data, events: events.data, customers: customers.data, trials: trials.data, carts: carts.data, marketplace }, days));
 };
 
 // ─── GET /admin/contacts?q=&segment=&country=&tag=
@@ -276,6 +279,20 @@ async function loadSalesData() {
     let payhip = [];
     try { payhip = await fetchAll('store_payhip_sales', 'order_id, sold_on, plugin, unit_price_usd, mixed, price_estimated', { order: 'order_id' }); } catch (_) { payhip = []; }
     return { orders, items, products, clicks, payhip, producerIds: OWNER_PRODUCER_IDS() };
+}
+
+// Ventas propias del marketplace desde `since`, como órdenes para el Resumen (solo productos de OWNER_PRODUCER_IDS, de pago y sin beats).
+async function loadMarketplaceOrders(since) {
+    const ids = OWNER_PRODUCER_IDS();
+    const [lines, prods] = await Promise.all([
+        supabase.from('order_items').select('order_id, product_id, quantity, price_at_purchase, order:orders!inner(id, status, created_at, transaction_id)')
+            .eq('order.status', 'completed').gte('order.created_at', since).limit(5000),
+        supabase.from('products').select('id, name, product_type, producer_id').in('producer_id', ids).limit(5000)
+    ]);
+    if (lines.error) throw lines.error;
+    if (prods.error) throw prods.error;
+    const orders = [...new Map(lines.data.map((l) => [l.order.id, l.order])).values()];
+    return marketplaceOrders({ orders, items: lines.data, products: prods.data, producerIds: ids });
 }
 
 // ─── GET /admin/sales

@@ -105,3 +105,29 @@ test('payhip: un pedido mixto con precio estimado a mano sí suma y se marca com
     assert.equal(r.sources.payhip.estimatedUnits, 1);
     assert.equal(r.sources.payhip.mixedOrders, 1);
 });
+
+test('resumen: ventas propias del marketplace se suman a las de la tienda, sin duplicar', async () => {
+    const { marketplaceOrders } = await import('../src/shared/store/salesReport.js');
+    const { buildOverview } = await import('../src/shared/store/analytics.js');
+    const ords = [
+        { id: 20, status: 'completed', created_at: '2026-10-27T14:33:00Z', transaction_id: '99D13458V5390930K' },
+        { id: 21, status: 'completed', created_at: '2026-10-26T03:01:00Z', transaction_id: 'WILLIE-PP-21325079VN4520356' }, // tienda: sin líneas, no se cuenta aquí
+        { id: 22, status: 'completed', created_at: '2026-10-20T15:23:00Z', transaction_id: 'MP-YAPE-185169465060' },
+        { id: 23, status: 'failed', created_at: '2026-10-27T10:00:00Z', transaction_id: 'X' }
+    ];
+    const its = [
+        { order_id: 20, product_id: 6, quantity: 1, price_at_purchase: 10 },
+        { order_id: 22, product_id: 1, quantity: 1, price_at_purchase: 10 },
+        { order_id: 22, product_id: 4, quantity: 1, price_at_purchase: 15 }, // de otro productor
+        { order_id: 22, product_id: 2, quantity: 1, price_at_purchase: 0 },  // gratis
+        { order_id: 23, product_id: 6, quantity: 1, price_at_purchase: 5 }   // fallida
+    ];
+    const mk = marketplaceOrders({ orders: ords, items: its, products, producerIds: [ME] });
+    assert.equal(mk.length, 2);
+    assert.deepEqual(mk.map((m) => [m.total_usd, m.payment_method]), [[10, 'paypal'], [10, 'yape']]);
+    const store = [{ status: 'completed', created_at: '2026-10-26T03:01:00Z', total_usd: 10, lines: [{ title: 'Preset de Yeyo' }] }];
+    const o = buildOverview({ orders: store, marketplace: mk }, 30, Date.parse('2026-10-27T20:00:00Z'));
+    assert.equal(o.revenueUsd, 30);
+    assert.equal(o.orders, 3);
+    assert.deepEqual(o.channels, { tienda: { orders: 1, revenueUsd: 10 }, marketplace: { orders: 2, revenueUsd: 20 } });
+});

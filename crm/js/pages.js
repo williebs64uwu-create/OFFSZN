@@ -42,10 +42,10 @@
                 return `<div class="funnel-step"><div class="row between"><span>${names[f.step]}</span><span class="muted small">${num(f.sessions)}${conv}</span></div><div class="bar"><i style="width:${Math.max(4, (f.sessions / top) * 100)}%;opacity:${1 - i * 0.18}">${num(f.sessions)}</i></div></div>`;
             }).join('');
             const due = t.items.slice(0, 5);
-            view.innerHTML = `${head('Resumen', `Últimos ${days} días de la tienda Willie Inspired.`,
+            view.innerHTML = `${head('Resumen', `Últimos ${days} días: tienda Willie Inspired más tus productos de pago del marketplace.`,
                 `<select class="select" id="period" style="width:auto"><option value="7">7 días</option><option value="30">30 días</option><option value="90">90 días</option></select><button class="btn btn--outline" data-go="contactos">${icon('users')} Contactos</button>`)}
                 <div class="kpis">
-                    ${[['Ingresos', usd(o.revenueUsd), `${num(o.orders)} ventas`, 'trend'], ['Ticket medio', usd(o.aovUsd), 'por venta', 'bag'], ['Recompra', `${o.customers.repeatRate}%`, `${num(o.customers.buyers)} compradores`, 'refresh'], ['Pruebas → compra', `${o.trials.rate}%`, `${num(o.trials.converted)} de ${num(o.trials.total)} pruebas`, 'flask'],
+                    ${[['Ingresos', usd(o.revenueUsd), `${num(o.orders)} ventas · tienda ${usd(o.channels.tienda.revenueUsd)} · marketplace ${usd(o.channels.marketplace.revenueUsd)}`, 'trend'], ['Ticket medio', usd(o.aovUsd), 'por venta', 'bag'], ['Recompra', `${o.customers.repeatRate}%`, `${num(o.customers.buyers)} compradores`, 'refresh'], ['Pruebas → compra', `${o.trials.rate}%`, `${num(o.trials.converted)} de ${num(o.trials.total)} pruebas`, 'flask'],
                     ['Clientes', num(o.customers.total), `${o.customers.segments.FREE} FREE · ${o.customers.segments['COMPRADOR V1']} V1 · ${o.customers.segments['COMPRADOR V2']} V2`, 'users'], ['Carritos abiertos', num(o.carts.open), `${o.carts.recovered} recuperados`, 'cart']]
                         .map(([l, v, f, ic]) => `<div class="card kpi"><div class="kpi__top"><span>${l}</span>${icon(ic)}</div><div class="kpi__value">${v}</div><div class="kpi__foot">${f}</div></div>`).join('')}
                 </div>

@@ -6,8 +6,14 @@ const dayKey = (iso) => String(iso || '').slice(0, 10);
 const bump = (map, key, amount = 1) => map.set(key, (map.get(key) || 0) + amount);
 const top = (map, n = 8) => [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
 
-export function buildOverview({ orders = [], events = [], customers = [], trials = [], carts = [] } = {}, days = 30, now = Date.now()) {
-    const completed = orders.filter((o) => o.status === 'completed');
+// `marketplace`: ventas propias del marketplace ya normalizadas como órdenes (ver marketplaceOrders); se suman a las de la tienda.
+export function buildOverview({ orders = [], events = [], customers = [], trials = [], carts = [], marketplace = [] } = {}, days = 30, now = Date.now()) {
+    const completed = [...orders.filter((o) => o.status === 'completed'), ...marketplace];
+    const channels = { tienda: { orders: 0, revenueUsd: 0 }, marketplace: { orders: 0, revenueUsd: 0 } };
+    for (const o of completed) {
+        const c = o.source === 'marketplace' ? channels.marketplace : channels.tienda;
+        c.orders += 1; c.revenueUsd = r2(c.revenueUsd + Number(o.total_usd || 0));
+    }
     const revenue = completed.reduce((a, o) => a + Number(o.total_usd || 0), 0);
 
     const byDay = new Map();
@@ -52,6 +58,7 @@ export function buildOverview({ orders = [], events = [], customers = [], trials
         revenueUsd: r2(revenue),
         orders: completed.length,
         aovUsd: completed.length ? r2(revenue / completed.length) : 0,
+        channels,
         series,
         byCountry: top(byCountry).map(([k, v]) => ({ key: k, revenueUsd: r2(v) })),
         bySource: top(bySource).map(([k, v]) => ({ key: k, revenueUsd: r2(v) })),

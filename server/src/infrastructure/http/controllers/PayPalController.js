@@ -1560,6 +1560,12 @@ export const capturePayPalOrder = async (req, res) => {
                         const { data: prodData } = await supabase.from('users').select('email, nickname').eq('id', item.product.producer_id).single();
                         const producerEmail = prodData?.email;
 
+                        // Etiqueta del aviso: de dónde vino la venta (checkout del marketplace) y qué tipo de producto fue.
+                        const KIND_LABELS = { beat: 'Beat', preset: 'Preset', drumkit: 'Drum kit', loopkit: 'Loop kit' };
+                        const saleKind = isPlugin ? 'Plugin' : (KIND_LABELS[String(item.product?.product_type || '').toLowerCase()] || 'Producto');
+                        const saleTag = `[MARKETPLACE · ${saleKind.toUpperCase()}]`;
+                        const saleMeta = `<p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Canal:</b> Marketplace OFFSZN (PayPal) · <b style="color:#fff;">Tipo:</b> ${saleKind} · <b style="color:#fff;">Producto #</b>${item.product?.id} · <b style="color:#fff;">Orden #</b>${order?.id ?? '—'}</p>`;
+
                         if (producerEmail) {
                             try {
                                 const producerHtml = `
@@ -1567,6 +1573,7 @@ export const capturePayPalOrder = async (req, res) => {
                                         <h2 style="color: #10B981; margin-bottom:16px;">¡Nueva Venta! 💰 ${isPlugin ? '🎛️ Plugin' : '🎵 Beat'}</h2>
                                         <p style="color:#ccc; line-height:1.6;">Hola <b>${prodData.nickname || 'Productor'}</b>, se acaba de vender una copia de <b style="color:#fff;">${item.product.name}</b>.</p>
                                         <div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:20px; margin:20px 0;">
+                                            ${saleMeta}
                                             <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Tu Ganancia:</b> <span style="color:#10B981; font-size:1.15rem; font-weight:700;">$${partnerAmount.toFixed(2)} USD</span></p>
                                             ${isCoke ? `<p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Total Venta:</b> $${displayTotal.toFixed(2)} USD</p>` : ''}
                                             <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Comprador:</b> ${userNickname} (${userEmail})</p>
@@ -1577,7 +1584,7 @@ export const capturePayPalOrder = async (req, res) => {
                                 `;
                                 await sendOffsznEmail({
                                     to: producerEmail,
-                                    subject: `💸 ¡Nueva Venta! ${item.product.name} — Ganancia: $${partnerAmount.toFixed(2)} USD`,
+                                    subject: `💸 ${saleTag} ${item.product.name} — Ganancia: $${partnerAmount.toFixed(2)} USD`,
                                     html: producerHtml,
                                     fromName: 'OFFSZN Ventas'
                                 });
@@ -1632,7 +1639,7 @@ export const capturePayPalOrder = async (req, res) => {
                                     ? `💸 ¡Nueva Venta ${item.product.name}! [REFERIDO: ${affiliateInfo.name}] — $${displayTotal.toFixed(2)} USD (Comisión: $${affiliateInfo.commission.toFixed(2)})`
                                     : (isCoke 
                                         ? `💰 Venta Coca-Cola: $${displayTotal.toFixed(2)} USD (OFFSZN: +$${offsznCommission.toFixed(2)})`
-                                        : `💸 Venta Tienda: ${item.product.name} — $${displayTotal.toFixed(2)} USD`);
+                                        : `💸 ${saleTag} ${item.product.name} — $${displayTotal.toFixed(2)} USD`);
 
                                 const adminHtml = `
                                     <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px; border: 1px solid rgba(255,255,255,0.08);">
@@ -1640,6 +1647,7 @@ export const capturePayPalOrder = async (req, res) => {
                                         ${referralBanner}
                                         <p style="color:#ccc; line-height:1.6;">El usuario <b>${userNickname}</b> (<b>${userEmail}</b>) compró <b style="color:#fff;">${item.product.name}</b>.</p>
                                         <div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:20px; margin:20px 0;">
+                                            ${saleMeta}
                                             <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Total Cobrado:</b> <span style="color:#fff; font-weight:700;">$${displayTotal.toFixed(2)} USD</span></p>
                                             ${isCoke ? `
                                                 <p style="color:#888; margin:0 0 8px;"><b style="color:#8B5CF6;">Comisión OFFSZN (20%):</b> <span style="color:#8B5CF6; font-weight:700;">$${offsznCommission.toFixed(2)} USD</span></p>
