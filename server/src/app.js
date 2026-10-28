@@ -442,6 +442,8 @@ app.use((req, res, next) => {
             pathLower === '/owner/correos-lista-de-espera.html' ||
             pathLower === '/owner/clientes-tienda' ||
             pathLower === '/owner/clientes-tienda.html' ||
+            pathLower === '/owner/star-conversaciones' ||
+            pathLower === '/owner/star-conversaciones.html' ||
             pathLower === '/owner/audience-data.js' ||
             pathLower === '/owner/payhip-sales-data.js' ||
             pathLower === '/server/public/recovery_dashboard.html' ||

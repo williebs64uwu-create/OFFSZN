@@ -18,6 +18,7 @@ import {
     adminGetTelemetryEvents
 } from '../controllers/PluginLicensingController.js';
 import { receiveDiag, adminListDiag, diagLimiter } from '../controllers/PluginDiagController.js';
+import { receiveChatLog, adminListChatLog, chatLogLimiter } from '../controllers/PluginChatLogController.js';
 import { receivePaymentClick, adminListPaymentClicks, paymentClickLimiter } from '../controllers/PaymentClickController.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 
@@ -35,6 +36,8 @@ router.post('/activate', activateLimiter, activateSerial);
 router.post('/validate', validateLicense);
 router.post('/diag', diagLimiter, receiveDiag);
 router.get('/admin/diag', adminListDiag);
+router.post('/chatlog', chatLogLimiter, receiveChatLog);
+router.get('/admin/chatlog', adminListChatLog);
 router.post('/payment-click', paymentClickLimiter, receivePaymentClick);
 router.get('/admin/payment-clicks', adminListPaymentClicks);
 
