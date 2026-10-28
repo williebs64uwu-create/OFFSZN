@@ -305,7 +305,7 @@ export async function fulfillOrder({ lines, email, extraEmails = [], paymentMeth
         const todo = [...manual, ...services];
         await sendOffsznEmail({
             to: OWNER_EMAIL,
-            subject: `${todo.length ? '📦 ENTREGAR A MANO · ' : '💸 '}Venta Willie Inspired $${quote.totalUsd.toFixed(2)} (${paymentMethod}, ${region?.country || '??'})`,
+            subject: `${todo.length ? '📦 ENTREGAR A MANO · ' : '💸 '}[WILLIEINSPIRED] Venta $${quote.totalUsd.toFixed(2)} (${paymentMethod}, ${region?.country || '??'})`,
             fromName: 'Willie Inspired Ventas',
             html: `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6">
                 <p><b>${esc(buyer)}</b> · ${esc(paymentMethod)} · ref ${esc(paymentRef)}</p>
