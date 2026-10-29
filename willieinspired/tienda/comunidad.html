@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Comunidad | Willie Inspired</title>
+    <meta name="description" content="Comunidad Willie Inspired: videos claros, módulos paso a paso y revisión de tus mezclas. Desde 9 USD al mes.">
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/willieinspired/assets/store.css">
+</head>
+<body>
+    <main>
+        <section class="wi-hero">
+            <div class="wi-container wi-hero__grid">
+                <div>
+                    <p class="wi-eyebrow">Comunidad</p>
+                    <h1 class="wi-h1" style="margin-top:12px">Aprende a controlar <em style="font-style:normal;color:var(--accent)">tu sonido</em></h1>
+                    <p class="wi-lead" style="margin-top:16px">Sin tutoriales eternos: módulos visuales, paso a paso, y una comunidad donde revisamos tus mezclas.</p>
+                    <div class="wi-hero__cta"><a class="wi-btn wi-btn--dark wi-btn--lg" href="#planes">Ver planes</a><a class="wi-btn wi-btn--ghost wi-btn--lg" id="waJoin" target="_blank" rel="noopener">Preguntar por WhatsApp</a></div>
+                </div>
+                <div class="wi-ph" style="--ratio:16/10" role="img" aria-label="VIDEO · Tour de la comunidad"><i class="bi bi-play-circle"></i><strong>VIDEO · Tour de la comunidad</strong><span>Pendiente de subir</span></div>
+            </div>
+        </section>
+
+        <section class="wi-section" id="planes">
+            <div class="wi-container">
+                <div class="wi-center" style="margin-bottom:28px"><p class="wi-eyebrow">Planes</p><h2 class="wi-h2" style="margin-top:6px">Elige cómo quieres entrar</h2></div>
+                <div class="wi-grid" id="plans"></div>
+                <p class="wi-subtle wi-center" style="margin-top:18px">Pagos mensuales o anuales. Puedes cancelar cuando quieras.</p>
+            </div>
+        </section>
+
+        <section class="wi-section--tight">
+            <div class="wi-container">
+                <div class="wi-panel wi-split">
+                    <div>
+                        <h2 class="wi-h3">Avísame cuando abra</h2>
+                        <p class="wi-muted" style="margin:6px 0 14px">Los primeros entran con precio de fundador.</p>
+                        <form class="wi-inline-form" data-lead="comunidad" data-product="comunidad-pro" novalidate>
+                            <input class="wi-input" type="email" name="email" required placeholder="tucorreo@gmail.com" aria-label="Tu correo">
+                            <input class="wi-hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+                            <button class="wi-btn wi-btn--dark" type="submit">Avísame</button>
+                            <p class="wi-form-msg" aria-live="polite" style="width:100%"></p>
+                        </form>
+                    </div>
+                    <div class="wi-ph" style="--ratio:16/9" role="img" aria-label="CAPTURA · Feed de la comunidad"><i class="bi bi-chat-square-text"></i><strong>CAPTURA · Feed de la comunidad</strong><span>Pendiente de subir</span></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/willieinspired/assets/store.js"></script>
+    <script>
+    (async () => {
+        const cat = await WI.init({ active: 'comunidad' });
+        WI.$('#waJoin').href = WI.wa('Hola Willie! Quiero info de la comunidad.');
+        const plans = cat.products.filter((p) => p.category === 'comunidad');
+        WI.$('#plans').innerHTML = plans.map((p) => `
+            <article class="wi-card" style="padding:26px">
+                <div class="wi-row">${(p.badges || []).map((b) => `<span class="wi-badge">${WI.esc(b)}</span>`).join('')}</div>
+                <h3 class="wi-h3" style="margin-top:10px">${WI.esc(p.title)}</h3>
+                <p class="wi-muted" style="margin:6px 0 14px">${WI.esc(p.tagline || '')}</p>
+                <p class="wi-price wi-price--lg"><span class="wi-price__now">US$${p.price.base}</span><span class="wi-price__usd">al mes</span></p>
+                ${p.price.yearly ? `<p class="wi-subtle" style="margin-top:4px">o US$${p.price.yearly} al año</p>` : ''}
+                <ul class="wi-list" style="margin:16px 0 20px">${(p.features || []).map((f) => `<li><i class="bi bi-check-circle-fill"></i>${WI.esc(f)}</li>`).join('')}</ul>
+                <a class="wi-btn wi-btn--dark wi-btn--block" href="${WI.wa(`Hola Willie! Quiero el plan ${p.title} de la comunidad.`)}" target="_blank" rel="noopener">Quiero ${WI.esc(p.title)}</a>
+            </article>`).join('');
+        WI.bindLeadForms(document.querySelector('[data-lead]').closest('section'));
+    })();
+    </script>
+</body>
+</html>

@@ -3,12 +3,30 @@
   "trailingSlash": false,
   "functions": {
     "api/index.js": {
-      "includeFiles": "{*.html,*.xml,server/public/**,willieinspired/**}",
+      "includeFiles": "{*.html,*.xml,server/public/**,willieinspired/**,crm/**}",
       "excludeFiles": "{**/*.wav,**/*.docx,**/*.psd,**/*.map,**/*.pkg,plugins/**,videos/**,images/**,willieimages/**,downloads/**,cursos/**,music-raw-to-defined/**,Carrusel_Instagram/**,scratch/**}",
       "maxDuration": 60
     }
   },
   "headers": [
+    {
+      "source": "/(index\\.html)?",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, s-maxage=86400, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/plugins/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, s-maxage=86400, stale-while-revalidate=86400"
+        }
+      ]
+    },
     {
       "source": "/(css|script|images|willieimages|libs|components|recursos|videos|pages)/(.*)",
       "headers": [
@@ -29,6 +47,10 @@
     }
   ],
   "rewrites": [
+    { "source": "/(wp-admin.*|wp-login.*|wp-content.*|xmlrpc.*|.*\\.php|\\.env.*|\\.git.*)", "destination": "/404.html" },
+    { "source": "/videos/(.*\\.mp4)", "destination": "/api/r2-public/videos/$1" },
+    { "source": "/videos/omni-beat", "destination": "/api/r2-public/videos/omni-beat.mp4" },
+    { "source": "/plugins/(.*\\.mp4)", "destination": "/api/r2-public/plugins/$1" },
     { "source": "/login", "destination": "/pages/login" },
     { "source": "/register", "destination": "/pages/register" },
     { "source": "/cart", "destination": "/pages/cart" },
@@ -43,8 +65,6 @@
     { "source": "/kanban-offszn", "destination": "/metodo/etapa-inicial/metodo-kanban/kanban-offszn" },
     { "source": "/kanban-upc", "destination": "/metodo/etapa-inicial/metodo-kanban/kanban-upc" },
     { "source": "/kanban-pendientes", "destination": "/metodo/etapa-inicial/metodo-kanban/kanban-pendientes" },
-    { "source": "/videos/omni-beat.mp4", "destination": "/api/r2-public/videos/omni-beat.mp4" },
-    { "source": "/videos/omni-beat", "destination": "/api/r2-public/videos/omni-beat.mp4" },
     { "source": "/(.*)", "destination": "/api" }
   ]
 }

@@ -322,6 +322,26 @@
             transform: translateY(-2px);
         }
 
+        .hero-buy-link {
+            pointer-events: auto;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            white-space: nowrap;
+            transition: color 0.2s ease;
+        }
+
+        .hero-buy-link:hover {
+            color: #ffffff;
+        }
+
+        .hero-buy-link s {
+            opacity: 0.55;
+        }
+
         /* SIGNATURE PRAXIS CHAMFERED CUT-CORNER CTA */
         .hero-cta {
             pointer-events: auto;
@@ -553,7 +573,7 @@
                 pointer-events: auto !important;
             }
 
-            /* BOTON 1: COMPRAR (ARRIBA) */
+            /* BOTON 1: PROBAR PLUGIN GRATIS (ARRIBA, PRINCIPAL) */
             .hero-cta {
                 order: 1 !important;
                 width: 100% !important;
@@ -564,6 +584,16 @@
                 letter-spacing: 0.05em !important;
                 clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%) !important;
                 box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15) !important;
+                pointer-events: auto !important;
+            }
+
+            /* ENLACE SECUNDARIO: COMPRAR (DEBAJO, DISCRETO) */
+            .hero-buy-link {
+                order: 2 !important;
+                width: 100% !important;
+                text-align: center !important;
+                padding: 6px 0 !important;
+                font-size: 0.8rem !important;
                 pointer-events: auto !important;
             }
 
@@ -2422,7 +2452,7 @@
                 <div class="hero-meta mono">
                     <div>VST3 / AU</div>
                     <div>WINDOWS / MACOS</div>
-                    <div>ONE-TIME / <s class="hero-was">$35</s> <span class="hero-price-now">25 USD</span></div>
+                    <div>ONE-TIME / <s class="hero-was" id="hero-meta-was">$35</s> <span class="hero-price-now" id="hero-meta-now">25 USD</span></div>
                 </div>
 
                 <!-- 2. Massive Centre Headline (Layered & bold with mix-blend contrast) -->
@@ -2439,13 +2469,12 @@
                     </div>
 
                     <div class="hero-bottom-actions">
-                        <a href="#probar-plugin" class="hero-try-btn mono">
-                            <span>PROBAR PLUGIN</span>
-                            <i class="bi bi-arrow-right"></i>
+                        <a href="#probar-plugin" class="hero-cta hero-cta-trial" id="hero-btn-trial">
+                            <i class="bi bi-play-fill"></i>
+                            <span>PROBAR PLUGIN GRATIS</span>
                         </a>
-                        <a href="#pricing-section" class="hero-cta" id="hero-btn-buy">
-                            <i class="bi bi-bag-fill"></i>
-                            <span>COMPRAR - <s class="hero-was">$35</s> 25 USD</span>
+                        <a href="#pricing-section" class="hero-buy-link" id="hero-btn-buy">
+                            o comprar ahora - <s class="hero-was" id="hero-was-price">$35</s> <span id="hero-now-price">25 USD</span>
                         </a>
                     </div>
                 </div>
@@ -4954,12 +4983,33 @@
                 window.addEventListener('DOMContentLoaded', dispatchViewContent);
             }
 
-            document.addEventListener('DOMContentLoaded', () => {
+            function applyPriceToDOM() {
                 const priceEl = document.getElementById('easy-mix-price-val');
                 if (priceEl) priceEl.innerText = `$${assignedPrice}`;
                 const origEl = document.getElementById('easy-mix-original-price');
                 if (origEl) origEl.innerText = `$${window.AB_ORIGINAL_PRICE}`;
-            });
+
+                // Sincronizar botones Hero (Comprar) y Meta
+                const heroNowEl = document.getElementById('hero-now-price');
+                if (heroNowEl) heroNowEl.innerText = `${assignedPrice} USD`;
+                const heroWasEl = document.getElementById('hero-was-price');
+                if (heroWasEl) heroWasEl.innerText = `$${window.AB_ORIGINAL_PRICE}`;
+
+                const heroMetaNow = document.getElementById('hero-meta-now');
+                if (heroMetaNow) heroMetaNow.innerText = `${assignedPrice} USD`;
+                const heroMetaWas = document.getElementById('hero-meta-was');
+                if (heroMetaWas) heroMetaWas.innerText = `$${window.AB_ORIGINAL_PRICE}`;
+
+                // Sincronizar todos los elementos con clases compartidas
+                document.querySelectorAll('.hero-price-now').forEach(el => el.innerText = `${assignedPrice} USD`);
+                document.querySelectorAll('.hero-was').forEach(el => el.innerText = `$${window.AB_ORIGINAL_PRICE}`);
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', applyPriceToDOM);
+            } else {
+                applyPriceToDOM();
+            }
         })();
     </script>
     <!-- ==================== SCROLL ENGINES & REVEALS ==================== -->

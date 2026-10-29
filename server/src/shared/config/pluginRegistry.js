@@ -32,13 +32,19 @@ export const PLUGINS = [
     // CASSETTE (cinta lo-fi y espacio): IDs de tienda con CASSETTE_PRODUCT_IDS (coma-separados) o default [5002].
     { id: 'cassette', prefix: 'CASSETTE', displayName: 'Cassette', names: ['cassette', 'cassette vst', 'cassette plugin'], keywords: ['cassette'], productIds: idsFromEnv('CASSETTE_PRODUCT_IDS').length ? idsFromEnv('CASSETTE_PRODUCT_IDS') : [5002], trialDays: 3, exclusive: true },
     // ORB (sintetizador con Astra, IA de sonido): IDs de tienda con ORB_PRODUCT_IDS (coma-separados). Pro/Max = suscripciones orb_pro_* / orb_max_* (ver AstraController).
-    { id: 'orb', prefix: 'ORB', displayName: 'Orb', names: ['orb', 'orb synth', 'orb plugin'], keywords: ['orb'], productIds: idsFromEnv('ORB_PRODUCT_IDS'), trialDays: 3, exclusive: true }
+    { id: 'orb', prefix: 'ORB', displayName: 'Orb', names: ['orb', 'orb synth', 'orb plugin'], keywords: ['orb'], productIds: idsFromEnv('ORB_PRODUCT_IDS'), trialDays: 3, exclusive: true },
+    // OFFSZN WIDGET (app de escritorio para Windows: Pomodoro, convertir, grabar, notas, portapapeles; 5 USD):
+    // IDs de tienda con WIDGET_PRODUCT_IDS (coma-separados) cuando exista el producto en `products`.
+    // La app manda plugin_name = 'OFFSZN Widget' en /request-trial, /activate y /validate.
+    // STAR CHAIN (agente de mezcla vocal STAR): IDs de tienda con STAR_PRODUCT_IDS (coma-separados) cuando exista en `products`.
+    { id: 'star-chain', prefix: 'STAR', displayName: 'STAR CHAIN', names: ['star chain', 'starchain'], keywords: ['star chain', 'starchain'], productIds: idsFromEnv('STAR_PRODUCT_IDS'), trialDays: 3, exclusive: true },
+    { id: 'offszn-widget', prefix: 'WIDGET', displayName: 'OFFSZN Widget', names: ['offszn widget', 'widget'], keywords: ['widget'], productIds: idsFromEnv('WIDGET_PRODUCT_IDS'), trialDays: 3, exclusive: true }
 ];
 
 export const DEFAULT_PLUGIN = PLUGINS[0]; // Easy Mix: comportamiento histórico cuando no se indica plugin
 
 // Orden de evaluación de palabras clave: los específicos primero ("Easy Master"/"Easy Pitch" contienen "easy"; "mix" va al final)
-const KEYWORD_ORDER = ['offszn-rack', 'omni', 'ghost', 'cassette', 'orb', 'easy-clean', 'easy-deeser', 'easy-level', 'easy-pitch', 'easy-master', 'coca-cola', 'inka-kola', 'vocal-preset', 'easy-mix'];
+const KEYWORD_ORDER = ['offszn-rack', 'omni', 'ghost', 'star-chain', 'offszn-widget', 'cassette', 'orb', 'easy-clean', 'easy-deeser', 'easy-level', 'easy-pitch', 'easy-master', 'coca-cola', 'inka-kola', 'vocal-preset', 'easy-mix'];
 
 export function normalizeName(name) {
     return String(name || '').toLowerCase().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
@@ -73,6 +79,21 @@ export function findPluginByName(name) {
         if (p.keywords.some((k) => n.includes(k))) return p;
     }
     return null;
+}
+
+// ¿Este producto de la tienda es el plugin `pluginId`? Por ID de producto (WIDGET_PRODUCT_IDS, etc.) o por nombre.
+// Lo usan los checkouts (PayPal/Yape) para decidir qué licencia emitir sin repetir cadenas de `includes(...)`.
+export function isProductOfPlugin(pluginId, { name, id } = {}) {
+    const p = PLUGINS.find((x) => x.id === pluginId);
+    if (!p) return false;
+    const n = Number.parseInt(id, 10);
+    if (Number.isFinite(n) && p.productIds.includes(n)) return true;
+    return findPluginByName(name)?.id === p.id;
+}
+
+// Primer ID de producto configurado de un plugin (o null si aún no existe en la tienda).
+export function firstProductIdOf(pluginId) {
+    return PLUGINS.find((x) => x.id === pluginId)?.productIds[0] ?? null;
 }
 
 export function prefixForName(name) {

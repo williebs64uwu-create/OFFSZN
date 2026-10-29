@@ -6,6 +6,7 @@ import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import { v4 as uuidv4 } from 'uuid';
 import { getPresignedDownloadUrl } from '../../services/r2-storage.service.js';
 import { generatePluginLicense } from './PluginLicensingController.js';
+import { isProductOfPlugin, firstProductIdOf } from '../../../shared/config/pluginRegistry.js';
 import MetaCapiService from '../../services/MetaCapiService.js';
 
 // --- PayPal OAuth Config ---
@@ -295,7 +296,7 @@ export const createPayPalOrder = async (req, res) => {
 
             let variantPrice = productObj.price_basic || 10;
             const requestedCustomPrice = parseFloat(req.body.customPrice || req.body.abPrice);
-            if (requestedCustomPrice && [5, 8, 10, 15, 17, 20, 25].includes(requestedCustomPrice)) {
+            if (requestedCustomPrice && [5, 8, 9, 10, 15, 17, 20, 25].includes(requestedCustomPrice)) {
                 variantPrice = requestedCustomPrice;
             }
 
@@ -476,7 +477,7 @@ export const createPayPalOrder = async (req, res) => {
             if (['899', '900', '901', '902', '905', '5000', '5001', '5002'].includes(prodIdToFind)) {
                 const defaultPluginPrice = prodIdToFind === '5002' ? 8 : (['900', '902', '5000'].includes(prodIdToFind) ? 5 : (prodIdToFind === '5001' ? 17 : 10));
                 const pluginPrice = parseFloat(item.variant_price) || defaultPluginPrice;
-                const validPluginPrice = [5, 8, 10, 15, 17, 20, 25].includes(pluginPrice) ? pluginPrice : defaultPluginPrice;
+                const validPluginPrice = [5, 8, 9, 10, 15, 17, 20, 25].includes(pluginPrice) ? pluginPrice : defaultPluginPrice;
 
                 subtotal += validPluginPrice;    // 100% to OFFSZN
                 verifiedCartItems.push({ ...item, variant_price: validPluginPrice });
@@ -892,7 +893,7 @@ export const capturePayPalOrder = async (req, res) => {
                 } else {
                     let variantPrice = productObj.price_basic || 10;
                     const requestedCustomPrice = parseFloat(req.body.customPrice || req.body.abPrice);
-                    if (requestedCustomPrice && [5, 8, 10, 15, 17, 20, 25].includes(requestedCustomPrice)) {
+                    if (requestedCustomPrice && [5, 8, 9, 10, 15, 17, 20, 25].includes(requestedCustomPrice)) {
                         variantPrice = requestedCustomPrice;
                     }
 
@@ -1253,11 +1254,13 @@ export const capturePayPalOrder = async (req, res) => {
                 const isEasyLevel = prodName.toLowerCase().includes('easy level') || prodName.toLowerCase().includes('easylevel');
                 const isEasyDeeser = /de-?e?s?ser/.test(prodName.toLowerCase()) && prodName.toLowerCase().includes('easy');
                 const isEasyClean = prodName.toLowerCase().includes('easy clean') || prodName.toLowerCase().includes('easyclean');
+                const isWidget = isProductOfPlugin('offszn-widget', { name: prodName, id: prodId }); // OFFSZN Widget (WIDGET_PRODUCT_IDS)
+                const isStar = isProductOfPlugin('star-chain', { name: prodName, id: prodId }); // STAR CHAIN (STAR_PRODUCT_IDS)
                 const isPromo2x1 = item.is_promo_2x1 === true || item.product?.is_promo_2x1 === true || prodName.toLowerCase().includes('2x1') || (item.license_name || '').toLowerCase().includes('2x1') || req.body.isPromo2x1 === true;
                 
-                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette || isEasyLevel || isEasyDeeser || isEasyClean) {
+                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette || isEasyLevel || isEasyDeeser || isEasyClean || isWidget || isStar) {
                     try {
-                        const pluginName = isCassette ? 'Cassette' : (isEasyClean ? 'Easy Clean' : isEasyDeeser ? 'Easy Deeser' : isEasyLevel ? 'Easy Level' : isOmni ? 'Omni Plugin' : (isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix')))));
+                        const pluginName = isStar ? 'STAR CHAIN' : isWidget ? 'OFFSZN Widget' : isCassette ? 'Cassette' : (isEasyClean ? 'Easy Clean' : isEasyDeeser ? 'Easy Deeser' : isEasyLevel ? 'Easy Level' : isOmni ? 'Omni Plugin' : (isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix')))));
                         const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
                                                (item.product?.product_type && item.product.product_type === 'subscription');
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';
@@ -1417,7 +1420,9 @@ export const capturePayPalOrder = async (req, res) => {
                         const isEasyPitch = prodName.toLowerCase().includes('easy pitch') || prodName.toLowerCase().includes('easypitch') || prodId === '5000';
                         const isOmni = prodName.toLowerCase().includes('omni') || prodId === '5001';
                         const isCassette = prodName.toLowerCase().includes('cassette') || prodId === '5002';
-                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette;
+                        const isWidget = isProductOfPlugin('offszn-widget', { name: prodName, id: prodId });
+                        const isStar = isProductOfPlugin('star-chain', { name: prodName, id: prodId });
+                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette || isWidget || isStar;
 
                         // A. Notify Client (Receipt) — includes serial key for plugin purchases
                         const serialKeySection = (isPlugin && keysGenerated.length > 0) ? `
@@ -1435,7 +1440,19 @@ export const capturePayPalOrder = async (req, res) => {
 
                         let downloadLinks = null;
                         if (isPlugin) {
-                            if (isCoke) {
+                            if (isStar) {
+                                // Instalador de STAR CHAIN (solo Windows por ahora): STAR_DOWNLOAD_URL en Vercel; si falta, "Mis compras"
+                                downloadLinks = {
+                                    win: process.env.STAR_DOWNLOAD_URL || 'https://offszn.lat/mis-compras',
+                                    mac: null
+                                };
+                            } else if (isWidget) {
+                                // Instalador del widget (solo Windows): WIDGET_DOWNLOAD_URL en Vercel; si falta, "Mis compras"
+                                downloadLinks = {
+                                    win: process.env.WIDGET_DOWNLOAD_URL || 'https://offszn.lat/mis-compras',
+                                    mac: null
+                                };
+                            } else if (isCoke) {
                                 downloadLinks = {
                                     win: 'https://drive.google.com/file/d/1cFKYYabnqLkVLeJDQYtWLixh93KzPwbN/view?usp=sharing',
                                     mac: 'https://drive.google.com/file/d/1741Z3uG8amQ5boK1il5Ffj136sW2WHPY/view?usp=sharing'
@@ -1543,6 +1560,12 @@ export const capturePayPalOrder = async (req, res) => {
                         const { data: prodData } = await supabase.from('users').select('email, nickname').eq('id', item.product.producer_id).single();
                         const producerEmail = prodData?.email;
 
+                        // Etiqueta del aviso: de dónde vino la venta (checkout del marketplace) y qué tipo de producto fue.
+                        const KIND_LABELS = { beat: 'Beat', preset: 'Preset', drumkit: 'Drum kit', loopkit: 'Loop kit' };
+                        const saleKind = isPlugin ? 'Plugin' : (KIND_LABELS[String(item.product?.product_type || '').toLowerCase()] || 'Producto');
+                        const saleTag = `[MARKETPLACE · ${saleKind.toUpperCase()}]`;
+                        const saleMeta = `<p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Canal:</b> Marketplace OFFSZN (PayPal) · <b style="color:#fff;">Tipo:</b> ${saleKind} · <b style="color:#fff;">Producto #</b>${item.product?.id} · <b style="color:#fff;">Orden #</b>${order?.id ?? '—'}</p>`;
+
                         if (producerEmail) {
                             try {
                                 const producerHtml = `
@@ -1550,6 +1573,7 @@ export const capturePayPalOrder = async (req, res) => {
                                         <h2 style="color: #10B981; margin-bottom:16px;">¡Nueva Venta! 💰 ${isPlugin ? '🎛️ Plugin' : '🎵 Beat'}</h2>
                                         <p style="color:#ccc; line-height:1.6;">Hola <b>${prodData.nickname || 'Productor'}</b>, se acaba de vender una copia de <b style="color:#fff;">${item.product.name}</b>.</p>
                                         <div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:20px; margin:20px 0;">
+                                            ${saleMeta}
                                             <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Tu Ganancia:</b> <span style="color:#10B981; font-size:1.15rem; font-weight:700;">$${partnerAmount.toFixed(2)} USD</span></p>
                                             ${isCoke ? `<p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Total Venta:</b> $${displayTotal.toFixed(2)} USD</p>` : ''}
                                             <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Comprador:</b> ${userNickname} (${userEmail})</p>
@@ -1560,7 +1584,7 @@ export const capturePayPalOrder = async (req, res) => {
                                 `;
                                 await sendOffsznEmail({
                                     to: producerEmail,
-                                    subject: `💸 ¡Nueva Venta! ${item.product.name} — Ganancia: $${partnerAmount.toFixed(2)} USD`,
+                                    subject: `💸 ${saleTag} ${item.product.name} — Ganancia: $${partnerAmount.toFixed(2)} USD`,
                                     html: producerHtml,
                                     fromName: 'OFFSZN Ventas'
                                 });
@@ -1615,7 +1639,7 @@ export const capturePayPalOrder = async (req, res) => {
                                     ? `💸 ¡Nueva Venta ${item.product.name}! [REFERIDO: ${affiliateInfo.name}] — $${displayTotal.toFixed(2)} USD (Comisión: $${affiliateInfo.commission.toFixed(2)})`
                                     : (isCoke 
                                         ? `💰 Venta Coca-Cola: $${displayTotal.toFixed(2)} USD (OFFSZN: +$${offsznCommission.toFixed(2)})`
-                                        : `💸 Venta Tienda: ${item.product.name} — $${displayTotal.toFixed(2)} USD`);
+                                        : `💸 ${saleTag} ${item.product.name} — $${displayTotal.toFixed(2)} USD`);
 
                                 const adminHtml = `
                                     <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px; border: 1px solid rgba(255,255,255,0.08);">
@@ -1623,6 +1647,7 @@ export const capturePayPalOrder = async (req, res) => {
                                         ${referralBanner}
                                         <p style="color:#ccc; line-height:1.6;">El usuario <b>${userNickname}</b> (<b>${userEmail}</b>) compró <b style="color:#fff;">${item.product.name}</b>.</p>
                                         <div style="background:#111827; border:1px solid #1f2937; border-radius:10px; padding:20px; margin:20px 0;">
+                                            ${saleMeta}
                                             <p style="color:#888; margin:0 0 8px;"><b style="color:#fff;">Total Cobrado:</b> <span style="color:#fff; font-weight:700;">$${displayTotal.toFixed(2)} USD</span></p>
                                             ${isCoke ? `
                                                 <p style="color:#888; margin:0 0 8px;"><b style="color:#8B5CF6;">Comisión OFFSZN (20%):</b> <span style="color:#8B5CF6; font-weight:700;">$${offsznCommission.toFixed(2)} USD</span></p>
@@ -2442,7 +2467,11 @@ export const handlePayPalWebhook = async (req, res) => {
             const hasCleanInItems = items.some(item => isCleanText(item.name));
             const isCassetteText = (t) => /cassette/.test(String(t || '').toLowerCase());
             const hasCassetteInItems = items.some(item => isCassetteText(item.name));
-            if (isCleanText(description) || hasCleanInItems) {
+            const isWidgetText = (t) => /offszn\s*widget/.test(String(t || '').toLowerCase());
+            const hasWidgetInItems = items.some(item => isWidgetText(item.name));
+            if (isWidgetText(description) || hasWidgetInItems) {
+                pluginToGenerate = 'OFFSZN Widget';
+            } else if (isCleanText(description) || hasCleanInItems) {
                 pluginToGenerate = 'Easy Clean';
             } else if (isDeeserText(description) || hasDeeserInItems) {
                 pluginToGenerate = 'Easy Deeser';
@@ -2483,7 +2512,7 @@ export const handlePayPalWebhook = async (req, res) => {
                 matchedUserId = matchedUser.id;
             }
 
-            const productId = pluginToGenerate === 'Cassette' ? 5002 : (pluginToGenerate === 'Omni Plugin' ? 5001 : (pluginToGenerate === 'Easy Pitch' ? 5000 : (pluginToGenerate === 'Easy Master' ? 900 : (pluginToGenerate === 'Vocal Preset' ? 905 : 899))));
+            const productId = pluginToGenerate === 'OFFSZN Widget' ? firstProductIdOf('offszn-widget') : pluginToGenerate === 'Cassette' ? 5002 : (pluginToGenerate === 'Omni Plugin' ? 5001 : (pluginToGenerate === 'Easy Pitch' ? 5000 : (pluginToGenerate === 'Easy Master' ? 900 : (pluginToGenerate === 'Vocal Preset' ? 905 : 899))));
 
             // Create Order Record to prevent double-processing and show in "Mis Compras"
             let { data: newOrder, error: orderError } = await supabase

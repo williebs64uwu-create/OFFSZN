@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Willie Inspired</title>
+    <meta name="description" content="Presets, plantillas y plugins de Willie Inspired.">
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/willieinspired/assets/store.css">
+</head>
+<body>
+    <main>
+        <div class="wi-container">
+            <nav class="wi-subtle" id="crumbs" style="padding-top:20px"></nav>
+            <div id="pdp"></div>
+        </div>
+        <section class="wi-section" id="howSection">
+            <div class="wi-container wi-split">
+                <div id="howVideo"></div>
+                <div>
+                    <p class="wi-eyebrow">Cómo se usa</p>
+                    <h2 class="wi-h2" style="margin-top:6px" id="howTitle">Listo en minutos</h2>
+                    <div class="wi-steps" style="grid-template-columns:1fr;margin-top:20px" id="howSteps"></div>
+                </div>
+            </div>
+        </section>
+        <section class="wi-section wi-alt" id="upsellSection">
+            <div class="wi-container">
+                <div class="wi-head"><div><p class="wi-eyebrow">Completa tu sonido</p><h2 class="wi-h2" style="margin-top:6px">Combínalo con</h2></div></div>
+                <div class="wi-grid wi-grid--4" id="upsells"></div>
+            </div>
+        </section>
+        <section class="wi-section">
+            <div class="wi-container">
+                <div class="wi-head"><div><h2 class="wi-h2">También te puede gustar</h2></div><a class="wi-link" id="moreLink" href="#">Ver más <i class="bi bi-arrow-right"></i></a></div>
+                <div class="wi-grid wi-grid--4" id="related"></div>
+            </div>
+        </section>
+        <section class="wi-section--tight">
+            <div class="wi-container"><h2 class="wi-h2 wi-center" style="margin-bottom:24px">Preguntas frecuentes</h2><div class="wi-faq" id="faq"></div></div>
+        </section>
+    </main>
+    <div class="wi-sticky-buy" id="stickyBuy"></div>
+
+    <script src="/willieinspired/assets/store.js"></script>
+    <script>
+    (async () => {
+        const parts = location.pathname.replace(/^\/@?willieinspired\/?/, '').split('/').filter(Boolean);
+        const [category] = parts;
+        const slug = parts[parts.length - 1];
+        const sub = parts.length === 3 ? parts[1] : null;
+        const cat = await WI.init({ active: category });
+        const $ = WI.$;
+        const p = cat.products.find((x) => x.category === category && x.slug === slug && (!sub || x.subcategory === sub));
+
+        if (!p) {
+            $('#pdp').innerHTML = `<div class="wi-empty wi-section"><i class="bi bi-question-circle"></i><h1 class="wi-h3">No encontramos este producto</h1><p style="margin:8px 0 16px">Puede que haya cambiado de nombre.</p><a class="wi-btn wi-btn--dark" href="/willieinspired/${WI.esc(category || '')}">Ver la tienda</a></div>`;
+            ['howSection', 'upsellSection'].forEach((id) => $(`#${id}`).remove());
+            return;
+        }
+
+        document.title = `${p.title} | Willie Inspired`;
+        WI.pixel('ViewContent', { content_ids: [p.id], content_name: p.title, content_type: 'product', currency: 'USD', value: p.pricing?.usd || 0 });
+        const label = { presets: 'Presets', plantillas: 'Plantillas', plugins: 'Plugins', servicios: 'Servicios' }[category] || category;
+        $('#crumbs').innerHTML = `<a href="/willieinspired">Inicio</a> / <a href="/willieinspired/${category}">${label}</a>${p.subcategory === 'artistas' ? ' / <a href="/willieinspired/presets/artistas">Artistas</a>' : ''} / ${WI.esc(p.title)}`;
+
+        const m = p.media || {};
+        const isPlugin = p.kind === 'plugin' || p.delivery === 'license';
+        const soon = p.status === 'coming_soon';
+        const lead = p.kind === 'lead_magnet';
+        const service = p.kind === 'service';
+        const buyable = WI.isBuyable(p);
+        const tryInVoice = ['presets', 'plantillas'].includes(category) && !lead && !soon;
+        const waTry = WI.wa(`Hola Willie! Quiero probar "${p.title}" en mi voz antes de comprarlo.`);
+        const waService = WI.wa(`Hola Willie! Me interesa "${p.title}". ¿Cómo empezamos?`);
+
+        // Galería: lo que no existe aún sale como placeholder con su nombre.
+        const slides = [
+            m.cover ? { type: 'img', src: m.cover } : { type: 'ph', label: `PORTADA · ${p.title}`, icon: 'image' },
+            m.hoverCover ? { type: 'img', src: m.hoverCover } : { type: 'ph', label: `IMAGEN 2 · ${p.artist || p.title} (variante)`, icon: 'images' },
+            m.video ? { type: 'video', src: m.video } : { type: 'ph', label: `VIDEO · Cómo suena ${p.artist || p.title}`, icon: 'camera-video' },
+            { type: 'ph', label: isPlugin ? `CAPTURA · Interfaz de ${p.title}` : 'CAPTURA · Plugins incluidos / guía', icon: isPlugin ? 'sliders' : 'file-earmark-text' }
+        ];
+        const slideHtml = (s, thumb) => s.type === 'img' ? `<img src="${WI.esc(s.src)}" alt="${WI.esc(p.title)}">`
+            : s.type === 'video' ? (thumb ? WI.ph('VIDEO', { icon: 'play-circle' }) : `<video src="${WI.esc(s.src)}" controls playsinline preload="metadata"></video>`)
+                : WI.ph(s.label, { icon: s.icon, note: thumb ? '' : 'Pendiente de subir' });
+
+        const pr = p.pricing;
+        const tierNote = pr?.local && pr.local.currency !== 'USD'
+            ? `<p class="wi-subtle" style="margin-top:6px">Precio en ${pr.local.currency}. Se cobra US$${pr.usd} con PayPal/tarjeta${pr.local.currency === 'PEN' ? ` o S/ ${pr.local.amount} con Yape` : ''}.</p>` : '';
+        const badges = [
+            ...(soon ? ['<span class="wi-badge wi-badge--dark">Próximamente</span>'] : []),
+            ...(lead ? ['<span class="wi-badge wi-badge--accent">Gratis</span>'] : []),
+            ...(p.badges || []).filter((b) => b !== 'Gratis').map((b) => `<span class="wi-badge">${WI.esc(b)}</span>`)
+        ].join(' ');
+
+        let buy = '';
+        if (soon) {
+            buy = `<div class="wi-panel" style="padding:18px"><p style="font-weight:700;margin-bottom:10px">Avísame cuando salga</p>${WI.leadForm({ kind: 'notify', productId: p.id, cta: 'Avísame' })}</div>`;
+        } else if (lead) {
+            buy = `<div class="wi-panel" style="padding:18px"><p style="font-weight:700;margin-bottom:10px">Te lo mando gratis a tu correo</p>${WI.leadForm({ productId: p.id })}<p class="wi-subtle">Sin spam. Solo tu regalo y novedades.</p></div>`;
+        } else if (buyable) {
+            buy = `
+                ${isPlugin ? `<div><span class="wi-subtle" style="display:block;margin-bottom:6px">Sistema</span><div class="wi-chips" id="osPick"><button type="button" class="wi-chip is-active" data-os="win"><i class="bi bi-windows"></i> Windows</button><button type="button" class="wi-chip" data-os="mac"><i class="bi bi-apple"></i> Mac</button></div></div>` : ''}
+                <div class="wi-pdp__buy">
+                    <button type="button" class="wi-btn wi-btn--dark wi-btn--lg wi-btn--block" id="addBtn">${service ? 'Reservar' : 'Añadir al carrito'} · ${pr.local ? WI.fmt(pr.local.amount, pr.local.currency) : ''}</button>
+                    <button type="button" class="wi-btn wi-btn--accent wi-btn--lg wi-btn--block" id="buyBtn">${service ? 'Pagar ahora' : 'Comprar ahora'}</button>
+                </div>
+                ${p.eligible2x1 ? `<div class="wi-note"><i class="bi bi-gift"></i><div><b>2x1:</b> lleva 2 y el de menor precio te sale gratis. <button type="button" class="wi-link" id="activate2x1">Activar 2x1</button></div></div>` : ''}`;
+        }
+        const extra = [
+            tryInVoice ? `<a class="wi-btn wi-btn--whatsapp wi-btn--block" href="${waTry}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Pruébalo gratis en tu voz antes de comprar</a>` : '',
+            service ? `<a class="wi-btn wi-btn--whatsapp wi-btn--block" href="${waService}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> ${p.badges?.includes('Pruébalo antes') ? 'Pídeme una prueba gratis' : 'Hablar por WhatsApp'}</a>` : '',
+            isPlugin && !soon && ['plugin-easy-master', 'plugin-easy-mix'].includes(p.id) ? `<div class="wi-panel" style="padding:18px" id="prueba"><p style="font-weight:700;margin-bottom:4px">¿Aún no te decides? Pruébalo ${p.trialDays || 3} días gratis</p><p class="wi-subtle" style="margin-bottom:10px">Te mando la licencia de prueba. Los días empiezan al activarlo.</p>${WI.trialForm(p.id)}</div>` : '',
+            p.landingUrl && isPlugin ? `<a class="wi-link" href="${WI.esc(p.landingUrl)}">Ver la página completa del plugin <i class="bi bi-arrow-up-right"></i></a>` : ''
+        ].filter(Boolean).join('');
+
+        const perks = (service
+            ? [['chat-dots', 'Trato directo'], ['arrow-repeat', 'Revisiones incluidas'], ['ear', 'Escuchas antes'], ['shield-lock', 'Pago seguro']]
+            : isPlugin
+                ? [['windows', 'Windows y Mac'], ['infinity', 'Licencia de por vida'], ['translate', 'Todo en español'], ['whatsapp', 'Soporte por WhatsApp']]
+                : [['lightning-charge', 'Descarga inmediata'], ['box-seam', 'Plugins incluidos'], ['file-earmark-text', 'Guía con capturas'], ['whatsapp', 'Soporte por WhatsApp']]
+        ).map(([i, t]) => `<div class="wi-perk"><i class="bi bi-${i}"></i>${t}</div>`).join('');
+
+        const list = (arr) => (arr || []).length ? `<ul class="wi-list">${arr.map((x) => `<li><i class="bi bi-check-circle-fill"></i>${WI.esc(x)}</li>`).join('')}</ul>` : '<p class="wi-muted">Pronto agregamos el detalle.</p>';
+        const requirements = isPlugin ? ['Windows 10/11 (VST3) o macOS 11+ (VST3 / AU)', 'Cualquier DAW: FL Studio, Ableton, Logic, Studio One…', 'Licencia para 2 equipos']
+            : (p.daw || []).includes('BandLab') ? ['BandLab (celular o web)'] : service ? ['Tus pistas en WAV (te explico cómo exportarlas)'] : ['FL Studio 20, 21, 24 o 2025', 'Windows o Mac', 'Plugins incluidos en la descarga'];
+
+        $('#pdp').innerHTML = `
+            <div class="wi-pdp">
+                <div class="wi-gallery">
+                    <div class="wi-gallery__main" id="galMain">${slideHtml(slides[0])}</div>
+                    <div class="wi-gallery__thumbs">${slides.map((s, i) => `<button type="button" class="${i === 0 ? 'is-active' : ''}" data-slide="${i}" aria-label="Ver imagen ${i + 1}">${slideHtml(s, true)}</button>`).join('')}</div>
+                </div>
+                <div class="wi-pdp__info">
+                    <div class="wi-row">${badges}</div>
+                    <h1 class="wi-pdp__title">${WI.esc(p.title)}</h1>
+                    <p class="wi-lead">${WI.esc(p.tagline || '')}</p>
+                    ${soon ? '' : `<div style="margin-top:16px" id="priceBox">${WI.priceHtml(pr, { lg: true, showSave: true })}${tierNote}</div>`}
+                    ${m.audioBefore && m.audioAfter ? '<div id="pdpAb"></div>' : ''}
+                    <div style="margin-top:18px;display:grid;gap:12px">${buy}${extra}</div>
+                    <div class="wi-perks">${perks}</div>
+                    <div class="wi-tabs" role="tablist">
+                        <button type="button" class="is-active" data-tab="desc">Descripción</button>
+                        <button type="button" data-tab="inc">Qué incluye</button>
+                        <button type="button" data-tab="req">Requisitos</button>
+                    </div>
+                    <div data-panel="desc"><p class="wi-muted" style="margin-bottom:14px">${WI.esc(p.description || '')}</p>${list(p.features)}</div>
+                    <div data-panel="inc" class="wi-hidden">${list(p.includes)}</div>
+                    <div data-panel="req" class="wi-hidden">${list(requirements)}</div>
+                </div>
+            </div>`;
+
+        if ($('#pdpAb')) WI.abPlayer($('#pdpAb'), { before: m.audioBefore, after: m.audioAfter });
+        WI.bindLeadForms($('#pdp'));
+        WI.bindTrialForms($('#pdp'));
+
+        $('#pdp').addEventListener('click', (e) => {
+            const t = e.target.closest('[data-slide]');
+            if (t) {
+                WI.$$('[data-slide]').forEach((x) => x.classList.toggle('is-active', x === t));
+                $('#galMain').innerHTML = slideHtml(slides[+t.dataset.slide]);
+            }
+            const tab = e.target.closest('[data-tab]');
+            if (tab) {
+                WI.$$('[data-tab]').forEach((x) => x.classList.toggle('is-active', x === tab));
+                WI.$$('[data-panel]').forEach((x) => x.classList.toggle('wi-hidden', x.dataset.panel !== tab.dataset.tab));
+            }
+            const os = e.target.closest('#osPick [data-os]');
+            if (os) WI.$$('#osPick .wi-chip').forEach((x) => x.classList.toggle('is-active', x === os));
+        });
+        const chosenOs = () => WI.$('#osPick .is-active')?.dataset.os || null;
+        if ($('#addBtn')) $('#addBtn').onclick = () => WI.cart.add(p.id, { os: chosenOs() });
+        if ($('#buyBtn')) $('#buyBtn').onclick = () => WI.buyNow(p.id, chosenOs());
+        if ($('#activate2x1')) $('#activate2x1').onclick = () => { WI.offer.set({ type: '2x1' }); WI.cart.add(p.id, { os: chosenOs() }); };
+
+        // Código de oferta (correo de "tu prueba terminó"): se muestra el precio especial validado por el servidor.
+        const offer = WI.offer.get();
+        if (offer?.type === 'code' && buyable) {
+            const q = await WI.quote([{ id: p.id }], offer);
+            if (q?.offerApplied) {
+                $('#priceBox').insertAdjacentHTML('afterbegin', `<div class="wi-note wi-note--success" style="margin-bottom:12px"><i class="bi bi-stars"></i><div><b>Oferta especial para ti:</b> ${WI.quoteMoney(q)} en lugar de US$${q.subtotalUsd}. Se aplica en el checkout.</div></div>`);
+            } else if (q?.error) {
+                $('#priceBox').insertAdjacentHTML('afterbegin', `<div class="wi-note" style="margin-bottom:12px"><i class="bi bi-info-circle"></i><div>${WI.esc(q.error)}</div></div>`);
+                WI.offer.clear();
+            }
+        }
+
+        // Cómo se usa
+        $('#howVideo').innerHTML = m.video ? `<div class="wi-video"><video src="${WI.esc(m.video)}" controls playsinline preload="metadata"></video></div>` : `<div class="wi-video">${WI.ph(`VIDEO · Cómo se usa ${p.title}`, { ratio: '16 / 9', icon: 'camera-video', dark: true, note: 'Video corto (30-60 s)' })}</div>`;
+        const steps = service
+            ? [['Me escribes', 'Por WhatsApp me cuentas tu referencia y tu equipo.'], ['Te mando una prueba', 'Si es preset o plantilla personalizada, escuchas antes de pagar.'], ['Lo recibes listo', 'Te entrego los archivos para grabar directo.']]
+            : isPlugin
+                ? [['Descarga e instala', 'Instalador para Windows y Mac con guía paso a paso.'], ['Activa tu licencia', 'Pega la clave que te llega al correo.'], ['Úsalo en tu DAW', 'Perillas con nombres claros: sabes qué hace cada una.']]
+                : [['Descarga', 'Te llega el link al correo: 4 descargas por producto.'], ['Instala con la guía', 'Word con capturas e índice, incluso si tu FL está desactualizado.'], ['Carga y graba', 'Abre el preset o la plantilla y graba sin latencia.']];
+        $('#howSteps').innerHTML = steps.map(([t, d]) => `<div class="wi-step"><h3 class="wi-h3">${t}</h3><p>${d}</p></div>`).join('');
+
+        const ups = (p.upsells || []).map((id) => cat.byId.get(id)).filter((x) => x && x.status === 'active');
+        if (ups.length) $('#upsells').innerHTML = ups.map(WI.card).join(''); else $('#upsellSection').remove();
+
+        const related = cat.products.filter((x) => x.category === category && x.id !== p.id && x.status === 'active' && x.kind !== 'lead_magnet' && (!p.subcategory || x.subcategory === p.subcategory)).slice(0, 4);
+        $('#related').innerHTML = related.map(WI.card).join('');
+        $('#moreLink').href = `/willieinspired/${category}${p.subcategory === 'artistas' ? '/artistas' : ''}`;
+        $('#faq').innerHTML = (cat.faq || []).map((f) => `<details><summary>${WI.esc(f.q)}</summary><p>${WI.esc(f.a)}</p></details>`).join('');
+
+        // Barra fija en móvil cuando el botón principal sale de la pantalla
+        if (buyable && $('#addBtn')) {
+            $('#stickyBuy').innerHTML = `<div><b style="display:block;font-size:.9rem;line-height:1.2">${WI.esc(p.title)}</b>${WI.priceHtml(pr)}</div><button type="button" class="wi-btn wi-btn--dark" id="stickyAdd">${service ? 'Reservar' : 'Añadir'}</button>`;
+            $('#stickyAdd').onclick = () => WI.cart.add(p.id, { os: chosenOs() });
+            new IntersectionObserver(([entry]) => {
+                const show = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+                $('#stickyBuy').classList.toggle('is-visible', show);
+                document.body.classList.toggle('has-sticky-buy', show);
+            }).observe($('#addBtn'));
+        }
+    })();
+    </script>
+</body>
+</html>

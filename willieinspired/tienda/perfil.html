@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Mi perfil | Willie Inspired</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/willieinspired/assets/store.css">
+</head>
+<body>
+    <main class="wi-section">
+        <div class="wi-container">
+            <div id="guest" class="wi-hidden wi-center" style="padding:40px 0">
+                <h1 class="wi-h2">Tu cuenta</h1>
+                <p class="wi-lead" style="margin:12px auto 22px">Inicia sesión para ver tus compras, tus descargas y tu descuento de bienvenida.</p>
+                <div class="wi-row" style="justify-content:center">
+                    <a class="wi-btn wi-btn--dark wi-btn--lg" id="loginBtn" href="#">Iniciar sesión</a>
+                    <a class="wi-btn wi-btn--ghost wi-btn--lg" id="registerBtn" href="#">Crear cuenta</a>
+                </div>
+            </div>
+
+            <div id="member" class="wi-hidden">
+                <div class="wi-head">
+                    <div>
+                        <p class="wi-eyebrow">Mi perfil</p>
+                        <h1 class="wi-h2" style="margin-top:6px" id="hello">Hola</h1>
+                        <p class="wi-muted" id="meta"></p>
+                    </div>
+                    <div class="wi-row">
+                        <a class="wi-btn wi-btn--ghost wi-btn--sm" href="/willieinspired/mi-perfil/mis-compras">Mis compras</a>
+                        <button class="wi-btn wi-btn--ghost wi-btn--sm" id="logout" type="button">Cerrar sesión</button>
+                    </div>
+                </div>
+                <div class="wi-grid" id="stats" style="margin-bottom:24px"></div>
+                <div id="welcomeBox" style="margin-bottom:24px"></div>
+                <section class="wi-panel" id="onbBox" style="margin-bottom:24px" hidden>
+                    <h2 class="wi-h3">Completa tu perfil</h2>
+                    <p class="wi-muted" style="margin:6px 0 14px">Usuario y país para darte precios y ofertas correctas.</p>
+                    <form class="wi-stack" id="onbForm">
+                        <input class="wi-input" name="username" placeholder="tu.usuario" minlength="3" maxlength="30" required>
+                        <select class="wi-select" name="country" required>
+                            <option value="">Elige tu país</option><option value="PE">Perú</option><option value="MX">México</option>
+                            <option value="AR">Argentina</option><option value="CL">Chile</option><option value="CO">Colombia</option>
+                            <option value="DO">República Dominicana</option><option value="US">Estados Unidos</option><option value="DE">Alemania</option>
+                            <option value="ES">España</option><option value="OTRO">Otro</option>
+                        </select>
+                        <button class="wi-btn wi-btn--dark" type="submit">Guardar</button>
+                        <p class="wi-form-msg" aria-live="polite"></p>
+                    </form>
+                </section>
+                <section class="wi-panel">
+                    <h2 class="wi-h3">Mis compras recientes</h2>
+                    <div class="wi-scroll-x" id="orders" style="margin-top:12px"></div>
+                </section>
+                <p class="wi-subtle" style="margin-top:20px">Ganar comisiones: <a class="wi-link" href="/willieinspired/mi-perfil/ganar-comisiones">vende presets y plugins con tu link</a></p>
+            </div>
+        </div>
+    </main>
+
+    <script src="/willieinspired/assets/store.js"></script>
+    <script>
+    (async () => {
+        const cat = await WI.init({ active: '' });
+        const $ = WI.$;
+        const session = await WI.auth.session();
+        const here = location.pathname;
+        if (!session) {
+            $('#guest').classList.remove('wi-hidden');
+            $('#loginBtn').href = WI.auth.loginUrl(here);
+            $('#registerBtn').href = WI.auth.registerUrl(here);
+            return;
+        }
+        $('#member').classList.remove('wi-hidden');
+        $('#logout').onclick = () => WI.auth.logout();
+
+        const { ok, data } = await WI.api('/me');
+        if (!ok) { $('#meta').textContent = 'No pudimos cargar tu cuenta. Recarga la página.'; return; }
+        const c = data.customer || {};
+        $('#hello').textContent = `Hola${c.username ? `, ${c.username}` : ''}`;
+        $('#meta').textContent = session.user.email;
+
+        const money = (n) => `US$${Number(n || 0).toFixed(2)}`;
+        const stat = (label, value) => `<div class="wi-panel" style="padding:18px"><p class="wi-subtle">${label}</p><p class="wi-h3" style="margin-top:4px">${value}</p></div>`;
+        $('#stats').innerHTML = [
+            stat('Segmento', c.segment || 'FREE'),
+            stat('Compras', c.purchaseCount ?? 0),
+            stat('Total gastado', money(c.totalSpentUsd)),
+            stat('Última compra', c.lastPurchase?.dia ? `${c.lastPurchase.dia} · ${c.lastPurchase.hora}` : '—')
+        ].join('');
+
+        if (!c.onboardingDone) {
+            $('#onbBox').hidden = false;
+            $('#onbForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const f = e.target; const msg = f.querySelector('.wi-form-msg'); const fd = new FormData(f);
+                const r = await WI.api('/onboarding', { method: 'POST', body: { username: fd.get('username'), country: fd.get('country'), timezone: WI.tz } });
+                msg.textContent = r.ok ? 'Listo. Guardado.' : (r.data.error || 'No pudimos guardar.');
+                msg.className = `wi-form-msg ${r.ok ? 'is-ok' : 'is-error'}`;
+                if (r.ok) setTimeout(() => location.reload(), 600);
+            });
+        }
+
+        if (!data.welcome?.claimed) {
+            $('#welcomeBox').innerHTML = `<div class="wi-note"><i class="bi bi-gift"></i><div><b>Tienes un 50% de bienvenida.</b> <a class="wi-link" href="/willieinspired/bienvenida">Actívalo aquí</a></div></div>`;
+        } else if (!data.welcome.used) {
+            $('#welcomeBox').innerHTML = `<div class="wi-note wi-note--success"><i class="bi bi-check2-circle"></i><div><b>Tu 50% de bienvenida está activo</b> para tu próxima compra.</div></div>`;
+        }
+
+        const orders = data.orders || [];
+        $('#orders').innerHTML = orders.length ? `<table class="wi-table"><thead><tr><th>Cuándo</th><th>Productos</th><th>Pago</th><th>Total</th><th></th></tr></thead><tbody>${orders.map((o) => `
+            <tr><td>${WI.esc(new Date(o.createdAt).toLocaleDateString('es-PE'))}</td>
+            <td>${o.lines.map((l) => WI.esc(l.title)).join('<br>')}</td>
+            <td>${WI.esc(o.method)}</td><td>${money(o.totalUsd)}</td>
+            <td>${o.portalUrl ? `<a class="wi-link" href="${WI.esc(o.portalUrl)}">Descargar</a>` : ''}</td></tr>`).join('')}</tbody></table>`
+            : '<p class="wi-muted">Aún no tienes compras. <a class="wi-link" href="/willieinspired/presets">Ver presets</a></p>';
+    })();
+    </script>
+</body>
+</html>

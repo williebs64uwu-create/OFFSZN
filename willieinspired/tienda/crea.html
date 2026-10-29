@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Crea tu preset o plantilla | Willie Inspired</title>
+    <meta name="description" content="Te armo un preset o una plantilla a la medida de tu voz. Escuchas el resultado antes de pagar.">
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/willieinspired/assets/store.css">
+</head>
+<body>
+    <main>
+        <section class="wi-hero">
+            <div class="wi-container wi-hero__grid">
+                <div>
+                    <p class="wi-eyebrow">Hecho a tu medida</p>
+                    <h1 class="wi-h1" style="margin-top:12px">Tu voz, <em style="font-style:normal;color:var(--accent)">con tu sonido</em></h1>
+                    <p class="wi-lead" style="margin-top:16px">Mándame una grabación tuya y la referencia que te gusta. Te devuelvo el resultado con el preset puesto. Lo escuchas, y si te gusta, lo compras.</p>
+                    <div class="wi-hero__cta"><a class="wi-btn wi-btn--whatsapp wi-btn--lg" id="waStart" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Empezar por WhatsApp</a></div>
+                </div>
+                <div class="wi-ph" style="--ratio:4/3" role="img" aria-label="VIDEO · Antes y después de una voz real"><i class="bi bi-camera-video"></i><strong>VIDEO · Antes y después de una voz real</strong><span>Pendiente de subir</span></div>
+            </div>
+        </section>
+
+        <section class="wi-section">
+            <div class="wi-container">
+                <div class="wi-center" style="margin-bottom:28px">
+                    <p class="wi-eyebrow">Cómo funciona</p>
+                    <h2 class="wi-h2" style="margin-top:6px">Tres pasos, sin compromiso</h2>
+                </div>
+                <div class="wi-steps">
+                    <div class="wi-step"><h3 class="wi-h3">1. Me mandas tu voz</h3><p>Una grabación de 20-30 segundos con tu micro de casa, y la referencia de sonido que quieres.</p></div>
+                    <div class="wi-step"><h3 class="wi-h3">2. Te devuelvo la prueba</h3><p>Te mando un audio con el preset aplicado en tu voz. Sin pagar nada todavía.</p></div>
+                    <div class="wi-step"><h3 class="wi-h3">3. Decides</h3><p>Si te gusta, lo pagas y te entrego los archivos listos para grabar directo.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="wi-section--tight">
+            <div class="wi-container">
+                <div class="wi-panel">
+                    <h2 class="wi-h3">Cuéntame para empezar</h2>
+                    <p class="wi-muted" style="margin-top:6px">Escribe esto en WhatsApp o usa el formulario:</p>
+                    <ul class="wi-list" style="margin:14px 0">
+                        <li><i class="bi bi-check-circle-fill"></i> Tu nombre artístico y tu país</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Qué artista o referencia de sonido quieres</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Tu micrófono y tu DAW (FL Studio, BandLab, etc.)</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Tu tipo de proyecto: preset, plantilla o las dos</li>
+                    </ul>
+                    <form class="wi-stack" id="reqForm" novalidate>
+                        <label class="wi-field"><span>Tu correo</span><input class="wi-input" type="email" name="email" required placeholder="tucorreo@gmail.com"></label>
+                        <label class="wi-field"><span>Referencia de sonido</span><input class="wi-input" name="ref" placeholder="Ej. Bad Bunny, Yeat, Dei V…"></label>
+                        <label class="wi-field"><span>Qué quieres</span>
+                            <select class="wi-select" name="kind"><option value="preset">Preset personalizado (15-20 USD)</option><option value="plantilla">Plantilla personalizada (30 USD)</option><option value="ambos">Las dos</option></select>
+                        </label>
+                        <input class="wi-hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+                        <button class="wi-btn wi-btn--dark wi-btn--block" type="submit">Quiero mi prueba gratis</button>
+                        <p class="wi-form-msg" aria-live="polite"></p>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/willieinspired/assets/store.js"></script>
+    <script>
+    (async () => {
+        await WI.init({ active: '' });
+        WI.$('#waStart').href = WI.wa('Hola Willie! Quiero una prueba de preset/plantilla para mi voz.');
+        WI.$('#reqForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const f = e.target; const msg = f.querySelector('.wi-form-msg'); const btn = f.querySelector('button');
+            const fd = new FormData(f);
+            btn.disabled = true;
+            const { ok, data } = await WI.api('/leads', { method: 'POST', auth: false, body: {
+                email: fd.get('email'), website: fd.get('website'), kind: 'notify', productId: 'servicio-preset-personalizado-para-tu-voz',
+                source: 'crea-tu-preset', variant: WI.ab.peek(), utm: WI.utm(), timezone: WI.tz, sessionId: WI.sid, page: location.pathname
+            } });
+            btn.disabled = false;
+            msg.textContent = ok ? '¡Listo! Te escribo por correo para coordinar tu prueba.' : (data.error || 'No pudimos enviarlo.');
+            msg.className = `wi-form-msg ${ok ? 'is-ok' : 'is-error'}`;
+            if (ok) WI.track('lead', { productId: 'servicio-preset-personalizado-para-tu-voz', meta: { kind: fd.get('kind'), ref: fd.get('ref') } });
+        });
+    })();
+    </script>
+</body>
+</html>

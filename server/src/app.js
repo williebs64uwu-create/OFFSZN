@@ -41,6 +41,9 @@ import willieRoutes from './infrastructure/http/routes/willie.routes.js';
 import licensePanelRoutes from './infrastructure/http/routes/license-panel.routes.js';
 import kanbanRoutes from './infrastructure/http/routes/kanban.routes.js';
 import cambiosRoutes from './infrastructure/http/routes/cambios.routes.js';
+import waitlistRoutes from './infrastructure/http/routes/waitlist.routes.js';
+import storeRoutes from './infrastructure/http/routes/store.routes.js';
+import { storePageFor } from './shared/store/pages.js';
 import bookingRoutes from './infrastructure/http/routes/booking.routes.js';
 import creatorApplicationRoutes from './infrastructure/http/routes/creator-application.routes.js';
 import { checkAndSendRemindersInternal } from './infrastructure/http/controllers/CalendarController.js';
@@ -301,6 +304,10 @@ app.get('/api/health', (req, res) => {
 app.use('/api', r2Routes);
 // Panel interno Willie+Gian: antes del limiter global porque la pagina consulta cada pocos segundos (protegido por clave admin)
 app.use('/api/cambios', cambiosRoutes);
+// Lista de espera STAR CHAIN BETA (publica con limiter propio + admin por clave)
+app.use('/api/waitlist', waitlistRoutes);
+// Tienda Willie Inspired (catálogo, quote, leads, eventos A/B, ofertas, cron) con limiters propios
+app.use('/api/store', storeRoutes);
 app.use('/api', globalLimiter);
 
 // --- RESTO DE RUTAS API (Omitidas para evitar borrado accidental) ---
@@ -431,6 +438,12 @@ app.use((req, res, next) => {
             pathLower === '/owner/content-calendar' ||
             pathLower === '/owner/cambios-notas' ||
             pathLower === '/owner/cambios-notas.html' ||
+            pathLower === '/owner/correos-lista-de-espera' ||
+            pathLower === '/owner/correos-lista-de-espera.html' ||
+            pathLower === '/owner/clientes-tienda' ||
+            pathLower === '/owner/clientes-tienda.html' ||
+            pathLower === '/owner/star-conversaciones' ||
+            pathLower === '/owner/star-conversaciones.html' ||
             pathLower === '/owner/audience-data.js' ||
             pathLower === '/owner/payhip-sales-data.js' ||
             pathLower === '/server/public/recovery_dashboard.html' ||
@@ -543,6 +556,13 @@ app.get(['/willieinspired', '/@willieinspired'], (req, res) => {
     return res.redirect(301, '/perfilpro.html?user=willieinspired');
 });
 
+// Páginas de la tienda (presets, plantillas, plugins, servicios, oferta, bienvenida, gracias, perfil, comunidad...)
+app.get(/^\/@?willieinspired\/(.+?)\/?$/, (req, res, next) => {
+    const template = storePageFor(req.params[0]);
+    if (!template) return next();
+    return res.sendFile(path.join(rootPath, 'willieinspired', template));
+});
+
 app.get(['/willieinspired/:slug', '/@willieinspired/:slug'], (req, res, next) => {
     const { slug } = req.params;
     const cleanSlug = slug.replace(/\.html$/, '');
@@ -556,6 +576,13 @@ app.get(['/willieinspired/:slug', '/@willieinspired/:slug'], (req, res, next) =>
     }
     next();
 });
+
+// --- 3.0.1b CRM DE LA TIENDA (pantalla de acceso por clave; los datos los protege la API con x-admin-key) ---
+app.get(['/crm', '/crm/'], (req, res) => {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.sendFile(path.join(rootPath, 'crm/index.html'));
+});
+app.use('/crm', express.static(path.join(rootPath, 'crm'), { index: false, maxAge: '10m' }));
 
 // --- 3.0.2 OFFSZN LICENSE PANEL DIRECT ROUTE ---
 app.get(['/pan/lic', '/pan/lic/', '/pan/lic/index.html'], (req, res) => {
@@ -601,6 +628,23 @@ app.get(['/cambios', '/cambios/notas', '/owner/cambios-notas', '/owner/cambios-n
     const p = path.join(rootPath, 'owner/cambios-notas.html');
     if (fs.existsSync(p)) return res.sendFile(p);
     return res.status(404).send('Cambios/notas not found');
+});
+
+// --- 3.0.5.0b CORREOS LISTA DE ESPERA (panel owner, protegido por clave en la API) ---
+app.get(['/owner/correos-lista-de-espera', '/owner/correos-lista-de-espera.html'], (req, res) => {
+    const p = path.join(rootPath, 'owner/correos-lista-de-espera.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Panel de lista de espera not found');
+});
+
+// --- 3.0.5.0d CLIENTES DE LA TIENDA WILLIE (tags, A/B; protegido por clave en la API) ---
+app.get(['/owner/clientes-tienda', '/owner/clientes-tienda.html'], (req, res) => res.redirect(301, '/crm'));
+
+// --- 3.0.5.0c LANDING LISTA DE ESPERA STAR CHAIN BETA ---
+app.get(['/list/lista-de-espera', '/list/lista-de-espera.html'], (req, res) => {
+    const p = path.join(rootPath, 'list/lista-de-espera.html');
+    if (fs.existsSync(p)) return res.sendFile(p);
+    return res.status(404).send('Lista de espera not found');
 });
 
 // --- 3.0.5.1 KANBAN STUDIO DIRECT ROUTES ---
@@ -747,9 +791,21 @@ app.use('/music-raw-to-defined', express.static(musicPath, {
     }
 }));
 
-// Video Omni Beat hospedado en Cloudflare R2
+// Videos hospedados en Cloudflare R2 (cero consumo de Fast Origin Transfer en Vercel)
 app.get(['/videos/omni-beat.mp4', '/videos/omni-beat'], (req, res) => {
     res.redirect(307, '/api/r2-public/videos/omni-beat.mp4');
+});
+app.get('/videos/:file', (req, res, next) => {
+    if (req.params.file.endsWith('.mp4')) {
+        return res.redirect(307, `/api/r2-public/videos/${req.params.file}`);
+    }
+    next();
+});
+app.get('/plugins/:file', (req, res, next) => {
+    if (req.params.file.endsWith('.mp4')) {
+        return res.redirect(307, `/api/r2-public/plugins/${req.params.file}`);
+    }
+    next();
 });
 
 const videosPath = path.join(rootPath, 'videos');
@@ -889,7 +945,8 @@ app.use(express.static(rootPath, {
     maxAge: '1d',
     setHeaders: (res, filePath) => {
         if (filePath.endsWith('.html')) {
-            res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+            res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=86400, stale-while-revalidate=86400');
+            res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=86400, stale-while-revalidate=86400');
         } else {
             if (filePath.endsWith('.css')) {
                 res.setHeader('Content-Type', 'text/css; charset=utf-8');
@@ -1706,7 +1763,9 @@ app.use((req, res, next) => {
         return res.status(404).type('text/plain').send('Image Not Found');
     }
 
-    // Servir 404.html con status 404 real
+    // Servir 404.html con status 404 real y cache en Edge para que los bots no despierten a Lambda
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+    res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=86400');
     res.status(404).sendFile(path.join(rootPath, '404.html'));
 });
 

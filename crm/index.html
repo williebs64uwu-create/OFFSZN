@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>CRM · Willie Inspired</title>
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/crm/crm.css">
+</head>
+<body>
+    <!-- Acceso por clave -->
+    <main class="login" id="login" hidden>
+        <div class="login__card">
+            <div class="login__brand">
+                <div class="logo-mark">W</div>
+                <div><h1 style="font-size:22px;font-weight:700;letter-spacing:-0.03em">CRM Willie Inspired</h1>
+                <p class="muted">Ingresa tu clave para continuar.</p></div>
+            </div>
+            <form class="card" id="loginForm" autocomplete="off" novalidate>
+                <div class="card__body stack" style="padding-top:20px">
+                    <label class="label">Clave del panel
+                        <span class="input-icon"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+                        <input class="input" id="loginKey" type="password" autocomplete="current-password" placeholder="••••••••••" required></span>
+                    </label>
+                    <label class="row small" style="gap:8px"><input type="checkbox" id="loginRemember"> Recordar en este dispositivo</label>
+                    <button class="btn btn--brand btn--block" id="loginBtn" type="submit">Entrar</button>
+                    <p class="small" id="loginMsg" role="alert" style="color:hsl(var(--destructive));min-height:1.2em"></p>
+                </div>
+            </form>
+            <p class="muted small" style="text-align:center;margin-top:16px">Acceso solo para el equipo. Tras varios intentos fallidos se bloquea unos minutos.</p>
+        </div>
+    </main>
+
+    <!-- Aplicación -->
+    <div class="app" id="app" hidden>
+        <aside class="sidebar" id="sidebar" aria-label="Navegación">
+            <div class="sidebar__brand"><div class="logo-mark">W</div><div>Willie Inspired<small>CRM de la tienda</small></div></div>
+            <nav class="nav" id="nav"></nav>
+            <div class="sidebar__foot">
+                <button class="btn btn--ghost btn--sm" data-theme-toggle id="themeBtn"></button>
+                <button class="btn btn--ghost btn--sm" data-logout id="logoutBtn"></button>
+            </div>
+        </aside>
+        <div class="main">
+            <header class="topbar">
+                <button class="btn btn--outline btn--icon menu-btn" data-menu aria-label="Abrir menú" id="menuBtn"></button>
+                <button class="btn btn--outline search-btn" data-search id="searchBtn"></button>
+                <div class="grow"></div>
+                <a class="btn btn--outline" href="/willieinspired" target="_blank" rel="noopener" id="storeBtn"></a>
+            </header>
+            <div class="content" id="view"></div>
+        </div>
+    </div>
+
+    <!-- Capas compartidas -->
+    <div class="scrim" id="scrim"></div>
+    <div class="overlay" id="overlay"></div>
+    <aside class="sheet" id="sheet" aria-label="Detalle">
+        <div class="sheet__head"><div class="grow"><div id="sheetTitle"></div><div id="sheetSub" class="muted small"></div></div><div id="sheetLead"></div></div>
+        <div class="sheet__body" id="sheetBody"></div>
+    </aside>
+    <div class="dialog" id="dialog" role="dialog" aria-modal="true"></div>
+    <div class="overlay" id="paletteScrim" style="z-index:110"></div>
+    <div class="palette" id="palette" role="dialog" aria-label="Buscar">
+        <input id="paletteInput" placeholder="Busca un contacto o ve a una sección…" autocomplete="off">
+        <div class="palette__list" id="paletteList"></div>
+    </div>
+    <div class="toasts" id="toasts" aria-live="polite"></div>
+
+    <script src="/crm/js/core.js"></script>
+    <script src="/crm/js/pages.js"></script>
+    <script src="/crm/js/negocio.js"></script>
+    <script>
+    // Navegación, iconos y textos fijos (usan los iconos de CRM.icon)
+    (() => {
+        const C = window.CRM;
+        const NAV = [
+            ['Principal', [['dashboard', 'Resumen', 'dashboard'], ['contactos', 'Contactos', 'users'], ['oportunidades', 'Oportunidades', 'kanban'], ['tareas', 'Tareas', 'tasks']]],
+            ['Crecimiento', [['automatizaciones', 'Automatizaciones', 'zap'], ['experimentos', 'Experimentos A/B', 'flask'], ['ventas', 'Venta manual', 'bag']]],
+            ['Negocio', [['historial', 'Historial de ventas', 'trend'], ['productos', 'Productos y precios', 'bag']]],
+            ['Ajustes', [['sistema', 'Estado del sistema', 'shield']]]
+        ];
+        document.getElementById('nav').innerHTML = NAV.map(([label, items]) => `<div class="nav__label">${label}</div>${items.map(([k, n, ic]) => `<a href="#/${k}" data-page="${k}">${C.icon(ic)}${n}</a>`).join('')}`).join('');
+        document.getElementById('themeBtn').innerHTML = `${C.icon('sun')} Cambiar tema`;
+        document.getElementById('logoutBtn').innerHTML = `${C.icon('logout')} Cerrar sesión`;
+        document.getElementById('menuBtn').innerHTML = C.icon('menu');
+        document.getElementById('searchBtn').innerHTML = `${C.icon('search')} Buscar contactos <span class="kbd" style="margin-left:auto">Ctrl K</span>`;
+        document.getElementById('storeBtn').innerHTML = `${C.icon('ext')} Ver tienda`;
+    })();
+    </script>
+</body>
+</html>

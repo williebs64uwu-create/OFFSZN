@@ -5,7 +5,7 @@ import path from 'path';
 import { isAdminKey } from '../../../shared/config/adminKey.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import {
-    PLUGINS, DEFAULT_PLUGIN, extractSerial, findPluginBySerial, findPluginByName, prefixForName, checkProductMatch
+    PLUGINS, DEFAULT_PLUGIN, extractSerial, findPluginBySerial, findPluginByName, prefixForName, checkProductMatch, resolveLicensePlugin
 } from '../../../shared/config/pluginRegistry.js';
 
 // ─── Country Resolver Helper ──────────────────────────────────────────────────
@@ -281,6 +281,11 @@ export const requestTrial = async (req, res) => {
         const activePluginName = plugin_name || 'Easy Mix';
         if (!hwid) return res.status(400).json({ error: 'Falta HWID' });
 
+        // STAR CHAIN: la prueba NO se pide desde el plugin; solo existe con una clave TRIAL (se activa con /activate como cualquier clave).
+        if (findPluginByName(activePluginName)?.prefix === 'STAR') {
+            return res.status(403).json({ error: 'La prueba de STAR CHAIN se activa con tu clave TRIAL. Pídela en offszn.lat/plugins.', trial_key_required: true });
+        }
+
         // ── 1. Check if this HWID ALREADY has a trial (past or present) ──────
         // Strict: ONE trial per machine, ever. No re-trials.
         // Se compara por ID de dispositivo (sufijo del hwid), no por nombre de equipo: renombrar el PC ya no resetea la prueba.
@@ -416,6 +421,16 @@ export const activateSerial = async (req, res) => {
         });
         if (!productCheck.ok) {
             return res.status(403).json({ error: productCheck.message, code: productCheck.code });
+        }
+
+        // ── Anti-reparto: sin HWID real no hay "equipo" que contar. Antes todos los que omitían el hwid compartían el
+        // id 'device-no-hwid' y gastaban UN solo cupo: una clave FULL se podía activar en cualquier cantidad de PCs.
+        // Solo Easy Mix / Easy Master (clientes antiguos) pueden seguir activando sin hwid.
+        if (!req.body?.hwid) {
+            const lp = resolveLicensePlugin(license);
+            if (!lp || !['easy-mix', 'easy-master'].includes(lp.id)) {
+                return res.status(400).json({ error: 'Falta el identificador del equipo (HWID). Actualiza el plugin.', code: 'bad_request' });
+            }
         }
 
         // 2. Count activations — use max_devices from DB (default 1)

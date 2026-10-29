@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Tienda | Willie Inspired</title>
+    <meta name="description" content="Presets, plantillas, plugins y servicios de Willie Inspired para sonar profesional grabando en casa.">
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/willieinspired/assets/store.css">
+</head>
+<body>
+    <main class="wi-section--tight">
+        <div class="wi-container">
+            <nav class="wi-subtle" id="crumbs" style="margin-bottom:14px"></nav>
+            <div class="wi-head">
+                <div>
+                    <p class="wi-eyebrow" id="eyebrow"></p>
+                    <h1 class="wi-h2" id="title" style="margin-top:6px"></h1>
+                    <p class="wi-lead" id="lead"></p>
+                </div>
+                <div class="wi-row">
+                    <input class="wi-input wi-hidden" id="search" type="search" placeholder="Buscar artista…" style="border-radius:999px;min-height:44px;width:220px" aria-label="Buscar">
+                    <select class="wi-select" id="sort" style="border-radius:999px;min-height:44px;width:auto" aria-label="Ordenar">
+                        <option value="rec">Recomendados</option>
+                        <option value="asc">Precio: menor a mayor</option>
+                        <option value="desc">Precio: mayor a menor</option>
+                        <option value="az">A → Z</option>
+                    </select>
+                </div>
+            </div>
+            <div class="wi-chips" id="chips" style="margin-bottom:22px"></div>
+            <div id="offerBanner"></div>
+            <div class="wi-grid wi-grid--4" id="grid"></div>
+            <div id="after" style="margin-top:40px"></div>
+        </div>
+    </main>
+
+    <script src="/willieinspired/assets/store.js"></script>
+    <script>
+    (async () => {
+        const parts = location.pathname.replace(/^\/@?willieinspired\/?/, '').split('/').filter(Boolean);
+        const category = parts[0];
+        const sub = parts[1] || '';
+        const cat = await WI.init({ active: category });
+        const $ = WI.$;
+
+        const COPY = {
+            presets: { eyebrow: 'Presets de voz', title: 'Suena como tu artista favorito', lead: 'Cadenas vocales listas para grabar en FL Studio, con los plugins incluidos y guía paso a paso.' },
+            plantillas: { eyebrow: 'Plantillas', title: 'Abre la plantilla y graba tu tema', lead: 'Proyectos de FL Studio con voces, dobles, ad-libs y master ya ruteados. Solo conecta el micro.' },
+            plugins: { eyebrow: 'Plugins', title: 'Plugins con nombres que dicen lo que hacen', lead: 'Easy Mix, Easy Master y más. Windows y Mac, licencia de por vida y 3 días de prueba gratis.' },
+            servicios: { eyebrow: 'Servicios', title: 'Hecho a la medida de tu voz', lead: 'Mezcla, beats y presets personalizados. En presets y plantillas personalizadas escuchas el resultado antes de pagar.' }
+        }[category] || { eyebrow: 'Tienda', title: 'Tienda', lead: '' };
+        const SUBS = {
+            presets: [['', 'Todos'], ['artistas', 'Artistas'], ['packs', 'Packs'], ['gratis', 'Gratis']],
+            plugins: [['', 'Todos'], ['plugins', 'Plugins'], ['bundle', 'Bundles'], ['expansiones', 'Expansiones']]
+        };
+        document.title = `${COPY.title} | Willie Inspired`;
+        $('#eyebrow').textContent = COPY.eyebrow;
+        $('#title').textContent = sub === 'artistas' ? 'Presets de artistas' : COPY.title;
+        $('#lead').textContent = COPY.lead;
+        $('#crumbs').innerHTML = `<a href="/willieinspired">Inicio</a> / <a href="/willieinspired/${category}">${WI.esc(COPY.eyebrow)}</a>${sub ? ` / ${WI.esc(sub)}` : ''}`;
+
+        const all = cat.products.filter((p) => p.category === category);
+        let filter = sub;
+        let genre = '';
+        if (category === 'presets') $('#search').classList.remove('wi-hidden');
+
+        const chips = SUBS[category] || (category === 'plantillas' ? [['', 'Todas'], ...[...new Set(all.map((p) => p.genre).filter(Boolean))].map((g) => [`g:${g}`, g])] : []);
+        $('#chips').innerHTML = chips.map(([k, l]) => `<button type="button" class="wi-chip${k === filter ? ' is-active' : ''}" data-k="${WI.esc(k)}">${WI.esc(l)}</button>`).join('');
+        $('#chips').addEventListener('click', (e) => {
+            const c = e.target.closest('.wi-chip'); if (!c) return;
+            const k = c.dataset.k;
+            if (k.startsWith('g:')) { genre = k.slice(2); filter = ''; } else { filter = k; genre = ''; }
+            WI.$$('.wi-chip', $('#chips')).forEach((x) => x.classList.toggle('is-active', x === c));
+            render();
+        });
+        $('#sort').addEventListener('change', render);
+        $('#search').addEventListener('input', render);
+
+        function visible() {
+            const q = $('#search').value.trim().toLowerCase();
+            let list = all.filter((p) => {
+                if (filter === 'artistas') return p.subcategory === 'artistas';
+                if (filter === 'packs') return p.kind === 'bundle';
+                if (filter === 'gratis') return p.kind === 'lead_magnet';
+                if (filter === 'plugins') return !p.subcategory && p.kind !== 'bundle';
+                if (filter === 'bundle') return p.subcategory === 'bundle';
+                if (filter === 'expansiones') return p.subcategory === 'expansiones';
+                return true;
+            });
+            if (genre) list = list.filter((p) => p.genre === genre || p.genre === 'Todos');
+            if (q) list = list.filter((p) => `${p.title} ${p.artist || ''}`.toLowerCase().includes(q));
+            const rank = (p) => (p.kind === 'lead_magnet' ? 0 : p.status === 'coming_soon' ? 3 : p.subcategory === 'artistas' ? 2 : 1);
+            const sort = $('#sort').value;
+            return list.sort((a, b) => {
+                if (sort === 'asc') return a.pricing.usd - b.pricing.usd;
+                if (sort === 'desc') return b.pricing.usd - a.pricing.usd;
+                if (sort === 'az') return a.title.localeCompare(b.title, 'es');
+                return rank(a) - rank(b) || (!!b.media.audioAfter - !!a.media.audioAfter) || (!!b.media.cover - !!a.media.cover);
+            });
+        }
+
+        function render() {
+            const list = visible();
+            $('#grid').innerHTML = list.length ? list.map(WI.card).join('') : '<div class="wi-empty" style="grid-column:1/-1"><i class="bi bi-search"></i>No encontramos nada con ese filtro.</div>';
+        }
+        render();
+
+        const offer = WI.offer.get();
+        if (offer?.type === '2x1' && ['presets', 'plantillas', 'plugins'].includes(category)) {
+            $('#offerBanner').innerHTML = `<div class="wi-note" style="margin-bottom:20px"><i class="bi bi-gift"></i><div><b>2x1 activo:</b> elige 2 productos y el de menor precio te sale gratis. Se aplica solo en el carrito.</div></div>`;
+        }
+
+        // Bloques al final según la colección (escalera de valor)
+        const after = {
+            presets: `<div class="wi-panel wi-split"><div><h2 class="wi-h3">¿No encuentras a tu artista?</h2><p class="wi-muted" style="margin-top:6px">Te armo un preset a la medida de tu voz y de la referencia que quieras. Te lo pruebo gratis antes de que pagues.</p><a class="wi-btn wi-btn--dark" style="margin-top:16px" href="/willieinspired/crea-tu-preset"><i class="bi bi-magic"></i> Crea tu preset</a></div>${WI.ph('VIDEO · Antes/después preset personalizado', { ratio: '16 / 9', icon: 'camera-video' })}</div>`,
+            plantillas: `<div class="wi-panel wi-split"><div><h2 class="wi-h3">¿Quieres una plantilla hecha para tu voz?</h2><p class="wi-muted" style="margin-top:6px">Te la armo con tu voz, tus dobles y tu master. Escuchas el resultado antes de pagar.</p><a class="wi-btn wi-btn--dark" style="margin-top:16px" href="/willieinspired/crea-tu-plantilla"><i class="bi bi-magic"></i> Crea tu plantilla</a></div>${WI.ph('VIDEO · Plantilla personalizada en acción', { ratio: '16 / 9', icon: 'camera-video' })}</div>`,
+            plugins: `<div class="wi-panel wi-split" id="prueba"><div><span class="wi-badge wi-badge--accent">3 días gratis</span><h2 class="wi-h3" style="margin-top:10px">Prueba Easy Master gratis</h2><p class="wi-muted" style="margin-top:6px">Te mando la licencia de prueba a tu correo. Los 3 días empiezan cuando lo actives en tu DAW.</p><div style="margin-top:16px">${WI.trialForm('plugin-easy-master')}</div></div>${WI.ph('VIDEO · Cómo se usa Easy Master', { ratio: '16 / 9', icon: 'camera-video' })}</div>`,
+            servicios: `<div class="wi-steps"><div class="wi-step"><h3 class="wi-h3">Me cuentas qué buscas</h3><p>Por WhatsApp: tu referencia, tu equipo y qué te molesta de tu sonido.</p></div><div class="wi-step"><h3 class="wi-h3">Te mando una prueba</h3><p>En presets y plantillas personalizadas, escuchas cómo suena tu voz antes de pagar.</p></div><div class="wi-step"><h3 class="wi-h3">Pagas y lo recibes</h3><p>Pagas con PayPal, tarjeta o Yape y te entrego los archivos listos para grabar.</p></div></div>`
+        }[category];
+        if (after) $('#after').innerHTML = after;
+        WI.bindTrialForms($('#after'));
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Tu regalo | Willie Inspired</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/willieinspired/assets/store.css">
+</head>
+<body>
+    <main class="wi-section">
+        <div class="wi-container wi-split">
+            <div>
+                <p class="wi-eyebrow">Tu regalo</p>
+                <h1 class="wi-h2" style="margin-top:8px" id="lmTitle">Cargando…</h1>
+                <p class="wi-lead" style="margin-top:12px" id="lmTag"></p>
+                <div class="wi-row" style="margin-top:20px">
+                    <a class="wi-btn wi-btn--dark wi-btn--lg" id="lmDownload" href="#">Descargar</a>
+                    <button type="button" class="wi-btn wi-btn--ghost" id="lmReplay">Ver cómo se usa</button>
+                </div>
+                <div class="wi-note" style="margin-top:22px"><i class="bi bi-envelope"></i><div>También te lo envié a tu correo. Revisa spam si no lo ves.</div></div>
+            </div>
+            <div>
+                <div class="wi-video" id="lmVideo"></div>
+                <p class="wi-subtle" style="margin-top:10px">Video corto: cómo se usa en 60 segundos.</p>
+            </div>
+        </div>
+
+        <div class="wi-container" style="margin-top:48px">
+            <div class="wi-panel wi-panel--accent" id="offerBox" style="text-align:center">
+                <span class="wi-badge wi-badge--accent" id="offerBadge">Oferta de bienvenida</span>
+                <p class="wi-h2" style="margin-top:14px" id="offerBig"></p>
+                <p class="wi-lead" style="margin:10px auto 0;color:#e4e4e7" id="offerText"></p>
+                <div style="margin-top:20px"><a class="wi-btn wi-btn--accent wi-btn--lg" id="offerGo" href="/willieinspired/presets">Ver productos</a></div>
+                <p class="wi-subtle" style="margin-top:12px;color:#a1a1aa" id="offerFine"></p>
+            </div>
+        </div>
+    </main>
+
+    <script src="/willieinspired/assets/store.js"></script>
+    <script>
+    (async () => {
+        const cat = await WI.init({ active: '', footer: true });
+        const $ = WI.$;
+        const slug = WI.params.get('lm') || 'graba-maquetas-con-nativos';
+        const lead = cat.products.find((p) => p.kind === 'lead_magnet' && p.slug === slug) || cat.products.find((p) => p.kind === 'lead_magnet');
+        const variant = WI.ab.variant();
+        WI.track('popup_view', { variant });
+
+        if (lead) {
+            $('#lmTitle').textContent = lead.title;
+            $('#lmTag').textContent = lead.tagline || '';
+            $('#lmDownload').href = lead.media?.download || '#';
+            if (!lead.media?.download) { $('#lmDownload').textContent = 'Te lo envío al correo'; $('#lmDownload').onclick = (e) => { e.preventDefault(); WI.toast('Revisa tu correo: te lo mandamos en unos minutos'); }; }
+            $('#lmVideo').innerHTML = lead.media?.video
+                ? `<video src="${WI.esc(lead.media.video)}" controls playsinline preload="metadata"></video>`
+                : WI.ph('VIDEO · Cómo se usa el regalo', { ratio: '16 / 9', icon: 'camera-video', dark: true, note: 'Pendiente de subir' });
+        } else {
+            $('#lmTitle').textContent = 'No encontramos ese regalo';
+        }
+
+        // Video: a los 5 s se pausa (según el brief) para que la oferta aparezca sin competir con el video
+        const video = $('#lmVideo video');
+        if (video) video.addEventListener('play', () => setTimeout(() => video.pause(), 5000), { once: true });
+        $('#lmReplay').onclick = () => { if (video) { video.currentTime = 0; video.play(); } };
+
+        // Oferta según la variante A/B: 50% de bienvenida (una vez, con cuenta) o 2x1 (elige tu gratis en el carrito)
+        const loggedIn = Boolean(await WI.auth.session());
+        if (variant === 'welcome50') {
+            $('#offerBadge').textContent = 'Solo para ti · una vez';
+            $('#offerBig').textContent = '50% de descuento';
+            $('#offerText').textContent = 'Crea tu cuenta y tu 50% de bienvenida queda activo para tu primera compra (máximo 10 USD de descuento).';
+            $('#offerFine').textContent = 'Uso único. Necesitas cuenta para activarlo.';
+            $('#offerGo').textContent = loggedIn ? 'Activar mi 50%' : 'Crear cuenta y activar';
+            $('#offerGo').onclick = async (e) => {
+                e.preventDefault();
+                WI.track('popup_click', { variant });
+                if (!loggedIn) { location.href = WI.auth.registerUrl('/willieinspired/bienvenida'); return; }
+                const { ok, data } = await WI.api('/welcome/claim', { method: 'POST' });
+                if (ok) location.href = '/willieinspired/bienvenida';
+                else WI.toast(data.error || 'No pudimos activarlo');
+            };
+        } else {
+            $('#offerBadge').textContent = 'Oferta de bienvenida';
+            $('#offerBig').textContent = '2x1';
+            $('#offerText').textContent = 'Lleva 2 productos y el de menor precio te sale gratis. Tú eliges cuál es el gratis en el carrito.';
+            $('#offerFine').textContent = 'Aplica a productos marcados con 2x1.';
+            $('#offerGo').onclick = (e) => { e.preventDefault(); WI.track('popup_click', { variant }); WI.offer.set({ type: '2x1' }); location.href = '/willieinspired/presets'; };
+        }
+        $('#offerBox').addEventListener('click', () => WI.track('popup_view', { variant, meta: { where: 'oferta_box' } }), { once: true });
+    })();
+    </script>
+</body>
+</html>

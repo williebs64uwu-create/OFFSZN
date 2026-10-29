@@ -10,6 +10,7 @@ const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
 process.env.PLUGIN_PRIVATE_KEY = privateKey.export({ format: 'der', type: 'pkcs8' }).toString('base64');
 process.env.OFFSZN_VARIABLE_PANEL = 'clave-de-prueba';
 process.env.OMNI_PRODUCT_IDS = '';               // Omni aún sin producto en la tienda
+process.env.WIDGET_PRODUCT_IDS = '7777';         // OFFSZN Widget: id de producto de prueba
 
 // ── Supabase en memoria (solo lo que usa PluginLicensingController) ───────────────────────────────────────────────
 function makeFakeSupabase() {
@@ -297,6 +298,52 @@ test('CASSETTE: prefijo CASSETTE, firma v2 y exclusiva (no sirve en otros plugin
     assert.match(fixed.body.serial_key, /^CASSETTE-FULL-[A-F0-9]{8}-[A-F0-9]{8}$/);
 });
 
+// ── OFFSZN WIDGET ─────────────────────────────────────────────────────────────────────────────────────────────────
+test('OFFSZN Widget: prefijo WIDGET, prueba de 3 días, firma v2 y exclusiva (no sirve en otros plugins ni al revés)', async () => {
+    const R = await import('../src/shared/config/pluginRegistry.js');
+    assert.equal(R.prefixForName('OFFSZN Widget'), 'WIDGET');
+    assert.equal(R.prefixForName('offszn-widget'), 'WIDGET');
+    assert.equal(R.findPluginBySerial('WIDGET-FULL-AB12CD34-EF56AB78').id, 'offszn-widget');
+    assert.equal(R.extractSerial('OFFSZN Widget: widget-trial-ab12cd34-ef56ab78'), 'WIDGET-TRIAL-AB12CD34-EF56AB78');
+    // el plugin "Rack" (palabra clave "hub") y los demás no se confunden con el widget
+    assert.equal(R.findPluginByName('OFFSZN Rack').id, 'offszn-rack');
+
+    // compra: el checkout reconoce el producto por ID (WIDGET_PRODUCT_IDS) o por nombre
+    assert.equal(R.isProductOfPlugin('offszn-widget', { id: 7777, name: 'lo-que-sea' }), true);
+    assert.equal(R.isProductOfPlugin('offszn-widget', { id: '7777' }), true);
+    assert.equal(R.isProductOfPlugin('offszn-widget', { name: 'OFFSZN Widget (Windows)' }), true);
+    assert.equal(R.isProductOfPlugin('offszn-widget', { id: 899, name: 'Easy Mix' }), false);
+    assert.equal(R.isProductOfPlugin('offszn-widget', { id: 5002, name: 'Cassette VST' }), false);
+    assert.equal(R.firstProductIdOf('offszn-widget'), 7777);
+
+    // clave completa (la que se emite al comprar)
+    const key = await newKey('OFFSZN Widget');
+    assert.match(key, /^WIDGET-FULL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    const hwid = HW('PC-WILLIE', DEV_A), nonce = 'n-widget';
+    const ok = await call(C.activateSerial, { serial_key: key, hwid, plugin_name: 'OFFSZN Widget', nonce });
+    assert.equal(ok.code, 200, JSON.stringify(ok.body));
+    assert.ok(verifyV2(ok, { serial: key, hwid, nonce }));
+    const v = await call(C.validateLicense, { serial_key: key, hwid, plugin_name: 'OFFSZN Widget', nonce: 'n-widget-2' });
+    assert.equal(v.code, 200, JSON.stringify(v.body));
+    for (const other of ['Easy Clean', 'Easy Pitch', 'EASY MIX', 'Omni Plugin', 'GHOST', 'Cassette']) {
+        const r = await call(C.activateSerial, { serial_key: key, hwid, plugin_name: other });
+        assert.equal(r.code, 403, `WIDGET no debe activarse en ${other}`); assert.equal(r.body.code, 'wrong_product');
+    }
+    const ghost = await newKey('GHOST');
+    const x = await call(C.activateSerial, { serial_key: ghost, hwid, plugin_name: 'OFFSZN Widget' });
+    assert.equal(x.code, 403); assert.equal(x.body.code, 'wrong_product');
+
+    // prueba gratis: una por equipo, clave WIDGET-TRIAL, arranca al activar
+    const hwidT = HW('PC-NUEVO', DEV_B);
+    const t = await call(C.requestTrial, { hwid: hwidT, device_name: 'PC-NUEVO', plugin_name: 'OFFSZN Widget' });
+    assert.equal(t.code, 200, JSON.stringify(t.body));
+    assert.match(t.body.serial_key, /^WIDGET-TRIAL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    const ta = await call(C.activateSerial, { serial_key: t.body.serial_key, hwid: hwidT, plugin_name: 'OFFSZN Widget', nonce: 'n-trial' });
+    assert.equal(ta.code, 200, JSON.stringify(ta.body));
+    assert.equal(ta.body.license_type, 'trial');
+    assert.ok(verifyV2(ta, { serial: t.body.serial_key, hwid: hwidT, nonce: 'n-trial' }));
+});
+
 test('admin: si el panel manda un serial con el prefijo de otro plugin, el servidor lo corrige', async () => {
     const r = await call(C.adminGenerateFullKey, { admin_key: ADMIN, plugin_name: 'Easy Level', serial_key: 'EASY-FULL-1234ABCD-5678ABCD' });
     assert.equal(r.code, 200);
@@ -440,4 +487,74 @@ test('generate-web de plugin sin producto configurado no emite licencias', async
     const res2 = { code: 200, body: null, status(c) { this.code = c; return this; }, json(o) { this.body = o; return this; } };
     await C.generateWebLicense({ body: { plugin_name: 'Plugin Inventado' }, user: { id: 'u1' } }, res2);
     assert.equal(res2.code, 400);
+});
+
+// ── STAR CHAIN ────────────────────────────────────────────────────────────────────────────────────────────────────
+test('STAR CHAIN: prefijo STAR, clave propia, firma v2 y exclusiva (no sirve en otros plugins)', async () => {
+    const R = await import('../src/shared/config/pluginRegistry.js');
+    assert.equal(R.prefixForName('STAR CHAIN'), 'STAR');
+    assert.equal(R.prefixForName('StarChain'), 'STAR');
+    assert.equal(R.findPluginBySerial('STAR-FULL-AB12CD34-EF56AB78').id, 'star-chain');
+    assert.equal(R.extractSerial('STAR CHAIN: star-full-ab12cd34-ef56ab78 '), 'STAR-FULL-AB12CD34-EF56AB78');
+
+    const serial = await newKey('STAR CHAIN');
+    assert.match(serial, /^STAR-FULL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    assert.equal(fake.db.plugin_licenses.find((l) => l.serial_key === serial).plugin_name, 'STAR CHAIN');
+
+    const hwid = HW('PC-WILLIE', DEV_A), nonce = 'nonce-star';
+    const ok = await call(C.activateSerial, { serial_key: serial, hwid, plugin_name: 'STAR CHAIN', nonce });
+    assert.equal(ok.code, 200, JSON.stringify(ok.body));
+    assert.equal(ok.body.license_type, 'lifetime');
+    assert.ok(verifyV2(ok, { serial, hwid, nonce }), 'la firma v2 debe verificar');
+    assert.ok(!verifyV2(ok, { serial, hwid: HW('PC-WILLIE', DEV_B), nonce }));
+
+    for (const other of ['Easy Pitch', 'Omni Plugin', 'GHOST', 'EASY MIX', 'OFFSZN Widget']) {
+        const r = await call(C.activateSerial, { serial_key: serial, hwid, plugin_name: other });
+        assert.equal(r.code, 403, `STAR CHAIN no debe activarse en ${other}`);
+        assert.equal(r.body.code, 'wrong_product');
+    }
+    const pitch = await newKey('Easy Pitch');
+    const back = await call(C.activateSerial, { serial_key: pitch, hwid, plugin_name: 'STAR CHAIN' });
+    assert.equal(back.code, 403); assert.equal(back.body.code, 'wrong_product');
+});
+
+test('STAR CHAIN: límite de equipos, renombrar el PC no gasta cupo y la auditoría exige equipo registrado', async () => {
+    const serial = await newKey('STAR CHAIN', { max_devices: 2 });
+    const act = (name, id) => call(C.activateSerial, { serial_key: serial, hwid: HW(name, id), plugin_name: 'STAR CHAIN', nonce: 'n' });
+    assert.equal((await act('PC-1', DEV_A)).code, 200);
+    assert.equal((await act('PC-RENOMBRADO', DEV_A)).code, 200, 'mismo equipo con otro nombre: no es un equipo nuevo');
+    assert.equal((await act('PC-2', DEV_B)).code, 200);
+    const third = await act('PC-3', DEV_C);
+    assert.equal(third.code, 403); assert.equal(third.body.code, 'device_limit');
+    const audit = (id) => call(C.validateLicense, { serial_key: serial, hwid: HW('X', id), plugin_name: 'STAR CHAIN', nonce: 'a' });
+    assert.equal((await audit(DEV_B)).code, 200);
+    const stranger = await audit(DEV_C);
+    assert.equal(stranger.code, 403); assert.equal(stranger.body.code, 'device_not_registered');
+});
+
+test('STAR CHAIN: sin HWID no se activa (antes todas las PCs sin hwid compartían un solo cupo); Easy Mix antiguo sí puede', async () => {
+    const star = await newKey('STAR CHAIN', { max_devices: 1 });
+    const r = await call(C.activateSerial, { serial_key: star, plugin_name: 'STAR CHAIN', nonce: 'x' });
+    assert.equal(r.code, 400); assert.equal(r.body.code, 'bad_request');
+    assert.equal(fake.db.plugin_activations.filter((a) => a.hwid === 'device-no-hwid').length, 0);
+    const pitch = await newKey('Easy Pitch');
+    assert.equal((await call(C.activateSerial, { serial_key: pitch, plugin_name: 'Easy Pitch' })).code, 400);
+    const mix = await newKey('Easy Mix');
+    assert.equal((await call(C.activateSerial, { serial_key: mix, plugin_name: 'Easy Mix' })).code, 200, 'cliente antiguo de Easy Mix sigue funcionando');
+});
+
+test('STAR CHAIN: la prueba NO se pide desde el plugin: solo con una clave TRIAL (3 días desde que se activa, 1 equipo)', async () => {
+    const r = await call(C.requestTrial, { hwid: HW('PC-A', DEV_C), device_name: 'PC-A', plugin_name: 'STAR CHAIN' });
+    assert.equal(r.code, 403); assert.equal(r.body.trial_key_required, true);
+    const key = await newKey('STAR CHAIN', { license_type: 'trial' });
+    assert.match(key, /^STAR-TRIAL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    const a = await call(C.activateSerial, { serial_key: key, hwid: HW('PC-A', DEV_C), plugin_name: 'STAR CHAIN', nonce: 'n1' });
+    assert.equal(a.code, 200, JSON.stringify(a.body)); assert.equal(a.body.license_type, 'trial');
+    const days = (new Date(a.body.expires_at) - Date.now()) / 86400000;
+    assert.ok(days > 2.9 && days < 3.1, 'prueba de 3 días');
+    const other = await call(C.activateSerial, { serial_key: key, hwid: HW('PC-B', DEV_B), plugin_name: 'STAR CHAIN', nonce: 'n2' });
+    assert.notEqual(other.code, 200, 'la clave TRIAL es de un solo equipo');
+    // Una prueba de STAR CHAIN no sirve en otro plugin
+    const wrong = await call(C.activateSerial, { serial_key: key, hwid: HW('PC-A', DEV_C), plugin_name: 'Easy Pitch' });
+    assert.equal(wrong.code, 403); assert.equal(wrong.body.code, 'wrong_product');
 });
