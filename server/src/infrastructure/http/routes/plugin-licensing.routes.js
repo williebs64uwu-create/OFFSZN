@@ -21,6 +21,7 @@ import { receiveDiag, adminListDiag, diagLimiter } from '../controllers/PluginDi
 import { receiveChatLog, adminListChatLog, chatLogLimiter } from '../controllers/PluginChatLogController.js';
 import { receivePaymentClick, adminListPaymentClicks, paymentClickLimiter } from '../controllers/PaymentClickController.js';
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
+import { astraAsk, astraStatus, adminSetOrbTier, astraLimiter } from '../controllers/AstraController.js';
 
 const router = express.Router();
 
@@ -34,6 +35,10 @@ const activateLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 40, standar
 router.post('/request-trial', trialLimiter, requestTrial);
 router.post('/activate', activateLimiter, activateSerial);
 router.post('/validate', validateLicense);
+// Orb · Astra en la nube (planes Pro / Max)
+router.post('/astra/status', astraLimiter, astraStatus);
+router.post('/astra', astraLimiter, astraAsk);
+router.post('/admin/orb-tier', adminSetOrbTier);
 router.post('/diag', diagLimiter, receiveDiag);
 router.get('/admin/diag', adminListDiag);
 router.post('/chatlog', chatLogLimiter, receiveChatLog);
