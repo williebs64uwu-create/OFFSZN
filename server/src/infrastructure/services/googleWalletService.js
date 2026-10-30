@@ -1,8 +1,15 @@
 import jwt from 'jsonwebtoken';
-import { google } from 'googleapis';
+import { JWT } from 'google-auth-library';
+import { walletobjects } from 'googleapis/build/src/apis/walletobjects/index.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+// Modular Google object providing only the auth and walletobjects methods needed by this service
+const google = {
+    auth: { JWT },
+    walletobjects
+};
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

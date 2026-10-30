@@ -16,8 +16,18 @@ import { execFile } from 'child_process';
 import { writeFile, unlink, mkdtemp, readFile, rmdir } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
 import { supabase } from '../../database/connection.js';
+
+async function resolveFfmpegPath() {
+    try {
+        // Computed specifier prevents @vercel/nft from statically tracing 60MB+ multi-platform binaries into serverless bundle
+        const pkg = ['@ffmpeg-installer', 'ffmpeg'].join('/');
+        const mod = await import(pkg);
+        return mod.default?.path || mod.path || 'ffmpeg';
+    } catch (_) {
+        return process.env.FFMPEG_PATH || 'ffmpeg';
+    }
+}
 
 // Plan limits (must match auth-utils.js)
 const YT_PLAN_LIMITS = { free: 3, starter: 10, pro: 30 };
@@ -119,8 +129,10 @@ export const renderVideo = async (req, res) => {
             outputPath
         ];
 
+        const ffmpegBin = await resolveFfmpegPath();
+
         await new Promise((resolve, reject) => {
-            const proc = execFile(ffmpegPath.path, ffmpegArgs, {
+            const proc = execFile(ffmpegBin, ffmpegArgs, {
                 timeout: 95000, // 95s kill switch (Render limit is ~100s)
                 maxBuffer: 10 * 1024 * 1024 // 10MB stderr buffer
             }, (error, stdout, stderr) => {

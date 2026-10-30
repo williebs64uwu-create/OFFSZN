@@ -2,12 +2,7 @@ import { supabase } from '../../database/connection.js';
 import { uploadBufferToR2, getPresignedDownloadUrl } from '../../services/r2-storage.service.js';
 import dotenv from 'dotenv';
 import OpenAI from 'openai';
-import { spawn } from 'child_process';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
-
 dotenv.config();
-
-const FFMPEG_BIN = ffmpegPath.path;
 
 // Groq AI Initialization (Open Source Models: Gemma, Llama)
 const groqAi = process.env.GROQ_API_KEY ? new OpenAI({
