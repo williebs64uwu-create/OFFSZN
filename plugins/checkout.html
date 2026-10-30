@@ -296,16 +296,24 @@
         updatePaymentLinks();
     }
 
+    // PayPal: enlace de pago directo al correo de OFFSZN (el paypal.me/williebs64 que había no existe: «No podemos encontrar este perfil»). Se probó: abre «Pagar con OFFSZN» con el monto y la opción de tarjeta.
+    const PAYPAL_BUSINESS = 'willie2008garay@gmail.com';
+    function paypalLink(amount, item, buyerEmail) {
+        return 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=' + encodeURIComponent(PAYPAL_BUSINESS) +
+            '&item_name=' + encodeURIComponent(item) + '&amount=' + amount + '&currency_code=USD&no_shipping=1' +
+            (buyerEmail ? '&custom=' + encodeURIComponent(buyerEmail) : '');
+    }
+
     function updatePaymentLinks() {
         const email = (document.getElementById('buyerEmail').value || '').trim();
         const em = email ? ' — Correo: ' + email : '';
         if (currentTier === 'lifetime') {
-            document.getElementById('btnPaypal').href = 'https://www.paypal.me/williebs64/49';
+            document.getElementById('btnPaypal').href = paypalLink('49.00', 'STAR CHAIN - Acceso de Por Vida', email);
             document.getElementById('btnYape').href = WA + encodeURIComponent('Hola Willie! Quiero pagar el Acceso de Por Vida de STAR CHAIN con Yape/Plin (S/ 185 / $49 USD)' + em);
             document.getElementById('btnMercadoPago').href = WA + encodeURIComponent('Hola Willie! Quiero pagar el Acceso de Por Vida de STAR CHAIN con Mercado Pago ($49 USD)' + em);
             document.getElementById('btnBinance').href = WA + encodeURIComponent('Hola Willie! Quiero pagar el Acceso de Por Vida de STAR CHAIN con Binance/USDT ($49 USDT)' + em);
         } else {
-            document.getElementById('btnPaypal').href = 'https://www.paypal.me/williebs64/16.33';
+            document.getElementById('btnPaypal').href = paypalLink('16.33', 'STAR CHAIN - Cuota 1 de 3', email);
             document.getElementById('btnYape').href = WA + encodeURIComponent('Hola Willie! Quiero pagar la 1ra Cuota de STAR CHAIN con Yape/Plin (S/ 62 / $16.33 USD)' + em);
             document.getElementById('btnMercadoPago').href = WA + encodeURIComponent('Hola Willie! Quiero pagar la 1ra Cuota de STAR CHAIN con Mercado Pago ($16.33 USD)' + em);
             document.getElementById('btnBinance').href = WA + encodeURIComponent('Hola Willie! Quiero pagar la 1ra Cuota de STAR CHAIN con Binance/USDT ($16.33 USDT)' + em);
