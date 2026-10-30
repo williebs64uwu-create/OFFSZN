@@ -1,729 +1,319 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Checkout | STAR CHAIN® — OFFSZN</title>
     <meta name="robots" content="noindex, nofollow">
-
-    <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/willieimages/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/willieimages/favicon-16x16.png">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-
-    <!-- Config & Scripts -->
-    <script src="/env.js"></script>
-
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-            --bg-base: #06070a;
-            --bg-card: #0d0f15;
-            --bg-card-hover: #121520;
-            --border: rgba(255, 255, 255, 0.08);
-            --border-gold: rgba(255, 210, 74, 0.35);
-            --gold: #ffd24a;
-            --gold-bright: #ffe066;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --yape-purple: #742284;
-            --mp-blue: #009ee3;
-            --binance-yellow: #f0b90b;
+            --bg:#0d0d10; --surface:#18181f; --surface2:#1f2029;
+            --border:rgba(255,255,255,0.07); --border-md:rgba(255,255,255,0.13);
+            --gold:#f5c842; --gold-dim:rgba(245,200,66,0.1); --green:#22c55e;
+            --text-1:#f1f5f9; --text-2:#94a3b8; --text-3:#4b5563;
         }
-
+        html { background:var(--bg); scroll-behavior:smooth; }
         body {
-            background-color: var(--bg-base);
-            color: var(--text-primary);
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
+            font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+            background:var(--bg); color:var(--text-1); min-height:100vh;
+            display:flex; flex-direction:column;
+            -webkit-font-smoothing:antialiased; overflow-x:hidden;
         }
-
-        /* Top Safe Nav */
+        /* HEADER */
         .co-header {
-            border-bottom: 1px solid var(--border);
-            padding: 18px 24px;
-            background: rgba(6, 7, 10, 0.85);
-            backdrop-filter: blur(16px);
-            position: sticky;
-            top: 0;
-            z-index: 50;
+            position:sticky; top:0; z-index:100;
+            background:rgba(13,13,16,0.92); backdrop-filter:blur(20px);
+            border-bottom:1px solid var(--border);
+            padding:0 24px; height:58px; display:flex; align-items:center;
         }
-
-        .co-header-inner {
-            max-width: 1100px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .co-header-inner { max-width:1060px; margin:0 auto; width:100%; display:flex; align-items:center; justify-content:space-between; }
+        .co-back { display:inline-flex; align-items:center; gap:7px; font-size:13px; font-weight:500; color:var(--text-2); text-decoration:none; transition:color .18s; }
+        .co-back:hover { color:var(--text-1); }
+        .co-secure { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--green); }
+        /* LAYOUT */
+        .co-main { max-width:1060px; margin:0 auto; padding:40px 20px 100px; width:100%; flex:1; }
+        .co-grid { display:grid; grid-template-columns:1fr 390px; gap:24px; align-items:start; }
+        /* CARDS */
+        .co-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:18px; }
+        .co-card-header { padding:20px 26px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+        .co-step-dot {
+            width:24px; height:24px; border-radius:50%;
+            background:var(--gold-dim); border:1px solid rgba(245,200,66,0.3);
+            color:var(--gold); font-size:11px; font-weight:700;
+            display:flex; align-items:center; justify-content:center; flex-shrink:0;
         }
-
-        .co-back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 13.5px;
-            font-weight: 600;
-            transition: color 0.2s ease;
+        .co-card-title { font-size:14.5px; font-weight:700; color:var(--text-1); }
+        .co-card-body { padding:22px 26px; }
+        /* PLAN CARDS */
+        .plan-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .plan-card {
+            position:relative; border:1.5px solid var(--border); border-radius:12px;
+            padding:18px 16px 16px; cursor:pointer; transition:all .2s;
+            background:var(--surface2); user-select:none;
         }
-
-        .co-back-link:hover {
-            color: #fff;
-        }
-
-        .co-brand-lock {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 12.5px;
-            font-weight: 700;
-            color: var(--text-muted);
-            letter-spacing: 0.05em;
-        }
-
-        .co-brand-lock i {
-            color: #10b981;
-            font-size: 14px;
-        }
-
-        /* Main Container */
-        .co-container {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 40px 20px 80px;
-            width: 100%;
-            flex: 1;
-        }
-
-        .co-grid {
-            display: grid;
-            grid-template-columns: 1fr 430px;
-            gap: 36px;
-            align-items: start;
-        }
-
-        @media (max-width: 900px) {
-            .co-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Left Column: Form & Tiers & Payment */
-        .co-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 32px;
-            margin-bottom: 24px;
-        }
-
-        .co-panel-title {
-            font-size: 18px;
-            font-weight: 800;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .co-panel-title .step-badge {
-            background: rgba(255, 210, 74, 0.15);
-            color: var(--gold);
-            font-size: 11px;
-            font-weight: 800;
-            padding: 3px 8px;
-            border-radius: 6px;
-            letter-spacing: 0.05em;
-        }
-
-        .co-panel-desc {
-            color: var(--text-secondary);
-            font-size: 13.5px;
-            margin-bottom: 22px;
-            line-height: 1.5;
-        }
-
-        /* Tier Selector Tabs */
-        .tier-tabs {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .tier-tab {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 16px 18px;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        .tier-tab:hover {
-            border-color: rgba(255, 255, 255, 0.2);
-            background: var(--bg-card-hover);
-        }
-
-        .tier-tab.active {
-            border-color: var(--gold);
-            background: rgba(255, 210, 74, 0.05);
-            box-shadow: 0 0 20px rgba(255, 210, 74, 0.12);
-        }
-
-        .tier-tab-badge {
-            position: absolute;
-            top: -10px;
-            right: 14px;
-            background: var(--gold);
-            color: #000;
-            font-size: 9.5px;
-            font-weight: 800;
-            padding: 2px 7px;
-            border-radius: 6px;
-            letter-spacing: 0.04em;
-        }
-
-        .tier-tab-name {
-            font-size: 14px;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .tier-tab-price {
-            font-size: 20px;
-            font-weight: 900;
-            color: var(--gold);
-        }
-
-        .tier-tab-price .strike {
-            font-size: 13px;
-            text-decoration: line-through;
-            color: var(--text-muted);
-            margin-right: 6px;
-            font-weight: 500;
-        }
-
-        .tier-tab-note {
-            font-size: 11.5px;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
-
-        /* Form Inputs */
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .form-input {
-            width: 100%;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 14px 16px;
-            font-size: 14px;
-            color: #fff;
-            outline: none;
-            transition: all 0.2s ease;
-            font-family: inherit;
-        }
-
-        .form-input:focus {
-            border-color: var(--gold);
-            background: rgba(255, 210, 74, 0.03);
-            box-shadow: 0 0 0 3px rgba(255, 210, 74, 0.15);
-        }
-
-        /* Payment Buttons Stack */
-        .pay-options-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .btn-pay-action {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 800;
-            text-decoration: none;
-            border: 1px solid transparent;
-            cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-        }
-
-        .btn-pay-action:hover {
-            transform: translateY(-2px);
-            opacity: 0.95;
-        }
-
-        .btn-pay-action .pay-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .btn-pay-action .pay-logo {
-            height: 24px;
-            object-fit: contain;
-        }
-
-        .btn-pay-paypal {
-            background: #ffc439;
-            color: #003087;
-            box-shadow: 0 6px 20px rgba(255, 196, 57, 0.25);
-        }
-
-        .btn-pay-yape {
-            background: #742284;
-            color: #ffffff;
-            box-shadow: 0 6px 20px rgba(116, 34, 132, 0.25);
-        }
-
-        .btn-pay-mp {
-            background: #009ee3;
-            color: #ffffff;
-            box-shadow: 0 6px 20px rgba(0, 158, 227, 0.25);
-        }
-
-        .btn-pay-binance {
-            background: #f0b90b;
-            color: #000000;
-            box-shadow: 0 6px 20px rgba(240, 185, 11, 0.25);
-        }
-
-        .pay-tag-badge {
-            font-size: 11px;
-            font-weight: 700;
-            background: rgba(0, 0, 0, 0.15);
-            padding: 3px 8px;
-            border-radius: 6px;
-        }
-
-        /* Order Summary Column */
-        .co-summary-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 32px;
-            position: sticky;
-            top: 90px;
-        }
-
-        .product-overview {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-            padding-bottom: 24px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 24px;
-        }
-
-        .product-thumb {
-            width: 74px;
-            height: 74px;
-            border-radius: 14px;
-            background: #06070a;
-            border: 1px solid var(--border);
-            object-fit: cover;
-            flex-shrink: 0;
-            padding: 4px;
-        }
-
-        .product-info h3 {
-            font-size: 17px;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .product-info p {
-            font-size: 12.5px;
-            color: var(--text-secondary);
-            line-height: 1.4;
-        }
-
-        /* Breakdown */
-        .breakdown-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-        }
-
-        .breakdown-row.strike {
-            text-decoration: line-through;
-            color: var(--text-muted);
-        }
-
-        .breakdown-row.discount {
-            color: #10b981;
-            font-weight: 700;
-        }
-
-        .breakdown-row.total {
-            font-size: 20px;
-            font-weight: 900;
-            color: #fff;
-            border-top: 1px solid var(--border);
-            padding-top: 16px;
-            margin-top: 16px;
-            margin-bottom: 22px;
-        }
-
-        .breakdown-row.total .total-amount {
-            color: var(--gold);
-            font-size: 26px;
-        }
-
-        /* Perks list */
-        .order-perks {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
-        }
-
-        .order-perks li {
-            font-size: 13px;
-            color: #cbd5e1;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .order-perks li i {
-            color: var(--gold);
-            font-size: 15px;
-            flex-shrink: 0;
-        }
-
-        /* Policy Notice: NO GUARANTEE, INSTANT DELIVERY */
-        .instant-delivery-notice {
-            margin-top: 22px;
-            background: rgba(255, 210, 74, 0.05);
-            border: 1px solid var(--border-gold);
-            border-radius: 12px;
-            padding: 14px 16px;
-            font-size: 12px;
-            color: #e2e8f0;
-            line-height: 1.5;
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-        }
-
-        .instant-delivery-notice i {
-            color: var(--gold);
-            font-size: 16px;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
+        .plan-card:hover { border-color:rgba(255,255,255,0.18); }
+        .plan-card.active { border-color:var(--gold); background:rgba(245,200,66,0.04); box-shadow:0 0 0 1px var(--gold) inset; }
+        .plan-badge { position:absolute; top:-9px; left:12px; background:var(--gold); color:#000; font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:20px; letter-spacing:.04em; }
+        .plan-radio { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+        .plan-name { font-size:13px; font-weight:600; color:var(--text-1); }
+        .radio-dot { width:18px; height:18px; border-radius:50%; border:2px solid var(--border-md); display:flex; align-items:center; justify-content:center; transition:all .15s; flex-shrink:0; }
+        .plan-card.active .radio-dot { border-color:var(--gold); background:var(--gold); }
+        .radio-dot::after { content:''; width:7px; height:7px; border-radius:50%; background:#000; opacity:0; transition:opacity .15s; }
+        .plan-card.active .radio-dot::after { opacity:1; }
+        .plan-price { font-size:24px; font-weight:800; color:var(--gold); letter-spacing:-.02em; line-height:1; margin-bottom:4px; }
+        .plan-currency { font-size:12px; font-weight:600; color:var(--text-2); vertical-align:middle; }
+        .plan-strike { font-size:13px; font-weight:500; color:var(--text-3); text-decoration:line-through; margin-right:3px; }
+        .plan-note { font-size:11px; color:var(--text-2); }
+        /* INPUT */
+        .input-group { margin-top:20px; }
+        .input-label { display:block; font-size:12px; font-weight:600; color:var(--text-2); margin-bottom:7px; }
+        .input-wrap { position:relative; }
+        .input-wrap i { position:absolute; left:13px; top:50%; transform:translateY(-50%); color:var(--text-3); font-size:14px; pointer-events:none; }
+        .co-input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px 13px 12px 38px; font-size:14px; color:var(--text-1); outline:none; font-family:inherit; transition:border-color .18s,box-shadow .18s; }
+        .co-input::placeholder { color:var(--text-3); }
+        .co-input:focus { border-color:rgba(245,200,66,.5); box-shadow:0 0 0 3px rgba(245,200,66,.08); }
+        /* PAYMENT BUTTONS */
+        .pay-stack { display:flex; flex-direction:column; gap:10px; }
+        .pay-btn { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-radius:12px; font-size:14px; font-weight:700; text-decoration:none; border:none; cursor:pointer; transition:transform .15s,filter .15s; }
+        .pay-btn:hover { transform:translateY(-1px); filter:brightness(1.06); }
+        .pay-btn:active { transform:translateY(0); }
+        .pay-btn-left { display:flex; align-items:center; gap:12px; }
+        .pay-icon { width:36px; height:36px; border-radius:8px; background:rgba(0,0,0,.15); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+        .pay-label { font-weight:700; font-size:14px; }
+        .pay-sub { font-size:11px; opacity:.75; margin-top:1px; }
+        .pay-tag { font-size:10px; font-weight:700; background:rgba(0,0,0,.18); padding:3px 8px; border-radius:20px; white-space:nowrap; }
+        .pay-paypal-main { background:linear-gradient(135deg,#ffc439,#ffda6b); color:#003087; box-shadow:0 6px 24px rgba(255,196,57,.32); }
+        .pay-yape  { background:#742284; color:#fff; box-shadow:0 4px 14px rgba(116,34,132,.28); }
+        .pay-mp    { background:#009ee3; color:#fff; box-shadow:0 4px 14px rgba(0,158,227,.28); }
+        .pay-bnb   { background:#f0b90b; color:#000; box-shadow:0 4px 14px rgba(240,185,11,.28); }
+        .pay-separator { display:flex; align-items:center; gap:12px; color:var(--text-3); font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+        .pay-separator::before,.pay-separator::after { content:''; flex:1; height:1px; background:var(--border); }
+        /* SUMMARY */
+        .co-summary { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; position:sticky; top:78px; }
+        .summary-header { padding:20px 22px; border-bottom:1px solid var(--border); }
+        .summary-product { display:flex; align-items:center; gap:13px; }
+        .summary-thumb { width:54px; height:54px; border-radius:11px; background:var(--surface2); border:1px solid var(--border); object-fit:contain; padding:5px; flex-shrink:0; }
+        .summary-product-name { font-size:15px; font-weight:800; margin-bottom:3px; }
+        .summary-product-sub { font-size:11.5px; color:var(--text-2); line-height:1.4; }
+        .summary-breakdown { padding:18px 22px; border-bottom:1px solid var(--border); }
+        .price-row { display:flex; align-items:center; justify-content:space-between; font-size:13px; margin-bottom:9px; }
+        .price-row:last-child { margin-bottom:0; }
+        .price-row .label { color:var(--text-2); }
+        .price-row .value { font-weight:600; color:var(--text-1); }
+        .price-row.striked .value { text-decoration:line-through; color:var(--text-3); font-weight:400; }
+        .price-row.green .value { color:var(--green); }
+        .price-row.gold .value { color:var(--gold); }
+        .price-total-bar { padding:18px 22px; background:rgba(245,200,66,.04); border-bottom:1px solid var(--border); }
+        .price-total-inner { display:flex; align-items:baseline; justify-content:space-between; }
+        .price-total-label { font-size:13.5px; font-weight:700; }
+        .price-total-amount { font-size:28px; font-weight:900; color:var(--gold); letter-spacing:-.03em; }
+        .price-total-sub { font-size:11px; color:var(--text-2); margin-top:3px; }
+        .summary-perks { padding:18px 22px; border-bottom:1px solid var(--border); }
+        .perks-list { list-style:none; display:flex; flex-direction:column; gap:9px; }
+        .perks-list li { display:flex; align-items:flex-start; gap:9px; font-size:12px; color:#c0cdd8; line-height:1.4; }
+        .perks-list li i { color:var(--green); font-size:13px; flex-shrink:0; margin-top:1px; }
+        .summary-policy { padding:14px 22px; display:flex; gap:9px; align-items:flex-start; font-size:11px; color:var(--text-2); line-height:1.5; }
+        .summary-policy i { color:var(--gold); font-size:14px; flex-shrink:0; margin-top:1px; }
+        .summary-policy strong { color:var(--text-1); }
+        /* TRUST */
+        .trust-bar { display:flex; align-items:center; justify-content:center; gap:18px; flex-wrap:wrap; padding:28px 20px 0; font-size:11.5px; color:var(--text-3); }
+        .trust-bar span { display:flex; align-items:center; gap:5px; }
+        @media(max-width:840px){ .co-grid{grid-template-columns:1fr;} .co-summary{position:static;order:-1;} }
+        @media(max-width:440px){ .plan-grid{grid-template-columns:1fr;} .co-card-body{padding:18px;} }
     </style>
 </head>
-
 <body>
 
-    <!-- Header -->
-    <header class="co-header">
-        <div class="co-header-inner">
-            <a href="/plugins/star-chain.html" class="co-back-link">
-                <i class="bi bi-arrow-left"></i>
-                <span>Volver a STAR CHAIN</span>
-            </a>
-            <div class="co-brand-lock">
-                <i class="bi bi-shield-fill-check"></i>
-                <span>CHECKOUT OFFSZN OFICIAL</span>
+<header class="co-header">
+    <div class="co-header-inner">
+        <a href="/plugins/star-chain.html" class="co-back"><i class="bi bi-arrow-left"></i> Volver a STAR CHAIN</a>
+        <div class="co-secure"><i class="bi bi-shield-fill-check"></i><span>Pago Seguro · OFFSZN</span></div>
+    </div>
+</header>
+
+<main class="co-main">
+<div class="co-grid">
+
+<!-- LEFT -->
+<div>
+    <!-- Step 1 -->
+    <div class="co-card">
+        <div class="co-card-header">
+            <div class="co-step-dot">1</div>
+            <span class="co-card-title">Elige tu modalidad de acceso</span>
+        </div>
+        <div class="co-card-body">
+            <div class="plan-grid">
+                <div class="plan-card active" id="tab-lifetime" onclick="setTier('lifetime')">
+                    <span class="plan-badge">51% OFF</span>
+                    <div class="plan-radio"><span class="plan-name">Acceso de Por Vida</span><div class="radio-dot"></div></div>
+                    <div class="plan-price"><span class="plan-strike">$100</span>$49<span class="plan-currency"> USD</span></div>
+                    <div class="plan-note">Pago único · Para siempre</div>
+                </div>
+                <div class="plan-card" id="tab-cuotas" onclick="setTier('cuotas')">
+                    <div class="plan-radio"><span class="plan-name">3 Cuotas Mensuales</span><div class="radio-dot"></div></div>
+                    <div class="plan-price">$16.33<span class="plan-currency"> USD/mes</span></div>
+                    <div class="plan-note">3 cuotas · Total $49 USD</div>
+                </div>
+            </div>
+            <div class="input-group">
+                <label class="input-label" for="buyerEmail">Correo electrónico — recibirás tu licencia y descarga aquí</label>
+                <div class="input-wrap">
+                    <i class="bi bi-envelope"></i>
+                    <input type="email" id="buyerEmail" class="co-input" placeholder="tuemail@ejemplo.com" autocomplete="email" oninput="updatePaymentLinks()">
+                </div>
             </div>
         </div>
-    </header>
+    </div>
 
-    <!-- Main Container -->
-    <main class="co-container">
-        
-        <div class="co-grid">
-            
-            <!-- LEFT COLUMN: Tiers & Payment Gateways -->
-            <div class="co-main-flow">
-                
-                <!-- 1. Plan Selector -->
-                <div class="co-panel">
-                    <div class="co-panel-title">
-                        <span class="step-badge">PASO 1</span>
-                        <span>Selecciona tu modalidad de acceso</span>
-                    </div>
-                    <p class="co-panel-desc">
-                        Elige entre el pago único de por vida con 51% OFF o pagar en 3 cuotas mensuales sin intereses.
-                    </p>
-
-                    <div class="tier-tabs">
-                        
-                        <!-- Tab Lifetime -->
-                        <div class="tier-tab active" id="tab-lifetime" onclick="setTier('lifetime')">
-                            <span class="tier-tab-badge">51% OFF</span>
-                            <div class="tier-tab-name">
-                                <span>Acceso de Por Vida</span>
-                                <i class="bi bi-check-circle-fill" style="color: var(--gold);"></i>
-                            </div>
-                            <div class="tier-tab-price">
-                                <span class="strike">$100</span>$49 <span style="font-size: 12px; font-weight: 600; color: #94a3b8;">USD</span>
-                            </div>
-                            <div class="tier-tab-note">Pago único · Para siempre</div>
-                        </div>
-
-                        <!-- Tab Cuotas -->
-                        <div class="tier-tab" id="tab-cuotas" onclick="setTier('cuotas')">
-                            <div class="tier-tab-name">
-                                <span>3 Cuotas Mensuales</span>
-                                <i class="bi bi-circle" id="check-cuotas" style="color: var(--text-muted);"></i>
-                            </div>
-                            <div class="tier-tab-price">
-                                $16.33 <span style="font-size: 12px; font-weight: 600; color: #94a3b8;">USD/mes</span>
-                            </div>
-                            <div class="tier-tab-note">3 cuotas de $16.33 · Total $49 USD</div>
-                        </div>
-
-                    </div>
-
-                    <!-- Datos del Comprador -->
-                    <div class="form-group">
-                        <label class="form-label" for="buyerEmail">Tu Correo Electrónico (para recibir la licencia y enlaces):</label>
-                        <input type="email" id="buyerEmail" class="form-input" placeholder="ejemplo@correo.com" required oninput="updatePaymentLinks()">
-                    </div>
-
-                </div>
-
-                <!-- 2. Payment Options -->
-                <div class="co-panel">
-                    <div class="co-panel-title">
-                        <span class="step-badge">PASO 2</span>
-                        <span>Elige tu método de pago preferido</span>
-                    </div>
-                    <p class="co-panel-desc">
-                        Aceptamos PayPal internacional, Tarjetas de Débito/Crédito, Yape/Plin (Perú), Mercado Pago y Cripto.
-                    </p>
-
-                    <div class="pay-options-stack">
-                        
-                        <!-- 1. PayPal / Tarjetas -->
-                        <a href="https://www.paypal.com" target="_blank" rel="noopener" class="btn-pay-action btn-pay-paypal" id="btnPaypal">
-                            <div class="pay-left">
-                                <i class="bi bi-paypal" style="font-size: 20px;"></i>
-                                <span id="labelPaypal">Pagar con PayPal o Tarjeta ($49 USD)</span>
-                            </div>
-                            <span class="pay-tag-badge">INTERNACIONAL</span>
-                        </a>
-
-                        <!-- 2. Yape / Plin Perú -->
-                        <a href="https://wa.me/51993525005" target="_blank" rel="noopener" class="btn-pay-action btn-pay-yape" id="btnYape">
-                            <div class="pay-left">
-                                <i class="bi bi-phone-fill" style="font-size: 20px;"></i>
-                                <span id="labelYape">Pagar con Yape / Plin (S/ 185 Soles)</span>
-                            </div>
-                            <span class="pay-tag-badge">PERÚ 🇵🇪</span>
-                        </a>
-
-                        <!-- 3. Mercado Pago -->
-                        <a href="https://wa.me/51993525005" target="_blank" rel="noopener" class="btn-pay-action btn-pay-mp" id="btnMercadoPago">
-                            <div class="pay-left">
-                                <i class="bi bi-credit-card-2-front-fill" style="font-size: 20px;"></i>
-                                <span id="labelMercadoPago">Pagar con Mercado Pago</span>
-                            </div>
-                            <span class="pay-tag-badge">LATAM</span>
-                        </a>
-
-                        <!-- 4. Binance USDT -->
-                        <a href="https://wa.me/51993525005" target="_blank" rel="noopener" class="btn-pay-action btn-pay-binance" id="btnBinance">
-                            <div class="pay-left">
-                                <i class="bi bi-currency-bitcoin" style="font-size: 20px;"></i>
-                                <span id="labelBinance">Pagar con Binance / USDT</span>
-                            </div>
-                            <span class="pay-tag-badge">CRYPTO</span>
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- RIGHT COLUMN: Order Summary & Value Stack -->
-            <div class="co-summary-col">
-                <div class="co-summary-card">
-                    
-                    <div class="product-overview">
-                        <img src="/images/plugins/star.png" alt="STAR CHAIN" class="product-thumb">
-                        <div class="product-info">
-                            <h3>STAR CHAIN® <i class="bi bi-patch-check-fill" style="color: var(--gold); font-size: 14px;"></i></h3>
-                            <p>Tu Ingeniero de Mezcla con IA<br><strong>VST3 / AU · Windows & Mac</strong></p>
-                        </div>
-                    </div>
-
-                    <!-- Breakdown -->
-                    <div class="breakdown-row strike" id="rowOriginalPrice">
-                        <span>Precio regular:</span>
-                        <span>$100.00 USD</span>
-                    </div>
-                    <div class="breakdown-row discount" id="rowDiscount">
-                        <span>Descuento de lanzamiento:</span>
-                        <span>- $51.00 USD (51%)</span>
-                    </div>
-                    <div class="breakdown-row">
-                        <span>Modalidad:</span>
-                        <span id="labelModeSummary" style="font-weight: 700; color: #fff;">Licencia de Por Vida</span>
-                    </div>
-
-                    <div class="breakdown-row total">
-                        <span>Total a pagar:</span>
-                        <span class="total-amount" id="labelTotalAmount">$49.00 USD</span>
-                    </div>
-
-                    <!-- Perks Included -->
-                    <ul class="order-perks">
-                        <li><i class="bi bi-check2-circle"></i> <span>Licencia oficial permanente para 2 computadoras</span></li>
-                        <li><i class="bi bi-check2-circle"></i> <span>STAR: Host inteligente con IA para voces</span></li>
-                        <li><i class="bi bi-check2-circle"></i> <span>Controla tus plugins externos en FL Studio, Ableton, etc.</span></li>
-                        <li><i class="bi bi-check2-circle"></i> <span>50+ presets de artistas urbanos (Feid, Mora, Trap)</span></li>
-                        <li><i class="bi bi-check2-circle"></i> <span>Todas las actualizaciones y nuevos artistas de por vida</span></li>
-                        <li><i class="bi bi-check2-circle"></i> <span>Serial Key y descarga directa al instante</span></li>
-                        <li><i class="bi bi-check2-circle"></i> <span>Soporte prioritario VIP 1 a 1 por WhatsApp</span></li>
-                    </ul>
-
-                    <!-- Policy notice -->
-                    <div class="instant-delivery-notice">
-                        <i class="bi bi-info-circle-fill"></i>
-                        <span>
-                            <strong>Entrega digital inmediata:</strong> Tras el pago recibirás tus seriales y descargables al instante en tu correo. Por tratarse de software digital con entrega inmediata de código, no aplican garantías ni devoluciones.
-                        </span>
-                    </div>
-
-                </div>
-            </div>
-
+    <!-- Step 2 -->
+    <div class="co-card">
+        <div class="co-card-header">
+            <div class="co-step-dot">2</div>
+            <span class="co-card-title">Elige tu método de pago</span>
         </div>
+        <div class="co-card-body">
+            <div class="pay-stack">
+                <a href="#" target="_blank" rel="noopener" id="btnPaypal" class="pay-btn pay-paypal-main">
+                    <div class="pay-btn-left">
+                        <div class="pay-icon"><i class="bi bi-paypal"></i></div>
+                        <div><div class="pay-label" id="labelPaypal">Pagar con PayPal o Tarjeta</div><div class="pay-sub">Visa · Mastercard · PayPal</div></div>
+                    </div>
+                    <span class="pay-tag">INTERNACIONAL</span>
+                </a>
+                <div class="pay-separator">o paga con</div>
+                <a href="#" target="_blank" rel="noopener" id="btnYape" class="pay-btn pay-yape">
+                    <div class="pay-btn-left">
+                        <div class="pay-icon"><i class="bi bi-phone-fill"></i></div>
+                        <div><div class="pay-label" id="labelYape">Yape / Plin</div><div class="pay-sub">Pago en Soles via WhatsApp</div></div>
+                    </div>
+                    <span class="pay-tag">PERÚ 🇵🇪</span>
+                </a>
+                <a href="#" target="_blank" rel="noopener" id="btnMercadoPago" class="pay-btn pay-mp">
+                    <div class="pay-btn-left">
+                        <div class="pay-icon"><i class="bi bi-credit-card-2-front-fill"></i></div>
+                        <div><div class="pay-label">Mercado Pago</div><div class="pay-sub">Tarjeta o saldo MP via WhatsApp</div></div>
+                    </div>
+                    <span class="pay-tag">LATAM</span>
+                </a>
+                <a href="#" target="_blank" rel="noopener" id="btnBinance" class="pay-btn pay-bnb">
+                    <div class="pay-btn-left">
+                        <div class="pay-icon"><i class="bi bi-currency-bitcoin"></i></div>
+                        <div><div class="pay-label">Binance / USDT</div><div class="pay-sub">Cripto via WhatsApp</div></div>
+                    </div>
+                    <span class="pay-tag">CRYPTO</span>
+                </a>
+            </div>
+        </div>
+    </div>
 
-    </main>
+    <div class="trust-bar">
+        <span><i class="bi bi-lightning-charge-fill" style="color:#f5c842"></i> Entrega inmediata al correo</span>
+        <span><i class="bi bi-person-check-fill" style="color:#22c55e"></i> Soporte VIP por WhatsApp</span>
+        <span><i class="bi bi-globe" style="color:#60a5fa"></i> Pagos desde cualquier país</span>
+        <span><i class="bi bi-infinity" style="color:#a78bfa"></i> Licencia permanente</span>
+    </div>
+</div>
 
-    <script>
-        // Parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        let currentTier = urlParams.get('tier') === 'cuotas' ? 'cuotas' : 'lifetime';
+<!-- RIGHT SUMMARY -->
+<aside>
+<div class="co-summary">
+    <div class="summary-header">
+        <div class="summary-product">
+            <img src="/images/plugins/star.png" alt="STAR CHAIN" class="summary-thumb" onerror="this.style.display='none'">
+            <div>
+                <div class="summary-product-name">STAR CHAIN® <i class="bi bi-patch-check-fill" style="color:var(--gold);font-size:12px;"></i></div>
+                <div class="summary-product-sub">Tu Ingeniero de Mezcla con IA<br><strong style="color:var(--text-1);">VST3 / AU · Windows &amp; Mac</strong></div>
+            </div>
+        </div>
+    </div>
+    <div class="summary-breakdown">
+        <div class="price-row striked" id="rowStrike"><span class="label">Precio regular</span><span class="value">$100.00 USD</span></div>
+        <div class="price-row green" id="rowDiscount"><span class="label">Descuento de lanzamiento</span><span class="value">− $51.00 (51%)</span></div>
+        <div class="price-row gold"><span class="label">Modalidad</span><span class="value" id="labelModeSummary">Licencia de Por Vida</span></div>
+    </div>
+    <div class="price-total-bar">
+        <div class="price-total-inner">
+            <span class="price-total-label">Total a pagar</span>
+            <span class="price-total-amount" id="labelTotalAmount">$49</span>
+        </div>
+        <div class="price-total-sub" id="totalSubnote">USD · Pago único</div>
+    </div>
+    <div class="summary-perks">
+        <ul class="perks-list">
+            <li><i class="bi bi-check-circle-fill"></i><span>Licencia permanente para 2 computadoras</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>STAR: Host IA para voces con presets de artistas</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>Controla plugins externos en FL, Ableton, Logic</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>50+ presets · Feid, Mora, Bad Bunny, Trap</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>Actualizaciones y nuevos artistas de por vida</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>Serial Key + descarga directa al instante</span></li>
+            <li><i class="bi bi-check-circle-fill"></i><span>Soporte VIP 1 a 1 por WhatsApp</span></li>
+        </ul>
+    </div>
+    <div class="summary-policy">
+        <i class="bi bi-info-circle-fill"></i>
+        <span><strong>Entrega inmediata.</strong> Recibirás serial y descarga en tu correo al instante. Software digital — no aplican garantías ni devoluciones.</span>
+    </div>
+</div>
+</aside>
 
-        function setTier(tier) {
-            currentTier = tier;
+</div>
+</main>
 
-            const tabLifetime = document.getElementById('tab-lifetime');
-            const tabCuotas = document.getElementById('tab-cuotas');
-            const checkCuotas = document.getElementById('check-cuotas');
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentTier = urlParams.get('tier') === 'cuotas' ? 'cuotas' : 'lifetime';
+    const WA = 'https://wa.me/51993525005?text=';
 
-            if (tier === 'lifetime') {
-                tabLifetime.classList.add('active');
-                tabCuotas.classList.remove('active');
-                if (checkCuotas) checkCuotas.className = 'bi bi-circle';
-
-                document.getElementById('rowOriginalPrice').style.display = 'flex';
-                document.getElementById('rowDiscount').style.display = 'flex';
-                document.getElementById('labelModeSummary').textContent = 'Licencia de Por Vida';
-                document.getElementById('labelTotalAmount').textContent = '$49.00 USD';
-                document.getElementById('labelPaypal').textContent = 'Pagar con PayPal o Tarjeta ($49 USD)';
-                document.getElementById('labelYape').textContent = 'Pagar con Yape / Plin (S/ 185 Soles)';
-            } else {
-                tabCuotas.classList.add('active');
-                tabLifetime.classList.remove('active');
-                if (checkCuotas) checkCuotas.className = 'bi bi-check-circle-fill';
-
-                document.getElementById('rowOriginalPrice').style.display = 'none';
-                document.getElementById('rowDiscount').style.display = 'none';
-                document.getElementById('labelModeSummary').textContent = '3 Cuotas ($16.33 USD / mes)';
-                document.getElementById('labelTotalAmount').textContent = '$16.33 USD / mes';
-                document.getElementById('labelPaypal').textContent = 'Suscribirme por PayPal (3 cuotas de $16.33 USD)';
-                document.getElementById('labelYape').textContent = 'Pagar 1ra Cuota con Yape (S/ 62 Soles)';
-            }
-
-            updatePaymentLinks();
+    function setTier(tier) {
+        currentTier = tier;
+        document.getElementById('tab-lifetime').classList.toggle('active', tier === 'lifetime');
+        document.getElementById('tab-cuotas').classList.toggle('active', tier === 'cuotas');
+        if (tier === 'lifetime') {
+            document.getElementById('rowStrike').style.display = '';
+            document.getElementById('rowDiscount').style.display = '';
+            document.getElementById('labelModeSummary').textContent = 'Licencia de Por Vida';
+            document.getElementById('labelTotalAmount').textContent = '$49';
+            document.getElementById('totalSubnote').textContent = 'USD · Pago único';
+            document.getElementById('labelPaypal').textContent = 'Pagar con PayPal o Tarjeta';
+            document.getElementById('labelYape').textContent = 'Yape / Plin';
+        } else {
+            document.getElementById('rowStrike').style.display = 'none';
+            document.getElementById('rowDiscount').style.display = 'none';
+            document.getElementById('labelModeSummary').textContent = '3 Cuotas Mensuales';
+            document.getElementById('labelTotalAmount').textContent = '$16.33';
+            document.getElementById('totalSubnote').textContent = 'USD/mes · 3 cuotas · Total $49 USD';
+            document.getElementById('labelPaypal').textContent = 'Pagar 1a Cuota con PayPal';
+            document.getElementById('labelYape').textContent = 'Yape / Plin (1a Cuota)';
         }
+        updatePaymentLinks();
+    }
 
-        function updatePaymentLinks() {
-            const email = (document.getElementById('buyerEmail').value || '').trim();
-            const emailText = email ? ` (Correo: ${email})` : '';
-
-            // WhatsApp link builder
-            const waBase = 'https://wa.me/51993525005?text=';
-
-            if (currentTier === 'lifetime') {
-                const yapeMsg = encodeURIComponent(`Hola Willie, quiero pagar el Acceso de Por Vida de STAR CHAIN por Yape (S/ 185 soles / $49 USD)${emailText}`);
-                document.getElementById('btnYape').href = `${waBase}${yapeMsg}`;
-
-                const mpMsg = encodeURIComponent(`Hola Willie, quiero pagar el Acceso de Por Vida de STAR CHAIN por Mercado Pago ($49 USD)${emailText}`);
-                document.getElementById('btnMercadoPago').href = `${waBase}${mpMsg}`;
-
-                const binanceMsg = encodeURIComponent(`Hola Willie, quiero pagar el Acceso de Por Vida de STAR CHAIN con Binance ($49 USDT)${emailText}`);
-                document.getElementById('btnBinance').href = `${waBase}${binanceMsg}`;
-
-                // PayPal direct link (will link to PayPal me or order endpoint)
-                const ppMsg = encodeURIComponent(`Hola Willie, quiero comprar STAR CHAIN por PayPal ($49 USD)${emailText}`);
-                document.getElementById('btnPaypal').href = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=williebs64@gmail.com&item_name=STAR+CHAIN+Licencia+Vitalicia&amount=49.00&currency_code=USD`;
-            } else {
-                const yapeMsg = encodeURIComponent(`Hola Willie, quiero pagar la 1ra Cuota de STAR CHAIN por Yape (S/ 62 soles / $16.33 USD)${emailText}`);
-                document.getElementById('btnYape').href = `${waBase}${yapeMsg}`;
-
-                const mpMsg = encodeURIComponent(`Hola Willie, quiero pagar la 1ra Cuota de STAR CHAIN por Mercado Pago ($16.33 USD)${emailText}`);
-                document.getElementById('btnMercadoPago').href = `${waBase}${mpMsg}`;
-
-                const binanceMsg = encodeURIComponent(`Hola Willie, quiero pagar la 1ra Cuota de STAR CHAIN con Binance ($16.33 USDT)${emailText}`);
-                document.getElementById('btnBinance').href = `${waBase}${binanceMsg}`;
-
-                // PayPal Cuotas: 3 monthly cycles of $16.33 USD
-                document.getElementById('btnPaypal').href = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick-subscriptions&business=williebs64@gmail.com&item_name=STAR+CHAIN+3+Cuotas&a3=16.33&p3=1&t3=M&src=1&srt=3&currency_code=USD`;
-            }
+    function updatePaymentLinks() {
+        const email = (document.getElementById('buyerEmail').value || '').trim();
+        const em = email ? ' — Correo: ' + email : '';
+        if (currentTier === 'lifetime') {
+            document.getElementById('btnPaypal').href = 'https://www.paypal.me/williebs64/49';
+            document.getElementById('btnYape').href = WA + encodeURIComponent('Hola Willie! Quiero pagar el Acceso de Por Vida de STAR CHAIN con Yape/Plin (S/ 185 / $49 USD)' + em);
+            document.getElementById('btnMercadoPago').href = WA + encodeURIComponent('Hola Willie! Quiero pagar el Acceso de Por Vida de STAR CHAIN con Mercado Pago ($49 USD)' + em);
+            document.getElementById('btnBinance').href = WA + encodeURIComponent('Hola Willie! Quiero pagar el Acceso de Por Vida de STAR CHAIN con Binance/USDT ($49 USDT)' + em);
+        } else {
+            document.getElementById('btnPaypal').href = 'https://www.paypal.me/williebs64/16.33';
+            document.getElementById('btnYape').href = WA + encodeURIComponent('Hola Willie! Quiero pagar la 1ra Cuota de STAR CHAIN con Yape/Plin (S/ 62 / $16.33 USD)' + em);
+            document.getElementById('btnMercadoPago').href = WA + encodeURIComponent('Hola Willie! Quiero pagar la 1ra Cuota de STAR CHAIN con Mercado Pago ($16.33 USD)' + em);
+            document.getElementById('btnBinance').href = WA + encodeURIComponent('Hola Willie! Quiero pagar la 1ra Cuota de STAR CHAIN con Binance/USDT ($16.33 USDT)' + em);
         }
+    }
 
-        // Initialize on page load
-        setTier(currentTier);
-    </script>
+    setTier(currentTier);
+</script>
 
 </body>
-
 </html>
