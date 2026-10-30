@@ -519,6 +519,16 @@ app.get(['/plugin/omni', '/plugin/omni.html', '/plugins/omni', '/plugins/omni.ht
     return res.sendFile(path.join(rootPath, 'plugins/omni.html'));
 });
 
+// Rutas directas para STAR CHAIN (by godmixing & OFFSZN)
+app.get(['/plugin/star-chain', '/plugin/star-chain.html', '/plugins/star-chain', '/plugins/star-chain.html'], (req, res) => {
+    return res.sendFile(path.join(rootPath, 'plugins/star-chain.html'));
+});
+
+// Rutas directas para Checkout de Plugins
+app.get(['/plugin/checkout', '/plugin/checkout.html', '/plugins/checkout', '/plugins/checkout.html'], (req, res) => {
+    return res.sendFile(path.join(rootPath, 'plugins/checkout.html'));
+});
+
 // Demo interactiva VST3 de Omni (carga limpia sin colisión de carpetas)
 app.get(['/plugins/omni-demo', '/plugins/omni-demo.html'], (req, res) => {
     return res.sendFile(path.join(rootPath, 'plugins/omni-demo.html'));
@@ -790,6 +800,11 @@ app.use('/music-raw-to-defined', express.static(musicPath, {
         res.setHeader('Vercel-CDN-Cache-Control', 'public, max-age=2592000');
     }
 }));
+
+// Fallback para URLs que usan /r2-public en vez de /api/r2-public
+app.use('/r2-public', (req, res) => {
+    res.redirect(307, `/api/r2-public${req.url}`);
+});
 
 // Videos hospedados en Cloudflare R2 (cero consumo de Fast Origin Transfer en Vercel)
 app.get(['/videos/omni-beat.mp4', '/videos/omni-beat'], (req, res) => {
@@ -1070,6 +1085,7 @@ app.get('/sitemap.xml', async (req, res) => {
             { loc: 'https://offszn.lat/plugins/inka-kola.html', priority: '0.9', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/easy-pitch.html', priority: '0.9', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/omni.html', priority: '0.9', changefreq: 'weekly' },
+            { loc: 'https://offszn.lat/plugins/star-chain.html', priority: '0.9', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/offszn-recorder.html', priority: '0.8', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/plugins/x-flow-analyzer.html', priority: '0.8', changefreq: 'weekly' },
             { loc: 'https://offszn.lat/legal/ayuda-y-contacto.html', priority: '0.5', changefreq: 'monthly' }
