@@ -13,6 +13,9 @@ import { generatePluginLicense } from './PluginLicensingController.js';
 import { PLUGINS } from '../../../shared/config/pluginRegistry.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import MetaCapiService from '../../services/MetaCapiService.js';
+import { getStarCouponPercent } from '../../services/starSubscriptionService.js';
+import { starPrice, STAR_PRODUCT_ID } from '../../../shared/store/starPlan.js';
+import { resolveYapePrice, rateFromEnv } from '../../../shared/store/yapePricing.js';
 
 const PLUGIN_INFO_MAP = {
     '899': {
@@ -64,6 +67,13 @@ const PLUGIN_INFO_MAP = {
             mac: 'https://drive.google.com/file/d/1laJdmvnab56pDSN0iAIDZXmxNwAFnh03/view?usp=sharing'
         }
     },
+    '5003': {
+        name: 'STAR CHAIN',
+        downloads: {
+            win: process.env.STAR_DOWNLOAD_URL || 'https://offszn.lat/mis-compras',
+            mac: '#'
+        }
+    },
     '5001': {
         name: 'Omni Plugin',
         downloads: {
@@ -101,13 +111,42 @@ for (const id of WIDGET_PLUGIN?.productIds || []) {
 }
 
 /**
+ * Precio que se cobra por Yape. STAR CHAIN: 49 US$ / S/ 185 (con cupón). Plugins: USD permitido para ese producto × YAPE_EXCHANGE_RATE_PEN.
+ * Lo usan el cobro y la cotización, así el modal muestra exactamente lo que se va a cobrar.
+ */
+async function priceForRequest({ productId, isPromo2x1, customPrice, couponCode }) {
+    if (String(productId) === String(STAR_PRODUCT_ID)) {
+        const price = starPrice(await getStarCouponPercent(couponCode));
+        return { ok: true, usd: price.usd, pen: price.pen };
+    }
+    return resolveYapePrice({ productId, isPromo2x1, customPrice, widgetIds: WIDGET_PLUGIN?.productIds || [], rate: rateFromEnv() });
+}
+
+/**
+ * GET /api/orders/yape/quote?productId=&price=&promo=&coupon=
+ * Dice cuántos soles se cobrarán (según la variable de tipo de cambio). El modal de Yape lo muestra y lo usa en el token.
+ */
+export const quoteYape = async (req, res) => {
+    try {
+        const productId = String(req.query.productId || '899');
+        const isPromo2x1 = req.query.promo === '1' || productId === 'promo-2x1';
+        const price = await priceForRequest({ productId, isPromo2x1, customPrice: req.query.price, couponCode: req.query.coupon });
+        if (!price.ok) return res.status(400).json({ error: price.error });
+        return res.json({ success: true, usd: price.usd, pen: price.pen });
+    } catch (error) {
+        console.error('[YapeQuote] Error:', error);
+        return res.status(500).json({ error: 'No se pudo calcular el precio.' });
+    }
+};
+
+/**
  * GET /api/orders/yape/config
  * Exposes Public Key and fixed exchange rate to frontend.
  */
 export const getYapeConfig = async (req, res) => {
     try {
         const publicKey = process.env.MERCADOPAGO_PUBLIC_KEY || '';
-        const exchangeRate = parseFloat(process.env.YAPE_EXCHANGE_RATE_PEN) || 3.30;
+        const exchangeRate = rateFromEnv();
 
         return res.json({
             success: true,
@@ -143,12 +182,18 @@ export const chargeYape = async (req, res) => {
             return res.status(500).json({ error: 'Pasarela de Mercado Pago no configurada en el servidor.' });
         }
 
-        const exchangeRate = parseFloat(process.env.YAPE_EXCHANGE_RATE_PEN) || 3.30;
-        const validUsdPrice = parseFloat(customPrice) || 10;
-        const amountPEN = req.body.customPricePEN ? Number(parseFloat(req.body.customPricePEN).toFixed(2)) : Number((validUsdPrice * exchangeRate).toFixed(2));
-
+        const exchangeRate = rateFromEnv();
         const isPromo2x1 = Boolean(req.body.isPromo2x1 || req.body.is_promo_2x1 || String(productId) === 'promo-2x1' || (req.body.pluginName || '').toLowerCase().includes('2x1'));
         const strProdId = String(productId || '');
+
+        // El monto lo decide el servidor (ver priceForRequest): lo que mande el navegador no se cobra.
+        const price = await priceForRequest({ productId: strProdId, isPromo2x1, customPrice, couponCode: req.body.couponCode });
+        if (!price.ok) {
+            console.warn(`[YapeCharge] Precio rechazado: producto=${strProdId} customPrice=${customPrice} promo=${isPromo2x1}`);
+            return res.status(400).json({ error: price.error });
+        }
+        const validUsdPrice = price.usd;
+        const amountPEN = price.pen;
         const prodInfo = PLUGIN_INFO_MAP[strProdId] || ((req.body.pluginName || '').toLowerCase().includes('cassette') ? PLUGIN_INFO_MAP['5002'] : null) || (strProdId === 'promo-2x1' ? PLUGIN_INFO_MAP['899'] : (productId ? PLUGIN_INFO_MAP['899'] : null));
         const pluginName = prodInfo ? (isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : prodInfo.name) : (req.body.pluginName || 'Presets');
 
@@ -333,6 +378,8 @@ export const chargeYape = async (req, res) => {
                     quantity: 1,
                     license_name: 'lifetime'
                 });
+                const { data: soldProd } = await supabase.from('products').select('sales_count').eq('id', parsedProductId).maybeSingle();
+                if (soldProd) await supabase.from('products').update({ sales_count: (soldProd.sales_count || 0) + 1 }).eq('id', parsedProductId);
             }
         } catch (dbErr) {
             console.error('[YapeCharge] DB insert exception:', dbErr);
@@ -397,8 +444,8 @@ export const chargeYape = async (req, res) => {
                 ` : '';
 
                 const emailSubject = affiliateInfo 
-                    ? `💜 ¡Venta Yape ${pluginName}! [REFERIDO: ${affiliateInfo.name}] — S/. ${amountPEN} (~$${validUsdPrice} USD)`
-                    : `💜 ¡Nueva Venta por Yape! ${pluginName} — S/. ${amountPEN} (~$${validUsdPrice} USD)`;
+                    ? `💜 [MARKETPLACE · YAPE · PLUGIN] ${pluginName} [REFERIDO: ${affiliateInfo.name}] — S/. ${amountPEN} (~$${validUsdPrice} USD)`
+                    : `💜 [MARKETPLACE · YAPE · PLUGIN] ${pluginName} — S/. ${amountPEN} (~$${validUsdPrice} USD)`;
 
                 const adminHtml = `
                     <div style="font-family: 'Segoe UI', sans-serif; padding: 30px; background: #0a0a0a; border-radius: 12px; color: #fff; max-width: 600px; border: 1px solid rgba(255,255,255,0.08);">

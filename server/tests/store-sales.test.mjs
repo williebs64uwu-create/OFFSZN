@@ -131,3 +131,38 @@ test('resumen: ventas propias del marketplace se suman a las de la tienda, sin d
     assert.equal(o.orders, 3);
     assert.deepEqual(o.channels, { tienda: { orders: 1, revenueUsd: 10 }, marketplace: { orders: 2, revenueUsd: 20 } });
 });
+
+// ─── STAR CHAIN: precios y reglas de las 3 cuotas ───────────────────────────────────────────────────────────────
+import { starPrice, licenseForPayment, starPlanBody, findCompletedSale, firstCompletedSale, subExpiry } from '../src/shared/store/starPlan.js';
+
+test('STAR: el precio lo fija el servidor y el cupón baja el % (nunca por debajo de 0)', () => {
+    assert.deepEqual(starPrice(0), { usd: 49, pen: 185 });
+    assert.deepEqual(starPrice(10), { usd: 44.1, pen: 166.5 });
+    assert.deepEqual(starPrice(500), { usd: 0, pen: 0 });
+    assert.deepEqual(starPrice('x'), { usd: 49, pen: 185 });
+});
+
+test('STAR: cuota 1 y 2 = clave SUB de un mes; cuota 3 = FULL de por vida', () => {
+    assert.equal(licenseForPayment(1).licenseType, 'subscription');
+    assert.equal(licenseForPayment(2).licenseType, 'subscription');
+    assert.equal(licenseForPayment(3).licenseType, 'lifetime');
+    assert.equal(licenseForPayment(4).kind, 'full');
+    const days = (Date.parse(subExpiry(new Date('2026-11-01T00:00:00Z'))) - Date.parse('2026-11-01T00:00:00Z')) / 86400000;
+    assert.equal(days, 33);
+});
+
+test('STAR: el plan de PayPal son 3 cobros mensuales de 16.33 y el cobro se confirma contra la lista de PayPal', () => {
+    const cycle = starPlanBody('PROD-1').billing_cycles[0];
+    assert.equal(cycle.total_cycles, 3);
+    assert.equal(cycle.frequency.interval_unit, 'MONTH');
+    assert.equal(cycle.pricing_scheme.fixed_price.value, '16.33');
+    const tx = [
+        { id: 'S2', status: 'COMPLETED', time: '2026-12-01T00:00:00Z', amount_with_breakdown: { gross_amount: { value: '16.33' } } },
+        { id: 'S1', status: 'COMPLETED', time: '2026-11-01T00:00:00Z', amount_with_breakdown: { gross_amount: { value: '16.33' } } },
+        { id: 'S3', status: 'FAILED', time: '2027-01-01T00:00:00Z', amount_with_breakdown: { gross_amount: { value: '16.33' } } }
+    ];
+    assert.equal(findCompletedSale(tx, 'S2').amountUsd, 16.33);
+    assert.equal(findCompletedSale(tx, 'S3'), null);   // un cobro fallido no cuenta
+    assert.equal(findCompletedSale(tx, 'NOPE'), null); // un id inventado no cuenta
+    assert.equal(firstCompletedSale(tx).saleId, 'S1');
+});

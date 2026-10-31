@@ -280,6 +280,30 @@
             40%, 80% { transform: translateX(6px); }
         }
 
+        .yape-steps { list-style: none; margin: 4px 0 14px; padding: 0; display: grid; gap: 8px; }
+        .yape-steps li { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: #374151; line-height: 1.45; }
+        .yape-steps .n { flex: none; width: 22px; height: 22px; border-radius: 50%; background: #f3e8ff; color: #7e22ce; font-weight: 700; font-size: 12px; display: grid; place-items: center; }
+        .yape-now {
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 0; cursor: pointer;
+            background: #742284; color: #fff; font-weight: 700; font-size: 15px; padding: 14px 16px; border-radius: 10px; transition: background .15s, transform .1s;
+        }
+        .yape-now:hover { background: #5f1c6c; }
+        .yape-now:active { transform: scale(.99); }
+        .yape-now .yape-logo { background: #fff; color: #742284; border-radius: 6px; padding: 1px 7px; font-weight: 800; }
+        .yape-alt-link { display: block; margin-top: 10px; text-align: center; font-size: 13px; color: #6b7280; text-decoration: underline; }
+        .account-hint {
+            display: none;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #374151;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 8px 12px;
+        }
+        .account-hint.show { display: block; }
+        .account-hint a { color: var(--border-focus); font-weight: 600; cursor: pointer; text-decoration: underline; }
+
         .input-error {
             border-color: #ef4444 !important;
             box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
@@ -841,7 +865,10 @@
                     <label for="buyerEmail" class="form-label">Dirección de correo electrónico</label>
                     <span class="form-link" onclick="promptLogin()">Iniciar sesión</span>
                 </div>
-                <input type="email" id="buyerEmail" class="checkout-input" placeholder="Tu dirección de correo electrónico" value="" oninput="handleEmailInput(this.value)" autocomplete="email" required>
+                <input type="email" id="buyerEmail" class="checkout-input" placeholder="Tu dirección de correo electrónico" value="" oninput="handleEmailInput(this.value)" onblur="checkAccountForEmail(this.value)" autocomplete="email" required>
+                <div id="accountHint" class="account-hint">
+                    Ya tienes una cuenta OFFSZN con este correo. <a onclick="promptLogin()">Inicia sesión</a> para ver tus licencias; o sigue como invitado, te llega todo al correo.
+                </div>
             </div>
 
             <!-- 2. Additional Data / Country -->
@@ -867,17 +894,9 @@
             <!-- 3. Official PayPal & Card Buttons -->
             <div class="payment-buttons-box">
                 <!-- PayPal Smart Yellow Button -->
-                <a id="btnPaypalYellow" href="#" class="btn-paypal-smart" title="Pagar de forma segura con PayPal" onclick="return validateBeforePayment(event, this)">
-                    <span class="paypal-logo-text">
-                        <span class="pp-p1">Pay</span><span class="pp-p2">Pal</span>
-                    </span>
-                </a>
-
-                <!-- Black Debit or Credit Card Button -->
-                <a id="btnCardBlack" href="#" class="btn-card-smart" title="Pagar con tarjeta de débito o crédito" onclick="return validateBeforePayment(event, this)">
-                    <i class="bi bi-credit-card-2-front"></i>
-                    <span>Tarjeta de débito o crédito</span>
-                </a>
+                <!-- PayPal / tarjeta: pago real con orden en la base, licencia y correo automáticos (como Easy Mix) -->
+                <div id="plugin-paypal-button-container"></div>
+                <div id="star-subscription-container" style="display:none; margin-top:14px;"></div>
 
                 <div class="paypal-powered-by">
                     Desarrollado por <span class="brand">Pay</span><span class="brand-pal">Pal</span>
@@ -904,15 +923,19 @@
             <!-- Alt Method Content: Yape / Plin -->
             <div class="alt-panel-content show" id="panelAltYape">
                 <div class="alt-panel-header">
-                    <span>Yape o Plin (Perú 🇵🇪)</span>
+                    <span>Yape (Perú 🇵🇪) · pago rápido</span>
                     <span id="labelAltYapePrice" style="color: #16a34a; font-weight: 800;">S/ 185 PEN</span>
                 </div>
-                <p class="alt-panel-desc">
-                    Yapea o transfiere a <strong>993 525 005</strong> (Willie Garay / OFFSZN) y envíanos la captura por WhatsApp para recibir tu Serial Key al instante.
-                </p>
-                <a id="btnActionYape" href="#" target="_blank" rel="noopener" class="alt-panel-action" onclick="return validateBeforeLocal(event)">
-                    <i class="bi bi-whatsapp"></i>
-                    <span>Confirmar pago por WhatsApp</span>
+                <ol class="yape-steps" id="yapeSteps">
+                    <li><span class="n">1</span><span>Escribe el <b>celular</b> de tu Yape.</span></li>
+                    <li><span class="n">2</span><span>En la app de Yape toca <b>Código de aprobación</b> y escribe los 6 dígitos.</span></li>
+                    <li><span class="n">3</span><span>Listo: tu <b>clave y el instalador</b> llegan al instante a tu correo.</span></li>
+                </ol>
+                <button type="button" id="btnYapeNow" class="yape-now" data-action="open-yape-checkout" onclick="return validateBeforeYape(event)">
+                    <span class="yape-logo">Yape</span><span>Pagar <span id="yapeNowPrice">S/ 185</span></span>
+                </button>
+                <a id="btnActionYape" href="#" target="_blank" rel="noopener" data-no-yape-modal class="yape-alt-link" onclick="return validateBeforeLocal(event)">
+                    ¿Prefieres transferir y enviar la captura? Confirma por WhatsApp
                 </a>
             </div>
 
@@ -1082,23 +1105,53 @@
     </div>
 </div>
 
+<script src="/env.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+<script src="/script/auth-utils.js?v=11"></script>
+<script>
+    // Datos del producto para el pago directo (script/plugin-checkout.js)
+    window.PLUGIN_SKIP_DIRECT = new URLSearchParams(window.location.search).get('tier') === 'cuotas';
+    window.PLUGIN_ID = 5003;
+    window.PLUGIN_NAME = 'STAR CHAIN';
+    window.COUPON_CODE = '';
+    window.BUYER_EMAIL = '';
+    // Antes de abrir PayPal exige un correo válido (ahí llegan la clave y el instalador)
+    window.PLUGIN_BEFORE_PAY = function () {
+        const input = document.getElementById('buyerEmail');
+        const email = (input.value || '').trim();
+        if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)) {
+            input.classList.add('input-error');
+            input.focus();
+            input.placeholder = '⚠ Ingresa tu correo antes de continuar';
+            setTimeout(() => { input.classList.remove('input-error'); input.placeholder = 'Tu dirección de correo electrónico'; }, 2200);
+            return false;
+        }
+        window.BUYER_EMAIL = email;
+        return true;
+    };
+</script>
+<script src="/script/plugin-checkout.js"></script>
+<script src="/script/yape-checkout.js?v=20261101_dyn"></script>
+<script src="/script/star-subscription.js"></script>
 <script>
     // ==================== STATE MANAGEMENT ====================
     const urlParams = new URLSearchParams(window.location.search);
     let selectedPlan = (urlParams.get('tier') === 'cuotas') ? 'cuotas' : 'full';
+    const initialPlan = selectedPlan; // el SDK de PayPal (pago único o suscripción) se carga según este modo
     let appliedDiscountPct = 0;
-    const PAYPAL_BUSINESS = 'willie2008garay@gmail.com';
     const WA_PHONE = '51993525005';
 
-    function promptLogin() {
-        const email = prompt('Ingresa tu correo para recordar tus compras anteriores:', '');
-        if (email && email.includes('@')) {
-            document.getElementById('buyerEmail').value = email;
-            handleEmailInput(email);
-        }
-    }
-
     function selectPlan(plan) {
+        // Pago único y suscripción usan SDKs de PayPal distintos: al cambiar de modo se recarga la página conservando correo y cupón
+        if (plan !== initialPlan) {
+            const u = new URL(window.location.href);
+            u.searchParams.set('tier', plan === 'cuotas' ? 'cuotas' : 'lifetime');
+            const em = (document.getElementById('buyerEmail').value || '').trim();
+            if (em) u.searchParams.set('email', em);
+            if (plan === 'full' && window.COUPON_CODE) u.searchParams.set('coupon', window.COUPON_CODE); else u.searchParams.delete('coupon');
+            window.location.href = u.toString();
+            return;
+        }
         selectedPlan = plan;
         document.getElementById('cardPlanFull').classList.toggle('active', plan === 'full');
         document.getElementById('cardPlanCuotas').classList.toggle('active', plan === 'cuotas');
@@ -1116,6 +1169,16 @@
             document.getElementById('labelAltCryptoPrice').textContent = '16.33 USDT';
         }
 
+        // Pago único: botones de PayPal + Yape rápido. Cuotas: suscripción de PayPal (Yape solo por WhatsApp).
+        const pp = document.getElementById('plugin-paypal-button-container');
+        if (pp) pp.style.display = (plan === 'full') ? '' : 'none';
+        const subBox = document.getElementById('star-subscription-container');
+        if (subBox) subBox.style.display = (plan === 'cuotas') ? '' : 'none';
+        const yapeSteps = document.getElementById('yapeSteps');
+        if (yapeSteps) yapeSteps.style.display = (plan === 'full') ? '' : 'none';
+        const yapeNow = document.getElementById('btnYapeNow');
+        if (yapeNow) yapeNow.style.display = (plan === 'full') ? '' : 'none';
+
         recalculateTotals();
     }
 
@@ -1124,16 +1187,28 @@
         const msg = document.getElementById('couponMsg');
         const code = (input.value || '').trim().toUpperCase();
 
+        if (selectedPlan === 'cuotas' && code) {
+            appliedDiscountPct = 0;
+            window.COUPON_CODE = '';
+            msg.className = 'coupon-msg error';
+            msg.textContent = 'Los cupones aplican al pago único (Licencia FULL).';
+            recalculateTotals();
+            return;
+        }
+
         if (code === 'OFFSZN' || code === 'STAR' || code === 'WILLIE' || code === 'GODMIXING') {
             appliedDiscountPct = 10;
+            window.COUPON_CODE = code;
             msg.className = 'coupon-msg success';
             msg.textContent = '✓ ¡Cupón ' + code + ' aplicado! (10% de descuento)';
         } else if (!code) {
             appliedDiscountPct = 0;
+            window.COUPON_CODE = '';
             msg.className = 'coupon-msg';
             msg.textContent = '';
         } else {
             appliedDiscountPct = 0;
+            window.COUPON_CODE = '';
             msg.className = 'coupon-msg error';
             msg.textContent = 'Código de cupón inválido o expirado.';
         }
@@ -1159,25 +1234,22 @@
 
         document.getElementById('displayTotal').textContent = `USD $${finalPrice.toFixed(2)}`;
 
+        // Pago único: el mismo monto alimenta Yape (soles) y los textos de los métodos manuales. El servidor vuelve a calcularlo.
+        if (selectedPlan === 'full') {
+            const penFinal = Math.round(185 * (1 - appliedDiscountPct / 100) * 100) / 100;
+            window.CURRENT_PROMO_PRICE = finalPrice;
+            window.YAPE_FIXED_PRICE_PEN = penFinal;
+            document.getElementById('labelAltYapePrice').textContent = `S/ ${penFinal} PEN`;
+            document.getElementById('yapeNowPrice').textContent = `S/ ${penFinal}`;
+            document.getElementById('labelAltMpPrice').textContent = `$${finalPrice.toFixed(2)} USD`;
+            document.getElementById('labelAltCryptoPrice').textContent = `${finalPrice.toFixed(2)} USDT`;
+        }
+
         updatePaymentLinks(finalPrice);
     }
 
     function updatePaymentLinks(amount) {
         const email = (document.getElementById('buyerEmail').value || '').trim();
-        const itemName = (selectedPlan === 'full') 
-            ? 'STAR CHAIN - Licencia FULL (2 dispositivos)' 
-            : 'STAR CHAIN - Cuota 1 de 3';
-
-        // 1. PayPal & Card Webscr standard direct URL
-        const payUrl = 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=' + encodeURIComponent(PAYPAL_BUSINESS) +
-            '&item_name=' + encodeURIComponent(itemName) +
-            '&amount=' + amount.toFixed(2) +
-            '&currency_code=USD&no_shipping=1' +
-            (email ? '&custom=' + encodeURIComponent(email) : '');
-
-        document.getElementById('btnPaypalYellow').href = payUrl;
-        document.getElementById('btnCardBlack').href = payUrl;
-
         // 2. WhatsApp links for local methods
         const emailText = email ? ` (Correo: ${email})` : '';
         const yapeText = (selectedPlan === 'full') 
@@ -1217,23 +1289,9 @@
         });
     }
 
-    // ==================== EMAIL VALIDATION GATE ====================
-    // Prevents payment redirect if email field is empty
-    function validateBeforePayment(evt, linkEl) {
-        const emailInput = document.getElementById('buyerEmail');
-        const email = (emailInput.value || '').trim();
-        if (!email || !email.includes('@')) {
-            evt.preventDefault();
-            emailInput.classList.add('input-error');
-            emailInput.focus();
-            emailInput.placeholder = '⚠ Ingresa tu correo antes de continuar';
-            setTimeout(() => {
-                emailInput.classList.remove('input-error');
-                emailInput.placeholder = 'Tu dirección de correo electrónico';
-            }, 2200);
-            return false;
-        }
-        // Email is valid — let the link navigate to PayPal
+    // Yape rápido: pide el correo antes de abrir el modal del celular y el código de aprobación
+    function validateBeforeYape(evt) {
+        if (!window.PLUGIN_BEFORE_PAY()) { evt.preventDefault(); evt.stopPropagation(); return false; }
         return true;
     }
 
@@ -1251,36 +1309,74 @@
         window.location.href = '/plugins/iniciar-sesion.html?redirect=' + encodeURIComponent(window.location.href);
     }
 
-    function logoutUser() {
-        localStorage.removeItem('offszn_token');
-        localStorage.removeItem('offszn_user');
-        localStorage.removeItem('offszn_google_user');
+    async function logoutUser() {
+        try { if (window.supabaseClient) await window.supabaseClient.auth.signOut(); } catch (_) {}
+        localStorage.removeItem('authToken');
+        document.cookie = 'sb-access-token=; path=/; max-age=0; SameSite=Strict; Secure';
         document.getElementById('buyerEmail').value = '';
         document.getElementById('userLoggedBox').style.display = 'none';
         document.getElementById('emailFormGroup').style.display = 'block';
+        document.getElementById('accountHint').classList.remove('show');
         recalculateTotals();
     }
 
-    function checkExistingLogin() {
-        const savedUser = localStorage.getItem('offszn_user');
-        if (savedUser) {
+    // Sesión real de OFFSZN (Supabase): si ya inició sesión, el correo se llena solo.
+    async function checkExistingLogin() {
+        try {
+            const { data } = await window.supabaseClient.auth.getSession();
+            const email = data && data.session && data.session.user && data.session.user.email;
+            if (email) {
+                document.getElementById('buyerEmail').value = email;
+                document.getElementById('userLoggedEmail').textContent = email;
+                document.getElementById('userLoggedBox').style.display = 'flex';
+                document.getElementById('emailFormGroup').style.display = 'none';
+                recalculateTotals();
+                return true;
+            }
+        } catch (_) {}
+        return false;
+    }
+
+    // ¿Ese correo ya tiene cuenta? Solo avisa; comprar como invitado sigue siendo posible.
+    const accountChecked = {};
+    async function checkAccountForEmail(raw) {
+        const email = String(raw || '').trim().toLowerCase();
+        const hint = document.getElementById('accountHint');
+        if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)) { hint.classList.remove('show'); return; }
+        if (!(email in accountChecked)) {
             try {
-                const u = JSON.parse(savedUser);
-                const email = u.email || '';
-                if (email && email.includes('@')) {
-                    document.getElementById('buyerEmail').value = email;
-                    document.getElementById('userLoggedEmail').textContent = email;
-                    document.getElementById('userLoggedBox').style.display = 'flex';
-                    document.getElementById('emailFormGroup').style.display = 'none';
-                }
-            } catch (_) {}
+                const res = await fetch('/api/auth/check-email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+                if (!res.ok) return;
+                accountChecked[email] = (await res.json()).available === false;
+            } catch (_) { return; }
         }
+        if (String(document.getElementById('buyerEmail').value || '').trim().toLowerCase() === email) hint.classList.toggle('show', accountChecked[email]);
     }
 
     // ==================== URL TIER PARAM & SESSION INIT ====================
     // Initialize plan and check existing auth session
     selectPlan(selectedPlan);
-    checkExistingLogin();
+    (async () => {
+        const logged = await checkExistingLogin();
+        // Links personalizados: ?email=cliente@correo.com&coupon=WILLIE&country=PE
+        const emailParam = (urlParams.get('email') || '').trim();
+        if (!logged && /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(emailParam)) {
+            document.getElementById('buyerEmail').value = emailParam;
+            handleEmailInput(emailParam);
+            checkAccountForEmail(emailParam);
+        }
+        const couponParam = (urlParams.get('coupon') || urlParams.get('cupon') || '').trim();
+        if (couponParam) {
+            document.getElementById('couponInput').value = couponParam.toUpperCase();
+            applyCoupon();
+        }
+        const countryParam = (urlParams.get('country') || urlParams.get('pais') || '').trim().toUpperCase();
+        const countrySelect = document.getElementById('buyerCountry');
+        if (countryParam && countrySelect && [...countrySelect.options].some((o) => o.value === countryParam)) {
+            countrySelect.value = countryParam;
+            handleCountryChange(countryParam);
+        }
+    })();
 </script>
 
 

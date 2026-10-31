@@ -1,5 +1,6 @@
 import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
+import { handleStarWebhook } from '../../services/starSubscriptionService.js';
 import { supabase } from '../../database/connection.js';
 import { PLATFORM_PAYPAL_EMAIL, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../../shared/config/config.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
@@ -267,6 +268,8 @@ export const createPayPalOrder = async (req, res) => {
                 productObj = { id: 5000, name: 'Easy Pitch', price_basic: 5, producer_id: null };
             } else if (String(directProductId) === '5001' || String(directProductId).toLowerCase().includes('omni')) {
                 productObj = { id: 5001, name: 'Omni Plugin', price_basic: 17, producer_id: null };
+            } else if (String(directProductId) === '5003' || String(directProductId).toLowerCase().includes('star')) {
+                productObj = { id: 5003, name: 'STAR CHAIN', price_basic: 49, producer_id: null };
             } else if (String(directProductId) === '5002' || String(directProductId).toLowerCase().includes('cassette')) {
                 productObj = { id: 5002, name: 'Cassette', price_basic: 8, producer_id: null };
             } else if (String(directProductId) === '905') {
@@ -385,7 +388,7 @@ export const createPayPalOrder = async (req, res) => {
         // Plugin IDs 899-905, 5000-5002 are OFFSZN-owned plugins (Easy Mix, Easy Master, Inka Kola, Coca-Cola, Vocal Preset, Easy Pitch, Omni, Cassette).
         // They have producer_id = null or are owned by OFFSZN and are handled by the plugin override
         // logic below — they don't require a third-party producer PayPal email.
-        const OFFSZN_PLUGIN_IDS = new Set(['899', '900', '901', '902', '903', '905', '5000', '5001', '5002']);
+        const OFFSZN_PLUGIN_IDS = new Set(['899', '900', '901', '902', '903', '905', '5000', '5001', '5002', '5003']);
         const missingPaymentProducers = [];
         cartItems.forEach(item => {
             const prodId = String(item.product?.id || '');
@@ -469,6 +472,14 @@ export const createPayPalOrder = async (req, res) => {
                 verifiedCartItems.push({ ...item, variant_price: partnerShare });
                 console.log(`[PayPalOrder] Coca-Cola: customer pays $${validPluginPrice} | OFFSZN=$${offsznShare} | partner=$${partnerShare}`);
                 return; // Skip regular DB price logic for this product
+            }
+
+            // STAR CHAIN (ID 5003): 100% OFFSZN, licencia FULL a 49 US$ fijos. El precio lo fija el servidor, nunca el cliente.
+            if (prodIdToFind === '5003') {
+                subtotal += 49;
+                verifiedCartItems.push({ ...item, variant_price: 49 });
+                console.log('[PayPalOrder] Plugin 5003 (STAR CHAIN): customer pays $49 | 100% OFFSZN');
+                return;
             }
 
             // EASY MIX / EASY MASTER / INKA KOLA / VOCAL PRESET / EASY PITCH / OMNI / CASSETTE OVERRIDE (IDs 899/900/901/902/905/5000/5001/5002):
@@ -687,7 +698,7 @@ export const createPayPalOrder = async (req, res) => {
 
         verifiedCartItems.forEach(item => {
             const prodIdStr = String(item.product?.id || '');
-            const OFFSZN_PLUGIN_IDS_SET = new Set(['899', '900', '901', '902', '903', '905', '5000', '5001', '5002']);
+            const OFFSZN_PLUGIN_IDS_SET = new Set(['899', '900', '901', '902', '903', '905', '5000', '5001', '5002', '5003']);
 
             // OFFSZN Plugins (899-905): producer_id is null — assign directly to OFFSZN merchant ID.
             // Coca-Cola (903) split was already resolved above (subtotal=partnerShare, serviceFee=offsznShare).
@@ -795,6 +806,7 @@ export const createPayPalOrder = async (req, res) => {
             if (idStr === '900' || (item.product?.name || '').toLowerCase().includes('easy master')) return 'easy_master';
             if (idStr === '902' || (item.product?.name || '').toLowerCase().includes('inka kola')) return 'inka_kola';
             if (idStr === '903' || (item.product?.name || '').toLowerCase().includes('coca')) return 'coca_cola';
+            if (idStr === '5003' || (item.product?.name || '').toLowerCase().includes('star chain')) return 'star_chain';
             if (idStr === '5002' || (item.product?.name || '').toLowerCase().includes('cassette')) return 'cassette';
             if (idStr === '5001' || (item.product?.name || '').toLowerCase().includes('omni')) return 'omni';
             if (idStr === '5000' || (item.product?.name || '').toLowerCase().includes('easy pitch')) return 'easy_pitch';
@@ -862,6 +874,8 @@ export const capturePayPalOrder = async (req, res) => {
                     productObj = { id: 903, name: 'Coca-Cola', price_basic: 15, producer_id: '8d2c03bf-2910-4af9-b75d-d6d9d3509bc2' };
                 } else if (String(directProductId) === '5001' || String(directProductId).toLowerCase().includes('omni')) {
                     productObj = { id: 5001, name: 'Omni Plugin', price_basic: 17, producer_id: null };
+                } else if (String(directProductId) === '5003' || String(directProductId).toLowerCase().includes('star')) {
+                    productObj = { id: 5003, name: 'STAR CHAIN', price_basic: 49, producer_id: null };
                 } else if (String(directProductId) === '5002' || String(directProductId).toLowerCase().includes('cassette')) {
                     productObj = { id: 5002, name: 'Cassette', price_basic: 8, producer_id: null };
                 } else if (String(directProductId) === '5000') {
@@ -1692,7 +1706,8 @@ export const capturePayPalOrder = async (req, res) => {
                         if (idStr === '900' || (item.product?.name || '').toLowerCase().includes('easy master')) return 'easy_master';
                         if (idStr === '902' || (item.product?.name || '').toLowerCase().includes('inka kola')) return 'inka_kola';
                         if (idStr === '903' || (item.product?.name || '').toLowerCase().includes('coca')) return 'coca_cola';
-                        if (idStr === '5002' || (item.product?.name || '').toLowerCase().includes('cassette')) return 'cassette';
+                        if (idStr === '5003' || (item.product?.name || '').toLowerCase().includes('star chain')) return 'star_chain';
+            if (idStr === '5002' || (item.product?.name || '').toLowerCase().includes('cassette')) return 'cassette';
                         if (idStr === '5001' || (item.product?.name || '').toLowerCase().includes('omni')) return 'omni';
                         if (idStr === '5000' || (item.product?.name || '').toLowerCase().includes('easy pitch')) return 'easy_pitch';
                         if (idStr === '905' || (item.product?.name || '').toLowerCase().includes('vocal')) return 'vocal_preset';
@@ -2282,6 +2297,8 @@ export const handlePayPalWebhook = async (req, res) => {
 
     try {
         console.log(`🔔 [PayPalWebhook] Processing event: ${event.event_type} | Event ID: ${event.id}`);
+        // STAR CHAIN en cuotas: cobros, fallos y cancelaciones de su suscripción (se confirman contra la API de PayPal)
+        if (await handleStarWebhook(event)) return;
         const eventType = event.event_type;
         let transactionId = '';
         let isSale = false;
