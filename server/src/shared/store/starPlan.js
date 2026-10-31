@@ -53,7 +53,9 @@ export function starPlanBody(productId) {
 export function findCompletedSale(transactions = [], saleId) {
     const t = (transactions || []).find((x) => String(x.id) === String(saleId) && String(x.status).toUpperCase() === 'COMPLETED');
     if (!t) return null;
-    return { saleId: String(t.id), amountUsd: round2(t.amount_with_breakdown?.gross_amount?.value), paidAt: t.time || null, payerEmail: t.payer_email || null };
+    const bd = t.amount_with_breakdown || {};
+    const optional = (v) => (v === undefined || v === null || v === '' ? null : round2(v));
+    return { saleId: String(t.id), amountUsd: round2(bd.gross_amount?.value), feeUsd: optional(bd.fee_amount?.value), netUsd: optional(bd.net_amount?.value), paidAt: t.time || null, payerEmail: t.payer_email || null };
 }
 
 // Primera cuota cobrada (la más antigua) para confirmar la suscripción justo después de aprobarla.

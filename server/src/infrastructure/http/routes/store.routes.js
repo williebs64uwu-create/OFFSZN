@@ -8,6 +8,7 @@ import {
 } from '../controllers/StoreController.js';
 import * as crm from '../controllers/CrmController.js';
 import { createPlanAdmin, starPlanStatus } from '../controllers/StarSubscriptionController.js';
+import { financeMonth, financeAddExpense, financeDeleteExpense, financeSaveBank, financeVerify, paypalWebhookSetup } from '../controllers/FinanceController.js';
 import { runAutomations } from '../../services/crmService.js';
 
 const router = express.Router();
@@ -47,6 +48,12 @@ router.post('/admin/verify', rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, ski
 router.get('/admin/system', adminAuth, crm.system);
 router.get('/admin/star-plan', adminAuth, starPlanStatus);
 router.post('/admin/star-plan', adminAuth, createPlanAdmin);
+router.get('/admin/finance', adminAuth, financeMonth);
+router.post('/admin/finance/expenses', adminAuth, financeAddExpense);
+router.delete('/admin/finance/expenses/:id', adminAuth, financeDeleteExpense);
+router.put('/admin/finance/bank', adminAuth, financeSaveBank);
+router.post('/admin/finance/income/:id/verify', adminAuth, financeVerify);
+router.post('/admin/paypal-webhook-setup', adminAuth, paypalWebhookSetup);
 router.get('/admin/overview', adminAuth, crm.overview);
 router.get('/admin/contacts', adminAuth, crm.contacts);
 router.get('/admin/contacts/:email', adminAuth, crm.contact);

@@ -31,9 +31,9 @@
 
     C.pages.dashboard = {
         async render(view, token) {
-            // Por defecto cuenta desde el 1 de abril de 2026 (inicio de las ventas reales)
-            const period = C.state.days || 'abril';
-            const [o, t] = await Promise.all([api(period === 'abril' ? '/admin/overview?since=2026-04-01' : `/admin/overview?days=${period}`), api('/admin/tasks')]);
+            // Por defecto, todo lo que hay desde que empezó el libro de finanzas (31 oct 2026)
+            const period = C.state.days || 'inicio';
+            const [o, t] = await Promise.all([api(period === 'inicio' ? '/admin/overview' : `/admin/overview?days=${period}`), api('/admin/tasks')]);
             if (token !== C.state.routeToken) return;
             const names = { page_view: 'Visitas', add_to_cart: 'Carrito', checkout_start: 'Checkout', purchase: 'Compras' };
             const top = Math.max(1, o.funnel[0]?.sessions || 1);
@@ -43,10 +43,10 @@
                 return `<div class="funnel-step"><div class="row between"><span>${names[f.step]}</span><span class="muted small">${num(f.sessions)}${conv}</span></div><div class="bar"><i style="width:${Math.max(4, (f.sessions / top) * 100)}%;opacity:${1 - i * 0.18}">${num(f.sessions)}</i></div></div>`;
             }).join('');
             const due = t.items.slice(0, 5);
-            view.innerHTML = `${head('Resumen', `${period === 'abril' ? 'Desde el 1 de abril de 2026' : `Últimos ${period} días`}: tienda Willie Inspired más tus productos de pago del marketplace (lo realmente cobrado).`,
-                `<select class="select" id="period" style="width:auto"><option value="abril">Desde 1 abr 2026</option><option value="7">7 días</option><option value="30">30 días</option><option value="90">90 días</option></select><button class="btn btn--outline" data-go="contactos">${icon('users')} Contactos</button>`)}
+            view.innerHTML = `${head('Resumen', `${period === 'inicio' ? 'Desde el 31 de octubre de 2026' : `Últimos ${period} días`}: todos los pagos reales de OFFSZN y la tienda, tal como los cobró PayPal o Mercado Pago.`,
+                `<select class="select" id="period" style="width:auto"><option value="inicio">Desde el 31 oct 2026</option><option value="7">7 días</option><option value="30">30 días</option><option value="90">90 días</option></select><button class="btn btn--outline" data-go="contactos">${icon('users')} Contactos</button>`)}
                 <div class="kpis">
-                    ${[['Ingresos', usd(o.revenueUsd), `${num(o.orders)} ventas · tienda ${usd(o.channels.tienda.revenueUsd)} · marketplace ${usd(o.channels.marketplace.revenueUsd)}`, 'trend'], ['Ticket medio', usd(o.aovUsd), 'por venta', 'bag'], ['Recompra', `${o.customers.repeatRate}%`, `${num(o.customers.buyers)} compradores`, 'refresh'], ['Pruebas → compra', `${o.trials.rate}%`, `${num(o.trials.converted)} de ${num(o.trials.total)} pruebas`, 'flask'],
+                    ${[['Ingresos', usd(o.revenueUsd), `${num(o.orders)} ventas · neto ${usd(o.netUsd)}`, 'trend'], ['Ticket medio', usd(o.aovUsd), 'por venta', 'bag'], ['Recompra', `${o.customers.repeatRate}%`, `${num(o.customers.buyers)} compradores`, 'refresh'], ['Pruebas → compra', `${o.trials.rate}%`, `${num(o.trials.converted)} de ${num(o.trials.total)} pruebas`, 'flask'],
                     ['Clientes', num(o.customers.total), `${o.customers.segments.FREE} FREE · ${o.customers.segments['COMPRADOR V1']} V1 · ${o.customers.segments['COMPRADOR V2']} V2`, 'users'], ['Carritos abiertos', num(o.carts.open), `${o.carts.recovered} recuperados`, 'cart']]
                         .map(([l, v, f, ic]) => `<div class="card kpi"><div class="kpi__top"><span>${l}</span>${icon(ic)}</div><div class="kpi__value">${v}</div><div class="kpi__foot">${f}</div></div>`).join('')}
                 </div>
@@ -65,7 +65,7 @@
                     ${card({ title: 'Ofertas y pagos', body: `<p class="muted small" style="margin-bottom:6px">Ventas por oferta</p>${rows(o.byOffer, 'key', 'orders')}<div class="separator" style="margin:14px 0"></div><p class="muted small" style="margin-bottom:6px">Ingresos por método</p>${rows(o.byMethod, 'key', 'revenueUsd', usd)}` })}
                 </div>`;
             $('#period').value = String(period);
-            $('#period').onchange = (e) => { C.state.days = e.target.value === 'abril' ? 'abril' : +e.target.value; C.route(); };
+            $('#period').onchange = (e) => { C.state.days = e.target.value === 'inicio' ? 'inicio' : +e.target.value; C.route(); };
         }
     };
 
@@ -351,13 +351,23 @@
                     ${card({ title: 'Base de datos', desc: `${s.tables.length - missingTables.length} de ${s.tables.length} tablas`, body: s.tables.map((t) => row(t.ok, t.name, `Falta correr ${t.migration}`)).join('') })}
                 </div>
                 ${card({ title: 'STAR CHAIN en 3 cuotas', desc: star.planId ? 'Plan de PayPal creado' : 'Falta crear el plan de PayPal', body: star.planId
-                    ? `<div class="list-row"><span class="dot dot--ok"></span><div class="grow"><b>Cuotas activas en el checkout</b><div class="muted small">Plan <span class="mono">${esc(star.planId)}</span> · 3 cobros mensuales de 16.33 US$ · cuota 3 = licencia FULL.</div></div></div><p class="muted small" style="margin-top:12px">En PayPal (Developer → Webhooks → <span class="mono">https://offszn.lat/api/orders/paypal-webhook</span>) deben estar marcados: Payment sale completed, Billing subscription payment failed / cancelled / suspended / expired.</p>`
+                    ? `<div class="list-row"><span class="dot dot--ok"></span><div class="grow"><b>Cuotas activas en el checkout</b><div class="muted small">Plan <span class="mono">${esc(star.planId)}</span> · 3 cobros mensuales de 16.33 US$ · cuota 3 = licencia FULL.</div></div></div><p class="muted small" style="margin:12px 0">Para que un cobro fallido revoque la clave, tu webhook de PayPal (<span class="mono">https://offszn.lat/api/orders/paypal-webhook</span>) necesita los avisos de cuotas. Un clic los registra y conserva los que ya tenías.</p><button class="btn btn--outline" id="mkStarHook">${icon('shield')} Activar avisos de PayPal</button><div class="muted small" id="starHookOut" style="margin-top:8px"></div>`
                     : `<p class="muted small" style="margin-bottom:12px">Crea una sola vez el producto y el plan en tu PayPal (usa las llaves del servidor). Mientras no exista, el checkout avisa que las cuotas aún no están habilitadas.</p><button class="btn btn--brand" id="mkStarPlan">${icon('zap')} Crear plan de cuotas en PayPal</button>` })}
                 ${card({ title: 'Contenido pendiente de subir', desc: 'Lo que hoy se ve como cuadro con nombre en la tienda.', body: `<div class="kpis" style="margin-bottom:16px">
                     ${[['Productos activos', c.active], ['Sin portada', c.withoutCoverCount], [`Artistas sin audio`, `${c.artistsWithoutAudio}/${c.artists}`], ['Sin video', c.withoutVideo]].map(([l, v]) => `<div class="card kpi" style="padding:14px 16px"><div class="kpi__top"><span>${l}</span></div><div class="kpi__value" style="font-size:22px">${v}</div></div>`).join('')}</div>
                     ${c.withoutCover.length ? `<p class="label" style="margin-bottom:8px">Productos sin portada</p><div class="chips">${c.withoutCover.map((p) => `<span class="chip">${esc(p.title)} <small>${esc(p.category)}</small></span>`).join('')}</div>` : ''}
                     <p class="muted small" style="margin-top:14px">Las rutas y los nombres de archivo se llenan en <span class="mono">willieinspired/data/store-catalog.json</span>. Guía completa en <span class="mono">docs/willieinspired-tienda/PLAN.md</span>.</p>` })}
                 ${card({ title: 'Enlaces', body: `<div class="row"><a class="btn btn--outline" href="/willieinspired" target="_blank" rel="noopener">${icon('ext')} Tienda</a><a class="btn btn--outline" href="/owner/licencias" target="_blank" rel="noopener">${icon('ext')} Licencias</a><a class="btn btn--outline" href="/owner/pagos-manuales" target="_blank" rel="noopener">${icon('ext')} Pagos manuales</a><a class="btn btn--outline" href="/owner/correos-lista-de-espera" target="_blank" rel="noopener">${icon('ext')} Lista de espera</a></div>` })}`;
+            const hook = document.getElementById('mkStarHook');
+            if (hook) hook.onclick = async () => {
+                hook.disabled = true; hook.textContent = 'Registrando…';
+                try {
+                    const r = await api('/admin/paypal-webhook-setup', { method: 'POST' });
+                    document.getElementById('starHookOut').textContent = `${r.created ? 'Webhook creado' : (r.unchanged ? 'Ya estaba todo registrado' : 'Eventos actualizados')} · ${r.events.length} eventos: ${r.events.join(', ')}`;
+                    toast(r.unchanged ? 'Los avisos ya estaban activos' : 'Avisos de PayPal activados');
+                } catch (err) { toast(err.message, 'error'); }
+                hook.disabled = false; hook.innerHTML = `${icon('shield')} Activar avisos de PayPal`;
+            };
             const mk = document.getElementById('mkStarPlan');
             if (mk) mk.onclick = async () => {
                 mk.disabled = true;

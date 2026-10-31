@@ -16,6 +16,7 @@ import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
 import { supabase } from '../../database/connection.js';
 import { getProduct } from '../../../shared/store/catalog.js';
+import { recordPayPalCaptures, recordMercadoPago } from '../../services/financeService.js';
 import { regionForRequest, quoteForRequest, fulfillOrder } from '../../services/storeService.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -180,6 +181,9 @@ export const captureWilliePayPalOrder = async (req, res) => {
             tracking: trackingOf(req)
         });
 
+        // Libro de finanzas: bruto, comisión y neto reales que informa PayPal. Nunca rompe la entrega.
+        await recordPayPalCaptures(captureResponse.result, { source: 'store_paypal', email: buyerEmail, product: lines.map((l) => l.title).join(' + ') || null });
+
         console.log(`[WillieCheckout Capture] ${orderID} entregado a ${buyerEmail} | $${captured.toFixed(2)}`);
         return res.status(200).json({
             success: true,
@@ -278,6 +282,9 @@ export const chargeWillieYape = async (req, res) => {
             utm: req.body?.attribution?.utm || null,
             tracking: { ...trackingOf(req), sourceUrl: req.headers.referer }
         });
+
+        // Libro de finanzas: soles con el neto que informa Mercado Pago. Nunca rompe la entrega.
+        await recordMercadoPago(mpData, { source: 'store_yape', email, product: quote.lines.map((l) => l.title).join(' + ') || null });
 
         return res.json({
             success: true,

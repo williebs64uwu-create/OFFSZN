@@ -1289,6 +1289,33 @@
                         </span>
                     </div>
 
+                    <!-- Pago recibido: solo para el registro de finanzas del CRM (no cambia el correo ni la clave) -->
+                    <div class="form-group" style="margin-top: 18px;">
+                        <label>Pago recibido <span style="font-weight: 500; color: var(--text-muted);">· solo para registro (Acción de Willie)</span></label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                            <select id="gen-pay-currency" class="form-control" onchange="onPayCurrencyChange()" style="padding: 11px 12px;">
+                                <option value="USD">Dólares (USD)</option>
+                                <option value="PEN">Soles (neto)</option>
+                                <option value="ARS">Pesos argentinos</option>
+                            </select>
+                            <select id="gen-pay-method" class="form-control" style="padding: 11px 12px;">
+                                <option value="paypal">PayPal</option>
+                                <option value="yape">Yape</option>
+                                <option value="mercadopago">Mercado Pago</option>
+                                <option value="binance">Binance (USDT)</option>
+                                <option value="transferencia">Transferencia</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                            <input type="number" id="gen-pay-amount" class="form-control" min="0" step="0.01" placeholder="Precio dado" style="padding: 11px 12px;">
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 8px; margin-top: 10px; font-weight: 500; cursor: pointer;">
+                            <input type="checkbox" id="gen-pay-skip" onchange="onPaySkipChange()"> Sin dato, revisar después
+                        </label>
+                        <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; display: block;">
+                            Dólares = lo que te dieron (PayPal) · Soles = dinero neto (Yape) · Pesos argentinos = los pesos exactos; se confirman a fin de mes.
+                        </span>
+                    </div>
+
                     <div class="fields-2col" style="margin-top: 18px;">
                         <div class="form-group" id="group-key1" style="margin-bottom: 0;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -2134,8 +2161,63 @@
             }
         }
 
+        // ── Pago recibido (registro de finanzas) ──
+        const PAY_DEFAULT_METHOD = { USD: 'paypal', PEN: 'yape', ARS: 'mercadopago' };
+        function onPayCurrencyChange() {
+            const cur = document.getElementById('gen-pay-currency').value;
+            document.getElementById('gen-pay-method').value = PAY_DEFAULT_METHOD[cur] || 'otro';
+        }
+        function onPaySkipChange() {
+            const skip = document.getElementById('gen-pay-skip').checked;
+            ['gen-pay-currency', 'gen-pay-method', 'gen-pay-amount'].forEach(id => { document.getElementById(id).disabled = skip; });
+        }
+        function resetPaymentFields() {
+            document.getElementById('gen-pay-currency').value = 'USD';
+            document.getElementById('gen-pay-method').value = 'paypal';
+            document.getElementById('gen-pay-amount').value = '';
+            document.getElementById('gen-pay-skip').checked = false;
+            onPaySkipChange();
+        }
+        // Antes de despachar hay que decir cuánto se pagó, o marcar "sin dato" (así nunca queda un hueco por descuido).
+        function validatePaymentFields() {
+            if (document.getElementById('gen-pay-skip').checked) return true;
+            const amount = parseFloat(document.getElementById('gen-pay-amount').value);
+            if (!(amount > 0)) {
+                goToDispatchStep(2);
+                showToast('Escribe el precio dado o marca "Sin dato, revisar después"');
+                document.getElementById('gen-pay-amount').focus();
+                return false;
+            }
+            return true;
+        }
+        // Anota el pago en el libro de finanzas del CRM. Una misma clave no se anota dos veces; si falla, el despacho no se frena.
+        function recordDispatchPayment(serials, productValue, email) {
+            const skip = document.getElementById('gen-pay-skip').checked;
+            const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || '';
+            const names = { 'easy-mix': 'Easy Mix', 'easy-master': 'Easy Master', 'promo-2x1': 'Promo 2x1 (Easy Mix + Easy Master)' };
+            const product = names[productValue] || (typeof normalizePluginName === 'function' ? normalizePluginName(productValue) : productValue);
+            // La promo 2x1 son dos claves pero UN solo pago: se anota con la primera clave.
+            const serial = serials[0];
+            if (!serial) return;
+            fetch('/api/plugin/admin/ledger', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    admin_key: adminPin, serial, email, product,
+                    currency: document.getElementById('gen-pay-currency').value,
+                    method: document.getElementById('gen-pay-method').value,
+                    amount: document.getElementById('gen-pay-amount').value,
+                    noDetail: skip,
+                    note: serials.length > 1 ? 'Claves: ' + serials.join(' + ') : ''
+                })
+            }).then(r => r.json().catch(() => ({}))).then(d => {
+                if (d && d.error) showToast('Pago no anotado: ' + d.error);
+            }).catch(e => console.warn('Ledger sync error:', e));
+        }
+
         function resetDispatchWizard() {
             document.getElementById('gen-email').value = '';
+            resetPaymentFields();
             selectProductChip('easy-mix');
             goToDispatchStep(1);
             showToast('Asistente de despacho reiniciado');
@@ -2496,6 +2578,7 @@
         }
 
         function copyPlainTextAndTag() {
+            if (!validatePaymentFields()) return;
             const { body } = buildEmailContent();
             copyTextFallback(body);
             showToast('Mensaje completo copiado al portapapeles');
@@ -2510,6 +2593,8 @@
                 document.getElementById('gen-email').focus();
                 return;
             }
+
+            if (!validatePaymentFields()) return;
 
             const btn = document.getElementById('btn-brevo');
             btn.disabled = true;
@@ -2644,6 +2729,7 @@
             renderInventory();
             updateProductChipsStock();
 
+            recordDispatchPayment(burnedKeys, pVal, email);
             showDispatchSuccessModal(burnedKeys, email, viaEmail);
 
             const adminPin = sessionStorage.getItem(SESSION_AUTH_KEY) || '';

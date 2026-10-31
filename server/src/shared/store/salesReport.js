@@ -42,7 +42,7 @@ export const PLUGIN_MAX_USD = 30;
 // aunque order_items guarde el precio de lista (10). Si la orden lleva productos de otros productores, el cobro se reparte
 // en proporción al precio de lista de cada línea. Las órdenes sin líneas (tienda de Willie, Yape antiguo) entran como "sin detalle".
 // Gratis (total 0), fallidas, beats y productos de otros no cuentan. `since` = ISO (ver sinceIso).
-export function realSales({ orders = [], items = [], products = [], producerIds = [], since = null, storeOrders = [] }) {
+export function realSales({ orders = [], items = [], products = [], producerIds = [], since = null, storeOrders = [], noDetail = true }) {
     const mine = new Map(ownProducts(products, producerIds).map((p) => [p.id, p]));
     const known = new Set(products.map((p) => p.id));
     const byOrder = new Map();
@@ -61,7 +61,7 @@ export function realSales({ orders = [], items = [], products = [], producerIds 
         const method = /YAPE/i.test(String(o.transaction_id || '')) ? 'yape' : 'paypal';
 
         if (!paid.length) {
-            if (its.length || !hasTotal) continue; // solo gratis, o sin monto: no hay venta
+            if (its.length || !hasTotal || !noDetail) continue; // solo gratis, sin monto o sin detalle (cuando no se piden): no hay venta que contar
             if (o.product_id != null && known.has(o.product_id) && !mine.has(o.product_id)) continue; // beat o producto de otro
             const st = store.get(String(o.transaction_id || '').replace(/^WILLIE-(PP|YAPE)-/i, ''));
             const own = o.product_id != null ? mine.get(o.product_id) : null;
@@ -91,8 +91,8 @@ export function realSales({ orders = [], items = [], products = [], producerIds 
     return lines;
 }
 
-export function buildSalesReport({ orders = [], items = [], products = [], clicks = [], producerIds = [], payhip = [], since = null, storeOrders = [] }) {
-    const lines = realSales({ orders, items, products, producerIds, since, storeOrders });
+export function buildSalesReport({ orders = [], items = [], products = [], clicks = [], producerIds = [], payhip = [], since = null, storeOrders = [], includeNoDetail = true }) {
+    const lines = realSales({ orders, items, products, producerIds, since, storeOrders, noDetail: includeNoDetail });
     const sinceDate = since ? String(since).slice(0, 10) : null;
 
     const orderIds = new Set();

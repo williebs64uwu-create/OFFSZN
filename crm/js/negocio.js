@@ -20,10 +20,11 @@
     const fail = (e) => `<div class="alert alert--error">${icon('alert')}<div>${esc(e.message)}</div></div>`;
 
     // ══ Historial de ventas ═══════════════════════════════════════════════════
+    /* Histórico (plugins): el dinero nuevo vive en Finanzas. Esto es solo para saber cómo fueron los plugins. */
     C.pages.historial = {
         async render(view, token) {
-            const TITLE = 'Historial de ventas';
-            const DESC = 'Ventas reales desde el 1 de abril de 2026: lo que de verdad se cobró en tus productos de pago de OFFSZN (marketplace, Yape y tienda) más los plugins vendidos por Payhip. Sin beats ni regalos, y los plugins entre 2 y 30 US$ por unidad.';
+            const TITLE = 'Histórico de plugins';
+            const DESC = 'Aproximado y solo de plugins: cómo les fue antes del libro nuevo de Finanzas (31 oct 2026), con lo que quedó guardado en la base y los plugins de Payhip. No suma al dinero real ni a tu cuenta del banco.';
             view.innerHTML = `${head(TITLE, DESC)}${loading}`;
             let r;
             try { r = await api('/admin/sales'); } catch (e) { view.innerHTML = head(TITLE) + fail(e); return; }

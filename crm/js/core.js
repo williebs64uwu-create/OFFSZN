@@ -144,7 +144,7 @@
     });
 
     // ── Paleta de búsqueda ⌘K ────────────────────────────────────────────────
-    const PAGES_INDEX = [['dashboard', 'Resumen'], ['contactos', 'Contactos'], ['oportunidades', 'Oportunidades'], ['automatizaciones', 'Automatizaciones'], ['ventas', 'Venta manual'], ['tareas', 'Tareas'], ['experimentos', 'Experimentos A/B'], ['sistema', 'Estado del sistema']];
+    const PAGES_INDEX = [['dashboard', 'Resumen'], ['contactos', 'Contactos'], ['oportunidades', 'Oportunidades'], ['automatizaciones', 'Automatizaciones'], ['ventas', 'Venta manual'], ['tareas', 'Tareas'], ['experimentos', 'Experimentos A/B'], ['finanzas', 'Finanzas'], ['historial', 'Histórico (plugins)'], ['sistema', 'Estado del sistema']];
     let palTimer;
     C.palette = {
         open() {

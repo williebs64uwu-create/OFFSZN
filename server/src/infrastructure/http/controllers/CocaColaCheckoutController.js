@@ -15,6 +15,7 @@
  *   $10 sale → OFFSZN gets $3, partner owed $7
  */
 
+import { recordPayPalCaptures } from '../../services/financeService.js';
 import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
 import { supabase } from '../../database/connection.js';
@@ -150,6 +151,9 @@ export const captureCokeOrder = async (req, res) => {
         // 2. Calculate split
         const offsznShare = capturedAmount >= 15 ? 5.00 : 3.00;
         const partnerShare = capturedAmount - offsznShare;
+
+        // Libro de finanzas: el cobro completo entra a tu cuenta, pero la parte del socio no es tuya (neto = lo que te queda). Nunca rompe el cobro.
+        await recordPayPalCaptures(response.result, { email: payerEmail, product: 'Coca-Cola', productId: 903, partnerOwed: partnerShare });
 
         console.log(`[CokeCheckout] Split: OFFSZN=$${offsznShare.toFixed(2)} | Partner (${PARTNER_EMAIL})=$${partnerShare.toFixed(2)}`);
 
