@@ -1,5 +1,6 @@
 import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
+import { handleStarWebhook } from '../../services/starSubscriptionService.js';
 import { supabase } from '../../database/connection.js';
 import { PLATFORM_PAYPAL_EMAIL, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../../shared/config/config.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
@@ -2296,6 +2297,8 @@ export const handlePayPalWebhook = async (req, res) => {
 
     try {
         console.log(`🔔 [PayPalWebhook] Processing event: ${event.event_type} | Event ID: ${event.id}`);
+        // STAR CHAIN en cuotas: cobros, fallos y cancelaciones de su suscripción (se confirman contra la API de PayPal)
+        if (await handleStarWebhook(event)) return;
         const eventType = event.event_type;
         let transactionId = '';
         let isSale = false;

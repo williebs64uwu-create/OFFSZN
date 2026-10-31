@@ -823,6 +823,10 @@
             this.modalElement.classList.add('active');
             document.body.style.overflow = 'hidden';
 
+            // Correo ya escrito en la página (checkout): se precarga para no pedirlo dos veces
+            const emailField = document.getElementById('yape-email');
+            if (emailField && !emailField.value && window.BUYER_EMAIL) emailField.value = window.BUYER_EMAIL;
+
             // Auto focus phone since it's the first field now
             const phoneInput = document.getElementById('yape-phone');
             if (phoneInput) setTimeout(() => phoneInput.focus(), 100);
@@ -946,6 +950,7 @@
                 if (window.YAPE_FIXED_PRICE_PEN) {
                     bodyPayload.customPricePEN = Number(window.YAPE_FIXED_PRICE_PEN);
                 }
+                if (window.COUPON_CODE) bodyPayload.couponCode = window.COUPON_CODE;
 
                 const response = await fetch('/api/orders/yape/charge', {
                     method: 'POST',
@@ -1051,6 +1056,7 @@
             document.addEventListener('click', (e) => {
                 const target = e.target.closest('[data-action="open-yape-checkout"], #btn-yape-checkout, #btn-yape, .btn-yape-trigger, .btn-yape-white, .btn-yape, a[href*="Yape"], a[href*="yape"]');
                 if (target) {
+                    if (target.hasAttribute('data-no-yape-modal')) return; // enlaces que deben seguir su camino (ej. WhatsApp)
                     const href = target.getAttribute('href') || '';
                     if (href.includes('problemas') || href.includes('instalar') || href.includes('soporte') || href.includes('flp') || href.includes('tutorial')) {
                         return;

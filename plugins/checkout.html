@@ -280,6 +280,17 @@
             40%, 80% { transform: translateX(6px); }
         }
 
+        .yape-steps { list-style: none; margin: 4px 0 14px; padding: 0; display: grid; gap: 8px; }
+        .yape-steps li { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: #374151; line-height: 1.45; }
+        .yape-steps .n { flex: none; width: 22px; height: 22px; border-radius: 50%; background: #f3e8ff; color: #7e22ce; font-weight: 700; font-size: 12px; display: grid; place-items: center; }
+        .yape-now {
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 0; cursor: pointer;
+            background: #742284; color: #fff; font-weight: 700; font-size: 15px; padding: 14px 16px; border-radius: 10px; transition: background .15s, transform .1s;
+        }
+        .yape-now:hover { background: #5f1c6c; }
+        .yape-now:active { transform: scale(.99); }
+        .yape-now .yape-logo { background: #fff; color: #742284; border-radius: 6px; padding: 1px 7px; font-weight: 800; }
+        .yape-alt-link { display: block; margin-top: 10px; text-align: center; font-size: 13px; color: #6b7280; text-decoration: underline; }
         .account-hint {
             display: none;
             margin-top: 8px;
@@ -885,9 +896,7 @@
                 <!-- PayPal Smart Yellow Button -->
                 <!-- PayPal / tarjeta: pago real con orden en la base, licencia y correo automáticos (como Easy Mix) -->
                 <div id="plugin-paypal-button-container"></div>
-                <div id="cuotasNotice" class="account-hint" style="display:none; margin-top:0;">
-                    Las 3 cuotas mensuales se activan por suscripción de PayPal y aún no están habilitadas aquí. Para pagar en cuotas escríbele a Willie por WhatsApp, o elige <b>Licencia FULL</b> para pagar una sola vez.
-                </div>
+                <div id="star-subscription-container" style="display:none; margin-top:14px;"></div>
 
                 <div class="paypal-powered-by">
                     Desarrollado por <span class="brand">Pay</span><span class="brand-pal">Pal</span>
@@ -914,15 +923,19 @@
             <!-- Alt Method Content: Yape / Plin -->
             <div class="alt-panel-content show" id="panelAltYape">
                 <div class="alt-panel-header">
-                    <span>Yape o Plin (Perú 🇵🇪)</span>
+                    <span>Yape (Perú 🇵🇪) · pago rápido</span>
                     <span id="labelAltYapePrice" style="color: #16a34a; font-weight: 800;">S/ 185 PEN</span>
                 </div>
-                <p class="alt-panel-desc">
-                    Yapea o transfiere a <strong>993 525 005</strong> (Willie Garay / OFFSZN) y envíanos la captura por WhatsApp para recibir tu Serial Key al instante.
-                </p>
-                <a id="btnActionYape" href="#" target="_blank" rel="noopener" class="alt-panel-action" onclick="return validateBeforeLocal(event)">
-                    <i class="bi bi-whatsapp"></i>
-                    <span>Confirmar pago por WhatsApp</span>
+                <ol class="yape-steps" id="yapeSteps">
+                    <li><span class="n">1</span><span>Escribe el <b>celular</b> de tu Yape.</span></li>
+                    <li><span class="n">2</span><span>En la app de Yape toca <b>Código de aprobación</b> y escribe los 6 dígitos.</span></li>
+                    <li><span class="n">3</span><span>Listo: tu <b>clave y el instalador</b> llegan al instante a tu correo.</span></li>
+                </ol>
+                <button type="button" id="btnYapeNow" class="yape-now" data-action="open-yape-checkout" onclick="return validateBeforeYape(event)">
+                    <span class="yape-logo">Yape</span><span>Pagar <span id="yapeNowPrice">S/ 185</span></span>
+                </button>
+                <a id="btnActionYape" href="#" target="_blank" rel="noopener" data-no-yape-modal class="yape-alt-link" onclick="return validateBeforeLocal(event)">
+                    ¿Prefieres transferir y enviar la captura? Confirma por WhatsApp
                 </a>
             </div>
 
@@ -1097,6 +1110,7 @@
 <script src="/script/auth-utils.js?v=11"></script>
 <script>
     // Datos del producto para el pago directo (script/plugin-checkout.js)
+    window.PLUGIN_SKIP_DIRECT = new URLSearchParams(window.location.search).get('tier') === 'cuotas';
     window.PLUGIN_ID = 5003;
     window.PLUGIN_NAME = 'STAR CHAIN';
     window.COUPON_CODE = '';
@@ -1117,14 +1131,27 @@
     };
 </script>
 <script src="/script/plugin-checkout.js"></script>
+<script src="/script/yape-checkout.js?v=20261031"></script>
+<script src="/script/star-subscription.js"></script>
 <script>
     // ==================== STATE MANAGEMENT ====================
     const urlParams = new URLSearchParams(window.location.search);
     let selectedPlan = (urlParams.get('tier') === 'cuotas') ? 'cuotas' : 'full';
+    const initialPlan = selectedPlan; // el SDK de PayPal (pago único o suscripción) se carga según este modo
     let appliedDiscountPct = 0;
     const WA_PHONE = '51993525005';
 
     function selectPlan(plan) {
+        // Pago único y suscripción usan SDKs de PayPal distintos: al cambiar de modo se recarga la página conservando correo y cupón
+        if (plan !== initialPlan) {
+            const u = new URL(window.location.href);
+            u.searchParams.set('tier', plan === 'cuotas' ? 'cuotas' : 'lifetime');
+            const em = (document.getElementById('buyerEmail').value || '').trim();
+            if (em) u.searchParams.set('email', em);
+            if (plan === 'full' && window.COUPON_CODE) u.searchParams.set('coupon', window.COUPON_CODE); else u.searchParams.delete('coupon');
+            window.location.href = u.toString();
+            return;
+        }
         selectedPlan = plan;
         document.getElementById('cardPlanFull').classList.toggle('active', plan === 'full');
         document.getElementById('cardPlanCuotas').classList.toggle('active', plan === 'cuotas');
@@ -1142,11 +1169,15 @@
             document.getElementById('labelAltCryptoPrice').textContent = '16.33 USDT';
         }
 
-        // El pago directo con PayPal es solo para la licencia FULL; las cuotas van por suscripción (pendiente)
+        // Pago único: botones de PayPal + Yape rápido. Cuotas: suscripción de PayPal (Yape solo por WhatsApp).
         const pp = document.getElementById('plugin-paypal-button-container');
         if (pp) pp.style.display = (plan === 'full') ? '' : 'none';
-        const notice = document.getElementById('cuotasNotice');
-        if (notice) notice.style.display = (plan === 'full') ? 'none' : 'block';
+        const subBox = document.getElementById('star-subscription-container');
+        if (subBox) subBox.style.display = (plan === 'cuotas') ? '' : 'none';
+        const yapeSteps = document.getElementById('yapeSteps');
+        if (yapeSteps) yapeSteps.style.display = (plan === 'full') ? '' : 'none';
+        const yapeNow = document.getElementById('btnYapeNow');
+        if (yapeNow) yapeNow.style.display = (plan === 'full') ? '' : 'none';
 
         recalculateTotals();
     }
@@ -1155,6 +1186,15 @@
         const input = document.getElementById('couponInput');
         const msg = document.getElementById('couponMsg');
         const code = (input.value || '').trim().toUpperCase();
+
+        if (selectedPlan === 'cuotas' && code) {
+            appliedDiscountPct = 0;
+            window.COUPON_CODE = '';
+            msg.className = 'coupon-msg error';
+            msg.textContent = 'Los cupones aplican al pago único (Licencia FULL).';
+            recalculateTotals();
+            return;
+        }
 
         if (code === 'OFFSZN' || code === 'STAR' || code === 'WILLIE' || code === 'GODMIXING') {
             appliedDiscountPct = 10;
@@ -1193,6 +1233,17 @@
         }
 
         document.getElementById('displayTotal').textContent = `USD $${finalPrice.toFixed(2)}`;
+
+        // Pago único: el mismo monto alimenta Yape (soles) y los textos de los métodos manuales. El servidor vuelve a calcularlo.
+        if (selectedPlan === 'full') {
+            const penFinal = Math.round(185 * (1 - appliedDiscountPct / 100) * 100) / 100;
+            window.CURRENT_PROMO_PRICE = finalPrice;
+            window.YAPE_FIXED_PRICE_PEN = penFinal;
+            document.getElementById('labelAltYapePrice').textContent = `S/ ${penFinal} PEN`;
+            document.getElementById('yapeNowPrice').textContent = `S/ ${penFinal}`;
+            document.getElementById('labelAltMpPrice').textContent = `$${finalPrice.toFixed(2)} USD`;
+            document.getElementById('labelAltCryptoPrice').textContent = `${finalPrice.toFixed(2)} USDT`;
+        }
 
         updatePaymentLinks(finalPrice);
     }
@@ -1236,6 +1287,12 @@
             if (pill) pill.classList.toggle('active', m === method);
             if (panel) panel.classList.toggle('show', m === method);
         });
+    }
+
+    // Yape rápido: pide el correo antes de abrir el modal del celular y el código de aprobación
+    function validateBeforeYape(evt) {
+        if (!window.PLUGIN_BEFORE_PAY()) { evt.preventDefault(); evt.stopPropagation(); return false; }
+        return true;
     }
 
     function validateBeforeLocal(evt) {

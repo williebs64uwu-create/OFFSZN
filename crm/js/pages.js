@@ -337,7 +337,7 @@
     // ══ Sistema ═══════════════════════════════════════════════════════════════
     C.pages.sistema = {
         async render(view, token) {
-            const s = await api('/admin/system');
+            const [s, star] = await Promise.all([api('/admin/system'), api('/admin/star-plan').catch(() => ({ planId: null, error: true }))]);
             if (token !== C.state.routeToken) return;
             const missingTables = s.tables.filter((t) => !t.ok);
             const missingInt = s.integrations.filter((i) => !i.ok);
@@ -349,11 +349,19 @@
                     ${card({ title: 'Conexiones', desc: missingInt.length ? `${missingInt.length} por configurar` : 'Todo configurado', body: s.integrations.map((i) => row(i.ok, i.name, i.fix)).join('') })}
                     ${card({ title: 'Base de datos', desc: `${s.tables.length - missingTables.length} de ${s.tables.length} tablas`, body: s.tables.map((t) => row(t.ok, t.name, `Falta correr ${t.migration}`)).join('') })}
                 </div>
+                ${card({ title: 'STAR CHAIN en 3 cuotas', desc: star.planId ? 'Plan de PayPal creado' : 'Falta crear el plan de PayPal', body: star.planId
+                    ? `<div class="list-row"><span class="dot dot--ok"></span><div class="grow"><b>Cuotas activas en el checkout</b><div class="muted small">Plan <span class="mono">${esc(star.planId)}</span> · 3 cobros mensuales de 16.33 US$ · cuota 3 = licencia FULL.</div></div></div><p class="muted small" style="margin-top:12px">En PayPal (Developer → Webhooks → <span class="mono">https://offszn.lat/api/orders/paypal-webhook</span>) deben estar marcados: Payment sale completed, Billing subscription payment failed / cancelled / suspended / expired.</p>`
+                    : `<p class="muted small" style="margin-bottom:12px">Crea una sola vez el producto y el plan en tu PayPal (usa las llaves del servidor). Mientras no exista, el checkout avisa que las cuotas aún no están habilitadas.</p><button class="btn btn--brand" id="mkStarPlan">${icon('zap')} Crear plan de cuotas en PayPal</button>` })}
                 ${card({ title: 'Contenido pendiente de subir', desc: 'Lo que hoy se ve como cuadro con nombre en la tienda.', body: `<div class="kpis" style="margin-bottom:16px">
                     ${[['Productos activos', c.active], ['Sin portada', c.withoutCoverCount], [`Artistas sin audio`, `${c.artistsWithoutAudio}/${c.artists}`], ['Sin video', c.withoutVideo]].map(([l, v]) => `<div class="card kpi" style="padding:14px 16px"><div class="kpi__top"><span>${l}</span></div><div class="kpi__value" style="font-size:22px">${v}</div></div>`).join('')}</div>
                     ${c.withoutCover.length ? `<p class="label" style="margin-bottom:8px">Productos sin portada</p><div class="chips">${c.withoutCover.map((p) => `<span class="chip">${esc(p.title)} <small>${esc(p.category)}</small></span>`).join('')}</div>` : ''}
                     <p class="muted small" style="margin-top:14px">Las rutas y los nombres de archivo se llenan en <span class="mono">willieinspired/data/store-catalog.json</span>. Guía completa en <span class="mono">docs/willieinspired-tienda/PLAN.md</span>.</p>` })}
                 ${card({ title: 'Enlaces', body: `<div class="row"><a class="btn btn--outline" href="/willieinspired" target="_blank" rel="noopener">${icon('ext')} Tienda</a><a class="btn btn--outline" href="/owner/licencias" target="_blank" rel="noopener">${icon('ext')} Licencias</a><a class="btn btn--outline" href="/owner/pagos-manuales" target="_blank" rel="noopener">${icon('ext')} Pagos manuales</a><a class="btn btn--outline" href="/owner/correos-lista-de-espera" target="_blank" rel="noopener">${icon('ext')} Lista de espera</a></div>` })}`;
+            const mk = document.getElementById('mkStarPlan');
+            if (mk) mk.onclick = async () => {
+                mk.disabled = true;
+                try { const r = await api('/admin/star-plan', { method: 'POST' }); toast(r.created ? 'Plan creado en PayPal' : 'El plan ya existía'); C.route(); } catch (err) { toast(err.message, 'error'); mk.disabled = false; }
+            };
         }
     };
 })();

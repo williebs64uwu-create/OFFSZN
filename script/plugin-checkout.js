@@ -81,6 +81,8 @@ class PluginDirectCheckout {
     }
 
     init() {
+        // En modo cuotas la página carga el SDK de suscripciones de PayPal (script/star-subscription.js); no se mezclan.
+        if (window.PLUGIN_SKIP_DIRECT) return;
         if (!this.container || !this.productId) {
             console.warn('[PluginCheckout] Missing container (#plugin-paypal-button-container) or window.PLUGIN_ID');
             return;
