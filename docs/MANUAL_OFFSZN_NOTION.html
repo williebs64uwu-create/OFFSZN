@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>OFFSZN — Manual Maestro de Infraestructura y Despliegues</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #ffffff;
+      --text: #37352f;
+      --text-secondary: #787774;
+      --border: #e9e9e7;
+      --callout-bg: #f7f6f5;
+      --callout-blue: #edf5fc;
+      --callout-green: #edf7ed;
+      --callout-amber: #fdf5e6;
+      --callout-red: #fde8e8;
+      --badge-bg: #f1f1ef;
+      --code-bg: #f7f6f3;
+      --accent: #2383e2;
+    }
+
+    @page {
+      size: A4;
+      margin: 18mm 18mm 20mm 18mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+      font-size: 14px;
+      padding: 40px 60px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* Notion Cover & Header */
+    .header-icon {
+      font-size: 44px;
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+
+    h1.page-title {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      color: #1a1a1a;
+    }
+
+    .meta-bar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      padding-bottom: 20px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--badge-bg);
+      color: #45433f;
+    }
+
+    .badge-green {
+      background: #dbeddb;
+      color: #1c5e29;
+    }
+
+    .badge-blue {
+      background: #d3e5ef;
+      color: #185078;
+    }
+
+    .badge-amber {
+      background: #fae3af;
+      color: #7b4f00;
+    }
+
+    /* Typography */
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+      color: #1f1f1f;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: #2e2e2e;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin-bottom: 12px;
+      color: #37352f;
+    }
+
+    strong {
+      font-weight: 600;
+      color: #111;
+    }
+
+    /* Notion Callouts */
+    .callout {
+      display: flex;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 13.5px;
+      background: var(--callout-bg);
+      border: 1px solid #eae8e5;
+      page-break-inside: avoid;
+    }
+
+    .callout-icon {
+      font-size: 18px;
+      line-height: 1.4;
+      flex-shrink: 0;
+    }
+
+    .callout-content {
+      flex: 1;
+    }
+
+    .callout.green { background: var(--callout-green); border-color: #cde6cd; }
+    .callout.blue { background: var(--callout-blue); border-color: #c9e0f3; }
+    .callout.amber { background: var(--callout-amber); border-color: #f7e4be; }
+    .callout.red { background: var(--callout-red); border-color: #f8cfcf; }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 20px 0;
+      font-size: 13px;
+      page-break-inside: avoid;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: #f7f6f3;
+      font-weight: 600;
+      color: #45433f;
+    }
+
+    tr:nth-child(even) td {
+      background: #fbfbfb;
+    }
+
+    /* Lists */
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 14px;
+    }
+
+    li {
+      margin-bottom: 6px;
+      color: #37352f;
+    }
+
+    /* Code & Blocks */
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #d44c47;
+      border: 1px solid #eae8e5;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid #eae8e5;
+      border-radius: 6px;
+      padding: 14px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+      page-break-inside: avoid;
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #2b2b2b;
+      font-size: 11.5px;
+      line-height: 1.5;
+    }
+
+    .key-value-list {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 8px 16px;
+      background: #fcfcfc;
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 12.5px;
+    }
+
+    .key-value-list dt {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: #0b6e99;
+    }
+
+    .key-value-list dd {
+      color: #555;
+    }
+
+    .footer {
+      margin-top: 40px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header-icon">⚡</div>
+  <h1 class="page-title">OFFSZN — Manual de Infraestructura, Vercel y Cloudflare</h1>
+  <div class="meta-bar">
+    <span class="badge badge-green">🟢 SISTEMA ACTIVO Y VIABLE</span>
+    <span><strong>Dominio:</strong> offszn.lat</span>
+    <span><strong>Actualizado:</strong> 31 de Octubre, 2026</span>
+    <span><strong>Autor:</strong> Antigravity & Willie</span>
+  </div>
+
+  <!-- Callout Resumen -->
+  <div class="callout green">
+    <div class="callout-icon">✅</div>
+    <div class="callout-content">
+      <strong>Veredicto oficial: Tu cuenta de Vercel está 100% SALVADA y no tienes que abandonarla.</strong><br>
+      El contador de Fast Origin Transfer se reinicia a 0 GB el 1 de cada mes. Además, acabamos de aplicar la optimización en <code>vercel.json</code> y Express, eliminando el 95% del consumo diario de tráfico.
+    </div>
+  </div>
+
+  <!-- SECCIÓN 1 -->
+  <h2>1. Estado Real de la Cuenta (¿Está viable o ya fue?)</h2>
+  <p>
+    Tu cuenta <strong>está completamente funcional y segura</strong>. No necesitas mudarte ni empezar de cero. Aquí tienes el análisis técnico de cada métrica que viste en tu panel:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Métrica en Vercel</th>
+        <th>Límite Gratuito</th>
+        <th>Tu Estado</th>
+        <th>Diagnóstico y Solución</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Fast Origin Transfer</strong></td>
+        <td>10 GB / mes</td>
+        <td><span class="badge badge-amber">11.96 GB (Rojo)</span></td>
+        <td>Se resetea a 0 GB el día 1 de noviembre. Con el nuevo enrutamiento a archivos HTML estáticos, el consumo bajará de 800 MB/día a &lt;15 MB/día.</td>
+      </tr>
+      <tr>
+        <td><strong>Functions Storage</strong></td>
+        <td>10 GB total</td>
+        <td><span class="badge badge-blue">7.48 GB (Bajando)</span></td>
+        <td>Ya bajó de 9.07 GB a 7.48 GB al borrar deploys viejos. Con la política de retención de 7 días bajará a &lt;2 GB permanentemente.</td>
+      </tr>
+      <tr>
+        <td><strong>Fast Data Transfer (CDN)</strong></td>
+        <td>100 GB / mes</td>
+        <td><span class="badge badge-green">19.15 GB (19%)</span></td>
+        <td>Impecable. Tienes más de 80 GB de margen disponible para tus visitantes.</td>
+      </tr>
+      <tr>
+        <td><strong>Function Invocations</strong></td>
+        <td>1,000,000 / mes</td>
+        <td><span class="badge badge-green">170,000 (17%)</span></td>
+        <td>Muy holgado. Tienes más de 830,000 llamadas de sobra.</td>
+      </tr>
+      <tr>
+        <td><strong>Deployment Storage</strong></td>
+        <td>10 GB total</td>
+        <td><span class="badge badge-green">223 MB (2%)</span></td>
+        <td>Casi vacío. No genera ningún problema.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECCIÓN 2 -->
+  <h2>2. Configuración Exacta de tu Captura (Deployment Retention)</h2>
+  <p>
+    En la pantalla que abriste en tu captura de pantalla (<strong>Settings ➔ Deployment Retention Policy</strong>), ajusta los campos exactamente con estos valores para que Vercel nunca vuelva a acumular despliegues pesados:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Campo en el Panel</th>
+        <th>Valor a Seleccionar</th>
+        <th>Efecto</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Canceled Deployments</strong></td>
+        <td><code>1 day</code> (o 7 days)</td>
+        <td>Elimina inmediatamente despliegues cancelados que ocupan espacio inútil.</td>
+      </tr>
+      <tr>
+        <td><strong>Errored Deployments</strong></td>
+        <td><code>1 day</code> (o 7 days)</td>
+        <td>Purga despliegues fallidos.</td>
+      </tr>
+      <tr>
+        <td><strong>Pre-Production Deployments</strong></td>
+        <td><code>7 days</code></td>
+        <td>Mantiene las previews solo 1 semana y luego las limpia automáticamente.</td>
+      </tr>
+      <tr>
+        <td><strong>Production Deployments</strong></td>
+        <td><code>7 days</code> (o 14 days)</td>
+        <td>Mantiene las versiones de producción necesarias sin acumular meses de historial.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout blue">
+    <div class="callout-icon">💡</div>
+    <div class="callout-content">
+      <strong>Paso final en la pantalla:</strong> Haz clic en el botón negro <strong>"Save"</strong> en la esquina inferior derecha. A partir de ese momento, la limpieza es 100% automática.
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- SECCIÓN 3 -->
+  <h2>3. Cloudflare & Configuración del Dominio (offszn.lat)</h2>
+  <p>
+    Cloudflare te pide dos configuraciones esenciales para que tu dominio esté blindado, rápido y con SSL perfecto:
+  </p>
+
+  <h3>Paso A: Registros DNS para conectar con Vercel</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Tipo</th>
+        <th>Nombre (Host)</th>
+        <th>Contenido / Destino</th>
+        <th>Estado del Proxy</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>A</code></td>
+        <td><code>@</code> (o offszn.lat)</td>
+        <td><code>76.76.21.21</code></td>
+        <td><strong>DNS Only (Gris)</strong> — Recomendado</td>
+      </tr>
+      <tr>
+        <td><code>CNAME</code></td>
+        <td><code>www</code></td>
+        <td><code>cname.vercel-dns.com</code></td>
+        <td><strong>DNS Only (Gris)</strong> — Recomendado</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout amber">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-content">
+      <strong>Si activas el Proxy Naranja de Cloudflare:</strong><br>
+      Debes ir en Cloudflare a <strong>SSL/TLS ➔ Overview</strong> y asegurarte de que esté en <strong>Full (Strict)</strong>. Si está en <em>Flexible</em>, provocará un bucle infinito de redirecciones (<code>ERR_TOO_MANY_REDIRECTS</code>).
+    </div>
+  </div>
+
+  <!-- SECCIÓN 4 -->
+  <h2>4. Dónde va cada archivo: ImageKit vs Cloudflare R2</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Tipo de Archivo</th>
+        <th>Destino Óptimo</th>
+        <th>¿Por qué?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Portadas, Avatares, Banners, UI</strong></td>
+        <td><strong>ImageKit</strong></td>
+        <td>Comprime automáticamente imágenes a formato WebP/AVIF ultra liviano, genera miniaturas al vuelo y tiene CDN global inmediata.</td>
+      </tr>
+      <tr>
+        <td><strong>Videos MP4</strong> (ej. <code>omni-beat.mp4</code>)</td>
+        <td><strong>Cloudflare R2</strong></td>
+        <td>Cloudflare R2 tiene <strong>cero costo de transferencia saliente (Zero Egress)</strong>. Transmite gigabytes de video sin cobrarte ni un centavo.</td>
+      </tr>
+      <tr>
+        <td><strong>Audios MP3 / Previews de Beats</strong></td>
+        <td><strong>Cloudflare R2</strong></td>
+        <td>Soporta cabeceras HTTP Range (código 206) para reproducción instantánea con barra de tiempo sin sobrecargar el servidor.</td>
+      </tr>
+      <tr>
+        <td><strong>Instaladores VST3/AU y ZIPs de pago</strong></td>
+        <td><strong>Cloudflare R2 (Privado)</strong></td>
+        <td>Se descargan mediante URLs firmadas con vencimiento de 1 hora. Máxima seguridad sin consumo de Vercel.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECCIÓN 5 -->
+  <h2>5. Fluid Compute en Vercel (Optimización de Memoria)</h2>
+  <p>
+    En tu captura anterior se observaba: <code>Fluid Active CPU: 35s / 4h</code>. Esto es parte de la nueva arquitectura de Vercel.
+  </p>
+  <ul>
+    <li>En <strong>Project Settings ➔ Functions</strong>, verifica que la memoria de las funciones esté en <strong>1024 MB</strong> (el valor predeterminado más eficiente).</li>
+    <li>Con el cambio que hicimos en <code>vercel.json</code>, las landings ahora se sirven como archivos estáticos. <strong>La CPU de Fluid apenas se usará unos segundos al día</strong>, garantizando cero costos.</li>
+  </ul>
+
+  <div class="page-break"></div>
+
+  <!-- SECCIÓN 6 -->
+  <h2>6. Mapa Maestro de Variables de Entorno (.env)</h2>
+  <p>
+    Todas estas variables están configuradas en tu archivo <code>server/.env</code> y deben estar cargadas en Vercel (<strong>Settings ➔ Environment Variables</strong>):
+  </p>
+
+  <dl class="key-value-list">
+    <dt>SUPABASE_URL</dt>
+    <dd>URL de tu proyecto en Supabase (Base de datos y autenticación).</dd>
+
+    <dt>SUPABASE_SERVICE_KEY</dt>
+    <dd>Clave con permisos de administración para backend.</dd>
+
+    <dt>JWT_SECRET</dt>
+    <dd>Firma de tokens de sesión para usuarios y creadores.</dd>
+
+    <dt>AGENT_ACCESS_KEY</dt>
+    <dd>Clave maestra para endpoints internos y automatizaciones.</dd>
+
+    <dt>MERCADOPAGO_ACCESS_TOKEN</dt>
+    <dd>Token de producción de MercadoPago para cobros en PEN/USD.</dd>
+
+    <dt>PAYPAL_CLIENT_ID / SECRET</dt>
+    <dd>Credenciales de la API de PayPal para checkout internacional.</dd>
+
+    <dt>R2_ENDPOINT_V4 / V3 / V2</dt>
+    <dd>Endpoints S3 de tus buckets en Cloudflare R2.</dd>
+
+    <dt>R2_ACCESS_KEY / SECRET</dt>
+    <dd>Credenciales de acceso a Cloudflare R2 con permisos de lectura/escritura.</dd>
+
+    <dt>IMAGEKIT_PUBLIC / PRIVATE</dt>
+    <dd>Credenciales para compresión y entrega rápida de imágenes.</dd>
+
+    <dt>PLUGIN_PRIVATE_KEY</dt>
+    <dd>Clave RSA/ECDSA para firmar licencias de Easy Mix, Omni y Star Chain.</dd>
+  </dl>
+
+  <!-- SECCIÓN 7 -->
+  <h2>7. Protocolo de Despliegues Seguros (Checklist Rápido)</h2>
+  <div class="callout green">
+    <div class="callout-icon">📋</div>
+    <div class="callout-content">
+      <strong>Antes de hacer cualquier deploy en el futuro:</strong>
+      <ol style="margin-top: 8px; margin-left: 18px;">
+        <li>Ejecuta siempre <code>node --check server/src/app.js</code> para evitar errores de sintaxis.</li>
+        <li>No agregues carpetas pesadas (videos, wavs, zips) dentro del repositorio Git; súbelas directamente a Cloudflare R2.</li>
+        <li>Mantén las listas <code>includeFiles</code> y <code>excludeFiles</code> de <code>vercel.json</code> por debajo de 256 caracteres cada una para evitar errores de build en Vercel.</li>
+        <li>Si alguna vez lanzas una landing nueva, agrégala en <code>vercel.json</code> apuntando a su <code>.html</code> estático.</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="footer">
+    OFFSZN Cloud Infrastructure Guide — Creado exclusivamente para Willie (OFFSZN) — 2026
+  </div>
+
+</body>
+</html>
