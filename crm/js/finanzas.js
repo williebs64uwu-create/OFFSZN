@@ -25,6 +25,7 @@
     const status = (r) => {
         if (r.status === 'no_detail') return '<span class="badge badge--warn">Sin dato · revisar</span>';
         if (r.status === 'pending_review') return '<span class="badge badge--warn">Pesos por confirmar</span>';
+        if (r.currency === 'ARS' && r.settled_pen !== null && r.settled_pen !== undefined) return '<span class="badge badge--ok">Confirmado con soles</span>';
         if (r.by_willie) return '<span class="badge">Acción de Willie</span>';
         return r.verified ? '<span class="badge badge--ok">Verificado</span>' : '<span class="badge">Sin verificar</span>';
     };
@@ -51,7 +52,7 @@
                 <td class="muted">${esc(d.methods[r.method] || r.method)}</td>
                 <td>${money(r.gross, r.currency)}</td>
                 <td class="muted">${r.fee === null ? '—' : money(r.fee, r.currency)}</td>
-                <td><b>${money(r.net, r.currency)}</b></td>
+                <td><b>${r.currency === 'ARS' && r.settled_pen !== null && r.settled_pen !== undefined ? pen(r.settled_pen) : money(r.net, r.currency)}</b></td>
                 <td>${status(r)}</td>
                 <td>${r.method === 'paypal' && !r.by_willie ? `<button class="btn btn--ghost btn--sm" data-verify="${esc(r.id)}">Verificar</button>` : ''}</td>
             </tr>`).join('');
@@ -86,14 +87,33 @@
                             <select class="select" name="category" id="expCat">${d.categories.map((c) => `<option>${esc(c)}</option>`).join('')}</select>
                             <div class="row"><input class="input" name="amountPen" type="number" step="0.01" min="0.01" placeholder="Monto en soles" required style="flex:1"><input class="input" name="spentAt" type="date" value="${new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 10)}" style="width:auto"></div>
                             <input class="input" name="note" id="expNote" placeholder="Nota (en suscripción importante: cuál es)">
+                            <input class="input" name="ref" placeholder="N° de operación (opcional, evita duplicados)">
                             <button class="btn btn--brand" type="submit">${icon('plus')} Guardar gasto</button>
                         </form>` })}
                 </div>
+                ${d.pendingArs.length ? card({ title: 'Pesos argentinos por confirmar', desc: 'Cuando llegan los soles (ej. el depósito de Sayko) se reparten entre estos pagos y pasan a contar como neto. El depósito no se anota como venta nueva.', body: `
+                    <form id="arsForm" class="stack">
+                        <div class="table-wrap"><table><thead><tr><th></th><th>Cuándo</th><th>Correo</th><th>Producto</th><th>Pesos</th></tr></thead><tbody>${d.pendingArs.map((r) => `<tr><td><input type="checkbox" name="ids" value="${esc(r.id)}" checked></td><td class="muted">${esc(when(r.occurred_at))}</td><td>${esc(r.email || '—')}</td><td>${esc(r.product || 'Sin nombre')}</td><td><b>${ars(r.gross)}</b></td></tr>`).join('')}</tbody></table></div>
+                        <div class="row" style="flex-wrap:wrap"><input class="input" name="label" value="Depósito de Sayko" placeholder="Nombre del depósito" style="flex:1;min-width:180px"><input class="input" name="pen" type="number" step="0.01" min="0.01" placeholder="Soles que llegaron" required style="width:170px"><input class="input" name="ref" placeholder="N° de operación (Yape)" style="width:190px"></div>
+                        <button class="btn btn--brand" type="submit">Confirmar con este depósito</button>
+                    </form>` }) + '<div style="height:16px"></div>' : ''}
                 ${card({ title: 'Ingresos', desc: `${d.income.length} en ${monthLabel(d.month)} · hora de Lima`, flush: true, body: d.income.length ? `<div class="table-wrap"><table><thead><tr><th>Cuándo</th><th>Correo</th><th>Producto</th><th>Método</th><th>Bruto</th><th>Comisión</th><th>Neto</th><th>Estado</th><th></th></tr></thead><tbody>${incomeRows}</tbody></table></div>` : `<div class="empty">${icon('activity')}<p>Todavía no hay pagos este mes.</p></div>` })}
                 <div style="height:16px"></div>
                 ${card({ title: 'Gastos', desc: `${d.expenses.length} en ${monthLabel(d.month)}`, flush: true, body: d.expenses.length ? `<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Categoría</th><th>Nota</th><th>Monto</th><th></th></tr></thead><tbody>${expenseRows}</tbody></table></div>` : `<div class="empty">${icon('activity')}<p>Sin gastos este mes.</p></div>` })}`;
 
             $('#finMonth').onchange = (e) => { C.state.finMonth = e.target.value || nowMonth(); C.route(); };
+            const arsForm = $('#arsForm');
+            if (arsForm) arsForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const f = new FormData(e.target);
+                const ids = f.getAll('ids');
+                if (!ids.length) { toast('Marca al menos un pago', 'error'); return; }
+                try {
+                    const r = await api('/admin/finance/settle-ars', { method: 'POST', body: { ids, label: f.get('label'), pen: f.get('pen'), ref: f.get('ref') } });
+                    toast(r.duplicate ? 'Ese depósito ya estaba aplicado' : `${r.settled} ${r.settled === 1 ? 'pago confirmado' : 'pagos confirmados'} con ${pen(r.pen)}`);
+                    C.route();
+                } catch (err) { toast(err.message, 'error'); }
+            };
             $('#bankForm').onsubmit = async (e) => {
                 e.preventDefault();
                 const f = new FormData(e.target);
@@ -102,7 +122,7 @@
             $('#expForm').onsubmit = async (e) => {
                 e.preventDefault();
                 const f = new FormData(e.target);
-                try { await api('/admin/finance/expenses', { method: 'POST', body: { category: f.get('category'), amountPen: f.get('amountPen'), spentAt: f.get('spentAt'), note: f.get('note') } }); toast('Gasto guardado'); C.route(); } catch (err) { toast(err.message, 'error'); }
+                try { await api('/admin/finance/expenses', { method: 'POST', body: { category: f.get('category'), amountPen: f.get('amountPen'), spentAt: f.get('spentAt'), note: f.get('note'), ref: f.get('ref') } }); toast('Gasto guardado'); C.route(); } catch (err) { toast(err.message, 'error'); }
             };
             $$('[data-del-expense]').forEach((b) => { b.onclick = async () => { if (!confirm('¿Quitar este gasto?')) return; try { await api(`/admin/finance/expenses/${b.dataset.delExpense}`, { method: 'DELETE' }); toast('Gasto quitado'); C.route(); } catch (err) { toast(err.message, 'error'); } }; });
             $$('[data-verify]').forEach((b) => {

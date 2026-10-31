@@ -1,7 +1,7 @@
 // ─── Finanzas del CRM: endpoints del panel de licencias (despacho) y del CRM ───────────────────────────────────
 import { isAdminKey } from '../../../shared/config/adminKey.js';
 import {
-    recordManualIncome, monthData, addExpense, deleteExpense, saveBank, verifyPayPalIncome, setupPayPalWebhook, getSettings
+    recordManualIncome, monthData, addExpense, deleteExpense, saveBank, verifyPayPalIncome, setupPayPalWebhook, getSettings, settleArs
 } from '../../services/financeService.js';
 import { METHOD_LABEL, EXPENSE_CATEGORIES } from '../../../shared/store/finance.js';
 
@@ -52,4 +52,9 @@ export const paypalWebhookSetup = async (req, res) => {
 
 export const financeSettings = async (req, res) => {
     try { return res.json(await getSettings()); } catch (e) { return fail(res, e); }
+};
+
+// POST /admin/finance/settle-ars { label, pen, ref, ids, note } → llegaron los soles de los pagos en pesos argentinos
+export const financeSettleArs = async (req, res) => {
+    try { return res.json(await settleArs(req.body || {})); } catch (e) { return fail(res, e); }
 };
