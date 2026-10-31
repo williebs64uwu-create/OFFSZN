@@ -25,7 +25,7 @@ button.pri{background:var(--amber);color:#111;border-color:var(--amber);font-wei
 .row.bad{border-color:rgba(244,63,94,.5)}
 .meta{display:flex;flex-wrap:wrap;gap:8px;color:var(--mut);font-size:11px;margin-bottom:6px;font-family:var(--mono)}
 .tag{padding:1px 7px;border-radius:99px;border:1px solid var(--line);color:var(--sec)}
-.tag.ia{color:var(--blue)}.tag.reglas{color:var(--green)}.tag.art{color:var(--amber)}
+.tag.voto_arriba{color:var(--green)}.tag.voto_abajo{color:var(--rose)}.tag.correccion{color:var(--amber)}.tag.ia{color:var(--blue)}.tag.reglas{color:var(--green)}.tag.art{color:var(--amber)}
 .u{font-weight:600}.s{color:var(--sec);margin-top:3px}
 .acc{font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:5px;word-break:break-all}
 .hw{cursor:pointer;text-decoration:underline dotted}
@@ -45,7 +45,7 @@ button.pri{background:var(--amber);color:#111;border-color:var(--amber);font-wei
   <header>
     <h1>Conversaciones de STAR CHAIN<small>Lo que escribe la gente, qué responde STAR y qué cambia. Solo texto, enviado con el aviso del plugin.</small></h1>
     <input id="q" placeholder="Buscar en lo que escribió…" style="min-width:200px">
-    <select id="ruta"><option value="">Todas</option><option value="IA">IA</option><option value="reglas">Reglas</option><option value="artista">Artista</option><option value="opcion">Opción</option></select>
+    <select id="ruta"><option value="">Todas</option><option value="IA">IA</option><option value="reglas">Reglas</option><option value="artista">Artista</option><option value="opcion">Opción</option><option value="voto_abajo">👎 No era eso</option><option value="voto_arriba">👍 Sirvió</option><option value="correccion">✍️ Correcciones</option><option value="prompt">Prompt</option><option value="guia">Guía</option></select>
     <select id="lic"><option value="">Toda licencia</option><option value="prueba">Prueba</option><option value="completa">Completa</option></select>
     <label style="color:var(--sec);font-size:12px"><input type="checkbox" id="onlyBad"> solo las que no resolvió</label>
     <button id="reload">Actualizar</button>
@@ -62,7 +62,7 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 // «No resolvió»: respuestas de "no entendí / no pude / no lo sé" o acciones vacías en una orden
 const BAD = /no (te )?entend|no (lo )?pude|no s[eé]|no est[aá] disponible|no tengo|intenta de otra/i;
-const isBad = (l) => BAD.test(l.respuesta || '');
+const isBad = (l) => l.ruta === 'voto_abajo' || (l.ruta !== 'voto_arriba' && BAD.test(l.respuesta || ''));
 
 async function verify(pin) {
   try { const r = await fetch('/api/plugin/admin/verify-pin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pin }) }); return r.ok; } catch (e) { return false; }
@@ -93,11 +93,11 @@ function render() {
   const L = LOGS.filter((l) => (!lic || l.license === lic) && (!onlyBad || isBad(l)));
   const users = new Set(L.map((l) => l.hwid)), bad = L.filter(isBad).length;
   const by = (k) => L.filter((l) => l.ruta === k).length;
-  $('stats').innerHTML = [[L.length, 'mensajes'], [users.size, 'usuarios'], [bad, 'no resueltos'], [by('IA'), 'por IA'], [by('reglas'), 'por reglas']].map((s) => `<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join('');
+  $('stats').innerHTML = [[L.length, 'mensajes'], [users.size, 'usuarios'], [bad, 'no resueltos'], [by('IA'), 'por IA'], [by('reglas'), 'por reglas'], [by('voto_arriba'), '👍 sirvió'], [by('voto_abajo'), '👎 no era eso'], (by('voto_arriba') + by('voto_abajo')) ? [Math.round(100 * by('voto_arriba') / (by('voto_arriba') + by('voto_abajo'))) + '%', 'aprobación'] : ['—', 'aprobación']].map((s) => `<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join('');
   $('msg').textContent = L.length ? '' : 'Sin conversaciones con estos filtros.';
   $('list').innerHTML = L.map((l) => {
     const when = new Date(l.said_at || l.created_at).toLocaleString('es');
-    const cls = { IA: 'ia', reglas: 'reglas', artista: 'art' }[l.ruta] || '';
+    const cls = { IA: 'ia', reglas: 'reglas', artista: 'art', voto_arriba: 'voto_arriba', voto_abajo: 'voto_abajo', correccion: 'correccion' }[l.ruta] || '';
     const acc = (l.acciones || []).map((a) => a && a.type ? a.type + (a.bus ? ':' + a.bus : '') : '').filter(Boolean).join(' · ');
     return `<div class="row ${isBad(l) ? 'bad' : ''}"><div class="meta"><span>${esc(when)}</span><span class="tag ${cls}">${esc(l.ruta)}</span><span class="tag">${esc(l.license)}</span><span class="tag">v${esc(l.version)}</span><span class="hw" data-h="${esc(l.hwid)}" title="Ver solo este usuario">${esc((l.hwid || '').slice(-10))}</span></div><div class="u">${esc(l.usuario)}</div><div class="s">${esc(l.respuesta)}</div>${acc ? `<div class="acc">${esc(acc)}</div>` : ''}</div>`;
   }).join('');
