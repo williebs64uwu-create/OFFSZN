@@ -74,7 +74,7 @@
                 return Number(window.YAPE_FIXED_PRICE_PEN).toFixed(2);
             }
             const usd = this.getPriceUSD();
-            const solesMap = { 5: 19, 8: 25, 10: 38, 15: 57, 17: 65, 20: 76, 25: 95 };
+            const solesMap = { 5: 19, 8: 25, 9: 34, 10: 38, 15: 57, 17: 65, 20: 76, 25: 95 }; // igual a USD_TO_PEN del servidor (yapePricing.js)
             if (solesMap[usd]) return Number(solesMap[usd]).toFixed(2);
             return (usd * this.exchangeRate).toFixed(2);
         }
