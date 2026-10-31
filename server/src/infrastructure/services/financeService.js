@@ -4,7 +4,7 @@
 import { supabase } from '../database/connection.js';
 import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../shared/config/config.js';
 import {
-    FX_DEFAULT, START_AT_DEFAULT, EXPENSE_CATEGORIES, monthRange, summarize, normalizeManualIncome, paypalCaptureRows, mercadoPagoRow
+    FX_DEFAULT, START_AT_DEFAULT, EXPENSE_CATEGORIES, monthRange, summarize, normalizeManualIncome, paypalCaptureRows, mercadoPagoRow, allocateSettlement
 } from '../../shared/store/finance.js';
 
 const PAYPAL_API = PAYPAL_ENVIRONMENT === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
@@ -79,7 +79,8 @@ export async function monthData(month) {
     ]);
     if (income.error) throw income.error;
     if (spent.error) throw spent.error;
-    return { settings, month: range.month, income: income.data || [], expenses: spent.data || [], summary: summarize(income.data || [], spent.data || [], settings.fx) };
+    const pendingArs = await listPendingArs();
+    return { settings, month: range.month, income: income.data || [], expenses: spent.data || [], pendingArs, summary: summarize(income.data || [], spent.data || [], settings.fx) };
 }
 
 // Ingresos desde el inicio del conteo (los usa el Resumen del CRM).
@@ -92,7 +93,7 @@ export async function incomeSince(fromIso) {
 }
 
 // ─── Gastos (siempre en soles) ────────────────────────────────────────────────────────────────────────────────
-export async function addExpense({ category, amountPen, note, spentAt }) {
+export async function addExpense({ category, amountPen, note, spentAt, ref }) {
     const cat = String(category || '').toUpperCase();
     if (!EXPENSE_CATEGORIES.includes(cat)) throw Object.assign(new Error('Elige una categoría: Gaseosa, Comida rápida o Suscripción importante.'), { status: 400 });
     const amount = Number(amountPen);
@@ -100,14 +101,48 @@ export async function addExpense({ category, amountPen, note, spentAt }) {
     const text = String(note || '').trim().slice(0, 200);
     if (cat === 'SUSCRIPCIÓN IMPORTANTE' && !text) throw Object.assign(new Error('Escribe cuál es la suscripción.'), { status: 400 });
     const date = /^\d{4}-\d{2}-\d{2}$/.test(String(spentAt)) ? spentAt : new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 10);
-    const { data, error } = await supabase.from('finance_expenses').insert({ category: cat, amount_pen: Math.round(amount * 100) / 100, note: text || null, spent_at: date }).select('*').single();
-    if (error) throw error;
+    const { data, error } = await supabase.from('finance_expenses').insert({ category: cat, amount_pen: Math.round(amount * 100) / 100, note: text || null, spent_at: date, ref: String(ref || '').trim().slice(0, 60) || null }).select('*').single();
+    if (error) { if (error.code === '23505') throw Object.assign(new Error('Ese gasto ya estaba registrado (mismo número de operación).'), { status: 409 }); throw error; }
     return data;
 }
 
 export async function deleteExpense(id) {
     const { error } = await supabase.from('finance_expenses').delete().eq('id', String(id).slice(0, 64));
     if (error) throw error;
+}
+
+// ─── Pesos argentinos por confirmar ──────────────────────────────────────────────────────────────────────────────
+export async function listPendingArs() {
+    const { data, error } = await supabase.from('finance_income').select('*').eq('currency', 'ARS').eq('status', 'pending_review').order('occurred_at', { ascending: true }).limit(2000);
+    if (error) throw error;
+    return data || [];
+}
+
+// Llegaron soles (ej. "Depósito de Sayko"): se reparten entre los pagos en pesos elegidos (o todos los pendientes) y pasan a contar como neto.
+// El depósito NO se anota como venta nueva. Con número de operación, el mismo depósito no se aplica dos veces.
+export async function settleArs({ label, pen, ref, ids, note }) {
+    const name = String(label || '').trim().slice(0, 80) || 'Depósito';
+    const opRef = String(ref || '').trim().slice(0, 60) || null;
+    if (opRef) {
+        const { data: dup } = await supabase.from('finance_deposits').select('id').eq('ref', opRef).maybeSingle();
+        if (dup) return { ok: true, duplicate: true };
+    }
+    const pending = await listPendingArs();
+    const wanted = Array.isArray(ids) && ids.length ? ids.map(String) : null;
+    const chosen = wanted ? pending.filter((r) => wanted.includes(String(r.id))) : pending;
+    const plan = allocateSettlement(chosen, pen);
+    if (!plan.ok) throw Object.assign(new Error(plan.error), { status: 400 });
+    const penAmount = Math.round(Number(pen) * 100) / 100;
+    const { error } = await supabase.from('finance_deposits').insert({ label: name, pen: penAmount, ref: opRef, income_ids: chosen.map((r) => r.id), note: String(note || '').trim().slice(0, 200) || null });
+    if (error) { if (error.code === '23505') return { ok: true, duplicate: true }; throw error; }
+    const at = new Date().toISOString();
+    for (const a of plan.allocations) {
+        const row = chosen.find((r) => r.id === a.id);
+        const text = `${row.note ? `${row.note} · ` : ''}${name}: S/ ${a.settled_pen.toFixed(2)}`;
+        const { error: upErr } = await supabase.from('finance_income').update({ status: 'confirmed', settled_pen: a.settled_pen, settled_at: at, note: text }).eq('id', a.id);
+        if (upErr) throw upErr;
+    }
+    return { ok: true, settled: plan.allocations.length, pen: penAmount, pesos: plan.pesos };
 }
 
 // ─── Verificación contra PayPal (solo lectura) ────────────────────────────────────────────────────────────────

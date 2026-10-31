@@ -2,7 +2,7 @@
 //   node --test tests/finance.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeManualIncome, summarize, usdOf, paypalCaptureRows, mercadoPagoRow, monthRange, limaMonth, FX_DEFAULT } from '../src/shared/store/finance.js';
+import { normalizeManualIncome, summarize, usdOf, paypalCaptureRows, mercadoPagoRow, monthRange, limaMonth, allocateSettlement, FX_DEFAULT } from '../src/shared/store/finance.js';
 
 test('despacho manual: dólares = lo que te dieron (PayPal), soles = neto (Yape), pesos argentinos = pendiente', () => {
     const usd = normalizeManualIncome({ serial: 'EASY-FULL-AAAA', currency: 'USD', amount: 17, email: 'A@B.com', product: 'Easy Mix' }).row;
@@ -10,7 +10,7 @@ test('despacho manual: dólares = lo que te dieron (PayPal), soles = neto (Yape)
     const pen = normalizeManualIncome({ serial: 'K2', currency: 'PEN', amount: 65 }).row;
     assert.deepEqual([pen.method, pen.gross, pen.net, pen.status], ['yape', 65, 65, 'confirmed']);
     const ars = normalizeManualIncome({ serial: 'K3', currency: 'ARS', amount: 15000 }).row;
-    assert.deepEqual([ars.method, ars.gross, ars.net, ars.status], ['mercadopago', 15000, null, 'pending_review']);
+    assert.deepEqual([ars.method, ars.gross, ars.net, ars.status], ['mp_argentina', 15000, null, 'pending_review']);
     assert.equal(normalizeManualIncome({ serial: 'K4', currency: 'PEN', amount: 38, method: 'binance' }).row.method, 'binance'); // se puede cambiar el método
 });
 
@@ -75,4 +75,22 @@ test('Mercado Pago (Yape): soles con el neto que informa MP; un pago no aprobado
     assert.equal(mercadoPagoRow({ id: 1, status: 'rejected', transaction_amount: 65 }), null);
     // sin neto informado: bruto menos comisión
     assert.equal(mercadoPagoRow({ id: 2, status: 'approved', transaction_amount: 38, fee_details: [{ fee_payer: 'collector', amount: 1.5 }] }).net, 36.5);
+});
+
+test('pesos argentinos: cuentan solo cuando llegan los soles; el depósito se reparte exacto entre los pagos', () => {
+    const pending = [{ id: 'a', gross: 15000 }, { id: 'b', gross: 30000 }, { id: 'c', gross: 15000 }];
+    const out = allocateSettlement(pending, 100);
+    assert.deepEqual(out.allocations.map((a) => a.settled_pen), [25, 50, 25]);
+    const odd = allocateSettlement([{ id: 'a', gross: 1 }, { id: 'b', gross: 1 }, { id: 'c', gross: 1 }], 100); // 33.33 + 33.33 + 33.34
+    assert.equal(odd.allocations.reduce((a, x) => a + x.settled_pen, 0).toFixed(2), '100.00');
+    assert.equal(allocateSettlement([], 100).ok, false);
+    assert.equal(allocateSettlement(pending, 0).ok, false);
+
+    const ars = (o) => ({ status: 'pending_review', by_willie: true, currency: 'ARS', method: 'mp_argentina', product: 'Easy Mix', fee: null, net: null, ...o });
+    const pend = summarize([ars({ gross: 15000 })], [], 3.37);
+    assert.deepEqual([pend.income.count, pend.pendingArs.count, pend.income.netPen], [0, 1, 0]);   // pendiente: no suma
+    const done = summarize([ars({ gross: 15000, status: 'confirmed', settled_pen: 101.1 })], [], 3.37);
+    assert.deepEqual([done.income.count, done.income.netPen, done.income.netUsd, done.pendingArs.count], [1, 101.1, 30, 0]); // confirmado: 101.1 soles ÷ 3.37 = 30 US$
+    assert.equal(done.income.byCurrency.ARS.settledPen, 101.1);
+    assert.equal(usdOf(ars({ gross: 15000 })), null);
 });

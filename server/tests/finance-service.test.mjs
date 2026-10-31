@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 
 const tables = {};
 const T = (n) => (tables[n] ||= []);
-const UNIQUE = { finance_income: [['source', 'ref']], finance_settings: [['key']] };
+const UNIQUE = { finance_income: [['source', 'ref']], finance_settings: [['key']], finance_deposits: [['ref']], finance_expenses: [['ref']] };
 let id = 1;
 let breakIncome = false;
 
@@ -28,7 +28,7 @@ class Query {
             const out = [];
             for (const raw of this.rows) {
                 const row = { id: `id${id++}`, ...raw };
-                const dup = (UNIQUE[this.table] || []).some((cols) => rows.some((r) => cols.every((c) => r[c] === row[c])));
+                const dup = (UNIQUE[this.table] || []).some((cols) => cols.every((c) => row[c] !== undefined && row[c] !== null) && rows.some((r) => cols.every((c) => r[c] === row[c])));
                 if (dup) { if (this.op === 'upsert' && this.o.ignoreDuplicates) continue; return { data: null, error: { code: '23505', message: 'duplicate' } }; }
                 rows.push(row); out.push(row);
             }
@@ -119,4 +119,47 @@ test('cuenta del banco: se guarda lo que escribes y rechaza montos inválidos', 
     assert.deepEqual(b, { pen: 27000.46, as_of: '2026-11-30' });
     await assert.rejects(() => svc.saveBank({ pen: 'x' }), /saldo/);
     await assert.rejects(() => svc.saveBank({ pen: -1 }), /saldo/);
+});
+
+test('gastos con número de operación: la misma captura dos veces no duplica', async () => {
+    reset();
+    await svc.addExpense({ category: 'COMIDA RÁPIDA', amountPen: 18, spentAt: '2026-11-03', ref: 'OP-123' });
+    await assert.rejects(() => svc.addExpense({ category: 'COMIDA RÁPIDA', amountPen: 18, spentAt: '2026-11-03', ref: 'OP-123' }), /ya estaba registrado/);
+    await svc.addExpense({ category: 'GASEOSA', amountPen: 4, spentAt: '2026-11-03' });   // sin número: se permite
+    await svc.addExpense({ category: 'GASEOSA', amountPen: 4, spentAt: '2026-11-03' });
+    assert.equal(T('finance_expenses').length, 3);
+});
+
+test('pesos argentinos: el depósito de soles los confirma, se reparte exacto y no se aplica dos veces', async () => {
+    reset();
+    const ars = (ref, pesos) => svc.recordManualIncome({ serial: ref, email: `${ref}@x.com`, product: 'Easy Mix', currency: 'ARS', amount: pesos });
+    await ars('S1', 15000); await ars('S2', 30000); await ars('S3', 15000);
+    const month = await svc.monthData('2026-10');
+    assert.equal(month.pendingArs.length, 3);
+    assert.equal(month.summary.income.count, 0);                       // sin depósito, nada suma
+
+    const first = await svc.settleArs({ label: 'Depósito de Sayko', pen: 202.2, ref: 'YAPE-OP-1' });
+    assert.deepEqual([first.ok, first.settled, first.pen], [true, 3, 202.2]);
+    const rows = T('finance_income');
+    assert.deepEqual(rows.map((r) => r.settled_pen), [50.55, 101.1, 50.55]);
+    assert.ok(rows.every((r) => r.status === 'confirmed' && /Depósito de Sayko/.test(r.note)));
+    assert.equal(T('finance_deposits').length, 1);
+
+    const again = await svc.settleArs({ label: 'Depósito de Sayko', pen: 202.2, ref: 'YAPE-OP-1' });   // misma captura
+    assert.equal(again.duplicate, true);
+    assert.equal(T('finance_deposits').length, 1);
+
+    const after = await svc.monthData('2026-10');
+    assert.equal(after.pendingArs.length, 0);
+    assert.equal(after.summary.income.netPen, 202.2);                  // los soles que de verdad llegaron
+    assert.equal(after.summary.income.netUsd, Math.round((202.2 / 3.37) * 100) / 100);
+    await assert.rejects(() => svc.settleArs({ label: 'x', pen: 50, ref: 'OP-2' }), /No hay pagos en pesos/);
+});
+
+test('pesos argentinos: se puede confirmar solo una parte de los pagos', async () => {
+    reset();
+    for (const [ref, pesos] of [['A', 10000], ['B', 10000]]) await svc.recordManualIncome({ serial: ref, currency: 'ARS', amount: pesos, product: 'Easy Mix' });
+    const idA = T('finance_income').find((r) => r.ref === 'A').id;
+    await svc.settleArs({ label: 'Depósito de Sayko', pen: 70, ref: 'OP-9', ids: [idA] });
+    assert.deepEqual(T('finance_income').map((r) => [r.ref, r.status]), [['A', 'confirmed'], ['B', 'pending_review']]);
 });

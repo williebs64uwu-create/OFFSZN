@@ -6,10 +6,10 @@ export const FX_DEFAULT = 3.37; // soles por dólar, solo para mostrar equivalen
 export const START_AT_DEFAULT = '2026-10-31T05:00:00.000Z'; // 31 oct 2026 00:00 hora de Lima: desde aquí se cuenta todo
 export const EXPENSE_CATEGORIES = ['GASEOSA', 'COMIDA RÁPIDA', 'SUSCRIPCIÓN IMPORTANTE'];
 export const CURRENCIES = ['USD', 'PEN', 'ARS'];
-export const METHODS = ['paypal', 'yape', 'mercadopago', 'binance', 'transferencia', 'otro'];
-export const METHOD_LABEL = { paypal: 'PayPal', yape: 'Yape', mercadopago: 'Mercado Pago', binance: 'Binance (USDT)', transferencia: 'Transferencia', otro: 'Otro' };
+export const METHODS = ['paypal', 'yape', 'mercadopago', 'mp_argentina', 'binance', 'transferencia', 'otro'];
+export const METHOD_LABEL = { paypal: 'PayPal', yape: 'Yape', mercadopago: 'Mercado Pago', mp_argentina: 'Mercado Pago → Yape (Argentina)', binance: 'Binance (USDT)', transferencia: 'Transferencia', otro: 'Otro' };
 // Método que se propone según la moneda al despachar a mano: dólares = PayPal, soles = Yape, pesos argentinos = Mercado Pago.
-export const DEFAULT_METHOD = { USD: 'paypal', PEN: 'yape', ARS: 'mercadopago' };
+export const DEFAULT_METHOD = { USD: 'paypal', PEN: 'yape', ARS: 'mp_argentina' };
 
 export const MAIN_MERCHANT_ID = 'MXV5F6X8JXG4S';
 export const MAIN_MERCHANT_EMAIL = 'willie2008garay@gmail.com';
@@ -57,6 +57,8 @@ export function normalizeManualIncome(input = {}, now = new Date()) {
 // Valor en dólares de lo que ya cuenta (confirmado). Soles: neto ÷ tipo de cambio. Sin dato o pesos argentinos: no cuentan todavía.
 export function usdOf(row, fx = FX_DEFAULT, field = 'net') {
     if (!row || row.status !== 'confirmed') return null;
+    // Pesos argentinos ya confirmados: valen los soles que de verdad llegaron (bruto = neto, no se conoce otro dato).
+    if (row.currency === 'ARS') { const settled = num(row.settled_pen); return settled === null ? null : r2(settled / fx); }
     const v = num(row[field] ?? (field === 'net' ? row.gross : null));
     if (v === null) return null;
     if (row.currency === 'USD') return r2(v);
@@ -87,7 +89,7 @@ export function summarize(rows = [], expenses = [], fx = FX_DEFAULT) {
     const bySource = { auto: 0, manual: 0 };
     const ars = { count: 0, pesos: 0 };
     const noDetail = { count: 0 };
-    const cur = { USD: { count: 0, gross: 0, fee: 0, net: 0 }, PEN: { count: 0, net: 0 } };
+    const cur = { USD: { count: 0, gross: 0, fee: 0, net: 0 }, PEN: { count: 0, net: 0 }, ARS: { count: 0, pesos: 0, settledPen: 0 } };
 
     for (const r of rows) {
         if (r.status === 'no_detail') { noDetail.count += 1; continue; }
@@ -97,8 +99,9 @@ export function summarize(rows = [], expenses = [], fx = FX_DEFAULT) {
         const grossUsd = usdOf(r, fx, 'gross') ?? netUsd;
         const feeUsd = r.currency === 'USD' ? r2(num(r.fee) || 0) : r2((num(r.fee) || 0) / fx);
         t.count += 1; t.grossUsd = r2(t.grossUsd + grossUsd); t.feeUsd = r2(t.feeUsd + feeUsd); t.netUsd = r2(t.netUsd + netUsd);
-        t.netPen = r2(t.netPen + (r.currency === 'PEN' ? num(r.net) || 0 : netUsd * fx));
+        t.netPen = r2(t.netPen + (r.currency === 'PEN' ? num(r.net) || 0 : r.currency === 'ARS' ? num(r.settled_pen) || 0 : netUsd * fx));
         if (r.currency === 'USD') { cur.USD.count += 1; cur.USD.gross = r2(cur.USD.gross + (num(r.gross) || 0)); cur.USD.fee = r2(cur.USD.fee + (num(r.fee) || 0)); cur.USD.net = r2(cur.USD.net + (num(r.net) || 0)); }
+        else if (r.currency === 'ARS') { cur.ARS.count += 1; cur.ARS.pesos = r2(cur.ARS.pesos + (num(r.gross) || 0)); cur.ARS.settledPen = r2(cur.ARS.settledPen + (num(r.settled_pen) || 0)); }
         else { cur.PEN.count += 1; cur.PEN.net = r2(cur.PEN.net + (num(r.net) || 0)); }
         if (r.by_willie) bySource.manual += 1; else bySource.auto += 1;
         const m = byMethod.get(r.method) || { method: r.method, label: METHOD_LABEL[r.method] || r.method, count: 0, netUsd: 0 };
@@ -187,4 +190,21 @@ export function mercadoPagoRow(payment, ctx = {}) {
         method: 'yape', currency: String(payment.currency_id || 'PEN').toUpperCase(), gross, fee: fee || null, net,
         status: 'confirmed', verified: true, by_willie: false, note: ctx.note || null, order_id: ctx.orderId ?? null
     };
+}
+
+// ─── Depósito en soles que confirma pagos en pesos argentinos ─────────────────────────────────────────────────
+// Los soles se reparten entre los pagos en proporción a sus pesos; el último absorbe el redondeo para que sumen exacto.
+export function allocateSettlement(pending = [], totalPen) {
+    const total = r2(totalPen);
+    const rows = (pending || []).filter((r) => (num(r.gross) || 0) > 0);
+    if (!(total > 0)) return { ok: false, error: 'Escribe los soles que llegaron (mayor que 0).' };
+    if (!rows.length) return { ok: false, error: 'No hay pagos en pesos por confirmar.' };
+    const pesos = rows.reduce((a, r) => a + Number(r.gross), 0);
+    let given = 0;
+    const out = rows.map((r, i) => {
+        const part = i === rows.length - 1 ? r2(total - given) : r2((total * Number(r.gross)) / pesos);
+        given = r2(given + part);
+        return { id: r.id, settled_pen: part };
+    });
+    return { ok: true, allocations: out, pesos: r2(pesos) };
 }
