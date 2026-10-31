@@ -319,6 +319,20 @@ export const requestTrial = async (req, res) => {
             return res.json({ success: true, serial_key: lic.serial_key, expires_at: lic.expires_at, license_type: 'trial', signature });
         }
 
+        // ── 1b. Prueba AUTOMATICA (EASY dentro de STAR CHAIN): tope global de lanzamiento (tabla plugin_trial_pool, 120 por defecto) ──
+        // Solo cuenta si el plugin avisa auto_star; las pruebas pedidas a mano en offszn.lat/plugins no tienen tope.
+        let poolSlot = false;
+        if (req.body.auto_star === true) {
+            const { data: okSlot, error: poolErr } = await supabase.rpc('claim_auto_trial_slot');
+            if (poolErr) console.warn('[Trial] pool no disponible, se deja pasar:', poolErr.message);
+            else if (!okSlot) {
+                return res.status(403).json({
+                    error: `Las pruebas gratis de lanzamiento ya se agotaron. Consigue tu licencia en offszn.lat/plugins para usar ${activePluginName}.`,
+                    trial_pool_empty: true
+                });
+            } else poolSlot = true;
+        }
+
         // ── 2. No previous trial → create one ────────────────────────────────
         const trialPlugin = findPluginByName(activePluginName) || DEFAULT_PLUGIN;
         const basePrefix = trialPlugin.prefix;
@@ -332,7 +346,7 @@ export const requestTrial = async (req, res) => {
             .from('plugin_licenses')
             .insert({ serial_key: serialKey, license_type: 'trial', status: 'active', expires_at: expiresAt, max_devices: 1, plugin_name: activePluginName })
             .select('id').single();
-        if (licErr) throw licErr;
+        if (licErr) { if (poolSlot) await supabase.rpc('release_auto_trial_slot'); throw licErr; }
 
         await supabase.from('plugin_activations').insert({ license_id: newLic.id, hwid, device_name: device_name || 'Desconocido' });
 
