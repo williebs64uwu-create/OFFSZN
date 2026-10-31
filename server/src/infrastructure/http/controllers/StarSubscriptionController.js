@@ -5,6 +5,7 @@ import { STAR_INSTALLMENTS, STAR_INSTALLMENT_USD, STAR_PRICE_USD } from '../../.
 // GET /api/orders/star/config → el checkout decide si ofrece las cuotas (solo si el plan ya existe)
 export const getStarConfig = async (req, res) => {
     try {
+        res.setHeader('Cache-Control', 'no-store'); // el plan se crea una vez: que ninguna caché guarde el "todavía no existe"
         return res.json({ planId: await getStarPlanId(), installments: STAR_INSTALLMENTS, installmentUsd: STAR_INSTALLMENT_USD, totalUsd: STAR_PRICE_USD });
     } catch (e) {
         return res.status(500).json({ error: 'No se pudo leer la configuración.' });

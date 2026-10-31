@@ -15,6 +15,7 @@ export function buildOverview({ orders = [], events = [], customers = [], trials
         c.orders += 1; c.revenueUsd = r2(c.revenueUsd + Number(o.total_usd || 0));
     }
     const revenue = completed.reduce((a, o) => a + Number(o.total_usd || 0), 0);
+    const net = completed.reduce((a, o) => a + Number(o.net_usd ?? o.total_usd ?? 0), 0);
 
     const byDay = new Map();
     const byCountry = new Map();
@@ -56,6 +57,7 @@ export function buildOverview({ orders = [], events = [], customers = [], trials
     return {
         days,
         revenueUsd: r2(revenue),
+        netUsd: r2(net),
         orders: completed.length,
         aovUsd: completed.length ? r2(revenue / completed.length) : 0,
         channels,

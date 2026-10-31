@@ -1,6 +1,8 @@
 import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
 import { handleStarWebhook } from '../../services/starSubscriptionService.js';
+import { recordPayPalCaptures, recordIncome, productLabel } from '../../services/financeService.js';
+import { paypalSaleEventRow } from '../../../shared/store/finance.js';
 import { supabase } from '../../database/connection.js';
 import { PLATFORM_PAYPAL_EMAIL, PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../../shared/config/config.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
@@ -1071,6 +1073,9 @@ export const capturePayPalOrder = async (req, res) => {
                     order = retry.data;
                 }
             }
+
+            // Libro de finanzas: una fila por cobro que llegó a tu cuenta, con bruto, comisión y neto que informa PayPal. Nunca rompe el cobro.
+            await recordPayPalCaptures(response.result, { email: payerEmail, orderId: order?.id ?? null, ...productLabel(cartItems) });
 
             // 3. Create Transactions and Order Items
             const transactions = [];
@@ -2567,6 +2572,9 @@ export const handlePayPalWebhook = async (req, res) => {
                     newOrder = retry.data;
                 }
             }
+
+            // Libro de finanzas (respaldo): el aviso de PayPal trae bruto y comisión. Nunca rompe la entrega.
+            if (isSale) await recordIncome(paypalSaleEventRow(event.resource, { email: payerEmail, product: pluginToGenerate, productId, orderId: newOrder?.id ?? null }));
 
             // Generate license and send email automatically
             const result = await generatePluginLicense({

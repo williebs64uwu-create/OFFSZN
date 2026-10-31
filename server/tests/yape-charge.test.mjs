@@ -13,6 +13,9 @@ mock.module('../src/infrastructure/services/MetaCapiService.js', { defaultExport
 mock.module('../src/infrastructure/http/controllers/PluginLicensingController.js', { namedExports: { generatePluginLicense: async ({ pluginName }) => ({ serialKey: `${pluginName}-KEY` }) } });
 mock.module('../src/infrastructure/services/starSubscriptionService.js', { namedExports: { getStarCouponPercent: async (code) => (String(code).toUpperCase() === 'STAR' ? 10 : 0) } });
 
+const ledger = [];
+mock.module('../src/infrastructure/services/financeService.js', { namedExports: { recordMercadoPago: async (payment, ctx) => { ledger.push({ payment, ctx }); return { ok: true }; } } });
+
 const { chargeYape, quoteYape } = await import('../src/infrastructure/http/controllers/YapeController.js');
 const { resolveYapePrice, penFor, rateFromEnv } = await import('../src/shared/store/yapePricing.js');
 
@@ -108,4 +111,13 @@ test('cotización: el modal recibe del servidor los mismos soles que luego se co
     assert.equal((await quote({ productId: '5002', price: '8' })).payload.pen, 25);
     assert.equal((await quote({ productId: '899', price: '1' })).status, 400);
     assert.equal((await quote({ productId: '5003', price: '1', coupon: 'star' })).payload.pen, 166.5);
+});
+
+test('libro de finanzas: cada cobro de Yape aprobado se anota con su producto y correo; los rechazados no', async () => {
+    ledger.length = 0;
+    await run({ productId: 899, customPrice: 17 });
+    assert.equal(ledger.length, 1);
+    assert.deepEqual([ledger[0].ctx.product, ledger[0].ctx.productId, ledger[0].ctx.email, String(ledger[0].payment.id)], ['Easy Mix', 899, 'cliente@correo.com', '777']);
+    await run({ productId: 899, customPrice: 1 });   // precio inventado: se rechaza antes de cobrar
+    assert.equal(ledger.length, 1);
 });

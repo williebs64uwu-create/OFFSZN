@@ -10,6 +10,7 @@
  * 4. Meta Pixel / CAPI purchase tracking deduplicated.
  */
 
+import { recordPayPalCaptures } from '../../services/financeService.js';
 import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
 import { supabase } from '../../database/connection.js';
@@ -144,6 +145,9 @@ export const capturePromo2x1Order = async (req, res) => {
         const capturedAmount = parseFloat(response.result.purchase_units?.[0]?.payments?.captures?.[0]?.amount?.value || validPrice);
 
         console.log(`[Promo2x1Checkout] ✅ Payment captured: $${capturedAmount} from ${payerEmail} (${payerName})`);
+
+        // Libro de finanzas: bruto, comisión y neto reales que informa PayPal. Nunca rompe el cobro.
+        await recordPayPalCaptures(response.result, { email: payerEmail, product: 'Promo 2x1 (Easy Mix + Easy Master)', productId: 899 });
 
         // 2. ALWAYS Generate BOTH Licenses (Easy Mix + Easy Master Lifetime)
         let mixKey = null;

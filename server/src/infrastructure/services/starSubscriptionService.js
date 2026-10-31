@@ -5,6 +5,7 @@
 import crypto from 'crypto';
 import { supabase } from '../database/connection.js';
 import { sendOffsznEmail } from '../../shared/utils/mailer.js';
+import { recordIncome } from './financeService.js';
 import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../shared/config/config.js';
 import {
     STAR_PRODUCT_ID, STAR_INSTALLMENTS, STAR_INSTALLMENT_USD, licenseForPayment, subExpiry,
@@ -172,7 +173,7 @@ async function recordOrder({ email, saleId, amountUsd, kind, n }) {
 }
 
 // Procesa UNA cuota cobrada (idempotente por sale_id). Devuelve la licencia entregada.
-export async function processStarPayment({ subscription, saleId, amountUsd, paidAt }) {
+export async function processStarPayment({ subscription, saleId, amountUsd, feeUsd = null, netUsd = null, paidAt }) {
     const { data: already } = await supabase.from('star_subscription_payments').select('*').eq('sale_id', saleId).maybeSingle();
     if (already) return { duplicate: true, serial: already.license_serial, n: already.n, kind: already.license_type === 'lifetime' ? 'full' : 'sub' };
 
@@ -202,6 +203,11 @@ export async function processStarPayment({ subscription, saleId, amountUsd, paid
     }).eq('subscription_id', subscription.subscription_id);
 
     await recordOrder({ email: subscription.email, saleId, amountUsd: amountUsd || STAR_INSTALLMENT_USD, kind, n });
+    // Libro de finanzas: la cuota con su bruto, comisión y neto de PayPal. Nunca rompe la entrega.
+    await recordIncome({
+        source: 'subscription', ref: saleId, occurred_at: paidAt || new Date().toISOString(), email: subscription.email, product: `STAR CHAIN · cuota ${n} de ${STAR_INSTALLMENTS}`, product_id: STAR_PRODUCT_ID,
+        method: 'paypal', currency: 'USD', gross: amountUsd || STAR_INSTALLMENT_USD, fee: feeUsd, net: netUsd, status: 'confirmed', verified: true, by_willie: false, note: null, order_id: null
+    });
     await emailBuyer({ to: subscription.email, n, serial, kind }).catch((e) => console.warn('[STAR sub] correo comprador:', e.message));
     await emailOwner({
         subject: `💸 [MARKETPLACE · PLUGIN · STAR CHAIN · CUOTA ${n}/${STAR_INSTALLMENTS}] $${Number(amountUsd || STAR_INSTALLMENT_USD).toFixed(2)} USD`,
@@ -238,7 +244,7 @@ export async function confirmStarSubscription({ subscriptionId, email, userId })
     for (let attempt = 0; attempt < 3; attempt++) {
         const first = firstCompletedSale(await listTransactions(sub));
         if (first) {
-            const r = await processStarPayment({ subscription: row, saleId: first.saleId, amountUsd: first.amountUsd, paidAt: first.paidAt });
+            const r = await processStarPayment({ subscription: row, saleId: first.saleId, amountUsd: first.amountUsd, feeUsd: first.feeUsd, netUsd: first.netUsd, paidAt: first.paidAt });
             return { ok: true, pending: false, serialKey: r.serial, n: r.n, email: row.email };
         }
         await new Promise((res) => setTimeout(res, 2000));
@@ -267,7 +273,7 @@ export async function handleStarWebhook(event) {
     if (isSale) {
         const sale = findCompletedSale(await listTransactions(sub), event.resource?.id);
         if (!sale) { console.warn(`[STAR sub] Pago ${event.resource?.id} no confirmado por PayPal; se ignora.`); return true; }
-        await processStarPayment({ subscription: row, saleId: sale.saleId, amountUsd: sale.amountUsd, paidAt: sale.paidAt });
+        await processStarPayment({ subscription: row, saleId: sale.saleId, amountUsd: sale.amountUsd, feeUsd: sale.feeUsd, netUsd: sale.netUsd, paidAt: sale.paidAt });
         return true;
     }
     if (type === 'BILLING.SUBSCRIPTION.PAYMENT.FAILED' || type === 'BILLING.SUBSCRIPTION.SUSPENDED') {

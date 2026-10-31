@@ -14,6 +14,7 @@ import { PLUGINS } from '../../../shared/config/pluginRegistry.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import MetaCapiService from '../../services/MetaCapiService.js';
 import { getStarCouponPercent } from '../../services/starSubscriptionService.js';
+import { recordMercadoPago } from '../../services/financeService.js';
 import { starPrice, STAR_PRODUCT_ID } from '../../../shared/store/starPlan.js';
 import { resolveYapePrice, rateFromEnv } from '../../../shared/store/yapePricing.js';
 
@@ -306,6 +307,9 @@ export const chargeYape = async (req, res) => {
         }
 
         console.log(`✅ [YapeCharge] Payment APPROVED! MP Payment ID: ${mpData.id}`);
+
+        // Libro de finanzas: soles con el neto que informa Mercado Pago (los pagos de simulación no cuentan). Nunca rompe el cobro.
+        await recordMercadoPago(mpData, { email: email.trim().toLowerCase(), product: pluginName, productId: Number(productId) || null });
 
         // 2. Generate Plugin Licenses (if applicable)
         let serialKey = null;

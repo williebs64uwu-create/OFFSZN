@@ -6,8 +6,10 @@ import { resolveRegion, quoteCart } from '../../../shared/store/pricing.js';
 import { getProduct, loadCatalog } from '../../../shared/store/catalog.js';
 import { fulfillOrder } from '../../services/storeService.js';
 import { runAutomations } from '../../services/crmService.js';
-import { buildSalesReport, buildProductPrices, marketplaceOrders } from '../../../shared/store/salesReport.js';
+import { buildSalesReport, buildProductPrices, classify } from '../../../shared/store/salesReport.js';
 import { parsePayhipPlugins } from '../../../shared/store/payhip.js';
+import { recordIncome, getSettings, incomeSince } from '../../services/financeService.js';
+import { incomeAsOrders } from '../../../shared/store/finance.js';
 
 const clip = (v, n) => String(v ?? '').slice(0, n).trim();
 const email = (v) => clip(v, 200).toLowerCase();
@@ -15,22 +17,29 @@ const STAGES = ['lead', 'prueba', 'cotizado', 'pagado', 'perdido'];
 const fail = (res, error, status = 500) => res.status(status).json({ error: typeof error === 'string' ? error : error?.message || 'Error' });
 
 // ─── GET /admin/overview?days=30
+// El dinero del Resumen sale del libro de finanzas (pagos reales desde el 31 oct 2026, con su neto). ?days=N mira solo los últimos N días.
 export const overview = async (req, res) => {
-    const days = Math.min(180, Math.max(1, parseInt(req.query.days, 10) || 30));
-    const since = new Date(Date.now() - days * 86400000).toISOString();
-    const [orders, events, customers, trials, carts] = await Promise.all([
-        supabase.from('store_orders').select('status, created_at, total_usd, country, payment_method, utm, offer_type, lines').gte('created_at', since).limit(5000),
+    const settings = await getSettings();
+    const start = Date.parse(settings.startAt);
+    let days; let since;
+    if (req.query.days) {
+        days = Math.min(400, Math.max(1, parseInt(req.query.days, 10) || 30));
+        since = new Date(Math.max(start, Date.now() - days * 86400000)).toISOString();
+    } else {
+        since = new Date(start).toISOString();
+        days = Math.min(400, Math.max(1, Math.ceil((Date.now() - start) / 86400000)));
+    }
+    const [events, customers, trials, carts] = await Promise.all([
         supabase.from('store_events').select('event, session_id').gte('created_at', since).in('event', ['page_view', 'add_to_cart', 'checkout_start', 'purchase']).limit(50000),
         supabase.from('store_customers').select('purchase_count, segment').limit(20000),
         supabase.from('store_trials').select('converted_at').gte('created_at', since).limit(5000),
         supabase.from('store_carts').select('recovered_at, reminder_sent_at').gte('created_at', since).limit(5000)
     ]);
-    const failed = [orders, events, customers, trials, carts].find((r) => r.error);
+    const failed = [events, customers, trials, carts].find((r) => r.error);
     if (failed) return fail(res, failed.error);
-    // Ventas propias del marketplace (orders / order_items). Si falla, el Resumen sigue con la tienda sola.
-    let marketplace = [];
-    try { marketplace = await loadMarketplaceOrders(since); } catch (e) { console.warn('[CRM overview] marketplace:', e.message); }
-    return res.json(buildOverview({ orders: orders.data, events: events.data, customers: customers.data, trials: trials.data, carts: carts.data, marketplace }, days));
+    let orders = [];
+    try { const { rows, fx } = await incomeSince(since); orders = incomeAsOrders(rows, fx); } catch (e) { console.warn('[CRM overview] libro de finanzas:', e.message); }
+    return res.json({ ...buildOverview({ orders, events: events.data, customers: customers.data, trials: trials.data, carts: carts.data }, days), since });
 };
 
 // ─── GET /admin/contacts?q=&segment=&country=&tag=
@@ -194,9 +203,15 @@ export const manualSale = async (req, res) => {
         quote.offerApplied = { type: 'manual' };
     }
     try {
+        const paymentRef = `WA-${Date.now().toString(36).toUpperCase()}`;
         const result = await fulfillOrder({
-            lines: quote.lines, email: e, paymentMethod: 'whatsapp', paymentRef: `WA-${Date.now().toString(36).toUpperCase()}`,
+            lines: quote.lines, email: e, paymentMethod: 'whatsapp', paymentRef,
             quote, region, tracking: { sourceUrl: 'https://offszn.lat/willieinspired' }
+        });
+        // Libro de finanzas: venta cerrada por WhatsApp = "Acción de Willie", en dólares con el precio acordado. Nunca rompe la entrega.
+        await recordIncome({
+            source: 'manual', ref: paymentRef, occurred_at: new Date().toISOString(), email: e, product: quote.lines.map((l) => l.title).join(' + ') || null, product_id: null,
+            method: 'otro', currency: 'USD', gross: quote.totalUsd, fee: null, net: quote.totalUsd, status: 'confirmed', verified: false, by_willie: true, note: 'Venta manual desde el CRM', order_id: null
         });
         if (clip(b.note, 500)) await supabase.from('store_notes').insert({ email: e, kind: 'note', body: `Venta manual: ${clip(b.note, 500)}` });
         return res.json({ ok: true, totalUsd: quote.totalUsd, licenses: result.licenses.map((l) => l.name), delivery: Boolean(result.delivery) });
@@ -226,10 +241,11 @@ export const system = async (req, res) => {
     ];
 
     const tables = ['store_customers', 'store_orders', 'store_offers', 'store_trials', 'store_events', 'willie_orders',
-        'store_carts', 'store_deals', 'store_notes', 'store_automation_rules', 'store_automation_log'];
+        'store_carts', 'store_deals', 'store_notes', 'store_automation_rules', 'store_automation_log',
+        'finance_income', 'finance_expenses', 'finance_settings', 'star_subscriptions', 'star_subscription_payments', 'star_config'];
     const checked = await Promise.all(tables.map(async (name) => {
         const { error } = await supabase.from(name).select('*', { count: 'exact', head: true }).limit(1);
-        return { name, ok: !error, migration: ['store_carts', 'store_deals', 'store_notes', 'store_automation_rules', 'store_automation_log'].includes(name) ? '20261023_willie_crm.sql' : '20261022_willie_store.sql' };
+        return { name, ok: !error, migration: name.startsWith('finance_') ? '20261031_finance_ledger.sql' : name.startsWith('star_') ? '20261031_star_subscriptions.sql' : ['store_carts', 'store_deals', 'store_notes', 'store_automation_rules', 'store_automation_log'].includes(name) ? '20261023_willie_crm.sql' : '20261022_willie_store.sql' };
     }));
 
     const { products } = loadCatalog();
@@ -254,10 +270,12 @@ export const system = async (req, res) => {
 
 // ─── Ventas de Willie (solo productos propios y de pago; tablas de OFFSZN) ────────────────────────────────────────
 // Supabase devuelve máximo 1000 filas por consulta: se pide por páginas.
-async function fetchAll(table, columns, { order = 'id' } = {}) {
+async function fetchAll(table, columns, { order = 'id', filter = null } = {}) {
     const out = [];
     for (let from = 0; from < 50000; from += 1000) {
-        const { data, error } = await supabase.from(table).select(columns).order(order, { ascending: true }).range(from, from + 999);
+        let q = supabase.from(table).select(columns);
+        if (filter) q = filter(q);
+        const { data, error } = await q.order(order, { ascending: true }).range(from, from + 999);
         if (error) throw error;
         out.push(...data);
         if (data.length < 1000) break;
@@ -268,36 +286,32 @@ async function fetchAll(table, columns, { order = 'id' } = {}) {
 // Cuenta(s) de productor de Willie en OFFSZN (ids separados por coma). Solo se cuentan productos de estas cuentas.
 const OWNER_PRODUCER_IDS = () => String(process.env.OFFSZN_OWNER_PRODUCER_IDS || '0382a813-85c7-46c3-8d2c-61a5692adffd').split(',').map((x) => x.trim()).filter(Boolean);
 
-async function loadSalesData() {
-    const [orders, items, products, clicks] = await Promise.all([
-        fetchAll('orders', 'id, status, created_at'),
-        fetchAll('order_items', 'id, order_id, product_id, quantity, price_at_purchase'),
+// Órdenes completadas desde `since`, con sus líneas (order_items) ya unidas.
+const ORDER_COLUMNS = 'id, status, created_at, total_price, transaction_id, product_id, order_items(order_id, product_id, quantity, price_at_purchase)';
+const splitItems = (rows) => ({ orders: rows.map(({ order_items, ...o }) => o), items: rows.flatMap((o) => o.order_items || []) });
+const loadStoreRefs = async () => {
+    try { return await fetchAll('store_orders', 'id, status, payment_ref, lines'); } catch (_) { return []; } // si la tabla aún no existe, solo se pierde el nombre del producto
+};
+
+// HISTÓRICO (aproximado): lo que hay en las tablas viejas, solo para ver cómo les fue a los productos. No suma a las finanzas nuevas.
+async function loadSalesData({ pluginsOnly = false } = {}) {
+    const [orderRows, allProducts, clicks, storeOrders] = await Promise.all([
+        fetchAll('orders', ORDER_COLUMNS, { filter: (q) => q.eq('status', 'completed') }),
         fetchAll('products', 'id, name, product_type, status, price_basic, producer_id'),
-        fetchAll('manual_payment_clicks', 'id, method, product')
+        fetchAll('manual_payment_clicks', 'id, method, product'),
+        loadStoreRefs()
     ]);
+    const { orders, items } = splitItems(orderRows);
+    const products = pluginsOnly ? allProducts.filter((p) => classify(p) === 'plugin') : allProducts;
     // Ventas de plugins de Payhip (se importan desde el CSV). Si la tabla aún no existe, el reporte sigue con OFFSZN solo.
     let payhip = [];
     try { payhip = await fetchAll('store_payhip_sales', 'order_id, sold_on, plugin, unit_price_usd, mixed, price_estimated', { order: 'order_id' }); } catch (_) { payhip = []; }
-    return { orders, items, products, clicks, payhip, producerIds: OWNER_PRODUCER_IDS() };
+    return { orders, items, products, clicks, payhip, storeOrders, since: null, includeNoDetail: !pluginsOnly, producerIds: OWNER_PRODUCER_IDS() };
 }
 
-// Ventas propias del marketplace desde `since`, como órdenes para el Resumen (solo productos de OWNER_PRODUCER_IDS, de pago y sin beats).
-async function loadMarketplaceOrders(since) {
-    const ids = OWNER_PRODUCER_IDS();
-    const [lines, prods] = await Promise.all([
-        supabase.from('order_items').select('order_id, product_id, quantity, price_at_purchase, order:orders!inner(id, status, created_at, transaction_id)')
-            .eq('order.status', 'completed').gte('order.created_at', since).limit(5000),
-        supabase.from('products').select('id, name, product_type, producer_id').in('producer_id', ids).limit(5000)
-    ]);
-    if (lines.error) throw lines.error;
-    if (prods.error) throw prods.error;
-    const orders = [...new Map(lines.data.map((l) => [l.order.id, l.order])).values()];
-    return marketplaceOrders({ orders, items: lines.data, products: prods.data, producerIds: ids });
-}
-
-// ─── GET /admin/sales
+// ─── GET /admin/sales → histórico aproximado de PLUGINS (no es el dinero nuevo: ese está en Finanzas)
 export const sales = async (req, res) => {
-    try { return res.json(buildSalesReport(await loadSalesData())); } catch (e) { return fail(res, e); }
+    try { return res.json(buildSalesReport(await loadSalesData({ pluginsOnly: true }))); } catch (e) { return fail(res, e); }
 };
 
 // ─── GET /admin/product-prices → precio de lista vs. lo cobrado + precios del catálogo de la tienda

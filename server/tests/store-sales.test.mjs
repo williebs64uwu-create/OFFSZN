@@ -166,3 +166,65 @@ test('STAR: el plan de PayPal son 3 cobros mensuales de 16.33 y el cobro se conf
     assert.equal(findCompletedSale(tx, 'NOPE'), null); // un id inventado no cuenta
     assert.equal(firstCompletedSale(tx).saleId, 'S1');
 });
+
+// ─── Ventas reales: lo que se cobró (orders.total_price), no el precio de lista, y desde el 1 de abril de 2026 ───────────
+import { realSales, sinceIso, marketplaceOrders as mkOrders } from '../src/shared/store/salesReport.js';
+
+test('real: se cuenta lo cobrado en la orden aunque order_items guarde el precio de lista (A/B de 5, 17 o 25)', () => {
+    const prods = [{ id: 899, name: 'Easy Mix', product_type: 'preset', producer_id: ME }, { id: 77, name: 'Beat ajeno', product_type: 'beat', producer_id: 'otro' }];
+    const ords = [
+        { id: 1, status: 'completed', created_at: '2026-09-01T10:00:00Z', total_price: 5, transaction_id: 'PAYPAL1' },   // se cobró 5, lista 10
+        { id: 2, status: 'completed', created_at: '2026-10-10T10:00:00Z', total_price: 25, transaction_id: 'PAYPAL2' },  // se cobró 25, lista 10
+        { id: 3, status: 'completed', created_at: '2026-10-11T10:00:00Z', total_price: 0, transaction_id: 'FREE-1' },    // gratis
+        { id: 4, status: 'completed', created_at: '2026-10-12T10:00:00Z', total_price: 40, transaction_id: 'PAYPAL4' }   // 10 mío + 30 beat ajeno (con 10 de comisión)
+    ];
+    const its = [
+        { order_id: 1, product_id: 899, quantity: 1, price_at_purchase: 10 },
+        { order_id: 2, product_id: 899, quantity: 1, price_at_purchase: 10 },
+        { order_id: 3, product_id: 899, quantity: 1, price_at_purchase: 0 },
+        { order_id: 4, product_id: 899, quantity: 1, price_at_purchase: 10 },
+        { order_id: 4, product_id: 77, quantity: 1, price_at_purchase: 30 }
+    ];
+    const r = buildSalesReport({ orders: ords, items: its, products: prods, producerIds: [ME] });
+    assert.equal(r.sources.offszn.revenueUsd, 5 + 25 + 10); // 4: 40 × 10/40 = 10 de lo mío
+    assert.equal(r.totals.orders, 3);
+    const mix = r.best.find((b) => b.name === 'Easy Mix');
+    assert.deepEqual([mix.units, mix.minPaid, mix.maxPaid], [3, 5, 25]);
+});
+
+test('real: solo desde el 1 de abril de 2026 (hora de Lima) y también Payhip', () => {
+    assert.equal(sinceIso(), '2026-04-01T05:00:00.000Z');
+    const prods = [{ id: 899, name: 'Easy Mix', product_type: 'preset', producer_id: ME }];
+    const ords = [
+        { id: 1, status: 'completed', created_at: '2026-03-31T23:00:00Z', total_price: 10, transaction_id: 'A' },  // antes de abril: no cuenta
+        { id: 2, status: 'completed', created_at: '2026-04-01T06:00:00Z', total_price: 10, transaction_id: 'B' }
+    ];
+    const its = [{ order_id: 1, product_id: 899, quantity: 1, price_at_purchase: 10 }, { order_id: 2, product_id: 899, quantity: 1, price_at_purchase: 10 }];
+    const payhip = [{ order_id: 'p1', sold_on: '2026-03-30', plugin: 'Easy Mix', unit_price_usd: 12 }, { order_id: 'p2', sold_on: '2026-04-02', plugin: 'Easy Mix', unit_price_usd: 12 }];
+    const r = buildSalesReport({ orders: ords, items: its, products: prods, producerIds: [ME], payhip, since: sinceIso() });
+    assert.equal(r.sources.offszn.revenueUsd, 10);
+    assert.equal(r.sources.payhip.revenueUsd, 12);
+    assert.equal(r.scope.since, '2026-04-01T05:00:00.000Z');
+});
+
+test('real: ventas sin líneas (tienda de Willie, Yape antiguo) entran como "sin detalle" con su nombre cuando se conoce', () => {
+    const prods = [{ id: 899, name: 'Easy Mix', product_type: 'preset', producer_id: ME }, { id: 77, name: 'Beat ajeno', product_type: 'beat', producer_id: 'otro' }];
+    const ords = [
+        { id: 1, status: 'completed', created_at: '2026-10-26T10:00:00Z', total_price: 10, transaction_id: 'WILLIE-PP-REF1' },         // tienda, está en store_orders
+        { id: 2, status: 'completed', created_at: '2026-09-10T10:00:00Z', total_price: 10, transaction_id: 'WILLIE-PP-VIEJA' },        // tienda antigua, sin store_orders
+        { id: 3, status: 'completed', created_at: '2026-09-01T10:00:00Z', total_price: 10, transaction_id: 'MP-YAPE-1', product_id: 899 }, // Yape sin línea, producto mío
+        { id: 4, status: 'completed', created_at: '2026-07-13T10:00:00Z', total_price: 5, transaction_id: 'PAYPALX' },                 // sin nada
+        { id: 5, status: 'completed', created_at: '2026-07-14T10:00:00Z', total_price: 30, transaction_id: 'PAYPALY', product_id: 77 } // beat de otro: no cuenta
+    ];
+    const storeOrders = [{ payment_ref: 'REF1', status: 'completed', lines: [{ title: 'Yeyo Vocal Preset' }] }];
+    const lines = realSales({ orders: ords, items: [], products: prods, producerIds: [ME], since: sinceIso(), storeOrders });
+    assert.deepEqual(lines.map((l) => [l.orderId, l.name, l.amountUsd, l.channel, l.noDetail]), [
+        [1, 'Yeyo Vocal Preset', 10, 'tienda', true], [2, 'Venta sin detalle', 10, 'tienda', true], [3, 'Easy Mix', 10, 'yape', true], [4, 'Venta sin detalle', 5, 'paypal', true]
+    ]);
+    const r = buildSalesReport({ orders: ords, items: [], products: prods, producerIds: [ME], since: sinceIso(), storeOrders });
+    assert.equal(r.totals.revenueUsd, 35);
+    assert.deepEqual([r.noDetail.orders, r.noDetail.revenueUsd], [4, 35]);
+    // El Resumen no cuenta dos veces la que ya está en store_orders
+    const mk = mkOrders({ orders: ords, items: [], products: prods, producerIds: [ME], since: sinceIso(), storeOrders });
+    assert.deepEqual(mk.map((m) => [m.total_usd, m.source]), [[10, 'tienda_legacy'], [10, 'marketplace'], [5, 'marketplace']]);
+});

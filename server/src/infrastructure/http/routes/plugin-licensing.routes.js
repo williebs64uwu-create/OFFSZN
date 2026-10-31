@@ -23,6 +23,7 @@ import { receivePaymentClick, adminListPaymentClicks, paymentClickLimiter } from
 import { authenticateTokenMiddleware } from '../../middlewares/authenticateTokenMiddleware.js';
 import { astraAsk, astraStatus, adminSetOrbTier, astraLimiter } from '../controllers/AstraController.js';
 
+import { adminRecordDispatchPayment } from '../controllers/FinanceController.js';
 const router = express.Router();
 
 // Límites por IP (además del limitador global de /api): sin esto se podían fabricar pruebas gratis enviando HWID inventados
@@ -60,6 +61,7 @@ router.post('/admin/generate-key', adminGenerateFullKey);
 router.post('/admin/create-license', adminGenerateFullKey);
 router.get('/admin/licenses', adminListLicenses);
 router.post('/admin/licenses', adminListLicenses);
+router.post('/admin/ledger', adminRecordDispatchPayment);
 router.post('/admin/update-status', adminUpdateLicenseStatus);
 router.post('/admin/send-email', adminSendDispatchEmail);
 // Admin: Estadísticas completas de trials, usuarios registrados y activaciones

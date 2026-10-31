@@ -20,10 +20,11 @@
     const fail = (e) => `<div class="alert alert--error">${icon('alert')}<div>${esc(e.message)}</div></div>`;
 
     // ══ Historial de ventas ═══════════════════════════════════════════════════
+    /* Histórico (plugins): el dinero nuevo vive en Finanzas. Esto es solo para saber cómo fueron los plugins. */
     C.pages.historial = {
         async render(view, token) {
-            const TITLE = 'Historial de ventas';
-            const DESC = 'Tus ventas de OFFSZN (solo productos tuyos y de pago) más los plugins vendidos por Payhip. Sin beats, sin regalos, y los plugins entre 2 y 30 US$ por unidad.';
+            const TITLE = 'Histórico de plugins';
+            const DESC = 'Aproximado y solo de plugins: cómo les fue antes del libro nuevo de Finanzas (31 oct 2026), con lo que quedó guardado en la base y los plugins de Payhip. No suma al dinero real ni a tu cuenta del banco.';
             view.innerHTML = `${head(TITLE, DESC)}${loading}`;
             let r;
             try { r = await api('/admin/sales'); } catch (e) { view.innerHTML = head(TITLE) + fail(e); return; }
@@ -31,6 +32,9 @@
             const t = r.totals; const so = r.sources;
             const monthly = r.byMonth.map((m) => ({ ...m, label: `${monthName(m.month)} · OFFSZN ${usd(m.offszn)} + Payhip ${usd(m.payhip)}` }));
             const range = r.scope.pluginRangeUsd || [2, 30];
+            const ch = r.channels || {};
+            const nd = r.noDetail || { orders: 0, revenueUsd: 0 };
+            const noDetailNote = nd.orders ? `<div class="alert alert--warning">${icon('alert')}<div><b>${nd.orders} ${nd.orders === 1 ? 'venta' : 'ventas'} sin detalle de producto</b> (${usd(nd.revenueUsd)}): se cobraron pero no quedó guardado qué se vendió (tienda de Willie y cobros antiguos). Están sumadas en los ingresos.</div></div>` : '';
             const odd = r.outOfRange.length ? `<div class="alert alert--warning">${icon('alert')}<div><b>${r.outOfRange.length} ${r.outOfRange.length === 1 ? "venta de plugin quedó fuera" : "ventas de plugin quedaron fuera"}</b> por costar menos de ${range[0]} o más de ${range[1]} US$ por unidad: ${r.outOfRange.slice(0, 6).map((x) => `${esc(x.name)} ${usd(x.price)} (${esc(x.source)})`).join(', ')}.</div></div>` : '';
             view.innerHTML = `${head(TITLE, DESC)}
                 <div class="kpis">
@@ -39,11 +43,13 @@
                     ${kpi('Payhip (plugins)', usd(so.payhip.revenueUsd), `${num(so.payhip.units)} plugins${so.payhip.estimatedUnits ? ` · ${so.payhip.estimatedUnits} con precio estimado` : ''}${so.payhip.mixedOrders ? ` · +${so.payhip.mixedOrders} mixtos sin monto` : ''}`, 'cart')}
                     ${kpi('Ticket medio', usd(t.avgTicketUsd), 'por venta', 'users')}
                 </div>
-                ${odd}
+                ${odd}${noDetailNote}
                 <div class="grid grid-2">
                     ${card({ title: 'Ingresos por mes', body: bars(monthly, 'label', 'revenueUsd', usd) })}
                     ${card({ title: 'Plugins, plantillas y presets', desc: 'Separado por el nombre del producto.', body: bars(r.byClass.map((x) => ({ key: `${x.label} · ${num(x.units)} u.`, revenueUsd: x.revenueUsd })), 'key', 'revenueUsd', usd) })}
                 </div>
+                ${card({ title: 'De dónde vino el dinero', desc: 'Dónde pagó el cliente (sin contar Payhip).', body: bars([{ key: `PayPal (marketplace) · ${num((ch.paypal || {}).units || 0)} u.`, revenueUsd: (ch.paypal || {}).revenueUsd || 0 }, { key: `Yape · ${num((ch.yape || {}).units || 0)} u.`, revenueUsd: (ch.yape || {}).revenueUsd || 0 }, { key: `Tienda Willie Inspired · ${num((ch.tienda || {}).units || 0)} u.`, revenueUsd: (ch.tienda || {}).revenueUsd || 0 }], 'key', 'revenueUsd', usd) })}
+                <div style="height:16px"></div>
                 ${card({ title: 'Lo que más dinero dejó', flush: true, body: r.best.length ? `<div class="table-wrap"><table><thead><tr><th>Producto</th><th>Tipo</th><th>Vendidos</th><th>Precio cobrado</th><th>Ingresos</th></tr></thead><tbody>${r.best.map((p) => `<tr><td>${esc(p.name)}</td><td class="muted">${esc(p.type)}</td><td>${num(p.units)}</td><td>${p.minPaid === p.maxPaid ? usd(p.minPaid) : `${usd(p.minPaid)} – ${usd(p.maxPaid)}`}</td><td><b>${usd(p.revenueUsd)}</b></td></tr>`).join('')}</tbody></table></div>` : empty('bag', 'Sin ventas de pago.') })}
                 <div style="height:16px"></div>
                 <div class="grid grid-2">
