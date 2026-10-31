@@ -13,10 +13,11 @@ mock.module('../src/infrastructure/services/MetaCapiService.js', { defaultExport
 mock.module('../src/infrastructure/http/controllers/PluginLicensingController.js', { namedExports: { generatePluginLicense: async ({ pluginName }) => ({ serialKey: `${pluginName}-KEY` }) } });
 mock.module('../src/infrastructure/services/starSubscriptionService.js', { namedExports: { getStarCouponPercent: async (code) => (String(code).toUpperCase() === 'STAR' ? 10 : 0) } });
 
-const { chargeYape } = await import('../src/infrastructure/http/controllers/YapeController.js');
-const { resolveYapePrice, USD_TO_PEN } = await import('../src/shared/store/yapePricing.js');
+const { chargeYape, quoteYape } = await import('../src/infrastructure/http/controllers/YapeController.js');
+const { resolveYapePrice, penFor, rateFromEnv } = await import('../src/shared/store/yapePricing.js');
 
 process.env.MERCADOPAGO_ACCESS_TOKEN = 'APP_USR-test';
+process.env.YAPE_EXCHANGE_RATE_PEN = '3.8'; // la variable de Vercel: soles = dólares × variable (redondeado al sol)
 let mpBodies = [];
 globalThis.fetch = async (url, opts) => {
     mpBodies.push(JSON.parse(opts.body));
@@ -31,7 +32,7 @@ const run = async (body) => {
     return { status, payload, charged: mpBodies[0]?.transaction_amount };
 };
 
-test('precios válidos: se cobra el monto en soles de la tabla oficial', async () => {
+test('precios válidos: soles = dólares × variable de Vercel (Cassette tiene S/ 25 fijos)', async () => {
     assert.equal((await run({ productId: 899, customPrice: 17 })).charged, 65);
     assert.equal((await run({ productId: 899, customPrice: 25 })).charged, 95);
     assert.equal((await run({ productId: 5001, customPrice: 9 })).charged, 34);
@@ -40,7 +41,7 @@ test('precios válidos: se cobra el monto en soles de la tabla oficial', async (
     assert.equal((await run({ productId: 903, customPrice: 15 })).charged, 57);
 });
 
-test('precio en soles inventado por el navegador: se ignora y se cobra el de la tabla', async () => {
+test('precio en soles inventado por el navegador: se ignora y se cobra dólares × variable', async () => {
     const r = await run({ productId: 899, customPrice: 17, customPricePEN: 1 });
     assert.equal(r.status, 200);
     assert.equal(r.charged, 65);
@@ -83,8 +84,28 @@ test('STAR CHAIN sigue con precio del servidor (49 US$ → S/ 185; cupón -10%)'
     assert.equal((await run({ productId: 5003, customPrice: 1, couponCode: 'star' })).charged, 166.5);
 });
 
-test('la tabla de precios cubre todos los precios en dólares que alguna página puede asignar', () => {
-    for (const usd of [5, 8, 9, 10, 15, 17, 20, 25]) assert.ok(USD_TO_PEN[usd], `falta S/ para ${usd} US$`);
-    assert.equal(resolveYapePrice({ productId: 899, customPrice: 20 }).pen, 76);
-    assert.equal(resolveYapePrice({ productId: 899, customPrice: 20 }).ok, true);
+test('precio dinámico: al cambiar la variable de Vercel cambia lo que se cobra, sin tocar páginas', async () => {
+    process.env.YAPE_EXCHANGE_RATE_PEN = '4';
+    assert.equal((await run({ productId: 899, customPrice: 17 })).charged, 68);
+    assert.equal((await run({ productId: 5002, customPrice: 8 })).charged, 25); // fijo: no sigue la variable
+    delete process.env.YAPE_EXCHANGE_RATE_PEN;                                   // sin variable: 3.30
+    assert.equal(rateFromEnv(), 3.3);
+    assert.equal((await run({ productId: 899, customPrice: 17 })).charged, 56);
+    process.env.YAPE_EXCHANGE_RATE_PEN = '3.8';
+    assert.equal(penFor(10, 3.8), 38);
+    assert.equal(resolveYapePrice({ productId: 899, customPrice: 20, rate: 3.8 }).pen, 76);
+});
+
+test('cotización: el modal recibe del servidor los mismos soles que luego se cobran', async () => {
+    const quote = async (query) => {
+        let status = 200, payload;
+        await quoteYape({ query }, { status(c) { status = c; return this; }, json(p) { payload = p; return this; } });
+        return { status, payload };
+    };
+    const a = await quote({ productId: '899', price: '17' });
+    assert.deepEqual([a.status, a.payload.usd, a.payload.pen], [200, 17, 65]);
+    assert.equal((await run({ productId: 899, customPrice: 17 })).charged, a.payload.pen);
+    assert.equal((await quote({ productId: '5002', price: '8' })).payload.pen, 25);
+    assert.equal((await quote({ productId: '899', price: '1' })).status, 400);
+    assert.equal((await quote({ productId: '5003', price: '1', coupon: 'star' })).payload.pen, 166.5);
 });

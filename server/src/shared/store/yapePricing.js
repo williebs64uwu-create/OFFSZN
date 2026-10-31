@@ -1,9 +1,17 @@
-// Precios válidos de cada plugin por Yape (funciones puras). El servidor NUNCA cobra el monto que manda el navegador:
-// el precio en dólares debe ser uno de los que esa página de plugin puede asignar (A/B test o variantes de afiliados)
-// y el monto en soles sale de la tabla de abajo, no de lo que diga el cliente.
+// Precios de los plugins por Yape (funciones puras). El servidor NUNCA cobra el monto que manda el navegador:
+// - el precio en dólares debe ser uno de los que esa página de plugin puede asignar (A/B test o variantes de afiliados);
+// - los soles salen de USD × tipo de cambio (variable YAPE_EXCHANGE_RATE_PEN de Vercel), redondeado al sol como la tienda.
+//   Así se puede mover el precio en soles cambiando solo esa variable, sin tocar las páginas.
 
-// Lo que muestran las páginas de plugin (solesMap de cada una) y lo que cobra Mercado Pago, en soles.
-export const USD_TO_PEN = { 5: 19, 8: 25, 9: 34, 10: 38, 15: 57, 17: 65, 20: 76, 25: 95 };
+// Soles fijos por decisión de la página (no siguen la variable): Cassette cuesta S/ 25 aunque sean 8 US$.
+export const FIXED_PEN = { '5002': { 8: 25 }, cassette: { 8: 25 } };
+
+export const DEFAULT_RATE = 3.3;
+export const rateFromEnv = (env = process.env) => {
+    const r = parseFloat(env.YAPE_EXCHANGE_RATE_PEN);
+    return Number.isFinite(r) && r > 0 ? r : DEFAULT_RATE;
+};
+export const penFor = (usd, rate) => Math.round(Number(usd) * Number(rate));
 
 // USD que cada producto puede costar por Yape. Salen de las páginas: Easy Mix 17/25 (A/B) y 5/10/15/20 (páginas de afiliados),
 // Easy Master 17/25 (y 5, su precio base), Inka Kola 5/10, Coca-Cola 10/15, Vocal Preset 5/10/17/25, Easy Pitch 5/10,
@@ -32,10 +40,10 @@ export const pricesForProduct = (productId, { isPromo2x1 = false, widgetIds = []
 };
 
 // Devuelve { ok: true, usd, pen } con el precio que se debe cobrar, o { ok: false, error } si el producto o el precio no son válidos.
-export function resolveYapePrice({ productId, isPromo2x1 = false, customPrice, widgetIds = [] }) {
+export function resolveYapePrice({ productId, isPromo2x1 = false, customPrice, widgetIds = [], rate = rateFromEnv() }) {
     const allowed = pricesForProduct(productId, { isPromo2x1, widgetIds });
     if (!allowed) return { ok: false, error: 'Este producto no está disponible para pagar con Yape.' };
     const usd = Number(customPrice);
     if (!allowed.includes(usd)) return { ok: false, error: 'El precio no es válido. Recarga la página e inténtalo de nuevo.' };
-    return { ok: true, usd, pen: USD_TO_PEN[usd] };
+    return { ok: true, usd, pen: FIXED_PEN[String(productId)]?.[usd] ?? penFor(usd, rate) };
 }

@@ -11,6 +11,7 @@
             this.exchangeRate = 3.30;
             this.publicKey = 'APP_USR-ca918f8a-784b-4413-aebb-d3fc5a6ae79c';
             this.mpInstance = null;
+            this.quote = null;
             this.modalElement = null;
             this.productId = window.PLUGIN_ID || 899;
             this.pluginName = window.PLUGIN_NAME || 'Easy Mix';
@@ -69,7 +70,25 @@
             return window.CURRENT_PROMO_PRICE || 10;
         }
 
+        // Soles que se van a cobrar: los calcula el servidor (USD × YAPE_EXCHANGE_RATE_PEN). El modal usa ese mismo monto en el token.
+        async refreshQuote() {
+            try {
+                const usd = this.getPriceUSD();
+                const isPromo = Boolean(window.IS_PROMO_2X1 || (this.pluginName && this.pluginName.includes('2x1')));
+                const qs = new URLSearchParams({ productId: String(this.productId), price: String(usd) });
+                if (isPromo) qs.set('promo', '1');
+                if (window.COUPON_CODE) qs.set('coupon', window.COUPON_CODE);
+                const res = await fetch('/api/orders/yape/quote?' + qs.toString());
+                const data = res.ok ? await res.json() : null;
+                this.quote = data && data.success ? { usd: Number(data.usd), pen: Number(data.pen) } : null;
+            } catch (e) {
+                this.quote = null;
+            }
+            return this.quote;
+        }
+
         getPricePEN() {
+            if (this.quote && this.quote.usd === Number(this.getPriceUSD())) return this.quote.pen.toFixed(2);
             if (window.YAPE_FIXED_PRICE_PEN) {
                 return Number(window.YAPE_FIXED_PRICE_PEN).toFixed(2);
             }
@@ -804,12 +823,15 @@
         openModal() {
             if (!this.modalElement) return;
 
-            const pricePEN = this.getPricePEN();
-            const priceEl = document.getElementById('yape-modal-price');
-            if (priceEl) priceEl.innerText = `S/. ${pricePEN}`;
-            
-            const submitText = document.getElementById('yape-submit-text');
-            if (submitText) submitText.innerText = `Yapear S/ ${pricePEN}`;
+            const paintPrice = () => {
+                const pricePEN = this.getPricePEN();
+                const priceEl = document.getElementById('yape-modal-price');
+                if (priceEl) priceEl.innerText = `S/. ${pricePEN}`;
+                const submitText = document.getElementById('yape-submit-text');
+                if (submitText) submitText.innerText = `Yapear S/ ${pricePEN}`;
+            };
+            paintPrice();
+            this.refreshQuote().then(paintPrice);
 
             // Reset views
             document.getElementById('yape-form-view').style.display = 'block';
@@ -898,6 +920,7 @@
                 }
 
                 try {
+                    await this.refreshQuote();
                     const pricePEN = parseFloat(this.getPricePEN());
                     const yape = this.mpInstance.yape({
                         otp: otp,
@@ -947,9 +970,6 @@
                     deviceId: deviceId
                 };
 
-                if (window.YAPE_FIXED_PRICE_PEN) {
-                    bodyPayload.customPricePEN = Number(window.YAPE_FIXED_PRICE_PEN);
-                }
                 if (window.COUPON_CODE) bodyPayload.couponCode = window.COUPON_CODE;
 
                 const response = await fetch('/api/orders/yape/charge', {
