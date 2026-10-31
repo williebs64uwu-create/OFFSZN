@@ -487,64 +487,71 @@ app.get('/recursos/x-flow-analyzer', (req, res) => {
     res.redirect(301, '/plugins/x-flow-analyzer.html');
 });
 
+// Helper to serve HTML landings with high-performance edge caching (eliminates Vercel Fast Origin Transfer)
+const sendEdgeCachedHtml = (res, filePath, sMaxAge = 86400) => {
+    res.setHeader('Cache-Control', `public, max-age=0, s-maxage=${sMaxAge}, stale-while-revalidate=86400`);
+    res.setHeader('Vercel-CDN-Cache-Control', `public, max-age=${sMaxAge}, stale-while-revalidate=86400`);
+    return res.sendFile(filePath);
+};
+
 // --- 3.0 PLUGIN DIRECT LANDINGS ---
 app.get(['/plugin/easy-mix', '/plugin/easy-mix.html'], (req, res) => {
     const pluginLandingPath = path.join(rootPath, 'plugin/easy-mix.html');
     if (fs.existsSync(pluginLandingPath)) {
-        return res.sendFile(pluginLandingPath);
+        return sendEdgeCachedHtml(res, pluginLandingPath);
     }
-    return res.sendFile(path.join(rootPath, 'plugins/easy-mix.html'));
+    return sendEdgeCachedHtml(res, path.join(rootPath, 'plugins/easy-mix.html'));
 });
 
 app.get(['/plugins/easy-mix', '/plugins/easy-mix.html'], (req, res) => {
     const pluginsLandingPath = path.join(rootPath, 'plugins/easy-mix.html');
     if (fs.existsSync(pluginsLandingPath)) {
-        return res.sendFile(pluginsLandingPath);
+        return sendEdgeCachedHtml(res, pluginsLandingPath);
     }
-    return res.sendFile(path.join(rootPath, 'plugin/easy-mix.html'));
+    return sendEdgeCachedHtml(res, path.join(rootPath, 'plugin/easy-mix.html'));
 });
 
 // Rutas directas para Easy Pitch: /plugin/ = landing para anuncios (ancla al precio), /plugins/ = showcase orgánico
 app.get(['/plugin/easy-pitch', '/plugin/easy-pitch.html'], (req, res) => {
     const p = path.join(rootPath, 'plugin/easy-pitch.html');
-    if (fs.existsSync(p)) return res.sendFile(p);
-    return res.sendFile(path.join(rootPath, 'plugins/easy-pitch.html'));
+    if (fs.existsSync(p)) return sendEdgeCachedHtml(res, p);
+    return sendEdgeCachedHtml(res, path.join(rootPath, 'plugins/easy-pitch.html'));
 });
 app.get(['/plugins/easy-pitch', '/plugins/easy-pitch.html'], (req, res) => {
-    return res.sendFile(path.join(rootPath, 'plugins/easy-pitch.html'));
+    return sendEdgeCachedHtml(res, path.join(rootPath, 'plugins/easy-pitch.html'));
 });
 
 // Rutas directas para Omni: /plugin/ y /plugins/
 app.get(['/plugin/omni', '/plugin/omni.html', '/plugins/omni', '/plugins/omni.html'], (req, res) => {
-    return res.sendFile(path.join(rootPath, 'plugins/omni.html'));
+    return sendEdgeCachedHtml(res, path.join(rootPath, 'plugins/omni.html'));
 });
 
 // Rutas directas para STAR CHAIN (by godmixing & OFFSZN)
 app.get(['/plugin/star-chain', '/plugin/star-chain.html', '/plugins/star-chain', '/plugins/star-chain.html'], (req, res) => {
-    return res.sendFile(path.join(rootPath, 'plugins/star-chain.html'));
+    return sendEdgeCachedHtml(res, path.join(rootPath, 'plugins/star-chain.html'));
 });
 
 // Rutas directas para Checkout de Plugins
 app.get(['/plugin/checkout', '/plugin/checkout.html', '/plugins/checkout', '/plugins/checkout.html'], (req, res) => {
-    return res.sendFile(path.join(rootPath, 'plugins/checkout.html'));
+    return sendEdgeCachedHtml(res, path.join(rootPath, 'plugins/checkout.html'));
 });
 
 // Demo interactiva VST3 de Omni (carga limpia sin colisión de carpetas)
 app.get(['/plugins/omni-demo', '/plugins/omni-demo.html'], (req, res) => {
-    return res.sendFile(path.join(rootPath, 'plugins/omni-demo.html'));
+    return sendEdgeCachedHtml(res, path.join(rootPath, 'plugins/omni-demo.html'));
 });
 
 // Rutas directas para Vocal Preset
 app.get(['/plugin/vocal-preset', '/plugin/vocal-preset.html', '/plugins/vocal-preset', '/plugins/vocal-preset.html'], (req, res) => {
     const pluginsLandingPath = path.join(rootPath, 'plugins/vocal-preset.html');
     if (fs.existsSync(pluginsLandingPath)) {
-        return res.sendFile(pluginsLandingPath);
+        return sendEdgeCachedHtml(res, pluginsLandingPath);
     }
     const pluginLandingPath = path.join(rootPath, 'plugin/vocal-preset.html');
     if (fs.existsSync(pluginLandingPath)) {
-        return res.sendFile(pluginLandingPath);
+        return sendEdgeCachedHtml(res, pluginLandingPath);
     }
-    return res.sendFile(path.join(rootPath, 'vocal-preset.html'));
+    return sendEdgeCachedHtml(res, path.join(rootPath, 'vocal-preset.html'));
 });
 
 // Rutas directas para afiliados de Easy Mix (abi, allan, patrick, ximo, etc.)
@@ -552,7 +559,7 @@ app.get(['/plugins/easy-mix-:affiliate', '/plugin/easy-mix-:affiliate'], (req, r
     const affiliate = req.params.affiliate.replace(/\.html$/, '').toLowerCase();
     const affiliateLanding = path.join(rootPath, 'plugins', `easy-mix-${affiliate}.html`);
     if (fs.existsSync(affiliateLanding)) {
-        return res.sendFile(affiliateLanding);
+        return sendEdgeCachedHtml(res, affiliateLanding);
     }
     next();
 });
@@ -653,7 +660,7 @@ app.get(['/owner/clientes-tienda', '/owner/clientes-tienda.html'], (req, res) =>
 // --- 3.0.5.0c LANDING LISTA DE ESPERA STAR CHAIN BETA ---
 app.get(['/list/lista-de-espera', '/list/lista-de-espera.html'], (req, res) => {
     const p = path.join(rootPath, 'list/lista-de-espera.html');
-    if (fs.existsSync(p)) return res.sendFile(p);
+    if (fs.existsSync(p)) return sendEdgeCachedHtml(res, p);
     return res.status(404).send('Lista de espera not found');
 });
 
