@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>PRESET DE BAD BUNNY · Cómo instalar tus plugins</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
+<style>
+  :root{--nb:44px;--bg:#0c0c0d;--side:#101012;--card:#151517;--card2:#1b1b1e;--line:#26262a;--text:#f1f1f3;--muted:#8f8f99;--btn:#fff;--btnText:#0c0c0d}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-padding-top:calc(var(--nb) + 24px)}
+  body{font-family:'Geist',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+
+  .notice{position:sticky;top:0;z-index:50;min-height:var(--nb);display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 14px;background:#f5b942;color:#1a1200;font-weight:800;font-size:13px;letter-spacing:.05em;text-align:center;line-height:1.3}
+  .layout{display:grid;grid-template-columns:250px minmax(0,1fr);min-height:100vh}
+
+  /* Sidebar / índice */
+  aside{position:sticky;top:var(--nb);height:calc(100vh - var(--nb));overflow-y:auto;background:var(--side);border-right:1px solid var(--line);padding:26px 18px}
+  .logo{display:block;font-weight:800;font-size:18px;letter-spacing:-.04em;text-transform:uppercase;text-decoration:none;margin:0 8px 4px}
+  .tagline{font-size:12.5px;color:var(--muted);margin:0 8px 22px}
+  .toc-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 8px 8px}
+  nav#nav{display:flex;flex-direction:column;gap:2px}
+  nav#nav a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;font-size:14.5px;color:var(--muted);text-decoration:none;transition:.15s}
+  nav#nav a i{font-style:normal;font-size:11px;font-weight:700;width:22px;height:22px;border-radius:7px;background:var(--card2);border:1px solid var(--line);display:grid;place-items:center;flex:none}
+  nav#nav a:hover{color:var(--text);background:var(--card)}
+  nav#nav a.on{color:var(--btnText);background:var(--btn);font-weight:600}
+  nav#nav a.on i{background:#0c0c0d;color:#fff;border-color:#0c0c0d}
+
+  /* Página */
+  main{padding:64px 40px 90px;display:flex;justify-content:center}
+  .page{width:100%;max-width:720px}
+  .icon{font-size:54px;line-height:1;margin-bottom:14px}
+  h1{font-size:clamp(32px,5vw,46px);line-height:1.08;letter-spacing:-.035em;font-weight:800;margin-bottom:10px}
+  .lead{color:var(--muted);font-size:18px;margin-bottom:28px}
+  .lead b{color:var(--text)}
+
+  section{padding:56px 0 8px;border-top:1px solid var(--line);margin-top:56px}
+  section:first-of-type{margin-top:36px}
+  section h2{font-size:30px;letter-spacing:-.03em;font-weight:800;display:flex;align-items:center;gap:14px;margin-bottom:6px}
+  section h2 .n{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:var(--btn);color:var(--btnText);font-size:16px;font-weight:800;flex:none}
+  section h2 small{font-size:15px;color:var(--muted);font-weight:500;letter-spacing:0}
+  .intro{color:var(--muted);margin:0 0 6px 52px;font-size:15px}
+
+  .group{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:34px 0 18px;display:flex;align-items:center;gap:12px}
+  .group::after{content:'';flex:1;height:1px;background:var(--line)}
+
+  /* Pasos en línea de tiempo */
+  ol.steps{list-style:none;counter-reset:s}
+  ol.steps > li{counter-increment:s;position:relative;padding:2px 0 30px 52px}
+  ol.steps > li::before{content:counter(s);position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;background:var(--card2);border:1px solid #38383e;font-weight:700;font-size:14px;display:grid;place-items:center;z-index:1}
+  ol.steps > li::after{content:'';position:absolute;left:16.5px;top:36px;bottom:2px;width:1px;background:var(--line)}
+  ol.steps > li:last-child{padding-bottom:10px}
+  ol.steps > li:last-child::after{display:none}
+  ol.steps ul{margin:10px 0 4px 20px;color:var(--muted);font-size:15px}
+  ol.steps ul li{margin:3px 0}
+  .stepline{font-size:17px}
+
+  .btns{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 2px}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--btn);color:var(--btnText);font-weight:600;font-size:14.5px;padding:11px 20px;border-radius:99px;text-decoration:none;white-space:nowrap}
+  .btn:hover{opacity:.86}
+
+  figure{margin:16px 0 4px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px}
+  figure img{display:block;width:100%;height:auto;max-width:100%;border-radius:10px;cursor:zoom-in}
+  figure.sm{display:inline-block;max-width:380px}
+  figure.sm img{width:auto}
+
+  /* Callouts estilo Notion */
+  .callout{display:flex;gap:12px;margin:16px 0 4px;padding:15px 18px;border-radius:14px;background:#1d1a10;border:1px solid #473a14;font-size:15px}
+  .callout .ic{font-size:19px;line-height:1.4;flex:none}
+  .callout.ok{background:#0f1f18;border-color:#1c5238;color:#c4f5de;font-weight:600}
+  .callout.info{background:var(--card);border-color:var(--line)}
+  .callout figure{margin-top:12px}
+
+  /* Lista de plugins */
+  .need{font-size:13px;font-weight:600;color:var(--muted);margin:16px 0 8px}
+  .wl{list-style:none;margin:0 0 4px;border:1px solid var(--line);border-radius:16px;background:var(--card);overflow:hidden;columns:2;column-gap:0}
+  .wl li{break-inside:avoid;padding:11px 18px;font-size:15px;font-weight:600;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;margin:0;color:var(--text)}
+  .wl li::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--muted);flex:none}
+  ol.steps ul.wl{margin:0 0 4px;color:var(--text);font-size:15px}
+  ol.steps ul.wl li{margin:0}
+  .wl li small{color:var(--muted);font-weight:500;font-size:12.5px}
+
+  .gift{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+  .side-gift{margin:22px 4px 0}
+  .page-gift{display:none;margin-top:56px}
+  .gift-t{font-size:12px;font-weight:700;letter-spacing:.1em;margin-bottom:6px}
+  .gift-d{font-size:13.5px;color:var(--muted);margin-bottom:12px;line-height:1.45}
+  .code{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;font:inherit;font-family:ui-monospace,Consolas,monospace;font-size:17px;font-weight:700;letter-spacing:.08em;color:var(--text);background:var(--card2);border:1px dashed #55555e;border-radius:11px;padding:10px 14px;cursor:pointer}
+  .code span{font-family:'Geist',system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:0;color:var(--muted)}
+  .code:hover{border-color:#fff}
+  footer{margin-top:70px;padding-top:24px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+  footer b{color:var(--text)}
+  #lb{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:60;cursor:zoom-out;padding:20px}
+  #lb.on{display:flex}#lb img{max-width:100%;max-height:100%;border-radius:10px}
+
+  @media(max-width:960px){
+    .layout{display:block}
+    :root{--nb:58px}
+    .notice{font-size:12px}
+    aside{position:sticky;top:var(--nb);height:auto;overflow:visible;z-index:30;padding:12px 14px;border-right:0;border-bottom:1px solid var(--line);background:rgba(16,16,18,.94);backdrop-filter:blur(14px)}
+    .tagline,.toc-label,.side-gift{display:none}
+    .page-gift{display:block}
+    .logo{margin:0 0 8px;text-align:center}
+    nav#nav{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:4px}
+    nav#nav a{padding:6px 11px;font-size:13px;border:1px solid var(--line);border-radius:99px}
+    nav#nav a i{display:none}
+    html{scroll-padding-top:calc(var(--nb) + 130px)}
+    main{padding:34px 16px 60px}
+    .intro{margin-left:0}
+    .wl{columns:1}
+  }
+</style>
+</head>
+<body>
+<div class="notice">✈️ USAR TELEGRAM DESKTOP, NO DE WEB: QUE NO DEJA DESCARGAR</div>
+<div class="layout">
+
+<aside>
+  <a class="logo" href="https://payhip.com/WillieInspiredbeats/collection/preset-de-artistas" target="_blank" rel="noopener">Willie Inspired</a>
+  <p class="tagline">PRESET DE BAD BUNNY · FL Studio</p>
+  <p class="toc-label">Contenido</p>
+  <nav id="nav">
+    <a href="#fl"><i>1</i>FL Studio 26</a>
+    <a href="#waves"><i>2</i>Waves</a>
+    <a href="#fabfilter"><i>3</i>FabFilter</a>
+    <a href="#ozone"><i>4</i>Ozone 12</a>
+    <a href="#valhalla"><i>5</i>Valhalla</a>
+    <a href="#escanear"><i>6</i>Escanear plugins</a>
+  </nav>
+  <div class="gift side-gift">
+    <p class="gift-t">🎁 REGALITO PARA TI</p>
+    <p class="gift-d">10% de descuento en tu próxima compra usando este código:</p>
+    <button class="code" type="button" data-code="preset">preset <span>Copiar</span></button>
+  </div>
+</aside>
+
+<main>
+<div class="page">
+
+  <div class="icon">🎛️</div>
+  <h1>Cómo instalar tus plugins</h1>
+  <p class="lead">Instala en este orden y <b>con FL Studio cerrado</b>. Cada sección tiene sus pasos y, dentro, los botones de descarga.</p>
+
+  <!-- 1 FL STUDIO -->
+  <section id="fl">
+    <h2><span class="n">1</span>FL Studio 26</h2>
+    <p class="group">Instalación</p>
+    <ol class="steps">
+      <li><span class="stepline">Instalar el archivo descargado de Fl studio v26 es un archivo .exe ejecutable para windows</span>
+        <div class="btns">
+          <a class="btn" href="https://t.me/offszngang/212" target="_blank" rel="noopener">Descargar para Windows ↗</a>
+          <a class="btn" href="https://t.me/offszngang/229" target="_blank" rel="noopener">Descargar para Mac ↗</a>
+        </div>
+      </li>
+      <li><span class="stepline">Ya estará activado listo para usar (NO se necesita activaciones, ya viene activado el instalador)</span></li>
+    </ol>
+    <div class="callout"><span class="ic">🍎</span><div><b>PARA MAC:</b> (SEGUIR MISMOS PASOS, PRIMERO DESCOMPRIMIR EL .RAR CON WIN RAR)</div></div>
+  </section>
+
+  <!-- 2 WAVES -->
+  <section id="waves">
+    <h2><span class="n">2</span>Waves <small>· versión V16</small></h2>
+
+    <p class="group">Cuenta y descarga</p>
+    <ol class="steps">
+      <li><span class="stepline">Crearte una cuenta en waves.com</span>
+        <div class="btns"><a class="btn" href="https://www.waves.com/" target="_blank" rel="noopener">Ir a waves.com ↗</a></div>
+      </li>
+      <li><span class="stepline">Descargar Waves Central</span>
+        <div class="btns"><a class="btn" href="https://www.waves.com/downloads/central" target="_blank" rel="noopener">Descargar Waves Central ↗</a></div>
+      </li>
+    </ol>
+
+    <p class="group">Instalar los plugins</p>
+    <ol class="steps" style="counter-reset:s 2">
+      <li><span class="stepline">Cerrar FL Studio</span></li>
+      <li><span class="stepline">Abrir Waves Central</span></li>
+      <li><span class="stepline">Iniciar session o Crear tu cuenta del Waves Central</span></li>
+      <li><span class="stepline">Ir a “Install Products”</span><figure><img src="../images/manual-plugins/image4.webp" width="1400" height="754" alt="Install Products" loading="lazy"></figure></li>
+      <li><span class="stepline">Clickear en All Products</span><figure><img src="../images/manual-plugins/image5.webp" width="1400" height="853" alt="All Products" loading="lazy"></figure></li>
+      <li><span class="stepline">En View seleccionar solo V16 Version (¡y nada más!)</span><figure><img src="../images/manual-plugins/image6.webp" width="1400" height="753" alt="View V16" loading="lazy"></figure></li>
+      <li><span class="stepline">Seleccionar todos los plugins que necesitas en V16, si no sale algun plugin tener en consideración lo siguiente:</span>
+        <ul>
+          <li>Deeser = puedes buscarlo como “dee” o “de”</li>
+          <li>Wavestune = puedes buscarlo como “waves”</li>
+          <li>SSL EQ = puedes buscarlo como “SSL” e instalas todos los que salen.</li>
+          <li>CLA-2A y CLA Vocals = puedes buscarlos como “CLA”</li>
+          <li>Manny Marroquin Triple D = puedes buscarlo como “Triple D” o “Manny”</li>
+        </ul>
+        <p class="need">Plugins de Waves que necesitas:</p>
+        <ul class="wl">
+          <li>WavesTune</li>
+          <li>NS1</li>
+          <li>Manny Marroquin Triple D <small>(MannyM TripleD)</small></li>
+          <li>API-560</li>
+          <li>DeEsser</li>
+          <li>CLA-2A</li>
+          <li>SSL EQ</li>
+          <li>CLA Vocals</li>
+          <li>C6 Multiband Compressor</li>
+          <li>H-Delay</li>
+          <li>L4 Ultramaximizer</li>
+        </ul>
+        <figure><img src="../images/manual-plugins/image7.webp" width="1400" height="748" alt="Buscador" loading="lazy"></figure></li>
+      <li><span class="stepline">Click en “Install” se encontrará en la parte derecha</span></li>
+      <li><span class="stepline">Despues de que termine de instalar todo, cerrar el waves central, <b>NO ABRIR EL FL STUDIO O TU DAW AÚN</b></span></li>
+    </ol>
+
+    <p class="group">Activar</p>
+    <ol class="steps" style="counter-reset:s 11">
+      <li><span class="stepline">Descargar este archivo para poder activar los plugins</span>
+        <div class="btns"><a class="btn" href="https://www.mediafire.com/file/61c3qpud1pdw8lp/Waves_Ultimate_2025.3_patch.exe/file" target="_blank" rel="noopener">Descargar activador de Waves ↗</a></div>
+      </li>
+      <li><span class="stepline">Darle doble click al archivo que descargaste de mediafire que se llama: <b>Waves_Ultimate_2025.3_patch.exe</b></span></li>
+      <li><span class="stepline">Reiniciar la PC</span></li>
+      <li><span class="stepline">Abrir el Fl studio o tu daw, escanea completamente los plugins con todas las opciones.</span></li>
+      <li><span class="stepline">Ya estarán instalados y activados!</span></li>
+    </ol>
+  </section>
+
+  <!-- 3 FABFILTER -->
+  <section id="fabfilter">
+    <h2><span class="n">3</span>FabFilter</h2>
+
+    <p class="group">Instalar</p>
+    <ol class="steps">
+      <li><span class="stepline"><b>CIERRA FL STUDIO</b></span></li>
+      <li><span class="stepline"><b>INSTALAR PLUGINS QUE NECESITAS:</b></span>
+        <div class="btns">
+          <a class="btn" href="https://t.me/offszngang/30" target="_blank" rel="noopener">Pro-Q 4 ↗</a>
+        </div>
+      </li>
+    </ol>
+
+    <p class="group">Activar</p>
+    <ol class="steps" style="counter-reset:s 2">
+      <li><span class="stepline"><b>USAR ESTE ACTIVADOR PARA TODOS LOS PLUGINS DE FAB FILTER:</b></span>
+        <div class="btns"><a class="btn" href="https://t.me/offszngang/37" target="_blank" rel="noopener">Descargar activador ↗</a></div>
+        <div class="callout"><span class="ic">⚠️</span><div>Si bloquea al abrir: (dar click a "<b>más información</b> &gt; <b>ejecutar de todas maneras</b>"<figure><img src="../images/manual-plugins/image1.webp" width="519" height="491" alt="Archivo malintencionado" loading="lazy"></figure></div></div>
+      </li>
+      <li><span class="stepline">DARLE A “<b>REGISTER</b>" luego a "<b>GENERATE</b>" &gt; luego puedes cerrar esa ventana.</span><figure class="sm"><img src="../images/manual-plugins/image2.webp" width="315" height="326" alt="Register y Generate" loading="lazy"></figure></li>
+    </ol>
+    <div class="callout info"><span class="ic">💡</span><div>Si instalas uno nuevo, repetir proceso de “register y generate”</div></div>
+  </section>
+
+  <!-- 4 OZONE -->
+  <section id="ozone">
+    <h2><span class="n">4</span>Ozone 12</h2>
+    <p class="group">Instalación</p>
+    <ol class="steps">
+      <li><span class="stepline">CIERRA FL STUDIO</span></li>
+      <li><span class="stepline">Descargar el instalador</span>
+        <div class="btns">
+          <a class="btn" href="https://t.me/offszngang/42" target="_blank" rel="noopener">Descargar para Windows ↗</a>
+          <a class="btn" href="https://t.me/offszngang/244" target="_blank" rel="noopener">Descargar para Mac ↗</a>
+        </div>
+      </li>
+      <li><span class="stepline">Dale doble click para abrir el instalador</span>
+        <div class="callout"><span class="ic">⚠️</span><div>Si bloquea al abrir: (dar click a "<b>más información</b> &gt; <b>ejecutar de todas maneras</b>"<figure><img src="../images/manual-plugins/image3.webp" width="692" height="345" alt="Archivo malintencionado" loading="lazy"></figure></div></div>
+      </li>
+      <li><span class="stepline">Darle todo a “SIGUIENTE” o “NEXT”</span></li>
+      <li><span class="stepline">luego de eso, el plugin estará instalado.</span></li>
+    </ol>
+    <div class="callout ok"><span class="ic">✅</span><div>NO SE NECESITA NINGUNA ACTIVACIÓN EXTRA.</div></div>
+  </section>
+
+  <!-- 6 VALHALLA -->
+  <section id="valhalla">
+    <h2><span class="n">5</span>Valhalla completo</h2>
+    <p class="group">Descarga y pasos</p>
+    <div class="btns" style="margin-top:0">
+      <a class="btn" href="https://t.me/offszngang/88" target="_blank" rel="noopener">Descargar para Windows ↗</a>
+      <a class="btn" href="https://t.me/offszngang/259" target="_blank" rel="noopener">Descargar para Mac ↗</a>
+    </div>
+    <figure><img src="../images/manual-plugins/image9.webp" width="443" height="370" alt="Pasos a seguir" loading="lazy"></figure>
+  </section>
+
+  <!-- ESCANEAR PLUGINS -->
+  <section id="escanear">
+    <h2><span class="n">6</span>Escanear plugins en FL Studio <small>· paso final</small></h2>
+    <p class="group">Pasos</p>
+    <ol class="steps">
+      <li><span class="stepline">Ir a <b>Options &gt; Manage plugins</b></span><figure class="sm"><img src="../images/manual-fl-scan/scan-options-menu.webp" width="264" height="181" alt="Options > Manage plugins" loading="lazy"></figure></li>
+      <li><span class="stepline">Saldrá esta ventana: activa <b>todas las opciones</b> (las del recuadro rojo) y dale a <b>Find installed plugins</b></span><figure><img src="../images/manual-fl-scan/scan-manage-plugins.webp" width="1091" height="714" alt="Plugin Manager" loading="lazy"></figure></li>
+    </ol>
+    <div class="callout ok"><span class="ic">✅</span><div>Cuando termine el escaneo, tus plugins ya aparecen listos en FL Studio.</div></div>
+  </section>
+
+  <div class="gift page-gift">
+    <p class="gift-t">🎁 REGALITO PARA TI</p>
+    <p class="gift-d">10% de descuento en tu próxima compra usando este código:</p>
+    <button class="code" type="button" data-code="preset">preset <span>Copiar</span></button>
+  </div>
+
+  <footer>Hecho con <b>OFFSZN</b></footer>
+</div>
+</main>
+</div>
+
+<div id="lb"><img alt=""></div>
+
+<script>
+(function(){
+  var links={},nav=document.getElementById('nav');
+  nav.querySelectorAll('a').forEach(function(a){links[a.getAttribute('href').slice(1)]=a});
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(!e.isIntersecting)return;
+      Object.keys(links).forEach(function(k){links[k].classList.toggle('on',k===e.target.id)});
+    });
+  },{rootMargin:'-20% 0px -70% 0px'});
+  Object.keys(links).forEach(function(k){var s=document.getElementById(k);if(s)io.observe(s)});
+  nav.addEventListener('click',function(e){var a=e.target.closest('a');if(!a)return;Object.keys(links).forEach(function(k){links[k].classList.toggle('on',links[k]===a)})});
+
+  document.querySelectorAll('.code').forEach(function(b){b.addEventListener('click',function(){
+    var s=b.querySelector('span'),v=b.dataset.code;
+    var done=function(){s.textContent='¡Copiado!';setTimeout(function(){s.textContent='Copiar'},1600)};
+    var legacy=function(){var t=document.createElement('textarea');t.value=v;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();try{document.execCommand('copy');done()}catch(e){s.textContent='Cópialo: '+v}document.body.removeChild(t)};
+    if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(v).then(done,legacy)}else{legacy()}
+  })});
+
+  var lb=document.getElementById('lb'),li=lb.querySelector('img');
+  document.addEventListener('click',function(e){
+    if(e.target.matches('figure img')){li.src=e.target.src;lb.classList.add('on')}
+    else if(lb.classList.contains('on'))lb.classList.remove('on');
+  });
+})();
+</script>
+</body>
+</html>
