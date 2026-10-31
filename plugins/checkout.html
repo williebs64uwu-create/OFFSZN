@@ -883,17 +883,11 @@
             <!-- 3. Official PayPal & Card Buttons -->
             <div class="payment-buttons-box">
                 <!-- PayPal Smart Yellow Button -->
-                <a id="btnPaypalYellow" href="#" class="btn-paypal-smart" title="Pagar de forma segura con PayPal" onclick="return validateBeforePayment(event, this)">
-                    <span class="paypal-logo-text">
-                        <span class="pp-p1">Pay</span><span class="pp-p2">Pal</span>
-                    </span>
-                </a>
-
-                <!-- Black Debit or Credit Card Button -->
-                <a id="btnCardBlack" href="#" class="btn-card-smart" title="Pagar con tarjeta de débito o crédito" onclick="return validateBeforePayment(event, this)">
-                    <i class="bi bi-credit-card-2-front"></i>
-                    <span>Tarjeta de débito o crédito</span>
-                </a>
+                <!-- PayPal / tarjeta: pago real con orden en la base, licencia y correo automáticos (como Easy Mix) -->
+                <div id="plugin-paypal-button-container"></div>
+                <div id="cuotasNotice" class="account-hint" style="display:none; margin-top:0;">
+                    Las 3 cuotas mensuales se activan por suscripción de PayPal y aún no están habilitadas aquí. Para pagar en cuotas escríbele a Willie por WhatsApp, o elige <b>Licencia FULL</b> para pagar una sola vez.
+                </div>
 
                 <div class="paypal-powered-by">
                     Desarrollado por <span class="brand">Pay</span><span class="brand-pal">Pal</span>
@@ -1102,11 +1096,32 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
 <script src="/script/auth-utils.js?v=11"></script>
 <script>
+    // Datos del producto para el pago directo (script/plugin-checkout.js)
+    window.PLUGIN_ID = 5003;
+    window.PLUGIN_NAME = 'STAR CHAIN';
+    window.COUPON_CODE = '';
+    window.BUYER_EMAIL = '';
+    // Antes de abrir PayPal exige un correo válido (ahí llegan la clave y el instalador)
+    window.PLUGIN_BEFORE_PAY = function () {
+        const input = document.getElementById('buyerEmail');
+        const email = (input.value || '').trim();
+        if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email)) {
+            input.classList.add('input-error');
+            input.focus();
+            input.placeholder = '⚠ Ingresa tu correo antes de continuar';
+            setTimeout(() => { input.classList.remove('input-error'); input.placeholder = 'Tu dirección de correo electrónico'; }, 2200);
+            return false;
+        }
+        window.BUYER_EMAIL = email;
+        return true;
+    };
+</script>
+<script src="/script/plugin-checkout.js"></script>
+<script>
     // ==================== STATE MANAGEMENT ====================
     const urlParams = new URLSearchParams(window.location.search);
     let selectedPlan = (urlParams.get('tier') === 'cuotas') ? 'cuotas' : 'full';
     let appliedDiscountPct = 0;
-    const PAYPAL_BUSINESS = 'willie2008garay@gmail.com';
     const WA_PHONE = '51993525005';
 
     function selectPlan(plan) {
@@ -1127,6 +1142,12 @@
             document.getElementById('labelAltCryptoPrice').textContent = '16.33 USDT';
         }
 
+        // El pago directo con PayPal es solo para la licencia FULL; las cuotas van por suscripción (pendiente)
+        const pp = document.getElementById('plugin-paypal-button-container');
+        if (pp) pp.style.display = (plan === 'full') ? '' : 'none';
+        const notice = document.getElementById('cuotasNotice');
+        if (notice) notice.style.display = (plan === 'full') ? 'none' : 'block';
+
         recalculateTotals();
     }
 
@@ -1137,14 +1158,17 @@
 
         if (code === 'OFFSZN' || code === 'STAR' || code === 'WILLIE' || code === 'GODMIXING') {
             appliedDiscountPct = 10;
+            window.COUPON_CODE = code;
             msg.className = 'coupon-msg success';
             msg.textContent = '✓ ¡Cupón ' + code + ' aplicado! (10% de descuento)';
         } else if (!code) {
             appliedDiscountPct = 0;
+            window.COUPON_CODE = '';
             msg.className = 'coupon-msg';
             msg.textContent = '';
         } else {
             appliedDiscountPct = 0;
+            window.COUPON_CODE = '';
             msg.className = 'coupon-msg error';
             msg.textContent = 'Código de cupón inválido o expirado.';
         }
@@ -1175,20 +1199,6 @@
 
     function updatePaymentLinks(amount) {
         const email = (document.getElementById('buyerEmail').value || '').trim();
-        const itemName = (selectedPlan === 'full') 
-            ? 'STAR CHAIN - Licencia FULL (2 dispositivos)' 
-            : 'STAR CHAIN - Cuota 1 de 3';
-
-        // 1. PayPal & Card Webscr standard direct URL
-        const payUrl = 'https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=' + encodeURIComponent(PAYPAL_BUSINESS) +
-            '&item_name=' + encodeURIComponent(itemName) +
-            '&amount=' + amount.toFixed(2) +
-            '&currency_code=USD&no_shipping=1' +
-            (email ? '&custom=' + encodeURIComponent(email) : '');
-
-        document.getElementById('btnPaypalYellow').href = payUrl;
-        document.getElementById('btnCardBlack').href = payUrl;
-
         // 2. WhatsApp links for local methods
         const emailText = email ? ` (Correo: ${email})` : '';
         const yapeText = (selectedPlan === 'full') 
@@ -1226,26 +1236,6 @@
             if (pill) pill.classList.toggle('active', m === method);
             if (panel) panel.classList.toggle('show', m === method);
         });
-    }
-
-    // ==================== EMAIL VALIDATION GATE ====================
-    // Prevents payment redirect if email field is empty
-    function validateBeforePayment(evt, linkEl) {
-        const emailInput = document.getElementById('buyerEmail');
-        const email = (emailInput.value || '').trim();
-        if (!email || !email.includes('@')) {
-            evt.preventDefault();
-            emailInput.classList.add('input-error');
-            emailInput.focus();
-            emailInput.placeholder = '⚠ Ingresa tu correo antes de continuar';
-            setTimeout(() => {
-                emailInput.classList.remove('input-error');
-                emailInput.placeholder = 'Tu dirección de correo electrónico';
-            }, 2200);
-            return false;
-        }
-        // Email is valid — let the link navigate to PayPal
-        return true;
     }
 
     function validateBeforeLocal(evt) {

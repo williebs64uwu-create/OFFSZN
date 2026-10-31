@@ -18,8 +18,16 @@ class PluginDirectCheckout {
         const isPitch = this.productId === 5000 || window.PLUGIN_NAME === 'Easy Pitch' || window.PLUGIN_NAME === 'EASY PITCH';
         const isOmni = this.productId === 5001 || window.PLUGIN_NAME === 'Omni Plugin' || window.PLUGIN_NAME === 'Omni' || window.PLUGIN_NAME === 'OMNI';
         const isCassette = this.productId === 5002 || (window.PLUGIN_NAME && window.PLUGIN_NAME.toLowerCase().includes('cassette'));
+        const isStar = this.productId === 5003 || window.PLUGIN_NAME === 'STAR CHAIN';
 
-        if (isCoke) {
+        if (isStar) {
+            // Solo Windows por ahora: el instalador y la clave también llegan por correo. Sin enlace de macOS.
+            this.downloads = {
+                name: 'STAR CHAIN',
+                win: '/mis-compras',
+                mac: null
+            };
+        } else if (isCoke) {
             this.downloads = {
                 name: 'Coca-Cola',
                 win: '/downloads/OFFSZN_COCA_COLA_Setup.exe',
@@ -128,6 +136,11 @@ class PluginDirectCheckout {
         if (!window.paypal || !this.container) return;
 
         window.paypal.Buttons({
+            // Página con validaciones propias (ej. correo obligatorio): si devuelve false no se abre PayPal
+            onClick: (data, actions) => {
+                if (typeof window.PLUGIN_BEFORE_PAY === 'function' && !window.PLUGIN_BEFORE_PAY()) return actions.reject();
+                return actions.resolve();
+            },
             createOrder: async () => {
                 try {
                     const token = window.AuthUtils && typeof window.AuthUtils.getSession === 'function' 
@@ -157,6 +170,8 @@ class PluginDirectCheckout {
                     if (window.CURRENT_PROMO_PRICE) {
                         createPayload.customPrice = window.CURRENT_PROMO_PRICE;
                     }
+                    if (window.COUPON_CODE) createPayload.couponCode = window.COUPON_CODE;
+                    if (window.BUYER_EMAIL) createPayload.guestEmail = window.BUYER_EMAIL;
 
                     // Coca-Cola and Promo 2x1 use dedicated isolated endpoints to guarantee 100% stability
                     const isCoke = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola';
@@ -185,12 +200,12 @@ class PluginDirectCheckout {
                     if (window.MetaPixel) {
                         const isOmni = this.productId === 5001 || window.PLUGIN_NAME === 'Omni Plugin' || window.PLUGIN_NAME === 'Omni' || window.PLUGIN_NAME === 'OMNI';
                         const isCassette = this.productId === 5002 || (window.PLUGIN_NAME && window.PLUGIN_NAME.toLowerCase().includes('cassette'));
-                        const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : (isPitch ? 'easy_pitch' : (isOmni ? 'omni' : (isCassette ? 'cassette' : 'easy_mix')))))));
+                        const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : (isPitch ? 'easy_pitch' : (isOmni ? 'omni' : (isCassette ? 'cassette' : (this.productId === 5003 ? 'star_chain' : 'easy_mix'))))))));
                         window.MetaPixel.trackInitiateCheckout({
                             content_ids: [pluginCode],
                             content_name: isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : this.downloads.name,
                             content_type: 'product',
-                            value: window.CURRENT_PROMO_PRICE || 10,
+                            value: window.CURRENT_PROMO_PRICE || (this.productId === 5003 ? 49 : 10),
                             currency: 'USD',
                             event_id: `initiate_checkout_${data.id}`
                         });
@@ -236,6 +251,8 @@ class PluginDirectCheckout {
                     if (window.CURRENT_PROMO_PRICE) {
                         capturePayload.customPrice = window.CURRENT_PROMO_PRICE;
                     }
+                    if (window.COUPON_CODE) capturePayload.couponCode = window.COUPON_CODE;
+                    if (window.BUYER_EMAIL) capturePayload.guestEmail = window.BUYER_EMAIL;
 
                     // Coca-Cola & Promo 2x1 use dedicated endpoints
                     const isCoke = this.productId === 903 || window.PLUGIN_NAME === 'Coca-Cola';
@@ -265,8 +282,8 @@ class PluginDirectCheckout {
                         if (window.MetaPixel) {
                             const isOmni = this.productId === 5001 || window.PLUGIN_NAME === 'Omni Plugin' || window.PLUGIN_NAME === 'Omni' || window.PLUGIN_NAME === 'OMNI';
                             const isCassette = this.productId === 5002 || (window.PLUGIN_NAME && window.PLUGIN_NAME.toLowerCase().includes('cassette'));
-                            const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : (isPitch ? 'easy_pitch' : (isOmni ? 'omni' : (isCassette ? 'cassette' : 'easy_mix')))))));
-                            const paidAmount = result.total_price || result.amount || window.CURRENT_PROMO_PRICE || 10;
+                            const pluginCode = isPromo2x1 ? 'promo_2x1' : (isCoke ? 'coca_cola' : (isInka ? 'inka_kola' : (isMaster ? 'easy_master' : (isVocal ? 'vocal_preset' : (isPitch ? 'easy_pitch' : (isOmni ? 'omni' : (isCassette ? 'cassette' : (this.productId === 5003 ? 'star_chain' : 'easy_mix'))))))));
+                            const paidAmount = result.total_price || result.amount || window.CURRENT_PROMO_PRICE || (this.productId === 5003 ? 49 : 10);
                             window.MetaPixel.trackPurchase({
                                 content_ids: [pluginCode],
                                 content_name: isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : this.downloads.name,
@@ -661,9 +678,9 @@ class PluginDirectCheckout {
                             <a href="${this.downloads.win}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer">
                                 <i class="bi bi-windows" style="color: #0078d4;"></i> Windows
                             </a>
-                            <a href="${this.downloads.mac}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer">
+                            ${this.downloads.mac ? `<a href="${this.downloads.mac}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer">
                                 <i class="bi bi-apple"></i> macOS
-                            </a>
+                            </a>` : ''}
                         </div>
                     </div>
                 </div>
