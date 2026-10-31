@@ -6,7 +6,7 @@ import { resolveRegion, quoteCart } from '../../../shared/store/pricing.js';
 import { getProduct, loadCatalog } from '../../../shared/store/catalog.js';
 import { fulfillOrder } from '../../services/storeService.js';
 import { runAutomations } from '../../services/crmService.js';
-import { buildSalesReport, buildProductPrices, marketplaceOrders } from '../../../shared/store/salesReport.js';
+import { buildSalesReport, buildProductPrices, marketplaceOrders, sinceIso, SALES_SINCE_DEFAULT } from '../../../shared/store/salesReport.js';
 import { parsePayhipPlugins } from '../../../shared/store/payhip.js';
 
 const clip = (v, n) => String(v ?? '').slice(0, n).trim();
@@ -16,8 +16,15 @@ const fail = (res, error, status = 500) => res.status(status).json({ error: type
 
 // ─── GET /admin/overview?days=30
 export const overview = async (req, res) => {
-    const days = Math.min(180, Math.max(1, parseInt(req.query.days, 10) || 30));
-    const since = new Date(Date.now() - days * 86400000).toISOString();
+    // ?since=AAAA-MM-DD (por ejemplo desde abril 2026) o ?days=N. Sin nada: desde el inicio de las ventas reales (CRM_SALES_SINCE).
+    let days; let since;
+    if (req.query.days) {
+        days = Math.min(400, Math.max(1, parseInt(req.query.days, 10) || 30));
+        since = new Date(Date.now() - days * 86400000).toISOString();
+    } else {
+        since = sinceIso(/^\d{4}-\d{2}-\d{2}$/.test(String(req.query.since || '')) ? req.query.since : (process.env.CRM_SALES_SINCE || SALES_SINCE_DEFAULT));
+        days = Math.min(400, Math.max(1, Math.ceil((Date.now() - new Date(since).getTime()) / 86400000)));
+    }
     const [orders, events, customers, trials, carts] = await Promise.all([
         supabase.from('store_orders').select('status, created_at, total_usd, country, payment_method, utm, offer_type, lines').gte('created_at', since).limit(5000),
         supabase.from('store_events').select('event, session_id').gte('created_at', since).in('event', ['page_view', 'add_to_cart', 'checkout_start', 'purchase']).limit(50000),
@@ -254,10 +261,12 @@ export const system = async (req, res) => {
 
 // ─── Ventas de Willie (solo productos propios y de pago; tablas de OFFSZN) ────────────────────────────────────────
 // Supabase devuelve máximo 1000 filas por consulta: se pide por páginas.
-async function fetchAll(table, columns, { order = 'id' } = {}) {
+async function fetchAll(table, columns, { order = 'id', filter = null } = {}) {
     const out = [];
     for (let from = 0; from < 50000; from += 1000) {
-        const { data, error } = await supabase.from(table).select(columns).order(order, { ascending: true }).range(from, from + 999);
+        let q = supabase.from(table).select(columns);
+        if (filter) q = filter(q);
+        const { data, error } = await q.order(order, { ascending: true }).range(from, from + 999);
         if (error) throw error;
         out.push(...data);
         if (data.length < 1000) break;
@@ -268,31 +277,39 @@ async function fetchAll(table, columns, { order = 'id' } = {}) {
 // Cuenta(s) de productor de Willie en OFFSZN (ids separados por coma). Solo se cuentan productos de estas cuentas.
 const OWNER_PRODUCER_IDS = () => String(process.env.OFFSZN_OWNER_PRODUCER_IDS || '0382a813-85c7-46c3-8d2c-61a5692adffd').split(',').map((x) => x.trim()).filter(Boolean);
 
-async function loadSalesData() {
-    const [orders, items, products, clicks] = await Promise.all([
-        fetchAll('orders', 'id, status, created_at'),
-        fetchAll('order_items', 'id, order_id, product_id, quantity, price_at_purchase'),
+// Órdenes completadas desde `since`, con sus líneas (order_items) ya unidas.
+const ORDER_COLUMNS = 'id, status, created_at, total_price, transaction_id, product_id, order_items(order_id, product_id, quantity, price_at_purchase)';
+const splitItems = (rows) => ({ orders: rows.map(({ order_items, ...o }) => o), items: rows.flatMap((o) => o.order_items || []) });
+const loadStoreRefs = async () => {
+    try { return await fetchAll('store_orders', 'id, status, payment_ref, lines'); } catch (_) { return []; } // si la tabla aún no existe, solo se pierde el nombre del producto
+};
+
+// Ventas propias del marketplace desde `since`, como órdenes para el Resumen: lo realmente cobrado (solo productos de OWNER_PRODUCER_IDS, de pago y sin beats).
+async function loadMarketplaceOrders(since) {
+    const [orderRows, products, storeOrders] = await Promise.all([
+        fetchAll('orders', ORDER_COLUMNS, { filter: (q) => q.eq('status', 'completed').gte('created_at', since).gt('total_price', 0) }),
         fetchAll('products', 'id, name, product_type, status, price_basic, producer_id'),
-        fetchAll('manual_payment_clicks', 'id, method, product')
+        loadStoreRefs()
     ]);
+    const { orders, items } = splitItems(orderRows);
+    return marketplaceOrders({ orders, items, products, producerIds: OWNER_PRODUCER_IDS(), since, storeOrders });
+}
+
+const salesSince = () => sinceIso(process.env.CRM_SALES_SINCE || SALES_SINCE_DEFAULT);
+
+async function loadSalesData() {
+    const since = salesSince();
+    const [orderRows, products, clicks, storeOrders] = await Promise.all([
+        fetchAll('orders', ORDER_COLUMNS, { filter: (q) => q.eq('status', 'completed').gte('created_at', since) }),
+        fetchAll('products', 'id, name, product_type, status, price_basic, producer_id'),
+        fetchAll('manual_payment_clicks', 'id, method, product'),
+        loadStoreRefs()
+    ]);
+    const { orders, items } = splitItems(orderRows);
     // Ventas de plugins de Payhip (se importan desde el CSV). Si la tabla aún no existe, el reporte sigue con OFFSZN solo.
     let payhip = [];
     try { payhip = await fetchAll('store_payhip_sales', 'order_id, sold_on, plugin, unit_price_usd, mixed, price_estimated', { order: 'order_id' }); } catch (_) { payhip = []; }
-    return { orders, items, products, clicks, payhip, producerIds: OWNER_PRODUCER_IDS() };
-}
-
-// Ventas propias del marketplace desde `since`, como órdenes para el Resumen (solo productos de OWNER_PRODUCER_IDS, de pago y sin beats).
-async function loadMarketplaceOrders(since) {
-    const ids = OWNER_PRODUCER_IDS();
-    const [lines, prods] = await Promise.all([
-        supabase.from('order_items').select('order_id, product_id, quantity, price_at_purchase, order:orders!inner(id, status, created_at, transaction_id)')
-            .eq('order.status', 'completed').gte('order.created_at', since).limit(5000),
-        supabase.from('products').select('id, name, product_type, producer_id').in('producer_id', ids).limit(5000)
-    ]);
-    if (lines.error) throw lines.error;
-    if (prods.error) throw prods.error;
-    const orders = [...new Map(lines.data.map((l) => [l.order.id, l.order])).values()];
-    return marketplaceOrders({ orders, items: lines.data, products: prods.data, producerIds: ids });
+    return { orders, items, products, clicks, payhip, storeOrders, since, producerIds: OWNER_PRODUCER_IDS() };
 }
 
 // ─── GET /admin/sales

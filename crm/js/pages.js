@@ -31,8 +31,9 @@
 
     C.pages.dashboard = {
         async render(view, token) {
-            const days = C.state.days || 30;
-            const [o, t] = await Promise.all([api(`/admin/overview?days=${days}`), api('/admin/tasks')]);
+            // Por defecto cuenta desde el 1 de abril de 2026 (inicio de las ventas reales)
+            const period = C.state.days || 'abril';
+            const [o, t] = await Promise.all([api(period === 'abril' ? '/admin/overview?since=2026-04-01' : `/admin/overview?days=${period}`), api('/admin/tasks')]);
             if (token !== C.state.routeToken) return;
             const names = { page_view: 'Visitas', add_to_cart: 'Carrito', checkout_start: 'Checkout', purchase: 'Compras' };
             const top = Math.max(1, o.funnel[0]?.sessions || 1);
@@ -42,8 +43,8 @@
                 return `<div class="funnel-step"><div class="row between"><span>${names[f.step]}</span><span class="muted small">${num(f.sessions)}${conv}</span></div><div class="bar"><i style="width:${Math.max(4, (f.sessions / top) * 100)}%;opacity:${1 - i * 0.18}">${num(f.sessions)}</i></div></div>`;
             }).join('');
             const due = t.items.slice(0, 5);
-            view.innerHTML = `${head('Resumen', `Últimos ${days} días: tienda Willie Inspired más tus productos de pago del marketplace.`,
-                `<select class="select" id="period" style="width:auto"><option value="7">7 días</option><option value="30">30 días</option><option value="90">90 días</option></select><button class="btn btn--outline" data-go="contactos">${icon('users')} Contactos</button>`)}
+            view.innerHTML = `${head('Resumen', `${period === 'abril' ? 'Desde el 1 de abril de 2026' : `Últimos ${period} días`}: tienda Willie Inspired más tus productos de pago del marketplace (lo realmente cobrado).`,
+                `<select class="select" id="period" style="width:auto"><option value="abril">Desde 1 abr 2026</option><option value="7">7 días</option><option value="30">30 días</option><option value="90">90 días</option></select><button class="btn btn--outline" data-go="contactos">${icon('users')} Contactos</button>`)}
                 <div class="kpis">
                     ${[['Ingresos', usd(o.revenueUsd), `${num(o.orders)} ventas · tienda ${usd(o.channels.tienda.revenueUsd)} · marketplace ${usd(o.channels.marketplace.revenueUsd)}`, 'trend'], ['Ticket medio', usd(o.aovUsd), 'por venta', 'bag'], ['Recompra', `${o.customers.repeatRate}%`, `${num(o.customers.buyers)} compradores`, 'refresh'], ['Pruebas → compra', `${o.trials.rate}%`, `${num(o.trials.converted)} de ${num(o.trials.total)} pruebas`, 'flask'],
                     ['Clientes', num(o.customers.total), `${o.customers.segments.FREE} FREE · ${o.customers.segments['COMPRADOR V1']} V1 · ${o.customers.segments['COMPRADOR V2']} V2`, 'users'], ['Carritos abiertos', num(o.carts.open), `${o.carts.recovered} recuperados`, 'cart']]
@@ -63,8 +64,8 @@
                         body: due.length ? due.map((n) => `<div class="list-row"><span class="avatar">${esc(C.initials(n.email))}</span><div class="grow"><b>${esc(n.body)}</b><div class="muted small"><a href="#" data-contact="${esc(n.email)}" style="text-decoration:underline">${esc(n.email)}</a>${n.due_at ? ` · ${ago(n.due_at) === '—' ? '' : when(n.due_at)}` : ''}</div></div></div>`).join('') : empty('tasks', 'No tienes tareas pendientes.') })}
                     ${card({ title: 'Ofertas y pagos', body: `<p class="muted small" style="margin-bottom:6px">Ventas por oferta</p>${rows(o.byOffer, 'key', 'orders')}<div class="separator" style="margin:14px 0"></div><p class="muted small" style="margin-bottom:6px">Ingresos por método</p>${rows(o.byMethod, 'key', 'revenueUsd', usd)}` })}
                 </div>`;
-            $('#period').value = String(days);
-            $('#period').onchange = (e) => { C.state.days = +e.target.value; C.route(); };
+            $('#period').value = String(period);
+            $('#period').onchange = (e) => { C.state.days = e.target.value === 'abril' ? 'abril' : +e.target.value; C.route(); };
         }
     };
 

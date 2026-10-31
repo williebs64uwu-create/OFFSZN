@@ -280,17 +280,6 @@
             40%, 80% { transform: translateX(6px); }
         }
 
-        .yape-steps { list-style: none; margin: 4px 0 14px; padding: 0; display: grid; gap: 8px; }
-        .yape-steps li { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: #374151; line-height: 1.45; }
-        .yape-steps .n { flex: none; width: 22px; height: 22px; border-radius: 50%; background: #f3e8ff; color: #7e22ce; font-weight: 700; font-size: 12px; display: grid; place-items: center; }
-        .yape-now {
-            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; border: 0; cursor: pointer;
-            background: #742284; color: #fff; font-weight: 700; font-size: 15px; padding: 14px 16px; border-radius: 10px; transition: background .15s, transform .1s;
-        }
-        .yape-now:hover { background: #5f1c6c; }
-        .yape-now:active { transform: scale(.99); }
-        .yape-now .yape-logo { background: #fff; color: #742284; border-radius: 6px; padding: 1px 7px; font-weight: 800; }
-        .yape-alt-link { display: block; margin-top: 10px; text-align: center; font-size: 13px; color: #6b7280; text-decoration: underline; }
         .account-hint {
             display: none;
             margin-top: 8px;
@@ -347,134 +336,43 @@
             color: var(--paypal-navy);
         }
 
-        .paypal-powered-by {
-            text-align: center;
-            font-size: 11.5px;
-            color: #6b7280;
-            margin-top: 10px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
+        /* ==================== PAYPAL: sin caja ni sombra del script de pago (esta página es clara) ==================== */
+        .payment-buttons-box #plugin-paypal-button-container,
+        .payment-buttons-box #star-subscription-container {
+            background: transparent !important;
+            padding: 0 !important;
+            margin-top: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
         }
 
-        .paypal-powered-by span.brand {
-            font-style: italic;
-            font-weight: 800;
-            color: #003087;
-        }
-
-        .paypal-powered-by span.brand-pal {
-            font-style: italic;
-            font-weight: 800;
-            color: #0079c1;
-        }
-
-        /* ==================== ALTERNATIVE LATAM METHODS (YAPE / MERCADO PAGO) ==================== */
+        /* ==================== MÉTODOS LOCALES: tres botones, un toque ==================== */
         .alt-methods-divider {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin: 18px 0;
+            margin: 20px 0 14px;
             color: var(--text-muted);
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
-
         .alt-methods-divider::before,
-        .alt-methods-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--border-color);
+        .alt-methods-divider::after { content: ''; flex: 1; height: 1px; background: var(--border-color); }
+        .pay-methods { display: grid; gap: 10px; }
+        .pay-method {
+            display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; min-height: 52px; padding: 0 16px;
+            border-radius: 10px; border: 1px solid var(--border-color); background: #fff; color: var(--text-main);
+            font-family: inherit; font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer;
+            transition: border-color .15s ease, box-shadow .15s ease, transform .1s ease;
         }
-
-        .alt-methods-pills {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .alt-pill-btn {
-            background: #f9fafb;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 9px 6px;
-            font-size: 12px;
-            font-weight: 700;
-            color: #374151;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .alt-pill-btn:hover {
-            background: #f3f4f6;
-            border-color: #cbd5e1;
-        }
-
-        .alt-pill-btn.active {
-            background: #eff6ff;
-            border-color: #3b82f6;
-            color: #1d4ed8;
-        }
-
-        .alt-panel-content {
-            background: #f9fafb;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 16px 18px;
-            margin-bottom: 24px;
-            display: none;
-        }
-
-        .alt-panel-content.show {
-            display: block;
-        }
-
-        .alt-panel-header {
-            font-size: 13.5px;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .alt-panel-desc {
-            font-size: 12.5px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin-bottom: 14px;
-        }
-
-        .alt-panel-action {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-            background: #22c55e;
-            color: #ffffff;
-            font-size: 13.5px;
-            font-weight: 700;
-            padding: 11px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            transition: background 0.15s ease;
-        }
-
-        .alt-panel-action:hover {
-            background: #16a34a;
-        }
+        .pay-method:hover { border-color: #9ca3af; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }
+        .pay-method:active { transform: scale(.99); }
+        .pay-method img, .pay-method svg { width: 28px; height: 28px; border-radius: 7px; object-fit: contain; flex: none; }
+        .pay-method .pm-name { flex: 1; text-align: left; }
+        .pay-method .pm-price { font-weight: 600; font-size: 14px; color: var(--text-secondary); }
+        .pay-help { display: block; margin-top: 12px; text-align: center; font-size: 12.5px; color: var(--text-muted); text-decoration: underline; }
 
         /* ==================== FOOTER GUARANTEE & LEGAL ==================== */
         .checkout-footer {
@@ -898,76 +796,28 @@
                 <div id="plugin-paypal-button-container"></div>
                 <div id="star-subscription-container" style="display:none; margin-top:14px;"></div>
 
-                <div class="paypal-powered-by">
-                    Desarrollado por <span class="brand">Pay</span><span class="brand-pal">Pal</span>
-                </div>
             </div>
 
-            <!-- 4. Alternative Methods (Yape/Plin, Mercado Pago, Crypto) for Local Buyers -->
+            <!-- 4. Métodos locales: Yape abre el pago rápido; Mercado Pago y Binance abren WhatsApp con el pedido ya escrito -->
             <div class="alt-methods-divider">
-                <span>O PAGA CON MÉTODOS LOCALES</span>
+                <span>o paga con</span>
             </div>
 
-            <div class="alt-methods-pills">
-                <button type="button" class="alt-pill-btn active" id="pillYape" onclick="selectAltMethod('yape')">
-                    <span>🇵🇪 Yape / Plin</span>
+            <div class="pay-methods">
+                <button type="button" id="btnYapeNow" class="pay-method" data-action="open-yape-checkout" onclick="return validateBeforeYape(event)">
+                    <img src="/images/payments/yape.png" alt="" width="28" height="28">
+                    <span class="pm-name">Yape</span><span class="pm-price" id="yapeNowPrice">S/ 185</span>
                 </button>
-                <button type="button" class="alt-pill-btn" id="pillMp" onclick="selectAltMethod('mp')">
-                    <span>⚡ Mercado Pago</span>
-                </button>
-                <button type="button" class="alt-pill-btn" id="pillCrypto" onclick="selectAltMethod('crypto')">
-                    <span>₮ USDT / Crypto</span>
-                </button>
-            </div>
-
-            <!-- Alt Method Content: Yape / Plin -->
-            <div class="alt-panel-content show" id="panelAltYape">
-                <div class="alt-panel-header">
-                    <span>Yape (Perú 🇵🇪) · pago rápido</span>
-                    <span id="labelAltYapePrice" style="color: #16a34a; font-weight: 800;">S/ 185 PEN</span>
-                </div>
-                <ol class="yape-steps" id="yapeSteps">
-                    <li><span class="n">1</span><span>Escribe el <b>celular</b> de tu Yape.</span></li>
-                    <li><span class="n">2</span><span>En la app de Yape toca <b>Código de aprobación</b> y escribe los 6 dígitos.</span></li>
-                    <li><span class="n">3</span><span>Listo: tu <b>clave y el instalador</b> llegan al instante a tu correo.</span></li>
-                </ol>
-                <button type="button" id="btnYapeNow" class="yape-now" data-action="open-yape-checkout" onclick="return validateBeforeYape(event)">
-                    <span class="yape-logo">Yape</span><span>Pagar <span id="yapeNowPrice">S/ 185</span></span>
-                </button>
-                <a id="btnActionYape" href="#" target="_blank" rel="noopener" data-no-yape-modal class="yape-alt-link" onclick="return validateBeforeLocal(event)">
-                    ¿Prefieres transferir y enviar la captura? Confirma por WhatsApp
+                <a id="btnActionMp" class="pay-method" href="#" target="_blank" rel="noopener" onclick="return validateBeforeLocal(event)">
+                    <img src="/images/payments/mercadopago.png" alt="" width="28" height="28">
+                    <span class="pm-name">Mercado Pago</span><span class="pm-price" id="labelAltMpPrice">$49.00</span>
+                </a>
+                <a id="btnActionCrypto" class="pay-method" href="#" target="_blank" rel="noopener" onclick="return validateBeforeLocal(event)">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#F0B90B" aria-hidden="true"><path d="M12 2L4.5 9.5L7.33 12.33L12 7.66L16.67 12.33L19.5 9.5L12 2ZM4.5 14.5L2 12L4.5 9.5L7.33 12.33L4.5 14.5ZM19.5 14.5L16.67 12.33L19.5 9.5L22 12L19.5 14.5ZM12 22L4.5 14.5L7.33 11.67L12 16.34L16.67 11.67L19.5 14.5L12 22ZM12 13.5L9.17 10.67L12 7.84L14.83 10.67L12 13.5Z"/></svg>
+                    <span class="pm-name">Binance (USDT)</span><span class="pm-price" id="labelAltCryptoPrice">49 USDT</span>
                 </a>
             </div>
-
-            <!-- Alt Method Content: Mercado Pago -->
-            <div class="alt-panel-content" id="panelAltMp">
-                <div class="alt-panel-header">
-                    <span>Mercado Pago (Latam)</span>
-                    <span id="labelAltMpPrice" style="color: #2563eb; font-weight: 800;">$49.00 USD</span>
-                </div>
-                <p class="alt-panel-desc">
-                    Paga con saldo Mercado Pago, tarjetas locales de tu país o transferencias PSE / Pix / SPEI.
-                </p>
-                <a id="btnActionMp" href="#" target="_blank" rel="noopener" class="alt-panel-action" style="background: #0284c7;" onclick="return validateBeforeLocal(event)">
-                    <i class="bi bi-whatsapp"></i>
-                    <span>Solicitar link Mercado Pago</span>
-                </a>
-            </div>
-
-            <!-- Alt Method Content: Crypto USDT -->
-            <div class="alt-panel-content" id="panelAltCrypto">
-                <div class="alt-panel-header">
-                    <span>Binance Pay / USDT</span>
-                    <span id="labelAltCryptoPrice" style="color: #f59e0b; font-weight: 800;">49 USDT</span>
-                </div>
-                <p class="alt-panel-desc">
-                    Aceptamos transferencias USDT (TRC-20 / BEP-20 / Binance Pay ID). Cero comisiones de intermediarios.
-                </p>
-                <a id="btnActionCrypto" href="#" target="_blank" rel="noopener" class="alt-panel-action" style="background: #d97706;" onclick="return validateBeforeLocal(event)">
-                    <i class="bi bi-whatsapp"></i>
-                    <span>Pagar con USDT / Binance</span>
-                </a>
-            </div>
+            <a id="btnActionHelp" class="pay-help" href="#" target="_blank" rel="noopener">¿Otro método de pago? Escríbele a Willie</a>
 
             <!-- 5. Secure Footer & Legal Links -->
             <footer class="checkout-footer">
@@ -1159,14 +1009,8 @@
         const sub = document.getElementById('displayProductSubtitle');
         if (plan === 'full') {
             sub.textContent = 'Licencia FULL - 2 dispositivos';
-            document.getElementById('labelAltYapePrice').textContent = 'S/ 185 PEN';
-            document.getElementById('labelAltMpPrice').textContent = '$49.00 USD';
-            document.getElementById('labelAltCryptoPrice').textContent = '49 USDT';
         } else {
             sub.textContent = '3 Cuotas Mensuales ($16.33 USD/mes)';
-            document.getElementById('labelAltYapePrice').textContent = 'S/ 62 PEN (1ra Cuota)';
-            document.getElementById('labelAltMpPrice').textContent = '$16.33 USD (1ra Cuota)';
-            document.getElementById('labelAltCryptoPrice').textContent = '16.33 USDT';
         }
 
         // Pago único: botones de PayPal + Yape rápido. Cuotas: suscripción de PayPal (Yape solo por WhatsApp).
@@ -1174,10 +1018,7 @@
         if (pp) pp.style.display = (plan === 'full') ? '' : 'none';
         const subBox = document.getElementById('star-subscription-container');
         if (subBox) subBox.style.display = (plan === 'cuotas') ? '' : 'none';
-        const yapeSteps = document.getElementById('yapeSteps');
-        if (yapeSteps) yapeSteps.style.display = (plan === 'full') ? '' : 'none';
-        const yapeNow = document.getElementById('btnYapeNow');
-        if (yapeNow) yapeNow.style.display = (plan === 'full') ? '' : 'none';
+        syncLocalMethods();
 
         recalculateTotals();
     }
@@ -1234,15 +1075,17 @@
 
         document.getElementById('displayTotal').textContent = `USD $${finalPrice.toFixed(2)}`;
 
-        // Pago único: el mismo monto alimenta Yape (soles) y los textos de los métodos manuales. El servidor vuelve a calcularlo.
+        // Precios de los botones locales. Pago único: el mismo monto alimenta Yape (soles); el servidor vuelve a calcularlo al cobrar.
         if (selectedPlan === 'full') {
             const penFinal = Math.round(185 * (1 - appliedDiscountPct / 100) * 100) / 100;
             window.CURRENT_PROMO_PRICE = finalPrice;
             window.YAPE_FIXED_PRICE_PEN = penFinal;
-            document.getElementById('labelAltYapePrice').textContent = `S/ ${penFinal} PEN`;
             document.getElementById('yapeNowPrice').textContent = `S/ ${penFinal}`;
-            document.getElementById('labelAltMpPrice').textContent = `$${finalPrice.toFixed(2)} USD`;
+            document.getElementById('labelAltMpPrice').textContent = `$${finalPrice.toFixed(2)}`;
             document.getElementById('labelAltCryptoPrice').textContent = `${finalPrice.toFixed(2)} USDT`;
+        } else {
+            document.getElementById('labelAltMpPrice').textContent = '$16.33 · 1ra cuota';
+            document.getElementById('labelAltCryptoPrice').textContent = '16.33 USDT';
         }
 
         updatePaymentLinks(finalPrice);
@@ -1252,10 +1095,7 @@
         const email = (document.getElementById('buyerEmail').value || '').trim();
         // 2. WhatsApp links for local methods
         const emailText = email ? ` (Correo: ${email})` : '';
-        const yapeText = (selectedPlan === 'full') 
-            ? `Hola Willie! Quiero pagar la Licencia FULL - 2 dispositivos de STAR CHAIN con Yape/Plin (S/ 185 / $49 USD)${emailText}`
-            : `Hola Willie! Quiero pagar la 1ra Cuota de STAR CHAIN con Yape/Plin (S/ 62 / $16.33 USD)${emailText}`;
-        document.getElementById('btnActionYape').href = `https://wa.me/${WA_PHONE}?text=` + encodeURIComponent(yapeText);
+        document.getElementById('btnActionHelp').href = `https://wa.me/${WA_PHONE}?text=` + encodeURIComponent(`Hola Willie! Quiero comprar STAR CHAIN y necesito otro método de pago${emailText}`);
 
         const mpText = (selectedPlan === 'full')
             ? `Hola Willie! Quiero link de Mercado Pago para la Licencia FULL - 2 dispositivos de STAR CHAIN ($49 USD)${emailText}`
@@ -1272,21 +1112,15 @@
         recalculateTotals();
     }
 
-    function handleCountryChange(val) {
-        // Automatically highlight Yape/Plin if Peru
-        if (val === 'PE') {
-            selectAltMethod('yape');
-        }
+    // Yape solo funciona con celular de Perú y en pago único; Mercado Pago y Binance siempre se ven.
+    function syncLocalMethods() {
+        const yape = document.getElementById('btnYapeNow');
+        const country = (document.getElementById('buyerCountry') || {}).value;
+        if (yape) yape.style.display = (selectedPlan === 'full' && country === 'PE') ? '' : 'none';
     }
 
-    function selectAltMethod(method) {
-        const methods = ['yape', 'mp', 'crypto'];
-        methods.forEach(m => {
-            const pill = document.getElementById(`pill${m.charAt(0).toUpperCase() + m.slice(1)}`);
-            const panel = document.getElementById(`panelAlt${m.charAt(0).toUpperCase() + m.slice(1)}`);
-            if (pill) pill.classList.toggle('active', m === method);
-            if (panel) panel.classList.toggle('show', m === method);
-        });
+    function handleCountryChange() {
+        syncLocalMethods();
     }
 
     // Yape rápido: pide el correo antes de abrir el modal del celular y el código de aprobación
