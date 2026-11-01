@@ -207,7 +207,7 @@
     </main>
 
     <script src="https://sdk.mercadopago.com/js/v2" async></script>
-    <script src="/willieinspired/assets/store.js?v=6"></script>
+    <script src="/willieinspired/assets/store.js?v=7"></script>
     <script>
     (async () => {
         const cat = await WI.init({ active: '', announce: false, footer: false });
@@ -382,15 +382,15 @@
             } catch (_) { /* el panel es un extra: nunca frena la compra */ }
             return ref;
         }
-        const waMsg = (method, ref) => WI.wa(`Hola, quiero comprar "${productNames()}" por ${method}. Ref: ${ref}`);
+        const waMsg = (method) => WI.wa(`Hola, quiero comprar "${productNames()}" por ${method}`);
 
         $('#mpLink').addEventListener('click', (e) => {
             if (needEmail()) { e.preventDefault(); return; }
-            $('#mpLink').href = waMsg('Mercado Pago', trackManual('Mercado Pago'));
+            trackManual('Mercado Pago'); $('#mpLink').href = waMsg('Mercado Pago');
         });
         $('#binTab').addEventListener('click', () => {
             if (needEmail()) return;
-            $('#binWa').href = waMsg('Binance', trackManual('Binance'));
+            trackManual('Binance'); $('#binWa').href = waMsg('Binance');
             openModal('#binModal');
         });
         $('#binCopy').addEventListener('click', async () => {
