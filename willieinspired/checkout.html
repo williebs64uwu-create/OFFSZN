@@ -16,6 +16,17 @@
         body.co-page { --bg:#fff; --surface:#fff; --surface-2:#fafafa; --ink:#0f172a; --muted:#475569; --subtle:#64748b; --line:#e5e7eb; --line-strong:#cbd5e1; --header-bg:#fff; --soft:#f1f5f9; --on-ink:#fff; --noise:none; --ph-a:#f1f5f9; --ph-b:#e2e8f0; --radius:10px; --radius-sm:8px; --shadow:none; color-scheme:light; background:#fff; }
         @media (min-width: 900px) { body.co-page { background: linear-gradient(to right, #fff 50%, #f5f5f5 50%); } }
         .co-page .wi-header { border-bottom:1px solid var(--line); background:#fff; backdrop-filter:none; }
+        .co-page .wi-nav, .co-page .wi-burger, .co-page .wi-theme, .co-page [aria-label="Mi perfil"] { display:none !important; }
+        .co-page .wi-header__inner { position:relative; justify-content:space-between; max-width:1040px; }
+        .co-page .wi-header__actions { margin-left:auto; }
+        .co-page .wi-brand { position:absolute; left:50%; transform:translateX(-50%); font-size:1.05rem; }
+        .co-note { display:flex; gap:12px; padding:14px 16px; margin:18px 0 22px; border:1px solid var(--line); border-radius:12px; background:#f5f5f5; font-size:.88rem; line-height:1.45; color:var(--ink); }
+        .co-note i { color:var(--subtle); margin-top:2px; }
+        .co-quick { text-align:center; color:var(--subtle); font-size:.85rem; margin-bottom:10px; }
+        .co-or { display:flex; align-items:center; gap:12px; margin:14px 0 4px; color:var(--subtle); font-size:.85rem; }
+        .co-or::before, .co-or::after { content:''; flex:1; height:1px; background:var(--line); }
+        .co-head { display:flex; align-items:baseline; justify-content:space-between; }
+        .co-head a { font-size:.88rem; font-weight:600; text-decoration:underline; color:var(--ink); }
         .co { display:grid; gap:0; padding:0; max-width:1040px; margin:0 auto; }
         @media (min-width: 900px) { .co { grid-template-columns: 1fr 1fr; } .co__summary { position:sticky; top:0; align-self:start; min-height:calc(100vh - 64px); } }
         .co__main { padding:32px 0 56px; }
@@ -73,12 +84,17 @@
         <div class="co" id="coMain">
             <div class="co__main">
                 <a href="/willieinspired" class="co-back"><i class="bi bi-arrow-left"></i> Seguir comprando</a>
-                <h1 style="margin-top:14px">Finaliza tu compra</h1>
+
+                <div class="co-note"><i class="bi bi-info-circle"></i><div><b>Descarga digital · Te llega al instante a tu correo.</b><br>Compra ahora y descarga cuando quieras, en cualquier dispositivo.</div></div>
+
+                <p class="co-quick">Pago rápido</p>
+                <div id="paypalButtons"><p class="wi-subtle" style="text-align:center">Cargando PayPal…</p></div>
+                <p class="wi-subtle" style="margin-top:8px;text-align:center"><i class="bi bi-shield-lock-fill" style="color:#059669"></i> PayPal o tarjeta de débito/crédito, sin crear cuenta.</p>
+                <div class="co-or"><span>O elige otro método de pago abajo</span></div>
 
                 <section class="wi-panel">
-                    <h2>Dirección de correo electrónico</h2>
-                    <p class="wi-subtle" style="margin-bottom:10px">Aquí te llegan tus archivos y licencias.</p>
-                    <label class="wi-field"><input class="wi-input" id="email" type="email" autocomplete="email" placeholder="tucorreo@gmail.com" required></label>
+                    <div class="co-head"><h2>Contacto</h2><a id="loginLink" href="#">Iniciar sesión</a></div>
+                    <label class="wi-field"><input class="wi-input" id="email" type="email" autocomplete="email" placeholder="Correo electrónico (aquí te llegan tus archivos)" required></label>
                     <p class="wi-subtle" id="sessionNote" style="margin-top:8px"></p>
                 </section>
 
@@ -90,15 +106,8 @@
                 </section>
 
                 <section class="wi-panel">
-                    <h2>Método de pago</h2>
+                    <h2>Otros métodos de pago</h2>
                     <div class="pm-list" id="payTabs">
-                        <div class="pm is-active" data-pm="paypal">
-                            <button type="button" class="pm__head" data-pay="paypal"><span class="pm__radio"></span> PayPal / tarjeta <span class="pm__tags"><span>VISA</span><span>MC</span><span>AMEX</span></span></button>
-                            <div class="pm__body" data-paypane="paypal">
-                                <div id="paypalButtons"><p class="wi-subtle">Cargando PayPal…</p></div>
-                                <p class="wi-subtle" style="margin-top:8px"><i class="bi bi-shield-lock-fill" style="color:#059669"></i> Pagas con PayPal o con tarjeta de débito/crédito sin crear cuenta.</p>
-                            </div>
-                        </div>
                         <div class="pm" data-pm="yape">
                             <button type="button" class="pm__head" data-pay="yape" id="yapeTab"><span class="pm__radio"></span> Yape (Perú) <span class="pm__tags"><span>S/</span></span></button>
                             <div class="pm__body wi-hidden" data-paypane="yape">
@@ -140,7 +149,7 @@
     </main>
 
     <script src="https://sdk.mercadopago.com/js/v2" async></script>
-    <script src="/willieinspired/assets/store.js?v=3"></script>
+    <script src="/willieinspired/assets/store.js?v=4"></script>
     <script>
     (async () => {
         const cat = await WI.init({ active: '', announce: false, footer: false });
@@ -151,9 +160,11 @@
         if (session?.user?.email) {
             $('#email').value = session.user.email;
             $('#sessionNote').innerHTML = `Sesión iniciada como <b>${WI.esc(session.user.email)}</b>`;
+            $('#loginLink').style.display = 'none';
         } else {
             $('#email').value = WI.store.get('wi_email') || '';
-            $('#sessionNote').innerHTML = `¿Tienes cuenta? <a class="wi-link" href="${WI.auth.loginUrl()}">Inicia sesión</a> para ver tus compras en tu perfil.`;
+            $('#sessionNote').innerHTML = '';
+            $('#loginLink').href = WI.auth.loginUrl();
         }
         if (cat.region?.country === 'PE') { selectPay('yape'); }
 
