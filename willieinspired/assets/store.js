@@ -380,7 +380,7 @@
         const recent = () => store.get('wi_recent', []);
         const remember = (id) => store.set('wi_recent', [id, ...recent().filter((x) => x !== id)].slice(0, 5));
         const row = (p) => ({ id: p.id, title: p.category === 'presets' && p.subcategory === 'artistas' ? `Preset de ${p.artist}` : p.title, label: SEARCH_LABEL[p.category] || '', cover: p.media?.cover || null, icon: SEARCH_ICON[p.category] || 'search', href: WI.url(p), free: p.kind === 'lead_magnet' });
-        const SHORTCUTS = [['Ver todos los presets', '/willieinspired/presets', 'mic'], ['Ver plantillas', '/willieinspired/plantillas', 'sliders'], ['Ver plugins', '/willieinspired/plugins', 'soundwave'], ['Ver servicios', '/willieinspired/servicios', 'headphones'], ['Mis compras', '/willieinspired/mi-perfil/mis-compras', 'bag-check']];
+        const SHORTCUTS = [['Ver todos los presets', '/willieinspired/presets', 'mic'], ['Ver plantillas', '/willieinspired/plantillas', 'sliders'], ['Ver plugins', '/willieinspired/plugins', 'soundwave'], ['Ver servicios', '/willieinspired/servicios', 'headphones'], ['Cosas gratis', '/willieinspired#gratis', 'gift'], ['Mis compras', '/willieinspired/mi-perfil/mis-compras', 'bag-check']];
         function groups(q) {
             const list = (cat?.products || []).filter((p) => p.status === 'active' || p.status === 'coming_soon');
             if (!q) {

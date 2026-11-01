@@ -73,7 +73,7 @@
     }
 
     // ── Estado ─────────────────────────────────────────────────────────────────────
-    const S = { p: null, mode: 'pre', playing: false, dur: 0, progress: 0, raw: null, pre: null, hasAB: false, peaksRaw: null, playedOnce: false, raf: 0 };
+    const S = { p: null, mode: 'pre', playing: false, dur: 0, progress: 0, raw: null, pre: null, hasAB: false, peaksRaw: null, playedOnce: false, raf: 0, tok: 0 };
 
     // ── Onda ───────────────────────────────────────────────────────────────────────
     const canvas = $('#waveCanvas'); const ctx = canvas.getContext('2d');
@@ -162,11 +162,37 @@
         document.querySelectorAll('#seg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
     }
 
+    // Arrastrar o tocar la onda para moverse en el audio (una sola vez)
+    (function bindWave() {
+        const wave = $('#wave'); let drag = false;
+        const ratioOf = (e) => { const r = wave.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); };
+        wave.addEventListener('pointerdown', (e) => { if (!S.pre) return; drag = true; wave.setPointerCapture(e.pointerId); seek(ratioOf(e)); });
+        wave.addEventListener('pointermove', (e) => { if (drag && S.pre) seek(ratioOf(e)); });
+        wave.addEventListener('pointerup', () => { drag = false; });
+        wave.addEventListener('keydown', (e) => {
+            if (!S.pre) return;
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); const d = duration(); if (d) seek((S.pre.currentTime + (e.key === 'ArrowRight' ? 5 : -5)) / d); }
+        });
+    })();
+
+    // Antes de cargar otro preset: se detiene el audio y se limpia el estado
+    function resetPlayer() {
+        if (S.pre) { S.pre.pause(); S.pre.removeAttribute('src'); }
+        if (S.raw) { S.raw.pause(); S.raw.removeAttribute('src'); }
+        S.pre = null; S.raw = null; S.hasAB = false; S.peaksRaw = null; S.playedOnce = false; S.mode = 'pre'; S.progress = 0; S.dur = 0;
+        cancelAnimationFrame(S.raf); S.playing = false; player.classList.remove('is-playing', 'has-ab');
+        const m = $('#waveMsg'); if (m) m.hidden = true;
+        $('#play').disabled = true; $('#tCur').textContent = '0:00'; $('#tDur').textContent = '0:00';
+        drawWave();
+    }
+
     async function initPlayer(p) {
+        const tok = ++S.tok;
         const ver = p.storage_version || p.r2_version;
         const preRaw = hasVal(p.audio_after_url) ? p.audio_after_url : (hasVal(p.audio_before_url) ? p.audio_before_url : null);
         const rawRaw = hasVal(p.audio_before_url) ? p.audio_before_url : null;
         const preUrl = await mediaUrl(preRaw, ver, p.id);
+        if (tok !== S.tok) return;
         if (!preUrl) { const m = $('#waveMsg'); m.hidden = false; m.textContent = 'Este preset aún no tiene audio de muestra.'; $('#abLabel').textContent = 'Sin audio de muestra'; return; }
 
         // Antes/después real: solo si hay dos archivos distintos. Con un solo archivo repetido no se finge una comparación.
@@ -174,6 +200,7 @@
         S.pre = new Audio(); S.pre.preload = 'auto'; S.pre.src = preUrl;
         if (S.hasAB) {
             const rawUrl = await mediaUrl(rawRaw, ver, p.id);
+            if (tok !== S.tok) return;
             if (rawUrl) { S.raw = new Audio(); S.raw.preload = 'auto'; S.raw.src = rawUrl; } else S.hasAB = false;
         }
         player.classList.toggle('has-ab', S.hasAB);
@@ -187,23 +214,13 @@
         $('#play').onclick = () => (S.playing ? pause() : play());
         document.querySelectorAll('#seg button').forEach((b) => { b.onclick = () => setMode(b.dataset.mode); });
 
-        // Arrastrar o tocar la onda para moverse en el audio
-        const wave = $('#wave'); let drag = false;
-        const ratioOf = (e) => { const r = wave.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); };
-        wave.addEventListener('pointerdown', (e) => { drag = true; wave.setPointerCapture(e.pointerId); seek(ratioOf(e)); });
-        wave.addEventListener('pointermove', (e) => { if (drag) seek(ratioOf(e)); });
-        wave.addEventListener('pointerup', () => { drag = false; });
-        wave.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); const d = duration(); if (d) seek((S.pre.currentTime + (e.key === 'ArrowRight' ? 5 : -5)) / d); }
-        });
-
-        computePeaks(preUrl).then((pk) => { S.peaksRaw = pk; drawWave(); });
+        computePeaks(preUrl).then((pk) => { if (tok === S.tok) { S.peaksRaw = pk; drawWave(); } });
     }
 
     // ── Datos del producto ─────────────────────────────────────────────────────────
     function render(p) {
         const { kicker, title } = splitName(p.name);
-        document.title = `${p.name} | OFFSZN`;
+        if (!window.PP_LANDING) document.title = `${p.name} | OFFSZN`;
         $('#kicker').textContent = kicker; $('#title').textContent = title;
         const daws = detectDaws(p);
         $('#sub').textContent = /plantilla/i.test(p.name) ? 'lista para abrir y usar en tu DAW' : '& todo listo dentro del proyecto…';
@@ -293,7 +310,7 @@
 
     // ── Carrusel de presets ────────────────────────────────────────────────────────
     let list = []; let idx = -1;
-    const SHORT_ROUTE = location.pathname.startsWith('/presets/');
+    const SHORT_ROUTE = location.pathname.startsWith('/presets/') || !!window.PP_LANDING;
     const href = (p) => SHORT_ROUTE
         ? `/presets/${encodeURIComponent(p.public_slug.replace(/^preset-de-/, ''))}`
         : `/preset/${encodeURIComponent(p.public_slug)}${PREVIEW}`;
@@ -330,6 +347,7 @@
     function go(step) {
         if (idx < 0 || list.length < 2) return;
         const next = list[(idx + step + list.length) % list.length];
+        if (window.PP_LANDING) { switchTo(next.public_slug).catch((err) => toast(err.message)); return; }
         location.href = href(next);
     }
     document.addEventListener('keydown', (e) => {
@@ -338,6 +356,36 @@
         else if (e.key === 'ArrowRight') go(1);
         else if (e.code === 'Space' && S.pre && e.target === document.body) { e.preventDefault(); S.playing ? pause() : play(); }
     });
+
+    // ── Cambiar de preset sin recargar (landing): se pide la página del preset y se lee su JSON ──
+    function markRail(p) {
+        idx = list.findIndex((x) => x.id === p.id);
+        document.querySelectorAll('#railTrack .rail__item').forEach((a, i) => { a.classList.toggle('on', i === idx); if (i === idx) { a.setAttribute('aria-current', 'page'); if (a.scrollIntoView) a.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); } else a.removeAttribute('aria-current'); });
+    }
+    async function mount(p) {
+        STORE = !!p.store;
+        S.p = p; resetPlayer(); render(p); resizeWave();
+        initPlayer(p).catch(() => {});
+        if (list.length) markRail(p); else loadRail(p).catch((e) => console.warn('[preset] carrusel:', e));
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitle);
+    }
+    async function switchTo(slug) {
+        const res = await fetch('/presets/' + encodeURIComponent(slug));
+        if (!res.ok) throw new Error('No se pudo abrir ese preset.');
+        const html = await res.text();
+        const m = html.match(/id="presetData">(\{[\s\S]*?\})<\/script>/);
+        if (!m) throw new Error('Preset sin datos.');
+        const p = JSON.parse(m[1]);
+        await mount(p);
+        try { history.replaceState(null, '', '?artista=' + encodeURIComponent(slug)); } catch (_) { /* sin historial */ }
+    }
+    document.getElementById('railTrack').addEventListener('click', (e) => {
+        if (!window.PP_LANDING) return;
+        const a = e.target.closest('.rail__item'); if (!a) return;
+        e.preventDefault();
+        switchTo(decodeURIComponent(a.getAttribute('href').split('/').pop().split('?')[0])).catch((err) => toast(err.message));
+    });
+    window.PP = { switchTo, mount };
 
     // ── Arranque ───────────────────────────────────────────────────────────────────
     async function loadProduct() {
@@ -349,14 +397,11 @@
         return data && data.id ? data : null;
     }
     (async function init() {
-        if (window.WI) WI.init({ active: 'presets' }).catch((e) => console.warn('[preset] menú:', e));
+        if (window.WI && !window.PP_LANDING) WI.init({ active: 'presets' }).catch((e) => console.warn('[preset] menú:', e));
         window.addEventListener('resize', () => { resizeWave(); fitTitle(); });
+        if (window.PP_LANDING) return; // la landing llama PP.switchTo(artista) cuando tiene el catálogo
         const p = await loadProduct();
         if (!p) { location.replace('/explorar.html'); return; }
-        STORE = !!p.store;
-        S.p = p; render(p); resizeWave();
-        initPlayer(p).catch(() => {});
-        loadRail(p).catch((e) => console.warn('[preset] carrusel:', e));
-        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitle);
+        mount(p);
     })();
 })();

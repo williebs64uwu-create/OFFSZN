@@ -17,47 +17,94 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/willieinspired/assets/store.css?v=4">
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Geist:wght@300..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/preset-page.css?v=5">
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>window.supabaseClient = null; window.PP_LANDING = true;</script>
+    <script src="/script/config.js"></script>
+    <script src="/script/auth-utils.js?v=12"></script>
+    <style>
+        .pp--landing { background: #efeeeb radial-gradient(rgba(0, 0, 0, .045) 1px, transparent 1px) 0 0 / 4px 4px; color-scheme: light; padding: 8px 0 26px; }
+        .pp--landing .page { padding-bottom: 20px; }
+        .pp--landing .hero { padding-top: 26px; }
+        /* Cosas gratis: eliges una y se abre su formulario */
+        .gift-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-top: 26px; }
+        .gift { position: relative; text-align: left; display: grid; gap: 12px; padding: 18px; border-radius: 22px; background: var(--surface); border: 2px solid var(--line); transition: transform .18s, border-color .18s, box-shadow .18s; }
+        .gift:hover { transform: translateY(-3px); }
+        .gift.is-active { border-color: var(--ink); box-shadow: var(--shadow-lg); }
+        .gift.is-active::before { content: '▼'; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 14px; color: var(--ink); }
+        .gift__top { display: flex; justify-content: space-between; font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--subtle); }
+        .gift__top b { color: var(--accent-ink); }
+        .gift__art { aspect-ratio: 16 / 10; border-radius: 14px; display: grid; place-items: center; background: linear-gradient(145deg, #1b1b1e, #34343a); color: #fff; overflow: hidden; }
+        .gift__art i { font-size: 3.4rem; opacity: .92; }
+        .gift__art img { width: 100%; height: 100%; object-fit: cover; }
+        .gift h3 { font-size: 1.2rem; font-weight: 800; letter-spacing: -.02em; }
+        .gift p { font-size: .9rem; color: var(--muted); }
+        .gift__free { padding-top: 10px; border-top: 1px solid var(--line); font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--subtle); }
+        .gift-open { margin-top: 26px; }
+        .gift-open[hidden] { display: none; }
+    </style>
 </head>
 <body>
     <main>
         <!-- ── 1. HERO: Suena como [artista] + antes/después ── -->
-        <section class="wi-hero">
-            <div class="wi-container wi-hero__grid">
-                <div>
-                    <p class="wi-eyebrow">Presets de artistas para FL Studio</p>
-                    <h1 class="wi-h1 wi-hero__title" style="margin-top:12px">
-                        <span class="sub">Suena como</span>
-                        <span class="big"><em id="heroArtist">tu artista</em></span>
-                    </h1>
-                    <p class="wi-lead" style="margin-top:16px">Graba en casa con tu micro de siempre y suena listo para subir. Abres el preset, cargas y grabas: con los plugins incluidos, todo en español y sin latencia.</p>
-                    <div id="heroAb"></div>
-                    <div class="wi-hero__cta">
-                        <button type="button" class="wi-btn wi-btn--dark wi-btn--lg" id="heroBuy">Obtener preset</button>
-                        <a class="wi-btn wi-btn--ghost wi-btn--lg" href="/willieinspired/presets/artistas">Ver todos los artistas</a>
-                    </div>
-                    <div class="wi-trust">
-                        <span><i class="bi bi-box-seam"></i> Plugins incluidos</span>
-                        <span><i class="bi bi-translate"></i> Todo en español</span>
-                        <span><i class="bi bi-lightning-charge"></i> Sin latencia</span>
-                        <span><i class="bi bi-ear"></i> Pruébalo en tu voz</span>
-                    </div>
+        <section class="pp pp--landing" id="presetHero" aria-label="Elige tu artista">
+            <div class="page">
+        <section class="hero" aria-labelledby="title">
+            <div class="hero__text">
+                <p class="kicker" id="kicker"></p>
+                <h1 class="title" id="title">&nbsp;</h1>
+                <p class="sub" id="sub"></p>
+            </div>
+            <figure class="cover" id="cover">
+                <div class="cover__frame skeleton" id="coverFrame"><img id="coverImg" alt="" hidden><span class="cover__sheen"></span></div>
+            </figure>
+        </section>
+
+        <section class="player" id="player" aria-label="Escucha el preset">
+            <div class="player__top">
+                <button class="play" id="play" type="button" aria-label="Reproducir" disabled>
+                    <svg class="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+                    <svg class="i-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4.2" height="14" rx="1.2"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.2"/></svg>
+                </button>
+                <div class="wave" id="wave" role="slider" aria-label="Posición del audio" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                    <canvas id="waveCanvas"></canvas>
+                    <div class="wave__msg" id="waveMsg" hidden></div>
                 </div>
-                <div class="wi-hero__art">
-                    <a class="wi-hero__cover" id="heroCover" href="/willieinspired/presets/artistas"></a>
-                    <div class="wi-arrows">
-                        <button type="button" class="wi-icon-btn" id="heroPrev" aria-label="Artista anterior"><i class="bi bi-chevron-left"></i></button>
-                        <button type="button" class="wi-icon-btn" id="heroNext" aria-label="Siguiente artista"><i class="bi bi-chevron-right"></i></button>
-                    </div>
-                    <div class="wi-hero__float">
-                        <div><b id="heroTitle">Vocal Preset</b><small id="heroPrice"></small></div>
-                        <button type="button" class="wi-btn wi-btn--accent wi-btn--sm" id="heroAdd">Añadir</button>
+                <div class="time"><b id="tCur">0:00</b> / <span id="tDur">0:00</span></div>
+                <div class="ab">
+                    <div class="ab__label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 10v4M8 6v12M12 9v6M16 4v16M20 8v8"/></svg><span id="abLabel">Escucha el preset</span></div>
+                    <div class="seg" id="seg" role="group" aria-label="Versión del audio">
+                        <button type="button" data-mode="raw" aria-pressed="false">RAW</button>
+                        <button type="button" data-mode="pre" aria-pressed="true">PRESET</button>
                     </div>
                 </div>
             </div>
-            <div class="wi-container" style="margin-top:48px">
-                <p class="wi-subtle" style="margin-bottom:8px"><i class="bi bi-chevron-down"></i> Elige tu artista: la página cambia al sonido</p>
-                <div class="wi-avatars" id="heroAvatars"></div>
+            <div class="player__bottom">
+                <div class="daws" id="daws"></div>
+                <ul class="badges">
+                    <li>Descarga inmediata</li>
+                    <li>Pago único</li>
+                    <li>Acceso de por vida</li>
+                </ul>
+                <div class="buy">
+                    <span class="price" id="price"></span>
+                    <button class="cta" id="cta" type="button"><span id="ctaText">Obtener el preset</span><span class="cta__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
+                </div>
+                <p class="vol" id="vol" hidden></p>
             </div>
+        </section>
+
+        <nav class="rail" id="rail" aria-label="Otros presets" hidden>
+            <button class="rail__arrow l" id="railPrev" type="button" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+            <div class="rail__track" id="railTrack"></div>
+            <button class="rail__arrow r" id="railNext" type="button" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        </nav>
+        <p class="hint" id="hint" hidden>← usa las flechas del teclado →</p>
+            </div>
+            <div hidden><div id="desc"></div><div id="tags"></div></div>
+            <div class="toast" id="toast" role="status" aria-live="polite"></div>
         </section>
 
         <!-- ── 2. Categorías ── -->
@@ -215,18 +262,38 @@
             </div>
         </section>
 
-        <!-- ── 10. Regalo (lead magnet) ── -->
-        <section class="wi-section">
+        <!-- ── 10. Cosas gratis ── -->
+        <section class="wi-section" id="gratis">
             <div class="wi-container">
-                <div class="wi-panel wi-split">
-                    <div data-ph="PORTADA · Preset gratis para maquetas" data-ratio="1 / 1" data-icon="gift"></div>
-                    <div>
-                        <span class="wi-badge wi-badge--accent">Gratis</span>
-                        <h2 class="wi-h2" style="margin-top:14px">Graba tus maquetas hoy, gratis</h2>
-                        <p class="wi-lead" style="margin-top:10px">Un preset hecho solo con plugins nativos de FL Studio: no instalas nada. Te lo mando a tu correo con un video de cómo se usa.</p>
-                        <div style="margin-top:20px" id="leadForm"></div>
-                    </div>
+                <div class="wi-center">
+                    <p class="wi-eyebrow">Sin costo · siempre gratis</p>
+                    <h2 class="wi-h2" style="margin-top:6px">Elige tu regalo</h2>
+                    <p class="wi-lead" style="margin-top:10px">Escoge uno, déjame tu correo y te lo mando al instante.</p>
                 </div>
+                <div class="gift-grid" id="giftGrid">
+                    <button type="button" class="gift is-active" data-gift="preset">
+                        <span class="gift__top"><b>Preset gratis</b><span>01</span></span>
+                        <span class="gift__art"><i class="bi bi-mic-fill"></i></span>
+                        <h3>Preset para tus maquetas</h3>
+                        <p>Hecho solo con plugins nativos de FL Studio: no instalas nada.</p>
+                        <span class="gift__free">Gratis · te llega a tu correo</span>
+                    </button>
+                    <button type="button" class="gift" data-gift="plugin">
+                        <span class="gift__top"><b>Prueba de plugin</b><span>02</span></span>
+                        <span class="gift__art"><i class="bi bi-soundwave"></i></span>
+                        <h3>Easy Master, 3 días gratis</h3>
+                        <p>Pruébalo en tu propia mezcla antes de decidir.</p>
+                        <span class="gift__free">Licencia de prueba por correo</span>
+                    </button>
+                    <button type="button" class="gift" data-gift="plantilla">
+                        <span class="gift__top"><b>Plantilla gratis</b><span>03</span></span>
+                        <span class="gift__art"><i class="bi bi-sliders"></i></span>
+                        <h3>Plantilla para tus maquetas</h3>
+                        <p>Abre, graba tu idea y escucha cómo podría sonar.</p>
+                        <span class="gift__free">Gratis · te llega a tu correo</span>
+                    </button>
+                </div>
+                <div class="gift-open wi-center" id="giftOpen"></div>
             </div>
         </section>
 
@@ -254,7 +321,8 @@
         </section>
     </main>
 
-    <script src="/willieinspired/assets/store.js?v=12"></script>
+    <script src="/willieinspired/assets/store.js?v=13"></script>
+    <script src="/script/preset-page.js?v=10"></script>
     <script>
     (async () => {
         const cat = await WI.init({ active: '' });
@@ -266,30 +334,24 @@
         const artists = cat.products.filter((p) => p.subcategory === 'artistas' && p.status === 'active');
         // Primero los que tienen audio antes/después y portada.
         artists.sort((a, b) => (!!b.media.audioAfter - !!a.media.audioAfter) || (!!b.media.cover - !!a.media.cover));
-        let idx = Math.max(0, artists.findIndex((p) => p.slug === WI.params.get('artista')));
-        let ab = null;
+        // Hero: mismo diseño y reproductor de la página de preset; elegir un artista lo cambia sin recargar
+        const startSlug = (artists.find((p) => p.slug === WI.params.get('artista')) || artists[0] || {}).slug;
+        const heroReady = window.PP ? window.PP.switchTo(startSlug) : Promise.resolve();
+        if (startSlug && window.PP) heroReady.catch((e) => console.warn('[landing] hero:', e));
 
-        function showArtist(i) {
-            if (!artists.length) return;
-            idx = (i + artists.length) % artists.length;
-            const p = artists[idx];
-            $('#heroArtist').textContent = p.artist;
-            $('#heroTitle').textContent = p.title;
-            $('#heroPrice').innerHTML = WI.priceHtml(p.pricing);
-            $('#heroCover').href = WI.url(p);
-            $('#heroCover').innerHTML = WI.img(p.media.cover, WI.coverLabel(p));
-            if (ab) ab.pause();
-            ab = WI.abPlayer($('#heroAb'), { before: p.media.audioBefore, after: p.media.audioAfter });
-            WI.$$('.wi-avatar', $('#heroAvatars')).forEach((a) => a.classList.toggle('is-active', a.dataset.i == idx));
-        }
-        $('#heroAvatars').innerHTML = artists.map((p, i) => `
-            <button type="button" class="wi-avatar" data-i="${i}"><span class="wi-avatar__img">${WI.img(p.media.cover, p.artist)}</span><span>${WI.esc(p.artist)}</span></button>`).join('');
-        $('#heroAvatars').addEventListener('click', (e) => { const b = e.target.closest('.wi-avatar'); if (b) showArtist(+b.dataset.i); });
-        $('#heroPrev').onclick = () => showArtist(idx - 1);
-        $('#heroNext').onclick = () => showArtist(idx + 1);
-        $('#heroAdd').onclick = () => WI.cart.add(artists[idx].id);
-        $('#heroBuy').onclick = () => { location.href = WI.url(artists[idx]); };
-        showArtist(idx);
+        // Cosas gratis: eliges una y se abre su formulario
+        const GIFTS = {
+            preset: () => WI.leadForm({ productId: 'lead-graba-maquetas-con-nativos', cta: 'Enviármelo gratis' }),
+            plantilla: () => WI.leadForm({ productId: 'lead-graba-tus-maquetas', cta: 'Enviármela gratis' }),
+            plugin: () => WI.trialForm('plugin-easy-master', 'Probar 3 días gratis')
+        };
+        const showGift = (k) => {
+            WI.$$('.gift', $('#giftGrid')).forEach((g) => g.classList.toggle('is-active', g.dataset.gift === k));
+            const box = $('#giftOpen'); box.innerHTML = GIFTS[k]();
+            WI.bindLeadForms(box); WI.bindTrialForms(box);
+        };
+        $('#giftGrid').addEventListener('click', (e) => { const g = e.target.closest('.gift'); if (g) showGift(g.dataset.gift); });
+        showGift('preset');
 
         // Más vendidos (orden editorial; se puede cambiar aquí)
         const best = ['bundle-promo-2x1', 'plugin-easy-mix', 'preset-bad-bunny', 'preset-definitivo', 'plantilla-trap-definitivo', 'preset-feid', 'plantilla-grabacion-y-mezcla-profesional', 'preset-duki']
@@ -344,8 +406,6 @@
         $('#services').innerHTML = ['servicio-preset-personalizado-para-tu-voz', 'servicio-plantilla-personalizada-para-tu-voz', 'servicio-mezcla-1-a-1']
             .map((id) => cat.byId.get(id)).filter(Boolean).map(WI.card).join('');
 
-        $('#leadForm').innerHTML = WI.leadForm({ productId: 'lead-graba-maquetas-con-nativos' });
-        WI.bindLeadForms($('#leadForm'));
 
         $('#faq').innerHTML = (cat.faq || []).map((f) => `<details><summary>${WI.esc(f.q)}</summary><p>${WI.esc(f.a)}</p></details>`).join('');
     })();
