@@ -81,6 +81,35 @@
         .pm__head img, .pm--link img, .pm__head svg, .pm--link svg { width:30px; height:30px; border-radius:8px; object-fit:contain; flex:none; }
         .pm__name { flex:1; }
         .pm__price { color:var(--subtle); font-weight:600; font-size:.92rem; }
+                button.pm--link { font:inherit; border:1px solid var(--line-strong); }
+        /* Ventanas de pago (Yape y Binance) */
+        .cm { position:fixed; inset:0; z-index:2147483000; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(15,23,42,.55); backdrop-filter:blur(3px); }
+        .cm.is-open { display:flex; }
+        .cm__card { width:min(420px,100%); max-height:calc(100vh - 32px); overflow-y:auto; background:#fff; border-radius:20px; box-shadow:0 30px 80px rgba(0,0,0,.35); }
+        .cm__head { display:flex; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--line); }
+        .cm__brand { display:flex; align-items:center; gap:12px; }
+        .cm__brand img, .cm__brand svg { border-radius:8px; }
+        .cm__brand h3 { font-size:1.05rem; font-weight:800; margin:0; }
+        .cm__x { font-size:1.8rem; line-height:1; color:var(--subtle); background:none; padding:0 4px; }
+        .cm__body { padding:20px; display:grid; gap:0; }
+        .cm__label { font-size:.85rem; font-weight:700; margin-bottom:8px; }
+        .cm__phone { display:flex; align-items:center; border:1px solid var(--line-strong); border-radius:10px; overflow:hidden; }
+        .cm__phone span { padding:0 12px; font-weight:700; color:var(--subtle); background:#f5f5f5; align-self:stretch; display:grid; place-items:center; }
+        .cm__phone input { flex:1; min-width:0; border:0; outline:0; padding:14px 12px; font:inherit; font-size:1rem; letter-spacing:.04em; }
+        .cm__phone:focus-within { border-color:#742284; box-shadow:0 0 0 3px rgba(116,34,132,.15); }
+        .cm__otp { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; }
+        .cm__otp input { min-width:0; width:100%; text-align:center; padding:13px 0; border:1px solid var(--line-strong); border-radius:10px; font:inherit; font-size:1.25rem; font-weight:800; outline:0; }
+        .cm__otp input:focus { border-color:#742284; box-shadow:0 0 0 3px rgba(116,34,132,.15); }
+        .cm__hint { font-size:.8rem; color:var(--subtle); margin-top:8px; }
+        .cm__err { color:#b42318; font-size:.85rem; min-height:1.2em; margin-top:10px; }
+        .cm__submit { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:15px; border-radius:12px; color:#fff; font-weight:800; font-size:1rem; margin-top:8px; text-decoration:none; }
+        .cm__submit:disabled { opacity:.6; cursor:progress; }
+        .cm__amount { text-align:center; font-size:2rem; font-weight:900; letter-spacing:-.02em; margin-bottom:14px; }
+        .cm__profile { width:100%; border-radius:14px; }
+        .cm__id { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:12px 0; padding:10px 12px; border:1px solid var(--line-strong); border-radius:10px; font-size:.9rem; }
+        .cm__id button { padding:7px 12px; border-radius:8px; background:#0f172a; color:#fff; font-weight:700; font-size:.82rem; }
+        .cm__qr { display:block; margin:6px auto 10px; border-radius:12px; }
+        .cm__steps { margin:6px 0 10px 18px; font-size:.88rem; color:var(--muted); line-height:1.6; }
         .co-help { display:block; text-align:center; margin-top:14px; font-size:.85rem; color:var(--subtle); text-decoration:underline; }
         .co-coupon-box { display:flex; align-items:center; background:#fff; border:1px solid var(--line-strong); border-radius:12px; padding:4px; margin:14px 0 6px; }
         .co-coupon-box input { flex:1; min-width:0; border:0; outline:0; background:none; padding:10px 12px; font:inherit; font-size:.92rem; }
@@ -100,7 +129,7 @@
             <div class="co__main">
                 <a href="/willieinspired" class="co-back"><i class="bi bi-arrow-left"></i> Seguir comprando</a>
 
-                <div class="co-note"><i class="bi bi-info-circle"></i><div><b>Descarga digital · Te llega al instante a tu correo.</b><br>Compra ahora y descarga cuando quieras, en cualquier dispositivo.</div></div>
+                <div class="co-note"><i class="bi bi-info-circle"></i><div>Te llega al instante a tu correo y descárgalo cuando quieras.</div></div>
 
                 <section class="wi-panel">
                     <div class="co-head"><h2>Contacto</h2><a id="loginLink" href="#">Iniciar sesión</a></div>
@@ -118,22 +147,50 @@
                 <div id="paypalButtons" style="margin-top:22px"><p class="wi-subtle" style="text-align:center">Cargando PayPal…</p></div>
 
                 <div class="pm-list" id="payTabs">
-                    <div class="pm" data-pm="yape">
-                        <button type="button" class="pm__head" data-pay="yape" id="yapeTab"><img src="/images/payments/yape.png" alt="" width="30" height="30"><span class="pm__name">Yape</span><span class="pm__price" id="yapeRowPrice"></span></button>
-                        <div class="pm__body wi-hidden" data-paypane="yape">
-                            <div class="wi-stack">
-                                <label class="wi-field"><span>Celular Yape</span><input class="wi-input" id="yapePhone" type="tel" inputmode="numeric" maxlength="9" placeholder="9XXXXXXXX"></label>
-                                <label class="wi-field"><span>Código de aprobación (app Yape → Código de aprobación)</span><input class="wi-input otp" id="yapeOtp" type="tel" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="one-time-code"></label>
-                                <button type="button" class="wi-btn wi-btn--dark wi-btn--block wi-btn--lg" id="yapePay" style="background:#742284">Pagar con Yape</button>
-                                <p class="wi-form-msg" id="yapeMsg"></p>
+                    <button type="button" class="pm pm--link" id="yapeTab"><img src="/images/payments/yape.png" alt="" width="30" height="30"><span class="pm__name">Yape</span><span class="pm__price" id="yapeRowPrice"></span></button>
+                    <a class="pm pm--link" id="mpLink" href="#" target="_blank" rel="noopener"><img src="/images/payments/mercadopago.png" alt="" width="30" height="30"><span class="pm__name">Mercado Pago</span><span class="pm__price" id="mpPrice"></span></a>
+                    <button type="button" class="pm pm--link" id="binTab"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#F0B90B" aria-hidden="true"><path d="M12 2L4.5 9.5L7.33 12.33L12 7.66L16.67 12.33L19.5 9.5L12 2ZM4.5 14.5L2 12L4.5 9.5L7.33 12.33L4.5 14.5ZM19.5 14.5L16.67 12.33L19.5 9.5L22 12L19.5 14.5ZM12 22L4.5 14.5L7.33 11.67L12 16.34L16.67 11.67L19.5 14.5L12 22ZM12 13.5L9.17 10.67L12 7.84L14.83 10.67L12 13.5Z"/></svg><span class="pm__name">Binance (USDT)</span><span class="pm__price" id="binPrice"></span></button>
+                </div>
+
+                <!-- Yape: ventana de pago (mismo estilo que el de Easy Mix) -->
+                <div class="cm" id="yapeModal" role="dialog" aria-modal="true" aria-label="Pagar con Yape">
+                    <div class="cm__card">
+                        <div class="cm__head">
+                            <div class="cm__brand"><img src="/images/payments/yape.png" alt="" width="32" height="32"><h3>Pagar con Yape</h3></div>
+                            <button type="button" class="cm__x" data-cm-close aria-label="Cerrar">&times;</button>
+                        </div>
+                        <form class="cm__body" id="yapeForm" onsubmit="return false;">
+                            <label class="cm__label" for="yapePhone">Ingresa tu celular Yape</label>
+                            <div class="cm__phone"><span>+51</span><input id="yapePhone" type="tel" inputmode="numeric" maxlength="9" placeholder="9XX XXX XXX" autocomplete="tel-national"></div>
+                            <label class="cm__label" for="yapeOtp0" style="margin-top:18px">Código de aprobación</label>
+                            <div class="cm__otp" id="yapeOtpGrid">
+                                <input id="yapeOtp0" type="tel" inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Dígito 1"><input type="tel" inputmode="numeric" maxlength="1" aria-label="Dígito 2"><input type="tel" inputmode="numeric" maxlength="1" aria-label="Dígito 3"><input type="tel" inputmode="numeric" maxlength="1" aria-label="Dígito 4"><input type="tel" inputmode="numeric" maxlength="1" aria-label="Dígito 5"><input type="tel" inputmode="numeric" maxlength="1" aria-label="Dígito 6">
                             </div>
+                            <p class="cm__hint">Encuéntralo en el menú de Yape.</p>
+                            <p class="cm__err" id="yapeMsg" role="alert"></p>
+                            <button type="submit" class="cm__submit" id="yapePay" style="background:#742284">Yapear</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Binance: ventana con tu perfil y el monto en USDT -->
+                <div class="cm" id="binModal" role="dialog" aria-modal="true" aria-label="Pagar con Binance">
+                    <div class="cm__card">
+                        <div class="cm__head">
+                            <div class="cm__brand"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#F0B90B" width="32" height="32" aria-hidden="true"><path d="M12 2L4.5 9.5L7.33 12.33L12 7.66L16.67 12.33L19.5 9.5L12 2ZM4.5 14.5L2 12L4.5 9.5L7.33 12.33L4.5 14.5ZM19.5 14.5L16.67 12.33L19.5 9.5L22 12L19.5 14.5ZM12 22L4.5 14.5L7.33 11.67L12 16.34L16.67 11.67L19.5 14.5L12 22ZM12 13.5L9.17 10.67L12 7.84L14.83 10.67L12 13.5Z"/></svg><h3>Pagar con Binance</h3></div>
+                            <button type="button" class="cm__x" data-cm-close aria-label="Cerrar">&times;</button>
+                        </div>
+                        <div class="cm__body">
+                            <p class="cm__amount" id="binAmount"></p>
+                            <img class="cm__profile" src="/images/payments/binance-perfil.png" alt="Perfil de Binance: willieinspired" width="320">
+                            <div class="cm__id"><span>ID de Binance <b id="binId">1257117526</b></span><button type="button" id="binCopy">Copiar</button></div>
+                            <img class="cm__qr" src="/images/payments/binance-qr.png" alt="QR de Binance" width="180" onerror="this.remove()">
+                            <ol class="cm__steps"><li>Abre Binance → Pay → Enviar.</li><li>Busca el ID de arriba o escanea el QR.</li><li>Envía el monto exacto en USDT.</li></ol>
+                            <a class="cm__submit" id="binWa" href="#" target="_blank" rel="noopener" style="background:#25d366;color:#fff"><i class="bi bi-whatsapp"></i> Ya pagué · avisar a Willie</a>
                         </div>
                     </div>
-                    <a class="pm pm--link" id="mpLink" href="#" target="_blank" rel="noopener" data-method="Mercado Pago"><img src="/images/payments/mercadopago.png" alt="" width="30" height="30"><span class="pm__name">Mercado Pago</span><span class="pm__price" id="mpPrice"></span></a>
-                    <a class="pm pm--link" id="binLink" href="#" target="_blank" rel="noopener" data-method="Binance (USDT)"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#F0B90B" aria-hidden="true"><path d="M12 2L4.5 9.5L7.33 12.33L12 7.66L16.67 12.33L19.5 9.5L12 2ZM4.5 14.5L2 12L4.5 9.5L7.33 12.33L4.5 14.5ZM19.5 14.5L16.67 12.33L19.5 9.5L22 12L19.5 14.5ZM12 22L4.5 14.5L7.33 11.67L12 16.34L16.67 11.67L19.5 14.5L12 22ZM12 13.5L9.17 10.67L12 7.84L14.83 10.67L12 13.5Z"/></svg><span class="pm__name">Binance (USDT)</span><span class="pm__price" id="binPrice"></span></a>
                 </div>
-                <a class="co-help" id="waOther" href="#" target="_blank" rel="noopener">¿Otro método de pago? Escríbele a Willie</a>
-                <p class="co-secure"><i class="bi bi-lock-fill"></i> Todas las transacciones están protegidas y cifradas</p>
+<p class="co-secure"><i class="bi bi-lock-fill"></i> Todas las transacciones están protegidas y cifradas</p>
             </div>
 
             <aside class="co__summary wi-panel">
@@ -150,7 +207,7 @@
     </main>
 
     <script src="https://sdk.mercadopago.com/js/v2" async></script>
-    <script src="/willieinspired/assets/store.js?v=5"></script>
+    <script src="/willieinspired/assets/store.js?v=6"></script>
     <script>
     (async () => {
         const cat = await WI.init({ active: '', announce: false, footer: false });
@@ -223,11 +280,11 @@
             const save = quote?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Descuento${pct}</span><span>−${WI.fmt(quote.discountUsd)}</span></div>` : '';
             $('#totals').innerHTML = `${quote?.discountUsd > 0 ? `<div class="wi-sumline"><span>Subtotal</span><span>${WI.fmt(quote?.subtotalUsd ?? 0)}</span></div>${save}` : ''}
                 <div class="co-total"><span>Total</span><span><em>USD</em><b>${WI.fmt(quote?.totalUsd ?? 0)}</b></span></div>`;
-            $('#yapePay').textContent = `Pagar S/ ${quote?.totalPen ?? ''} con Yape`;
+            $('#yapePay').textContent = `Yapear S/ ${Number(quote?.totalPen ?? 0).toFixed(2)}`;
             $('#yapeRowPrice').textContent = `S/ ${quote?.totalPen ?? ''}`;
-            $('#mpPrice').textContent = WI.fmt(quote?.totalUsd ?? 0);
+            $('#mpPrice').textContent = quote?.totalArs ? `ARS ${Number(quote.totalArs).toLocaleString('es-AR')}` : '';
             $('#binPrice').textContent = `${quote?.totalUsd ?? 0} USDT`;
-            $('#waOther').href = WI.wa(`Hola Willie! Quiero pagar con otro método:\n${(quote?.lines || []).map((l) => `• ${l.title}`).join('\n')}\nTotal: US$${quote?.totalUsd}\nMi correo: ${email()}`);
+            $('#binAmount').textContent = `${quote?.totalUsd ?? 0} USDT`;
             renderPicker();
         }
 
@@ -303,6 +360,43 @@
             if ($('#paypalButtons')) $('#paypalButtons').innerHTML = '<p class="wi-form-msg is-error">No se pudo cargar PayPal. Recarga la página o usa otro método.</p>';
         }
 
+        // ── Ventanas de pago: Yape (cobra aquí) y Binance (transferencia que confirmas por WhatsApp) ──
+        const openModal = (sel) => { $(sel).classList.add('is-open'); document.body.style.overflow = 'hidden'; $('#paypalButtons').style.visibility = 'hidden'; };
+        const closeModals = () => { WI.$$('.cm').forEach((m) => m.classList.remove('is-open')); document.body.style.overflow = ''; $('#paypalButtons').style.visibility = ''; };
+        const needEmail = () => {
+            if (!validEmail()) { WI.toast('Escribe tu correo para recibir tus archivos'); $('#email').focus(); return true; }
+            if (quote?.error) { WI.toast(quote.error); return true; }
+            return false;
+        };
+        WI.$$('.cm').forEach((m) => m.addEventListener('click', (e) => { if (e.target === m || e.target.closest('[data-cm-close]')) closeModals(); }));
+        addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModals(); });
+
+        // Pagos manuales (Mercado Pago y Binance): el clic queda en tu panel /owner/pagos-manuales con producto, método, precio y un código de referencia
+        const productNames = () => (quote?.lines || []).map((l) => l.title).join(', ');
+        function trackManual(method) {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let ref = '';
+            for (let i = 0; i < 5; i++) ref += chars.charAt(Math.floor(Math.random() * chars.length));
+            try {
+                fetch('/api/plugin/payment-click', { method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+                    body: JSON.stringify({ ref, product: productNames().slice(0, 80), method, price_usd: quote?.totalUsd, price_pen: quote?.totalPen, variant: WI.ab.peek() || '', page: location.pathname }) }).catch(() => {});
+            } catch (_) { /* el panel es un extra: nunca frena la compra */ }
+            return ref;
+        }
+        const waMsg = (method, ref) => WI.wa(`Hola, quiero comprar "${productNames()}" por ${method}. Ref: ${ref}`);
+
+        $('#mpLink').addEventListener('click', (e) => {
+            if (needEmail()) { e.preventDefault(); return; }
+            $('#mpLink').href = waMsg('Mercado Pago', trackManual('Mercado Pago'));
+        });
+        $('#binTab').addEventListener('click', () => {
+            if (needEmail()) return;
+            $('#binWa').href = waMsg('Binance', trackManual('Binance'));
+            openModal('#binModal');
+        });
+        $('#binCopy').addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText($('#binId').textContent.trim()); WI.toast('ID copiado'); } catch (_) { WI.toast('Copia el ID: ' + $('#binId').textContent.trim()); }
+        });
+
         // ── Yape (Mercado Pago Perú)
         let mp = null;
         async function mercadoPago() {
@@ -313,25 +407,38 @@
             mp = new window.MercadoPago(data.publicKey, { locale: 'es-PE' });
             return mp;
         }
-        const waFor = (method) => WI.wa(`Hola Willie! Quiero pagar con ${method}:\n${(quote?.lines || []).map((l) => `• ${l.title}`).join('\n')}\nTotal: US$${quote?.totalUsd}\nMi correo: ${email()}`);
-        [$('#mpLink'), $('#binLink')].forEach((a) => a.addEventListener('click', (e) => {
-            if (!validEmail()) { e.preventDefault(); WI.toast('Escribe tu correo para recibir tus archivos'); $('#email').focus(); return; }
-            if (quote?.error) { e.preventDefault(); WI.toast(quote.error); return; }
-            a.href = waFor(a.dataset.method);
-        }));
-        $('#yapeOtp').addEventListener('input', (e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); });
+        const otpBoxes = WI.$$('#yapeOtpGrid input');
+        const otpValue = () => otpBoxes.map((b) => b.value).join('');
+        otpBoxes.forEach((box, i) => {
+            box.addEventListener('input', () => { box.value = box.value.replace(/\D/g, '').slice(-1); if (box.value && otpBoxes[i + 1]) otpBoxes[i + 1].focus(); });
+            box.addEventListener('keydown', (e) => { if (e.key === 'Backspace' && !box.value && otpBoxes[i - 1]) otpBoxes[i - 1].focus(); });
+            box.addEventListener('paste', (e) => {
+                const digits = (e.clipboardData?.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+                if (!digits) return;
+                e.preventDefault();
+                digits.split('').forEach((d, k) => { if (otpBoxes[k]) otpBoxes[k].value = d; });
+                (otpBoxes[Math.min(digits.length, 5)]).focus();
+            });
+        });
         $('#yapePhone').addEventListener('input', (e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 9); });
-        $('#yapePay').addEventListener('click', async () => {
+        $('#yapeTab').addEventListener('click', () => {
+            if (needEmail()) return;
+            trackManual('Yape');
+            openModal('#yapeModal');
+            setTimeout(() => $('#yapePhone').focus(), 60);
+        });
+        const yapeLabel = () => `Yapear S/ ${Number(quote?.totalPen ?? 0).toFixed(2)}`;
+        $('#yapeForm').addEventListener('submit', async () => {
             const msg = $('#yapeMsg');
             const phone = $('#yapePhone').value;
-            const otp = $('#yapeOtp').value;
-            msg.className = 'wi-form-msg is-error';
-            if (!validEmail()) { msg.textContent = 'Escribe tu correo arriba.'; return; }
+            const otp = otpValue();
+            msg.textContent = '';
+            if (!validEmail()) { msg.textContent = 'Escribe tu correo en la página.'; return; }
             if (!/^9\d{8}$/.test(phone)) { msg.textContent = 'Tu celular debe tener 9 dígitos y empezar con 9.'; return; }
             if (otp.length !== 6) { msg.textContent = 'El código de aprobación tiene 6 dígitos.'; return; }
             if (quote?.error) { msg.textContent = quote.error; return; }
             const btn = $('#yapePay');
-            btn.disabled = true; btn.textContent = 'Validando con Yape…'; msg.textContent = '';
+            btn.disabled = true; btn.textContent = 'Validando con Yape…';
             try {
                 const sdk = await mercadoPago();
                 const tokenRes = await sdk.yape({ otp, phoneNumber: phone, amount: quote.totalPen }).create();
@@ -344,7 +451,7 @@
             } catch (e) {
                 msg.textContent = e.message || 'No se pudo completar el pago con Yape.';
                 btn.disabled = false;
-                btn.textContent = `Pagar S/ ${quote?.totalPen ?? ''} con Yape`;
+                btn.textContent = yapeLabel();
             }
         });
     })();

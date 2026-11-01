@@ -18,7 +18,7 @@ export const ALWAYS_BASE = new Set(['VE', 'CU']);
 // El resto de monedas queda como referencia por si algún día se vuelve a mostrar precio local.
 // Tipos de cambio editables por variable de entorno (STORE_FX_MXN=18.5, etc.). ARS cambia rápido: revisarlo.
 export const CURRENCIES = {
-    AR: { code: 'ARS', rate: num(process.env.STORE_FX_ARS, 1450), step: 100 },
+    AR: { code: 'ARS', rate: num(process.env.STORE_FX_ARS, 1500), step: 100 }, // 1 USD = 1500 ARS (Mercado Pago)
     MX: { code: 'MXN', rate: num(process.env.STORE_FX_MXN, 18.5), step: 5 },
     US: { code: 'USD', rate: 1, step: 0.01 },
     DE: { code: 'EUR', rate: num(process.env.STORE_FX_EUR, 0.92), step: 0.01 },
@@ -258,6 +258,7 @@ export function quoteCart({ items, getProduct, region, offer, autoVolume = true 
         discountUsd: round2(subtotalUsd - totalUsd),
         totalUsd,
         totalPen: toLocal(totalUsd, CURRENCIES.PE).amount, // soles enteros: lo mismo que se muestra es lo que cobra Yape
+        totalArs: toLocal(totalUsd, CURRENCIES.AR).amount, // pesos argentinos para Mercado Pago (1 USD = 1500 ARS)
         local: toLocal(totalUsd, currency),
         offerApplied,
         volume: { count: volumeLines.length, ...volume }, // para mostrar "agrega 1 más y ahorras 20%"

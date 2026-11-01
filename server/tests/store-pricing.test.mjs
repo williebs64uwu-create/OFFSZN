@@ -177,3 +177,9 @@ test('descuento por cantidad: no se acumula con otras ofertas ni toca productos 
     const presetsOnly = quoteCart({ items: two, getProduct, region });
     assert.equal(mixed.discountUsd, presetsOnly.discountUsd, 'el plugin no suma ni recibe descuento');
 });
+
+test('pesos argentinos: 1 USD = 1500 ARS en el total para Mercado Pago', () => {
+    const region = resolveRegion({ ipCountry: 'PE', timezone: 'America/Lima' });
+    const q = quoteCart({ items: [{ id: 'preset-bad-bunny' }], getProduct, region });
+    assert.equal(q.totalArs, q.totalUsd * 1500);
+});
