@@ -259,7 +259,7 @@
     WI.url = (p) => {
         if (!p) return BASE;
         if (p.category === 'comunidad') return `${BASE}/comunidad/suscribirse#${p.slug}`;
-        if (p.category === 'presets' && p.subcategory === 'artistas') return `/presets/${p.slug}`;
+        if (p.category === 'presets' && p.subcategory === 'artistas') return `${BASE}/presets/${p.slug}`;
         const sub = ['artistas', 'bundle', 'expansiones'].includes(p.subcategory) ? `${p.subcategory}/` : '';
         return `${BASE}/${p.category}/${sub}${p.slug}`;
     };
@@ -373,6 +373,18 @@
     const SEARCH_LABEL = { presets: 'Presets', plantillas: 'Plantillas', plugins: 'Plugins', servicios: 'Servicios', comunidad: 'Comunidad' };
     const SEARCH_ICON = { presets: 'mic', plantillas: 'sliders', plugins: 'soundwave', servicios: 'headphones', comunidad: 'people' };
     const SEARCH_RECOMMENDED = ['bundle-promo-2x1', 'plugin-easy-mix', 'preset-bad-bunny', 'preset-definitivo', 'plantilla-trap-definitivo', 'lead-graba-maquetas-con-nativos'];
+    // Palabras que no ayudan a encontrar nada ("preset de ...")
+    const STOP = new Set(['preset', 'presets', 'de', 'del', 'la', 'el', 'los', 'las', 'vocal', 'para', 'y', 'a', 'un', 'una']);
+    const lev = (a, b) => { const m = a.length; const n = b.length; const d = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]); for (let j = 1; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[m][n]; };
+    // 0 = empieza igual · 1 = lo contiene · 2+ = parecido con errores de tipeo · -1 = no coincide
+    const near = (word, token) => {
+        if (token.startsWith(word)) return 0;
+        if (word.length >= 3 && token.includes(word)) return 1;
+        const max = word.length >= 7 ? 2 : word.length >= 4 ? 1 : 0;
+        if (!max) return -1;
+        const d = Math.min(lev(word, token), lev(word, token.slice(0, word.length)), lev(word, token.slice(0, word.length + 1)));
+        return d <= max ? 2 + d : -1;
+    };
     const normalize = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     WI.search = (() => {
         let cat = null; let rows = []; let active = 0;
@@ -380,24 +392,30 @@
         const recent = () => store.get('wi_recent', []);
         const remember = (id) => store.set('wi_recent', [id, ...recent().filter((x) => x !== id)].slice(0, 5));
         const row = (p) => ({ id: p.id, title: p.category === 'presets' && p.subcategory === 'artistas' ? `Preset de ${p.artist}` : p.title, label: SEARCH_LABEL[p.category] || '', cover: p.media?.cover || null, icon: SEARCH_ICON[p.category] || 'search', href: WI.url(p), free: p.kind === 'lead_magnet' });
-        const SHORTCUTS = [['Ver todos los presets', '/willieinspired/presets', 'mic'], ['Ver plantillas', '/willieinspired/plantillas', 'sliders'], ['Ver plugins', '/willieinspired/plugins', 'soundwave'], ['Ver servicios', '/willieinspired/servicios', 'headphones'], ['Cosas gratis', '/willieinspired#gratis', 'gift'], ['Mis compras', '/willieinspired/mi-perfil/mis-compras', 'bag-check']];
         function groups(q) {
             const list = (cat?.products || []).filter((p) => p.status === 'active' || p.status === 'coming_soon');
             if (!q) {
                 const rec = recent().map((id) => cat.byId.get(id)).filter(Boolean).map(row);
                 const recIds = new Set(rec.map((r) => r.id));
                 const reco = SEARCH_RECOMMENDED.map((id) => cat.byId.get(id)).filter((p) => p && !recIds.has(p.id)).map(row);
-                return [rec.length ? ['Recientes', rec] : null, ['Recomendados', reco], ['Ir a', SHORTCUTS.map(([title, href, icon]) => ({ id: href, title, label: '', cover: null, icon, href }))]].filter(Boolean);
+                return [rec.length ? ['Recientes', rec] : null, ['Recomendados', reco]].filter(Boolean);
             }
-            const words = normalize(q).split(/\s+/).filter(Boolean);
+            const words = normalize(q).split(/[^a-z0-9]+/).filter((w) => w && !STOP.has(w));
+            const pool = words.length ? list : list.filter((p) => p.category === 'presets' && p.subcategory === 'artistas' && p.media?.cover).slice(0, 14);
             const scored = [];
-            for (const p of list) {
-                const hay = normalize(`${p.title} ${p.artist || ''} ${p.tagline || ''} ${SEARCH_LABEL[p.category] || ''} ${p.subcategory || ''}`);
-                if (!words.every((w) => hay.includes(w))) continue;
-                const name = normalize(p.artist || p.title);
-                scored.push([(name.startsWith(words[0]) ? 0 : name.includes(words[0]) ? 1 : 2) + (p.kind === 'lead_magnet' ? 0 : 0.1), p]);
+            for (const p of pool) {
+                const tokens = normalize(`${p.title} ${p.artist || ''} ${SEARCH_LABEL[p.category] || ''}`).split(/[^a-z0-9]+/).filter(Boolean);
+                if (p.artist) tokens.push(normalize(p.artist).replace(/[^a-z0-9]/g, ''));
+                let total = 0; let ok = true;
+                for (const w of words) {
+                    let best = -1;
+                    for (const t of tokens) { const sc = near(w, t); if (sc >= 0 && (best < 0 || sc < best)) best = sc; }
+                    if (best < 0) { ok = false; break; }
+                    total += best;
+                }
+                if (ok) scored.push([total, p]);
             }
-            scored.sort((a, b) => a[0] - b[0]);
+            scored.sort((x, y) => x[0] - y[0]);
             const out = new Map();
             for (const [, p] of scored.slice(0, 14)) { const k = SEARCH_LABEL[p.category] || 'Otros'; if (!out.has(k)) out.set(k, []); out.get(k).push(row(p)); }
             return [...out.entries()];
@@ -413,7 +431,7 @@
                     ${r.cover ? `<img src="${WI.esc(r.cover)}" alt="" width="36" height="36" loading="lazy">` : `<span class="wi-search__ico"><i class="bi bi-${r.icon}"></i></span>`}
                     <span class="wi-search__name">${WI.esc(r.title)}${r.free ? ' <em>Gratis</em>' : ''}</span>
                     ${r.label ? `<span class="wi-search__tag">— ${WI.esc(r.label)}</span>` : ''}
-                </a>`).join('')}`).join('') : `<p class="wi-search__empty">No encontré "${WI.esc(q)}". Prueba con el nombre del artista, o escríbeme por <a href="${WI.wa('Hola Willie! Busco un preset de ' + q)}" target="_blank" rel="noopener">WhatsApp</a>.</p>`;
+                </a>`).join('')}`).join('') : `<p class="wi-search__empty">No encontré "${WI.esc(q)}". Revisa cómo lo escribiste o prueba con otro artista. Si no está, <a href="${WI.wa('Hola Willie! Busco un preset de ' + q)}" target="_blank" rel="noopener">escríbeme por WhatsApp</a> y lo armamos.</p>`;
             const cur = WI.$('.wi-search__item.is-active'); if (cur) cur.scrollIntoView({ block: 'nearest' });
         }
         async function open() {
@@ -429,6 +447,7 @@
         function bind() {
             document.addEventListener('click', (e) => {
                 if (e.target.closest('[data-open-search]')) { e.preventDefault(); open(); return; }
+                if (e.target.closest('[data-search-close]')) { close(); return; }
                 const box = el(); if (!box || box.hidden) return;
                 if (e.target === box) { close(); return; }
                 const a = e.target.closest('.wi-search__item');
@@ -436,9 +455,7 @@
             });
             document.addEventListener('keydown', (e) => {
                 const box = el(); if (!box) return;
-                const typing = /input|textarea|select/i.test(e.target?.tagName || '');
                 if ((e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); box.hidden ? open() : close(); return; }
-                if (e.key === '/' && !typing && box.hidden) { e.preventDefault(); open(); return; }
                 if (box.hidden) return;
                 if (e.key === 'Escape') { close(); return; }
                 if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (rows.length) { active = (active + (e.key === 'ArrowDown' ? 1 : -1) + rows.length) % rows.length; paint(); } return; }
@@ -592,9 +609,8 @@
         const drawers = `
             <div class="wi-search" id="wi-search" role="dialog" aria-modal="true" aria-label="Buscar" hidden>
                 <div class="wi-search__panel">
-                    <div class="wi-search__bar"><i class="bi bi-search"></i><input id="wi-search-input" type="search" placeholder="Busca presets, artistas, plugins…" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div>
+                    <div class="wi-search__bar"><i class="bi bi-search"></i><input id="wi-search-input" type="search" placeholder="Busca presets, artistas, plugins…" autocomplete="off" spellcheck="false"><button type="button" class="wi-search__x" data-search-close aria-label="Cerrar">✕</button></div>
                     <div class="wi-search__list" id="wi-search-list" role="listbox"></div>
-                    <div class="wi-search__foot"><span><kbd>↑</kbd><kbd>↓</kbd> para moverte</span><span><kbd>↵</kbd> para abrir</span><span class="wi-search__hide"><kbd>Ctrl</kbd><kbd>K</kbd> para buscar en cualquier página</span></div>
                 </div>
             </div>
             <div class="wi-backdrop" id="wi-backdrop" data-close></div>

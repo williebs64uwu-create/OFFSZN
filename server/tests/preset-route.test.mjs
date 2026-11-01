@@ -53,19 +53,23 @@ test('un producto que no es preset con ?v=2 sigue con la página de siempre, y u
     assert.equal((await get('/preset/no-existe?v=2')).status, 404);
 });
 
-test('/presets/remers sirve el diseño nuevo directo (sin ?v=2), acepta el nombre corto y el slug largo, y no es para otros productos', async () => {
-    const short = await get('/presets/remers');
-    assert.equal(short.status, 200);
-    assert.match(short.html, /id="presetData">\{/);
-    assert.match(short.html, /<link rel="canonical" href="https:\/\/offszn\.lat\/presets\/remers">/);
-    assert.ok(!short.html.includes('SECRETO'));
-    assert.equal((await get('/presets/preset-de-remers')).status, 200);
-    assert.equal((await get('/presets/beat-x')).status, 404);          // no es preset
-    assert.equal((await get('/presets/no-existe')).status, 404);
+test('/willieinspired/presets/remers sirve el diseño nuevo (sin ?v=2), con su dirección oficial como canonical', async () => {
+    const page = await get('/willieinspired/presets/remers');
+    assert.equal(page.status, 200);
+    assert.match(page.html, /id="presetData">\{/);
+    assert.match(page.html, /<link rel="canonical" href="https:\/\/offszn\.lat\/willieinspired\/presets\/remers">/);
+    assert.ok(!page.html.includes('SECRETO'));
 });
 
-test('/presets/remers es un preset de la tienda de Willie: se compra con su id del catálogo y no expone archivos', async () => {
-    const { html } = await get('/presets/remers');
+test('las direcciones anteriores redirigen a /willieinspired/presets/<artista>', async () => {
+    const manual = async (p) => { const r = await fetch(base + p, { redirect: 'manual' }); return { status: r.status, to: r.headers.get('location') }; };
+    assert.deepEqual(await manual('/presets/remers'), { status: 302, to: '/willieinspired/presets/remers' });
+    assert.deepEqual(await manual('/presets/preset-de-remers'), { status: 302, to: '/willieinspired/presets/remers' });
+    assert.deepEqual(await manual('/willieinspired/presets/artistas/remers'), { status: 301, to: '/willieinspired/presets/remers' });
+});
+
+test('/willieinspired/presets/remers es un preset de la tienda de Willie: se compra con su id del catálogo y no expone archivos', async () => {
+    const { html } = await get('/willieinspired/presets/remers');
     const data = JSON.parse(html.match(/id="presetData">(\{.*?\})<\/script>/s)[1]);
     assert.deepEqual([data.store, data.id, data.public_slug], [true, 'preset-remers', 'remers']);
     assert.ok(!/bucket_key|\.fst/i.test(html), 'nunca se inyectan archivos de entrega');

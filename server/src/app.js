@@ -574,6 +574,26 @@ app.get(['/willieinspired', '/@willieinspired'], (req, res) => {
     return res.redirect(301, '/perfilpro.html?user=willieinspired');
 });
 
+// Presets de artistas: /willieinspired/presets/<artista> es la página nueva. Lo que no sea un artista sigue por las páginas de la tienda.
+const STORE_RESERVED = new Set(['artistas', 'bundle', 'expansiones']);
+app.get(['/willieinspired/presets/:slug', '/@willieinspired/presets/:slug'], (req, res, next) => {
+    const slug = String(req.params.slug || '').toLowerCase().replace(/\.html$/, '');
+    if (STORE_RESERVED.has(slug) || !getStoreProductBySlug('presets', slug, 'artistas')) return next();
+    req.params.slug = slug;
+    return serveProductPage(req, res, next);
+});
+// Direcciones anteriores de la página de un artista: se redirigen a la oficial
+app.get(['/willieinspired/presets/artistas/:slug', '/@willieinspired/presets/artistas/:slug'], (req, res, next) => {
+    const slug = String(req.params.slug || '').toLowerCase();
+    if (!getStoreProductBySlug('presets', slug, 'artistas')) return next();
+    return res.redirect(301, `/willieinspired/presets/${encodeURIComponent(slug)}`);
+});
+app.get('/presets/:slug', (req, res) => {
+    const slug = String(req.params.slug || '').toLowerCase().replace(/^preset-de-/, '');
+    const q = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+    return res.redirect(302, `/willieinspired/presets/${encodeURIComponent(slug)}${q}`);
+});
+
 // Páginas de la tienda (presets, plantillas, plugins, servicios, oferta, bienvenida, gracias, perfil, comunidad...)
 app.get(/^\/@?willieinspired\/(.+?)\/?$/, (req, res, next) => {
     const template = storePageFor(req.params[0]);
@@ -1244,12 +1264,7 @@ function storePresetAsPage(p) {
 }
 
 // --- 3.4 PRODUCT SHORTCUT ROUTES (SEO Friendly with Dynamic OG Tags & Clean Canonicals) ---
-app.get([
-    '/beat/:slug', '/kit/:slug', '/drumkit/:slug', '/loopkit/:slug',
-    '/preset/:slug', '/presets/:slug', '/plantilla/:slug', '/sample/:slug',
-    '/instrumento/:slug', '/plugin/:slug', '/voces/:slug',
-    '/p/:code'
-], async (req, res, next) => {
+async function serveProductPage(req, res, next) {
     const { slug, code } = req.params;
     const productPagePath = path.join(rootPath, 'producto.html');
     if (!fs.existsSync(productPagePath)) return next();
@@ -1259,8 +1274,8 @@ app.get([
         let productId = null;
         let productSlug = slug;
 
-        // /presets/<nombre>: página nueva de preset, directa y corta (/presets/remers). El marketplace sigue en /preset/<slug>.
-        const isPresetsRoute = req.path.startsWith('/presets/');
+        // /willieinspired/presets/<artista>: página nueva de preset de la tienda de Willie. El marketplace sigue en /preset/<slug>.
+        const isPresetsRoute = /^\/@?willieinspired\/presets\//.test(req.path);
 
         // 1. Resolve ID or Slug
         if (code) {
@@ -1404,7 +1419,13 @@ app.get([
         console.error("Error serving dynamic product page:", err);
         res.status(404).sendFile(path.join(rootPath, '404.html'));
     }
-});
+}
+app.get([
+    '/beat/:slug', '/kit/:slug', '/drumkit/:slug', '/loopkit/:slug',
+    '/preset/:slug', '/plantilla/:slug', '/sample/:slug',
+    '/instrumento/:slug', '/plugin/:slug', '/voces/:slug',
+    '/p/:code'
+], serveProductPage);
 
 // --- 3.4.5 SERVICE SHORTCUT ROUTE (/servicio/:slug) ---
 app.get('/servicio/:slug', async (req, res, next) => {

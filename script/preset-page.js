@@ -310,9 +310,9 @@
 
     // ── Carrusel de presets ────────────────────────────────────────────────────────
     let list = []; let idx = -1;
-    const SHORT_ROUTE = location.pathname.startsWith('/presets/') || !!window.PP_LANDING;
+    const SHORT_ROUTE = location.pathname.includes('/presets/') || !!window.PP_LANDING;
     const href = (p) => SHORT_ROUTE
-        ? `/presets/${encodeURIComponent(p.public_slug.replace(/^preset-de-/, ''))}`
+        ? `/willieinspired/presets/${encodeURIComponent(p.public_slug.replace(/^preset-de-/, ''))}`
         : `/preset/${encodeURIComponent(p.public_slug)}${PREVIEW}`;
     async function loadStoreRail(p) {
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -370,7 +370,7 @@
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitle);
     }
     async function switchTo(slug) {
-        const res = await fetch('/presets/' + encodeURIComponent(slug));
+        const res = await fetch('/willieinspired/presets/' + encodeURIComponent(slug));
         if (!res.ok) throw new Error('No se pudo abrir ese preset.');
         const html = await res.text();
         const m = html.match(/id="presetData">(\{[\s\S]*?\})<\/script>/);
