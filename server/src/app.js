@@ -1273,7 +1273,17 @@ app.get([
             return res.status(404).sendFile(path.join(rootPath, '404.html'));
         }
 
-        let html = fs.readFileSync(productPagePath, 'utf8');
+        // Diseño nuevo de preset (vista previa): solo con ?v=2 y solo para presets. Sin eso, todo sigue igual que antes.
+        const presetV2Path = path.join(rootPath, 'preset.html');
+        const useV2 = req.query.v === '2' && String(product.product_type || '').toLowerCase() === 'preset' && fs.existsSync(presetV2Path);
+        let html = fs.readFileSync(useV2 ? presetV2Path : productPagePath, 'utf8');
+        if (useV2) {
+            // Solo campos públicos: nunca los archivos de descarga.
+            const pub = ['id', 'name', 'public_slug', 'price_basic', 'is_free', 'image_url', 'audio_before_url', 'audio_after_url', 'storage_version', 'r2_version', 'tags', 'description', 'product_type', 'sales_count']
+                .reduce((o, k) => { o[k] = product[k] ?? null; return o; }, {});
+            const json = JSON.stringify(pub).replace(/</g, '\\u003c').replace(/\u2028|\u2029/g, '');
+            html = html.replace('__PRESET_JSON__', () => json);
+        }
 
         const producerName = product.users?.nickname || 'Productor';
         const title = `${product.name} - ${producerName} | OFFSZN`;
