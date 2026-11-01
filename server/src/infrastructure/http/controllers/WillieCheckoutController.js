@@ -208,6 +208,17 @@ export const captureWilliePayPalOrder = async (req, res) => {
 // =========================================================
 // POST /api/willie/yape/charge
 // =========================================================
+// Productos del cobro de Yape, como en Easy Mix: con descripción y con precios que suman EXACTO el monto cobrado (lo gratis no se envía).
+export function yapeItems(quote, amountPEN) {
+    const paid = quote.lines.filter((l) => l.lineUsd > 0);
+    let left = amountPEN;
+    return paid.map((l, i) => {
+        const share = i === paid.length - 1 ? left : Math.round(amountPEN * (l.lineUsd / (quote.totalUsd || 1)) * 100) / 100;
+        left = Math.round((left - share) * 100) / 100;
+        return { id: l.id, title: l.title, description: `${l.title} - Willie Inspired`, category_id: 'software', quantity: 1, unit_price: share };
+    });
+}
+
 export const chargeWillieYape = async (req, res) => {
     try {
         const { token, phoneNumber, deviceId, attribution = {} } = req.body || {};
@@ -237,6 +248,7 @@ export const chargeWillieYape = async (req, res) => {
                     Authorization: `Bearer ${accessToken}`,
                     'Content-Type': 'application/json',
                     'X-Idempotency-Key': `willie-yape-${externalReference}`,
+                    'User-Agent': 'MercadoPago Node.js SDK/2.10.0',
                     ...(deviceId ? { 'X-Meli-Session-Id': deviceId } : {})
                 },
                 body: JSON.stringify({
@@ -249,10 +261,8 @@ export const chargeWillieYape = async (req, res) => {
                     statement_descriptor: 'OFFSZN',
                     payer: { email, ...(cleanPhone ? { phone: { area_code: '51', number: cleanPhone } } : {}) },
                     additional_info: {
-                        items: quote.lines.map((l) => ({
-                            id: l.id, title: l.title, category_id: 'software', quantity: 1,
-                            unit_price: Math.round(l.lineUsd * (quote.totalPen / quote.totalUsd) * 100) / 100
-                        }))
+                        items: yapeItems(quote, amountPEN),
+                        ...(cleanPhone ? { payer: { phone: { area_code: '51', number: cleanPhone } } } : {})
                     },
                     metadata: { store: 'willie', usd_total: quote.totalUsd, lines: quote.lines.map((l) => l.id).join(',').slice(0, 400) }
                 })

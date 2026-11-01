@@ -238,14 +238,19 @@ export function quoteCart({ items, getProduct, region, offer, autoVolume = true 
         }
     }
 
-    // Descuento por cantidad (automático): solo si no hay otra oferta aplicada, así nunca se acumulan. Lo calcula el servidor.
+    // Descuento por cantidad (automático). No se acumula con otras ofertas; si hay un cupón, gana el que más ahorra al cliente.
     const volumeLines = lines.filter((l) => getProduct(l.id)?.eligibleVolume);
     const volume = volumeTierFor(volumeLines.length);
-    if (autoVolume && !offerApplied && volume.percent > 0) {
+    if (autoVolume && volume.percent > 0) {
         const base = volumeLines.reduce((a, l) => a + l.unitUsd, 0);
-        discountUsd = round2(base * volume.percent / 100);
-        for (const l of volumeLines) l.lineUsd = round2(l.unitUsd - discountUsd * (l.unitUsd / base));
-        offerApplied = { type: 'volume', percent: volume.percent, count: volumeLines.length };
+        const volumeDiscount = round2(base * volume.percent / 100);
+        const couponLoses = offerApplied?.type === 'coupon' && volumeDiscount > discountUsd;
+        if (!offerApplied || couponLoses) {
+            if (couponLoses) { for (const l of lines) l.lineUsd = l.unitUsd; errors.push({ offer: 'coupon', error: 'volume_better' }); }
+            discountUsd = volumeDiscount;
+            for (const l of volumeLines) l.lineUsd = round2(l.unitUsd - discountUsd * (l.unitUsd / base));
+            offerApplied = { type: 'volume', percent: volume.percent, count: volumeLines.length };
+        }
     }
 
     const subtotalUsd = round2(lines.reduce((a, l) => a + l.unitUsd, 0));

@@ -183,3 +183,18 @@ test('pesos argentinos: 1 USD = 1500 ARS en el total para Mercado Pago', () => {
     const q = quoteCart({ items: [{ id: 'preset-bad-bunny' }], getProduct, region });
     assert.equal(q.totalArs, q.totalUsd * 1500);
 });
+
+test('cupón vs descuento por cantidad: gana el que más ahorra, nunca se acumulan', () => {
+    const region = resolveRegion({ ipCountry: 'PE', timezone: 'America/Lima' });
+    const three = [{ id: 'preset-bad-bunny' }, { id: 'preset-alejo' }, { id: 'preset-bhavi' }];
+    const weak = quoteCart({ items: three, getProduct, region, offer: { type: 'coupon', code: 'WILLIE10' } });
+    assert.equal(weak.offerApplied.type, 'volume', 'el 20% por cantidad supera al 10% del cupón');
+    assert.ok(weak.errors.some((e) => e.error === 'volume_better'));
+    assert.equal(weak.discountUsd, weak.subtotalUsd * 0.2);
+    const strong = quoteCart({ items: three, getProduct, region, offer: { type: 'coupon', code: 'VOCES' } });
+    assert.equal(strong.discountUsd, strong.subtotalUsd * 0.2, 'VOCES 20% empata con el 20% por cantidad: no se acumulan');
+    const one = quoteCart({ items: [{ id: 'preset-bad-bunny' }], getProduct, region, offer: { type: 'coupon', code: 'WILLIE10' } });
+    assert.equal(one.offerApplied.type, 'coupon', 'con un solo preset el cupón sí aplica');
+    const bad = quoteCart({ items: three, getProduct, region, offer: { type: 'coupon', code: 'NOEXISTE' } });
+    assert.ok(bad.errors.some((e) => e.error === 'invalid_coupon'));
+});

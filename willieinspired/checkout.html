@@ -111,9 +111,11 @@
         .cm__qr { display:block; margin:6px auto 10px; border-radius:12px; }
         .cm__steps { margin:6px 0 10px 18px; font-size:.88rem; color:var(--muted); line-height:1.6; }
         .co-help { display:block; text-align:center; margin-top:14px; font-size:.85rem; color:var(--subtle); text-decoration:underline; }
-        .co-coupon-box { display:flex; align-items:center; background:#fff; border:1px solid var(--line-strong); border-radius:12px; padding:4px; margin:14px 0 6px; }
-        .co-coupon-box input { flex:1; min-width:0; border:0; outline:0; background:none; padding:10px 12px; font:inherit; font-size:.92rem; }
-        .co-coupon-box button { padding:9px 14px; border-radius:8px; background:#f1f1f1; color:var(--subtle); font-weight:700; font-size:.88rem; }
+        .co-coupon-box { display:flex; align-items:center; gap:8px; background:#fff; border:1px solid var(--line-strong); border-radius:14px; padding:8px 8px 8px 14px; margin:14px 0 6px; }
+        .co-coupon-in { flex:1; min-width:0; display:grid; gap:1px; }
+        .co-coupon-in span { font-size:.74rem; color:var(--subtle); }
+        .co-coupon-box input { min-width:0; border:0; outline:0; background:none; padding:0; font:inherit; font-size:.95rem; text-transform:uppercase; }
+        .co-coupon-box button { padding:11px 18px; border-radius:10px; background:#000; color:#fff; font-weight:700; font-size:.92rem; }
         .co-thumb, .co-thumb img, .co-thumb .wi-ph { width:72px; height:72px; }
         .co-thumb img, .co-thumb .wi-ph { border-radius:14px; border:3px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.12); }
         .co-line { grid-template-columns: 72px minmax(0,1fr) auto; }
@@ -198,7 +200,7 @@
                 <div id="lines"></div>
                 <div id="offerNote" style="margin:12px 0"></div>
                 <form class="co-coupon-box" id="couponForm">
-                    <input id="coupon" placeholder="Código de descuento" aria-label="Cupón">
+                    <label class="co-coupon-in"><span>Código de descuento</span><input id="coupon" autocomplete="off" aria-label="Código de descuento"></label>
                     <button type="submit">Aplicar</button>
                 </form>
                 <div id="totals"></div>
@@ -207,11 +209,12 @@
     </main>
 
     <script src="https://sdk.mercadopago.com/js/v2" async></script>
-    <script src="/willieinspired/assets/store.js?v=7"></script>
+    <script src="/willieinspired/assets/store.js?v=8"></script>
     <script>
     (async () => {
         const cat = await WI.init({ active: '', announce: false, footer: false });
         const $ = WI.$;
+        const usd = (n) => "$" + Number(n || 0).toFixed(2); // como Shopify: USD $154.80
         let quote = null;
         let session = await WI.auth.session();
 
@@ -264,7 +267,7 @@
                 const l = lineById.get(it.id);
                 const os = l?.os ? ` · ${l.os === 'mac' ? 'Mac' : 'Windows'}` : '';
                 const unit = l ? l.unitUsd : p.pricing.usd;
-                const cell = l?.free ? '<span class="wi-badge wi-badge--success">GRATIS</span>' : (l && l.lineUsd < l.unitUsd ? `<s>${WI.fmt(l.unitUsd)}</s>${WI.fmt(l.lineUsd)}` : WI.fmt(unit));
+                const cell = l?.free ? '<span class="wi-badge wi-badge--success">GRATIS</span>' : (l && l.lineUsd < l.unitUsd ? `<s>${usd(l.unitUsd)}</s>${usd(l.lineUsd)}` : usd(unit));
                 return `<div class="co-line"><div class="co-thumb">${WI.img(p.media?.cover, WI.coverLabel(p))}<span class="co-qty">1</span></div>
                     <div class="co-line__t"><b>${WI.esc(p.title)}</b><small>${WI.esc(p.format || p.category)}${os}</small></div>
                     <div class="co-line__p">${cell}<button type="button" class="co-remove" data-remove="${p.id}">Quitar</button></div></div>`;
@@ -274,12 +277,12 @@
             const hint = typeof WI.volumeHint === 'function' ? WI.volumeHint(quote) : '';
             $('#offerNote').innerHTML = quote?.error
                 ? `<div class="wi-note"><i class="bi bi-info-circle"></i><div>${WI.esc(quote.error)}${quote.code === 'login_required' ? ` <a class="wi-link" href="${WI.auth.loginUrl()}">Iniciar sesión</a>` : ''} <button type="button" class="wi-link" data-clear-offer>Quitar oferta</button></div></div>`
-                : quote?.offerApplied?.type === 'volume' || (!offer && quote?.volume?.count > 0) ? ''
+                : quote?.offerApplied?.type === 'volume' || (!offer && quote?.volume?.count > 0) ? (quote?.errors?.some((e) => e.error === 'volume_better') ? '<div class="wi-note"><i class="bi bi-info-circle"></i><div>Tu descuento por cantidad es mejor que el cupón, así que aplicamos ese.</div></div>' : '')
                 : quote?.offerApplied ? `<div class="wi-note wi-note--success"><i class="bi bi-gift"></i><div><b>${WI.esc(WI.offer.label(offer))}</b> <button type="button" class="wi-link" data-clear-offer>Quitar</button></div></div>` : '';
             const pct = quote?.offerApplied?.percent ? ` (−${quote.offerApplied.percent}%)` : '';
-            const save = quote?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Descuento${pct}</span><span>−${WI.fmt(quote.discountUsd)}</span></div>` : '';
-            $('#totals').innerHTML = `${quote?.discountUsd > 0 ? `<div class="wi-sumline"><span>Subtotal</span><span>${WI.fmt(quote?.subtotalUsd ?? 0)}</span></div>${save}` : ''}
-                <div class="co-total"><span>Total</span><span><em>USD</em><b>${WI.fmt(quote?.totalUsd ?? 0)}</b></span></div>`;
+            const save = quote?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Descuento${pct}</span><span>−${usd(quote.discountUsd)}</span></div>` : '';
+            $('#totals').innerHTML = `${quote?.discountUsd > 0 ? `<div class="wi-sumline"><span>Subtotal</span><span>${usd(quote?.subtotalUsd ?? 0)}</span></div>${save}` : ''}
+                <div class="co-total"><span>Total</span><span><em>USD</em><b>${usd(quote?.totalUsd ?? 0)}</b></span></div>`;
             $('#yapePay').textContent = `Yapear S/ ${Number(quote?.totalPen ?? 0).toFixed(2)}`;
             $('#yapeRowPrice').textContent = `S/ ${quote?.totalPen ?? ''}`;
             $('#mpPrice').textContent = quote?.totalArs ? `ARS ${Number(quote.totalArs).toLocaleString('es-AR')}` : '';
@@ -312,7 +315,7 @@
         $('#couponForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const code = $('#coupon').value.trim();
-            if (code) WI.offer.set({ type: 'coupon', code });
+            if (code) WI.offer.set({ type: 'coupon', code: code.toUpperCase() });
         });
         document.addEventListener('wi:cart', refresh);
         await refresh();
