@@ -52,3 +52,21 @@ test('un producto que no es preset con ?v=2 sigue con la página de siempre, y u
     assert.ok(!beat.html.includes('presetData'));
     assert.equal((await get('/preset/no-existe?v=2')).status, 404);
 });
+
+test('/presets/remers sirve el diseño nuevo directo (sin ?v=2), acepta el nombre corto y el slug largo, y no es para otros productos', async () => {
+    const short = await get('/presets/remers');
+    assert.equal(short.status, 200);
+    assert.match(short.html, /id="presetData">\{/);
+    assert.match(short.html, /<link rel="canonical" href="https:\/\/offszn\.lat\/presets\/remers">/);
+    assert.ok(!short.html.includes('SECRETO'));
+    assert.equal((await get('/presets/preset-de-remers')).status, 200);
+    assert.equal((await get('/presets/beat-x')).status, 404);          // no es preset
+    assert.equal((await get('/presets/no-existe')).status, 404);
+});
+
+test('/presets/remers es un preset de la tienda de Willie: se compra con su id del catálogo y no expone archivos', async () => {
+    const { html } = await get('/presets/remers');
+    const data = JSON.parse(html.match(/id="presetData">(\{.*?\})<\/script>/s)[1]);
+    assert.deepEqual([data.store, data.id, data.public_slug], [true, 'preset-remers', 'remers']);
+    assert.ok(!/bucket_key|\.fst/i.test(html), 'nunca se inyectan archivos de entrega');
+});

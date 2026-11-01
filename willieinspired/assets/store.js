@@ -383,6 +383,14 @@
     };
     addEventListener('keydown', (e) => { if (e.key === 'Escape') WI.drawer.close(); });
 
+    // Descuento por cantidad: lo calcula el servidor; aquí solo se muestra lo aplicado y lo que falta para el siguiente nivel.
+    WI.volumeHint = (q) => {
+        const v = q?.volume; if (!v) return '';
+        const applied = q.offerApplied?.type === 'volume' ? `<b>−${v.percent}% por llevar ${v.count} presets.</b> ` : '';
+        const next = v.next ? `Agrega ${v.next.add} más y ahorras <b>${v.next.percent}%</b>.` : '¡Máximo descuento aplicado!';
+        return `<div class="wi-progress">🎁 ${applied}${next}</div>`;
+    };
+
     let quoteSeq = 0;
     WI.quote = async (items = WI.cart.items(), offer = WI.offer.get()) => {
         if (!items.length) return null;
@@ -429,6 +437,8 @@
                 : `<div class="wi-progress">🎁 <b>2x1 aplicado:</b> el de menor precio va gratis.</div>`;
         } else if (offer) {
             hint = `<div class="wi-progress">🎁 <b>${WI.esc(WI.offer.label(offer))}</b></div>`;
+        } else if (q?.volume && q.volume.count > 0) {
+            hint = WI.volumeHint(q);
         }
         const offerError = q?.error ? `<div class="wi-note"><i class="bi bi-info-circle"></i><div>${WI.esc(q.error)} <button type="button" class="wi-link" data-clear-offer>Quitar oferta</button></div></div>` : '';
 

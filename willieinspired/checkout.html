@@ -178,6 +178,7 @@
             const offer = WI.offer.get();
             $('#offerNote').innerHTML = quote?.error
                 ? `<div class="wi-note"><i class="bi bi-info-circle"></i><div>${WI.esc(quote.error)}${quote.code === 'login_required' ? ` <a class="wi-link" href="${WI.auth.loginUrl()}">Iniciar sesión</a>` : ''} <button type="button" class="wi-link" data-clear-offer>Quitar oferta</button></div></div>`
+                : quote?.offerApplied?.type === 'volume' || (!offer && quote?.volume?.count > 0) ? WI.volumeHint(quote)
                 : quote?.offerApplied ? `<div class="wi-note wi-note--success"><i class="bi bi-gift"></i><div><b>${WI.esc(WI.offer.label(offer))}</b> <button type="button" class="wi-link" data-clear-offer>Quitar</button></div></div>` : '';
             const pe = cat.region?.country === 'PE';
             const save = quote?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Descuento</span><span>-US$${quote.discountUsd}</span></div>` : '';

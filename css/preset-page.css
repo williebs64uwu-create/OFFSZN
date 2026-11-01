@@ -168,3 +168,35 @@ img { display: block; max-width: 100%; }
     .announce__track { animation: none; }
     * { transition: none !important; }
 }
+
+/* ── Todo ya viene ajustado: al pasar el mouse, la tarjeta se enfoca y las demás se desenfocan ── */
+.how { margin-top: 70px; }
+.how__chip { display: inline-block; padding: 6px 12px; border-radius: 999px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.how__title { font-family: var(--display); font-weight: 400; font-size: clamp(34px, 6vw, 64px); letter-spacing: -.04em; line-height: .95; margin: 14px 0 10px; text-transform: none; }
+.how__sub { color: var(--ink-2); font-size: 15px; margin-bottom: 26px; }
+.how__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+.how__card { transition: filter .25s, opacity .25s, transform .25s; outline-offset: 6px; }
+.how__card h3 { font-size: 16px; font-weight: 800; letter-spacing: -.01em; margin-top: 14px; }
+.how__card p { font-size: 13.5px; line-height: 1.5; color: var(--ink-2); margin-top: 4px; }
+.how__art { position: relative; aspect-ratio: 4 / 3; border-radius: 20px; overflow: hidden; background: linear-gradient(145deg, #2a2a2d, #3a3a40); color: rgba(255, 255, 255, .85); display: grid; place-items: center; box-shadow: 0 10px 26px rgba(0, 0, 0, .18); }
+.how__art svg { width: 58%; }
+.how__art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; }
+.how__card--wide { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 28px; align-items: center; }
+.how__card--wide .how__art { aspect-ratio: 16 / 7; }
+.how__card--wide h3 { font-family: var(--display); font-weight: 400; font-size: 30px; letter-spacing: -.03em; margin: 0; }
+.how__card--wide p { font-size: 15px; margin-top: 8px; }
+@media (hover: hover) {
+    .how__grid:has(.how__card:hover) .how__card:not(:hover),
+    .how__grid:has(.how__card:focus-visible) .how__card:not(:focus-visible) { filter: blur(6px) saturate(.7); opacity: .55; }
+    .how__card:hover { transform: translateY(-4px); }
+}
+@media (max-width: 860px) {
+    .how { margin-top: 48px; }
+    .how__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .how__card--wide { grid-template-columns: 1fr; gap: 12px; }
+}
+@media (max-width: 520px) { .how__grid { grid-template-columns: 1fr; } }
+
+/* Aviso de descuento por cantidad (solo en la tienda de Willie) */
+.vol { grid-column: 1 / -1; margin-top: 4px; font-size: 12.5px; font-weight: 700; color: var(--on-card-2); letter-spacing: .01em; }
+.vol b { color: var(--on-card); }

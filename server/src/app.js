@@ -44,6 +44,7 @@ import cambiosRoutes from './infrastructure/http/routes/cambios.routes.js';
 import waitlistRoutes from './infrastructure/http/routes/waitlist.routes.js';
 import storeRoutes from './infrastructure/http/routes/store.routes.js';
 import { storePageFor } from './shared/store/pages.js';
+import { getProductBySlug as getStoreProductBySlug } from './shared/store/catalog.js';
 import bookingRoutes from './infrastructure/http/routes/booking.routes.js';
 import creatorApplicationRoutes from './infrastructure/http/routes/creator-application.routes.js';
 import { checkAndSendRemindersInternal } from './infrastructure/http/controllers/CalendarController.js';
@@ -1232,10 +1233,20 @@ app.get('/api/og-image/:productId', async (req, res) => {
     }
 });
 
+// Un preset de la tienda de Willie con la misma forma que usa la página nueva de preset (solo datos públicos).
+function storePresetAsPage(p) {
+    return {
+        id: p.id, name: `Preset de ${p.artist || p.title}`, public_slug: p.slug, price_basic: p.price?.base ?? 0, is_free: false,
+        image_url: p.media?.cover || null, audio_before_url: p.media?.audioBefore || null, audio_after_url: p.media?.audioAfter || null,
+        storage_version: null, r2_version: null, tags: [], description: p.description || '', product_type: 'preset', sales_count: null,
+        store: true, users: { nickname: 'Willie Inspired' }
+    };
+}
+
 // --- 3.4 PRODUCT SHORTCUT ROUTES (SEO Friendly with Dynamic OG Tags & Clean Canonicals) ---
 app.get([
     '/beat/:slug', '/kit/:slug', '/drumkit/:slug', '/loopkit/:slug',
-    '/preset/:slug', '/plantilla/:slug', '/sample/:slug',
+    '/preset/:slug', '/presets/:slug', '/plantilla/:slug', '/sample/:slug',
     '/instrumento/:slug', '/plugin/:slug', '/voces/:slug',
     '/p/:code'
 ], async (req, res, next) => {
@@ -1248,9 +1259,14 @@ app.get([
         let productId = null;
         let productSlug = slug;
 
+        // /presets/<nombre>: página nueva de preset, directa y corta (/presets/remers). El marketplace sigue en /preset/<slug>.
+        const isPresetsRoute = req.path.startsWith('/presets/');
+
         // 1. Resolve ID or Slug
         if (code) {
             productId = serverDecodeId(code);
+        } else if (isPresetsRoute) {
+            productSlug = slug.toLowerCase();
         } else if (slug) {
             const parts = slug.split('-');
             const potentialCode = parts.pop();
@@ -1259,6 +1275,15 @@ app.get([
         }
 
         // 2. Fetch Product Data
+        // /presets/<artista>: presets de la tienda de Willie (catálogo propio, compra por /willieinspired/checkout).
+        const storeP = isPresetsRoute ? getStoreProductBySlug('presets', productSlug, 'artistas') : null;
+        let product = storeP ? storePresetAsPage(storeP) : null;
+        if (product && !(product.image_url && product.audio_before_url && product.audio_after_url)) {
+            // La tienda aún no tiene portada o audio de este preset: se completa con el del marketplace (mismo nombre), sin tocar nada más.
+            const { data: mk } = await db.from('products').select('image_url, audio_before_url, audio_after_url, storage_version, r2_version, tags')
+                .neq('status', 'deleted').in('public_slug', [productSlug, `preset-de-${productSlug}`]).limit(1).maybeSingle();
+            if (mk) for (const k of ['image_url', 'audio_before_url', 'audio_after_url', 'storage_version', 'r2_version', 'tags']) if (!product[k] || (Array.isArray(product[k]) && !product[k].length)) product[k] = mk[k] ?? product[k];
+        }
         let query = db.from('products').select('*, users!products_producer_id_fkey(nickname, avatar_url)').neq('status', 'deleted');
         if (productId) {
             query = query.eq('id', productId);
@@ -1266,20 +1291,24 @@ app.get([
             query = query.eq('public_slug', productSlug);
         }
 
-        const { data: product } = await query.maybeSingle();
+        if (!product) ({ data: product } = await query.maybeSingle());
+        // En /presets el nombre corto vale: "remers" busca "remers" y, si no existe, "preset-de-remers".
+        if (isPresetsRoute && !product && !productSlug.startsWith('preset-de-')) {
+            ({ data: product } = await db.from('products').select('*, users!products_producer_id_fkey(nickname, avatar_url)').neq('status', 'deleted').eq('public_slug', `preset-de-${productSlug}`).maybeSingle());
+        }
 
         // 3. Return real 404 if product does not exist (Prevents Soft 404s in GSC)
-        if (!product) {
+        if (!product || (isPresetsRoute && String(product.product_type || '').toLowerCase() !== 'preset')) {
             return res.status(404).sendFile(path.join(rootPath, '404.html'));
         }
 
         // Diseño nuevo de preset (vista previa): solo con ?v=2 y solo para presets. Sin eso, todo sigue igual que antes.
         const presetV2Path = path.join(rootPath, 'preset.html');
-        const useV2 = req.query.v === '2' && String(product.product_type || '').toLowerCase() === 'preset' && fs.existsSync(presetV2Path);
+        const useV2 = (isPresetsRoute || req.query.v === '2') && String(product.product_type || '').toLowerCase() === 'preset' && fs.existsSync(presetV2Path);
         let html = fs.readFileSync(useV2 ? presetV2Path : productPagePath, 'utf8');
         if (useV2) {
             // Solo campos públicos: nunca los archivos de descarga.
-            const pub = ['id', 'name', 'public_slug', 'price_basic', 'is_free', 'image_url', 'audio_before_url', 'audio_after_url', 'storage_version', 'r2_version', 'tags', 'description', 'product_type', 'sales_count']
+            const pub = ['id', 'name', 'public_slug', 'price_basic', 'is_free', 'image_url', 'audio_before_url', 'audio_after_url', 'storage_version', 'r2_version', 'tags', 'description', 'product_type', 'sales_count', 'store']
                 .reduce((o, k) => { o[k] = product[k] ?? null; return o; }, {});
             const json = JSON.stringify(pub).replace(/</g, '\\u003c').replace(/\u2028|\u2029/g, '');
             html = html.replace('__PRESET_JSON__', () => json);
@@ -1296,7 +1325,9 @@ app.get([
         let image = product.image_url || 'https://offszn.lat/images/LOGO%20OFFSZN.webp';
         const version = product.storage_version || 'v2';
 
-        if (image.startsWith('http')) {
+        if (product.store && image.startsWith('/')) {
+            image = `https://offszn.lat${image}`;
+        } else if (image.startsWith('http')) {
             if (image.includes('r2.cloudflarestorage.com')) {
                 try {
                     const urlObj = new URL(image);

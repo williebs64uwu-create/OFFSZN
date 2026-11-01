@@ -63,8 +63,10 @@
 
     // ── Medios ─────────────────────────────────────────────────────────────────────
     const hasVal = (v) => !!v && v !== 'null' && v !== 'undefined';
+    let STORE = false; // preset de la tienda de Willie: archivos propios (rutas del sitio) y compra por /willieinspired/checkout
     async function mediaUrl(raw, version, productId) {
         if (!hasVal(raw)) return null;
+        if (STORE && /^(\/|https?:)/.test(raw)) return raw;
         const u = window.AuthUtils && window.AuthUtils.resolvePreviewMediaUrl ? window.AuthUtils.resolvePreviewMediaUrl(raw, version) : null;
         if (u) return u;
         try { return await window.AuthUtils.getAuthorizedUrl(raw, version, productId); } catch (_) { return null; }
@@ -145,7 +147,7 @@
             if (S.raw) S.raw.currentTime = S.pre.currentTime;
             await Promise.all([S.pre.play(), S.raw ? S.raw.play() : null]);
             setPlaying(true);
-            if (!S.playedOnce) { S.playedOnce = true; fetch(`/api/products/${S.p.id}/play`, { method: 'POST' }).catch(() => {}); }
+            if (!S.playedOnce) { S.playedOnce = true; if (!STORE) fetch(`/api/products/${S.p.id}/play`, { method: 'POST' }).catch(() => {}); }
         } catch (_) { setPlaying(false); toast('No se pudo reproducir el audio. Prueba de nuevo.'); }
     }
     function pause() { if (S.pre) S.pre.pause(); if (S.raw) S.raw.pause(); setPlaying(false); }
@@ -214,6 +216,7 @@
         const free = !!p.is_free && price === 0;
         $('#price').textContent = free ? 'Gratis' : (window.CurrencyManager && window.CurrencyManager.format ? window.CurrencyManager.format(price) : `$${price.toFixed(2)}`);
         $('#ctaText').textContent = free ? 'Descargar gratis' : 'Obtener el preset';
+        if (STORE) storePrice(p);
 
         mediaUrl(p.image_url, p.storage_version || p.r2_version, p.id).then((u) => {
             const img = $('#coverImg'); const frame = $('#coverFrame');
@@ -223,7 +226,26 @@
             img.src = u; img.alt = p.name;
         });
 
-        try { const k = `offszn_pv_${p.id}`; if (!sessionStorage.getItem(k)) { sessionStorage.setItem(k, '1'); fetch(`/api/products/${p.id}/view`, { method: 'POST' }).catch(() => {}); } } catch (_) { /* modo privado */ }
+        if (!STORE) { try { const k = `offszn_pv_${p.id}`; if (!sessionStorage.getItem(k)) { sessionStorage.setItem(k, '1'); fetch(`/api/products/${p.id}/view`, { method: 'POST' }).catch(() => {}); } } catch (_) { /* modo privado */ } }
+    }
+
+    // ── Tienda de Willie: el precio y el descuento por cantidad los pone el servidor (el navegador solo los muestra) ──
+    const money = (amount, cur) => (cur && cur !== 'USD' ? `${cur === 'PEN' ? 'S/' : cur} ${amount}` : `US$${amount}`);
+    async function storePrice(p) {
+        try {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const res = await fetch('/api/store/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{ id: p.id }], timezone: tz }) });
+            const q = await res.json();
+            if (q && q.local) $('#price').textContent = money(q.local.amount, q.local.currency);
+            const v = $('#vol'); v.hidden = false;
+            v.innerHTML = 'Lleva más y ahorra: <b>2 presets −10%</b> · <b>3 −20%</b> · <b>4 o más −25%</b>';
+        } catch (_) { /* se queda el precio de lista */ }
+    }
+    const WI_CART_KEY = 'wi_cart';
+    function addToStoreCart(id) {
+        let items = []; try { items = JSON.parse(localStorage.getItem(WI_CART_KEY) || '[]').filter((i) => i && i.id); } catch (_) { items = []; }
+        if (!items.some((i) => i.id === id)) items.push({ id, os: null });
+        try { localStorage.setItem(WI_CART_KEY, JSON.stringify(items)); } catch (_) { /* modo privado: el checkout empezará vacío */ }
     }
 
     // ── Compra (mismo flujo que la página actual) ──────────────────────────────────
@@ -262,6 +284,7 @@
         else if (url) window.open(url, '_blank');
     }
     $('#cta').onclick = async () => {
+        if (STORE) { addToStoreCart(S.p.id); location.href = '/willieinspired/checkout'; return; }
         const btn = $('#cta'); btn.disabled = true;
         try { const price = parseFloat(S.p.price_basic) || 0; await (S.p.is_free && price === 0 ? download() : buy()); }
         catch (e) { toast(e.message || 'No se pudo continuar.'); }
@@ -270,8 +293,25 @@
 
     // ── Carrusel de presets ────────────────────────────────────────────────────────
     let list = []; let idx = -1;
-    const href = (p) => `/preset/${encodeURIComponent(p.public_slug)}${PREVIEW}`;
+    const SHORT_ROUTE = location.pathname.startsWith('/presets/');
+    const href = (p) => SHORT_ROUTE
+        ? `/presets/${encodeURIComponent(p.public_slug.replace(/^preset-de-/, ''))}`
+        : `/preset/${encodeURIComponent(p.public_slug)}${PREVIEW}`;
+    async function loadStoreRail(p) {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const res = await fetch(`/api/store/catalog?tz=${encodeURIComponent(tz)}`); const cat = await res.json();
+        list = (cat.products || []).filter((x) => x.category === 'presets' && x.subcategory === 'artistas' && x.status === 'active' && ((x.media && x.media.cover) || x.id === p.id))
+            .map((x) => ({ id: x.id, name: `Preset de ${x.artist}`, public_slug: x.slug, image_url: x.id === p.id ? (p.image_url || (x.media && x.media.cover)) : x.media.cover }));
+        idx = list.findIndex((x) => x.id === p.id);
+        if (list.length < 2 || idx < 0) return;
+        const track = $('#railTrack');
+        track.innerHTML = list.map((x, i) => `<a class="rail__item ${i === idx ? 'on' : ''}" href="${esc(href(x))}" aria-label="${esc(x.name)}"${i === idx ? ' aria-current="page"' : ''}><img alt="" loading="lazy" width="96" height="96"${/^(\/|https?:)/.test(x.image_url || '') ? ` src="${esc(x.image_url)}"` : ''}><span>${esc(splitName(x.name).title.toLowerCase())}</span></a>`).join('');
+        $('#rail').hidden = false; $('#hint').hidden = false;
+        const cur = track.children[idx]; if (cur && cur.scrollIntoView) cur.scrollIntoView({ inline: 'center', block: 'nearest' });
+        $('#railPrev').onclick = () => go(-1); $('#railNext').onclick = () => go(1);
+    }
     async function loadRail(p) {
+        if (STORE) return loadStoreRail(p);
         const sb = window.supabaseClient; if (!sb) return;
         const { data } = await sb.from('products').select('id, name, public_slug, image_url, storage_version, r2_version, sales_count')
             .eq('product_type', 'preset').eq('status', 'approved').eq('visibility', 'public').not('public_slug', 'is', null)
@@ -312,9 +352,10 @@
         window.addEventListener('resize', () => { resizeWave(); fitTitle(); });
         const p = await loadProduct();
         if (!p) { location.replace('/explorar.html'); return; }
+        STORE = !!p.store;
         S.p = p; render(p); resizeWave();
         initPlayer(p).catch(() => {});
-        loadRail(p).catch(() => {});
+        loadRail(p).catch((e) => console.warn('[preset] carrusel:', e));
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitle);
     })();
 })();

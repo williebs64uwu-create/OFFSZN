@@ -75,6 +75,7 @@ function buildArtistProduct(a, defaults, audio, extra = {}) {
         },
         eligible2x1: true,
         eligibleWelcome: true,
+        eligibleVolume: true, // descuento por cantidad (2 → 10%, 3 → 20%, 4+ → 25%)
         upsells: [...defaults.upsells],
         // Solo para la entrega (nunca sale en la API pública)
         files: a.files || []

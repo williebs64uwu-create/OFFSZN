@@ -192,7 +192,7 @@ export const manualSale = async (req, res) => {
     if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e)) return fail(res, 'Correo no válido', 400);
     const country = clip(b.country, 2).toUpperCase() || null;
     const region = resolveRegion({ declaredCountry: country });
-    const quote = quoteCart({ items: (Array.isArray(b.items) ? b.items : []).slice(0, 30), getProduct, region });
+    const quote = quoteCart({ items: (Array.isArray(b.items) ? b.items : []).slice(0, 30), getProduct, region, autoVolume: false });
     if (!quote.lines.length) return fail(res, 'Elige al menos un producto vendible', 400);
 
     // Precio acordado distinto al de lista (descuento por WhatsApp): se registra tal cual.
