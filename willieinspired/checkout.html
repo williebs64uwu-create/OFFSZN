@@ -73,6 +73,7 @@
         .co-total { display:flex; justify-content:space-between; align-items:baseline; margin-top:14px; font-size:1.1rem; font-weight:700; }
         .co-total em { font-style:normal; font-size:.72rem; color:var(--subtle); margin-right:6px; font-weight:600; letter-spacing:.06em; }
         .co-total b { font-size:1.45rem; letter-spacing:-.02em; }
+        .co-coupon { background:none; color:var(--subtle); font-size:.88rem; text-decoration:underline; margin:6px 0 4px; padding:0; }
         .co-secure { margin-top:28px; text-align:center; color:var(--subtle); font-size:.78rem; }
         #paypalButtons { min-height: 50px; padding-top:10px; }
         .otp { letter-spacing: .5em; font-weight: 800; text-align: center; font-size: 1.3rem; }
@@ -89,9 +90,7 @@
 
                 <p class="co-quick">Pago rápido</p>
                 <div id="paypalButtons"><p class="wi-subtle" style="text-align:center">Cargando PayPal…</p></div>
-                <p class="wi-subtle" style="margin-top:8px;text-align:center"><i class="bi bi-shield-lock-fill" style="color:#059669"></i> PayPal o tarjeta de débito/crédito, sin crear cuenta.</p>
-                <div class="co-or"><span>O elige otro método de pago abajo</span></div>
-
+                                
                 <section class="wi-panel">
                     <div class="co-head"><h2>Contacto</h2><a id="loginLink" href="#">Iniciar sesión</a></div>
                     <label class="wi-field"><input class="wi-input" id="email" type="email" autocomplete="email" placeholder="Correo electrónico (aquí te llegan tus archivos)" required></label>
@@ -135,16 +134,13 @@
                 <h2>Resumen</h2>
                 <div id="lines"></div>
                 <div id="offerNote" style="margin:12px 0"></div>
-                <form class="wi-inline-form" id="couponForm" style="margin:12px 0">
+                <button type="button" id="couponToggle" class="co-coupon">¿Tienes un cupón?</button>
+                <form class="wi-inline-form wi-hidden" id="couponForm" style="margin:12px 0">
                     <input class="wi-input" id="coupon" placeholder="Cupón" style="min-height:44px" aria-label="Cupón">
                     <button class="wi-btn wi-btn--ghost wi-btn--sm" type="submit">Aplicar</button>
                 </form>
                 <div id="totals"></div>
-                <div class="wi-perks" style="grid-template-columns:1fr 1fr">
-                    <div class="wi-perk"><i class="bi bi-lightning-charge"></i>Entrega inmediata</div>
-                    <div class="wi-perk"><i class="bi bi-whatsapp"></i>Soporte directo</div>
-                </div>
-            </aside>
+                            </aside>
         </div>
     </main>
 
@@ -166,7 +162,7 @@
             $('#sessionNote').innerHTML = '';
             $('#loginLink').href = WI.auth.loginUrl();
         }
-        if (cat.region?.country === 'PE') { selectPay('yape'); }
+        
 
         const email = () => $('#email').value.trim().toLowerCase();
         const validEmail = () => /^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email());
@@ -216,7 +212,7 @@
             const hint = typeof WI.volumeHint === 'function' ? WI.volumeHint(quote) : '';
             $('#offerNote').innerHTML = quote?.error
                 ? `<div class="wi-note"><i class="bi bi-info-circle"></i><div>${WI.esc(quote.error)}${quote.code === 'login_required' ? ` <a class="wi-link" href="${WI.auth.loginUrl()}">Iniciar sesión</a>` : ''} <button type="button" class="wi-link" data-clear-offer>Quitar oferta</button></div></div>`
-                : quote?.offerApplied?.type === 'volume' || (!offer && quote?.volume?.count > 0) ? hint
+                : quote?.offerApplied?.type === 'volume' || (!offer && quote?.volume?.count > 0) ? ''
                 : quote?.offerApplied ? `<div class="wi-note wi-note--success"><i class="bi bi-gift"></i><div><b>${WI.esc(WI.offer.label(offer))}</b> <button type="button" class="wi-link" data-clear-offer>Quitar</button></div></div>` : '';
             const pe = cat.region?.country === 'PE';
             const pct = quote?.offerApplied?.percent ? ` (−${quote.offerApplied.percent}%)` : '';
@@ -250,6 +246,7 @@
             WI.track('upsell_click', { productId: b.dataset.pick, meta: { where: '2x1_pick' } });
         });
 
+        $('#couponToggle').addEventListener('click', () => { $('#couponToggle').classList.add('wi-hidden'); $('#couponForm').classList.remove('wi-hidden'); $('#coupon').focus(); });
         $('#couponForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const code = $('#coupon').value.trim();
