@@ -388,7 +388,11 @@
         const v = q?.volume; if (!v) return '';
         const applied = q.offerApplied?.type === 'volume' ? `<b>−${v.percent}% por llevar ${v.count} presets.</b> ` : '';
         const next = v.next ? `Agrega ${v.next.add} más y ahorras <b>${v.next.percent}%</b>.` : '¡Máximo descuento aplicado!';
-        return `<div class="wi-progress">🎁 ${applied}${next}</div>`;
+        const pct = Math.min(100, Math.round((Math.min(v.count, 4) / 4) * 100));
+        const steps = [[2, 10], [3, 20], [4, 25]].map(([n, p]) => `<span style="${v.count >= n ? 'color:var(--ink)' : ''}">${n === 4 ? '4+' : n} · −${p}%</span>`).join('');
+        return `<div class="wi-progress">🎁 ${applied}${next}
+            <div style="height:8px;border-radius:999px;background:rgba(127,127,127,.25);overflow:hidden;margin-top:8px"><i style="display:block;height:100%;width:${pct}%;background:var(--ink);border-radius:inherit"></i></div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:.72rem;font-weight:700;opacity:.8">${steps}</div></div>`;
     };
 
     let quoteSeq = 0;

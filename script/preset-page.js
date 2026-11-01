@@ -284,7 +284,7 @@
         else if (url) window.open(url, '_blank');
     }
     $('#cta').onclick = async () => {
-        if (STORE) { addToStoreCart(S.p.id); location.href = '/willieinspired/checkout'; return; }
+        if (STORE) { addToStoreCart(S.p.id); openCart(); return; }
         const btn = $('#cta'); btn.disabled = true;
         try { const price = parseFloat(S.p.price_basic) || 0; await (S.p.is_free && price === 0 ? download() : buy()); }
         catch (e) { toast(e.message || 'No se pudo continuar.'); }
@@ -338,6 +338,53 @@
         else if (e.key === 'ArrowRight') go(1);
         else if (e.code === 'Space' && S.pre && e.target === document.body) { e.preventDefault(); S.playing ? pause() : play(); }
     });
+
+    // ── Carrito lateral (comparte los productos con el de la landing: mismo wi_cart) ──
+    const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    let catCache = null; let cartSeq = 0;
+    const cartIds = () => { try { return JSON.parse(localStorage.getItem(WI_CART_KEY) || '[]').filter((i) => i && i.id); } catch (_) { return []; } };
+    const saveCartIds = (items) => { try { localStorage.setItem(WI_CART_KEY, JSON.stringify(items)); } catch (_) { /* modo privado */ } };
+    const storeOffer = () => { try { return JSON.parse(localStorage.getItem('wi_offer') || 'null'); } catch (_) { return null; } };
+    const storeCatalog = async () => { if (!catCache) catCache = await (await fetch(`/api/store/catalog?tz=${encodeURIComponent(TZ)}`)).json(); return catCache; };
+    function updateCount() { const n = cartIds().length; const b = $('#cartCount'); b.textContent = n; b.hidden = !n; }
+    function openCart() { $('#cart').classList.add('on'); $('#cart').setAttribute('aria-hidden', 'false'); $('#cartBackdrop').hidden = false; renderCart(); }
+    function closeCart() { $('#cart').classList.remove('on'); $('#cart').setAttribute('aria-hidden', 'true'); $('#cartBackdrop').hidden = true; }
+    async function renderCart() {
+        updateCount();
+        const items = cartIds(); const body = $('#cartBody'); const foot = $('#cartFoot');
+        if (!items.length) { body.innerHTML = '<div class="cart__empty">Tu carrito está vacío.<br><a href="/willieinspired/presets">Ver presets</a></div>'; foot.innerHTML = ''; return; }
+        const seq = ++cartSeq;
+        try {
+            const [cat, q] = await Promise.all([storeCatalog(), fetch('/api/store/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items, offer: storeOffer(), timezone: TZ }) }).then((r) => r.json())]);
+            if (seq !== cartSeq) return;
+            const byId = new Map((cat.products || []).map((x) => [x.id, x]));
+            body.innerHTML = items.map((it) => {
+                const x = byId.get(it.id); if (!x) return '';
+                const pr = x.pricing && x.pricing.local ? money(x.pricing.local.amount, x.pricing.local.currency) : '';
+                const cover = x.media && x.media.cover ? `<img src="${esc(x.media.cover)}" alt="" width="56" height="56">` : '<img alt="" width="56" height="56">';
+                return `<div class="cart__line">${cover}<div><b>${esc(x.title)}</b><small>${esc(x.format || 'Preset')}</small></div><div>${esc(pr)}<button type="button" class="rm" data-rm="${esc(x.id)}">Quitar</button></div></div>`;
+            }).join('');
+            // Descuento por cantidad: lo calcula el servidor; aquí solo se muestra el avance
+            const v = q.volume || { count: 0, percent: 0, next: null };
+            const tiers = [[2, 10], [3, 20], [4, 25]];
+            const msg = v.next ? `Agrega <b>${v.next.add} más</b> y ahorras <b>${v.next.percent}%</b>.` : '<b>¡Máximo descuento aplicado!</b>';
+            const head = q.offerApplied && q.offerApplied.type === 'volume' ? `<b>−${v.percent}% por llevar ${v.count} presets.</b> ` : '';
+            const tier = (v.count > 0 || v.next) && !(q.offerApplied && q.offerApplied.type !== 'volume')
+                ? `<div class="cart__tier">${head}${msg}<div class="cart__bar"><i style="width:${Math.min(100, (Math.min(v.count, 4) / 4) * 100)}%"></i></div><div class="cart__steps">${tiers.map(([n, p]) => `<span class="${v.count >= n ? 'ok' : ''}">${n === 4 ? '4+' : n} · −${p}%</span>`).join('')}</div></div>` : '';
+            body.insertAdjacentHTML('afterbegin', tier);
+            const pe = q.local && q.local.currency !== 'USD';
+            foot.innerHTML = `${q.discountUsd > 0 && !pe ? `<div class="cart__row"><span>Subtotal</span><span>US$${q.subtotalUsd}</span></div><div class="cart__row save"><span>Ahorras</span><span>−US$${q.discountUsd}</span></div>` : ''}
+                ${q.discountUsd > 0 && pe ? `<div class="cart__row save"><span>Descuento</span><span>${q.offerApplied && q.offerApplied.percent ? `−${q.offerApplied.percent}%` : `−US$${q.discountUsd}`}</span></div>` : ''}
+                <div class="cart__row total"><span>Total</span><span>${esc(q.local ? money(q.local.amount, q.local.currency) : `US$${q.totalUsd}`)}</span></div>
+                <a class="cart__pay" href="/willieinspired/checkout">Ir a pagar →</a>
+                <p class="cart__note">Entrega inmediata · Pago seguro</p>`;
+        } catch (_) { body.innerHTML = '<div class="cart__empty">No pude cargar el carrito. Intenta de nuevo.</div>'; }
+    }
+    $('#cartBtn').onclick = openCart; $('#cartClose').onclick = closeCart; $('#cartBackdrop').onclick = closeCart;
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCart(); });
+    $('#cartBody').addEventListener('click', (e) => { const b = e.target.closest('[data-rm]'); if (!b) return; saveCartIds(cartIds().filter((i) => i.id !== b.dataset.rm)); renderCart(); });
+    window.addEventListener('storage', (e) => { if (e.key === WI_CART_KEY) renderCart(); });
+    updateCount();
 
     // ── Arranque ───────────────────────────────────────────────────────────────────
     async function loadProduct() {

@@ -183,7 +183,8 @@
             const pe = cat.region?.country === 'PE';
             const save = quote?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Descuento</span><span>-US$${quote.discountUsd}</span></div>` : '';
             const usdNote = pe ? `<p class="wi-subtle" style="text-align:right">Con PayPal o tarjeta pagas <b>US$${quote?.totalUsd ?? '—'}</b>. Con Yape pagas <b>S/ ${quote?.totalPen ?? '—'}</b>.</p>` : '';
-            $('#totals').innerHTML = `${pe ? '' : `<div class="wi-sumline"><span>Subtotal</span><span>US$${quote?.subtotalUsd ?? 0}</span></div>${save}`}
+            const savePe = quote?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Descuento</span><span>${quote.offerApplied?.percent ? `−${quote.offerApplied.percent}%` : `−US$${quote.discountUsd}`}</span></div>` : '';
+            $('#totals').innerHTML = `${pe ? savePe : `<div class="wi-sumline"><span>Subtotal</span><span>US$${quote?.subtotalUsd ?? 0}</span></div>${save}`}
                 <div class="wi-sumline wi-sumline--total"><span>Total</span><span>${WI.quoteMoney(quote)}</span></div>${usdNote}`;
             $('#yapePay').textContent = `Pagar S/ ${quote?.totalPen ?? ''} con Yape`;
             $('#waOther').href = WI.wa(`Hola Willie! Quiero pagar con otro método:\n${(quote?.lines || []).map((l) => `• ${l.title}`).join('\n')}\nTotal: US$${quote?.totalUsd}\nMi correo: ${email()}`);

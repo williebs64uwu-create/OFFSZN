@@ -41,6 +41,7 @@ img { display: block; max-width: 100%; }
 
 /* ── Cabecera ────────────────────────────────────────────────────────────────── */
 .topbar { max-width: var(--maxw); margin: 0 auto; padding: 18px 20px 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+.brand { font-family: var(--display); font-size: 21px; letter-spacing: -.04em; text-transform: uppercase; white-space: nowrap; }
 .brand img { height: 38px; width: auto; }
 .pill-nav { display: flex; gap: 2px; padding: 5px; border-radius: 999px; background: rgba(255, 255, 255, .6); box-shadow: 0 6px 24px rgba(0, 0, 0, .06), inset 0 0 0 1px rgba(0, 0, 0, .04); backdrop-filter: blur(8px); }
 .pill-nav a { padding: 10px 18px; border-radius: 999px; font-size: 12.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); transition: background .15s, color .15s; }
@@ -200,3 +201,31 @@ img { display: block; max-width: 100%; }
 /* Aviso de descuento por cantidad (solo en la tienda de Willie) */
 .vol { grid-column: 1 / -1; margin-top: 4px; font-size: 12.5px; font-weight: 700; color: var(--on-card-2); letter-spacing: .01em; }
 .vol b { color: var(--on-card); }
+
+/* ── Carrito lateral (mismo carrito de la tienda: comparte los productos con la landing) ── */
+.icon-btn { position: relative; }
+.cart-count { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 11px; font-weight: 800; display: grid; place-items: center; }
+.backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, .42); backdrop-filter: blur(2px); z-index: 60; }
+.cart { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100vw); background: #fbfbfa; z-index: 61; display: flex; flex-direction: column; transform: translateX(105%); transition: transform .28s ease; box-shadow: -18px 0 50px rgba(0, 0, 0, .22); }
+.cart.on { transform: none; }
+.cart__head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--line); font-size: 17px; }
+.cart__body { flex: 1; overflow-y: auto; padding: 16px 20px; display: grid; gap: 12px; align-content: start; }
+.cart__foot { padding: 16px 20px 20px; border-top: 1px solid var(--line); display: grid; gap: 8px; background: #fff; }
+.cart__empty { text-align: center; padding: 48px 0; color: var(--ink-2); }
+.cart__empty a { display: inline-block; margin-top: 12px; font-weight: 800; text-decoration: underline; color: var(--ink); }
+.cart__line { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.cart__line img { width: 56px; height: 56px; border-radius: 12px; object-fit: cover; background: #1b1b1d; }
+.cart__line b { display: block; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cart__line small { color: var(--ink-2); font-size: 12px; }
+.cart__line s { color: #8c8d92; font-size: 12px; margin-right: 4px; }
+.cart__line .rm { display: block; margin-top: 2px; font-size: 12px; color: var(--ink-2); text-decoration: underline; text-align: right; width: 100%; }
+.cart__tier { padding: 12px 14px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 1px var(--line); font-size: 13px; line-height: 1.45; }
+.cart__bar { height: 8px; border-radius: 999px; background: rgba(0, 0, 0, .08); overflow: hidden; margin-top: 8px; }
+.cart__bar i { display: block; height: 100%; background: var(--ink); border-radius: inherit; transition: width .3s; }
+.cart__steps { display: flex; justify-content: space-between; margin-top: 6px; font-size: 11px; font-weight: 700; color: var(--ink-2); }
+.cart__steps .ok { color: var(--ink); }
+.cart__row { display: flex; justify-content: space-between; font-size: 14px; }
+.cart__row.save { color: #067647; font-weight: 700; }
+.cart__row.total { font-size: 18px; font-weight: 800; padding-top: 8px; border-top: 1px solid var(--line); }
+.cart__pay { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 6px; padding: 15px; border-radius: 999px; background: var(--ink); color: #fff; font-weight: 800; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; }
+.cart__note { text-align: center; font-size: 12px; color: var(--ink-2); }
