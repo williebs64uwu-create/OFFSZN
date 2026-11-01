@@ -10,42 +10,60 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="/willieinspired/assets/store.css">
+    <link rel="stylesheet" href="/willieinspired/assets/store.css?v=3">
     <style>
-        /* Checkout claro tipo Stripe: siempre blanco, una columna de datos y un resumen a la derecha */
+        /* Checkout claro tipo Shopify/Stripe: menú siempre visible, datos a la izquierda y resumen gris a la derecha */
         body.co-page { --bg:#fff; --surface:#fff; --surface-2:#fafafa; --ink:#0f172a; --muted:#475569; --subtle:#64748b; --line:#e5e7eb; --line-strong:#cbd5e1; --header-bg:#fff; --soft:#f1f5f9; --on-ink:#fff; --noise:none; --ph-a:#f1f5f9; --ph-b:#e2e8f0; --radius:10px; --radius-sm:8px; --shadow:none; color-scheme:light; background:#fff; }
-        .co-page .wi-announce, .co-page .wi-nav, .co-page .wi-burger, .co-page .wi-theme, .co-page [aria-label="Mi perfil"] { display:none !important; }
+        @media (min-width: 900px) { body.co-page { background: linear-gradient(to right, #fff 50%, #f5f5f5 50%); } }
         .co-page .wi-header { border-bottom:1px solid var(--line); background:#fff; backdrop-filter:none; }
-        .co-page .wi-header__inner { position:relative; justify-content:space-between; max-width:1040px; }
-        .co-page .wi-brand { position:absolute; left:50%; transform:translateX(-50%); font-size:1.05rem; }
-        .co-back { color:var(--subtle); font-size:.9rem; font-weight:600; }
         .co { display:grid; gap:0; padding:0; max-width:1040px; margin:0 auto; }
-        @media (min-width: 900px) { .co { grid-template-columns: 1fr 0.9fr; } .co__summary { position:sticky; top:0; align-self:start; min-height:calc(100vh - 64px); } }
-        .co__main { padding:36px 0 56px; }
-        @media (min-width: 900px) { .co__main { padding-right:56px; } }
-        .co h1 { font-size:1.5rem; font-weight:800; letter-spacing:-.02em; margin:0 0 22px; }
-        .co h2 { font-size:1rem; font-weight:700; margin:28px 0 10px; display:flex; align-items:center; gap:8px; }
+        @media (min-width: 900px) { .co { grid-template-columns: 1fr 1fr; } .co__summary { position:sticky; top:0; align-self:start; min-height:calc(100vh - 64px); } }
+        .co__main { padding:32px 0 56px; }
+        @media (min-width: 900px) { .co__main { padding-right:48px; } }
+        .co-back { color:var(--subtle); font-size:.9rem; font-weight:600; }
+        .co h1 { font-size:1.5rem; font-weight:800; letter-spacing:-.02em; margin:14px 0 6px; }
+        .co h2 { font-size:1rem; font-weight:700; margin:24px 0 10px; display:flex; align-items:center; gap:8px; }
         .co .wi-panel { background:none; border:0; box-shadow:none; padding:0; border-radius:0; }
-        .co .wi-panel + .wi-panel { margin-top:0; }
-        .co .wi-input { border-radius:8px; min-height:44px; border:1px solid var(--line-strong); background:#fff; }
+        .co .wi-input { border-radius:8px; min-height:46px; border:1px solid var(--line-strong); background:#fff; }
         .co .wi-input:focus { outline:2px solid rgba(99,91,255,.35); border-color:#635bff; }
-        .co__summary { background:#fafafa; border:0; border-left:1px solid var(--line); border-radius:0 !important; padding:36px 0 56px 40px !important; }
-        @media (max-width: 899px) { .co__summary { order:-1; border-left:0; border-bottom:1px solid var(--line); padding:20px var(--gutter) !important; min-height:0; } .co__main { padding:24px var(--gutter) 48px; } }
+        .co__summary { background:#f5f5f5; border:0; border-radius:0 !important; padding:32px 0 56px 40px !important; }
+        @media (max-width: 899px) { .co__summary { order:-1; border-bottom:1px solid var(--line); padding:20px var(--gutter) !important; min-height:0; } .co__main { padding:20px var(--gutter) 48px; } }
         .co__summary h2 { margin-top:0; }
+        /* Métodos de pago en lista: el elegido se abre dentro de la misma caja */
+        .pm-list { border:1px solid var(--line-strong); border-radius:10px; overflow:hidden; background:#fff; }
+        .pm { border-top:1px solid var(--line); }
+        .pm:first-child { border-top:0; }
+        .pm__head { width:100%; display:flex; align-items:center; gap:12px; padding:15px 16px; background:#fff; text-align:left; font-weight:600; font-size:.95rem; color:var(--ink); }
+        .pm__radio { flex:none; width:18px; height:18px; border-radius:50%; border:1.5px solid var(--line-strong); display:grid; place-items:center; }
+        .pm.is-active { box-shadow: inset 0 0 0 2px var(--ink); border-radius:8px; border-top-color:transparent; }
+        .pm.is-active .pm__radio { border-color:var(--ink); }
+        .pm.is-active .pm__radio::after { content:''; width:9px; height:9px; border-radius:50%; background:var(--ink); }
+        .pm__tags { margin-left:auto; display:flex; gap:6px; align-items:center; font-size:.7rem; font-weight:800; color:var(--subtle); letter-spacing:.04em; }
+        .pm__tags span { border:1px solid var(--line); border-radius:5px; padding:3px 6px; background:#fff; }
+        .pm__body { padding:6px 16px 18px; background:#fafafa; border-top:1px solid var(--line); }
         .pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; max-height: 420px; overflow-y: auto; padding: 2px; }
         .pick button { text-align: left; background: #fff; border: 1px solid var(--line-strong); border-radius: 8px; padding: 8px; display: grid; gap: 6px; transition: border-color .2s; }
         .pick button:hover { border-color: #635bff; }
         .pick img, .pick .wi-ph { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 6px; }
         .pick .wi-ph span, .pick .wi-ph i { display: none; }
         .pick b { font-size: .8rem; line-height: 1.2; }
-        .pay-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
-        .co .pay-tabs .wi-chip { border-radius:8px; background:#fff; border:1px solid var(--line-strong); color:var(--ink); }
-        .co .pay-tabs .wi-chip.is-active { border-color:#635bff; box-shadow:0 0 0 1px #635bff; background:#fff; color:var(--ink); }
+        /* Resumen */
+        .co-line { display:grid; grid-template-columns: 64px minmax(0,1fr) auto; gap:14px; align-items:center; padding:10px 0; }
+        .co-thumb { position:relative; width:64px; height:64px; }
+        .co-thumb img, .co-thumb .wi-ph { width:64px; height:64px; border-radius:10px; object-fit:cover; padding:0; border:1px solid var(--line); background:#fff; }
+        .co-thumb .wi-ph span, .co-thumb .wi-ph i { display:none; }
+        .co-qty { position:absolute; top:-8px; right:-8px; min-width:22px; height:22px; border-radius:999px; background:#0f172a; color:#fff; font-size:.72rem; font-weight:700; display:grid; place-items:center; }
+        .co-line__t b { display:block; font-size:.95rem; }
+        .co-line__t small { color:var(--subtle); font-size:.8rem; }
+        .co-line__p { text-align:right; font-weight:700; font-size:.95rem; }
+        .co-line__p s { color:var(--subtle); font-weight:500; margin-right:4px; font-size:.82rem; }
+        .co-remove { display:block; margin-left:auto; font-size:.76rem; color:var(--subtle); text-decoration:underline; font-weight:500; background:none; }
         .co .wi-sumline { font-size:.92rem; }
-        .co .wi-sumline--total { font-size:1.1rem; border-top:1px solid var(--line); padding-top:12px; margin-top:8px; }
-        .co .wi-cart-line__title { font-weight:700; }
+        .co-total { display:flex; justify-content:space-between; align-items:baseline; margin-top:14px; font-size:1.1rem; font-weight:700; }
+        .co-total em { font-style:normal; font-size:.72rem; color:var(--subtle); margin-right:6px; font-weight:600; letter-spacing:.06em; }
+        .co-total b { font-size:1.45rem; letter-spacing:-.02em; }
         .co-secure { margin-top:28px; text-align:center; color:var(--subtle); font-size:.78rem; }
-        #paypalButtons { min-height: 50px; }
+        #paypalButtons { min-height: 50px; padding-top:10px; }
         .otp { letter-spacing: .5em; font-weight: 800; text-align: center; font-size: 1.3rem; }
     </style>
 </head>
@@ -73,26 +91,32 @@
 
                 <section class="wi-panel">
                     <h2>Método de pago</h2>
-                    <div class="pay-tabs" id="payTabs">
-                        <button type="button" class="wi-chip is-active" data-pay="paypal"><i class="bi bi-paypal"></i> PayPal / tarjeta</button>
-                        <button type="button" class="wi-chip" data-pay="yape" id="yapeTab">Yape (Perú)</button>
-                        <button type="button" class="wi-chip" data-pay="otro">Otro método</button>
-                    </div>
-                    <div data-paypane="paypal">
-                        <div id="paypalButtons"><p class="wi-subtle">Cargando PayPal…</p></div>
-                        <p class="wi-subtle" style="margin-top:8px"><i class="bi bi-shield-lock-fill" style="color:#059669"></i> Pagas con PayPal o con tarjeta de débito/crédito sin crear cuenta.</p>
-                    </div>
-                    <div data-paypane="yape" class="wi-hidden">
-                        <div class="wi-stack">
-                            <label class="wi-field"><span>Celular Yape</span><input class="wi-input" id="yapePhone" type="tel" inputmode="numeric" maxlength="9" placeholder="9XXXXXXXX"></label>
-                            <label class="wi-field"><span>Código de aprobación (app Yape → Código de aprobación)</span><input class="wi-input otp" id="yapeOtp" type="tel" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="one-time-code"></label>
-                            <button type="button" class="wi-btn wi-btn--dark wi-btn--block wi-btn--lg" id="yapePay" style="background:#742284">Pagar con Yape</button>
-                            <p class="wi-form-msg" id="yapeMsg"></p>
+                    <div class="pm-list" id="payTabs">
+                        <div class="pm is-active" data-pm="paypal">
+                            <button type="button" class="pm__head" data-pay="paypal"><span class="pm__radio"></span> PayPal / tarjeta <span class="pm__tags"><span>VISA</span><span>MC</span><span>AMEX</span></span></button>
+                            <div class="pm__body" data-paypane="paypal">
+                                <div id="paypalButtons"><p class="wi-subtle">Cargando PayPal…</p></div>
+                                <p class="wi-subtle" style="margin-top:8px"><i class="bi bi-shield-lock-fill" style="color:#059669"></i> Pagas con PayPal o con tarjeta de débito/crédito sin crear cuenta.</p>
+                            </div>
                         </div>
-                    </div>
-                    <div data-paypane="otro" class="wi-hidden">
-                        <p class="wi-muted" style="margin-bottom:12px">¿No puedes pagar con PayPal, tarjeta ni Yape? Escríbeme y vemos otro método (transferencia, Plin, Mercado Pago, Binance…).</p>
-                        <a class="wi-btn wi-btn--whatsapp wi-btn--block" id="waOther" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Pagar con otro método</a>
+                        <div class="pm" data-pm="yape">
+                            <button type="button" class="pm__head" data-pay="yape" id="yapeTab"><span class="pm__radio"></span> Yape (Perú) <span class="pm__tags"><span>S/</span></span></button>
+                            <div class="pm__body wi-hidden" data-paypane="yape">
+                                <div class="wi-stack">
+                                    <label class="wi-field"><span>Celular Yape</span><input class="wi-input" id="yapePhone" type="tel" inputmode="numeric" maxlength="9" placeholder="9XXXXXXXX"></label>
+                                    <label class="wi-field"><span>Código de aprobación (app Yape → Código de aprobación)</span><input class="wi-input otp" id="yapeOtp" type="tel" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="one-time-code"></label>
+                                    <button type="button" class="wi-btn wi-btn--dark wi-btn--block wi-btn--lg" id="yapePay" style="background:#742284">Pagar con Yape</button>
+                                    <p class="wi-form-msg" id="yapeMsg"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pm" data-pm="otro">
+                            <button type="button" class="pm__head" data-pay="otro"><span class="pm__radio"></span> Otro método <span class="pm__tags"><span>Transferencia · Plin · Binance</span></span></button>
+                            <div class="pm__body wi-hidden" data-paypane="otro">
+                                <p class="wi-muted" style="margin-bottom:12px">¿No puedes pagar con PayPal, tarjeta ni Yape? Escríbeme y vemos otro método (transferencia, Plin, Mercado Pago, Binance…).</p>
+                                <a class="wi-btn wi-btn--whatsapp wi-btn--block" id="waOther" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Pagar con otro método</a>
+                            </div>
+                        </div>
                     </div>
                 </section>
                 <p class="co-secure"><i class="bi bi-lock-fill"></i> Todas las transacciones están protegidas y cifradas</p>
@@ -116,7 +140,7 @@
     </main>
 
     <script src="https://sdk.mercadopago.com/js/v2" async></script>
-    <script src="/willieinspired/assets/store.js"></script>
+    <script src="/willieinspired/assets/store.js?v=3"></script>
     <script>
     (async () => {
         const cat = await WI.init({ active: '', announce: false, footer: false });
@@ -149,7 +173,7 @@
         if (validEmail()) saveCartForEmail();
 
         function selectPay(kind) {
-            WI.$$('#payTabs [data-pay]').forEach((b) => b.classList.toggle('is-active', b.dataset.pay === kind));
+            WI.$$('#payTabs [data-pm]').forEach((b) => b.classList.toggle('is-active', b.dataset.pm === kind));
             WI.$$('[data-paypane]').forEach((p) => p.classList.toggle('wi-hidden', p.dataset.paypane !== kind));
         }
         $('#payTabs').addEventListener('click', (e) => { const b = e.target.closest('[data-pay]'); if (b) selectPay(b.dataset.pay); });
@@ -170,22 +194,25 @@
                 if (!p) return '';
                 const l = lineById.get(it.id);
                 const os = l?.os ? ` · ${l.os === 'mac' ? 'Mac' : 'Windows'}` : '';
-                return `<div class="wi-cart-line">${WI.img(p.media?.cover, WI.coverLabel(p))}
-                    <div><div class="wi-cart-line__title">${WI.esc(p.title)}</div><div class="wi-cart-line__meta">${WI.esc(p.format || p.category)}${os}</div></div>
-                    <div class="wi-cart-line__price">${l?.free ? '<span class="wi-badge wi-badge--success">GRATIS</span>' : WI.priceHtml(p.pricing)}<br><button type="button" class="wi-cart-line__remove" data-remove="${p.id}">Quitar</button></div></div>`;
+                const unit = l ? l.unitUsd : p.pricing.usd;
+                const cell = l?.free ? '<span class="wi-badge wi-badge--success">GRATIS</span>' : (l && l.lineUsd < l.unitUsd ? `<s>${WI.fmt(l.unitUsd)}</s>${WI.fmt(l.lineUsd)}` : WI.fmt(unit));
+                return `<div class="co-line"><div class="co-thumb">${WI.img(p.media?.cover, WI.coverLabel(p))}<span class="co-qty">1</span></div>
+                    <div class="co-line__t"><b>${WI.esc(p.title)}</b><small>${WI.esc(p.format || p.category)}${os}</small></div>
+                    <div class="co-line__p">${cell}<button type="button" class="co-remove" data-remove="${p.id}">Quitar</button></div></div>`;
             }).join('');
 
             const offer = WI.offer.get();
+            const hint = typeof WI.volumeHint === 'function' ? WI.volumeHint(quote) : '';
             $('#offerNote').innerHTML = quote?.error
                 ? `<div class="wi-note"><i class="bi bi-info-circle"></i><div>${WI.esc(quote.error)}${quote.code === 'login_required' ? ` <a class="wi-link" href="${WI.auth.loginUrl()}">Iniciar sesión</a>` : ''} <button type="button" class="wi-link" data-clear-offer>Quitar oferta</button></div></div>`
-                : quote?.offerApplied?.type === 'volume' || (!offer && quote?.volume?.count > 0) ? WI.volumeHint(quote)
+                : quote?.offerApplied?.type === 'volume' || (!offer && quote?.volume?.count > 0) ? hint
                 : quote?.offerApplied ? `<div class="wi-note wi-note--success"><i class="bi bi-gift"></i><div><b>${WI.esc(WI.offer.label(offer))}</b> <button type="button" class="wi-link" data-clear-offer>Quitar</button></div></div>` : '';
             const pe = cat.region?.country === 'PE';
-            const save = quote?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Descuento</span><span>-US$${quote.discountUsd}</span></div>` : '';
-            const usdNote = pe ? `<p class="wi-subtle" style="text-align:right">Con PayPal o tarjeta pagas <b>US$${quote?.totalUsd ?? '—'}</b>. Con Yape pagas <b>S/ ${quote?.totalPen ?? '—'}</b>.</p>` : '';
-            const savePe = quote?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Descuento</span><span>${quote.offerApplied?.percent ? `−${quote.offerApplied.percent}%` : `−US$${quote.discountUsd}`}</span></div>` : '';
-            $('#totals').innerHTML = `${pe ? savePe : `<div class="wi-sumline"><span>Subtotal</span><span>US$${quote?.subtotalUsd ?? 0}</span></div>${save}`}
-                <div class="wi-sumline wi-sumline--total"><span>Total</span><span>${WI.quoteMoney(quote)}</span></div>${usdNote}`;
+            const pct = quote?.offerApplied?.percent ? ` (−${quote.offerApplied.percent}%)` : '';
+            const save = quote?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Descuento${pct}</span><span>−${WI.fmt(quote.discountUsd)}</span></div>` : '';
+            const yapeNote = pe ? `<p class="wi-subtle" style="text-align:right;margin-top:6px">Con Yape pagas <b>S/ ${quote?.totalPen ?? '—'}</b>.</p>` : '';
+            $('#totals').innerHTML = `<div class="wi-sumline"><span>Subtotal · ${items.length} ${items.length === 1 ? 'producto' : 'productos'}</span><span>${WI.fmt(quote?.subtotalUsd ?? 0)}</span></div>${save}
+                <div class="co-total"><span>Total</span><span><em>USD</em><b>${WI.fmt(quote?.totalUsd ?? 0)}</b></span></div>${yapeNote}`;
             $('#yapePay').textContent = `Pagar S/ ${quote?.totalPen ?? ''} con Yape`;
             $('#waOther').href = WI.wa(`Hola Willie! Quiero pagar con otro método:\n${(quote?.lines || []).map((l) => `• ${l.title}`).join('\n')}\nTotal: US$${quote?.totalUsd}\nMi correo: ${email()}`);
             renderPicker();

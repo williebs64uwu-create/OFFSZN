@@ -236,7 +236,7 @@
             const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const res = await fetch('/api/store/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{ id: p.id }], timezone: tz }) });
             const q = await res.json();
-            if (q && q.local) $('#price').textContent = money(q.local.amount, q.local.currency);
+            if (q && q.totalUsd) $('#price').textContent = `US$${q.totalUsd}`;
             const v = $('#vol'); v.hidden = false;
             v.innerHTML = 'Lleva más y ahorra: <b>2 presets −10%</b> · <b>3 −20%</b> · <b>4 o más −25%</b>';
         } catch (_) { /* se queda el precio de lista */ }
@@ -360,7 +360,7 @@
             const byId = new Map((cat.products || []).map((x) => [x.id, x]));
             body.innerHTML = items.map((it) => {
                 const x = byId.get(it.id); if (!x) return '';
-                const pr = x.pricing && x.pricing.local ? money(x.pricing.local.amount, x.pricing.local.currency) : '';
+                const pr = x.pricing && x.pricing.usd ? `US$${x.pricing.usd}` : '';
                 const cover = x.media && x.media.cover ? `<img src="${esc(x.media.cover)}" alt="" width="56" height="56">` : '<img alt="" width="56" height="56">';
                 return `<div class="cart__line">${cover}<div><b>${esc(x.title)}</b><small>${esc(x.format || 'Preset')}</small></div><div>${esc(pr)}<button type="button" class="rm" data-rm="${esc(x.id)}">Quitar</button></div></div>`;
             }).join('');
@@ -372,17 +372,61 @@
             const tier = (v.count > 0 || v.next) && !(q.offerApplied && q.offerApplied.type !== 'volume')
                 ? `<div class="cart__tier">${head}${msg}<div class="cart__bar"><i style="width:${Math.min(100, (Math.min(v.count, 4) / 4) * 100)}%"></i></div><div class="cart__steps">${tiers.map(([n, p]) => `<span class="${v.count >= n ? 'ok' : ''}">${n === 4 ? '4+' : n} · −${p}%</span>`).join('')}</div></div>` : '';
             body.insertAdjacentHTML('afterbegin', tier);
-            const pe = q.local && q.local.currency !== 'USD';
-            foot.innerHTML = `${q.discountUsd > 0 && !pe ? `<div class="cart__row"><span>Subtotal</span><span>US$${q.subtotalUsd}</span></div><div class="cart__row save"><span>Ahorras</span><span>−US$${q.discountUsd}</span></div>` : ''}
-                ${q.discountUsd > 0 && pe ? `<div class="cart__row save"><span>Descuento</span><span>${q.offerApplied && q.offerApplied.percent ? `−${q.offerApplied.percent}%` : `−US$${q.discountUsd}`}</span></div>` : ''}
-                <div class="cart__row total"><span>Total</span><span>${esc(q.local ? money(q.local.amount, q.local.currency) : `US$${q.totalUsd}`)}</span></div>
+            // Recomendados: primero los de este producto (lo que ya sugería la tienda); si falta, presets para completar el descuento
+            const inCart = new Set(items.map((i) => i.id));
+            const first = byId.get(items[0].id);
+            const pool = [];
+            const add = (x) => { if (x && x.status === 'active' && !inCart.has(x.id) && !pool.some((y) => y.id === x.id) && x.pricing && x.pricing.usd > 0 && x.kind !== 'bundle') pool.push(x); };
+            const presets = (cat.products || []).filter((x) => x.category === 'presets' && x.subcategory === 'artistas' && x.media && x.media.cover);
+            if (v.next) presets.slice(0, 40).forEach(add); // para subir de nivel, primero otros presets
+            ((first && first.upsells) || []).forEach((id) => add(byId.get(id)));
+            const sug = pool.slice(0, 3);
+            if (sug.length) {
+                body.insertAdjacentHTML('beforeend', `<div class="cart__sug"><h4>${v.next ? 'Completa tu descuento' : 'Combínalo con'}</h4>${sug.map((x) => `<div class="cart__line">${x.media && x.media.cover ? `<img src="${esc(x.media.cover)}" alt="" width="56" height="56">` : '<img alt="" width="56" height="56">'}<div><b>${esc(x.title)}</b><small>US$${x.pricing.usd}</small></div><button type="button" class="cart__add" data-add="${esc(x.id)}">Añadir</button></div>`).join('')}</div>`);
+            }
+            const peCountry = (cat.region && cat.region.country) === 'PE';
+            foot.innerHTML = `${q.discountUsd > 0 ? `<div class="cart__row"><span>Subtotal</span><span>US$${q.subtotalUsd}</span></div><div class="cart__row save"><span>Descuento${q.offerApplied && q.offerApplied.percent ? ` (−${q.offerApplied.percent}%)` : ''}</span><span>−US$${q.discountUsd}</span></div>` : ''}
+                <div class="cart__row total"><span>Total</span><span>US$${q.totalUsd}</span></div>
+                ${peCountry ? `<p class="cart__note">Con Yape pagas S/ ${q.totalPen}</p>` : ''}
                 <a class="cart__pay" href="/willieinspired/checkout">Ir a pagar →</a>
                 <p class="cart__note">Entrega inmediata · Pago seguro</p>`;
         } catch (_) { body.innerHTML = '<div class="cart__empty">No pude cargar el carrito. Intenta de nuevo.</div>'; }
     }
     $('#cartBtn').onclick = openCart; $('#cartClose').onclick = closeCart; $('#cartBackdrop').onclick = closeCart;
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCart(); });
-    $('#cartBody').addEventListener('click', (e) => { const b = e.target.closest('[data-rm]'); if (!b) return; saveCartIds(cartIds().filter((i) => i.id !== b.dataset.rm)); renderCart(); });
+    $('#cartBody').addEventListener('click', (e) => {
+        const b = e.target.closest('[data-rm]');
+        if (b) { saveCartIds(cartIds().filter((i) => i.id !== b.dataset.rm)); renderCart(); return; }
+        const a = e.target.closest('[data-add]');
+        if (a) { addToStoreCart(a.dataset.add); renderCart(); }
+    });
+
+    // ── Buscador del menú: artistas de la tienda, se filtra al escribir ──
+    let searchList = [];
+    async function loadSearch() {
+        if (searchList.length) return;
+        const cat = await storeCatalog();
+        searchList = (cat.products || []).filter((x) => x.category === 'presets' && x.subcategory === 'artistas' && x.status === 'active')
+            .map((x) => ({ slug: x.slug, name: x.artist || x.title, cover: x.media && x.media.cover }));
+    }
+    function paintSearch() {
+        const q = $('#searchInput').value.trim().toLowerCase();
+        const rows = searchList.filter((x) => !q || x.name.toLowerCase().includes(q)).slice(0, 12);
+        $('#searchLabel').textContent = q ? `${rows.length} resultado${rows.length === 1 ? '' : 's'}` : 'Presets';
+        $('#searchList').innerHTML = rows.length
+            ? rows.map((x) => `<a class="search__item" href="/presets/${encodeURIComponent(x.slug)}">${x.cover ? `<img src="${esc(x.cover)}" alt="" width="42" height="42">` : '<img alt="" width="42" height="42">'}<span>${esc(x.name)}</span><em>→</em></a>`).join('')
+            : '<p class="search__empty">No encontré ese artista. Escríbele a Willie por WhatsApp y lo armamos.</p>';
+    }
+    function toggleSearch(open) {
+        const box = $('#search'); const show = open === undefined ? box.hidden : open;
+        box.hidden = !show; $('#searchBtn').setAttribute('aria-expanded', String(show));
+        if (show) { loadSearch().then(paintSearch).catch(() => {}); setTimeout(() => $('#searchInput').focus(), 30); }
+    }
+    $('#searchBtn').onclick = (e) => { e.stopPropagation(); toggleSearch(); };
+    $('#searchInput').addEventListener('input', paintSearch);
+    $('#searchInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { const a = $('#searchList a'); if (a) location.href = a.getAttribute('href'); } e.stopPropagation(); });
+    document.addEventListener('click', (e) => { if (!$('#search').hidden && !e.target.closest('#search')) toggleSearch(false); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleSearch(false); });
     window.addEventListener('storage', (e) => { if (e.key === WI_CART_KEY) renderCart(); });
     updateCount();
 
