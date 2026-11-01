@@ -22,7 +22,8 @@
     const readTheme = () => { try { return localStorage.getItem('wi_theme'); } catch (_) { return null; } };
     const systemDark = () => { try { return matchMedia('(prefers-color-scheme: dark)').matches; } catch (_) { return false; } };
     const applyTheme = (t) => document.documentElement.setAttribute('data-theme', t);
-    applyTheme(readTheme() || (systemDark() ? 'dark' : 'light'));
+    // Páginas de diseño claro fijo (preset, checkout): <html data-theme-lock="light"> ignora el tema guardado, sin cambiarlo.
+    applyTheme(document.documentElement.getAttribute('data-theme-lock') || readTheme() || (systemDark() ? 'dark' : 'light'));
 
     const WI = (window.WI = { BASE, store, session });
     WI.theme = {
@@ -510,7 +511,7 @@
             const os = p.kind === 'plugin' || p.delivery === 'license'
                 ? `<div class="wi-os">${['win', 'mac'].map((o) => `<button type="button" data-os="${o}" data-id="${p.id}" class="${(it.os || 'win') === o ? 'is-active' : ''}">${o === 'win' ? 'Windows' : 'Mac'}</button>`).join('')}</div>`
                 : '';
-            const price = line?.free ? '<span class="wi-badge wi-badge--success">GRATIS</span>' : WI.priceHtml(p.pricing);
+            const price = line?.free ? '<span class="wi-badge wi-badge--success">GRATIS</span>' : "<b>$" + Number(line ? line.lineUsd : p.pricing.usd).toFixed(2) + "</b>";
             return `<div class="wi-cart-line">
                 ${WI.img(p.media?.cover, WI.coverLabel(p))}
                 <div><div class="wi-cart-line__title">${WI.esc(p.title)}</div><div class="wi-cart-line__meta">${WI.esc(p.format || p.category)}</div>${os}</div>
@@ -533,16 +534,19 @@
 
         // Upsell: lo que sugiere el primer producto del carrito y aún no está.
         const firstWithUpsell = items.map((i) => cat.byId.get(i.id)).find((p) => p?.upsells?.length);
-        const ups = (firstWithUpsell?.upsells || []).map((id) => cat.byId.get(id)).filter((p) => WI.isBuyable(p) && !WI.cart.has(p.id)).slice(0, 2);
-        const upsHtml = ups.length ? `<div style="margin-top:20px"><p class="wi-eyebrow" style="margin-bottom:8px">Combínalo con</p>${ups.map((p) => `
+        const completar = q?.volume?.next && !offer;
+        const ups = completar
+            ? cat.products.filter((p) => p.category === 'presets' && p.subcategory === 'artistas' && p.status === 'active' && p.media?.cover && WI.isBuyable(p) && !WI.cart.has(p.id)).slice(0, 3)
+            : (firstWithUpsell?.upsells || []).map((id) => cat.byId.get(id)).filter((p) => WI.isBuyable(p) && !WI.cart.has(p.id)).slice(0, 2);
+        const upsHtml = ups.length ? `<div style="margin-top:20px"><p class="wi-eyebrow" style="margin-bottom:8px">${completar ? 'Completa tu descuento' : 'Combínalo con'}</p>${ups.map((p) => `
             <div class="wi-cart-line">${WI.img(p.media?.cover, WI.coverLabel(p))}<div><div class="wi-cart-line__title">${WI.esc(p.title)}</div>${WI.priceHtml(p.pricing)}</div>
             <button type="button" class="wi-btn wi-btn--ghost wi-btn--sm" data-add-upsell="${p.id}">Añadir</button></div>`).join('')}</div>` : '';
 
         body.innerHTML = hint + offerError + rows + upsHtml;
-        const save = q?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Ahorras</span><span>-US$${q.discountUsd}</span></div>` : '';
+        const save = q?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Ahorras</span><span>−$${Number(q.discountUsd).toFixed(2)}</span></div>` : '';
         foot.innerHTML = `
-            <div class="wi-sumline"><span>Subtotal (${items.length})</span><span>US$${q?.subtotalUsd ?? 0}</span></div>${save}
-            <div class="wi-sumline wi-sumline--total"><span>Total</span><span>${WI.quoteMoney(q)}</span></div>
+            <div class="wi-sumline"><span>Subtotal (${items.length})</span><span>$${Number(q?.subtotalUsd ?? 0).toFixed(2)}</span></div>${save}
+            <div class="wi-sumline wi-sumline--total"><span>Total</span><span>USD $${Number(q?.totalUsd ?? 0).toFixed(2)}</span></div>
             <a href="${BASE}/checkout" class="wi-btn wi-btn--dark wi-btn--block wi-btn--lg" data-checkout>Ir a pagar <i class="bi bi-arrow-right"></i></a>
             <p class="wi-subtle wi-center" style="margin-top:10px"><i class="bi bi-lightning-charge-fill" style="color:#f59e0b"></i> Descarga inmediata · <i class="bi bi-shield-lock-fill" style="color:#059669"></i> Pago seguro</p>`;
     };

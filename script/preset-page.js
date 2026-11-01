@@ -284,7 +284,7 @@
         else if (url) window.open(url, '_blank');
     }
     $('#cta').onclick = async () => {
-        if (STORE) { addToStoreCart(S.p.id); openCart(); return; }
+        if (STORE) { if (window.WI) WI.cart.add(S.p.id); else { addToStoreCart(S.p.id); location.href = '/willieinspired/checkout'; } return; }
         const btn = $('#cta'); btn.disabled = true;
         try { const price = parseFloat(S.p.price_basic) || 0; await (S.p.is_free && price === 0 ? download() : buy()); }
         catch (e) { toast(e.message || 'No se pudo continuar.'); }
@@ -339,97 +339,6 @@
         else if (e.code === 'Space' && S.pre && e.target === document.body) { e.preventDefault(); S.playing ? pause() : play(); }
     });
 
-    // ── Carrito lateral (comparte los productos con el de la landing: mismo wi_cart) ──
-    const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    let catCache = null; let cartSeq = 0;
-    const cartIds = () => { try { return JSON.parse(localStorage.getItem(WI_CART_KEY) || '[]').filter((i) => i && i.id); } catch (_) { return []; } };
-    const saveCartIds = (items) => { try { localStorage.setItem(WI_CART_KEY, JSON.stringify(items)); } catch (_) { /* modo privado */ } };
-    const storeOffer = () => { try { return JSON.parse(localStorage.getItem('wi_offer') || 'null'); } catch (_) { return null; } };
-    const storeCatalog = async () => { if (!catCache) catCache = await (await fetch(`/api/store/catalog?tz=${encodeURIComponent(TZ)}`)).json(); return catCache; };
-    function updateCount() { const n = cartIds().length; const b = $('#cartCount'); b.textContent = n; b.hidden = !n; }
-    function openCart() { $('#cart').classList.add('on'); $('#cart').setAttribute('aria-hidden', 'false'); $('#cartBackdrop').hidden = false; renderCart(); }
-    function closeCart() { $('#cart').classList.remove('on'); $('#cart').setAttribute('aria-hidden', 'true'); $('#cartBackdrop').hidden = true; }
-    async function renderCart() {
-        updateCount();
-        const items = cartIds(); const body = $('#cartBody'); const foot = $('#cartFoot');
-        if (!items.length) { body.innerHTML = '<div class="cart__empty">Tu carrito está vacío.<br><a href="/willieinspired/presets">Ver presets</a></div>'; foot.innerHTML = ''; return; }
-        const seq = ++cartSeq;
-        try {
-            const [cat, q] = await Promise.all([storeCatalog(), fetch('/api/store/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items, offer: storeOffer(), timezone: TZ }) }).then((r) => r.json())]);
-            if (seq !== cartSeq) return;
-            const byId = new Map((cat.products || []).map((x) => [x.id, x]));
-            body.innerHTML = items.map((it) => {
-                const x = byId.get(it.id); if (!x) return '';
-                const pr = x.pricing && x.pricing.usd ? `US$${x.pricing.usd}` : '';
-                const cover = x.media && x.media.cover ? `<img src="${esc(x.media.cover)}" alt="" width="56" height="56">` : '<img alt="" width="56" height="56">';
-                return `<div class="cart__line">${cover}<div><b>${esc(x.title)}</b><small>${esc(x.format || 'Preset')}</small></div><div>${esc(pr)}<button type="button" class="rm" data-rm="${esc(x.id)}">Quitar</button></div></div>`;
-            }).join('');
-            // Descuento por cantidad: lo calcula el servidor; aquí solo se muestra el avance
-            const v = q.volume || { count: 0, percent: 0, next: null };
-            const tiers = [[2, 10], [3, 20], [4, 25]];
-            const msg = v.next ? `Agrega <b>${v.next.add} más</b> y ahorras <b>${v.next.percent}%</b>.` : '<b>¡Máximo descuento aplicado!</b>';
-            const head = q.offerApplied && q.offerApplied.type === 'volume' ? `<b>−${v.percent}% por llevar ${v.count} presets.</b> ` : '';
-            const tier = (v.count > 0 || v.next) && !(q.offerApplied && q.offerApplied.type !== 'volume')
-                ? `<div class="cart__tier">${head}${msg}<div class="cart__bar"><i style="width:${Math.min(100, (Math.min(v.count, 4) / 4) * 100)}%"></i></div><div class="cart__steps">${tiers.map(([n, p]) => `<span class="${v.count >= n ? 'ok' : ''}">${n === 4 ? '4+' : n} · −${p}%</span>`).join('')}</div></div>` : '';
-            body.insertAdjacentHTML('afterbegin', tier);
-            // Recomendados: primero los de este producto (lo que ya sugería la tienda); si falta, presets para completar el descuento
-            const inCart = new Set(items.map((i) => i.id));
-            const first = byId.get(items[0].id);
-            const pool = [];
-            const add = (x) => { if (x && x.status === 'active' && !inCart.has(x.id) && !pool.some((y) => y.id === x.id) && x.pricing && x.pricing.usd > 0 && x.kind !== 'bundle') pool.push(x); };
-            const presets = (cat.products || []).filter((x) => x.category === 'presets' && x.subcategory === 'artistas' && x.media && x.media.cover);
-            if (v.next) presets.slice(0, 40).forEach(add); // para subir de nivel, primero otros presets
-            ((first && first.upsells) || []).forEach((id) => add(byId.get(id)));
-            const sug = pool.slice(0, 3);
-            if (sug.length) {
-                body.insertAdjacentHTML('beforeend', `<div class="cart__sug"><h4>${v.next ? 'Completa tu descuento' : 'Combínalo con'}</h4>${sug.map((x) => `<div class="cart__line">${x.media && x.media.cover ? `<img src="${esc(x.media.cover)}" alt="" width="56" height="56">` : '<img alt="" width="56" height="56">'}<div><b>${esc(x.title)}</b><small>US$${x.pricing.usd}</small></div><button type="button" class="cart__add" data-add="${esc(x.id)}">Añadir</button></div>`).join('')}</div>`);
-            }
-            const peCountry = (cat.region && cat.region.country) === 'PE';
-            foot.innerHTML = `${q.discountUsd > 0 ? `<div class="cart__row"><span>Subtotal</span><span>US$${q.subtotalUsd}</span></div><div class="cart__row save"><span>Descuento${q.offerApplied && q.offerApplied.percent ? ` (−${q.offerApplied.percent}%)` : ''}</span><span>−US$${q.discountUsd}</span></div>` : ''}
-                <div class="cart__row total"><span>Total</span><span>US$${q.totalUsd}</span></div>
-                ${peCountry ? `<p class="cart__note">Con Yape pagas S/ ${q.totalPen}</p>` : ''}
-                <a class="cart__pay" href="/willieinspired/checkout">Ir a pagar →</a>
-                <p class="cart__note">Entrega inmediata · Pago seguro</p>`;
-        } catch (_) { body.innerHTML = '<div class="cart__empty">No pude cargar el carrito. Intenta de nuevo.</div>'; }
-    }
-    $('#cartBtn').onclick = openCart; $('#cartClose').onclick = closeCart; $('#cartBackdrop').onclick = closeCart;
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCart(); });
-    $('#cartBody').addEventListener('click', (e) => {
-        const b = e.target.closest('[data-rm]');
-        if (b) { saveCartIds(cartIds().filter((i) => i.id !== b.dataset.rm)); renderCart(); return; }
-        const a = e.target.closest('[data-add]');
-        if (a) { addToStoreCart(a.dataset.add); renderCart(); }
-    });
-
-    // ── Buscador del menú: artistas de la tienda, se filtra al escribir ──
-    let searchList = [];
-    async function loadSearch() {
-        if (searchList.length) return;
-        const cat = await storeCatalog();
-        searchList = (cat.products || []).filter((x) => x.category === 'presets' && x.subcategory === 'artistas' && x.status === 'active')
-            .map((x) => ({ slug: x.slug, name: x.artist || x.title, cover: x.media && x.media.cover }));
-    }
-    function paintSearch() {
-        const q = $('#searchInput').value.trim().toLowerCase();
-        const rows = searchList.filter((x) => !q || x.name.toLowerCase().includes(q)).slice(0, 12);
-        $('#searchLabel').textContent = q ? `${rows.length} resultado${rows.length === 1 ? '' : 's'}` : 'Presets';
-        $('#searchList').innerHTML = rows.length
-            ? rows.map((x) => `<a class="search__item" href="/presets/${encodeURIComponent(x.slug)}">${x.cover ? `<img src="${esc(x.cover)}" alt="" width="42" height="42">` : '<img alt="" width="42" height="42">'}<span>${esc(x.name)}</span><em>→</em></a>`).join('')
-            : '<p class="search__empty">No encontré ese artista. Escríbele a Willie por WhatsApp y lo armamos.</p>';
-    }
-    function toggleSearch(open) {
-        const box = $('#search'); const show = open === undefined ? box.hidden : open;
-        box.hidden = !show; $('#searchBtn').setAttribute('aria-expanded', String(show));
-        if (show) { loadSearch().then(paintSearch).catch(() => {}); setTimeout(() => $('#searchInput').focus(), 30); }
-    }
-    $('#searchBtn').onclick = (e) => { e.stopPropagation(); toggleSearch(); };
-    $('#searchInput').addEventListener('input', paintSearch);
-    $('#searchInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { const a = $('#searchList a'); if (a) location.href = a.getAttribute('href'); } e.stopPropagation(); });
-    document.addEventListener('click', (e) => { if (!$('#search').hidden && !e.target.closest('#search')) toggleSearch(false); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleSearch(false); });
-    window.addEventListener('storage', (e) => { if (e.key === WI_CART_KEY) renderCart(); });
-    updateCount();
-
     // ── Arranque ───────────────────────────────────────────────────────────────────
     async function loadProduct() {
         try { const inline = JSON.parse($('#presetData').textContent); if (inline && inline.id) return inline; } catch (_) { /* abierto sin servidor: se busca por el slug */ }
@@ -440,6 +349,7 @@
         return data && data.id ? data : null;
     }
     (async function init() {
+        if (window.WI) WI.init({ active: 'presets' }).catch((e) => console.warn('[preset] menú:', e));
         window.addEventListener('resize', () => { resizeWave(); fitTitle(); });
         const p = await loadProduct();
         if (!p) { location.replace('/explorar.html'); return; }
