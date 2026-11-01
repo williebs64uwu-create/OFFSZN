@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preset | OFFSZN</title>
+    <!-- Vista previa del diseño nuevo (?v=2): no se indexa hasta que reemplace a la página actual -->
+    <meta name="robots" content="noindex, follow">
+    <meta name="theme-color" content="#efeeeb">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Geist:wght@300..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/preset-page.css?v=1">
+    <link rel="stylesheet" href="/css/download-gate.css">
+
+    <!-- Datos del producto: los inyecta el servidor. Si se abre sin servidor, la página los busca por el slug. -->
+    <script type="application/json" id="presetData">__PRESET_JSON__</script>
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>window.supabaseClient = null;</script>
+    <script src="/script/config.js"></script>
+    <script src="/script/auth-utils.js?v=12"></script>
+</head>
+<body>
+    <div class="announce" aria-hidden="true">
+        <div class="announce__track">
+            <span>Entrega inmediata</span><span>Plugins e instaladores incluidos</span><span>Pago único, acceso de por vida</span><span>Soporte por WhatsApp</span>
+            <span>Entrega inmediata</span><span>Plugins e instaladores incluidos</span><span>Pago único, acceso de por vida</span><span>Soporte por WhatsApp</span>
+        </div>
+    </div>
+
+    <header class="topbar">
+        <a class="brand" href="/" aria-label="OFFSZN"><img src="/images/LOGO%20OFFSZN.webp" alt="OFFSZN" onerror="this.onerror=null;this.src='/favicon.ico'"></a>
+        <nav class="pill-nav" aria-label="Principal">
+            <a class="on" href="/explorar.html">Presets</a>
+            <a href="/plugins/vst-plugins.html">Plugins</a>
+            <a href="/explorar.html">Explorar</a>
+            <a href="/mis-compras.html">Mis compras</a>
+        </nav>
+        <div class="tools">
+            <a class="icon-btn" href="/explorar.html" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></a>
+            <a class="icon-btn" href="/carrito.html" aria-label="Carrito"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></a>
+        </div>
+    </header>
+
+    <main class="page">
+        <section class="hero" aria-labelledby="title">
+            <div class="hero__text">
+                <p class="kicker" id="kicker"></p>
+                <h1 class="title" id="title">&nbsp;</h1>
+                <p class="sub" id="sub"></p>
+            </div>
+            <figure class="cover" id="cover">
+                <div class="cover__frame skeleton" id="coverFrame"><img id="coverImg" alt="" hidden><span class="cover__sheen"></span></div>
+            </figure>
+        </section>
+
+        <section class="player" id="player" aria-label="Escucha el preset">
+            <div class="player__top">
+                <button class="play" id="play" type="button" aria-label="Reproducir" disabled>
+                    <svg class="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
+                    <svg class="i-pause" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4.2" height="14" rx="1.2"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.2"/></svg>
+                </button>
+                <div class="wave" id="wave" role="slider" aria-label="Posición del audio" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                    <canvas id="waveCanvas"></canvas>
+                    <div class="wave__msg" id="waveMsg" hidden></div>
+                </div>
+                <div class="time"><b id="tCur">0:00</b> / <span id="tDur">0:00</span></div>
+                <div class="ab">
+                    <div class="ab__label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 10v4M8 6v12M12 9v6M16 4v16M20 8v8"/></svg><span id="abLabel">Escucha el preset</span></div>
+                    <div class="seg" id="seg" role="group" aria-label="Versión del audio">
+                        <button type="button" data-mode="raw" aria-pressed="false">RAW</button>
+                        <button type="button" data-mode="pre" aria-pressed="true">PRESET</button>
+                    </div>
+                </div>
+            </div>
+            <div class="player__bottom">
+                <div class="daws" id="daws"></div>
+                <ul class="badges">
+                    <li>Descarga inmediata</li>
+                    <li>Pago único</li>
+                    <li>Acceso de por vida</li>
+                </ul>
+                <div class="buy">
+                    <span class="price" id="price"></span>
+                    <button class="cta" id="cta" type="button"><span id="ctaText">Obtener el preset</span><span class="cta__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
+                </div>
+            </div>
+        </section>
+
+        <nav class="rail" id="rail" aria-label="Otros presets" hidden>
+            <button class="rail__arrow l" id="railPrev" type="button" aria-label="Anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+            <div class="rail__track" id="railTrack"></div>
+            <button class="rail__arrow r" id="railNext" type="button" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+        </nav>
+        <p class="hint" id="hint" hidden>← usa las flechas del teclado →</p>
+
+        <section class="details">
+            <div>
+                <h2>Qué incluye</h2>
+                <p class="desc" id="desc"></p>
+                <div class="tags" id="tags"></div>
+            </div>
+            <div>
+                <h2>Cómo funciona</h2>
+                <ol class="steps">
+                    <li><span>Compras el preset y recibes el acceso al instante en <b>Mis compras</b>.</span></li>
+                    <li><span>Descargas el proyecto con todo configurado, incluidos los plugins e instaladores.</span></li>
+                    <li><span>Lo abres en tu DAW, grabas tu voz y suena como en la muestra.</span></li>
+                </ol>
+                <p class="help">¿Dudas antes de comprar? Escríbele a Willie por <a href="https://wa.me/51993525005" target="_blank" rel="noopener">WhatsApp</a>.</p>
+            </div>
+        </section>
+
+        <footer class="foot">
+            <span>© OFFSZN</span>
+            <nav aria-label="Legal">
+                <a href="/legal/terminos-de-servicio.html">Términos</a>
+                <a href="/legal/politicas-de-privacidad.html">Privacidad</a>
+                <a href="/legal/politicas-de-reembolso.html">Reembolsos</a>
+                <a href="/legal/ayuda-y-contacto.html">Ayuda</a>
+            </nav>
+        </footer>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="/script/id-obfuscator.js"></script>
+    <script src="/script/cart.js?v=24"></script>
+    <script src="/script/download-gate.js"></script>
+    <script src="/script/preset-page.js?v=1"></script>
+</body>
+</html>
