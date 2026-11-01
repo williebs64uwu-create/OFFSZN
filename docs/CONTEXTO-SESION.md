@@ -35,8 +35,38 @@ Resumen de lo construido y decidido con Willie hasta el 1 de noviembre de 2026. 
 - Mejor mes registrado en la base (sept 2026): 62 ventas, US$ 517. Pico de Willie: ~S/ 5.000 al mes (incluye Payhip y cobros manuales). Meta: S/ 10.000.
 - No hay afiliados (ya no se trabaja con ellos). Reembolsos: por ahora no.
 
-## Pendiente / siguiente
-- Willie revisa en localhost la página de preset v2 y dice qué cambiar. Al aprobar: hacerla la página por defecto de presets (quitar `noindex`) y seguir con tienda, landing y el resto de páginas con los diseños que él envíe.
-- Revisar precios cuando estén las páginas. Unificar el catálogo (los IDs/precios de plugins se repiten en ~6 archivos) al rediseñar la tienda.
-- Más adelante: manejo de reembolsos/disputas, revisión diaria contra PayPal (activar "Transaction search" en la app), backups de Supabase, confirmar régimen tributario con un contador.
-- A fin de mes: Willie envía capturas de Yape y del banco para registrar y comparar.
+## Historial de lo fusionado a `main` (para ubicarte con `git log`)
+- **#28** CRM: el Resumen suma las ventas propias del marketplace; los correos de venta llevan etiqueta de canal.
+- **#30** Login real de plugins (Supabase), checkout de STAR CHAIN con PayPal real, cuotas por suscripción, Yape rápido y precio seguro de Yape (soles = USD × variable de Vercel).
+- **#31** Finanzas del CRM (libro de ingresos, gastos, banco), campos de pago en el panel de despacho, checkout de 3 botones, botón de avisos de PayPal.
+- **#32** Pesos argentinos confirmados con el depósito, gastos con N° de operación, enlaces legales arreglados.
+- **#33** Página de preset nueva en vista previa (`?v=2`).
+- **#34** Este archivo.
+
+## Pendientes (expedientes), con su estado
+**Esperando a Willie**
+- Revisar en localhost la página de preset v2 (`/preset/<slug>?v=2`) y decir qué cambiar. Luego enviar más diseños (tienda, landing, resto de páginas).
+- Poner el link del instalador de STAR CHAIN (Google Drive) en la variable `STAR_DOWNLOAD_URL` de Vercel. Dijo que lo hace "al final".
+- Pruebas con dinero real que **todavía no se han hecho**: compra de STAR CHAIN (49 US$ y con cupón), una cuota de 16,33, un cobro de Yape de un plugin y un despacho de prueba en el panel. Ver que cada una aparezca en CRM > Finanzas y usar "Verificar".
+- A fin de mes: capturas de Yape y del banco para registrar y comparar; confirmar los pesos argentinos con el depósito de Sayko.
+
+**Para hacer cuando Willie apruebe**
+- Hacer la página de preset v2 la principal (quitar `noindex` de `preset.html`) y extender el diseño a tienda y landing.
+- Revisar precios cuando las páginas estén listas.
+- Unificar el catálogo: los IDs y precios de plugins están repetidos en unos 6 archivos (`pluginRegistry.js`, `yapePricing.js`, `YapeController.js`, `PayPalController.js`, `plugin-checkout.js`, páginas de plugins).
+- Subir el audio RAW de los presets que más venden (hoy solo 7 de 39 tienen antes/después distinto).
+
+**Ideas ya conversadas, aún sin hacer**
+- Reembolsos y disputas (hoy un reembolso en PayPal seguiría contando como ingreso). Willie dijo "por ahora no".
+- Revisión diaria contra PayPal (activar "Transaction search" en la app de PayPal), backups diarios de Supabase, confirmar el régimen tributario con un contador (a S/ 10 mil mensuales cambia de tramo).
+- Mercado Pago automático para clientes argentinos (hoy es manual).
+
+## Límites conocidos (para no sorprenderse)
+- El Resumen del CRM ya no sabe el **país** de cada venta: el libro no guarda país, así que "Por país" sale "N/D". Existe la columna `country`, sin llenar.
+- Las estadísticas de **licencias** del panel (`owner/licencias.html`, gráficos de ingresos) siguen **estimando por tramos de precio**; no leen el libro nuevo. Conviene reemplazarlas o rotularlas como estimado.
+- "Productos y precios" del CRM sigue leyendo las tablas viejas (`orders` / `order_items`), donde `price_at_purchase` es el precio de lista, no lo cobrado.
+- Los DAWs de la página de preset salen como texto, no como logos (faltan los íconos).
+- En el entorno de pruebas de la nube no se pudieron hacer cobros reales ni ver Vercel: todo lo que toca dinero se probó con simulaciones, no con pagos de verdad.
+
+## Prompt para arrancar la sesión local
+> Lee `docs/CONTEXTO-SESION.md` completo y respétalo (cómo trabajamos, reglas del dinero, pendientes). Corre `git pull origin main`, `npm install` y `npm run dev`, y déjame abrir `http://localhost:3000/preset/preset-de-remers?v=2`. Todo se revisa primero en localhost; no subas nada a `main` ni despliegues sin que yo lo apruebe. Cuando termines de leer, resúmeme en 10 líneas qué entendiste y qué sigue, para que yo corrija lo que falte.
