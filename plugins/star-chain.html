@@ -68,21 +68,24 @@
         }
 
         /* ==================== TOP PRE-SALE BANNER ==================== */
+        :root { --promo-h: 46px; }
+
         .promo-top-bar {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: 36px;
-            background: #111317;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            height: var(--promo-h);
+            background: linear-gradient(180deg, #16181d 0%, #0d0e11 100%);
+            border-bottom: 1px solid rgba(255, 210, 74, 0.28);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
             color: #e2e8f0;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 14px;
             padding: 0 16px;
             z-index: 100;
         }
@@ -90,9 +93,9 @@
         .promo-pill {
             background: #ffd24a;
             color: #07080a;
-            padding: 2px 8px;
+            padding: 3px 10px;
             border-radius: 9999px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 800;
             letter-spacing: 0.05em;
             text-transform: uppercase;
@@ -100,15 +103,17 @@
         }
 
         .promo-desc {
-            font-size: 12px;
-            color: #e2e8f0;
+            font-size: 13.5px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #ffffff;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .promo-timer {
             font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
             color: #ffd24a;
             font-weight: 700;
             flex-shrink: 0;
@@ -123,13 +128,13 @@
             flex-direction: column;
             justify-content: space-between;
             overflow: hidden;
-            padding-top: 36px;
+            padding-top: var(--promo-h);
         }
 
         /* Fixed Navigation Header - Clean & Direct (No "by") */
         header.tvb-header {
             position: absolute;
-            top: 52px;
+            top: calc(var(--promo-h) + 16px);
             left: clamp(20px, 4vw, 50px);
             right: clamp(20px, 4vw, 50px);
             display: flex;
@@ -2322,6 +2327,26 @@
             font-size: 14px;
         }
 
+        /* ==================== VIDEO DEMO ==================== */
+        .demo-video-frame {
+            width: 100%;
+            max-width: 960px;
+            margin: 0 auto;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 210, 74, 0.25);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+            background: #000;
+            aspect-ratio: 16 / 9;
+        }
+
+        .demo-video-frame video {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
         /* ==================== RESPONSIVE QUERIES ==================== */
         @media (max-width: 1024px) {
             .hero-main-stage {
@@ -2358,33 +2383,35 @@
         }
 
         @media (max-width: 640px) {
-            .promo-top-bar {
-                height: 34px;
-                font-size: 10.5px;
-                gap: 6px;
-                padding: 0 10px;
-                justify-content: space-between;
-            }
+            :root { --promo-h: 58px; }
 
-            .promo-pill {
-                font-size: 9px;
-                padding: 1.5px 6px;
+            .promo-top-bar {
+                flex-wrap: wrap;
+                align-content: center;
+                row-gap: 3px;
+                column-gap: 10px;
+                padding: 6px 10px;
             }
 
             .promo-desc {
-                font-size: 10.5px;
+                order: -1;
+                flex: 0 0 100%;
+                text-align: center;
+                font-size: 12.5px;
+                letter-spacing: 0.03em;
+            }
+
+            .promo-pill {
+                font-size: 9.5px;
+                padding: 2px 8px;
             }
 
             .promo-timer {
-                font-size: 10px;
-            }
-
-            #hero-runway {
-                padding-top: 34px;
+                font-size: 13px;
             }
 
             header.tvb-header {
-                top: 42px;
+                top: calc(var(--promo-h) + 8px);
                 left: 14px;
                 right: 14px;
             }
@@ -2403,7 +2430,7 @@
             }
 
             .hero-main-stage {
-                padding: 64px 12px 20px;
+                padding: 74px 12px 20px;
                 gap: 16px;
             }
 
@@ -2413,14 +2440,25 @@
             }
 
             #starAvatar {
-                width: 175px;
-                height: 175px;
-                margin-top: 0;
+                width: 170px;
+                height: 170px;
+                margin-top: 6px;
+                overflow: hidden;
+            }
+
+            #starAvatar > * {
+                max-width: 100%;
+                max-height: 100%;
             }
 
             .star-pedestal-shadow {
                 width: 140px;
                 height: 14px;
+                margin-top: 0;
+            }
+
+            .hero-cta-group {
+                margin-top: 22px;
             }
 
             .hero-primary-cta {
@@ -2482,7 +2520,7 @@
     <!-- 1. Top Pre-Sale Launch Bar -->
     <div class="promo-top-bar">
         <span class="promo-pill">LANZAMIENTO</span>
-        <span class="promo-desc">Apertura Oficial · 60% OFF</span>
+        <span class="promo-desc">Obtén tu licencia de por vida</span>
         <span class="promo-timer" id="topCountdown">47h : 59m : 42s</span>
     </div>
 
@@ -2676,6 +2714,29 @@
     <!-- 3. Dark Rest of Site (Cinematic Suite) -->
     <main id="rest-of-site">
 
+
+        <!-- SECTION: VIDEO REAL DE STAR EN FL STUDIO -->
+        <section class="site-container demo-video-section" id="como-funciona">
+            <span class="section-kicker">MÍRALO EN ACCIÓN</span>
+            <h2 class="section-headline-lg">Así mezcla STAR tu voz, en 17 segundos.</h2>
+            <p style="color: #94a3b8; font-size: 15px; max-width: 680px; margin-bottom: 22px;">
+                Grabado dentro de FL Studio: le pides un sonido y STAR arma la cadena por ti.
+            </p>
+            <div class="demo-video-frame">
+                <video id="starDemoVideo" muted loop playsinline controls preload="none"
+                    poster="/images/plugins/star-chain/video_poster.jpg">
+                    <source src="https://pub-6ee2d2530ccf470d8fa1759f5b749cf8.r2.dev/plugins/star-chain/como-funciona.mp4" type="video/mp4">
+                    <source src="/plugins/star-chain-como-funciona.mp4" type="video/mp4">
+                    Tu navegador no soporta la reproducción de video.
+                </video>
+            </div>
+            <div style="text-align:center; margin-top: 22px;">
+                <a href="#precios" class="hero-primary-cta" style="display:inline-flex; width:auto;">
+                    <span>Obtener mi licencia de por vida</span>
+                    <i class="bi bi-arrow-right-short" style="font-size: 20px;"></i>
+                </a>
+            </div>
+        </section>
 
         <!-- SECTION: WALKTHROUGH EN 3 PASOS -->
         <section class="site-container">
@@ -3856,7 +3917,7 @@
                 try {
                     window.CloverBot.mount(avatarEl, {
                         type: 'star',
-                        size: 250,
+                        size: avatarEl.clientWidth || 250,
                         state: 'default',
                         interactive: true,
                         turn: 0.35,
@@ -4489,6 +4550,17 @@
         window.addEventListener('DOMContentLoaded', () => {
             generatePlayerBars();
         });
+
+        // Video demo: arranca solo al verse (sin sonido) y se pausa al salir
+        (function () {
+            const v = document.getElementById('starDemoVideo');
+            if (!v || !('IntersectionObserver' in window)) return;
+            new IntersectionObserver((es) => {
+                es.forEach((e) => {
+                    if (e.isIntersecting) { v.play().catch(() => {}); } else { v.pause(); }
+                });
+            }, { threshold: 0.5 }).observe(v);
+        })();
 
         // ==================== LAUNCH COUNTDOWN TIMER ====================
         let remainingSeconds = 47 * 3600 + 59 * 60 + 42;
