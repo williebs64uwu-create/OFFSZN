@@ -23,11 +23,11 @@
     const nowMonth = () => new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 7);
 
     const status = (r) => {
-        if (r.status === 'no_detail') return '<span class="badge badge--warn">Sin dato · revisar</span>';
-        if (r.status === 'pending_review') return '<span class="badge badge--warn">Pesos por confirmar</span>';
-        if (r.currency === 'ARS' && r.settled_pen !== null && r.settled_pen !== undefined) return '<span class="badge badge--ok">Confirmado con soles</span>';
+        if (r.status === 'no_detail') return '<span class="badge badge--warning">Sin dato · revisar</span>';
+        if (r.status === 'pending_review') return '<span class="badge badge--warning">Pesos por confirmar</span>';
+        if (r.currency === 'ARS' && r.settled_pen !== null && r.settled_pen !== undefined) return '<span class="badge badge--success">Confirmado con soles</span>';
         if (r.by_willie) return '<span class="badge">Acción de Willie</span>';
-        return r.verified ? '<span class="badge badge--ok">Verificado</span>' : '<span class="badge">Sin verificar</span>';
+        return r.verified ? '<span class="badge badge--success">Verificado</span>' : '<span class="badge">Sin verificar</span>';
     };
 
     C.pages.finanzas = {
@@ -41,8 +41,8 @@
             const s = d.summary; const fx = s.fx; const inc = s.income; const bank = d.settings.bank;
             const startLabel = new Date(d.settings.startAt).toLocaleDateString('es-PE', { timeZone: 'America/Lima', day: 'numeric', month: 'long', year: 'numeric' });
             const alerts = [
-                s.pendingArs.count ? `<div class="alert alert--warning">${icon('alert')}<div><b>${s.pendingArs.count} ${s.pendingArs.count === 1 ? 'pago' : 'pagos'} en pesos argentinos</b> (${ars(s.pendingArs.pesos)}) por confirmar a fin de mes. Todavía no suman a los totales.</div></div>` : '',
-                s.noDetail.count ? `<div class="alert alert--warning">${icon('alert')}<div><b>${s.noDetail.count} ${s.noDetail.count === 1 ? 'despacho' : 'despachos'} sin dato de pago.</b> Se entregaron pero falta decir cuánto pagaron; revísalos abajo.</div></div>` : ''
+                s.pendingArs.count ? `<div class="alert alert--warn">${icon('alert')}<div><b>${s.pendingArs.count} ${s.pendingArs.count === 1 ? 'pago' : 'pagos'} en pesos argentinos</b> (${ars(s.pendingArs.pesos)}) por confirmar a fin de mes. Todavía no suman a los totales.</div></div>` : '',
+                s.noDetail.count ? `<div class="alert alert--warn">${icon('alert')}<div><b>${s.noDetail.count} ${s.noDetail.count === 1 ? 'despacho' : 'despachos'} sin dato de pago.</b> Se entregaron pero falta decir cuánto pagaron; revísalos abajo.</div></div>` : ''
             ].join('');
 
             const incomeRows = d.income.map((r) => `<tr>

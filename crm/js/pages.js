@@ -6,10 +6,7 @@
 
     const SEGMENT_BADGE = { FREE: 'secondary', 'COMPRADOR V1': 'brand', 'COMPRADOR V2': 'success' };
     const segBadge = (s) => `<span class="badge badge--${SEGMENT_BADGE[s] || 'secondary'}">${esc(s || 'FREE')}</span>`;
-    const card = ({ title, desc = '', actions = '', body = '', flush = false, id = '' }) => `<section class="card ${flush ? 'card--flush' : ''}" ${id ? `id="${id}"` : ''}>
-        ${title ? `<div class="card__head"><div><h2 class="card__title">${title}</h2>${desc ? `<p class="card__desc">${desc}</p>` : ''}</div>${actions}</div>` : ''}<div class="card__body">${body}</div></section>`;
-    const head = (title, desc = '', actions = '') => `<div class="page-head"><div><h1>${title}</h1>${desc ? `<p>${desc}</p>` : ''}</div><div class="row">${actions}</div></div>`;
-    const empty = (ic, text) => `<div class="empty">${icon(ic)}<p>${text}</p></div>`;
+    const { card, head, empty } = C.ui;
     const rows = (list, label, value, fmt = (v) => v) => {
         const max = Math.max(1, ...list.map((r) => r[value]));
         return list.length ? list.map((r) => `<div class="list-row"><div class="grow"><div class="row between"><span>${esc(r[label])}</span><b>${fmt(r[value])}</b></div><div class="bar" style="margin-top:6px"><i style="width:${Math.max(3, (r[value] / max) * 100)}%"></i></div></div></div>`).join('')

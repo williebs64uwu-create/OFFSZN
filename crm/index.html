@@ -79,14 +79,8 @@
     // Navegación, iconos y textos fijos (usan los iconos de CRM.icon)
     (() => {
         const C = window.CRM;
-        const NAV = [
-            ['Principal', [['dashboard', 'Resumen', 'dashboard'], ['contactos', 'Contactos', 'users'], ['oportunidades', 'Oportunidades', 'kanban'], ['tareas', 'Tareas', 'tasks']]],
-            ['Crecimiento', [['automatizaciones', 'Automatizaciones', 'zap'], ['experimentos', 'Experimentos A/B', 'flask'], ['ventas', 'Venta manual', 'bag']]],
-            ['Negocio', [['finanzas', 'Finanzas', 'dashboard'], ['historial', 'Histórico (plugins)', 'trend'], ['productos', 'Productos y precios', 'bag']]],
-            ['Ajustes', [['sistema', 'Estado del sistema', 'shield']]]
-        ];
-        document.getElementById('nav').innerHTML = NAV.map(([label, items]) => `<div class="nav__label">${label}</div>${items.map(([k, n, ic]) => `<a href="#/${k}" data-page="${k}">${C.icon(ic)}${n}</a>`).join('')}`).join('');
-        document.getElementById('themeBtn').innerHTML = `${C.icon('sun')} Cambiar tema`;
+        document.getElementById('nav').innerHTML = C.navHtml();
+        C.setTheme(document.documentElement.dataset.theme);
         document.getElementById('logoutBtn').innerHTML = `${C.icon('logout')} Cerrar sesión`;
         document.getElementById('menuBtn').innerHTML = C.icon('menu');
         document.getElementById('searchBtn').innerHTML = `${C.icon('search')} Buscar contactos <span class="kbd" style="margin-left:auto">Ctrl K</span>`;

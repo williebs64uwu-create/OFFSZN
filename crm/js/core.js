@@ -52,13 +52,52 @@
         cart: '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
         copy: '<rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>',
         filter: '<path d="M22 3H2l8 9.46V19l4 2v-8.54z"/>',
-        play: '<path d="m6 3 14 9-14 9z"/>'
+        play: '<path d="m6 3 14 9-14 9z"/>',
+        send: '<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+        chart: '<path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+        wallet: '<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+        history: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+        tag: '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5"/>',
+        hand: '<path d="M18 11V6a2 2 0 0 0-4 0v1"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
+        cog: '<circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+        home: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>'
     };
     C.icon = (name, cls = '') => `<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ''}</svg>`;
 
+    // ── Piezas de interfaz compartidas (las páginas nuevas las reutilizan) ───
+    C.ui = {
+        card: ({ title, desc = '', actions = '', body = '', flush = false, id = '' }) => `<section class="card ${flush ? 'card--flush' : ''}" ${id ? `id="${id}"` : ''}>
+        ${title ? `<div class="card__head"><div><h2 class="card__title">${title}</h2>${desc ? `<p class="card__desc">${desc}</p>` : ''}</div>${actions}</div>` : ''}<div class="card__body">${body}</div></section>`,
+        head: (title, desc = '', actions = '') => `<div class="page-head"><div><h1>${title}</h1>${desc ? `<p>${desc}</p>` : ''}</div><div class="row">${actions}</div></div>`,
+        empty: (ic, text) => `<div class="empty">${C.icon(ic)}<p>${text}</p></div>`
+    };
+
+    // ── Menú lateral: una sola lista para el menú y para la paleta Ctrl K ────
+    // [grupo, [[ruta, etiqueta, icono]]]. Una ruta que empieza con "/" es un enlace a un panel anterior (se abre aparte).
+    C.NAV = [
+        ['Hoy', [['dashboard', 'Resumen', 'home'], ['tareas', 'Tareas', 'tasks']]],
+        ['Vender', [['/owner/licencias.html', 'Despacho de licencia', 'send'], ['/owner/pagos-manuales.html', 'Pagos manuales', 'hand'], ['ventas', 'Cobrar manual (tienda)', 'bag'], ['productos', 'Productos y precios', 'tag']]],
+        ['Clientes', [['contactos', 'Contactos', 'users'], ['oportunidades', 'Oportunidades', 'kanban']]],
+        ['Dinero', [['finanzas', 'Finanzas', 'wallet'], ['historial', 'Histórico de plugins', 'history']]],
+        ['Marketing', [['automatizaciones', 'Emails automáticos', 'mail'], ['experimentos', 'Pruebas A/B', 'flask']]],
+        ['Sistema', [['sistema', 'Estado del sistema', 'shield']]]
+    ];
+    C.navHtml = () => C.NAV.map(([label, items]) => `<div class="nav__label">${label}</div>${items.map(([k, n, ic]) => (k.startsWith('/')
+        ? `<a href="${k}" target="_blank" rel="noopener">${C.icon(ic)}${n}${C.icon('ext', 'nav__ext')}</a>`
+        : `<a href="#/${k}" data-page="${k}">${C.icon(ic)}${n}<span class="badge badge--destructive nav__count" data-count="${k}" hidden></span></a>`)).join('')}`).join('');
+    // Contador rojo de tareas vencidas junto a "Tareas"
+    C.refreshBadges = async () => {
+        try {
+            const { items } = await C.api('/admin/tasks');
+            const late = items.filter((t) => t.due_at && new Date(t.due_at) < Date.now()).length;
+            const el = $('[data-count="tareas"]');
+            if (el) { el.textContent = late; el.hidden = !late; }
+        } catch (_) { /* sin contador */ }
+    };
+
     // ── Tema ─────────────────────────────────────────────────────────────────
     const savedTheme = () => { try { return localStorage.getItem('crm_theme'); } catch (_) { return null; } };
-    C.setTheme = (t) => { document.documentElement.setAttribute('data-theme', t); try { localStorage.setItem('crm_theme', t); } catch (_) { /* modo privado */ } };
+    C.setTheme = (t) => { document.documentElement.setAttribute('data-theme', t); const b = document.getElementById('themeBtn'); if (b) b.innerHTML = `${C.icon(t === 'dark' ? 'sun' : 'moon')} ${t === 'dark' ? 'Tema claro' : 'Tema oscuro'}`; try { localStorage.setItem('crm_theme', t); } catch (_) { /* modo privado */ } };
     document.documentElement.setAttribute('data-theme', savedTheme() || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
     C.toggleTheme = () => C.setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
 
@@ -144,7 +183,7 @@
     });
 
     // ── Paleta de búsqueda ⌘K ────────────────────────────────────────────────
-    const PAGES_INDEX = [['dashboard', 'Resumen'], ['contactos', 'Contactos'], ['oportunidades', 'Oportunidades'], ['automatizaciones', 'Automatizaciones'], ['ventas', 'Venta manual'], ['tareas', 'Tareas'], ['experimentos', 'Experimentos A/B'], ['finanzas', 'Finanzas'], ['historial', 'Histórico (plugins)'], ['sistema', 'Estado del sistema']];
+    const PAGES_INDEX = C.NAV.flatMap(([, items]) => items.filter(([k]) => !k.startsWith('/')).map(([k, n, ic]) => [k, n, ic]));
     let palTimer;
     C.palette = {
         open() {
@@ -155,7 +194,7 @@
         render(contacts, q) {
             const pages = PAGES_INDEX.filter(([, n]) => !q || n.toLowerCase().includes(q.toLowerCase()));
             $('#paletteList').innerHTML =
-                (pages.length ? `<p class="muted small" style="padding:6px 10px">Ir a</p>${pages.map(([k, n]) => `<button class="palette__item" data-go="${k}">${C.icon('dashboard')}${C.esc(n)}</button>`).join('')}` : '')
+                (pages.length ? `<p class="muted small" style="padding:6px 10px">Ir a</p>${pages.map(([k, n, ic]) => `<button class="palette__item" data-go="${k}">${C.icon(ic)}${C.esc(n)}</button>`).join('')}` : '')
                 + (contacts.length ? `<p class="muted small" style="padding:10px 10px 6px">Contactos</p>${contacts.map((c) => `<button class="palette__item" data-contact="${C.esc(c.email)}"><span class="avatar">${C.esc(C.initials(c.email))}</span><span><b>${C.esc(c.email)}</b><br><span class="muted small">${C.esc(c.segment || '')} · ${C.esc(C.country(c.country || c.ip_country))}</span></span></button>`).join('')}` : '');
         },
         async search(q) {
@@ -184,6 +223,7 @@
         view.onclick = null; // cada página registra el suyo; así no se acumulan
         view.innerHTML = '<div class="stack"><div class="skeleton" style="height:36px;width:220px"></div><div class="skeleton" style="height:120px"></div><div class="skeleton" style="height:260px"></div></div>';
         const token = (C.state.routeToken = (C.state.routeToken || 0) + 1);
+        C.refreshBadges();
         try { await def.render(view, token); } catch (e) { if (token === C.state.routeToken) view.innerHTML = `<div class="alert alert--error">${C.icon('alert')}<div>${C.esc(e.message)}</div></div>`; }
     };
     addEventListener('hashchange', C.route);
