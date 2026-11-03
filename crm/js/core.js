@@ -76,7 +76,7 @@
     // [grupo, [[ruta, etiqueta, icono]]]. Una ruta que empieza con "/" es un enlace a un panel anterior (se abre aparte).
     C.NAV = [
         ['Hoy', [['dashboard', 'Resumen', 'home'], ['tareas', 'Tareas', 'tasks']]],
-        ['Vender', [['/owner/licencias.html', 'Despacho de licencia', 'send'], ['/owner/pagos-manuales.html', 'Pagos manuales', 'hand'], ['ventas', 'Cobrar manual (tienda)', 'bag'], ['productos', 'Productos y precios', 'tag']]],
+        ['Vender', [['/owner/licencias.html', 'Despacho de licencia', 'send'], ['/owner/pagos-manuales.html', 'Pagos manuales', 'hand'], ['ventas', 'Venta manual', 'bag'], ['productos', 'Productos y precios', 'tag']]],
         ['Clientes', [['contactos', 'Contactos', 'users'], ['oportunidades', 'Oportunidades', 'kanban']]],
         ['Dinero', [['finanzas', 'Finanzas', 'wallet'], ['historial', 'Histórico de plugins', 'history']]],
         ['Marketing', [['automatizaciones', 'Emails automáticos', 'mail'], ['experimentos', 'Pruebas A/B', 'flask']]],

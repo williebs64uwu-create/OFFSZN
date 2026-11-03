@@ -19,6 +19,17 @@ export const adminRecordDispatchPayment = async (req, res) => {
     } catch (e) { return fail(res, e); }
 };
 
+// POST /admin/finance/income { product, currency, amount, method, email, note, occurredAt } → anota una venta cobrada a mano.
+// Solo registra en finanzas: no entrega nada, no envía correos y no crea claves.
+export const financeAddIncome = async (req, res) => {
+    try {
+        const b = req.body || {};
+        const out = await recordManualIncome({ registerOnly: true, email: b.email, product: b.product, currency: b.currency, amount: b.amount, method: b.method, note: b.note, occurredAt: b.occurredAt });
+        if (!out.ok) return res.status(out.status || 400).json({ error: out.error });
+        return res.json({ ok: true, income: { id: out.row.ref, status: out.row.status, currency: out.row.currency, net: out.row.net, product: out.row.product, occurredAt: out.row.occurred_at } });
+    } catch (e) { return fail(res, e); }
+};
+
 // GET /admin/finance?month=AAAA-MM → ajustes + ingresos + gastos + resumen del mes
 export const financeMonth = async (req, res) => {
     try {

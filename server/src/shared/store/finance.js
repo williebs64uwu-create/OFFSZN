@@ -31,8 +31,14 @@ export function monthRange(month) {
 // USD → lo que te dieron (PayPal): bruto = neto. Soles → neto (Yape). Pesos argentinos → pendiente de confirmar.
 // "Sin dato" → queda marcado para revisarlo después; nunca se inventa un monto.
 export function normalizeManualIncome(input = {}, now = new Date()) {
-    const serial = String(input.serial || '').trim();
+    // "Solo registrar" (venta cobrada a mano, sin despacho): no hay clave, así que la referencia se genera sola y cada registro es único.
+    const registerOnly = Boolean(input.registerOnly);
+    const serial = registerOnly
+        ? `REG-${now.getTime().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`
+        : String(input.serial || '').trim();
     if (!serial) return { ok: false, error: 'Falta la clave que se despachó.' };
+    if (registerOnly && !String(input.product || '').trim()) return { ok: false, error: 'Escribe qué producto se vendió.' };
+    if (input.occurredAt && Date.parse(input.occurredAt) > now.getTime() + 10 * 60000) return { ok: false, error: 'La fecha no puede ser futura.' };
     const email = String(input.email || '').trim().toLowerCase() || null;
     const base = {
         source: 'manual', ref: serial.slice(0, 120), email, product: String(input.product || '').trim().slice(0, 120) || null,
