@@ -2,6 +2,7 @@
 // Cuota 1 y 2 → clave temporal STAR-SUB de un mes (la del mes anterior se revoca). Cuota 3 → licencia STAR-FULL de por vida.
 // Si un cobro falla se revoca la clave temporal hasta que se pague la siguiente cuota.
 // Lo que PayPal informa se confirma siempre contra su API: un webhook falso no puede crear licencias.
+import { STAR_WIN_URL, STAR_MAC_URL } from '../../shared/config/starDelivery.js';
 import crypto from 'crypto';
 import { supabase } from '../database/connection.js';
 import { sendOffsznEmail } from '../../shared/utils/mailer.js';
@@ -122,7 +123,8 @@ async function emailBuyer({ to, n, serial, kind }) {
         <p>${full ? 'Esta es tu licencia <b>STAR CHAIN FULL</b>, de por vida. Reemplaza a la clave temporal anterior:' : `Esta es tu clave de <b>STAR CHAIN</b> para este mes. ${n > 1 ? 'Reemplaza a la clave del mes pasado: actívala en tu plugin.' : ''}`}</p>
         ${keyBox(serial)}
         ${full ? '' : `<p style="color:#555;font-size:13px">Cuando se cobre tu siguiente cuota recibirás una clave nueva. Si un cobro falla, la clave se suspende hasta que se pague.</p>`}
-        <p><a href="${SITE}/mis-compras">Descargar el instalador (Mis compras)</a></p>
+        <p><a href="${STAR_WIN_URL}">Descargar el instalador de Windows</a></p>
+        <p>¿Usas Mac? <a href="${STAR_MAC_URL}">Pide el instalador de macOS por WhatsApp</a>.</p>
         <p>¿Dudas? Escríbele a Willie por <a href="https://wa.me/51993525005">WhatsApp</a>.</p>`);
     await sendOffsznEmail({ to, subject: full ? '🔑 Tu licencia STAR CHAIN FULL de por vida' : `🔑 Tu clave STAR CHAIN · cuota ${n} de ${STAR_INSTALLMENTS}`, html, fromName: 'OFFSZN', type: 'transactional' });
 }

@@ -21,11 +21,13 @@ class PluginDirectCheckout {
         const isStar = this.productId === 5003 || window.PLUGIN_NAME === 'STAR CHAIN';
 
         if (isStar) {
-            // Solo Windows por ahora: el instalador y la clave también llegan por correo. Sin enlace de macOS.
+            // Windows: ZIP en Drive (pegar aquí el mismo link de server/src/shared/config/starDelivery.js). macOS: WhatsApp de Willie.
+            const STAR_WIN_LINK = 'https://drive.google.com/file/d/1j6hqZKsaRL0aJ7RvSuTj7nWjABX0jViT/view?usp=sharing';
             this.downloads = {
                 name: 'STAR CHAIN',
-                win: '/mis-compras',
-                mac: null
+                win: STAR_WIN_LINK || '/mis-compras',
+                mac: 'https://wa.me/51993525005?text=' + encodeURIComponent('Compré el STAR CHAIN, quiero que me envíen el instalador de MAC'),
+                macLabel: 'macOS · pídelo por WhatsApp'
             };
         } else if (isCoke) {
             this.downloads = {
@@ -681,7 +683,7 @@ class PluginDirectCheckout {
                                 <i class="bi bi-windows" style="color: #0078d4;"></i> Windows
                             </a>
                             ${this.downloads.mac ? `<a href="${this.downloads.mac}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer">
-                                <i class="bi bi-apple"></i> macOS
+                                <i class="bi bi-apple"></i> ${this.downloads.macLabel || 'macOS'}
                             </a>` : ''}
                         </div>
                     </div>
