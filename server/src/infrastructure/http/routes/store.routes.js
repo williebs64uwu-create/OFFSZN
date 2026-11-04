@@ -8,7 +8,7 @@ import {
 } from '../controllers/StoreController.js';
 import * as crm from '../controllers/CrmController.js';
 import { createPlanAdmin, starPlanStatus } from '../controllers/StarSubscriptionController.js';
-import { financeMonth, financeAddExpense, financeDeleteExpense, financeSaveBank, financeSaveYape, financeVerify, paypalWebhookSetup, financeSettleArs, financeAddIncome } from '../controllers/FinanceController.js';
+import { financeMonth, financeAddExpense, financeDeleteExpense, financeSaveBank, financeSaveYape, financeEditIncome, financeVerify, paypalWebhookSetup, financeSettleArs, financeAddIncome } from '../controllers/FinanceController.js';
 import { runAutomations } from '../../services/crmService.js';
 
 const router = express.Router();
@@ -54,6 +54,7 @@ router.post('/admin/finance/expenses', adminAuth, financeAddExpense);
 router.delete('/admin/finance/expenses/:id', adminAuth, financeDeleteExpense);
 router.put('/admin/finance/bank', adminAuth, financeSaveBank);
 router.put('/admin/finance/yape', adminAuth, financeSaveYape);
+router.patch('/admin/finance/income/:id', adminAuth, financeEditIncome);
 router.post('/admin/finance/income/:id/verify', adminAuth, financeVerify);
 router.post('/admin/finance/settle-ars', adminAuth, financeSettleArs);
 router.post('/admin/paypal-webhook-setup', adminAuth, paypalWebhookSetup);
