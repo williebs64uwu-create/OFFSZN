@@ -211,6 +211,23 @@
         $$('[data-del-transfer]').forEach((b) => { b.onclick = async () => { if (!confirm('¿Quitar este envío al banco? (no cambia el saldo del banco)')) return; try { await api(`/admin/finance/bank-transfers/${b.dataset.delTransfer}`, { method: 'DELETE' }); toast('Envío quitado'); C.route(); } catch (err) { toast(err.message, 'error'); } }; });
         $$('[data-del-expense]').forEach((b) => { b.onclick = async () => { if (!confirm('¿Quitar este gasto?')) return; try { await api(`/admin/finance/expenses/${b.dataset.delExpense}`, { method: 'DELETE' }); toast('Gasto quitado'); C.route(); } catch (err) { toast(err.message, 'error'); } }; });
         const cat = $('#expCat'); if (cat) cat.onchange = (e) => { $('#expNote').required = e.target.value === 'SUSCRIPCIÓN IMPORTANTE'; };
+        const mp = $('#mailPreview');
+        if (mp) {
+            mp.onclick = async () => {
+                try {
+                    const res = await fetch('/api/store/admin/finance/weekly-preview', { headers: { 'x-admin-key': C.key.get() } });
+                    if (!res.ok) throw new Error('No se pudo armar el correo.');
+                    const html = await res.text();
+                    const w = window.open('', '_blank');
+                    if (w) { w.document.open(); w.document.write(html); w.document.close(); } else toast('Permite las ventanas emergentes para verlo', 'error');
+                } catch (err) { toast(err.message, 'error'); }
+            };
+            $('#mailSend').onclick = async (e) => {
+                e.target.disabled = true; $('#mailMsg').textContent = 'Enviando…';
+                try { const r = await api('/admin/finance/weekly-send', { method: 'POST', body: {} }); $('#mailMsg').textContent = r.ok ? `Enviado a ${r.sentTo}. Revisa tu bandeja (y spam).` : (r.error || 'No se pudo enviar.'); if (r.ok) toast('Correo enviado'); } catch (err) { $('#mailMsg').textContent = err.message; toast(err.message, 'error'); }
+                e.target.disabled = false;
+            };
+        }
         const su = $('#simUsd');
         if (su) {
             const drawSim = () => {
@@ -313,6 +330,9 @@
                     <button class="card fx-tile" data-go="finanzas-ventas"><span class="fx-tile__top">Esta semana contra la anterior</span><span class="kpi__value">${pen0(wk.now.pen)}</span>${wk.before.pen > 0 ? `<span class="small ${diff >= 0 ? 'fx-net' : 'fx-fee'}">${diff >= 0 ? '▲' : '▼'} ${pen0(Math.abs(diff))} ${diff >= 0 ? 'más' : 'menos'} que la semana anterior (${pen0(wk.before.pen)})</span>` : '<span class="small muted">Todavía no hay una semana anterior para comparar.</span>'}<span class="muted small">${wk.now.count} ${wk.now.count === 1 ? 'venta' : 'ventas'} · ver ventas ›</span></button>
                     <button class="card fx-tile" data-go="finanzas-movimientos"><span class="fx-tile__top">Movimientos del mes</span><span class="kpi__value">${num(s.income.count)} ${s.income.count === 1 ? 'venta' : 'ventas'}</span><span class="muted small">Gastos ${pen(s.expenses.totalPen)} · ver todos los movimientos ›</span></button>
                 </div>
+                ${card('📧 Correo semanal', 'Cada lunes a las 8:00 am (hora de Lima) te llega cómo vas.', `<p class="small">${d.settings.reportEmail ? `Se envía a <b>${esc(d.settings.reportEmail)}</b>.` : 'Todavía no hay un correo guardado.'}</p>
+                    <div class="row" style="margin-top:10px;flex-wrap:wrap"><button class="btn btn--outline" id="mailPreview">Ver cómo se ve</button><button class="btn btn--brand" id="mailSend" ${d.settings.reportEmail ? '' : 'disabled'}>Enviármelo ahora</button></div>
+                    <p class="muted small" id="mailMsg" style="margin-top:8px"></p>`, 'mt16')}
                 ${guide(false)}`;
             bind(x);
         }
