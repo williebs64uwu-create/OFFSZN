@@ -87,11 +87,9 @@
                     </div></div>
                 <div class="kpis">
                     ${hasYape
-                        ? `<div class="card kpi fx-hero"><div class="kpi__top"><span>💰 Dinero que tienes hoy</span>${icon('bag')}</div><div class="kpi__value">${pen(available)}</div><div class="kpi__foot">Saldo Yape ${pen(yp.pen)} + PayPal si retiras hoy ${pen(pp.estPen)}. Es lo que pasarías al banco.</div></div>`
-                        : `<div class="card kpi fx-hero"><div class="kpi__top"><span>Ventas netas del mes</span>${icon('bag')}</div><div class="kpi__value">${pen(real.netPen)}</div><div class="kpi__foot">Ya sin comisiones de PayPal ni retiro.</div></div>`}
-                    <div class="card kpi"><div class="kpi__top"><span>Ventas netas de ${monthLabel(d.month)}</span>${icon('trend')}</div><div class="kpi__value">${pen(real.netPen)}</div><div class="kpi__foot">${num(s.income.count)} ${s.income.count === 1 ? 'venta' : 'ventas'} · ya sin comisiones ni retiro. No es lo que tienes en mano.</div></div>
-                    <div class="card kpi"><div class="kpi__top"><span>Gastos</span>${icon('cart')}</div><div class="kpi__value fx-neg">${pen(s.expenses.totalPen)}</div><div class="kpi__foot">${s.expenses.totalPen ? s.expenses.byCategory.filter((c) => c.count).map((c) => `${c.category.toLowerCase()} ${pen(c.totalPen)}`).join(' · ') : 'Sin gastos este mes'}</div></div>
-                    <div class="card kpi"><div class="kpi__top"><span>Ganancia de ${monthLabel(d.month)}</span>${icon('dashboard')}</div><div class="kpi__value">${pen(real.resultPen)}</div><div class="kpi__foot">Ventas netas menos gastos</div></div>
+                        ? `<div class="card kpi fx-hero"><div class="kpi__top"><span>💰 Tu utilidad: lo que tienes hoy</span>${icon('bag')}</div><div class="kpi__value">${pen(available)}</div><div class="kpi__foot">Yape ${pen(yp.pen)} + PayPal si retiras hoy ${pen(pp.estPen)}. Esto es lo que pasarías al banco.</div></div>`
+                        : `<div class="card kpi fx-hero"><div class="kpi__top"><span>PayPal si retiras hoy</span>${icon('bag')}</div><div class="kpi__value">${pen(pp.estPen)}</div><div class="kpi__foot">Anota tu saldo de Yape más abajo para ver el total.</div></div>`}
+                    <div class="card kpi"><div class="kpi__top"><span>Gastos</span>${icon('cart')}</div><div class="kpi__value fx-neg">${pen(s.expenses.totalPen)}</div><div class="kpi__foot">${s.expenses.totalPen ? s.expenses.byCategory.filter((c) => c.count).map((c) => `${c.category.toLowerCase()} ${pen(c.totalPen)}`).join(' · ') : 'Sin gastos este mes'} · ya está descontado en tu Yape, no se resta otra vez.</div></div>
                 </div>
 
                 <div class="fx-pockets">
@@ -111,14 +109,6 @@
                         <form id="rateForm" class="stack" style="margin-top:10px"><input class="input" name="rate" type="number" step="0.0001" min="1" placeholder="Ej. 3.3292" value="${w.rate}" required><button class="btn btn--outline" type="submit">Guardar cambio</button></form></details>`)}
                 </div>
 
-                ${hasYape ? card('¿Por qué las ventas no son lo que tengo hoy?', 'Son dos números distintos. Esta es la cuenta, paso a paso:', `
-                    <div class="fx-steps">
-                        <div class="row between"><span>Ventas netas desde el 31 de octubre <span class="muted small">(sin comisiones ni retiro)</span></span><b class="fx-net">+ ${pen(k.soles.netPen + pp.estPen)}</b></div>
-                        <div class="row between"><span>Gastos</span><b class="fx-fee">− ${pen(s.expenses.totalPen)}</b></div>
-                        <div class="row between"><span>Lo que ya enviaste al banco y el saldo que tenías antes en Yape <span class="muted small">(calculado)</span></span><b class="${available - (k.soles.netPen + pp.estPen - s.expenses.totalPen) < 0 ? 'fx-fee' : 'fx-net'}">${available - (k.soles.netPen + pp.estPen - s.expenses.totalPen) < 0 ? '−' : '+'} ${pen(Math.abs(available - (k.soles.netPen + pp.estPen - s.expenses.totalPen)))}</b></div>
-                        <div class="row between fx-total"><span>Dinero que tienes hoy</span><b>${pen(available)}</b></div>
-                    </div>
-                    <p class="muted small" style="margin-top:8px">Las ventas de ${monthLabel(d.month)} (${pen(real.netPen)}) son menores porque el mes no incluye lo vendido el 31 de octubre.</p>`, 'mt16') : ''}
                 ${card('Simulador de retiro de PayPal', 'Solo para ver cuánto te llegaría. No guarda nada ni cambia tus números.', `
                     <div class="fx-sim">
                         <div class="fx-sim__in">
@@ -128,12 +118,14 @@
                         <div class="fx-steps" id="simOut"></div>
                     </div>`, 'mt16')}
                 <div class="grid grid-2" style="margin-top:16px">
-                    ${card('De lo que pagaron a lo que te queda', 'Ventas del mes: así se va el dinero antes de llegar a ti.', `
+                    ${card('PayPal: de lo que pagaron a tus soles', 'Paso a paso, en dólares, hasta llegar al número de arriba.', `
                         <div class="fx-steps">
-                            <div class="row between"><span>Lo que pagaron (bruto)</span><b>${pen(real.grossPen)}</b></div>
-                            <div class="row between muted"><span>Comisiones de PayPal</span><b>−${usd(pp.feeUsd)}</b></div>
-                            <div class="row between muted"><span>Retiro de PayPal${pp.provisional && !pp.withdrawCostUsd ? ' (previsión)' : ''}</span><b>${pp.withdrawCostUsd || pp.provisionUsd ? `−${usd(pp.withdrawCostUsd + pp.provisionUsd)}` : 'aún no (menos de ' + w.provision + ' US$)'}</b></div>
-                            <div class="row between fx-total"><span>Lo que te queda (ventas netas)</span><b>${pen(real.netPen)}</b></div>
+                            <div class="row between"><span>Lo que pagaron los clientes (bruto)</span><b>${usd(pp.grossUsd)}</b></div>
+                            <div class="row between muted"><span>Comisiones de PayPal</span><b class="fx-fee">−${usd(pp.feeUsd)}</b></div>
+                            <div class="row between"><span>Saldo en PayPal</span><b>${usd(pp.balanceUsd)}</b></div>
+                            <div class="row between muted"><span>Retiro${pp.provisional && !pp.withdrawCostUsd ? ' (previsión)' : ''}</span><b class="fx-fee">${pp.withdrawCostUsd || pp.provisionUsd ? `−${usd(pp.withdrawCostUsd + pp.provisionUsd)}` : 'aún no (menos de ' + w.provision + ' US$)'}</b></div>
+                            <div class="row between muted"><span>Por el cambio de ${String(w.rate).replace('.', ',')}</span><b></b></div>
+                            <div class="row between fx-total"><span>Soles de PayPal</span><b>${pen(pp.estPen)}</b></div>
                         </div>`)}
                     ${card('Ingresos por día', monthLabel(d.month), heat(d.month, d.byDay))}
                 </div>
