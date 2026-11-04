@@ -172,6 +172,35 @@ export function byDay(rows = [], rate = PAYPAL_WITHDRAW_DEFAULT.rate) {
     return [...m.values()].sort((a, b) => a.date.localeCompare(b.date));
 }
 
+// ─── Saldos que se mueven solos ───────────────────────────────────────────────────────────────────────────────
+// SALDO YAPE y BANCO son fotos que tú anotas (con su fecha y hora). Desde esa foto, lo nuevo se suma o se resta solo:
+//   Yape  = foto + cobros en soles nuevos (Yape, Binance, pesos ya confirmados) − gastos nuevos − envíos al banco nuevos
+//   Banco = foto + envíos al banco nuevos
+// Lo que ya pasó antes de la foto no se vuelve a contar. Sin hora guardada, la foto vale hasta el final de su día (hora de Lima).
+const endOfDayLima = (date) => (date ? Date.parse(`${date}T23:59:59-05:00`) : 0);
+const snapAt = (snap) => (snap && snap.at && !Number.isNaN(Date.parse(snap.at)) ? Date.parse(snap.at) : endOfDayLima(snap && snap.as_of));
+export function liveBalances({ income = [], expenses = [], transfers = [], yape = null, bank = null } = {}) {
+    const afterYape = snapAt(yape); const afterBank = snapAt(bank);
+    const newer = (t, since) => (t.at ? Date.parse(t.at) > since : endOfDayLima(t.date) > since);
+    const sales = solesPocket(income.filter((r) => r.occurred_at && Date.parse(r.occurred_at) > afterYape));
+    const spentNew = r2(expenses.filter((e) => e.created_at && Date.parse(e.created_at) > afterYape).reduce((a, e) => a + (num(e.amount_pen) || 0), 0));
+    const sentYape = r2(transfers.filter((t) => newer(t, afterYape)).reduce((a, t) => a + (num(t.pen) || 0), 0));
+    const sentBank = r2(transfers.filter((t) => newer(t, afterBank)).reduce((a, t) => a + (num(t.pen) || 0), 0));
+    const hasYape = yape && num(yape.pen) !== null;
+    return {
+        yape: { base: hasYape ? num(yape.pen) : null, newSales: sales.netPen, newSpent: spentNew, newSent: sentYape, now: hasYape ? r2(num(yape.pen) + sales.netPen - spentNew - sentYape) : null },
+        bank: { base: num(bank && bank.pen) ?? 0, newSent: sentBank, now: r2((num(bank && bank.pen) ?? 0) + sentBank) }
+    };
+}
+
+// ─── Meta del mes (en soles, ventas netas): mínimo ≈ US$ 1.000, intermedia y la mejor ──────────────────────────
+export const GOALS_DEFAULT = { min: 3500, mid: 4000, top: 5000 };
+export function goalProgress(salesNetPen, goals = GOALS_DEFAULT) {
+    const v = r2(salesNetPen);
+    const level = v >= goals.top ? 'top' : v >= goals.mid ? 'mid' : v >= goals.min ? 'min' : 'none';
+    return { salesNetPen: v, goals, level, pct: Math.min(100, Math.round((v / goals.top) * 100)), missing: { min: r2(Math.max(0, goals.min - v)), mid: r2(Math.max(0, goals.mid - v)), top: r2(Math.max(0, goals.top - v)) } };
+}
+
 // ─── Resumen de un mes ────────────────────────────────────────────────────────────────────────────────────────
 export function summarize(rows = [], expenses = [], fx = FX_DEFAULT) {
     const t = { count: 0, grossUsd: 0, feeUsd: 0, netUsd: 0, netPen: 0 };

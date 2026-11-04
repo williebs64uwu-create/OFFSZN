@@ -4,7 +4,7 @@
 import { supabase } from '../database/connection.js';
 import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../shared/config/config.js';
 import {
-    FX_DEFAULT, START_AT_DEFAULT, EXPENSE_CATEGORIES, PAYPAL_WITHDRAW_DEFAULT, BINANCE_RATE_DEFAULT, monthRange, summarize, pockets, byDay, kindOf, normalizeManualIncome, paypalCaptureRows, mercadoPagoRow, allocateSettlement
+    FX_DEFAULT, START_AT_DEFAULT, EXPENSE_CATEGORIES, PAYPAL_WITHDRAW_DEFAULT, BINANCE_RATE_DEFAULT, monthRange, summarize, pockets, byDay, kindOf, liveBalances, goalProgress, paypalPocket, solesPocket, GOALS_DEFAULT, normalizeManualIncome, paypalCaptureRows, mercadoPagoRow, allocateSettlement
 } from '../../shared/store/finance.js';
 
 const PAYPAL_API = PAYPAL_ENVIRONMENT === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
@@ -21,14 +21,16 @@ export async function getSettings() {
     const pos = (v, d) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : d);
     const withdraw = { threshold: pos(w.threshold, PAYPAL_WITHDRAW_DEFAULT.threshold), fee: pos(w.fee, PAYPAL_WITHDRAW_DEFAULT.fee), rate: pos(w.rate, PAYPAL_WITHDRAW_DEFAULT.rate), provision: pos(w.provision, PAYPAL_WITHDRAW_DEFAULT.provision) };
     const transfers = (Array.isArray(map.get('bank_transfers')) ? map.get('bank_transfers') : []).filter((t) => t && Number(t.pen) > 0);
-    return { bank, yape, transfers, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw, binanceRate: pos(map.get('binance_rate'), BINANCE_RATE_DEFAULT) };
+    const g = map.get('month_goals') || {};
+    const goals = { min: pos(g.min, GOALS_DEFAULT.min), mid: pos(g.mid, GOALS_DEFAULT.mid), top: pos(g.top, GOALS_DEFAULT.top) };
+    return { bank, yape, transfers, goals, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw, binanceRate: pos(map.get('binance_rate'), BINANCE_RATE_DEFAULT) };
 }
 
 export async function saveBank({ pen, asOf }) {
     const amount = Number(pen);
     if (!Number.isFinite(amount) || amount < 0 || amount > 100000000) throw Object.assign(new Error('Escribe el saldo en soles.'), { status: 400 });
     const date = /^\d{4}-\d{2}-\d{2}$/.test(String(asOf)) ? asOf : new Date().toISOString().slice(0, 10);
-    const { error } = await supabase.from('finance_settings').upsert({ key: 'bank_base', value: { pen: Math.round(amount * 100) / 100, as_of: date }, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    const { error } = await supabase.from('finance_settings').upsert({ key: 'bank_base', value: { pen: Math.round(amount * 100) / 100, as_of: date, at: new Date().toISOString() }, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     if (error) throw error;
     return { pen: Math.round(amount * 100) / 100, as_of: date };
 }
@@ -38,7 +40,7 @@ export async function saveYapeBalance({ pen, asOf }) {
     const amount = Number(pen);
     if (!Number.isFinite(amount) || amount < 0 || amount > 100000000) throw Object.assign(new Error('Escribe el saldo de Yape en soles.'), { status: 400 });
     const date = /^\d{4}-\d{2}-\d{2}$/.test(String(asOf)) ? asOf : new Date().toISOString().slice(0, 10);
-    const value = { pen: Math.round(amount * 100) / 100, as_of: date };
+    const value = { pen: Math.round(amount * 100) / 100, as_of: date, at: new Date().toISOString() };
     const { error } = await supabase.from('finance_settings').upsert({ key: 'yape_balance', value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     if (error) throw error;
     return value;
@@ -65,7 +67,7 @@ export async function addBankTransfer({ pen, date, note }) {
     if (!Number.isFinite(amount) || amount <= 0 || amount > 100000000) throw Object.assign(new Error('Escribe cuántos soles enviaste al banco.'), { status: 400 });
     const day = /^\d{4}-\d{2}-\d{2}$/.test(String(date)) ? date : new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 10);
     const current = (await getSettings()).transfers;
-    const item = { id: `t-${Date.now().toString(36)}`, date: day, pen: Math.round(amount * 100) / 100, note: String(note || '').trim().slice(0, 120) || null };
+    const item = { id: `t-${Date.now().toString(36)}`, at: new Date().toISOString(), date: day, pen: Math.round(amount * 100) / 100, note: String(note || '').trim().slice(0, 120) || null };
     await writeTransfers([...current, item]);
     return item;
 }
@@ -148,7 +150,15 @@ export async function monthData(month) {
     const real = pockets(rows, settings.bank.pen, settings.withdraw, summary.expenses.totalPen, pk.paypal).real; // bruto vs neto real del mes
     const transfers = settings.transfers.filter((t) => String(t.date).startsWith(range.month));
     const transfersPen = Math.round(transfers.reduce((a, t) => a + Number(t.pen), 0) * 100) / 100;
-    return { settings, month: range.month, income: rows, transfers, transfersPen, expenses: spent.data || [], pendingArs, summary, pockets: { ...pk, real }, byDay: byDay(rows, settings.withdraw.rate) };
+    // Gastos desde la foto del saldo de Yape (los de antes ya están descontados en ese saldo)
+    const spentAll = await supabase.from('finance_expenses').select('amount_pen, created_at').gte('created_at', settings.yape && settings.yape.as_of ? `${settings.yape.as_of}T00:00:00-05:00` : settings.startAt).limit(5000);
+    if (spentAll.error) throw spentAll.error;
+    const live = liveBalances({ income: all.data || [], expenses: spentAll.data || [], transfers: settings.transfers, yape: settings.yape, bank: settings.bank });
+    // Meta del mes: ventas netas del mes (Yape y Binance en soles + PayPal ya sin comisión, sin el costo de retiro) contra el mínimo, el intermedio y el mejor
+    const monthPp = paypalPocket(rows, settings.withdraw);
+    const monthSoles = solesPocket(rows);
+    const goal = goalProgress(monthSoles.netPen + monthPp.balanceUsd * settings.withdraw.rate, settings.goals);
+    return { settings, month: range.month, income: rows, transfers, transfersPen, live, goal, expenses: spent.data || [], pendingArs, summary, pockets: { ...pk, real }, byDay: byDay(rows, settings.withdraw.rate) };
 }
 
 // Ingresos desde el inicio del conteo (los usa el Resumen del CRM).
