@@ -8,7 +8,7 @@ import {
 } from '../controllers/StoreController.js';
 import * as crm from '../controllers/CrmController.js';
 import { createPlanAdmin, starPlanStatus } from '../controllers/StarSubscriptionController.js';
-import { financeMonth, financeAddExpense, financeDeleteExpense, financeSaveBank, financeSaveYape, financeEditIncome, financeSaveWithdrawRate, financeVerify, paypalWebhookSetup, financeSettleArs, financeAddIncome } from '../controllers/FinanceController.js';
+import { financeMonth, financeAddExpense, financeDeleteExpense, financeSaveBank, financeSaveYape, financeEditIncome, financeSaveWithdrawRate, financeAddTransfer, financeDeleteTransfer, financeVerify, paypalWebhookSetup, financeSettleArs, financeAddIncome } from '../controllers/FinanceController.js';
 import { runAutomations } from '../../services/crmService.js';
 
 const router = express.Router();
@@ -55,6 +55,8 @@ router.delete('/admin/finance/expenses/:id', adminAuth, financeDeleteExpense);
 router.put('/admin/finance/bank', adminAuth, financeSaveBank);
 router.put('/admin/finance/yape', adminAuth, financeSaveYape);
 router.put('/admin/finance/withdraw-rate', adminAuth, financeSaveWithdrawRate);
+router.post('/admin/finance/bank-transfers', adminAuth, financeAddTransfer);
+router.delete('/admin/finance/bank-transfers/:id', adminAuth, financeDeleteTransfer);
 router.patch('/admin/finance/income/:id', adminAuth, financeEditIncome);
 router.post('/admin/finance/income/:id/verify', adminAuth, financeVerify);
 router.post('/admin/finance/settle-ars', adminAuth, financeSettleArs);

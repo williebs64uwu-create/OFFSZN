@@ -124,7 +124,9 @@ export function paypalPocket(rows = [], w = PAYPAL_WITHDRAW_DEFAULT) {
     const provisional = leftUsd >= w.provision && leftUsd < w.threshold;
     const provisionUsd = provisional ? w.fee : 0;
     const estPen = r2(blocks * (w.threshold - w.fee) * w.rate + Math.max(0, leftUsd - provisionUsd) * w.rate);
-    return { ...t, ...w, blocks, leftUsd, provisional, provisionUsd, withdrawCostUsd: r2(blocks * w.fee), remainingUsd: r2(Math.max(0, w.threshold - leftUsd)), progress: Math.min(1, leftUsd / w.threshold), estPen };
+    return { ...t, ...w, blocks, leftUsd, provisional, provisionUsd, withdrawCostUsd: r2(blocks * w.fee), remainingUsd: r2(Math.max(0, w.threshold - leftUsd)), progress: Math.min(1, leftUsd / w.threshold), estPen,
+        // Si cambias TODO el saldo hoy: un retiro, con su costo de 4 US$ (aunque no llegue a 200). Es el "dinero para depositar" de PayPal.
+        nowCostUsd: t.balanceUsd > 0 ? w.fee : 0, nowPen: t.balanceUsd > w.fee ? r2((t.balanceUsd - w.fee) * w.rate) : 0 };
 }
 
 export function solesPocket(rows = []) {

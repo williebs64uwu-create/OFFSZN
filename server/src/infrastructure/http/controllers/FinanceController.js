@@ -1,7 +1,7 @@
 // ─── Finanzas del CRM: endpoints del panel de licencias (despacho) y del CRM ───────────────────────────────────
 import { isAdminKey } from '../../../shared/config/adminKey.js';
 import {
-    recordManualIncome, monthData, addExpense, deleteExpense, saveBank, saveYapeBalance, saveWithdrawRate, updateIncomeLabel, verifyPayPalIncome, setupPayPalWebhook, getSettings, settleArs
+    recordManualIncome, monthData, addExpense, deleteExpense, saveBank, saveYapeBalance, saveWithdrawRate, addBankTransfer, deleteBankTransfer, updateIncomeLabel, verifyPayPalIncome, setupPayPalWebhook, getSettings, settleArs
 } from '../../services/financeService.js';
 import { METHOD_LABEL, EXPENSE_CATEGORIES } from '../../../shared/store/finance.js';
 
@@ -59,6 +59,14 @@ export const financeSaveYape = async (req, res) => {
 // PUT /admin/finance/withdraw-rate { rate } → cambio real de PayPal al retirar
 export const financeSaveWithdrawRate = async (req, res) => {
     try { return res.json({ ok: true, withdraw: await saveWithdrawRate(req.body?.rate) }); } catch (e) { return fail(res, e); }
+};
+
+// POST /admin/finance/bank-transfers { pen, date, note } · DELETE /admin/finance/bank-transfers/:id → dinero enviado al banco
+export const financeAddTransfer = async (req, res) => {
+    try { return res.json({ ok: true, transfer: await addBankTransfer({ pen: req.body?.pen, date: req.body?.date, note: req.body?.note }) }); } catch (e) { return fail(res, e); }
+};
+export const financeDeleteTransfer = async (req, res) => {
+    try { await deleteBankTransfer(req.params.id); return res.json({ ok: true }); } catch (e) { return fail(res, e); }
 };
 
 // PATCH /admin/finance/income/:id { product, note } → corrige el nombre del producto (no cambia montos)
