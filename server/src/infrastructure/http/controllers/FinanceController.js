@@ -1,7 +1,7 @@
 // ─── Finanzas del CRM: endpoints del panel de licencias (despacho) y del CRM ───────────────────────────────────
 import { isAdminKey } from '../../../shared/config/adminKey.js';
 import {
-    recordManualIncome, monthData, addExpense, deleteExpense, saveBank, verifyPayPalIncome, setupPayPalWebhook, getSettings, settleArs
+    recordManualIncome, monthData, addExpense, deleteExpense, saveBank, saveYapeBalance, verifyPayPalIncome, setupPayPalWebhook, getSettings, settleArs
 } from '../../services/financeService.js';
 import { METHOD_LABEL, EXPENSE_CATEGORIES } from '../../../shared/store/finance.js';
 
@@ -38,6 +38,11 @@ export const financeDeleteExpense = async (req, res) => {
 // PUT /admin/finance/bank { pen, asOf } → la cuenta del banco la actualizas tú; las ventas nuevas no se suman solas
 export const financeSaveBank = async (req, res) => {
     try { return res.json({ ok: true, bank: await saveBank({ pen: req.body?.pen, asOf: req.body?.asOf }) }); } catch (e) { return fail(res, e); }
+};
+
+// PUT /admin/finance/yape { pen, asOf } → SALDO YAPE (dato de control, no es venta)
+export const financeSaveYape = async (req, res) => {
+    try { return res.json({ ok: true, yape: await saveYapeBalance({ pen: req.body?.pen, asOf: req.body?.asOf }) }); } catch (e) { return fail(res, e); }
 };
 
 // POST /admin/finance/income/:id/verify → vuelve a preguntarle a PayPal por ese cobro

@@ -14,12 +14,13 @@ export async function getSettings() {
     const { data } = await supabase.from('finance_settings').select('key, value');
     const map = new Map((data || []).map((r) => [r.key, r.value]));
     const bank = map.get('bank_base') || { pen: 0, as_of: null };
+    const yape = map.get('yape_balance') || { pen: null, as_of: null }; // SALDO YAPE: lo que de verdad hay en Yape; no es una venta y no suma a nada
     const fx = Number(map.get('fx_pen_per_usd'));
     // Retiro de PayPal (opcional en la tabla; si no está se usan 200 US$, 4 US$ y 3,3)
     const w = map.get('paypal_withdraw') || {};
     const pos = (v, d) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : d);
     const withdraw = { threshold: pos(w.threshold, PAYPAL_WITHDRAW_DEFAULT.threshold), fee: pos(w.fee, PAYPAL_WITHDRAW_DEFAULT.fee), rate: pos(w.rate, PAYPAL_WITHDRAW_DEFAULT.rate), provision: pos(w.provision, PAYPAL_WITHDRAW_DEFAULT.provision) };
-    return { bank, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw };
+    return { bank, yape, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw };
 }
 
 export async function saveBank({ pen, asOf }) {
@@ -29,6 +30,17 @@ export async function saveBank({ pen, asOf }) {
     const { error } = await supabase.from('finance_settings').upsert({ key: 'bank_base', value: { pen: Math.round(amount * 100) / 100, as_of: date }, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     if (error) throw error;
     return { pen: Math.round(amount * 100) / 100, as_of: date };
+}
+
+// Saldo real de Yape (lo anotas tú). Es solo un dato de control: no es una venta y no entra en el neto ni en la utilidad.
+export async function saveYapeBalance({ pen, asOf }) {
+    const amount = Number(pen);
+    if (!Number.isFinite(amount) || amount < 0 || amount > 100000000) throw Object.assign(new Error('Escribe el saldo de Yape en soles.'), { status: 400 });
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(String(asOf)) ? asOf : new Date().toISOString().slice(0, 10);
+    const value = { pen: Math.round(amount * 100) / 100, as_of: date };
+    const { error } = await supabase.from('finance_settings').upsert({ key: 'yape_balance', value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error) throw error;
+    return value;
 }
 
 // Nombre del producto que se vendió en una orden: solo lo tuyo (producto sin productor = plugin de OFFSZN, o de tu cuenta).

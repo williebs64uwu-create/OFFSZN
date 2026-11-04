@@ -53,7 +53,7 @@
             try { d = await api(`/admin/finance?month=${month}`); } catch (e) { view.innerHTML = head('Finanzas') + `<div class="alert alert--error">${icon('alert')}<div>${esc(e.message)}</div></div>`; return; }
             if (token !== C.state.routeToken) return;
 
-            const s = d.summary; const k = d.pockets; const w = d.settings.withdraw; const pp = k.paypal; const real = k.real; const bank = d.settings.bank;
+            const s = d.summary; const k = d.pockets; const w = d.settings.withdraw; const pp = k.paypal; const real = k.real; const bank = d.settings.bank; const yp = d.settings.yape || {};
             const startLabel = new Date(d.settings.startAt).toLocaleDateString('es-PE', { timeZone: 'America/Lima', day: 'numeric', month: 'long', year: 'numeric' });
             const alerts = [
                 s.pendingArs.count ? `<div class="alert alert--warning">${icon('alert')}<div><b>${s.pendingArs.count} ${s.pendingArs.count === 1 ? 'pago' : 'pagos'} en pesos argentinos</b> (${ars(s.pendingArs.pesos)}) por confirmar. Todavía no suman.</div></div>` : '',
@@ -77,7 +77,11 @@
                     ${card('Banco', 'Fijo. Lo editas tú; las ventas nuevas no se suman aquí.', `<div class="kpi__value">${pen(bank.pen)}</div><p class="muted small">Al ${esc(bank.as_of || '—')} · solo cambia con tus intereses de fin de mes</p>
                         <details style="margin-top:10px"><summary class="muted small" style="cursor:pointer">Actualizar saldo</summary>
                         <form id="bankForm" class="stack" style="margin-top:10px"><div class="row"><input class="input" name="pen" type="number" step="0.01" min="0" placeholder="Saldo en soles" required style="flex:1"><input class="input" name="asOf" type="date" value="${today()}" style="width:auto"></div><button class="btn btn--outline" type="submit">Guardar saldo</button></form></details>`)}
-                    ${card('Yape y Binance', 'Soles que ya son netos. Sin retiro.', `<div class="kpi__value">${pen(k.soles.netPen)}</div><div class="stack" style="margin-top:8px;gap:4px">${solesCount ? solesLines : '<p class="muted small">Sin cobros en soles todavía.</p>'}</div>`)}
+                    ${card('Yape y Binance', 'Soles que ya son netos. Sin retiro.', `<div class="kpi__value">${pen(k.soles.netPen)}</div><div class="stack" style="margin-top:8px;gap:4px">${solesCount ? solesLines : '<p class="muted small">Sin cobros en soles todavía.</p>'}</div>
+                        <div class="fx-saldo"><div class="row between"><span>SALDO YAPE <span class="muted small">(lo que hay hoy)</span></span><b>${yp.pen === null || yp.pen === undefined ? '—' : pen(yp.pen)}</b></div>
+                        <p class="muted small">${yp.pen === null || yp.pen === undefined ? 'Anótalo abajo para compararlo con las ventas.' : `Al ${esc(yp.as_of || '—')} · dato de control, no es venta y no suma al neto`}</p></div>
+                        <details style="margin-top:6px"><summary class="muted small" style="cursor:pointer">Anotar saldo de Yape</summary>
+                        <form id="yapeForm" class="stack" style="margin-top:10px"><div class="row"><input class="input" name="pen" type="number" step="0.01" min="0" placeholder="Saldo en soles" required style="flex:1"><input class="input" name="asOf" type="date" value="${today()}" style="width:auto"></div><button class="btn btn--outline" type="submit">Guardar saldo de Yape</button></form></details>`)}
                     ${card('PayPal', `Dólares ya sin comisión · retiro cada ${w.threshold} US$`, `<div class="kpi__value">${usd(pp.balanceUsd)}</div>
                         <div class="bar" style="margin:10px 0 6px"><i style="width:${Math.max(2, Math.round(pp.progress * 100))}%"></i></div>
                         <p class="muted small">${pp.blocks ? `${pp.blocks} ${pp.blocks === 1 ? 'retiro listo' : 'retiros listos'} (−${usd(pp.withdrawCostUsd)} de costo) · ` : ''}faltan <b>${usd(pp.remainingUsd)}</b> para el siguiente retiro de ${w.threshold} US$</p>
@@ -157,6 +161,10 @@
             $('#bankForm').onsubmit = async (e) => {
                 e.preventDefault(); const f = new FormData(e.target);
                 try { await api('/admin/finance/bank', { method: 'PUT', body: { pen: f.get('pen'), asOf: f.get('asOf') } }); toast('Saldo actualizado'); C.route(); } catch (err) { toast(err.message, 'error'); }
+            };
+            $('#yapeForm').onsubmit = async (e) => {
+                e.preventDefault(); const f = new FormData(e.target);
+                try { await api('/admin/finance/yape', { method: 'PUT', body: { pen: f.get('pen'), asOf: f.get('asOf') } }); toast('Saldo de Yape guardado'); C.route(); } catch (err) { toast(err.message, 'error'); }
             };
             $('#expForm').onsubmit = async (e) => {
                 e.preventDefault(); const f = new FormData(e.target);
