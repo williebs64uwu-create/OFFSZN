@@ -152,3 +152,49 @@ test('oferta de prueba vencida según país', () => {
     assert.equal(trialFollowupPrice('VE'), 5);
     assert.equal(trialFollowupPrice(null), 5);
 });
+
+test('descuento por cantidad: 2 presets 10%, 3 → 20%, 4 → 25%, y avisa cuántos faltan para el siguiente nivel', () => {
+    const region = resolveRegion({ ipCountry: 'PE', timezone: 'America/Lima' });
+    const ids = ['preset-bad-bunny', 'preset-alejo', 'preset-remers', 'preset-jhayco'];
+    const q = (n, extra = {}) => quoteCart({ items: ids.slice(0, n).map((id) => ({ id })), getProduct, region, ...extra });
+    assert.equal(q(1).discountUsd, 0);
+    assert.equal(q(1).volume.next.add, 1);
+    assert.equal(q(2).offerApplied.type, 'volume');
+    assert.equal(q(2).discountUsd, q(2).subtotalUsd * 0.1);
+    assert.equal(q(3).offerApplied.percent, 20);
+    assert.equal(q(4).offerApplied.percent, 25);
+    assert.equal(q(4).volume.next, null);
+    assert.equal(q(4).totalUsd, q(4).subtotalUsd * 0.75);
+    assert.equal(q(2, { autoVolume: false }).discountUsd, 0, 'las ventas manuales del CRM no lo aplican solas');
+});
+
+test('descuento por cantidad: no se acumula con otras ofertas ni toca productos que no son presets', () => {
+    const region = resolveRegion({ ipCountry: 'PE', timezone: 'America/Lima' });
+    const two = [{ id: 'preset-bad-bunny' }, { id: 'preset-alejo' }];
+    const withOffer = quoteCart({ items: two, getProduct, region, offer: { type: 'coupon', code: 'WILLIE10' } });
+    assert.equal(withOffer.offerApplied.type, 'coupon');
+    const mixed = quoteCart({ items: [...two, { id: 'plugin-easy-mix' }], getProduct, region });
+    const presetsOnly = quoteCart({ items: two, getProduct, region });
+    assert.equal(mixed.discountUsd, presetsOnly.discountUsd, 'el plugin no suma ni recibe descuento');
+});
+
+test('pesos argentinos: 1 USD = 1500 ARS en el total para Mercado Pago', () => {
+    const region = resolveRegion({ ipCountry: 'PE', timezone: 'America/Lima' });
+    const q = quoteCart({ items: [{ id: 'preset-bad-bunny' }], getProduct, region });
+    assert.equal(q.totalArs, q.totalUsd * 1500);
+});
+
+test('cupón vs descuento por cantidad: gana el que más ahorra, nunca se acumulan', () => {
+    const region = resolveRegion({ ipCountry: 'PE', timezone: 'America/Lima' });
+    const three = [{ id: 'preset-bad-bunny' }, { id: 'preset-alejo' }, { id: 'preset-bhavi' }];
+    const weak = quoteCart({ items: three, getProduct, region, offer: { type: 'coupon', code: 'WILLIE10' } });
+    assert.equal(weak.offerApplied.type, 'volume', 'el 20% por cantidad supera al 10% del cupón');
+    assert.ok(weak.errors.some((e) => e.error === 'volume_better'));
+    assert.equal(weak.discountUsd, weak.subtotalUsd * 0.2);
+    const strong = quoteCart({ items: three, getProduct, region, offer: { type: 'coupon', code: 'VOCES' } });
+    assert.equal(strong.discountUsd, strong.subtotalUsd * 0.2, 'VOCES 20% empata con el 20% por cantidad: no se acumulan');
+    const one = quoteCart({ items: [{ id: 'preset-bad-bunny' }], getProduct, region, offer: { type: 'coupon', code: 'WILLIE10' } });
+    assert.equal(one.offerApplied.type, 'coupon', 'con un solo preset el cupón sí aplica');
+    const bad = quoteCart({ items: three, getProduct, region, offer: { type: 'coupon', code: 'NOEXISTE' } });
+    assert.ok(bad.errors.some((e) => e.error === 'invalid_coupon'));
+});

@@ -22,6 +22,7 @@
     function detectProduct() {
         if (window.PLUGIN_NAME && typeof window.PLUGIN_NAME === 'string') return window.PLUGIN_NAME;
         var p = (location.pathname || '').toLowerCase();
+        if (p.indexOf('star-chain') !== -1) return 'STAR CHAIN';
         if (p.indexOf('easy-pitch') !== -1) return 'Easy Pitch';
         if (p.indexOf('easy-mix') !== -1) return 'Easy Mix';
         if (p.indexOf('vocal-preset') !== -1) return 'Vocal Preset';

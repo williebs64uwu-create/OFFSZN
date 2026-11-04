@@ -6,10 +6,7 @@
 
     const SEGMENT_BADGE = { FREE: 'secondary', 'COMPRADOR V1': 'brand', 'COMPRADOR V2': 'success' };
     const segBadge = (s) => `<span class="badge badge--${SEGMENT_BADGE[s] || 'secondary'}">${esc(s || 'FREE')}</span>`;
-    const card = ({ title, desc = '', actions = '', body = '', flush = false, id = '' }) => `<section class="card ${flush ? 'card--flush' : ''}" ${id ? `id="${id}"` : ''}>
-        ${title ? `<div class="card__head"><div><h2 class="card__title">${title}</h2>${desc ? `<p class="card__desc">${desc}</p>` : ''}</div>${actions}</div>` : ''}<div class="card__body">${body}</div></section>`;
-    const head = (title, desc = '', actions = '') => `<div class="page-head"><div><h1>${title}</h1>${desc ? `<p>${desc}</p>` : ''}</div><div class="row">${actions}</div></div>`;
-    const empty = (ic, text) => `<div class="empty">${icon(ic)}<p>${text}</p></div>`;
+    const { card, head, empty } = C.ui;
     const rows = (list, label, value, fmt = (v) => v) => {
         const max = Math.max(1, ...list.map((r) => r[value]));
         return list.length ? list.map((r) => `<div class="list-row"><div class="grow"><div class="row between"><span>${esc(r[label])}</span><b>${fmt(r[value])}</b></div><div class="bar" style="margin-top:6px"><i style="width:${Math.max(3, (r[value] / max) * 100)}%"></i></div></div></div>`).join('')
@@ -255,15 +252,72 @@
 
     // ══ Venta manual ══════════════════════════════════════════════════════════
     let products = [];
+    // Venta manual: por defecto SOLO REGISTRA en Finanzas (no entrega nada ni envía correos). La entrega con correo es otra pestaña.
+    const PLUGINS = ['STAR CHAIN', 'Easy Mix', 'Easy Master', 'Omni', 'Vocal Preset', 'Easy Pitch', 'Coca-Cola', 'Inka Kola', 'Easy Level', 'Easy Deeser', 'Easy Clean', 'Ghost', 'Cassette', 'Orb'];
+    const METHODS = [['yape', 'Yape'], ['paypal', 'PayPal'], ['mercadopago', 'Mercado Pago'], ['mp_argentina', 'Mercado Pago → Yape (Argentina)'], ['binance', 'Binance (USDT)'], ['transferencia', 'Transferencia'], ['otro', 'Otro']];
+    const DEFAULT_METHOD = { PEN: 'yape', USD: 'paypal', ARS: 'mp_argentina' };
+    const whenIso = (v, custom) => {
+        const h = { now: 0, h1: 1, h2: 2, h5: 5, d1: 24 }[v];
+        if (h !== undefined) return new Date(Date.now() - h * 3600000).toISOString();
+        return custom ? new Date(custom).toISOString() : null;
+    };
     C.pages.ventas = {
         async render(view, token) {
+            const mode = C.state.saleMode || 'registrar';
+            view.innerHTML = `${head('Venta manual', 'Anota una venta que cobraste por fuera (Yape, Binance, transferencia…).')}
+                <div class="tabs" id="saleTabs"><button class="${mode === 'registrar' ? 'is-active' : ''}" data-mode="registrar">Solo registrar</button><button class="${mode === 'entregar' ? 'is-active' : ''}" data-mode="entregar">Registrar y entregar (tienda)</button></div>
+                <div id="saleBox"></div>`;
+            $('#saleTabs').onclick = (e) => { const t = e.target.closest('[data-mode]'); if (t) { C.state.saleMode = t.dataset.mode; C.route(); } };
+            const box = $('#saleBox');
+            if (mode === 'registrar') return registerForm(box);
+            return deliverForm(box, token);
+        }
+    };
+
+    function registerForm(box) {
+        box.innerHTML = `<form class="stack" id="regForm" style="max-width:560px">
+            ${card({ title: 'Qué se vendió', body: `<div class="stack">
+                <label class="label">Producto<input class="input" name="product" list="regProducts" required maxlength="120" placeholder="Ej. STAR CHAIN (licencia full)" autocomplete="off"><datalist id="regProducts">${PLUGINS.map((n) => `<option value="${esc(n)}">`).join('')}</datalist></label>
+                <div class="chips" id="regChips">${PLUGINS.slice(0, 8).map((n) => `<button type="button" class="chip" data-prod="${esc(n)}">${esc(n)}</button>`).join('')}</div></div>` })}
+            ${card({ title: 'Cuánto y cómo', body: `<div class="stack">
+                <div class="row"><label class="label grow">Monto<input class="input" name="amount" type="number" inputmode="decimal" min="0.01" step="0.01" required placeholder="120"><span class="field-hint" id="regHint">Soles: lo que te llegó neto.</span></label>
+                <label class="label grow">Moneda<select class="select" name="currency" id="regCur"><option value="PEN">Soles (neto)</option><option value="USD">Dólares (USD)</option><option value="ARS">Pesos argentinos</option></select></label></div>
+                <label class="label">Método<select class="select" name="method" id="regMethod">${METHODS.map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</select></label>
+                <div class="row"><label class="label grow">¿Cuándo?<select class="select" name="when" id="regWhen"><option value="now">Ahora</option><option value="h1">Hace 1 hora</option><option value="h2">Hace 2 horas</option><option value="h5">Hace 5 horas</option><option value="d1">Hace 1 día</option><option value="custom">Elegir fecha y hora…</option></select></label>
+                <label class="label grow" id="regCustomBox" hidden>Fecha y hora<input class="input" name="custom" type="datetime-local"></label></div>
+                <label class="label">Correo del comprador (opcional)<input class="input" name="email" type="email" placeholder="comprador@gmail.com"></label>
+                <label class="label">Nota (opcional)<input class="input" name="note" maxlength="300" placeholder="Ej. pagó por Yape a mi número"></label></div>` })}
+            <button class="btn btn--brand btn--block" id="regBtn">Registrar venta</button>
+            <p class="muted small">Esto solo anota el ingreso en Finanzas. No envía correos, no entrega archivos y no crea claves.</p>
+            <div id="regMsg"></div></form>`;
+        const f = $('#regForm');
+        $('#regChips').onclick = (e) => { const b = e.target.closest('[data-prod]'); if (b) { f.product.value = b.dataset.prod; } };
+        $('#regCur').onchange = (e) => { $('#regMethod').value = DEFAULT_METHOD[e.target.value]; $('#regHint').textContent = { PEN: 'Soles: lo que te llegó neto.', USD: 'Dólares: lo que te dieron.', ARS: 'Pesos: queda por confirmar hasta que lleguen los soles.' }[e.target.value]; };
+        $('#regWhen').onchange = (e) => { $('#regCustomBox').hidden = e.target.value !== 'custom'; };
+        f.onsubmit = async (e) => {
+            e.preventDefault();
+            const fd = new FormData(f);
+            const occurredAt = whenIso(fd.get('when'), fd.get('custom'));
+            if (!occurredAt) { toast('Elige la fecha y la hora', 'error'); return; }
+            const btn = $('#regBtn'); btn.disabled = true; btn.textContent = 'Registrando…';
+            try {
+                const r = await api('/admin/finance/income', { method: 'POST', body: { product: fd.get('product'), amount: fd.get('amount'), currency: fd.get('currency'), method: fd.get('method'), email: fd.get('email'), note: fd.get('note'), occurredAt } });
+                const cur = r.income.currency;
+                const money = cur === 'PEN' ? `S/ ${Number(r.income.net).toFixed(2)}` : cur === 'USD' ? usd(r.income.net) : 'Pesos por confirmar';
+                $('#regMsg').innerHTML = `<div class="alert alert--ok">${icon('check')}<div><b>Registrado: ${esc(r.income.product)} · ${money}.</b><br>${C.when(r.income.occurredAt)} · ya cuenta en <a href="#/finanzas" style="text-decoration:underline">Finanzas</a>.</div></div>`;
+                f.reset(); $('#regCustomBox').hidden = true; toast('Venta registrada');
+            } catch (err) { $('#regMsg').innerHTML = `<div class="alert alert--error">${icon('alert')}<div>${esc(err.message)}</div></div>`; }
+            btn.disabled = false; btn.textContent = 'Registrar venta';
+        };
+    }
+
+    async function deliverForm(box, token) {
             if (!products.length) {
                 const res = await fetch('/api/store/catalog').then((r) => r.json()).catch(() => ({ products: [] }));
                 products = res.products.filter((p) => p.status === 'active' && !['lead_magnet', 'subscription'].includes(p.kind) && p.pricing?.usd > 0);
             }
             if (token !== C.state.routeToken) return;
-            view.innerHTML = `${head('Venta manual', 'Una venta que cerraste por WhatsApp: se entrega, se avisa al comprador y queda en el CRM.')}
-                <form class="grid grid-2" id="saleForm" style="align-items:start">
+                        box.innerHTML = `<form class="grid grid-2" id="saleForm" style="align-items:start">
                     ${card({ title: 'Comprador', body: `<div class="stack">
                         <label class="label">Correo<input class="input" name="email" type="email" required placeholder="comprador@gmail.com"></label>
                         <div class="row"><label class="label grow">País (2 letras)<input class="input" name="country" maxlength="2" placeholder="PE"><span class="field-hint">Define el precio de lista.</span></label>
@@ -296,8 +350,7 @@
                 } catch (err) { $('#saleMsg').innerHTML = `<div class="alert alert--error">${icon('alert')}<div>${esc(err.message)}</div></div>`; }
                 btn.disabled = false; btn.textContent = 'Registrar y entregar';
             };
-        }
-    };
+    }
 
     // ══ Tareas ════════════════════════════════════════════════════════════════
     C.pages.tareas = {

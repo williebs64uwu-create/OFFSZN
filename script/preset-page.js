@@ -63,15 +63,17 @@
 
     // ── Medios ─────────────────────────────────────────────────────────────────────
     const hasVal = (v) => !!v && v !== 'null' && v !== 'undefined';
+    let STORE = false; // preset de la tienda de Willie: archivos propios (rutas del sitio) y compra por /willieinspired/checkout
     async function mediaUrl(raw, version, productId) {
         if (!hasVal(raw)) return null;
+        if (STORE && /^(\/|https?:)/.test(raw)) return raw;
         const u = window.AuthUtils && window.AuthUtils.resolvePreviewMediaUrl ? window.AuthUtils.resolvePreviewMediaUrl(raw, version) : null;
         if (u) return u;
         try { return await window.AuthUtils.getAuthorizedUrl(raw, version, productId); } catch (_) { return null; }
     }
 
     // ── Estado ─────────────────────────────────────────────────────────────────────
-    const S = { p: null, mode: 'pre', playing: false, dur: 0, progress: 0, raw: null, pre: null, hasAB: false, peaksRaw: null, playedOnce: false, raf: 0 };
+    const S = { p: null, mode: 'pre', playing: false, dur: 0, progress: 0, raw: null, pre: null, hasAB: false, peaksRaw: null, playedOnce: false, raf: 0, tok: 0 };
 
     // ── Onda ───────────────────────────────────────────────────────────────────────
     const canvas = $('#waveCanvas'); const ctx = canvas.getContext('2d');
@@ -145,7 +147,7 @@
             if (S.raw) S.raw.currentTime = S.pre.currentTime;
             await Promise.all([S.pre.play(), S.raw ? S.raw.play() : null]);
             setPlaying(true);
-            if (!S.playedOnce) { S.playedOnce = true; fetch(`/api/products/${S.p.id}/play`, { method: 'POST' }).catch(() => {}); }
+            if (!S.playedOnce) { S.playedOnce = true; if (!STORE) fetch(`/api/products/${S.p.id}/play`, { method: 'POST' }).catch(() => {}); }
         } catch (_) { setPlaying(false); toast('No se pudo reproducir el audio. Prueba de nuevo.'); }
     }
     function pause() { if (S.pre) S.pre.pause(); if (S.raw) S.raw.pause(); setPlaying(false); }
@@ -160,11 +162,37 @@
         document.querySelectorAll('#seg button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
     }
 
+    // Arrastrar o tocar la onda para moverse en el audio (una sola vez)
+    (function bindWave() {
+        const wave = $('#wave'); let drag = false;
+        const ratioOf = (e) => { const r = wave.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); };
+        wave.addEventListener('pointerdown', (e) => { if (!S.pre) return; drag = true; wave.setPointerCapture(e.pointerId); seek(ratioOf(e)); });
+        wave.addEventListener('pointermove', (e) => { if (drag && S.pre) seek(ratioOf(e)); });
+        wave.addEventListener('pointerup', () => { drag = false; });
+        wave.addEventListener('keydown', (e) => {
+            if (!S.pre) return;
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); const d = duration(); if (d) seek((S.pre.currentTime + (e.key === 'ArrowRight' ? 5 : -5)) / d); }
+        });
+    })();
+
+    // Antes de cargar otro preset: se detiene el audio y se limpia el estado
+    function resetPlayer() {
+        if (S.pre) { S.pre.pause(); S.pre.removeAttribute('src'); }
+        if (S.raw) { S.raw.pause(); S.raw.removeAttribute('src'); }
+        S.pre = null; S.raw = null; S.hasAB = false; S.peaksRaw = null; S.playedOnce = false; S.mode = 'pre'; S.progress = 0; S.dur = 0;
+        cancelAnimationFrame(S.raf); S.playing = false; player.classList.remove('is-playing', 'has-ab');
+        const m = $('#waveMsg'); if (m) m.hidden = true;
+        $('#play').disabled = true; $('#tCur').textContent = '0:00'; $('#tDur').textContent = '0:00';
+        drawWave();
+    }
+
     async function initPlayer(p) {
+        const tok = ++S.tok;
         const ver = p.storage_version || p.r2_version;
         const preRaw = hasVal(p.audio_after_url) ? p.audio_after_url : (hasVal(p.audio_before_url) ? p.audio_before_url : null);
         const rawRaw = hasVal(p.audio_before_url) ? p.audio_before_url : null;
         const preUrl = await mediaUrl(preRaw, ver, p.id);
+        if (tok !== S.tok) return;
         if (!preUrl) { const m = $('#waveMsg'); m.hidden = false; m.textContent = 'Este preset aún no tiene audio de muestra.'; $('#abLabel').textContent = 'Sin audio de muestra'; return; }
 
         // Antes/después real: solo si hay dos archivos distintos. Con un solo archivo repetido no se finge una comparación.
@@ -172,6 +200,7 @@
         S.pre = new Audio(); S.pre.preload = 'auto'; S.pre.src = preUrl;
         if (S.hasAB) {
             const rawUrl = await mediaUrl(rawRaw, ver, p.id);
+            if (tok !== S.tok) return;
             if (rawUrl) { S.raw = new Audio(); S.raw.preload = 'auto'; S.raw.src = rawUrl; } else S.hasAB = false;
         }
         player.classList.toggle('has-ab', S.hasAB);
@@ -185,23 +214,13 @@
         $('#play').onclick = () => (S.playing ? pause() : play());
         document.querySelectorAll('#seg button').forEach((b) => { b.onclick = () => setMode(b.dataset.mode); });
 
-        // Arrastrar o tocar la onda para moverse en el audio
-        const wave = $('#wave'); let drag = false;
-        const ratioOf = (e) => { const r = wave.getBoundingClientRect(); return Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)); };
-        wave.addEventListener('pointerdown', (e) => { drag = true; wave.setPointerCapture(e.pointerId); seek(ratioOf(e)); });
-        wave.addEventListener('pointermove', (e) => { if (drag) seek(ratioOf(e)); });
-        wave.addEventListener('pointerup', () => { drag = false; });
-        wave.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); const d = duration(); if (d) seek((S.pre.currentTime + (e.key === 'ArrowRight' ? 5 : -5)) / d); }
-        });
-
-        computePeaks(preUrl).then((pk) => { S.peaksRaw = pk; drawWave(); });
+        computePeaks(preUrl).then((pk) => { if (tok === S.tok) { S.peaksRaw = pk; drawWave(); } });
     }
 
     // ── Datos del producto ─────────────────────────────────────────────────────────
     function render(p) {
         const { kicker, title } = splitName(p.name);
-        document.title = `${p.name} | OFFSZN`;
+        if (!window.PP_LANDING) document.title = `${p.name} | OFFSZN`;
         $('#kicker').textContent = kicker; $('#title').textContent = title;
         const daws = detectDaws(p);
         $('#sub').textContent = /plantilla/i.test(p.name) ? 'lista para abrir y usar en tu DAW' : '& todo listo dentro del proyecto…';
@@ -214,6 +233,7 @@
         const free = !!p.is_free && price === 0;
         $('#price').textContent = free ? 'Gratis' : (window.CurrencyManager && window.CurrencyManager.format ? window.CurrencyManager.format(price) : `$${price.toFixed(2)}`);
         $('#ctaText').textContent = free ? 'Descargar gratis' : 'Obtener el preset';
+        if (STORE) storePrice(p);
 
         mediaUrl(p.image_url, p.storage_version || p.r2_version, p.id).then((u) => {
             const img = $('#coverImg'); const frame = $('#coverFrame');
@@ -223,7 +243,26 @@
             img.src = u; img.alt = p.name;
         });
 
-        try { const k = `offszn_pv_${p.id}`; if (!sessionStorage.getItem(k)) { sessionStorage.setItem(k, '1'); fetch(`/api/products/${p.id}/view`, { method: 'POST' }).catch(() => {}); } } catch (_) { /* modo privado */ }
+        if (!STORE) { try { const k = `offszn_pv_${p.id}`; if (!sessionStorage.getItem(k)) { sessionStorage.setItem(k, '1'); fetch(`/api/products/${p.id}/view`, { method: 'POST' }).catch(() => {}); } } catch (_) { /* modo privado */ } }
+    }
+
+    // ── Tienda de Willie: el precio y el descuento por cantidad los pone el servidor (el navegador solo los muestra) ──
+    const money = (amount, cur) => (cur && cur !== 'USD' ? `${cur === 'PEN' ? 'S/' : cur} ${amount}` : `US$${amount}`);
+    async function storePrice(p) {
+        try {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const res = await fetch('/api/store/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ items: [{ id: p.id }], timezone: tz }) });
+            const q = await res.json();
+            if (q && q.totalUsd) $('#price').textContent = `US$${q.totalUsd}`;
+            const v = $('#vol'); v.hidden = false;
+            v.innerHTML = 'Lleva más y ahorra: <b>2 presets −10%</b> · <b>3 −20%</b> · <b>4 o más −25%</b>';
+        } catch (_) { /* se queda el precio de lista */ }
+    }
+    const WI_CART_KEY = 'wi_cart';
+    function addToStoreCart(id) {
+        let items = []; try { items = JSON.parse(localStorage.getItem(WI_CART_KEY) || '[]').filter((i) => i && i.id); } catch (_) { items = []; }
+        if (!items.some((i) => i.id === id)) items.push({ id, os: null });
+        try { localStorage.setItem(WI_CART_KEY, JSON.stringify(items)); } catch (_) { /* modo privado: el checkout empezará vacío */ }
     }
 
     // ── Compra (mismo flujo que la página actual) ──────────────────────────────────
@@ -262,6 +301,7 @@
         else if (url) window.open(url, '_blank');
     }
     $('#cta').onclick = async () => {
+        if (STORE) { if (window.WI) WI.cart.add(S.p.id); else { addToStoreCart(S.p.id); location.href = '/willieinspired/checkout'; } return; }
         const btn = $('#cta'); btn.disabled = true;
         try { const price = parseFloat(S.p.price_basic) || 0; await (S.p.is_free && price === 0 ? download() : buy()); }
         catch (e) { toast(e.message || 'No se pudo continuar.'); }
@@ -270,8 +310,25 @@
 
     // ── Carrusel de presets ────────────────────────────────────────────────────────
     let list = []; let idx = -1;
-    const href = (p) => `/preset/${encodeURIComponent(p.public_slug)}${PREVIEW}`;
+    const SHORT_ROUTE = location.pathname.includes('/presets/') || !!window.PP_LANDING;
+    const href = (p) => SHORT_ROUTE
+        ? `/willieinspired/presets/${encodeURIComponent(p.public_slug.replace(/^preset-de-/, ''))}`
+        : `/preset/${encodeURIComponent(p.public_slug)}${PREVIEW}`;
+    async function loadStoreRail(p) {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const res = await fetch(`/api/store/catalog?tz=${encodeURIComponent(tz)}`); const cat = await res.json();
+        list = (cat.products || []).filter((x) => x.category === 'presets' && x.subcategory === 'artistas' && x.status === 'active' && ((x.media && x.media.cover) || x.id === p.id))
+            .map((x) => ({ id: x.id, name: `Preset de ${x.artist}`, public_slug: x.slug, image_url: x.id === p.id ? (p.image_url || (x.media && x.media.cover)) : x.media.cover }));
+        idx = list.findIndex((x) => x.id === p.id);
+        if (list.length < 2 || idx < 0) return;
+        const track = $('#railTrack');
+        track.innerHTML = list.map((x, i) => `<a class="rail__item ${i === idx ? 'on' : ''}" href="${esc(href(x))}" aria-label="${esc(x.name)}"${i === idx ? ' aria-current="page"' : ''}><img alt="" loading="lazy" width="96" height="96"${/^(\/|https?:)/.test(x.image_url || '') ? ` src="${esc(x.image_url)}"` : ''}><span>${esc(splitName(x.name).title.toLowerCase())}</span></a>`).join('');
+        $('#rail').hidden = false; $('#hint').hidden = false;
+        const cur = track.children[idx]; if (cur && cur.scrollIntoView) cur.scrollIntoView({ inline: 'center', block: 'nearest' });
+        $('#railPrev').onclick = () => go(-1); $('#railNext').onclick = () => go(1);
+    }
     async function loadRail(p) {
+        if (STORE) return loadStoreRail(p);
         const sb = window.supabaseClient; if (!sb) return;
         const { data } = await sb.from('products').select('id, name, public_slug, image_url, storage_version, r2_version, sales_count')
             .eq('product_type', 'preset').eq('status', 'approved').eq('visibility', 'public').not('public_slug', 'is', null)
@@ -290,6 +347,7 @@
     function go(step) {
         if (idx < 0 || list.length < 2) return;
         const next = list[(idx + step + list.length) % list.length];
+        if (window.PP_LANDING) { switchTo(next.public_slug).catch((err) => toast(err.message)); return; }
         location.href = href(next);
     }
     document.addEventListener('keydown', (e) => {
@@ -298,6 +356,36 @@
         else if (e.key === 'ArrowRight') go(1);
         else if (e.code === 'Space' && S.pre && e.target === document.body) { e.preventDefault(); S.playing ? pause() : play(); }
     });
+
+    // ── Cambiar de preset sin recargar (landing): se pide la página del preset y se lee su JSON ──
+    function markRail(p) {
+        idx = list.findIndex((x) => x.id === p.id);
+        document.querySelectorAll('#railTrack .rail__item').forEach((a, i) => { a.classList.toggle('on', i === idx); if (i === idx) { a.setAttribute('aria-current', 'page'); if (a.scrollIntoView) a.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' }); } else a.removeAttribute('aria-current'); });
+    }
+    async function mount(p) {
+        STORE = !!p.store;
+        S.p = p; resetPlayer(); render(p); resizeWave();
+        initPlayer(p).catch(() => {});
+        if (list.length) markRail(p); else loadRail(p).catch((e) => console.warn('[preset] carrusel:', e));
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitle);
+    }
+    async function switchTo(slug) {
+        const res = await fetch('/willieinspired/presets/' + encodeURIComponent(slug));
+        if (!res.ok) throw new Error('No se pudo abrir ese preset.');
+        const html = await res.text();
+        const m = html.match(/id="presetData">(\{[\s\S]*?\})<\/script>/);
+        if (!m) throw new Error('Preset sin datos.');
+        const p = JSON.parse(m[1]);
+        await mount(p);
+        try { history.replaceState(null, '', '?artista=' + encodeURIComponent(slug)); } catch (_) { /* sin historial */ }
+    }
+    document.getElementById('railTrack').addEventListener('click', (e) => {
+        if (!window.PP_LANDING) return;
+        const a = e.target.closest('.rail__item'); if (!a) return;
+        e.preventDefault();
+        switchTo(decodeURIComponent(a.getAttribute('href').split('/').pop().split('?')[0])).catch((err) => toast(err.message));
+    });
+    window.PP = { switchTo, mount };
 
     // ── Arranque ───────────────────────────────────────────────────────────────────
     async function loadProduct() {
@@ -309,12 +397,11 @@
         return data && data.id ? data : null;
     }
     (async function init() {
+        if (window.WI && !window.PP_LANDING) WI.init({ active: 'presets' }).catch((e) => console.warn('[preset] menú:', e));
         window.addEventListener('resize', () => { resizeWave(); fitTitle(); });
+        if (window.PP_LANDING) return; // la landing llama PP.switchTo(artista) cuando tiene el catálogo
         const p = await loadProduct();
         if (!p) { location.replace('/explorar.html'); return; }
-        S.p = p; render(p); resizeWave();
-        initPlayer(p).catch(() => {});
-        loadRail(p).catch(() => {});
-        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitle);
+        mount(p);
     })();
 })();

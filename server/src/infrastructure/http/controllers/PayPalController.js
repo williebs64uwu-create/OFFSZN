@@ -1,6 +1,7 @@
 import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
 import { handleStarWebhook } from '../../services/starSubscriptionService.js';
+import { STAR_WIN_URL, STAR_MAC_URL } from '../../../shared/config/starDelivery.js';
 import { recordPayPalCaptures, recordIncome, productLabel } from '../../services/financeService.js';
 import { paypalSaleEventRow } from '../../../shared/store/finance.js';
 import { supabase } from '../../database/connection.js';
@@ -1460,10 +1461,11 @@ export const capturePayPalOrder = async (req, res) => {
                         let downloadLinks = null;
                         if (isPlugin) {
                             if (isStar) {
-                                // Instalador de STAR CHAIN (solo Windows por ahora): STAR_DOWNLOAD_URL en Vercel; si falta, "Mis compras"
+                                // Instalador de STAR CHAIN: Windows = ZIP en Drive; macOS = WhatsApp de Willie (ver config/starDelivery.js)
                                 downloadLinks = {
-                                    win: process.env.STAR_DOWNLOAD_URL || 'https://offszn.lat/mis-compras',
-                                    mac: null
+                                    win: STAR_WIN_URL,
+                                    mac: STAR_MAC_URL,
+                                    macLabel: 'macOS (.rar)'
                                 };
                             } else if (isWidget) {
                                 // Instalador del widget (solo Windows): WIDGET_DOWNLOAD_URL en Vercel; si falta, "Mis compras"
@@ -1519,7 +1521,7 @@ export const capturePayPalOrder = async (req, res) => {
                                 <p style="color:#aaa; font-size:0.78rem; text-transform:uppercase; letter-spacing:2px; font-weight:700; margin-bottom:12px;">Descargar Instaladores</p>
                                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
                                     <a href="${downloadLinks.win}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xea00; Windows</a>
-                                    ${downloadLinks.mac ? `<a href="${downloadLinks.mac}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xf8ff; macOS</a>` : '<span style="color:#888; font-size:0.85rem; align-self:center; padding:10px 0;">(macOS próximamente)</span>'}
+                                    ${downloadLinks.mac ? `<a href="${downloadLinks.mac}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.85rem;">&#xf8ff; ${downloadLinks.macLabel || 'macOS'}</a>` : '<span style="color:#888; font-size:0.85rem; align-self:center; padding:10px 0;">(macOS próximamente)</span>'}
                                 </div>
                             </div>
                         ` : (isPlugin ? '' : `

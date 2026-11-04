@@ -22,6 +22,18 @@ test('despacho manual: nunca se inventa un monto; "sin dato" queda marcado para 
     }
 });
 
+test('solo registrar: sin clave, referencia propia y única, fecha pasada permitida, futura no', () => {
+    const now = new Date('2026-11-03T03:00:00Z');
+    const a = normalizeManualIncome({ registerOnly: true, product: 'STAR CHAIN', currency: 'PEN', amount: 120, method: 'yape', occurredAt: '2026-11-03T02:00:00Z' }, now);
+    assert.equal(a.ok, true);
+    assert.deepEqual([a.row.source, a.row.currency, a.row.gross, a.row.net, a.row.status, a.row.by_willie, a.row.method, a.row.occurred_at], ['manual', 'PEN', 120, 120, 'confirmed', true, 'yape', '2026-11-03T02:00:00.000Z']);
+    assert.match(a.row.ref, /^REG-/);
+    assert.notEqual(a.row.ref, normalizeManualIncome({ registerOnly: true, product: 'STAR CHAIN', currency: 'PEN', amount: 120 }, now).row.ref); // dos registros iguales no se pisan
+    assert.equal(normalizeManualIncome({ registerOnly: true, currency: 'PEN', amount: 120 }, now).ok, false); // sin producto
+    assert.equal(normalizeManualIncome({ registerOnly: true, product: 'X', currency: 'PEN', amount: 120, occurredAt: '2026-11-04T00:00:00Z' }, now).ok, false); // futura
+    assert.equal(normalizeManualIncome({ currency: 'PEN', amount: 120, product: 'X' }, now).ok, false); // el despacho de siempre sigue pidiendo la clave
+});
+
 test('meses en hora de Lima: el 31 oct a las 23:00 en Lima sigue siendo octubre aunque en UTC ya sea noviembre', () => {
     assert.equal(limaMonth('2026-11-01T04:00:00Z'), '2026-10');
     assert.equal(limaMonth('2026-11-01T05:00:00Z'), '2026-11');

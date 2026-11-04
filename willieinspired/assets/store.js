@@ -22,7 +22,8 @@
     const readTheme = () => { try { return localStorage.getItem('wi_theme'); } catch (_) { return null; } };
     const systemDark = () => { try { return matchMedia('(prefers-color-scheme: dark)').matches; } catch (_) { return false; } };
     const applyTheme = (t) => document.documentElement.setAttribute('data-theme', t);
-    applyTheme(readTheme() || (systemDark() ? 'dark' : 'light'));
+    // Páginas de diseño claro fijo (preset, checkout): <html data-theme-lock="light"> ignora el tema guardado, sin cambiarlo.
+    applyTheme(document.documentElement.getAttribute('data-theme-lock') || readTheme() || (systemDark() ? 'dark' : 'light'));
 
     const WI = (window.WI = { BASE, store, session });
     WI.theme = {
@@ -258,6 +259,7 @@
     WI.url = (p) => {
         if (!p) return BASE;
         if (p.category === 'comunidad') return `${BASE}/comunidad/suscribirse#${p.slug}`;
+        if (p.category === 'presets' && p.subcategory === 'artistas') return `${BASE}/presets/${p.slug}`;
         const sub = ['artistas', 'bundle', 'expansiones'].includes(p.subcategory) ? `${p.subcategory}/` : '';
         return `${BASE}/${p.category}/${sub}${p.slug}`;
     };
@@ -367,6 +369,107 @@
         return api;
     };
 
+    // ── Buscador tipo paleta de comandos (Ctrl/⌘+K o la lupa): recientes, recomendados y resultados al escribir ──
+    const SEARCH_LABEL = { presets: 'Presets', plantillas: 'Plantillas', plugins: 'Plugins', servicios: 'Servicios', comunidad: 'Comunidad' };
+    const SEARCH_ICON = { presets: 'mic', plantillas: 'sliders', plugins: 'soundwave', servicios: 'headphones', comunidad: 'people' };
+    const SEARCH_RECOMMENDED = ['bundle-promo-2x1', 'plugin-easy-mix', 'preset-bad-bunny', 'preset-definitivo', 'plantilla-trap-definitivo', 'lead-graba-maquetas-con-nativos'];
+    // Palabras que no ayudan a encontrar nada ("preset de ...")
+    const STOP = new Set(['preset', 'presets', 'de', 'del', 'la', 'el', 'los', 'las', 'vocal', 'para', 'y', 'a', 'un', 'una']);
+    const lev = (a, b) => { const m = a.length; const n = b.length; const d = Array.from({ length: m + 1 }, (_, i) => [i, ...Array(n).fill(0)]); for (let j = 1; j <= n; j++) d[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[m][n]; };
+    // 0 = empieza igual · 1 = lo contiene · 2+ = parecido con errores de tipeo · -1 = no coincide
+    const near = (word, token) => {
+        if (token.startsWith(word)) return 0;
+        if (word.length >= 3 && token.includes(word)) return 1;
+        const max = word.length >= 7 ? 2 : word.length >= 4 ? 1 : 0;
+        if (!max) return -1;
+        const d = Math.min(lev(word, token), lev(word, token.slice(0, word.length)), lev(word, token.slice(0, word.length + 1)));
+        return d <= max ? 2 + d : -1;
+    };
+    const normalize = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+    WI.search = (() => {
+        let cat = null; let rows = []; let active = 0;
+        const el = () => WI.$('#wi-search');
+        const recent = () => store.get('wi_recent', []);
+        const remember = (id) => store.set('wi_recent', [id, ...recent().filter((x) => x !== id)].slice(0, 5));
+        const row = (p) => ({ id: p.id, title: p.category === 'presets' && p.subcategory === 'artistas' ? `Preset de ${p.artist}` : p.title, label: SEARCH_LABEL[p.category] || '', cover: p.media?.cover || null, icon: SEARCH_ICON[p.category] || 'search', href: WI.url(p), free: p.kind === 'lead_magnet' });
+        function groups(q) {
+            const list = (cat?.products || []).filter((p) => p.status === 'active' || p.status === 'coming_soon');
+            if (!q) {
+                const rec = recent().map((id) => cat.byId.get(id)).filter(Boolean).map(row);
+                const recIds = new Set(rec.map((r) => r.id));
+                const reco = SEARCH_RECOMMENDED.map((id) => cat.byId.get(id)).filter((p) => p && !recIds.has(p.id)).map(row);
+                return [rec.length ? ['Recientes', rec] : null, ['Recomendados', reco]].filter(Boolean);
+            }
+            const words = normalize(q).split(/[^a-z0-9]+/).filter((w) => w && !STOP.has(w));
+            const pool = words.length ? list : list.filter((p) => p.category === 'presets' && p.subcategory === 'artistas' && p.media?.cover).slice(0, 14);
+            const scored = [];
+            for (const p of pool) {
+                const tokens = normalize(`${p.title} ${p.artist || ''} ${SEARCH_LABEL[p.category] || ''}`).split(/[^a-z0-9]+/).filter(Boolean);
+                if (p.artist) tokens.push(normalize(p.artist).replace(/[^a-z0-9]/g, ''));
+                let total = 0; let ok = true;
+                for (const w of words) {
+                    let best = -1;
+                    for (const t of tokens) { const sc = near(w, t); if (sc >= 0 && (best < 0 || sc < best)) best = sc; }
+                    if (best < 0) { ok = false; break; }
+                    total += best;
+                }
+                if (ok) scored.push([total, p]);
+            }
+            scored.sort((x, y) => x[0] - y[0]);
+            const out = new Map();
+            for (const [, p] of scored.slice(0, 14)) { const k = SEARCH_LABEL[p.category] || 'Otros'; if (!out.has(k)) out.set(k, []); out.get(k).push(row(p)); }
+            return [...out.entries()];
+        }
+        function paint() {
+            const q = WI.$('#wi-search-input').value.trim();
+            const gs = groups(q);
+            rows = gs.flatMap(([, r]) => r);
+            active = Math.min(active, Math.max(0, rows.length - 1));
+            let i = 0;
+            WI.$('#wi-search-list').innerHTML = rows.length ? gs.map(([name, items]) => `<p class="wi-search__group">${WI.esc(name)}</p>${items.map((r) => `
+                <a class="wi-search__item${i++ === active ? ' is-active' : ''}" href="${WI.esc(r.href)}" data-i="${i - 1}" data-id="${WI.esc(r.id)}" role="option">
+                    ${r.cover ? `<img src="${WI.esc(r.cover)}" alt="" width="36" height="36" loading="lazy">` : `<span class="wi-search__ico"><i class="bi bi-${r.icon}"></i></span>`}
+                    <span class="wi-search__name">${WI.esc(r.title)}${r.free ? ' <em>Gratis</em>' : ''}</span>
+                    ${r.label ? `<span class="wi-search__tag">— ${WI.esc(r.label)}</span>` : ''}
+                </a>`).join('')}`).join('') : `<p class="wi-search__empty">No encontré "${WI.esc(q)}". Revisa cómo lo escribiste o prueba con otro artista. Si no está, <a href="${WI.wa('Hola Willie! Busco un preset de ' + q)}" target="_blank" rel="noopener">escríbeme por WhatsApp</a> y lo armamos.</p>`;
+            const cur = WI.$('.wi-search__item.is-active'); if (cur) cur.scrollIntoView({ block: 'nearest' });
+        }
+        async function open() {
+            const box = el(); if (!box) return;
+            box.hidden = false; document.body.classList.add('wi-search-open');
+            WI.$('#wi-search-input').value = ''; active = 0;
+            setTimeout(() => WI.$('#wi-search-input').focus(), 20);
+            if (!cat) { WI.$('#wi-search-list').innerHTML = '<p class="wi-search__empty">Cargando…</p>'; cat = await WI.catalog(); }
+            paint();
+        }
+        function close() { const box = el(); if (box) box.hidden = true; document.body.classList.remove('wi-search-open'); }
+        function go(r) { if (!r) return; if (cat?.byId.has(r.id)) remember(r.id); location.href = r.href; }
+        function bind() {
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('[data-open-search]')) { e.preventDefault(); open(); return; }
+                if (e.target.closest('[data-search-close]')) { close(); return; }
+                const box = el(); if (!box || box.hidden) return;
+                if (e.target === box) { close(); return; }
+                const a = e.target.closest('.wi-search__item');
+                if (a) { const r = rows[+a.dataset.i]; if (r && cat?.byId.has(r.id)) remember(r.id); }
+            });
+            document.addEventListener('keydown', (e) => {
+                const box = el(); if (!box) return;
+                if ((e.key === 'k' || e.key === 'K') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); box.hidden ? open() : close(); return; }
+                if (box.hidden) return;
+                if (e.key === 'Escape') { close(); return; }
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (rows.length) { active = (active + (e.key === 'ArrowDown' ? 1 : -1) + rows.length) % rows.length; paint(); } return; }
+                if (e.key === 'Enter') { e.preventDefault(); go(rows[active]); }
+            });
+            document.addEventListener('input', (e) => { if (e.target.id === 'wi-search-input') { active = 0; paint(); } });
+            document.addEventListener('mouseover', (e) => {
+                const a = e.target.closest?.('.wi-search__item'); if (!a || +a.dataset.i === active) return;
+                active = +a.dataset.i; WI.$$('.wi-search__item').forEach((x) => x.classList.toggle('is-active', x === a));
+            });
+        }
+        return { open, close, bind };
+    })();
+
     // ── Drawers ─────────────────────────────────────────────────────────────
     WI.drawer = {
         open(name) {
@@ -382,6 +485,18 @@
         }
     };
     addEventListener('keydown', (e) => { if (e.key === 'Escape') WI.drawer.close(); });
+
+    // Descuento por cantidad: lo calcula el servidor; aquí solo se muestra lo aplicado y lo que falta para el siguiente nivel.
+    WI.volumeHint = (q) => {
+        const v = q?.volume; if (!v) return '';
+        const applied = q.offerApplied?.type === 'volume' ? `<b>−${v.percent}% por llevar ${v.count} presets.</b> ` : '';
+        const next = v.next ? `Agrega ${v.next.add} más y ahorras <b>${v.next.percent}%</b>.` : '¡Máximo descuento aplicado!';
+        const pct = Math.min(100, Math.round((Math.min(v.count, 4) / 4) * 100));
+        const steps = [[2, 10], [3, 20], [4, 25]].map(([n, p]) => `<span style="${v.count >= n ? 'color:var(--ink)' : ''}">${n === 4 ? '4+' : n} · −${p}%</span>`).join('');
+        return `<div class="wi-progress">🎁 ${applied}${next}
+            <div style="height:8px;border-radius:999px;background:rgba(127,127,127,.25);overflow:hidden;margin-top:8px"><i style="display:block;height:100%;width:${pct}%;background:var(--ink);border-radius:inherit"></i></div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:.72rem;font-weight:700;opacity:.8">${steps}</div></div>`;
+    };
 
     let quoteSeq = 0;
     WI.quote = async (items = WI.cart.items(), offer = WI.offer.get()) => {
@@ -413,7 +528,7 @@
             const os = p.kind === 'plugin' || p.delivery === 'license'
                 ? `<div class="wi-os">${['win', 'mac'].map((o) => `<button type="button" data-os="${o}" data-id="${p.id}" class="${(it.os || 'win') === o ? 'is-active' : ''}">${o === 'win' ? 'Windows' : 'Mac'}</button>`).join('')}</div>`
                 : '';
-            const price = line?.free ? '<span class="wi-badge wi-badge--success">GRATIS</span>' : WI.priceHtml(p.pricing);
+            const price = line?.free ? '<span class="wi-badge wi-badge--success">GRATIS</span>' : "<b>$" + Number(line ? line.lineUsd : p.pricing.usd).toFixed(2) + "</b>";
             return `<div class="wi-cart-line">
                 ${WI.img(p.media?.cover, WI.coverLabel(p))}
                 <div><div class="wi-cart-line__title">${WI.esc(p.title)}</div><div class="wi-cart-line__meta">${WI.esc(p.format || p.category)}</div>${os}</div>
@@ -429,21 +544,26 @@
                 : `<div class="wi-progress">🎁 <b>2x1 aplicado:</b> el de menor precio va gratis.</div>`;
         } else if (offer) {
             hint = `<div class="wi-progress">🎁 <b>${WI.esc(WI.offer.label(offer))}</b></div>`;
+        } else if (q?.volume && q.volume.count > 0) {
+            hint = WI.volumeHint(q);
         }
         const offerError = q?.error ? `<div class="wi-note"><i class="bi bi-info-circle"></i><div>${WI.esc(q.error)} <button type="button" class="wi-link" data-clear-offer>Quitar oferta</button></div></div>` : '';
 
         // Upsell: lo que sugiere el primer producto del carrito y aún no está.
         const firstWithUpsell = items.map((i) => cat.byId.get(i.id)).find((p) => p?.upsells?.length);
-        const ups = (firstWithUpsell?.upsells || []).map((id) => cat.byId.get(id)).filter((p) => WI.isBuyable(p) && !WI.cart.has(p.id)).slice(0, 2);
-        const upsHtml = ups.length ? `<div style="margin-top:20px"><p class="wi-eyebrow" style="margin-bottom:8px">Combínalo con</p>${ups.map((p) => `
+        const completar = q?.volume?.next && !offer;
+        const ups = completar
+            ? cat.products.filter((p) => p.category === 'presets' && p.subcategory === 'artistas' && p.status === 'active' && p.media?.cover && WI.isBuyable(p) && !WI.cart.has(p.id)).slice(0, 3)
+            : (firstWithUpsell?.upsells || []).map((id) => cat.byId.get(id)).filter((p) => WI.isBuyable(p) && !WI.cart.has(p.id)).slice(0, 2);
+        const upsHtml = ups.length ? `<div style="margin-top:20px"><p class="wi-eyebrow" style="margin-bottom:8px">${completar ? 'Completa tu descuento' : 'Combínalo con'}</p>${ups.map((p) => `
             <div class="wi-cart-line">${WI.img(p.media?.cover, WI.coverLabel(p))}<div><div class="wi-cart-line__title">${WI.esc(p.title)}</div>${WI.priceHtml(p.pricing)}</div>
             <button type="button" class="wi-btn wi-btn--ghost wi-btn--sm" data-add-upsell="${p.id}">Añadir</button></div>`).join('')}</div>` : '';
 
         body.innerHTML = hint + offerError + rows + upsHtml;
-        const save = q?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Ahorras</span><span>-US$${q.discountUsd}</span></div>` : '';
+        const save = q?.discountUsd > 0 ? `<div class="wi-sumline wi-sumline--save"><span>Ahorras</span><span>−$${Number(q.discountUsd).toFixed(2)}</span></div>` : '';
         foot.innerHTML = `
-            <div class="wi-sumline"><span>Subtotal (${items.length})</span><span>US$${q?.subtotalUsd ?? 0}</span></div>${save}
-            <div class="wi-sumline wi-sumline--total"><span>Total</span><span>${WI.quoteMoney(q)}</span></div>
+            <div class="wi-sumline"><span>Subtotal (${items.length})</span><span>$${Number(q?.subtotalUsd ?? 0).toFixed(2)}</span></div>${save}
+            <div class="wi-sumline wi-sumline--total"><span>Total</span><span>USD $${Number(q?.totalUsd ?? 0).toFixed(2)}</span></div>
             <a href="${BASE}/checkout" class="wi-btn wi-btn--dark wi-btn--block wi-btn--lg" data-checkout>Ir a pagar <i class="bi bi-arrow-right"></i></a>
             <p class="wi-subtle wi-center" style="margin-top:10px"><i class="bi bi-lightning-charge-fill" style="color:#f59e0b"></i> Descarga inmediata · <i class="bi bi-shield-lock-fill" style="color:#059669"></i> Pago seguro</p>`;
     };
@@ -480,12 +600,19 @@
                 <a href="${BASE}" class="wi-brand">Willie Inspired</a>
                 <nav class="wi-nav" aria-label="Principal">${NAV.map(([k, l]) => `<a href="${BASE}/${k}" class="${active === k ? 'is-active' : ''}">${l}</a>`).join('')}</nav>
                 <div class="wi-header__actions">
+                    <button type="button" class="wi-icon-btn" data-open-search aria-label="Buscar (Ctrl+K)"><i class="bi bi-search"></i></button>
                     <button type="button" class="wi-icon-btn wi-theme" data-theme-toggle aria-label="Cambiar entre tema claro y oscuro"><i class="bi bi-moon"></i><i class="bi bi-sun"></i></button>
                     <a href="${BASE}/mi-perfil" class="wi-icon-btn" aria-label="Mi perfil"><i class="bi bi-person"></i></a>
                     <button type="button" class="wi-icon-btn" data-open="cart" aria-label="Ver carrito"><i class="bi bi-bag"></i><span class="wi-count" data-cart-count data-n="${n}">${n || ''}</span></button>
                 </div>
             </div></header>`;
         const drawers = `
+            <div class="wi-search" id="wi-search" role="dialog" aria-modal="true" aria-label="Buscar" hidden>
+                <div class="wi-search__panel">
+                    <div class="wi-search__bar"><i class="bi bi-search"></i><input id="wi-search-input" type="search" placeholder="Busca presets, artistas, plugins…" autocomplete="off" spellcheck="false"><button type="button" class="wi-search__x" data-search-close aria-label="Cerrar">✕</button></div>
+                    <div class="wi-search__list" id="wi-search-list" role="listbox"></div>
+                </div>
+            </div>
             <div class="wi-backdrop" id="wi-backdrop" data-close></div>
             <aside class="wi-drawer wi-drawer--left" id="wi-drawer-menu" aria-label="Menú">
                 <div class="wi-drawer__head"><span class="wi-brand">Willie Inspired</span><button type="button" class="wi-icon-btn" data-close aria-label="Cerrar"><i class="bi bi-x-lg"></i></button></div>
@@ -537,6 +664,7 @@
             <a class="wi-wa" href="${WI.wa()}" target="_blank" rel="noopener" aria-label="WhatsApp"><i class="bi bi-whatsapp"></i></a>`;
         document.body.insertAdjacentHTML('afterbegin', header);
         document.body.insertAdjacentHTML('beforeend', drawers + (footer ? foot : ''));
+        WI.search.bind();
     };
 
     // Enlace del correo de carrito abandonado: ?cart=<id> recupera los productos que había dejado.

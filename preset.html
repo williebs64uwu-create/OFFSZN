@@ -11,7 +11,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Geist:wght@300..800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/css/preset-page.css?v=1">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/willieinspired/assets/store.css?v=5">
+    <link rel="stylesheet" href="/css/preset-page.css?v=5">
+    <script>document.documentElement.setAttribute("data-theme-lock", "light");</script>
     <link rel="stylesheet" href="/css/download-gate.css">
 
     <!-- Datos del producto: los inyecta el servidor. Si se abre sin servidor, la página los busca por el slug. -->
@@ -22,29 +26,8 @@
     <script src="/script/config.js"></script>
     <script src="/script/auth-utils.js?v=12"></script>
 </head>
-<body>
-    <div class="announce" aria-hidden="true">
-        <div class="announce__track">
-            <span>Entrega inmediata</span><span>Plugins e instaladores incluidos</span><span>Pago único, acceso de por vida</span><span>Soporte por WhatsApp</span>
-            <span>Entrega inmediata</span><span>Plugins e instaladores incluidos</span><span>Pago único, acceso de por vida</span><span>Soporte por WhatsApp</span>
-        </div>
-    </div>
-
-    <header class="topbar">
-        <a class="brand" href="/" aria-label="OFFSZN"><img src="/images/LOGO%20OFFSZN.webp" alt="OFFSZN" onerror="this.onerror=null;this.src='/favicon.ico'"></a>
-        <nav class="pill-nav" aria-label="Principal">
-            <a class="on" href="/explorar.html">Presets</a>
-            <a href="/plugins/vst-plugins.html">Plugins</a>
-            <a href="/explorar.html">Explorar</a>
-            <a href="/mis-compras.html">Mis compras</a>
-        </nav>
-        <div class="tools">
-            <a class="icon-btn" href="/explorar.html" aria-label="Buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></a>
-            <a class="icon-btn" href="/carrito.html" aria-label="Carrito"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></a>
-        </div>
-    </header>
-
-    <main class="page">
+<body class="pp-page">
+    <main class="pp"><div class="page">
         <section class="hero" aria-labelledby="title">
             <div class="hero__text">
                 <p class="kicker" id="kicker"></p>
@@ -86,6 +69,7 @@
                     <span class="price" id="price"></span>
                     <button class="cta" id="cta" type="button"><span id="ctaText">Obtener el preset</span><span class="cta__arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></button>
                 </div>
+                <p class="vol" id="vol" hidden></p>
             </div>
         </section>
 
@@ -95,6 +79,34 @@
             <button class="rail__arrow r" id="railNext" type="button" aria-label="Siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
         </nav>
         <p class="hint" id="hint" hidden>← usa las flechas del teclado →</p>
+
+        <section class="how" aria-labelledby="howTitle">
+            <span class="how__chip">Sin mezclar nada</span>
+            <h2 class="how__title" id="howTitle">Todo ya viene ajustado</h2>
+            <p class="how__sub">Lo abres, lo pones en tu voz y grabas. Pasa el mouse por encima de cada paso.</p>
+            <div class="how__grid">
+                <article class="how__card" tabindex="0">
+                    <div class="how__art"><img src="/images/preset-como-funciona/eq.webp" alt="" loading="lazy" onerror="this.remove()"><svg viewBox="0 0 120 60" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 44c14 0 18-30 32-30s14 26 30 26 16-22 30-22 14 12 20 12"/></svg></div>
+                    <h3>EQ listo</h3><p>Ya está en el tono exacto. No tocas nada: pones tu voz y listo.</p>
+                </article>
+                <article class="how__card" tabindex="0">
+                    <div class="how__art"><img src="/images/preset-como-funciona/compresion.webp" alt="" loading="lazy" onerror="this.remove()"><svg viewBox="0 0 120 60" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="40" cy="30" r="18"/><path d="M40 30l9-9"/><circle cx="88" cy="30" r="11"/><path d="M88 30l-5-6"/></svg></div>
+                    <h3>Compresión lista</h3><p>La cadena completa ya está puesta. No hay perillas que mover.</p>
+                </article>
+                <article class="how__card" tabindex="0">
+                    <div class="how__art"><img src="/images/preset-como-funciona/delay.webp" alt="" loading="lazy" onerror="this.remove()"><svg viewBox="0 0 120 60" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 48V30M30 48V20M50 48V32M70 48V38M90 48V42M110 48V45"/></svg></div>
+                    <h3>Delay a tiempo</h3><p>El tempo, el eco y el tono ya vienen ajustados.</p>
+                </article>
+                <article class="how__card" tabindex="0">
+                    <div class="how__art"><img src="/images/preset-como-funciona/reverb.webp" alt="" loading="lazy" onerror="this.remove()"><svg viewBox="0 0 120 60" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 30h14l6-18 8 36 8-30 6 12h10"/><path d="M76 30c6-10 16-10 22 0s16 10 22 0" opacity=".55"/></svg></div>
+                    <h3>Reverb lista</h3><p>Con el espacio del sonido del artista. Le das play y ya.</p>
+                </article>
+                <article class="how__card how__card--wide" tabindex="0">
+                    <div class="how__art"><img src="/images/preset-como-funciona/ganancia.webp" alt="" loading="lazy" onerror="this.remove()"><svg viewBox="0 0 120 60" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M10 30h100"/><circle cx="72" cy="30" r="7" fill="currentColor"/></svg></div>
+                    <div><h3>Ajusta tu ganancia</h3><p>Es la única perilla que tocas. Iguala el nivel de tu voz y queda mezclada.</p></div>
+                </article>
+            </div>
+        </section>
 
         <section class="details">
             <div>
@@ -113,22 +125,13 @@
             </div>
         </section>
 
-        <footer class="foot">
-            <span>© OFFSZN</span>
-            <nav aria-label="Legal">
-                <a href="/legal/terminos-de-servicio.html">Términos</a>
-                <a href="/legal/politicas-de-privacidad.html">Privacidad</a>
-                <a href="/legal/politicas-de-reembolso.html">Reembolsos</a>
-                <a href="/legal/ayuda-y-contacto.html">Ayuda</a>
-            </nav>
-        </footer>
-    </main>
-
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+        </div></main>
+    <div class="pp"><div class="toast" id="toast" role="status" aria-live="polite"></div></div>
 
     <script src="/script/id-obfuscator.js"></script>
     <script src="/script/cart.js?v=24"></script>
     <script src="/script/download-gate.js"></script>
-    <script src="/script/preset-page.js?v=1"></script>
+    <script src="/willieinspired/assets/store.js?v=14"></script>
+    <script src="/script/preset-page.js?v=11"></script>
 </body>
 </html>

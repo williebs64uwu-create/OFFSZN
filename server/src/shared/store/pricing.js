@@ -18,7 +18,7 @@ export const ALWAYS_BASE = new Set(['VE', 'CU']);
 // El resto de monedas queda como referencia por si algún día se vuelve a mostrar precio local.
 // Tipos de cambio editables por variable de entorno (STORE_FX_MXN=18.5, etc.). ARS cambia rápido: revisarlo.
 export const CURRENCIES = {
-    AR: { code: 'ARS', rate: num(process.env.STORE_FX_ARS, 1450), step: 100 },
+    AR: { code: 'ARS', rate: num(process.env.STORE_FX_ARS, 1500), step: 100 }, // 1 USD = 1500 ARS (Mercado Pago)
     MX: { code: 'MXN', rate: num(process.env.STORE_FX_MXN, 18.5), step: 5 },
     US: { code: 'USD', rate: 1, step: 0.01 },
     DE: { code: 'EUR', rate: num(process.env.STORE_FX_EUR, 0.92), step: 0.01 },
@@ -140,16 +140,27 @@ export function priceFor(product, region) {
 export const isBuyable = (product) =>
     Boolean(product) && product.status === 'active' && !['lead_magnet', 'subscription'].includes(product.kind) && Number(product.price?.base) > 0;
 
+// Descuento por cantidad en presets: 2 → 10%, 3 → 20%, 4 o más → 25% (equivale a llevarte 1 de cada 4 gratis).
+export const VOLUME_TIERS = [{ min: 2, percent: 10 }, { min: 3, percent: 20 }, { min: 4, percent: 25 }];
+
+export function volumeTierFor(count) {
+    const n = Number(count) || 0;
+    const current = [...VOLUME_TIERS].reverse().find((t) => n >= t.min) || null;
+    const next = VOLUME_TIERS.find((t) => t.min > n) || null;
+    return { percent: current ? current.percent : 0, next: next ? { add: next.min - n, percent: next.percent } : null };
+}
+
 /**
  * Total del carrito.
  * @param {object}   args
  * @param {Array}    args.items   [{ id, os? }] ids del catálogo (se ignoran duplicados; todo es cantidad 1)
  * @param {Function} args.getProduct id → producto del catálogo (o null)
  * @param {object}   args.region  resultado de resolveRegion
+ * @param {boolean}  [args.autoVolume=true] descuento por cantidad automático (las ventas manuales del CRM lo apagan)
  * @param {object}   [args.offer] ya validada por el controlador:
  *        { type: 'welcome50' } | { type: '2x1', freeIds?: [] } | { type: 'code', productId, priceUsd } | { type: 'coupon', code }
  */
-export function quoteCart({ items, getProduct, region, offer } = {}) {
+export function quoteCart({ items, getProduct, region, offer, autoVolume = true } = {}) {
     const errors = [];
     const seen = new Set();
     const lines = [];
@@ -227,6 +238,21 @@ export function quoteCart({ items, getProduct, region, offer } = {}) {
         }
     }
 
+    // Descuento por cantidad (automático). No se acumula con otras ofertas; si hay un cupón, gana el que más ahorra al cliente.
+    const volumeLines = lines.filter((l) => getProduct(l.id)?.eligibleVolume);
+    const volume = volumeTierFor(volumeLines.length);
+    if (autoVolume && volume.percent > 0) {
+        const base = volumeLines.reduce((a, l) => a + l.unitUsd, 0);
+        const volumeDiscount = round2(base * volume.percent / 100);
+        const couponLoses = offerApplied?.type === 'coupon' && volumeDiscount > discountUsd;
+        if (!offerApplied || couponLoses) {
+            if (couponLoses) { for (const l of lines) l.lineUsd = l.unitUsd; errors.push({ offer: 'coupon', error: 'volume_better' }); }
+            discountUsd = volumeDiscount;
+            for (const l of volumeLines) l.lineUsd = round2(l.unitUsd - discountUsd * (l.unitUsd / base));
+            offerApplied = { type: 'volume', percent: volume.percent, count: volumeLines.length };
+        }
+    }
+
     const subtotalUsd = round2(lines.reduce((a, l) => a + l.unitUsd, 0));
     const totalUsd = round2(Math.max(0, subtotalUsd - discountUsd));
     const currency = region?.currency || USD;
@@ -237,8 +263,10 @@ export function quoteCart({ items, getProduct, region, offer } = {}) {
         discountUsd: round2(subtotalUsd - totalUsd),
         totalUsd,
         totalPen: toLocal(totalUsd, CURRENCIES.PE).amount, // soles enteros: lo mismo que se muestra es lo que cobra Yape
+        totalArs: toLocal(totalUsd, CURRENCIES.AR).amount, // pesos argentinos para Mercado Pago (1 USD = 1500 ARS)
         local: toLocal(totalUsd, currency),
         offerApplied,
+        volume: { count: volumeLines.length, ...volume }, // para mostrar "agrega 1 más y ahorras 20%"
         region: region ? { country: region.country, tier: region.tier, vpnSuspected: region.vpnSuspected, currency: currency.code } : null,
         errors
     };

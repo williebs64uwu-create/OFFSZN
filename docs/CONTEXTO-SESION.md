@@ -70,3 +70,12 @@ Resumen de lo construido y decidido con Willie hasta el 1 de noviembre de 2026. 
 
 ## Prompt para arrancar la sesión local
 > Lee `docs/CONTEXTO-SESION.md` completo y respétalo (cómo trabajamos, reglas del dinero, pendientes). Corre `git pull origin main`, `npm install` y `npm run dev`, y déjame abrir `http://localhost:3000/preset/preset-de-remers?v=2`. Todo se revisa primero en localhost; no subas nada a `main` ni despliegues sin que yo lo apruebe. Cuando termines de leer, resúmeme en 10 líneas qué entendiste y qué sigue, para que yo corrija lo que falte.
+
+## Actualización 1 nov 2026 (tienda de Willie: presets, carrito, checkout)
+- **Dirección oficial de un preset de artista:** `/willieinspired/presets/<artista>` (ej. `/willieinspired/presets/remers`). `/presets/<x>` y `/willieinspired/presets/artistas/<x>` redirigen ahí. El marketplace sigue en `/preset/<slug>` sin cambios.
+- **Página de preset y landing** comparten diseño (`preset.html`, `css/preset-page.css` dentro de `.pp`, `script/preset-page.js`). En la landing el artista cambia sin recargar (`?artista=`). Menú, carrito, buscador y pie son los modulares de la tienda (`willieinspired/assets/store.js`).
+- **Descuento por cantidad (solo presets de artistas, lo calcula el servidor en `shared/store/pricing.js`):** 2 → 10%, 3 → 20%, 4 o más → 25%. No se acumula con otras ofertas; con un cupón gana el que más ahorra. Las ventas manuales del CRM no lo aplican.
+- **Cupones de la tienda:** WILLIE10 (10%), VOCES (20%), SPECIAL (15%), OFFSZN (US$5). Un cupón que no existe ahora avisa y no deja pagar.
+- **Checkout `/willieinspired/checkout`:** correo, PayPal/tarjeta, y recuadros de Yape (ventana tipo Easy Mix, cobra en la tienda), Mercado Pago (WhatsApp, total en ARS con 1 USD = 1500 ARS) y Binance (ventana con tu ID 1257117526). Todo en dólares; Yape en soles. Los clics de Yape/MP/Binance se guardan en `/api/plugin/payment-click` (panel `/owner/pagos-manuales`).
+- **Buscador del menú:** tolerante a errores de escritura, sin tildes ni mayúsculas, sin atajos visibles.
+- **Pendiente tuyo / sin probar:** QR de Binance (guardar captura en `images/payments/binance-qr.png`), audios antes/después de la mayoría de artistas, capturas propias para "Todo ya viene ajustado" (`images/preset-como-funciona/`), y **cobros reales con PayPal y Yape** (ninguno se ha probado). La prueba `admin-key` falla en esta PC solo porque `server/.env` ya trae la clave del panel.

@@ -10,6 +10,7 @@
 // Uses globalThis.fetch available in Node 18+
 import { supabase } from '../../database/connection.js';
 import { generatePluginLicense } from './PluginLicensingController.js';
+import { STAR_WIN_URL, STAR_MAC_URL } from '../../../shared/config/starDelivery.js';
 import { PLUGINS } from '../../../shared/config/pluginRegistry.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import MetaCapiService from '../../services/MetaCapiService.js';
@@ -71,8 +72,8 @@ const PLUGIN_INFO_MAP = {
     '5003': {
         name: 'STAR CHAIN',
         downloads: {
-            win: process.env.STAR_DOWNLOAD_URL || 'https://offszn.lat/mis-compras',
-            mac: '#'
+            win: STAR_WIN_URL,
+            mac: STAR_MAC_URL
         }
     },
     '5001': {

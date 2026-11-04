@@ -141,6 +141,8 @@ export async function quoteForRequest(req) {
     const quote = quoteCart({ items: normalizeItems(cartItems || items), getProduct, region, offer: resolved.error ? null : resolved.offer });
     // Oferta no válida: el carrito muestra el total sin oferta y el aviso; los checkouts no cobran (status 400).
     if (resolved.error) return { error: resolved.error, code: resolved.code, status: 400, quote, region };
+    // Cupón que no existe: se avisa (antes no se mostraba nada) y los checkouts no cobran hasta quitarlo.
+    if (quote.errors.some((e) => e.offer === 'coupon' && e.error === 'invalid_coupon')) return { error: 'Ese cupón no existe.', code: 'invalid_coupon', status: 400, quote, region };
     if (!quote.lines.length) return { error: 'Carrito vacío o sin productos disponibles.', status: 400, quote, region };
     if (quote.totalUsd <= 0) return { error: 'El total no puede ser 0.', status: 400, quote, region };
     return { quote, region, offerRef: resolved.offerRef || null };

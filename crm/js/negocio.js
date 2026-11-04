@@ -34,8 +34,8 @@
             const range = r.scope.pluginRangeUsd || [2, 30];
             const ch = r.channels || {};
             const nd = r.noDetail || { orders: 0, revenueUsd: 0 };
-            const noDetailNote = nd.orders ? `<div class="alert alert--warning">${icon('alert')}<div><b>${nd.orders} ${nd.orders === 1 ? 'venta' : 'ventas'} sin detalle de producto</b> (${usd(nd.revenueUsd)}): se cobraron pero no quedó guardado qué se vendió (tienda de Willie y cobros antiguos). Están sumadas en los ingresos.</div></div>` : '';
-            const odd = r.outOfRange.length ? `<div class="alert alert--warning">${icon('alert')}<div><b>${r.outOfRange.length} ${r.outOfRange.length === 1 ? "venta de plugin quedó fuera" : "ventas de plugin quedaron fuera"}</b> por costar menos de ${range[0]} o más de ${range[1]} US$ por unidad: ${r.outOfRange.slice(0, 6).map((x) => `${esc(x.name)} ${usd(x.price)} (${esc(x.source)})`).join(', ')}.</div></div>` : '';
+            const noDetailNote = nd.orders ? `<div class="alert alert--warn">${icon('alert')}<div><b>${nd.orders} ${nd.orders === 1 ? 'venta' : 'ventas'} sin detalle de producto</b> (${usd(nd.revenueUsd)}): se cobraron pero no quedó guardado qué se vendió (tienda de Willie y cobros antiguos). Están sumadas en los ingresos.</div></div>` : '';
+            const odd = r.outOfRange.length ? `<div class="alert alert--warn">${icon('alert')}<div><b>${r.outOfRange.length} ${r.outOfRange.length === 1 ? "venta de plugin quedó fuera" : "ventas de plugin quedaron fuera"}</b> por costar menos de ${range[0]} o más de ${range[1]} US$ por unidad: ${r.outOfRange.slice(0, 6).map((x) => `${esc(x.name)} ${usd(x.price)} (${esc(x.source)})`).join(', ')}.</div></div>` : '';
             view.innerHTML = `${head(TITLE, DESC)}
                 <div class="kpis">
                     ${kpi('Ingresos', usd(t.revenueUsd), `${num(t.units)} productos vendidos`, 'trend')}
