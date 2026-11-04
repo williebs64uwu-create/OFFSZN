@@ -29,6 +29,9 @@ export function kindOf(row) {
     return 'Otro';
 }
 
+// Binance: el dinero final es Yape en soles. Los USDT solo se muestran aproximados (soles ÷ este cambio, que sale de tus cobros reales ≈ 3,46).
+export const BINANCE_RATE_DEFAULT = 3.46;
+
 export const MAIN_MERCHANT_ID = 'MXV5F6X8JXG4S';
 export const MAIN_MERCHANT_EMAIL = 'willie2008garay@gmail.com';
 

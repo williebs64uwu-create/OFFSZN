@@ -4,7 +4,7 @@
 import { supabase } from '../database/connection.js';
 import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../shared/config/config.js';
 import {
-    FX_DEFAULT, START_AT_DEFAULT, EXPENSE_CATEGORIES, PAYPAL_WITHDRAW_DEFAULT, monthRange, summarize, pockets, byDay, kindOf, normalizeManualIncome, paypalCaptureRows, mercadoPagoRow, allocateSettlement
+    FX_DEFAULT, START_AT_DEFAULT, EXPENSE_CATEGORIES, PAYPAL_WITHDRAW_DEFAULT, BINANCE_RATE_DEFAULT, monthRange, summarize, pockets, byDay, kindOf, normalizeManualIncome, paypalCaptureRows, mercadoPagoRow, allocateSettlement
 } from '../../shared/store/finance.js';
 
 const PAYPAL_API = PAYPAL_ENVIRONMENT === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
@@ -20,7 +20,7 @@ export async function getSettings() {
     const w = map.get('paypal_withdraw') || {};
     const pos = (v, d) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : d);
     const withdraw = { threshold: pos(w.threshold, PAYPAL_WITHDRAW_DEFAULT.threshold), fee: pos(w.fee, PAYPAL_WITHDRAW_DEFAULT.fee), rate: pos(w.rate, PAYPAL_WITHDRAW_DEFAULT.rate), provision: pos(w.provision, PAYPAL_WITHDRAW_DEFAULT.provision) };
-    return { bank, yape, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw };
+    return { bank, yape, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw, binanceRate: pos(map.get('binance_rate'), BINANCE_RATE_DEFAULT) };
 }
 
 export async function saveBank({ pen, asOf }) {
