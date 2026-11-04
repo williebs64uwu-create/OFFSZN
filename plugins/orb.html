@@ -2541,7 +2541,8 @@
         .model-btn.ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.3); }
         .model-btn.ghost:hover { background: rgba(255,255,255,.08); }
         .clyra-showcase { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; }
-        .clyra-showcase .demo-video-frame { aspect-ratio: 3 / 4; max-width: 400px; margin: 0 auto; width: 100%; }
+        .clyra-showcase .demo-video-frame { aspect-ratio: 1 / 1; max-width: 460px; margin: 0 auto; width: 100%; }
+        .clyra-showcase .astra-frame { aspect-ratio: 720 / 860; max-width: 400px; }
         .clyra-showcase.flip > div:first-child { order: 2; }
         .astra-frame { display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #16171b, #050506 70%); border: 1px solid rgba(255,255,255,.08); }
         .astra-frame span { font-size: 12px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.26); }
@@ -2575,6 +2576,22 @@
         .lic-copy.ok { background: #fff; }
         @media (max-width: 760px) { .dl-link { display: none; } }
         @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } .dl-btn, .dl-link b, .live-dot { animation: none !important; } }
+        /* ===== descarga: pasos en vertical y botón grande, para que no se pierda ===== */
+        #descargar .dl-grid { grid-template-columns: 1fr; max-width: 820px; gap: 46px; }
+        #descargar .dl-link { display: none; }
+        #descargar .dl-card { overflow: visible; padding: 30px 32px; }
+        #descargar .dl-card::before { border-radius: inherit; }
+        #descargar .dl-card + .dl-card::after { content: ""; position: absolute; left: 52px; top: -46px; width: 2px; height: 46px; background: repeating-linear-gradient(180deg, rgba(255,255,255,.4) 0 5px, transparent 5px 10px); }
+        #descargar .dl-card + .dl-card .step-num-pill::after { content: ""; }
+        #descargar .dl-flow-dot { position: absolute; left: 49px; top: -46px; width: 8px; height: 8px; border-radius: 50%; background: #e6e6ec; box-shadow: 0 0 14px 3px rgba(230,230,236,.5); animation: dlfall 2s ease-in-out infinite; pointer-events: none; }
+        @keyframes dlfall { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(44px); opacity: 0; } }
+        #descargar #dlBtn.dl-btn { width: 100%; max-width: 520px; height: 76px; justify-content: center; gap: 14px; border-radius: 999px; font-size: 22px; font-weight: 900; letter-spacing: -.3px; background: #f2f2f6; color: #07080a; box-shadow: 0 0 0 1px rgba(255,255,255,.4), 0 18px 44px -14px rgba(255,255,255,.35); margin: 6px 0 4px; }
+        #descargar #dlBtn.dl-btn i { font-size: 28px; }
+        #descargar #dlBtn.dl-btn:hover { background: #fff; transform: translateY(-3px) scale(1.015); }
+        #descargar #dlBtn.dl-btn.disabled { background: #1a1c22; color: #7d8799; box-shadow: none; }
+        #descargar .dl-progress { max-width: 520px; }
+        #descargar #licWall .dl-btn, #descargar #licReady .dl-btn { height: 52px; }
+        @media (max-width: 760px) { #descargar .dl-card { padding: 24px 22px; } #descargar #dlBtn.dl-btn { height: 66px; font-size: 19px; } #descargar .dl-card + .dl-card::after, #descargar .dl-flow-dot { left: 34px; } }
         .btn-buy-tier { white-space: normal; text-align: center; }
         .dl-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 26px; }
         .dl-card { background: #12151d; border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
@@ -2657,7 +2674,11 @@
                     </p>
                     <a href="#precios" class="hero-primary-cta" style="display:inline-flex; width:auto;"><span>Ver cómo obtener ORB</span><i class="bi bi-arrow-right-short" style="font-size: 20px;"></i></a>
                 </div>
-                <div class="demo-video-frame astra-frame" aria-label="Imagen de Astra (próximamente)"><span>Astra</span></div>
+                <div class="demo-video-frame astra-frame">
+                    <video id="astraVideo" muted loop playsinline autoplay preload="metadata" poster="/images/plugins/orb/astra-poster.jpg">
+                        <source src="/plugins/orb-astra.mp4" type="video/mp4">
+                    </video>
+                </div>
             </div>
         </section>
 
@@ -2674,7 +2695,7 @@
                 </div>
                 <div class="demo-video-frame">
                     <video id="clyraVideo" muted loop playsinline autoplay preload="metadata" poster="/images/plugins/orb/clyra-poster.jpg">
-                        <source src="/plugins/orb-clyra-colores.mp4" type="video/mp4">
+                        <source src="/plugins/orb-clyra.mp4" type="video/mp4">
                         Tu navegador no soporta la reproducción de video.
                     </video>
                 </div>
@@ -2697,7 +2718,7 @@
                     <small id="dlNote" class="dl-note">Orb_0.9.3_TRIAL_Setup.exe · 3,3 GB · se descarga desde Google Drive.</small>
                     <div class="dl-progress" id="dlProg" aria-hidden="true"><i></i></div>
                 </div>
-                <div class="dl-card reveal" id="licCard" style="--d:.18s">
+                <div class="dl-card reveal" id="licCard" style="--d:.18s"><i class="dl-flow-dot" aria-hidden="true"></i>
                     <span class="step-num-pill">PASO 02</span>
                     <h3>Tu licencia gratis</h3>
                     <div id="licWall">
