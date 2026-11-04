@@ -4,7 +4,7 @@
 import { supabase } from '../database/connection.js';
 import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../shared/config/config.js';
 import {
-    FX_DEFAULT, START_AT_DEFAULT, EXPENSE_CATEGORIES, PAYPAL_WITHDRAW_DEFAULT, BINANCE_RATE_DEFAULT, monthRange, summarize, pockets, byDay, kindOf, liveBalances, goalProgress, paypalPocket, solesPocket, GOALS_DEFAULT, normalizeManualIncome, paypalCaptureRows, mercadoPagoRow, allocateSettlement
+    FX_DEFAULT, START_AT_DEFAULT, EXPENSE_CATEGORIES, PAYPAL_WITHDRAW_DEFAULT, BINANCE_RATE_DEFAULT, monthRange, summarize, pockets, byDay, kindOf, withdrawalPen, liveBalances, goalProgress, paypalPocket, solesPocket, GOALS_DEFAULT, normalizeManualIncome, paypalCaptureRows, mercadoPagoRow, allocateSettlement
 } from '../../shared/store/finance.js';
 
 const PAYPAL_API = PAYPAL_ENVIRONMENT === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
@@ -21,9 +21,10 @@ export async function getSettings() {
     const pos = (v, d) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : d);
     const withdraw = { threshold: pos(w.threshold, PAYPAL_WITHDRAW_DEFAULT.threshold), fee: pos(w.fee, PAYPAL_WITHDRAW_DEFAULT.fee), rate: pos(w.rate, PAYPAL_WITHDRAW_DEFAULT.rate), provision: pos(w.provision, PAYPAL_WITHDRAW_DEFAULT.provision) };
     const transfers = (Array.isArray(map.get('bank_transfers')) ? map.get('bank_transfers') : []).filter((t) => t && Number(t.pen) > 0);
+    const withdrawals = (Array.isArray(map.get('paypal_withdrawals')) ? map.get('paypal_withdrawals') : []).filter((t) => t && Number(t.usd) > 0);
     const g = map.get('month_goals') || {};
     const goals = { min: pos(g.min, GOALS_DEFAULT.min), mid: pos(g.mid, GOALS_DEFAULT.mid), top: pos(g.top, GOALS_DEFAULT.top) };
-    return { bank, yape, transfers, goals, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw, binanceRate: pos(map.get('binance_rate'), BINANCE_RATE_DEFAULT) };
+    return { bank, yape, transfers, withdrawals, goals, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw, binanceRate: pos(map.get('binance_rate'), BINANCE_RATE_DEFAULT) };
 }
 
 export async function saveBank({ pen, asOf }) {
@@ -74,6 +75,33 @@ export async function addBankTransfer({ pen, date, note }) {
 export async function deleteBankTransfer(id) {
     const current = (await getSettings()).transfers;
     await writeTransfers(current.filter((t) => t.id !== String(id)));
+}
+
+// Retiros de PayPal: los dólares bajan de PayPal y los soles netos van directo al banco (no pasan por Yape). Es conversión de moneda, no pérdida.
+async function writeWithdrawals(list) {
+    const { error } = await supabase.from('finance_settings').upsert({ key: 'paypal_withdrawals', value: list, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error) throw error;
+}
+export async function addPayPalWithdrawal({ usd, fee, rate, pen, date, note }) {
+    const settings = await getSettings();
+    const dollars = Number(usd);
+    if (!Number.isFinite(dollars) || dollars <= 0 || dollars > 1000000) throw Object.assign(new Error('Escribe cuántos dólares retiraste de PayPal.'), { status: 400 });
+    const cost = Number.isFinite(Number(fee)) && String(fee).trim() !== '' ? Number(fee) : settings.withdraw.fee;
+    const change = Number.isFinite(Number(rate)) && Number(rate) > 0 ? Number(rate) : settings.withdraw.rate;
+    const received = Number.isFinite(Number(pen)) && String(pen).trim() !== '' ? Number(pen) : withdrawalPen(dollars, cost, change);
+    if (!(received > 0)) throw Object.assign(new Error('Escribe cuántos soles te llegaron.'), { status: 400 });
+    const all = await supabase.from('finance_income').select('*').gte('occurred_at', settings.startAt).limit(20000);
+    if (all.error) throw all.error;
+    const balance = paypalPocket(all.data || [], settings.withdraw, settings.withdrawals).balanceUsd;
+    if (dollars > balance + 5) throw Object.assign(new Error(`En el CRM PayPal tiene ${balance.toFixed(2)} US$; no puedes retirar ${dollars.toFixed(2)} US$. Revisa el monto.`), { status: 400 });
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(String(date)) ? date : new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 10);
+    const item = { id: `w-${Date.now().toString(36)}`, at: new Date().toISOString(), date: day, usd: Math.round(dollars * 100) / 100, fee: Math.round(cost * 100) / 100, rate: Math.round(change * 10000) / 10000, pen: Math.round(received * 100) / 100, note: String(note || '').trim().slice(0, 120) || null };
+    await writeWithdrawals([...settings.withdrawals, item]);
+    return item;
+}
+export async function deletePayPalWithdrawal(id) {
+    const current = (await getSettings()).withdrawals;
+    await writeWithdrawals(current.filter((t) => t.id !== String(id)));
 }
 
 // Corregir el nombre del producto y la nota de un ingreso (nunca toca montos ni el método). Sirve para resolver los "Por revisar".
@@ -146,19 +174,21 @@ export async function monthData(month) {
     // Bolsillos: el saldo de PayPal se junta mes a mes (el retiro es por cada 200 US$), así que se calcula desde el inicio del conteo.
     const all = await supabase.from('finance_income').select('*').gte('occurred_at', settings.startAt).limit(20000);
     if (all.error) throw all.error;
-    const pk = pockets(all.data || [], settings.bank.pen, settings.withdraw, summary.expenses.totalPen);
+    const pk = pockets(all.data || [], settings.bank.pen, settings.withdraw, summary.expenses.totalPen, null, settings.withdrawals);
     const real = pockets(rows, settings.bank.pen, settings.withdraw, summary.expenses.totalPen, pk.paypal).real; // bruto vs neto real del mes
     const transfers = settings.transfers.filter((t) => String(t.date).startsWith(range.month));
     const transfersPen = Math.round(transfers.reduce((a, t) => a + Number(t.pen), 0) * 100) / 100;
     // Gastos desde la foto del saldo de Yape (los de antes ya están descontados en ese saldo)
     const spentAll = await supabase.from('finance_expenses').select('amount_pen, created_at').gte('created_at', settings.yape && settings.yape.as_of ? `${settings.yape.as_of}T00:00:00-05:00` : settings.startAt).limit(5000);
     if (spentAll.error) throw spentAll.error;
-    const live = liveBalances({ income: all.data || [], expenses: spentAll.data || [], transfers: settings.transfers, yape: settings.yape, bank: settings.bank });
+    const live = liveBalances({ income: all.data || [], expenses: spentAll.data || [], transfers: settings.transfers, withdrawals: settings.withdrawals, yape: settings.yape, bank: settings.bank });
+    const withdrawals = settings.withdrawals.filter((t) => String(t.date).startsWith(range.month));
+    const withdrawalsPen = Math.round(withdrawals.reduce((a, t) => a + Number(t.pen), 0) * 100) / 100;
     // Meta del mes: ventas netas del mes (Yape y Binance en soles + PayPal ya sin comisión, sin el costo de retiro) contra el mínimo, el intermedio y el mejor
     const monthPp = paypalPocket(rows, settings.withdraw);
     const monthSoles = solesPocket(rows);
     const goal = goalProgress(monthSoles.netPen + monthPp.balanceUsd * settings.withdraw.rate, settings.goals);
-    return { settings, month: range.month, income: rows, transfers, transfersPen, live, goal, expenses: spent.data || [], pendingArs, summary, pockets: { ...pk, real }, byDay: byDay(rows, settings.withdraw.rate) };
+    return { settings, month: range.month, income: rows, transfers, transfersPen, withdrawals, withdrawalsPen, live, goal, expenses: spent.data || [], pendingArs, summary, pockets: { ...pk, real }, byDay: byDay(rows, settings.withdraw.rate) };
 }
 
 // Ingresos desde el inicio del conteo (los usa el Resumen del CRM).

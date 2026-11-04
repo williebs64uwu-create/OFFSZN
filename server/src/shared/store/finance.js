@@ -111,13 +111,17 @@ export function incomeAsOrders(rows = [], fx = FX_DEFAULT) {
 // ─── Bolsillos: dónde está el dinero ─────────────────────────────────────────────────────────────────────────
 // PayPal (dólares, con retiro), soles (Yape, Binance y pesos ya confirmados; ya son netos) y banco (fijo, lo editas tú).
 // El retiro solo cuenta por cada 200 US$ completos: ahí se descuentan 4 US$ y se cambia a 3,3. Lo que no llega a 200 solo se convierte.
-export function paypalPocket(rows = [], w = PAYPAL_WITHDRAW_DEFAULT) {
+export function paypalPocket(rows = [], w = PAYPAL_WITHDRAW_DEFAULT, withdrawals = []) {
     const t = { count: 0, grossUsd: 0, feeUsd: 0, balanceUsd: 0 };
     for (const r of rows) {
         if (r.status !== 'confirmed' || r.method !== 'paypal' || r.currency !== 'USD') continue;
         const net = num(r.net); if (net === null) continue;
         t.count += 1; t.balanceUsd = r2(t.balanceUsd + net); t.feeUsd = r2(t.feeUsd + (num(r.fee) || 0)); t.grossUsd = r2(t.grossUsd + (num(r.gross) ?? net));
     }
+    // Retiros ya hechos: los dólares salen de PayPal (se convirtieron en soles que fueron directo al banco). No es una pérdida.
+    t.ledgerUsd = t.balanceUsd;
+    t.withdrawnUsd = r2((withdrawals || []).reduce((a, x) => a + (num(x.usd) || 0), 0));
+    t.balanceUsd = r2(Math.max(0, t.balanceUsd - t.withdrawnUsd));
     const blocks = Math.floor(t.balanceUsd / w.threshold);
     const leftUsd = r2(t.balanceUsd - blocks * w.threshold);
     // Lo que sobra después de los retiros completos: desde 120 US$ se prevé el costo de 4 US$ (previsión); por debajo no se descuenta nada.
@@ -145,8 +149,8 @@ export function solesPocket(rows = []) {
 // Resumen de bolsillos y de bruto vs neto REAL en soles (después de comisiones de PayPal y del retiro).
 // Si se pasa `allPaypal` (el bolsillo de PayPal desde el inicio), el costo de retiro de ese saldo se reparte en proporción entre los pagos de `rows`
 // (así el neto de un solo mes también descuenta la previsión, aunque ese mes solo no llegue a 120 US$).
-export function pockets(rows = [], bankPen = 0, w = PAYPAL_WITHDRAW_DEFAULT, expensesPen = 0, allPaypal = null) {
-    const paypal = paypalPocket(rows, w);
+export function pockets(rows = [], bankPen = 0, w = PAYPAL_WITHDRAW_DEFAULT, expensesPen = 0, allPaypal = null, withdrawals = []) {
+    const paypal = paypalPocket(rows, w, withdrawals);
     const soles = solesPocket(rows);
     let ppEst = paypal.estPen;
     if (allPaypal && allPaypal.balanceUsd > 0) {
@@ -179,17 +183,18 @@ export function byDay(rows = [], rate = PAYPAL_WITHDRAW_DEFAULT.rate) {
 // Lo que ya pasó antes de la foto no se vuelve a contar. Sin hora guardada, la foto vale hasta el final de su día (hora de Lima).
 const endOfDayLima = (date) => (date ? Date.parse(`${date}T23:59:59-05:00`) : 0);
 const snapAt = (snap) => (snap && snap.at && !Number.isNaN(Date.parse(snap.at)) ? Date.parse(snap.at) : endOfDayLima(snap && snap.as_of));
-export function liveBalances({ income = [], expenses = [], transfers = [], yape = null, bank = null } = {}) {
+export function liveBalances({ income = [], expenses = [], transfers = [], withdrawals = [], yape = null, bank = null } = {}) {
     const afterYape = snapAt(yape); const afterBank = snapAt(bank);
     const newer = (t, since) => (t.at ? Date.parse(t.at) > since : endOfDayLima(t.date) > since);
     const sales = solesPocket(income.filter((r) => r.occurred_at && Date.parse(r.occurred_at) > afterYape));
     const spentNew = r2(expenses.filter((e) => e.created_at && Date.parse(e.created_at) > afterYape).reduce((a, e) => a + (num(e.amount_pen) || 0), 0));
     const sentYape = r2(transfers.filter((t) => newer(t, afterYape)).reduce((a, t) => a + (num(t.pen) || 0), 0));
     const sentBank = r2(transfers.filter((t) => newer(t, afterBank)).reduce((a, t) => a + (num(t.pen) || 0), 0));
+    const fromPaypal = r2((withdrawals || []).filter((t) => newer(t, afterBank)).reduce((a, t) => a + (num(t.pen) || 0), 0)); // PayPal → banco, sin pasar por Yape
     const hasYape = yape && num(yape.pen) !== null;
     return {
         yape: { base: hasYape ? num(yape.pen) : null, newSales: sales.netPen, newSpent: spentNew, newSent: sentYape, now: hasYape ? r2(num(yape.pen) + sales.netPen - spentNew - sentYape) : null },
-        bank: { base: num(bank && bank.pen) ?? 0, newSent: sentBank, now: r2((num(bank && bank.pen) ?? 0) + sentBank) }
+        bank: { base: num(bank && bank.pen) ?? 0, newSent: r2(sentBank + fromPaypal), newFromPaypal: fromPaypal, now: r2((num(bank && bank.pen) ?? 0) + sentBank + fromPaypal) }
     };
 }
 
@@ -199,6 +204,12 @@ export function goalProgress(salesNetPen, goals = GOALS_DEFAULT) {
     const v = r2(salesNetPen);
     const level = v >= goals.top ? 'top' : v >= goals.mid ? 'mid' : v >= goals.min ? 'min' : 'none';
     return { salesNetPen: v, goals, level, pct: Math.min(100, Math.round((v / goals.top) * 100)), missing: { min: r2(Math.max(0, goals.min - v)), mid: r2(Math.max(0, goals.mid - v)), top: r2(Math.max(0, goals.top - v)) } };
+}
+
+// Retiro de PayPal: los soles que llegan = (dólares − costo del retiro) × cambio. Si PayPal te dio otro monto, ese es el que vale.
+export function withdrawalPen(usd, fee, rate) {
+    const u = num(usd) || 0;
+    return r2(Math.max(0, u - (num(fee) || 0)) * (num(rate) || 0));
 }
 
 // ─── Resumen de un mes ────────────────────────────────────────────────────────────────────────────────────────

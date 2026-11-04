@@ -108,7 +108,7 @@ test('pesos argentinos: cuentan solo cuando llegan los soles; el depósito se re
 });
 
 // ─── Bolsillos, retiro de PayPal y servicios ───────────────────────────────────────────────────────────────────
-import { paypalPocket, pockets, kindOf, byDay, liveBalances, goalProgress } from '../src/shared/store/finance.js';
+import { paypalPocket, pockets, kindOf, byDay, liveBalances, goalProgress, withdrawalPen } from '../src/shared/store/finance.js';
 const ppRow = (net, fee = 0) => ({ status: 'confirmed', method: 'paypal', currency: 'USD', gross: net + fee, fee, net });
 test('PayPal por debajo de 120 US$: solo se convierte a 3,3, sin costo de retiro', () => {
     const p = paypalPocket([ppRow(46.05, 2.95), ppRow(15.78, 1.22)]);
@@ -182,4 +182,16 @@ test('Saldos vivos: gasto nuevo baja Yape; un envío nuevo baja Yape y sube el b
 test('Meta del mes: mínimo 3.500, intermedia 4.000, la mejor 5.000', () => {
     assert.equal(goalProgress(707.65).level, 'none'); assert.equal(goalProgress(707.65).missing.min, 2792.35);
     assert.equal(goalProgress(3500).level, 'min'); assert.equal(goalProgress(4200).level, 'mid'); assert.equal(goalProgress(5100).level, 'top'); assert.equal(goalProgress(9000).pct, 100);
+});
+
+test('Retiro de PayPal: los dólares bajan, no es pérdida; los soles = (dólares − 4) × cambio', () => {
+    assert.equal(withdrawalPen(139, 4, 3.3292), 449.44);          // tu captura de retiro
+    const antes = paypalPocket([ppRow(138.96, 10.37)]);
+    const despues = paypalPocket([ppRow(138.96, 10.37)], undefined, [{ usd: 138.96 }]);
+    assert.equal(antes.balanceUsd, 138.96); assert.equal(despues.balanceUsd, 0); assert.equal(despues.withdrawnUsd, 138.96); assert.equal(despues.nowPen, 0);
+    assert.equal(paypalPocket([ppRow(100)], undefined, [{ usd: 250 }]).balanceUsd, 0);   // nunca negativo
+});
+test('Retiro de PayPal: sube el banco y NO toca Yape', () => {
+    const k = liveBalances({ yape: yapeSnap, bank: bankSnap, withdrawals: [{ at: '2026-11-06T12:00:00Z', date: '2026-11-06', usd: 139, pen: 449.44 }] });
+    assert.equal(k.bank.now, 27449.44); assert.equal(k.bank.newFromPaypal, 449.44); assert.equal(k.yape.now, 287.5);
 });

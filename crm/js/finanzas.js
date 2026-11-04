@@ -118,6 +118,41 @@
             <div class="stack" style="margin-top:10px;gap:6px">${list.map(([m, v]) => `<div class="row between"><span><i class="fx-dot" style="background:${METHOD_COLOR[m] || 'hsl(var(--muted-foreground))'}"></i> ${esc(d.methods[m] || m)}</span><span><b>${pen0(v)}</b> <span class="muted small">${Math.round((v / total) * 100)}%</span></span></div>`).join('')}</div>`;
     };
 
+    // Gráfico de anillo: de dónde vienen las ventas del mes
+    const donut = (d, rate) => {
+        const sums = {};
+        for (const r of d.income) {
+            if (r.status !== 'confirmed') continue;
+            let v = null;
+            if (r.currency === 'PEN') v = Number(r.net); else if (r.currency === 'ARS') v = Number(r.settled_pen); else if (r.currency === 'USD') v = Number(r.net) * rate;
+            if (v === null || !Number.isFinite(v)) continue;
+            sums[r.method] = (sums[r.method] || 0) + v;
+        }
+        const list = Object.entries(sums).sort((a, b) => b[1] - a[1]);
+        const total = list.reduce((a, [, v]) => a + v, 0);
+        if (!list.length) return '<div class="empty"><p>Todavía no hay ventas este mes.</p></div>';
+        const R = 52; const L = 2 * Math.PI * R; let off = 0;
+        const arcs = list.map(([m, v]) => { const len = (v / total) * L; const a = `<circle cx="70" cy="70" r="${R}" fill="none" stroke="${METHOD_COLOR[m] || 'hsl(var(--muted-foreground))'}" stroke-width="18" stroke-dasharray="${len.toFixed(2)} ${(L - len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 70 70)"><title>${esc(d.methods[m] || m)}: ${pen0(v)}</title></circle>`; off += len; return a; }).join('');
+        return `<div class="fx-donut"><svg viewBox="0 0 140 140" role="img" aria-label="De dónde vienen las ventas"><circle cx="70" cy="70" r="${R}" fill="none" stroke="hsl(var(--muted))" stroke-width="18"/>${arcs}<text x="70" y="66" text-anchor="middle" class="fx-donut__v">${pen0(total)}</text><text x="70" y="84" text-anchor="middle" class="fx-axis">ventas netas</text></svg>
+            <div class="stack" style="gap:8px;flex:1;min-width:150px">${list.map(([m, v]) => `<div class="row between"><span><i class="fx-dot" style="background:${METHOD_COLOR[m] || 'hsl(var(--muted-foreground))'}"></i> ${esc(d.methods[m] || m)}</span><span><b>${pen0(v)}</b> <span class="muted small">${Math.round((v / total) * 100)}%</span></span></div>`).join('')}</div></div>`;
+    };
+
+    // A este ritmo, ¿cuánto cerrarías el mes? (solo ventas netas del mes en curso)
+    const projection = (d) => {
+        if (!d.goal || d.month !== nowMonth()) return null;
+        const day = Number(today().slice(8, 10)); const [y, m] = d.month.split('-').map(Number); const total = new Date(y, m, 0).getDate();
+        if (day < 3) return null;
+        return Math.round((d.goal.salesNetPen / day) * total);
+    };
+
+    // Esta semana contra la anterior (7 días cada una, dentro del mes que estás viendo)
+    const weekCompare = (d) => {
+        const key = (off) => new Date(Date.now() - 5 * 3600000 - off * 86400000).toISOString().slice(0, 10);
+        const map = new Map(d.byDay.map((x) => [x.date, x]));
+        const sum = (from, to) => { let a = 0; let c = 0; for (let o = from; o <= to; o += 1) { const x = map.get(key(o)); if (x) { a += x.pen; c += x.count; } } return { pen: Math.round(a * 100) / 100, count: c }; };
+        return { now: sum(0, 6), before: sum(7, 13) };
+    };
+
     // ─── Carga única y números compartidos ──────────────────────────────────────────────────────────────────────
     async function load(view, token, title, desc) {
         const month = C.state.finMonth || nowMonth();
@@ -131,7 +166,8 @@
         const yapeNow = hasYape ? lv.yape.now : null;
         const available = hasYape ? yapeNow + pp.nowPen : 0;
         const sentPen = Number(d.transfersPen) || 0;
-        const x = { d, month, s, k, w, pp, bank, yp, hasYape, lv, yapeNow, available, sentPen, monthTotal: available + sentPen };
+        const wdPen = Number(d.withdrawalsPen) || 0;
+        const x = { d, month, s, k, w, pp, bank, yp, hasYape, lv, yapeNow, available, sentPen, wdPen, monthTotal: available + sentPen + wdPen };
         x.alerts = [
             s.pendingArs.count ? `<div class="alert alert--warning">${icon('alert')}<div><b>${s.pendingArs.count} ${s.pendingArs.count === 1 ? 'pago' : 'pagos'} en pesos argentinos</b> (${ars(s.pendingArs.pesos)}) por confirmar. Todavía no suman. <a href="#/finanzas-ventas">Ir a Ventas</a></div></div>` : '',
             s.noDetail.count ? `<div class="alert alert--warning">${icon('alert')}<div><b>${s.noDetail.count} ${s.noDetail.count === 1 ? 'despacho' : 'despachos'} sin dato de pago.</b> Revísalos en <a href="#/finanzas-ventas">Ventas</a>.</div></div>` : ''
@@ -157,6 +193,21 @@
         on('#rateForm', submit('/admin/finance/withdraw-rate', 'PUT', (f) => ({ rate: f.get('rate') }), 'Cambio guardado'));
         on('#transferForm', submit('/admin/finance/bank-transfers', 'POST', (f) => ({ pen: f.get('pen'), date: f.get('date'), note: f.get('note') }), 'Envío al banco anotado'));
         on('#expForm', submit('/admin/finance/expenses', 'POST', (f) => ({ category: f.get('category'), amountPen: f.get('amountPen'), spentAt: f.get('spentAt'), note: f.get('note'), ref: f.get('ref') }), 'Gasto guardado'));
+        const wf = $('#wdForm');
+        if (wf) {
+            const calc = () => {
+                const usdV = Number($('#wdUsd').value) || 0; const fee = Number($('#wdFee').value) || 0; const rate = Number($('#wdRate').value) || 0;
+                const soles = Math.max(0, usdV - fee) * rate;
+                $('#wdPen').value = soles ? soles.toFixed(2) : '';
+                $('#wdPreview').innerHTML = soles ? `PayPal baja <b>${usd(usdV)}</b> → te llegan <b>${pen(soles)}</b> y suben directo a tu banco. Yape no cambia.` : '';
+            };
+            ['#wdUsd', '#wdFee', '#wdRate'].forEach((id) => { $(id).oninput = calc; }); calc();
+            wf.onsubmit = async (e) => {
+                e.preventDefault(); const f = new FormData(wf);
+                try { await api('/admin/finance/paypal-withdrawals', { method: 'POST', body: { usd: f.get('usd'), fee: f.get('fee'), rate: f.get('rate'), pen: f.get('pen'), date: f.get('date'), note: f.get('note') } }); toast('Retiro registrado: los dólares bajaron y el banco subió'); C.route(); } catch (err) { toast(err.message, 'error'); }
+            };
+        }
+        $$('[data-del-wd]').forEach((b) => { b.onclick = async () => { if (!confirm('¿Quitar este retiro? Los dólares vuelven a PayPal y los soles salen del banco.')) return; try { await api(`/admin/finance/paypal-withdrawals/${b.dataset.delWd}`, { method: 'DELETE' }); toast('Retiro quitado'); C.route(); } catch (err) { toast(err.message, 'error'); } }; });
         $$('[data-del-transfer]').forEach((b) => { b.onclick = async () => { if (!confirm('¿Quitar este envío al banco? (no cambia el saldo del banco)')) return; try { await api(`/admin/finance/bank-transfers/${b.dataset.delTransfer}`, { method: 'DELETE' }); toast('Envío quitado'); C.route(); } catch (err) { toast(err.message, 'error'); } }; });
         $$('[data-del-expense]').forEach((b) => { b.onclick = async () => { if (!confirm('¿Quitar este gasto?')) return; try { await api(`/admin/finance/expenses/${b.dataset.delExpense}`, { method: 'DELETE' }); toast('Gasto quitado'); C.route(); } catch (err) { toast(err.message, 'error'); } }; });
         const cat = $('#expCat'); if (cat) cat.onchange = (e) => { $('#expNote').required = e.target.value === 'SUSCRIPCIÓN IMPORTANTE'; };
@@ -229,17 +280,22 @@
         <div class="fx-goal__labels"><span>S/ 0</span><span>Mínimo ${pen0(g.goals.min)}</span><span>Intermedia ${pen0(g.goals.mid)}</span><span>La mejor ${pen0(g.goals.top)}+</span></div></div>`;
     const goalText = (g) => (g.level === 'none' ? `faltan ${pen(g.missing.min)} para el mínimo` : g.level === 'min' ? 'mínimo logrado 🟡' : g.level === 'mid' ? 'intermedia lograda 🟢' : '¡la mejor meta lograda! 🏆');
 
-    // ─── 1. Resumen ────────────────────────────────────────────────────────────────────────────────────────────
-    C.pages.finanzas = {
+    // ─── Inicio: el panel único con las tarjetas y los gráficos ────────────────────────────────────────────────
+    const ACTIONS = [['ventas', 'bag', 'Venta manual', 'Anotar una venta (Yape, Binance…)'], ['finanzas-retiro', 'send', 'Retiro de PayPal', 'Simular o registrar'], ['finanzas-envio', 'wallet', 'Envío al banco', 'De Yape al banco'], ['finanzas-gastos', 'cart', 'Anotar gasto', 'Gaseosa, comida…']];
+    const homePanel = {
         async render(view, token) {
-            const x = await load(view, token, 'Dinero · Resumen', 'Lo importante de un vistazo. Cada tarjeta lleva a su pantalla.');
+            const x = await load(view, token, 'Resumen', 'Tu dinero de un vistazo. Toca una tarjeta para ver el detalle.');
             if (!x) return;
-            const { d, w, pp, bank, hasYape, lv, yapeNow, available, sentPen, monthTotal, s } = x;
+            const { d, w, pp, hasYape, lv, yapeNow, available, sentPen, wdPen, monthTotal, s } = x;
+            const proj = projection(d); const wk = weekCompare(d);
+            const diff = wk.now.pen - wk.before.pen;
             view.innerHTML = `${x.head}${x.alerts}
-                <div class="kpis">
+                <h2 class="fx-sec" style="margin-top:4px">¿Qué quieres hacer?</h2>
+                <div class="fx-actions">${ACTIONS.map(([k, ic, t, sub]) => `<button class="fx-action" data-go="${k}">${icon(ic)}<span><b>${t}</b><small>${sub}</small></span></button>`).join('')}</div>
+                <div class="kpis" style="margin-top:18px">
                     ${hasYape
-                        ? `<div class="card kpi fx-hero"><div class="kpi__top"><span>💰 Dinero para depositar</span>${icon('bag')}</div><div class="kpi__value">${pen(available)}</div><div class="kpi__foot">Yape ${pen(yapeNow)} (Binance incluido) + PayPal cambiado a soles ${pen(pp.nowPen)} (ya con el −${usd(pp.nowCostUsd)} del retiro). Los gastos y lo enviado al banco ya están descontados.</div></div>
-                           <div class="card kpi"><div class="kpi__top"><span>Dinero del mes total</span>${icon('trend')}</div><div class="kpi__value">${pen(monthTotal)}</div><div class="kpi__foot">${pen(available)} para depositar + ${pen(sentPen)} que ya enviaste al banco este mes.</div></div>`
+                        ? `<div class="card kpi fx-hero"><div class="kpi__top"><span>💰 Dinero para depositar</span>${icon('bag')}</div><div class="kpi__value">${pen(available)}</div><div class="kpi__foot">Yape ${pen(yapeNow)} (Binance incluido) + PayPal cambiado a soles ${pen(pp.nowPen)} (ya con el −${usd(pp.nowCostUsd)} del retiro).</div></div>
+                           <div class="card kpi"><div class="kpi__top"><span>Dinero del mes total</span>${icon('trend')}</div><div class="kpi__value">${pen(monthTotal)}</div><div class="kpi__foot">${pen(available)} para depositar + ${pen(sentPen)} enviados al banco${wdPen ? ` + ${pen(wdPen)} de retiros de PayPal` : ''}.</div></div>`
                         : `<div class="card kpi fx-hero"><div class="kpi__top"><span>PayPal si retiras hoy</span>${icon('bag')}</div><div class="kpi__value">${pen(pp.nowPen)}</div><div class="kpi__foot">Anota tu saldo de Yape en "Banco y Yape" para ver el total.</div></div>`}
                 </div>
                 <h2 class="fx-sec">¿Dónde está tu dinero?</h2>
@@ -248,14 +304,14 @@
                     <button class="card fx-tile" data-go="finanzas-banco"><span class="fx-tile__top"><i class="fx-dot fx-dot--yp"></i> Yape (Binance incluido)</span><span class="kpi__value">${hasYape ? pen(yapeNow) : '—'}</span><span class="muted small">Lo que hay hoy · ver detalle ›</span></button>
                     <button class="card fx-tile" data-go="finanzas-paypal"><span class="fx-tile__top"><i class="fx-dot fx-dot--pp"></i> PayPal</span><span class="kpi__value">${usd(pp.balanceUsd)}</span><span class="muted small">≈ ${pen(pp.nowPen)} si lo cambias hoy · ver detalle ›</span></button>
                 </div>
-                ${d.goal ? `<button class="card fx-tile fx-tile--wide" data-go="finanzas-metas" style="margin-top:16px"><span class="fx-tile__top">🎯 Meta del mes</span><span class="row between" style="align-items:baseline;flex-wrap:wrap;width:100%"><span class="kpi__value">${pen(d.goal.salesNetPen)}</span><span class="muted small">${goalText(d.goal)}</span></span>${goalBar(d.goal)}<span class="muted small">Ver metas ›</span></button>` : ''}
+                ${d.goal ? `<button class="card fx-tile fx-tile--wide" data-go="finanzas-metas" style="margin-top:16px"><span class="fx-tile__top">🎯 Meta del mes</span><span class="row between" style="align-items:baseline;flex-wrap:wrap;width:100%"><span class="kpi__value">${pen(d.goal.salesNetPen)}</span><span class="muted small">${goalText(d.goal)}</span></span>${goalBar(d.goal)}<span class="muted small">${proj ? `Estimado simple: a este ritmo cerrarías el mes en ≈ <b>${pen0(proj)}</b> · ` : ''}Ver metas ›</span></button>` : ''}
                 <div class="grid grid-2" style="margin-top:16px">
                     ${card('Ventas por día', `${monthLabel(d.month)} · soles netos aproximados`, barsByDay(d.month, d.byDay))}
-                    ${card('De dónde vienen las ventas', `${monthLabel(d.month)} · en soles`, origin(d, w.rate))}
+                    ${card('De dónde vienen las ventas', `${monthLabel(d.month)} · en soles`, donut(d, w.rate))}
                 </div>
                 <div class="grid grid-2" style="margin-top:16px">
-                    <button class="card fx-tile" data-go="finanzas-ventas"><span class="fx-tile__top">Ventas del mes</span><span class="kpi__value">${num(s.income.count)}</span><span class="muted small">${num(s.income.count) === 1 ? 'venta' : 'ventas'} registradas · ver todas ›</span></button>
-                    <button class="card fx-tile" data-go="finanzas-gastos"><span class="fx-tile__top">Gastos del mes</span><span class="kpi__value fx-neg">${pen(s.expenses.totalPen)}</span><span class="muted small">ya descontado en tu Yape · ver gastos ›</span></button>
+                    <button class="card fx-tile" data-go="finanzas-ventas"><span class="fx-tile__top">Esta semana contra la anterior</span><span class="kpi__value">${pen0(wk.now.pen)}</span>${wk.before.pen > 0 ? `<span class="small ${diff >= 0 ? 'fx-net' : 'fx-fee'}">${diff >= 0 ? '▲' : '▼'} ${pen0(Math.abs(diff))} ${diff >= 0 ? 'más' : 'menos'} que la semana anterior (${pen0(wk.before.pen)})</span>` : '<span class="small muted">Todavía no hay una semana anterior para comparar.</span>'}<span class="muted small">${wk.now.count} ${wk.now.count === 1 ? 'venta' : 'ventas'} · ver ventas ›</span></button>
+                    <button class="card fx-tile" data-go="finanzas-movimientos"><span class="fx-tile__top">Movimientos del mes</span><span class="kpi__value">${num(s.income.count)} ${s.income.count === 1 ? 'venta' : 'ventas'}</span><span class="muted small">Gastos ${pen(s.expenses.totalPen)} · ver todos los movimientos ›</span></button>
                 </div>
                 ${guide(false)}`;
             bind(x);
@@ -306,14 +362,14 @@
     // ─── 4. Banco y Yape ───────────────────────────────────────────────────────────────────────────────────────
     C.pages['finanzas-banco'] = {
         async render(view, token) {
-            const x = await load(view, token, 'Dinero · Banco y Yape', 'Dónde está tu dinero en soles y cuánto has enviado al banco.');
+            const x = await load(view, token, 'Dinero · Banco y Yape', 'Dónde está tu dinero en soles. Para mover dinero usa las acciones: Envío al banco y Retiro de PayPal.');
             if (!x) return;
-            const { d, k, bank, yp, hasYape, lv, yapeNow, sentPen } = x;
+            const { d, k, bank, yp, hasYape, lv, yapeNow, sentPen, wdPen } = x;
             const solesCount = Object.keys(k.soles.byMethod).length;
             const solesLines = Object.entries(k.soles.byMethod).map(([m, v]) => `<div class="row between"><span>${esc(d.methods[m] || m)}</span><b>${pen(v)}</b></div>`).join('');
             view.innerHTML = `${x.head}
                 <div class="grid grid-2">
-                    ${card('🏦 Banco', 'Tu dinero guardado. Sube con lo que anotas como enviado al banco.', `<div class="kpi__value">${pen(lv.bank.now)}</div><p class="muted small">${lv.bank.newSent ? `Tenías ${pen(bank.pen)} al ${esc(bank.as_of || '—')} + ${pen(lv.bank.newSent)} que enviaste después.` : `Al ${esc(bank.as_of || '—')} · sube cuando anotas lo que envías y con tus intereses de fin de mes`}</p>
+                    ${card('🏦 Banco', 'Tu dinero guardado. Sube con lo que envías y con tus retiros de PayPal.', `<div class="kpi__value">${pen(lv.bank.now)}</div><p class="muted small">${lv.bank.newSent ? `Tenías ${pen(bank.pen)} al ${esc(bank.as_of || '—')} + ${pen(lv.bank.newSent)} que llegó después.` : `Al ${esc(bank.as_of || '—')} · sube con lo que envías, con retiros de PayPal y con tus intereses de fin de mes`}</p>
                         <details style="margin-top:10px"><summary class="muted small" style="cursor:pointer">Actualizar saldo del banco</summary>
                         <form id="bankForm" class="stack" style="margin-top:10px"><div class="row"><input class="input" name="pen" type="number" step="0.01" min="0" placeholder="Saldo en soles" required style="flex:1"><input class="input" name="asOf" type="date" value="${today()}" style="width:auto"></div><button class="btn btn--outline" type="submit">Guardar saldo</button></form></details>`)}
                     ${card('<i class="fx-dot fx-dot--yp"></i> Yape (Binance incluido)', 'Lo que hay hoy en tu Yape.', `<div class="kpi__value">${hasYape ? pen(yapeNow) : '—'}</div>
@@ -322,9 +378,8 @@
                         <details style="margin-top:10px"><summary class="muted small" style="cursor:pointer">Anotar saldo de Yape</summary>
                         <form id="yapeForm" class="stack" style="margin-top:10px"><div class="row"><input class="input" name="pen" type="number" step="0.01" min="0" placeholder="Saldo en soles" required style="flex:1"><input class="input" name="asOf" type="date" value="${today()}" style="width:auto"></div><button class="btn btn--outline" type="submit">Guardar saldo de Yape</button></form></details>`)}
                 </div>
-                ${card('Dinero enviado al banco', `${monthLabel(d.month)} · de Yape o PayPal al banco. No es gasto.`, `<div class="row between" style="align-items:baseline"><span class="kpi__value fx-net">${pen(sentPen)}</span><span class="muted small">este mes</span></div>
-                    ${(d.transfers || []).map((t) => `<div class="row between small muted" style="margin-top:6px"><span>${esc(t.date)} · ${esc(t.note || 'Envío al banco')}</span><span><b>${pen(t.pen)}</b> <button class="fx-edit" data-del-transfer="${esc(t.id)}" title="Quitar este envío" aria-label="Quitar este envío">✕</button></span></div>`).join('') || '<p class="muted small">Todavía no anotaste envíos este mes.</p>'}
-                    <form id="transferForm" class="stack" style="margin-top:14px"><div class="row"><input class="input" name="pen" type="number" step="0.01" min="0.01" placeholder="Soles enviados al banco" required style="flex:1"><input class="input" name="date" type="date" value="${today()}" style="width:auto"></div><input class="input" name="note" placeholder="Nota (opcional)"><button class="btn btn--brand" type="submit">${icon('plus')} Anotar envío</button></form>`, 'mt16')}`;
+                ${card('Llegó al banco este mes', `${monthLabel(d.month)} · no es gasto: es dinero que pasó a tu banco`, `<div class="row between" style="align-items:baseline"><span class="kpi__value fx-net">${pen(sentPen + wdPen)}</span><span class="muted small">${pen(sentPen)} desde Yape + ${pen(wdPen)} desde PayPal</span></div>
+                    <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="btn btn--outline" data-go="finanzas-envio">Anotar un envío al banco</button><button class="btn btn--outline" data-go="finanzas-retiro">Registrar un retiro de PayPal</button><button class="btn btn--ghost" data-go="finanzas-movimientos">Ver el detalle ›</button></div>`, 'mt16')}`;
             bind(x);
         }
     };
@@ -332,7 +387,7 @@
     // ─── 5. PayPal ─────────────────────────────────────────────────────────────────────────────────────────────
     C.pages['finanzas-paypal'] = {
         async render(view, token) {
-            const x = await load(view, token, 'Dinero · PayPal', 'Tus dólares, el costo de retirarlos y cuántos soles te llegarían.');
+            const x = await load(view, token, 'Dinero · PayPal', 'Tus dólares y cuántos soles te llegarían. Para simular o registrar un retiro usa la acción Retiro de PayPal.');
             if (!x) return;
             const { w, pp } = x;
             view.innerHTML = `${x.head}
@@ -341,27 +396,104 @@
                         <div class="bar" style="margin:10px 0 6px"><i style="width:${Math.max(2, Math.round(pp.progress * 100))}%"></i></div>
                         <p class="muted small">${pp.blocks ? `${pp.blocks} ${pp.blocks === 1 ? 'retiro listo' : 'retiros listos'} (−${usd(pp.withdrawCostUsd)} de costo) · ` : ''}faltan <b>${usd(pp.remainingUsd)}</b> para el siguiente retiro de ${w.threshold} US$</p>
                         <p class="small" style="margin-top:6px">Si lo cambias hoy: <b>≈ ${pen(pp.nowPen)}</b> (ya con el −${usd(pp.nowCostUsd)} del retiro y el cambio de ${rate1(w.rate)}). Si esperas a los ${w.threshold} US$ el retiro cuesta menos en porcentaje.</p>
-                        <details style="margin-top:8px"><summary class="muted small" style="cursor:pointer">Cambiar el cambio de PayPal (hoy ${rate1(w.rate)})</summary>
+                        <div class="row" style="margin-top:10px"><button class="btn btn--brand" data-go="finanzas-retiro">Simular o registrar un retiro</button></div>
+                        <details style="margin-top:10px"><summary class="muted small" style="cursor:pointer">Cambiar el cambio de PayPal (hoy ${rate1(w.rate)})</summary>
                         <form id="rateForm" class="stack" style="margin-top:10px"><input class="input" name="rate" type="number" step="0.0001" min="1" placeholder="Ej. 3.3292" value="${w.rate}" required><button class="btn btn--outline" type="submit">Guardar cambio</button></form></details>`)}
                     ${card('De lo que pagaron a tus soles', 'Paso a paso, en dólares.', `
                         <div class="fx-steps">
                             <div class="row between"><span>Lo que pagaron los clientes (bruto)</span><b>${usd(pp.grossUsd)}</b></div>
                             <div class="row between muted"><span>Comisiones de PayPal</span><b class="fx-fee">−${usd(pp.feeUsd)}</b></div>
+                            ${pp.withdrawnUsd ? `<div class="row between muted"><span>Ya retirado (convertido a soles, fue al banco)</span><b>−${usd(pp.withdrawnUsd)}</b></div>` : ''}
                             <div class="row between"><span>Saldo en PayPal</span><b>${usd(pp.balanceUsd)}</b></div>
                             <div class="row between muted"><span>Costo del retiro (hoy)</span><b class="fx-fee">−${usd(pp.nowCostUsd)}</b></div>
                             <div class="row between"><span>Dólares que te llegan</span><b>${usd(Math.max(0, pp.balanceUsd - pp.nowCostUsd))}</b></div>
                             <div class="row between muted"><span>Por el cambio de ${rate1(w.rate)}</span><b></b></div>
                             <div class="row between fx-total"><span>Soles si lo cambias hoy</span><b>${pen(pp.nowPen)}</b></div>
                         </div>`)}
+                </div>`;
+            bind(x);
+        }
+    };
+
+    // ─── Acción: Retiro de PayPal (simular y registrar) ─────────────────────────────────────────────────────────
+    C.pages['finanzas-retiro'] = {
+        async render(view, token) {
+            const x = await load(view, token, 'Retiro de PayPal', 'Los dólares de PayPal se convierten en soles y van directo al banco. No es pérdida: es cambio de moneda.');
+            if (!x) return;
+            const { d, w, pp } = x;
+            const list = d.withdrawals || [];
+            view.innerHTML = `${x.head}
+                <div class="grid grid-2">
+                    ${card('① Simular', 'Solo para ver cuánto te llegaría. No guarda nada.', `
+                        <div class="fx-sim">
+                            <div class="fx-sim__in">
+                                <label class="small muted">Dólares a retirar<input class="input" id="simUsd" type="number" step="0.01" min="0" value="${Math.floor(pp.balanceUsd * 100) / 100}"></label>
+                                <label class="small muted">Cambio del día (soles por dólar)<input class="input" id="simRate" type="number" step="0.0001" min="0" value="${w.rate}"></label>
+                            </div>
+                            <div class="fx-steps" id="simOut"></div>
+                        </div>`)}
+                    ${card('② Registrar un retiro', 'Cuando ya lo hiciste en PayPal. Los dólares bajan y los soles suben a tu banco.', `
+                        <form id="wdForm" class="stack">
+                            <div class="row"><label class="label grow">Dólares que retiraste<input class="input" name="usd" id="wdUsd" type="number" step="0.01" min="0.01" required value="${Math.floor(pp.balanceUsd * 100) / 100}"></label>
+                            <label class="label grow">Costo del retiro (US$)<input class="input" name="fee" id="wdFee" type="number" step="0.01" min="0" value="${w.fee}"></label></div>
+                            <div class="row"><label class="label grow">Cambio que te dio PayPal<input class="input" name="rate" id="wdRate" type="number" step="0.0001" min="0" value="${w.rate}"></label>
+                            <label class="label grow">Soles que te llegaron<input class="input" name="pen" id="wdPen" type="number" step="0.01" min="0.01" required><span class="field-hint">Se calcula solo; corrígelo si te llegó otro monto.</span></label></div>
+                            <div class="row"><label class="label grow">Fecha<input class="input" name="date" type="date" value="${today()}"></label>
+                            <label class="label grow">Nota (opcional)<input class="input" name="note" maxlength="120" placeholder="Ej. retiro a Ligo"></label></div>
+                            <div class="fx-wd-preview muted small" id="wdPreview"></div>
+                            <button class="btn btn--brand" type="submit">Registrar retiro</button>
+                        </form>`)}
                 </div>
-                ${card('Simulador de retiro', 'Solo para ver cuánto te llegaría. No guarda nada ni cambia tus números.', `
-                    <div class="fx-sim">
-                        <div class="fx-sim__in">
-                            <label class="small muted">Dólares a retirar<input class="input" id="simUsd" type="number" step="0.01" min="0" value="${Math.floor(pp.balanceUsd * 100) / 100}"></label>
-                            <label class="small muted">Cambio del día (soles por dólar)<input class="input" id="simRate" type="number" step="0.0001" min="0" value="${w.rate}"></label>
-                        </div>
-                        <div class="fx-steps" id="simOut"></div>
-                    </div>`, 'mt16')}`;
+                ${card('Retiros de ' + monthLabel(d.month), list.length ? `${list.length} ${list.length === 1 ? 'retiro' : 'retiros'} · ${pen(x.wdPen)} al banco` : 'Todavía no registraste retiros este mes', list.length ? `<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Dólares</th><th>Costo</th><th>Cambio</th><th>Soles al banco</th><th></th></tr></thead><tbody>${list.map((t) => `<tr><td class="muted">${esc(t.date)}</td><td>−${usd(t.usd)}</td><td class="fx-fee">−${usd(t.fee)}</td><td>${rate1(t.rate)}</td><td><b class="fx-net">+${pen(t.pen)}</b></td><td><button class="fx-edit" data-del-wd="${esc(t.id)}" title="Quitar este retiro" aria-label="Quitar este retiro">✕</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="empty"><p>Aquí saldrán tus retiros de PayPal.</p></div>', 'mt16')}`;
+            bind(x);
+        }
+    };
+
+    // ─── Acción: Envío al banco (de Yape al banco) ─────────────────────────────────────────────────────────────
+    C.pages['finanzas-envio'] = {
+        async render(view, token) {
+            const x = await load(view, token, 'Envío al banco', 'Cuando pasas soles de tu Yape al banco. No es gasto: el dinero sigue siendo tuyo, solo cambió de lugar.');
+            if (!x) return;
+            const { d, sentPen } = x;
+            view.innerHTML = `${x.head}
+                <div class="grid grid-2">
+                    ${card('Anotar un envío', 'Baja tu Yape y sube tu banco.', `<form id="transferForm" class="stack"><div class="row"><input class="input" name="pen" type="number" step="0.01" min="0.01" placeholder="Soles enviados al banco" required style="flex:1"><input class="input" name="date" type="date" value="${today()}" style="width:auto"></div><input class="input" name="note" placeholder="Nota (opcional)"><button class="btn btn--brand" type="submit">${icon('plus')} Anotar envío</button></form>`)}
+                    ${card('Enviado este mes', `${monthLabel(d.month)} · desde Yape`, `<div class="row between" style="align-items:baseline"><span class="kpi__value fx-net">${pen(sentPen)}</span><span class="muted small">${(d.transfers || []).length} ${(d.transfers || []).length === 1 ? 'envío' : 'envíos'}</span></div>
+                        ${(d.transfers || []).map((t) => `<div class="row between small muted" style="margin-top:6px"><span>${esc(t.date)} · ${esc(t.note || 'Envío al banco')}</span><span><b>${pen(t.pen)}</b> <button class="fx-edit" data-del-transfer="${esc(t.id)}" title="Quitar este envío" aria-label="Quitar este envío">✕</button></span></div>`).join('') || '<p class="muted small">Todavía no anotaste envíos este mes.</p>'}`)}
+                </div>`;
+            bind(x);
+        }
+    };
+
+    // ─── Movimientos: todo lo que pasó con el dinero, en una sola lista ─────────────────────────────────────────
+    const FEED = { todo: 'Todo', venta: 'Ventas', retiro: 'Retiros de PayPal', envio: 'Envíos al banco', gasto: 'Gastos' };
+    const feedOf = (d, w) => {
+        const out = [];
+        for (const r of d.income) {
+            const show = r.currency === 'ARS' && r.settled_pen !== null && r.settled_pen !== undefined ? pen(r.settled_pen) : money(r.net ?? r.gross, r.currency);
+            out.push({ t: Date.parse(r.occurred_at), kind: 'venta', color: 'green', icon: 'trend', title: r.product || 'Venta', sub: `${d.methods[r.method] || r.method}${r.email ? ` · ${r.email}` : ''}`, amount: `+ ${show}`, cls: 'fx-net', tag: r.kind, tagCls: KIND_CLASS[r.kind] || '' });
+        }
+        for (const t of d.withdrawals || []) out.push({ t: Date.parse(t.at || `${t.date}T12:00:00-05:00`), kind: 'retiro', color: 'pp', icon: 'send', title: 'Retiro de PayPal → banco', sub: `−${usd(t.usd)} · costo −${usd(t.fee)} · cambio ${rate1(t.rate)}${t.note ? ` · ${t.note}` : ''}`, amount: `+ ${pen(t.pen)} al banco`, cls: 'fx-net', tag: 'Conversión', tagCls: 'fx-tag--pp' });
+        for (const t of d.transfers || []) out.push({ t: Date.parse(t.at || `${t.date}T12:00:00-05:00`), kind: 'envio', color: 'gray', icon: 'wallet', title: 'Envío de Yape → banco', sub: t.note || 'Dinero que pasó a tu banco', amount: `${pen(t.pen)} al banco`, cls: '', tag: 'No es gasto', tagCls: '' });
+        for (const e of d.expenses) out.push({ t: Date.parse(e.created_at || `${e.spent_at}T12:00:00-05:00`), kind: 'gasto', color: 'red', icon: 'cart', title: e.category, sub: e.note || 'Gasto en soles', amount: `− ${pen(e.amount_pen)}`, cls: 'fx-fee', tag: 'Gasto', tagCls: 'fx-tag--warn' });
+        return out.sort((a, b) => b.t - a.t);
+    };
+    C.pages['finanzas-movimientos'] = {
+        async render(view, token) {
+            const x = await load(view, token, 'Dinero · Movimientos', 'Todo lo que pasó con tu dinero, de lo más nuevo a lo más viejo.');
+            if (!x) return;
+            const { d, w } = x;
+            const all = feedOf(d, w);
+            const draw = () => {
+                const cur = state.feed || 'todo';
+                const list = all.filter((m) => cur === 'todo' || m.kind === cur);
+                $('#fxFeed').innerHTML = card('Movimientos', `${list.length} en ${monthLabel(d.month)} · hora de Lima`, `
+                    <div class="fx-filters"><div class="chips">${Object.entries(FEED).map(([k, n]) => `<button class="chip ${cur === k ? 'is-active' : ''}" data-feed="${k}">${n}</button>`).join('')}</div></div>
+                    ${list.length ? `<div class="fx-feed">${list.map((m) => `<div class="fx-feed__row"><span class="fx-feed__ic fx-feed__ic--${m.color}">${icon(m.icon)}</span><div class="fx-feed__txt"><b>${esc(m.title)}</b> ${m.tag ? `<span class="fx-tag ${m.tagCls}">${esc(m.tag)}</span>` : ''}<div class="muted small">${esc(m.sub)}</div></div><div class="fx-feed__amt"><b class="${m.cls}">${esc(m.amount)}</b><div class="muted small">${esc(when(new Date(m.t).toISOString()))}</div></div></div>`).join('')}</div>` : '<div class="empty"><p>No hay movimientos con ese filtro.</p></div>'}`);
+                $$('#fxFeed [data-feed]').forEach((b) => { b.onclick = () => { state.feed = b.dataset.feed; draw(); }; });
+            };
+            view.innerHTML = `${x.head}${x.alerts}<div id="fxFeed"></div>`;
+            draw();
             bind(x);
         }
     };
@@ -386,4 +518,8 @@
             bind(x);
         }
     };
+    // El Resumen del inicio es ahora el panel único de dinero. El panel de antes (clientes, embudo, países) se conserva como "Analítica".
+    if (C.pages.dashboard && !C.pages.analitica) C.pages.analitica = C.pages.dashboard;
+    C.pages.dashboard = homePanel;
+    C.pages.finanzas = homePanel; // por si alguien tiene guardado el enlace de antes
 })();
