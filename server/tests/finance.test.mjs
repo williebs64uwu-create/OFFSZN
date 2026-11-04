@@ -98,10 +98,15 @@ test('pesos argentinos: cuentan solo cuando llegan los soles; el depósito se re
 // ─── Bolsillos, retiro de PayPal y servicios ───────────────────────────────────────────────────────────────────
 import { paypalPocket, pockets, kindOf, byDay } from '../src/shared/store/finance.js';
 const ppRow = (net, fee = 0) => ({ status: 'confirmed', method: 'paypal', currency: 'USD', gross: net + fee, fee, net });
-test('PayPal por debajo de 200 US$: solo se convierte a 3,3, sin costo de retiro', () => {
+test('PayPal por debajo de 120 US$: solo se convierte a 3,3, sin costo de retiro', () => {
     const p = paypalPocket([ppRow(46.05, 2.95), ppRow(15.78, 1.22)]);
-    assert.equal(p.balanceUsd, 61.83); assert.equal(p.blocks, 0); assert.equal(p.withdrawCostUsd, 0);
+    assert.equal(p.balanceUsd, 61.83); assert.equal(p.blocks, 0); assert.equal(p.withdrawCostUsd, 0); assert.equal(p.provisional, false);
     assert.equal(p.estPen, Math.round(61.83 * 3.3 * 100) / 100); assert.equal(p.remainingUsd, 138.17);
+});
+test('PayPal entre 120 y 200 US$: se prevé el costo de 4 US$ (previsión, no es retiro real)', () => {
+    const p = paypalPocket([ppRow(138.96, 10.37)]);
+    assert.equal(p.provisional, true); assert.equal(p.provisionUsd, 4); assert.equal(p.blocks, 0); assert.equal(p.withdrawCostUsd, 0);
+    assert.equal(p.estPen, Math.round((138.96 - 4) * 3.3 * 100) / 100);   // ≈ 445,37 (tu demostración: 449,44 con 3,3292)
 });
 test('PayPal con 200 US$: se descuentan 4 US$ y se cambia a 3,3 (646,80 soles)', () => {
     const p = paypalPocket([ppRow(200)]);
@@ -109,7 +114,7 @@ test('PayPal con 200 US$: se descuentan 4 US$ y se cambia a 3,3 (646,80 soles)',
 });
 test('PayPal con 250 US$: el retiro cuenta solo por los 200 completos', () => {
     const p = paypalPocket([ppRow(250)]);
-    assert.equal(p.estPen, Math.round((196 * 3.3 + 50 * 3.3) * 100) / 100);
+    assert.equal(p.estPen, Math.round((196 * 3.3 + 50 * 3.3) * 100) / 100); assert.equal(p.provisional, false);
 });
 test('Bolsillos: Yape y Binance no pagan retiro; el banco no se mueve', () => {
     const rows = [ppRow(100, 5), { status: 'confirmed', method: 'yape', currency: 'PEN', gross: 50, net: 50 }, { status: 'confirmed', method: 'binance', currency: 'PEN', gross: 45, net: 45 }, { status: 'pending_review', method: 'binance', currency: 'PEN', gross: 85, net: 85 }];

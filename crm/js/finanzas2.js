@@ -81,7 +81,7 @@
                     ${card('PayPal', `Dólares ya sin comisión · retiro cada ${w.threshold} US$`, `<div class="kpi__value">${usd(pp.balanceUsd)}</div>
                         <div class="bar" style="margin:10px 0 6px"><i style="width:${Math.max(2, Math.round(pp.progress * 100))}%"></i></div>
                         <p class="muted small">${pp.blocks ? `${pp.blocks} ${pp.blocks === 1 ? 'retiro listo' : 'retiros listos'} (−${usd(pp.withdrawCostUsd)} de costo) · ` : ''}faltan <b>${usd(pp.remainingUsd)}</b> para el siguiente retiro de ${w.threshold} US$</p>
-                        <p class="small" style="margin-top:6px">≈ <b>${pen(pp.estPen)}</b> al cambio ${String(w.rate).replace('.', ',')}${pp.blocks ? ` (retiro −${usd(w.fee)} por cada ${w.threshold})` : ' · el costo de retiro se descuenta al llegar a ' + w.threshold + ' US$'}</p>`)}
+                        <p class="small" style="margin-top:6px">≈ <b>${pen(pp.estPen)}</b> al cambio ${String(w.rate).replace('.', ',')}${pp.blocks ? ` (retiro −${usd(w.fee)} por cada ${w.threshold})` : ''}${pp.provisional ? ` · incluye −${usd(pp.provisionUsd)} de retiro como <b>previsión</b> (desde ${w.provision} US$); el retiro real es a los ${w.threshold} US$` : (pp.blocks ? '' : ` · el costo de retiro se prevé desde ${w.provision} US$`)}</p>`)}
                 </div>
 
                 <div class="grid grid-2">
@@ -89,7 +89,7 @@
                         <div class="fx-steps">
                             <div class="row between"><span>Lo que pagaron (bruto)</span><b>${pen(real.grossPen)}</b></div>
                             <div class="row between muted"><span>Comisiones de PayPal</span><b>−${usd(pp.feeUsd)}</b></div>
-                            <div class="row between muted"><span>Retiro de PayPal</span><b>${pp.withdrawCostUsd ? `−${usd(pp.withdrawCostUsd)}` : 'aún no (menos de ' + w.threshold + ' US$)'}</b></div>
+                            <div class="row between muted"><span>Retiro de PayPal${pp.provisional && !pp.withdrawCostUsd ? ' (previsión)' : ''}</span><b>${pp.withdrawCostUsd || pp.provisionUsd ? `−${usd(pp.withdrawCostUsd + pp.provisionUsd)}` : 'aún no (menos de ' + w.provision + ' US$)'}</b></div>
                             <div class="row between fx-total"><span>Neto real</span><b>${pen(real.netPen)}</b></div>
                         </div>`)}
                     ${card('Ingresos por día', monthLabel(d.month), heat(d.month, d.byDay))}

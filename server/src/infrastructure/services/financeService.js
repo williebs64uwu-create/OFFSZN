@@ -18,7 +18,7 @@ export async function getSettings() {
     // Retiro de PayPal (opcional en la tabla; si no está se usan 200 US$, 4 US$ y 3,3)
     const w = map.get('paypal_withdraw') || {};
     const pos = (v, d) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : d);
-    const withdraw = { threshold: pos(w.threshold, PAYPAL_WITHDRAW_DEFAULT.threshold), fee: pos(w.fee, PAYPAL_WITHDRAW_DEFAULT.fee), rate: pos(w.rate, PAYPAL_WITHDRAW_DEFAULT.rate) };
+    const withdraw = { threshold: pos(w.threshold, PAYPAL_WITHDRAW_DEFAULT.threshold), fee: pos(w.fee, PAYPAL_WITHDRAW_DEFAULT.fee), rate: pos(w.rate, PAYPAL_WITHDRAW_DEFAULT.rate), provision: pos(w.provision, PAYPAL_WITHDRAW_DEFAULT.provision) };
     return { bank, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw };
 }
 

@@ -13,7 +13,8 @@ export const DEFAULT_METHOD = { USD: 'paypal', PEN: 'yape', ARS: 'mp_argentina' 
 
 // Retiro de PayPal: se retira cada vez que se juntan 200 US$; PayPal cobra 4 US$ por retiro y cambia a 3,3 soles por dólar.
 // Solo el dinero que llega por PayPal pasa por esto. Yape, Binance y el banco no tienen retiro.
-export const PAYPAL_WITHDRAW_DEFAULT = { threshold: 200, fee: 4, rate: 3.3 };
+// Desde 120 US$ ya se descuenta el costo de 4 US$ como previsión (así la utilidad no sale inflada); a los 200 US$ es el retiro real.
+export const PAYPAL_WITHDRAW_DEFAULT = { threshold: 200, fee: 4, rate: 3.3, provision: 120 };
 
 // Servicios que das a mano (mezcla, master, beats...). Se reconocen por el nombre del producto.
 export const SERVICES = ['MIX Y MASTER', 'MEZCLA, MIX, MASTER', 'BEAT REMAKE', 'PRESET PERSONALIZADO'];
@@ -110,8 +111,11 @@ export function paypalPocket(rows = [], w = PAYPAL_WITHDRAW_DEFAULT) {
     }
     const blocks = Math.floor(t.balanceUsd / w.threshold);
     const leftUsd = r2(t.balanceUsd - blocks * w.threshold);
-    const estPen = r2(blocks * (w.threshold - w.fee) * w.rate + leftUsd * w.rate);
-    return { ...t, ...w, blocks, leftUsd, withdrawCostUsd: r2(blocks * w.fee), remainingUsd: r2(Math.max(0, w.threshold - leftUsd)), progress: Math.min(1, leftUsd / w.threshold), estPen };
+    // Lo que sobra después de los retiros completos: desde 120 US$ se prevé el costo de 4 US$ (previsión); por debajo no se descuenta nada.
+    const provisional = leftUsd >= w.provision && leftUsd < w.threshold;
+    const provisionUsd = provisional ? w.fee : 0;
+    const estPen = r2(blocks * (w.threshold - w.fee) * w.rate + Math.max(0, leftUsd - provisionUsd) * w.rate);
+    return { ...t, ...w, blocks, leftUsd, provisional, provisionUsd, withdrawCostUsd: r2(blocks * w.fee), remainingUsd: r2(Math.max(0, w.threshold - leftUsd)), progress: Math.min(1, leftUsd / w.threshold), estPen };
 }
 
 export function solesPocket(rows = []) {
