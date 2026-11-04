@@ -43,6 +43,18 @@ export async function saveYapeBalance({ pen, asOf }) {
     return value;
 }
 
+// Corregir el nombre del producto y la nota de un ingreso (nunca toca montos ni el método). Sirve para resolver los "Por revisar".
+export async function updateIncomeLabel(id, { product, note }) {
+    const patch = {};
+    if (product !== undefined) { const t = String(product || '').trim().slice(0, 120); if (!t) throw Object.assign(new Error('Escribe qué producto fue.'), { status: 400 }); patch.product = t; }
+    if (note !== undefined) patch.note = String(note || '').trim().slice(0, 300) || null;
+    if (!Object.keys(patch).length) throw Object.assign(new Error('No hay nada que cambiar.'), { status: 400 });
+    const { data, error } = await supabase.from('finance_income').update(patch).eq('id', String(id).slice(0, 64)).select('id, product, note').maybeSingle();
+    if (error) throw error;
+    if (!data) throw Object.assign(new Error('Ese pago no existe.'), { status: 404 });
+    return data;
+}
+
 // Nombre del producto que se vendió en una orden: solo lo tuyo (producto sin productor = plugin de OFFSZN, o de tu cuenta).
 const ownerIds = () => String(process.env.OFFSZN_OWNER_PRODUCER_IDS || '0382a813-85c7-46c3-8d2c-61a5692adffd').split(',').map((x) => x.trim()).filter(Boolean);
 export function productLabel(cartItems = []) {
