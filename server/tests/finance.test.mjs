@@ -94,3 +94,41 @@ test('pesos argentinos: cuentan solo cuando llegan los soles; el depósito se re
     assert.equal(done.income.byCurrency.ARS.settledPen, 101.1);
     assert.equal(usdOf(ars({ gross: 15000 })), null);
 });
+
+// ─── Bolsillos, retiro de PayPal y servicios ───────────────────────────────────────────────────────────────────
+import { paypalPocket, pockets, kindOf, byDay } from '../src/shared/store/finance.js';
+const ppRow = (net, fee = 0) => ({ status: 'confirmed', method: 'paypal', currency: 'USD', gross: net + fee, fee, net });
+test('PayPal por debajo de 200 US$: solo se convierte a 3,3, sin costo de retiro', () => {
+    const p = paypalPocket([ppRow(46.05, 2.95), ppRow(15.78, 1.22)]);
+    assert.equal(p.balanceUsd, 61.83); assert.equal(p.blocks, 0); assert.equal(p.withdrawCostUsd, 0);
+    assert.equal(p.estPen, Math.round(61.83 * 3.3 * 100) / 100); assert.equal(p.remainingUsd, 138.17);
+});
+test('PayPal con 200 US$: se descuentan 4 US$ y se cambia a 3,3 (646,80 soles)', () => {
+    const p = paypalPocket([ppRow(200)]);
+    assert.equal(p.blocks, 1); assert.equal(p.withdrawCostUsd, 4); assert.equal(p.estPen, 646.8);
+});
+test('PayPal con 250 US$: el retiro cuenta solo por los 200 completos', () => {
+    const p = paypalPocket([ppRow(250)]);
+    assert.equal(p.estPen, Math.round((196 * 3.3 + 50 * 3.3) * 100) / 100);
+});
+test('Bolsillos: Yape y Binance no pagan retiro; el banco no se mueve', () => {
+    const rows = [ppRow(100, 5), { status: 'confirmed', method: 'yape', currency: 'PEN', gross: 50, net: 50 }, { status: 'confirmed', method: 'binance', currency: 'PEN', gross: 45, net: 45 }, { status: 'pending_review', method: 'binance', currency: 'PEN', gross: 85, net: 85 }];
+    const k = pockets(rows, 27000, undefined, 3);
+    assert.equal(k.bankPen, 27000); assert.equal(k.soles.netPen, 95); assert.equal(k.paypal.balanceUsd, 100);
+    assert.equal(k.real.netPen, 330 + 95); assert.equal(k.real.grossPen, Math.round((105 * 3.3 + 95) * 100) / 100); assert.equal(k.real.resultPen, 422);
+});
+test('Servicios, Payhip y plugins se reconocen por el nombre', () => {
+    assert.equal(kindOf({ product: 'MIX Y MASTER' }), 'Servicio');
+    assert.equal(kindOf({ product: 'Pago directo BINANCE - MEZCLA, MASTER Y BEAT' }), 'Servicio');
+    assert.equal(kindOf({ product: 'Easy Mix' }), 'Plugin');
+    assert.equal(kindOf({ product: 'Preset de Omar Courtz (Payhip)' }), 'Payhip');
+    assert.equal(kindOf({ product: 'BEAT REMAKE' }), 'Servicio');
+});
+test('Ingresos por día en hora de Lima', () => {
+    const d = byDay([{ status: 'confirmed', currency: 'PEN', net: 50, occurred_at: '2026-11-04T03:03:00Z' }, { status: 'confirmed', currency: 'USD', net: 10, occurred_at: '2026-11-03T20:00:00Z' }]);
+    assert.deepEqual(d.map((x) => [x.date, x.pen]), [['2026-11-03', 83]]);
+});
+test('Un cobro en soles "por revisar" no se confunde con pesos argentinos por confirmar', () => {
+    const s = summarize([{ status: 'pending_review', currency: 'PEN', gross: 85, net: 85, method: 'binance' }, { status: 'pending_review', currency: 'ARS', gross: 15000, method: 'mp_argentina' }], [], 3.37);
+    assert.equal(s.pendingArs.count, 1); assert.equal(s.pendingArs.pesos, 15000);
+});

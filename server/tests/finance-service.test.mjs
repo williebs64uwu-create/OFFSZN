@@ -130,11 +130,13 @@ test('gastos con número de operación: la misma captura dos veces no duplica', 
     assert.equal(T('finance_expenses').length, 3);
 });
 
+const thisMonth = () => new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 7); // los pagos de este test se anotan con la fecha de hoy
+
 test('pesos argentinos: el depósito de soles los confirma, se reparte exacto y no se aplica dos veces', async () => {
     reset();
     const ars = (ref, pesos) => svc.recordManualIncome({ serial: ref, email: `${ref}@x.com`, product: 'Easy Mix', currency: 'ARS', amount: pesos });
     await ars('S1', 15000); await ars('S2', 30000); await ars('S3', 15000);
-    const month = await svc.monthData('2026-10');
+    const month = await svc.monthData(thisMonth());
     assert.equal(month.pendingArs.length, 3);
     assert.equal(month.summary.income.count, 0);                       // sin depósito, nada suma
 
@@ -149,7 +151,7 @@ test('pesos argentinos: el depósito de soles los confirma, se reparte exacto y 
     assert.equal(again.duplicate, true);
     assert.equal(T('finance_deposits').length, 1);
 
-    const after = await svc.monthData('2026-10');
+    const after = await svc.monthData(thisMonth());
     assert.equal(after.pendingArs.length, 0);
     assert.equal(after.summary.income.netPen, 202.2);                  // los soles que de verdad llegaron
     assert.equal(after.summary.income.netUsd, Math.round((202.2 / 3.37) * 100) / 100);

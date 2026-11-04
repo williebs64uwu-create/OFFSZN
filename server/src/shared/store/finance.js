@@ -11,6 +11,23 @@ export const METHOD_LABEL = { paypal: 'PayPal', yape: 'Yape', mercadopago: 'Merc
 // Método que se propone según la moneda al despachar a mano: dólares = PayPal, soles = Yape, pesos argentinos = Mercado Pago.
 export const DEFAULT_METHOD = { USD: 'paypal', PEN: 'yape', ARS: 'mp_argentina' };
 
+// Retiro de PayPal: se retira cada vez que se juntan 200 US$; PayPal cobra 4 US$ por retiro y cambia a 3,3 soles por dólar.
+// Solo el dinero que llega por PayPal pasa por esto. Yape, Binance y el banco no tienen retiro.
+export const PAYPAL_WITHDRAW_DEFAULT = { threshold: 200, fee: 4, rate: 3.3 };
+
+// Servicios que das a mano (mezcla, master, beats...). Se reconocen por el nombre del producto.
+export const SERVICES = ['MIX Y MASTER', 'MEZCLA, MIX, MASTER', 'BEAT REMAKE', 'PRESET PERSONALIZADO'];
+const SERVICE_RE = /mezcla|\bmaster\b|beat remake|preset personalizado/i;
+const PLUGIN_RE = /easy mix|star chain|cassette|coca|plugin/i;
+export function kindOf(row) {
+    const p = String(row?.product || '');
+    if (SERVICE_RE.test(p)) return 'Servicio';
+    if (/payhip/i.test(p)) return 'Payhip';
+    if (PLUGIN_RE.test(p)) return 'Plugin';
+    if (/por confirmar|usd extra/i.test(p)) return 'Por revisar';
+    return 'Otro';
+}
+
 export const MAIN_MERCHANT_ID = 'MXV5F6X8JXG4S';
 export const MAIN_MERCHANT_EMAIL = 'willie2008garay@gmail.com';
 
@@ -81,6 +98,58 @@ export function incomeAsOrders(rows = [], fx = FX_DEFAULT) {
     return out;
 }
 
+// ─── Bolsillos: dónde está el dinero ─────────────────────────────────────────────────────────────────────────
+// PayPal (dólares, con retiro), soles (Yape, Binance y pesos ya confirmados; ya son netos) y banco (fijo, lo editas tú).
+// El retiro solo cuenta por cada 200 US$ completos: ahí se descuentan 4 US$ y se cambia a 3,3. Lo que no llega a 200 solo se convierte.
+export function paypalPocket(rows = [], w = PAYPAL_WITHDRAW_DEFAULT) {
+    const t = { count: 0, grossUsd: 0, feeUsd: 0, balanceUsd: 0 };
+    for (const r of rows) {
+        if (r.status !== 'confirmed' || r.method !== 'paypal' || r.currency !== 'USD') continue;
+        const net = num(r.net); if (net === null) continue;
+        t.count += 1; t.balanceUsd = r2(t.balanceUsd + net); t.feeUsd = r2(t.feeUsd + (num(r.fee) || 0)); t.grossUsd = r2(t.grossUsd + (num(r.gross) ?? net));
+    }
+    const blocks = Math.floor(t.balanceUsd / w.threshold);
+    const leftUsd = r2(t.balanceUsd - blocks * w.threshold);
+    const estPen = r2(blocks * (w.threshold - w.fee) * w.rate + leftUsd * w.rate);
+    return { ...t, ...w, blocks, leftUsd, withdrawCostUsd: r2(blocks * w.fee), remainingUsd: r2(Math.max(0, w.threshold - leftUsd)), progress: Math.min(1, leftUsd / w.threshold), estPen };
+}
+
+export function solesPocket(rows = []) {
+    const t = { count: 0, grossPen: 0, netPen: 0, byMethod: {} };
+    for (const r of rows) {
+        if (r.status !== 'confirmed') continue;
+        let net = null; let gross = null;
+        if (r.currency === 'PEN') { net = num(r.net); gross = num(r.gross) ?? net; } else if (r.currency === 'ARS') { net = num(r.settled_pen); gross = net; }
+        if (net === null) continue;
+        t.count += 1; t.netPen = r2(t.netPen + net); t.grossPen = r2(t.grossPen + gross);
+        t.byMethod[r.method] = r2((t.byMethod[r.method] || 0) + net);
+    }
+    return t;
+}
+
+// Resumen de bolsillos y de bruto vs neto REAL en soles (después de comisiones de PayPal y del retiro).
+export function pockets(rows = [], bankPen = 0, w = PAYPAL_WITHDRAW_DEFAULT, expensesPen = 0) {
+    const paypal = paypalPocket(rows, w);
+    const soles = solesPocket(rows);
+    const grossPen = r2(paypal.grossUsd * w.rate + soles.grossPen);
+    const netPen = r2(paypal.estPen + soles.netPen);
+    return { bankPen: r2(bankPen), paypal, soles, real: { grossPen, netPen, lostPen: r2(grossPen - netPen), resultPen: r2(netPen - expensesPen) } };
+}
+
+// Ingresos por día (hora de Lima), en soles reales aproximados: sirve para el mapa de calor.
+export function byDay(rows = [], rate = PAYPAL_WITHDRAW_DEFAULT.rate) {
+    const m = new Map();
+    for (const r of rows) {
+        if (r.status !== 'confirmed') continue;
+        let pen = null;
+        if (r.currency === 'PEN') pen = num(r.net); else if (r.currency === 'ARS') pen = num(r.settled_pen); else if (r.currency === 'USD') { const n = num(r.net); pen = n === null ? null : n * rate; }
+        if (pen === null) continue;
+        const d = new Date(new Date(r.occurred_at).getTime() - 5 * 3600000).toISOString().slice(0, 10);
+        const x = m.get(d) || { date: d, count: 0, pen: 0 }; x.count += 1; x.pen = r2(x.pen + pen); m.set(d, x);
+    }
+    return [...m.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
 // ─── Resumen de un mes ────────────────────────────────────────────────────────────────────────────────────────
 export function summarize(rows = [], expenses = [], fx = FX_DEFAULT) {
     const t = { count: 0, grossUsd: 0, feeUsd: 0, netUsd: 0, netPen: 0 };
@@ -93,7 +162,7 @@ export function summarize(rows = [], expenses = [], fx = FX_DEFAULT) {
 
     for (const r of rows) {
         if (r.status === 'no_detail') { noDetail.count += 1; continue; }
-        if (r.status === 'pending_review') { ars.count += 1; ars.pesos = r2(ars.pesos + (num(r.gross) || 0)); continue; }
+        if (r.status === 'pending_review') { if (r.currency === 'ARS') { ars.count += 1; ars.pesos = r2(ars.pesos + (num(r.gross) || 0)); } continue; } // solo los pesos argentinos esperan el depósito
         const netUsd = usdOf(r, fx, 'net');
         if (netUsd === null) continue;
         const grossUsd = usdOf(r, fx, 'gross') ?? netUsd;
