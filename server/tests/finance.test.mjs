@@ -137,3 +137,10 @@ test('Un cobro en soles "por revisar" no se confunde con pesos argentinos por co
     const s = summarize([{ status: 'pending_review', currency: 'PEN', gross: 85, net: 85, method: 'binance' }, { status: 'pending_review', currency: 'ARS', gross: 15000, method: 'mp_argentina' }], [], 3.37);
     assert.equal(s.pendingArs.count, 1); assert.equal(s.pendingArs.pesos, 15000);
 });
+
+test('Neto real de un mes: reparte en proporción el costo de retiro del saldo total de PayPal', () => {
+    const all = [ppRow(50), ppRow(88.96)];                  // 138,96 en total → previsión de 4 US$
+    const allPp = paypalPocket(all);
+    const mes = pockets([ppRow(50)], 0, undefined, 0, allPp).real;
+    assert.equal(mes.netPen, Math.round((50 * 3.3 - 4 * 3.3 * (50 / 138.96)) * 100) / 100);
+});

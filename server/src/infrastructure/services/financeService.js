@@ -90,7 +90,7 @@ export async function monthData(month) {
     const all = await supabase.from('finance_income').select('*').gte('occurred_at', settings.startAt).limit(20000);
     if (all.error) throw all.error;
     const pk = pockets(all.data || [], settings.bank.pen, settings.withdraw, summary.expenses.totalPen);
-    const real = pockets(rows, settings.bank.pen, settings.withdraw, summary.expenses.totalPen).real; // bruto vs neto real del mes
+    const real = pockets(rows, settings.bank.pen, settings.withdraw, summary.expenses.totalPen, pk.paypal).real; // bruto vs neto real del mes
     return { settings, month: range.month, income: rows, expenses: spent.data || [], pendingArs, summary, pockets: { ...pk, real }, byDay: byDay(rows, settings.withdraw.rate) };
 }
 

@@ -132,11 +132,18 @@ export function solesPocket(rows = []) {
 }
 
 // Resumen de bolsillos y de bruto vs neto REAL en soles (después de comisiones de PayPal y del retiro).
-export function pockets(rows = [], bankPen = 0, w = PAYPAL_WITHDRAW_DEFAULT, expensesPen = 0) {
+// Si se pasa `allPaypal` (el bolsillo de PayPal desde el inicio), el costo de retiro de ese saldo se reparte en proporción entre los pagos de `rows`
+// (así el neto de un solo mes también descuenta la previsión, aunque ese mes solo no llegue a 120 US$).
+export function pockets(rows = [], bankPen = 0, w = PAYPAL_WITHDRAW_DEFAULT, expensesPen = 0, allPaypal = null) {
     const paypal = paypalPocket(rows, w);
     const soles = solesPocket(rows);
+    let ppEst = paypal.estPen;
+    if (allPaypal && allPaypal.balanceUsd > 0) {
+        const costUsd = allPaypal.withdrawCostUsd + allPaypal.provisionUsd;
+        ppEst = r2(paypal.balanceUsd * w.rate - costUsd * w.rate * (paypal.balanceUsd / allPaypal.balanceUsd));
+    }
     const grossPen = r2(paypal.grossUsd * w.rate + soles.grossPen);
-    const netPen = r2(paypal.estPen + soles.netPen);
+    const netPen = r2(ppEst + soles.netPen);
     return { bankPen: r2(bankPen), paypal, soles, real: { grossPen, netPen, lostPen: r2(grossPen - netPen), resultPen: r2(netPen - expensesPen) } };
 }
 
