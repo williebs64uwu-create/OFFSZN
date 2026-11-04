@@ -8,7 +8,7 @@ import {
 } from '../controllers/StoreController.js';
 import * as crm from '../controllers/CrmController.js';
 import { createPlanAdmin, starPlanStatus } from '../controllers/StarSubscriptionController.js';
-import { financeMonth, financeAddExpense, financeDeleteExpense, financeSaveBank, financeSaveYape, financeEditIncome, financeSaveWithdrawRate, financeAddTransfer, financeDeleteTransfer, financeAddWithdrawal, financeDeleteWithdrawal, financeVerify, paypalWebhookSetup, financeSettleArs, financeAddIncome } from '../controllers/FinanceController.js';
+import { financeMonth, financeAddExpense, financeDeleteExpense, financeSaveBank, financeSaveYape, financeEditIncome, financeSaveWithdrawRate, financeAddTransfer, financeDeleteTransfer, financeAddWithdrawal, financeDeleteWithdrawal, financeWeeklyCron, financeWeeklyPreview, financeWeeklySend, financeVerify, paypalWebhookSetup, financeSettleArs, financeAddIncome } from '../controllers/FinanceController.js';
 import { runAutomations } from '../../services/crmService.js';
 
 const router = express.Router();
@@ -57,6 +57,9 @@ router.put('/admin/finance/yape', adminAuth, financeSaveYape);
 router.put('/admin/finance/withdraw-rate', adminAuth, financeSaveWithdrawRate);
 router.post('/admin/finance/bank-transfers', adminAuth, financeAddTransfer);
 router.post('/admin/finance/paypal-withdrawals', adminAuth, financeAddWithdrawal);
+router.get('/admin/finance/weekly-preview', adminAuth, financeWeeklyPreview);
+router.post('/admin/finance/weekly-send', adminAuth, financeWeeklySend);
+router.all('/cron/weekly-finance', cronAuth, financeWeeklyCron);
 router.delete('/admin/finance/paypal-withdrawals/:id', adminAuth, financeDeleteWithdrawal);
 router.delete('/admin/finance/bank-transfers/:id', adminAuth, financeDeleteTransfer);
 router.patch('/admin/finance/income/:id', adminAuth, financeEditIncome);

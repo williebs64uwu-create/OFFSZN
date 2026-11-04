@@ -22,9 +22,10 @@ export async function getSettings() {
     const withdraw = { threshold: pos(w.threshold, PAYPAL_WITHDRAW_DEFAULT.threshold), fee: pos(w.fee, PAYPAL_WITHDRAW_DEFAULT.fee), rate: pos(w.rate, PAYPAL_WITHDRAW_DEFAULT.rate), provision: pos(w.provision, PAYPAL_WITHDRAW_DEFAULT.provision) };
     const transfers = (Array.isArray(map.get('bank_transfers')) ? map.get('bank_transfers') : []).filter((t) => t && Number(t.pen) > 0);
     const withdrawals = (Array.isArray(map.get('paypal_withdrawals')) ? map.get('paypal_withdrawals') : []).filter((t) => t && Number(t.usd) > 0);
+    const reportEmail = (map.get('report_email') || {}).email || null;
     const g = map.get('month_goals') || {};
     const goals = { min: pos(g.min, GOALS_DEFAULT.min), mid: pos(g.mid, GOALS_DEFAULT.mid), top: pos(g.top, GOALS_DEFAULT.top) };
-    return { bank, yape, transfers, withdrawals, goals, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw, binanceRate: pos(map.get('binance_rate'), BINANCE_RATE_DEFAULT) };
+    return { bank, yape, transfers, withdrawals, goals, reportEmail, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw, binanceRate: pos(map.get('binance_rate'), BINANCE_RATE_DEFAULT) };
 }
 
 export async function saveBank({ pen, asOf }) {
