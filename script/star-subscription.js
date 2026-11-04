@@ -42,7 +42,7 @@ const STAR_WIN_LINK = 'https://drive.google.com/file/d/1j6hqZKsaRL0aJ7RvSuTj7nWj
             <div class="plugin-modal-success-icon"><i class="bi bi-check-lg"></i></div>
             <h2 class="plugin-modal-title">¡Suscripción activa!</h2>${body}
             <a href="${STAR_WIN_LINK || '/mis-compras'}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer" style="display:inline-flex;margin-top:10px"><i class="bi bi-download"></i> Descargar instalador (Windows)</a>
-            <a href="https://wa.me/51993525005?text=${encodeURIComponent('Compré el STAR CHAIN, quiero que me envíen el instalador de MAC')}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer" style="display:inline-flex;margin-top:10px"><i class="bi bi-apple"></i> macOS · pídelo por WhatsApp</a>
+            <a href="https://drive.google.com/file/d/1NVbjGu79A48eSMkJcY-NxEeNqW4q-ZIr/view?usp=sharing" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer" style="display:inline-flex;margin-top:10px"><i class="bi bi-apple"></i> Descargar instalador (macOS .rar)</a>
         </div>`;
         modal.querySelector('#star-modal-close').onclick = () => modal.classList.remove('active');
         const copy = modal.querySelector('#star-copy-key');

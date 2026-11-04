@@ -1465,7 +1465,7 @@ export const capturePayPalOrder = async (req, res) => {
                                 downloadLinks = {
                                     win: STAR_WIN_URL,
                                     mac: STAR_MAC_URL,
-                                    macLabel: 'macOS · pídelo por WhatsApp'
+                                    macLabel: 'macOS (.rar)'
                                 };
                             } else if (isWidget) {
                                 // Instalador del widget (solo Windows): WIDGET_DOWNLOAD_URL en Vercel; si falta, "Mis compras"

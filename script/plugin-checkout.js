@@ -21,13 +21,13 @@ class PluginDirectCheckout {
         const isStar = this.productId === 5003 || window.PLUGIN_NAME === 'STAR CHAIN';
 
         if (isStar) {
-            // Windows: ZIP en Drive (pegar aquí el mismo link de server/src/shared/config/starDelivery.js). macOS: WhatsApp de Willie.
+            // Windows y macOS: archivos en Drive (los mismos links de server/src/shared/config/starDelivery.js).
             const STAR_WIN_LINK = 'https://drive.google.com/file/d/1j6hqZKsaRL0aJ7RvSuTj7nWjABX0jViT/view?usp=sharing';
             this.downloads = {
                 name: 'STAR CHAIN',
                 win: STAR_WIN_LINK || '/mis-compras',
-                mac: 'https://wa.me/51993525005?text=' + encodeURIComponent('Compré el STAR CHAIN, quiero que me envíen el instalador de MAC'),
-                macLabel: 'macOS · pídelo por WhatsApp'
+                mac: 'https://drive.google.com/file/d/1NVbjGu79A48eSMkJcY-NxEeNqW4q-ZIr/view?usp=sharing',
+                macLabel: 'macOS (.rar)'
             };
         } else if (isCoke) {
             this.downloads = {

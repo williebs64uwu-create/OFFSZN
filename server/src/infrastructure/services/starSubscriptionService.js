@@ -124,7 +124,7 @@ async function emailBuyer({ to, n, serial, kind }) {
         ${keyBox(serial)}
         ${full ? '' : `<p style="color:#555;font-size:13px">Cuando se cobre tu siguiente cuota recibirás una clave nueva. Si un cobro falla, la clave se suspende hasta que se pague.</p>`}
         <p><a href="${STAR_WIN_URL}">Descargar el instalador de Windows</a></p>
-        <p>¿Usas Mac? <a href="${STAR_MAC_URL}">Pide el instalador de macOS por WhatsApp</a>.</p>
+        <p>¿Usas Mac? <a href="${STAR_MAC_URL}">Descarga el instalador de macOS (.rar)</a>. Si no se abre, escríbele a Willie por WhatsApp.</p>
         <p>¿Dudas? Escríbele a Willie por <a href="https://wa.me/51993525005">WhatsApp</a>.</p>`);
     await sendOffsznEmail({ to, subject: full ? '🔑 Tu licencia STAR CHAIN FULL de por vida' : `🔑 Tu clave STAR CHAIN · cuota ${n} de ${STAR_INSTALLMENTS}`, html, fromName: 'OFFSZN', type: 'transactional' });
 }
