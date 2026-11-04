@@ -7,7 +7,7 @@ export const START_AT_DEFAULT = '2026-10-31T05:00:00.000Z'; // 31 oct 2026 00:00
 export const EXPENSE_CATEGORIES = ['GASEOSA', 'COMIDA RÁPIDA', 'SUSCRIPCIÓN IMPORTANTE'];
 export const CURRENCIES = ['USD', 'PEN', 'ARS'];
 export const METHODS = ['paypal', 'yape', 'mercadopago', 'mp_argentina', 'binance', 'transferencia', 'otro'];
-export const METHOD_LABEL = { paypal: 'PayPal', yape: 'Yape', mercadopago: 'Mercado Pago', mp_argentina: 'Mercado Pago → Yape (Argentina)', binance: 'Binance (USDT)', transferencia: 'Transferencia', otro: 'Otro' };
+export const METHOD_LABEL = { paypal: 'PayPal', yape: 'Yape', mercadopago: 'Mercado Pago', mp_argentina: 'Mercado Pago → Yape (Argentina)', binance: 'Binance → Yape', transferencia: 'Transferencia', otro: 'Otro' };
 // Método que se propone según la moneda al despachar a mano: dólares = PayPal, soles = Yape, pesos argentinos = Mercado Pago.
 export const DEFAULT_METHOD = { USD: 'paypal', PEN: 'yape', ARS: 'mp_argentina' };
 
