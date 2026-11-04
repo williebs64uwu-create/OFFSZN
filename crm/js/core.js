@@ -78,7 +78,7 @@
         ['Hoy', [['dashboard', 'Resumen', 'home'], ['tareas', 'Tareas', 'tasks']]],
         ['Vender', [['/owner/licencias.html', 'Despacho de licencia', 'send'], ['/owner/pagos-manuales.html', 'Pagos manuales', 'hand'], ['ventas', 'Venta manual', 'bag'], ['productos', 'Productos y precios', 'tag']]],
         ['Clientes', [['contactos', 'Contactos', 'users'], ['oportunidades', 'Oportunidades', 'kanban']]],
-        ['Dinero', [['finanzas', 'Finanzas', 'wallet'], ['historial', 'Histórico de plugins', 'history']]],
+        ['Dinero', [['finanzas', 'Finanzas', 'wallet'], ['finanzas2', 'Finanzas · vista nueva', 'wallet'], ['historial', 'Histórico de plugins', 'history']]],
         ['Marketing', [['automatizaciones', 'Emails automáticos', 'mail'], ['experimentos', 'Pruebas A/B', 'flask']]],
         ['Sistema', [['sistema', 'Estado del sistema', 'shield']]]
     ];

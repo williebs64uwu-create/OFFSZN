@@ -7,9 +7,30 @@ export const START_AT_DEFAULT = '2026-10-31T05:00:00.000Z'; // 31 oct 2026 00:00
 export const EXPENSE_CATEGORIES = ['GASEOSA', 'COMIDA RÁPIDA', 'SUSCRIPCIÓN IMPORTANTE'];
 export const CURRENCIES = ['USD', 'PEN', 'ARS'];
 export const METHODS = ['paypal', 'yape', 'mercadopago', 'mp_argentina', 'binance', 'transferencia', 'otro'];
-export const METHOD_LABEL = { paypal: 'PayPal', yape: 'Yape', mercadopago: 'Mercado Pago', mp_argentina: 'Mercado Pago → Yape (Argentina)', binance: 'Binance (USDT)', transferencia: 'Transferencia', otro: 'Otro' };
+export const METHOD_LABEL = { paypal: 'PayPal', yape: 'Yape', mercadopago: 'Mercado Pago', mp_argentina: 'Mercado Pago → Yape (Argentina)', binance: 'Binance → Yape', transferencia: 'Transferencia', otro: 'Otro' };
 // Método que se propone según la moneda al despachar a mano: dólares = PayPal, soles = Yape, pesos argentinos = Mercado Pago.
 export const DEFAULT_METHOD = { USD: 'paypal', PEN: 'yape', ARS: 'mp_argentina' };
+
+// Retiro de PayPal: se retira cada vez que se juntan 200 US$; PayPal cobra 4 US$ por retiro y cambia a 3,3 soles por dólar.
+// Solo el dinero que llega por PayPal pasa por esto. Yape, Binance y el banco no tienen retiro.
+// Desde 120 US$ ya se descuenta el costo de 4 US$ como previsión (así la utilidad no sale inflada); a los 200 US$ es el retiro real.
+export const PAYPAL_WITHDRAW_DEFAULT = { threshold: 200, fee: 4, rate: 3.3, provision: 120 };
+
+// Servicios que das a mano (mezcla, master, beats...). Se reconocen por el nombre del producto.
+export const SERVICES = ['MIX Y MASTER', 'MEZCLA, MIX, MASTER', 'BEAT REMAKE', 'PRESET PERSONALIZADO'];
+const SERVICE_RE = /mezcla|\bmaster\b|beat remake|preset personalizado/i;
+const PLUGIN_RE = /easy mix|star chain|cassette|coca|plugin/i;
+export function kindOf(row) {
+    const p = String(row?.product || '');
+    if (SERVICE_RE.test(p)) return 'Servicio';
+    if (/payhip/i.test(p)) return 'Payhip';
+    if (PLUGIN_RE.test(p)) return 'Plugin';
+    if (/por confirmar|usd extra/i.test(p)) return 'Por revisar';
+    return 'Otro';
+}
+
+// Binance: el dinero final es Yape en soles. Los USDT solo se muestran aproximados (soles ÷ este cambio, que sale de tus cobros reales ≈ 3,46).
+export const BINANCE_RATE_DEFAULT = 3.46;
 
 export const MAIN_MERCHANT_ID = 'MXV5F6X8JXG4S';
 export const MAIN_MERCHANT_EMAIL = 'willie2008garay@gmail.com';
@@ -87,6 +108,68 @@ export function incomeAsOrders(rows = [], fx = FX_DEFAULT) {
     return out;
 }
 
+// ─── Bolsillos: dónde está el dinero ─────────────────────────────────────────────────────────────────────────
+// PayPal (dólares, con retiro), soles (Yape, Binance y pesos ya confirmados; ya son netos) y banco (fijo, lo editas tú).
+// El retiro solo cuenta por cada 200 US$ completos: ahí se descuentan 4 US$ y se cambia a 3,3. Lo que no llega a 200 solo se convierte.
+export function paypalPocket(rows = [], w = PAYPAL_WITHDRAW_DEFAULT) {
+    const t = { count: 0, grossUsd: 0, feeUsd: 0, balanceUsd: 0 };
+    for (const r of rows) {
+        if (r.status !== 'confirmed' || r.method !== 'paypal' || r.currency !== 'USD') continue;
+        const net = num(r.net); if (net === null) continue;
+        t.count += 1; t.balanceUsd = r2(t.balanceUsd + net); t.feeUsd = r2(t.feeUsd + (num(r.fee) || 0)); t.grossUsd = r2(t.grossUsd + (num(r.gross) ?? net));
+    }
+    const blocks = Math.floor(t.balanceUsd / w.threshold);
+    const leftUsd = r2(t.balanceUsd - blocks * w.threshold);
+    // Lo que sobra después de los retiros completos: desde 120 US$ se prevé el costo de 4 US$ (previsión); por debajo no se descuenta nada.
+    const provisional = leftUsd >= w.provision && leftUsd < w.threshold;
+    const provisionUsd = provisional ? w.fee : 0;
+    const estPen = r2(blocks * (w.threshold - w.fee) * w.rate + Math.max(0, leftUsd - provisionUsd) * w.rate);
+    return { ...t, ...w, blocks, leftUsd, provisional, provisionUsd, withdrawCostUsd: r2(blocks * w.fee), remainingUsd: r2(Math.max(0, w.threshold - leftUsd)), progress: Math.min(1, leftUsd / w.threshold), estPen };
+}
+
+export function solesPocket(rows = []) {
+    const t = { count: 0, grossPen: 0, netPen: 0, byMethod: {} };
+    for (const r of rows) {
+        if (r.status !== 'confirmed') continue;
+        let net = null; let gross = null;
+        if (r.currency === 'PEN') { net = num(r.net); gross = num(r.gross) ?? net; } else if (r.currency === 'ARS') { net = num(r.settled_pen); gross = net; }
+        if (net === null) continue;
+        t.count += 1; t.netPen = r2(t.netPen + net); t.grossPen = r2(t.grossPen + gross);
+        t.byMethod[r.method] = r2((t.byMethod[r.method] || 0) + net);
+    }
+    return t;
+}
+
+// Resumen de bolsillos y de bruto vs neto REAL en soles (después de comisiones de PayPal y del retiro).
+// Si se pasa `allPaypal` (el bolsillo de PayPal desde el inicio), el costo de retiro de ese saldo se reparte en proporción entre los pagos de `rows`
+// (así el neto de un solo mes también descuenta la previsión, aunque ese mes solo no llegue a 120 US$).
+export function pockets(rows = [], bankPen = 0, w = PAYPAL_WITHDRAW_DEFAULT, expensesPen = 0, allPaypal = null) {
+    const paypal = paypalPocket(rows, w);
+    const soles = solesPocket(rows);
+    let ppEst = paypal.estPen;
+    if (allPaypal && allPaypal.balanceUsd > 0) {
+        const costUsd = allPaypal.withdrawCostUsd + allPaypal.provisionUsd;
+        ppEst = r2(paypal.balanceUsd * w.rate - costUsd * w.rate * (paypal.balanceUsd / allPaypal.balanceUsd));
+    }
+    const grossPen = r2(paypal.grossUsd * w.rate + soles.grossPen);
+    const netPen = r2(ppEst + soles.netPen);
+    return { bankPen: r2(bankPen), paypal, soles, real: { grossPen, netPen, lostPen: r2(grossPen - netPen), resultPen: r2(netPen - expensesPen) } };
+}
+
+// Ingresos por día (hora de Lima), en soles reales aproximados: sirve para el mapa de calor.
+export function byDay(rows = [], rate = PAYPAL_WITHDRAW_DEFAULT.rate) {
+    const m = new Map();
+    for (const r of rows) {
+        if (r.status !== 'confirmed') continue;
+        let pen = null;
+        if (r.currency === 'PEN') pen = num(r.net); else if (r.currency === 'ARS') pen = num(r.settled_pen); else if (r.currency === 'USD') { const n = num(r.net); pen = n === null ? null : n * rate; }
+        if (pen === null) continue;
+        const d = new Date(new Date(r.occurred_at).getTime() - 5 * 3600000).toISOString().slice(0, 10);
+        const x = m.get(d) || { date: d, count: 0, pen: 0 }; x.count += 1; x.pen = r2(x.pen + pen); m.set(d, x);
+    }
+    return [...m.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
 // ─── Resumen de un mes ────────────────────────────────────────────────────────────────────────────────────────
 export function summarize(rows = [], expenses = [], fx = FX_DEFAULT) {
     const t = { count: 0, grossUsd: 0, feeUsd: 0, netUsd: 0, netPen: 0 };
@@ -99,7 +182,7 @@ export function summarize(rows = [], expenses = [], fx = FX_DEFAULT) {
 
     for (const r of rows) {
         if (r.status === 'no_detail') { noDetail.count += 1; continue; }
-        if (r.status === 'pending_review') { ars.count += 1; ars.pesos = r2(ars.pesos + (num(r.gross) || 0)); continue; }
+        if (r.status === 'pending_review') { if (r.currency === 'ARS') { ars.count += 1; ars.pesos = r2(ars.pesos + (num(r.gross) || 0)); } continue; } // solo los pesos argentinos esperan el depósito
         const netUsd = usdOf(r, fx, 'net');
         if (netUsd === null) continue;
         const grossUsd = usdOf(r, fx, 'gross') ?? netUsd;

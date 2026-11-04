@@ -4,7 +4,7 @@
 import { supabase } from '../database/connection.js';
 import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../shared/config/config.js';
 import {
-    FX_DEFAULT, START_AT_DEFAULT, EXPENSE_CATEGORIES, monthRange, summarize, normalizeManualIncome, paypalCaptureRows, mercadoPagoRow, allocateSettlement
+    FX_DEFAULT, START_AT_DEFAULT, EXPENSE_CATEGORIES, PAYPAL_WITHDRAW_DEFAULT, BINANCE_RATE_DEFAULT, monthRange, summarize, pockets, byDay, kindOf, normalizeManualIncome, paypalCaptureRows, mercadoPagoRow, allocateSettlement
 } from '../../shared/store/finance.js';
 
 const PAYPAL_API = PAYPAL_ENVIRONMENT === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
@@ -14,8 +14,13 @@ export async function getSettings() {
     const { data } = await supabase.from('finance_settings').select('key, value');
     const map = new Map((data || []).map((r) => [r.key, r.value]));
     const bank = map.get('bank_base') || { pen: 0, as_of: null };
+    const yape = map.get('yape_balance') || { pen: null, as_of: null }; // SALDO YAPE: lo que de verdad hay en Yape; no es una venta y no suma a nada
     const fx = Number(map.get('fx_pen_per_usd'));
-    return { bank, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT };
+    // Retiro de PayPal (opcional en la tabla; si no está se usan 200 US$, 4 US$ y 3,3)
+    const w = map.get('paypal_withdraw') || {};
+    const pos = (v, d) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : d);
+    const withdraw = { threshold: pos(w.threshold, PAYPAL_WITHDRAW_DEFAULT.threshold), fee: pos(w.fee, PAYPAL_WITHDRAW_DEFAULT.fee), rate: pos(w.rate, PAYPAL_WITHDRAW_DEFAULT.rate), provision: pos(w.provision, PAYPAL_WITHDRAW_DEFAULT.provision) };
+    return { bank, yape, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw, binanceRate: pos(map.get('binance_rate'), BINANCE_RATE_DEFAULT) };
 }
 
 export async function saveBank({ pen, asOf }) {
@@ -25,6 +30,17 @@ export async function saveBank({ pen, asOf }) {
     const { error } = await supabase.from('finance_settings').upsert({ key: 'bank_base', value: { pen: Math.round(amount * 100) / 100, as_of: date }, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     if (error) throw error;
     return { pen: Math.round(amount * 100) / 100, as_of: date };
+}
+
+// Saldo real de Yape (lo anotas tú). Es solo un dato de control: no es una venta y no entra en el neto ni en la utilidad.
+export async function saveYapeBalance({ pen, asOf }) {
+    const amount = Number(pen);
+    if (!Number.isFinite(amount) || amount < 0 || amount > 100000000) throw Object.assign(new Error('Escribe el saldo de Yape en soles.'), { status: 400 });
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(String(asOf)) ? asOf : new Date().toISOString().slice(0, 10);
+    const value = { pen: Math.round(amount * 100) / 100, as_of: date };
+    const { error } = await supabase.from('finance_settings').upsert({ key: 'yape_balance', value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error) throw error;
+    return value;
 }
 
 // Nombre del producto que se vendió en una orden: solo lo tuyo (producto sin productor = plugin de OFFSZN, o de tu cuenta).
@@ -80,7 +96,14 @@ export async function monthData(month) {
     if (income.error) throw income.error;
     if (spent.error) throw spent.error;
     const pendingArs = await listPendingArs();
-    return { settings, month: range.month, income: income.data || [], expenses: spent.data || [], pendingArs, summary: summarize(income.data || [], spent.data || [], settings.fx) };
+    const rows = (income.data || []).map((r) => ({ ...r, kind: kindOf(r) }));
+    const summary = summarize(rows, spent.data || [], settings.fx);
+    // Bolsillos: el saldo de PayPal se junta mes a mes (el retiro es por cada 200 US$), así que se calcula desde el inicio del conteo.
+    const all = await supabase.from('finance_income').select('*').gte('occurred_at', settings.startAt).limit(20000);
+    if (all.error) throw all.error;
+    const pk = pockets(all.data || [], settings.bank.pen, settings.withdraw, summary.expenses.totalPen);
+    const real = pockets(rows, settings.bank.pen, settings.withdraw, summary.expenses.totalPen, pk.paypal).real; // bruto vs neto real del mes
+    return { settings, month: range.month, income: rows, expenses: spent.data || [], pendingArs, summary, pockets: { ...pk, real }, byDay: byDay(rows, settings.withdraw.rate) };
 }
 
 // Ingresos desde el inicio del conteo (los usa el Resumen del CRM).
