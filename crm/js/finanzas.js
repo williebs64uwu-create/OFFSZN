@@ -106,7 +106,9 @@
                     ${card('PayPal', `Dólares ya sin comisión · retiro cada ${w.threshold} US$`, `<div class="kpi__value">${usd(pp.balanceUsd)}</div>
                         <div class="bar" style="margin:10px 0 6px"><i style="width:${Math.max(2, Math.round(pp.progress * 100))}%"></i></div>
                         <p class="muted small">${pp.blocks ? `${pp.blocks} ${pp.blocks === 1 ? 'retiro listo' : 'retiros listos'} (−${usd(pp.withdrawCostUsd)} de costo) · ` : ''}faltan <b>${usd(pp.remainingUsd)}</b> para el siguiente retiro de ${w.threshold} US$</p>
-                        <p class="small" style="margin-top:6px">≈ <b>${pen(pp.estPen)}</b> al cambio ${String(w.rate).replace('.', ',')}${pp.blocks ? ` (retiro −${usd(w.fee)} por cada ${w.threshold})` : ''}${pp.provisional ? ` · incluye −${usd(pp.provisionUsd)} de retiro como <b>previsión</b> (desde ${w.provision} US$); el retiro real es a los ${w.threshold} US$` : (pp.blocks ? '' : ` · el costo de retiro se prevé desde ${w.provision} US$`)}</p>`)}
+                        <p class="small" style="margin-top:6px">≈ <b>${pen(pp.estPen)}</b> al cambio ${String(w.rate).replace('.', ',')}${pp.blocks ? ` (retiro −${usd(w.fee)} por cada ${w.threshold})` : ''}${pp.provisional ? ` · incluye −${usd(pp.provisionUsd)} de retiro como <b>previsión</b> (desde ${w.provision} US$); el retiro real es a los ${w.threshold} US$` : (pp.blocks ? '' : ` · el costo de retiro se prevé desde ${w.provision} US$`)}</p>
+                        <details style="margin-top:8px"><summary class="muted small" style="cursor:pointer">Cambiar el cambio de PayPal (hoy ${String(w.rate).replace('.', ',')})</summary>
+                        <form id="rateForm" class="stack" style="margin-top:10px"><input class="input" name="rate" type="number" step="0.0001" min="1" placeholder="Ej. 3.3292" value="${w.rate}" required><button class="btn btn--outline" type="submit">Guardar cambio</button></form></details>`)}
                 </div>
 
                 ${hasYape ? card('¿Por qué las ventas no son lo que tengo hoy?', 'Son dos números distintos. Esta es la cuenta, paso a paso:', `
@@ -223,6 +225,10 @@
             $('#yapeForm').onsubmit = async (e) => {
                 e.preventDefault(); const f = new FormData(e.target);
                 try { await api('/admin/finance/yape', { method: 'PUT', body: { pen: f.get('pen'), asOf: f.get('asOf') } }); toast('Saldo de Yape guardado'); C.route(); } catch (err) { toast(err.message, 'error'); }
+            };
+            $('#rateForm').onsubmit = async (e) => {
+                e.preventDefault(); const f = new FormData(e.target);
+                try { await api('/admin/finance/withdraw-rate', { method: 'PUT', body: { rate: f.get('rate') } }); toast('Cambio guardado'); C.route(); } catch (err) { toast(err.message, 'error'); }
             };
             $('#expForm').onsubmit = async (e) => {
                 e.preventDefault(); const f = new FormData(e.target);

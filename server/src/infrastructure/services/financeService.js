@@ -43,6 +43,17 @@ export async function saveYapeBalance({ pen, asOf }) {
     return value;
 }
 
+// Cambio de PayPal al retirar (soles por dólar). Lo pones tú con el cambio real del día; el resto del retiro (200 US$, 4 US$, previsión desde 120) se conserva.
+export async function saveWithdrawRate(rate) {
+    const r = Number(rate);
+    if (!Number.isFinite(r) || r < 1 || r > 10) throw Object.assign(new Error('Escribe el cambio en soles por dólar (por ejemplo 3,3292).'), { status: 400 });
+    const current = (await getSettings()).withdraw;
+    const value = { threshold: current.threshold, fee: current.fee, provision: current.provision, rate: Math.round(r * 10000) / 10000 };
+    const { error } = await supabase.from('finance_settings').upsert({ key: 'paypal_withdraw', value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error) throw error;
+    return value;
+}
+
 // Corregir el nombre del producto y la nota de un ingreso (nunca toca montos ni el método). Sirve para resolver los "Por revisar".
 export async function updateIncomeLabel(id, { product, note }) {
     const patch = {};
