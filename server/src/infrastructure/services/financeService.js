@@ -20,7 +20,8 @@ export async function getSettings() {
     const w = map.get('paypal_withdraw') || {};
     const pos = (v, d) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : d);
     const withdraw = { threshold: pos(w.threshold, PAYPAL_WITHDRAW_DEFAULT.threshold), fee: pos(w.fee, PAYPAL_WITHDRAW_DEFAULT.fee), rate: pos(w.rate, PAYPAL_WITHDRAW_DEFAULT.rate), provision: pos(w.provision, PAYPAL_WITHDRAW_DEFAULT.provision) };
-    return { bank, yape, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw, binanceRate: pos(map.get('binance_rate'), BINANCE_RATE_DEFAULT) };
+    const transfers = (Array.isArray(map.get('bank_transfers')) ? map.get('bank_transfers') : []).filter((t) => t && Number(t.pen) > 0);
+    return { bank, yape, transfers, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw, binanceRate: pos(map.get('binance_rate'), BINANCE_RATE_DEFAULT) };
 }
 
 export async function saveBank({ pen, asOf }) {
@@ -52,6 +53,25 @@ export async function saveWithdrawRate(rate) {
     const { error } = await supabase.from('finance_settings').upsert({ key: 'paypal_withdraw', value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     if (error) throw error;
     return value;
+}
+
+// Dinero enviado al banco (de Yape o PayPal al banco). Se registra como movimiento, nunca como gasto: el banco no se suma solo.
+async function writeTransfers(list) {
+    const { error } = await supabase.from('finance_settings').upsert({ key: 'bank_transfers', value: list, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+    if (error) throw error;
+}
+export async function addBankTransfer({ pen, date, note }) {
+    const amount = Number(pen);
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 100000000) throw Object.assign(new Error('Escribe cuántos soles enviaste al banco.'), { status: 400 });
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(String(date)) ? date : new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 10);
+    const current = (await getSettings()).transfers;
+    const item = { id: `t-${Date.now().toString(36)}`, date: day, pen: Math.round(amount * 100) / 100, note: String(note || '').trim().slice(0, 120) || null };
+    await writeTransfers([...current, item]);
+    return item;
+}
+export async function deleteBankTransfer(id) {
+    const current = (await getSettings()).transfers;
+    await writeTransfers(current.filter((t) => t.id !== String(id)));
 }
 
 // Corregir el nombre del producto y la nota de un ingreso (nunca toca montos ni el método). Sirve para resolver los "Por revisar".
@@ -126,7 +146,9 @@ export async function monthData(month) {
     if (all.error) throw all.error;
     const pk = pockets(all.data || [], settings.bank.pen, settings.withdraw, summary.expenses.totalPen);
     const real = pockets(rows, settings.bank.pen, settings.withdraw, summary.expenses.totalPen, pk.paypal).real; // bruto vs neto real del mes
-    return { settings, month: range.month, income: rows, expenses: spent.data || [], pendingArs, summary, pockets: { ...pk, real }, byDay: byDay(rows, settings.withdraw.rate) };
+    const transfers = settings.transfers.filter((t) => String(t.date).startsWith(range.month));
+    const transfersPen = Math.round(transfers.reduce((a, t) => a + Number(t.pen), 0) * 100) / 100;
+    return { settings, month: range.month, income: rows, transfers, transfersPen, expenses: spent.data || [], pendingArs, summary, pockets: { ...pk, real }, byDay: byDay(rows, settings.withdraw.rate) };
 }
 
 // Ingresos desde el inicio del conteo (los usa el Resumen del CRM).

@@ -156,3 +156,10 @@ test('Neto real de un mes: reparte en proporción el costo de retiro del saldo t
     const mes = pockets([ppRow(50)], 0, undefined, 0, allPp).real;
     assert.equal(mes.netPen, Math.round((50 * 3.3 - 4 * 3.3 * (50 / 138.96)) * 100) / 100);
 });
+
+test('Dinero para depositar: se cambia todo el saldo hoy con un retiro de 4 US$, aunque no llegue a 200', () => {
+    const p = paypalPocket([ppRow(138.96, 10.37)], { threshold: 200, fee: 4, rate: 3.3292, provision: 120 });
+    assert.equal(p.nowCostUsd, 4); assert.equal(p.nowPen, Math.round((138.96 - 4) * 3.3292 * 100) / 100);   // ≈ 449,31
+    assert.equal(paypalPocket([ppRow(2)]).nowPen, 0);      // menos que el costo del retiro: no queda nada
+    assert.equal(paypalPocket([]).nowCostUsd, 0);
+});
