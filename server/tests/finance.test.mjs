@@ -195,3 +195,25 @@ test('Retiro de PayPal: sube el banco y NO toca Yape', () => {
     const k = liveBalances({ yape: yapeSnap, bank: bankSnap, withdrawals: [{ at: '2026-11-06T12:00:00Z', date: '2026-11-06', usd: 139, pen: 449.44 }] });
     assert.equal(k.bank.now, 27449.44); assert.equal(k.bank.newFromPaypal, 449.44); assert.equal(k.yape.now, 287.5);
 });
+
+// ─── Correo semanal ───────────────────────────────────────────────────────────────────────────────────────────
+import { weekStats, renderWeeklyEmail } from '../src/shared/store/weeklyReport.js';
+test('Correo semanal: esta semana contra la anterior, lo más vendido y de dónde vino', () => {
+    const now = Date.parse('2026-11-09T15:00:00Z');
+    const rows = [
+        { status: 'confirmed', currency: 'PEN', net: 50, method: 'yape', product: 'Easy Mix', occurred_at: '2026-11-08T03:00:00Z' },
+        { status: 'confirmed', currency: 'USD', net: 15.78, method: 'paypal', product: 'Easy Mix', occurred_at: '2026-11-07T20:00:00Z' },
+        { status: 'confirmed', currency: 'PEN', net: 100, method: 'yape', product: 'STAR CHAIN', occurred_at: '2026-11-01T20:00:00Z' },   // semana anterior
+        { status: 'pending_review', currency: 'ARS', gross: 15000, method: 'mp_argentina', product: 'X', occurred_at: '2026-11-08T10:00:00Z' }  // no suma
+    ];
+    const w = weekStats(rows, 3.3, now, { yape: 'Yape', paypal: 'PayPal' });
+    assert.equal(w.count, 2); assert.equal(w.pen, Math.round((50 + 15.78 * 3.3) * 100) / 100); assert.equal(w.prevPen, 100);
+    assert.equal(w.products[0].name, 'Easy Mix'); assert.equal(w.methods[0].method, 'paypal');
+});
+test('Correo semanal: el HTML trae los números y escapa el texto', () => {
+    const goal = { salesNetPen: 707.65, goals: { min: 3500, mid: 4000, top: 5000 }, level: 'none', pct: 14, missing: { min: 2792.35, mid: 3292.35, top: 4292.35 } };
+    const { subject, html } = renderWeeklyEmail({ rangeText: 'Del 3 al 9 de noviembre', monthLabel: 'noviembre 2026', available: 736.81, monthTotal: 849.81, sentToBank: 113, bank: 27000, yape: 287.5, paypalUsd: 138.96, paypalNowPen: 449.31, paypalProgress: 0.69, paypalRemainingUsd: 61.04, paypalThreshold: 200,
+        goal, projection: 5307, pending: 1, crmUrl: 'https://offszn.lat/crm', week: { pen: 705, count: 10, prevPen: 0, prevCount: 0, avgTicket: 70.5, best: { date: '2026-11-03', pen: 300 }, products: [{ name: '<b>Easy</b> Mix', pen: 300 }], methods: [{ method: 'paypal', label: 'PayPal', pen: 337.65 }] } });
+    assert.match(subject, /para depositar/); assert.match(html, /736,81|736\.81/); assert.match(html, /27,000\.00|27\.000,00|27,000/); assert.ok(!html.includes('<b>Easy</b> Mix')); assert.match(html, /&lt;b&gt;Easy/);
+    assert.match(html, /1 pago por revisar/); assert.match(html, /Abrir mi panel/);
+});

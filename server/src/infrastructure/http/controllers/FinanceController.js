@@ -3,6 +3,7 @@ import { isAdminKey } from '../../../shared/config/adminKey.js';
 import {
     recordManualIncome, monthData, addExpense, deleteExpense, saveBank, saveYapeBalance, saveWithdrawRate, addBankTransfer, deleteBankTransfer, addPayPalWithdrawal, deletePayPalWithdrawal, updateIncomeLabel, verifyPayPalIncome, setupPayPalWebhook, getSettings, settleArs
 } from '../../services/financeService.js';
+import { sendWeeklyReport } from '../../services/weeklyReportService.js';
 import { METHOD_LABEL, EXPENSE_CATEGORIES } from '../../../shared/store/finance.js';
 
 const fail = (res, e) => res.status(e.status || 500).json({ error: e.status ? e.message : (e.message || 'Error') });
@@ -99,4 +100,19 @@ export const financeSettings = async (req, res) => {
 // POST /admin/finance/settle-ars { label, pen, ref, ids, note } → llegaron los soles de los pagos en pesos argentinos
 export const financeSettleArs = async (req, res) => {
     try { return res.json(await settleArs(req.body || {})); } catch (e) { return fail(res, e); }
+};
+
+// GET/POST /api/store/cron/weekly-finance (Authorization: Bearer STORE_CRON_SECRET) → manda el correo semanal. ?dry=1 solo lo arma, sin enviar.
+export const financeWeeklyCron = async (req, res) => {
+    try { return res.json(await sendWeeklyReport({ dry: String(req.query.dry || '') === '1' })); } catch (e) { return fail(res, e); }
+};
+
+// GET /admin/finance/weekly-preview → el correo semanal como página, para verlo antes de recibirlo (no envía nada)
+export const financeWeeklyPreview = async (req, res) => {
+    try { const out = await sendWeeklyReport({ dry: true }); return res.type('html').send(out.html); } catch (e) { return fail(res, e); }
+};
+
+// POST /admin/finance/weekly-send → manda el correo ahora (a report_email o al correo que indiques)
+export const financeWeeklySend = async (req, res) => {
+    try { return res.json(await sendWeeklyReport({ to: req.body && req.body.to })); } catch (e) { return fail(res, e); }
 };
