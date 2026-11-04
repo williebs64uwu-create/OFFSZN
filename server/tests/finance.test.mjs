@@ -108,7 +108,7 @@ test('pesos argentinos: cuentan solo cuando llegan los soles; el depósito se re
 });
 
 // ─── Bolsillos, retiro de PayPal y servicios ───────────────────────────────────────────────────────────────────
-import { paypalPocket, pockets, kindOf, byDay } from '../src/shared/store/finance.js';
+import { paypalPocket, pockets, kindOf, byDay, liveBalances, goalProgress } from '../src/shared/store/finance.js';
 const ppRow = (net, fee = 0) => ({ status: 'confirmed', method: 'paypal', currency: 'USD', gross: net + fee, fee, net });
 test('PayPal por debajo de 120 US$: solo se convierte a 3,3, sin costo de retiro', () => {
     const p = paypalPocket([ppRow(46.05, 2.95), ppRow(15.78, 1.22)]);
@@ -162,4 +162,24 @@ test('Dinero para depositar: se cambia todo el saldo hoy con un retiro de 4 US$,
     assert.equal(p.nowCostUsd, 4); assert.equal(p.nowPen, Math.round((138.96 - 4) * 3.3292 * 100) / 100);   // ≈ 449,31
     assert.equal(paypalPocket([ppRow(2)]).nowPen, 0);      // menos que el costo del retiro: no queda nada
     assert.equal(paypalPocket([]).nowCostUsd, 0);
+});
+
+const yapeSnap = { pen: 287.5, as_of: '2026-11-04', at: '2026-11-04T15:50:00Z' };
+const bankSnap = { pen: 27000, as_of: '2026-11-02' };
+test('Saldos vivos: una venta nueva en Yape sube el saldo de Yape; lo anterior a la foto no se cuenta dos veces', () => {
+    const antes = { status: 'confirmed', currency: 'PEN', net: 50, occurred_at: '2026-11-04T03:03:00Z' };
+    const nueva = { status: 'confirmed', currency: 'PEN', net: 70, occurred_at: '2026-11-04T20:00:00Z' };
+    const k = liveBalances({ income: [antes, nueva], yape: yapeSnap, bank: bankSnap, transfers: [{ date: '2026-11-02', pen: 113 }] });
+    assert.equal(k.yape.newSales, 70); assert.equal(k.yape.now, 357.5);
+    assert.equal(k.bank.now, 27000);            // los 113 son de antes de la foto del banco
+});
+test('Saldos vivos: gasto nuevo baja Yape; un envío nuevo baja Yape y sube el banco', () => {
+    const k = liveBalances({ expenses: [{ amount_pen: 3, created_at: '2026-11-03T15:38:00Z' }, { amount_pen: 5, created_at: '2026-11-05T12:00:00Z' }],
+        transfers: [{ at: '2026-11-05T13:00:00Z', date: '2026-11-05', pen: 200 }], yape: yapeSnap, bank: bankSnap });
+    assert.equal(k.yape.newSpent, 5); assert.equal(k.yape.newSent, 200); assert.equal(k.yape.now, 82.5);
+    assert.equal(k.bank.now, 27200);
+});
+test('Meta del mes: mínimo 3.500, intermedia 4.000, la mejor 5.000', () => {
+    assert.equal(goalProgress(707.65).level, 'none'); assert.equal(goalProgress(707.65).missing.min, 2792.35);
+    assert.equal(goalProgress(3500).level, 'min'); assert.equal(goalProgress(4200).level, 'mid'); assert.equal(goalProgress(5100).level, 'top'); assert.equal(goalProgress(9000).pct, 100);
 });
