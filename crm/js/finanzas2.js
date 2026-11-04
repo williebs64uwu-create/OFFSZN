@@ -88,6 +88,8 @@
                         <p class="small" style="margin-top:6px">≈ <b>${pen(pp.estPen)}</b> al cambio ${String(w.rate).replace('.', ',')}${pp.blocks ? ` (retiro −${usd(w.fee)} por cada ${w.threshold})` : ''}${pp.provisional ? ` · incluye −${usd(pp.provisionUsd)} de retiro como <b>previsión</b> (desde ${w.provision} US$); el retiro real es a los ${w.threshold} US$` : (pp.blocks ? '' : ` · el costo de retiro se prevé desde ${w.provision} US$`)}</p>`)}
                 </div>
 
+                ${yp.pen === null || yp.pen === undefined ? '' : `<div class="card fx-cash" style="margin-top:16px;padding:16px 20px"><div class="row between" style="flex-wrap:wrap;gap:8px"><div><div class="muted small">Dinero disponible hoy (sin contar el banco)</div><div class="kpi__value">${pen(Number(yp.pen) + pp.estPen)}</div></div>
+                    <div class="muted small" style="text-align:right">Saldo Yape ${pen(yp.pen)} + PayPal si retiras ahora ≈ ${pen(pp.estPen)}<br>PayPal: ${usd(pp.balanceUsd)}${pp.provisional ? ` − ${usd(pp.provisionUsd)} de retiro` : ''} × ${String(w.rate).replace('.', ',')} · es un estimado</div></div></div>`}
                 <div class="grid grid-2">
                     ${card('Bruto → neto real', 'Así se va el dinero antes de llegar a tu bolsillo.', `
                         <div class="fx-steps">
