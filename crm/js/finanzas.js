@@ -66,22 +66,27 @@
         return `<div class="fx-heat2">${rows}</div><div class="fx-legend muted small">Menos <i class="fx-heat__c fx-l0"></i><i class="fx-heat__c fx-l1"></i><i class="fx-heat__c fx-l2"></i><i class="fx-heat__c fx-l3"></i> Más · pasa el dedo o el mouse por un día para ver cuánto fue</div>`;
     };
 
-    // Gráfico de barras: ventas de cada día del mes (soles netos aproximados)
+    // Gráfico de barras: ventas de cada día del mes (soles netos aproximados), con el total arriba y las líneas guía
     const barsByDay = (month, days) => {
         const [y, m] = month.split('-').map(Number);
         const total = new Date(y, m, 0).getDate();
         const map = new Map(days.map((x) => [x.date, x]));
         const max = Math.max(1, ...days.map((x) => x.pen));
-        const W = 600; const H = 170; const pad = 22; const bw = (W - pad) / total;
+        const sum = days.reduce((a, x) => a + x.pen, 0); const count = days.reduce((a, x) => a + x.count, 0);
+        const W = 600; const H = 190; const padL = 40; const padB = 20; const plotH = H - padB - 10; const bw = (W - padL) / total;
+        const todayKey = today();
+        const grid = [0, 0.5, 1].map((f) => { const yy = H - padB - plotH * f; return `<line x1="${padL}" x2="${W}" y1="${yy}" y2="${yy}" class="fx-grid"/><text x="${padL - 6}" y="${yy + 3}" text-anchor="end" class="fx-axis">${f ? pen0(max * f).replace('S/ ', '') : '0'}</text>`; }).join('');
         let out = '';
         for (let d = 1; d <= total; d += 1) {
-            const x = map.get(`${month}-${String(d).padStart(2, '0')}`);
-            const h = x ? Math.max(3, ((H - 30) * x.pen) / max) : 0;
-            const bx = pad + (d - 1) * bw;
-            out += `<g><title>${d} de ${MONTHS[m - 1]}: ${x ? `${pen0(x.pen)} · ${x.count} ${x.count === 1 ? 'pago' : 'pagos'}` : 'sin ingresos'}</title><rect x="${bx + 1}" y="${H - 18 - h}" width="${Math.max(2, bw - 3)}" height="${x ? h : 2}" rx="3" class="${x ? 'fx-bar' : 'fx-bar fx-bar--empty'}"/></g>`;
-            if (d === 1 || d % 5 === 0) out += `<text x="${bx + bw / 2}" y="${H - 4}" text-anchor="middle" class="fx-axis">${d}</text>`;
+            const key = `${month}-${String(d).padStart(2, '0')}`;
+            const x = map.get(key);
+            const h = x ? Math.max(4, (plotH * x.pen) / max) : 0;
+            const bx = padL + (d - 1) * bw;
+            out += `<g><title>${d} de ${MONTHS[m - 1]}: ${x ? `${pen0(x.pen)} · ${x.count} ${x.count === 1 ? 'pago' : 'pagos'}` : 'sin ingresos'}</title><rect x="${bx + 2}" y="${H - padB - h}" width="${Math.max(3, bw - 5)}" height="${x ? h : 2}" rx="4" class="${x ? `fx-bar${key === todayKey ? ' fx-bar--today' : ''}` : 'fx-bar fx-bar--empty'}"/></g>`;
+            if (d === 1 || d % 5 === 0) out += `<text x="${bx + bw / 2}" y="${H - 5}" text-anchor="middle" class="fx-axis">${d}</text>`;
         }
-        return `<svg class="fx-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Ventas por día del mes">${out}</svg><p class="muted small">Cada barra es un día. Más alta = vendiste más ese día.</p>`;
+        return `<div class="fx-chart-head"><b>${pen0(sum)}</b><span class="fx-pill">${count} ${count === 1 ? 'venta' : 'ventas'} este mes</span></div>
+            <svg class="fx-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Ventas por día del mes">${grid}${out}</svg><p class="muted small">Cada barra es un día. Más alta = vendiste más ese día. La de hoy va más oscura.</p>`;
     };
 
     // Gráfico de línea: ventas acumuladas del mes contra las tres metas
@@ -169,8 +174,8 @@
         const wdPen = Number(d.withdrawalsPen) || 0;
         const x = { d, month, s, k, w, pp, bank, yp, hasYape, lv, yapeNow, available, sentPen, wdPen, monthTotal: available + sentPen + wdPen };
         x.alerts = [
-            s.pendingArs.count ? `<div class="alert alert--warning">${icon('alert')}<div><b>${s.pendingArs.count} ${s.pendingArs.count === 1 ? 'pago' : 'pagos'} en pesos argentinos</b> (${ars(s.pendingArs.pesos)}) por confirmar. Todavía no suman. <a href="#/finanzas-ventas">Ir a Ventas</a></div></div>` : '',
-            s.noDetail.count ? `<div class="alert alert--warning">${icon('alert')}<div><b>${s.noDetail.count} ${s.noDetail.count === 1 ? 'despacho' : 'despachos'} sin dato de pago.</b> Revísalos en <a href="#/finanzas-ventas">Ventas</a>.</div></div>` : ''
+            s.pendingArs.count ? `<div class="alert alert--warn">${icon('alert')}<div><b>${s.pendingArs.count} ${s.pendingArs.count === 1 ? 'pago' : 'pagos'} en pesos argentinos</b> (${ars(s.pendingArs.pesos)}) por confirmar. Todavía no suman. <a href="#/finanzas-ventas">Ir a Ventas</a></div></div>` : '',
+            s.noDetail.count ? `<div class="alert alert--warn">${icon('alert')}<div><b>${s.noDetail.count} ${s.noDetail.count === 1 ? 'despacho' : 'despachos'} sin dato de pago.</b> Revísalos en <a href="#/finanzas-ventas">Ventas</a>.</div></div>` : ''
         ].join('');
         x.head = head(title, desc, `<input class="input" type="month" id="finMonth" value="${month}" min="${d.settings.startAt.slice(0, 7)}" style="width:auto" aria-label="Mes">`);
         return x;
@@ -259,14 +264,14 @@
         $('#fxMovs').innerHTML = card('Movimientos', `${list.length} ${list.length === 1 ? 'movimiento' : 'movimientos'} en ${monthLabel(d.month)} · hora de Lima`, `
             <div class="fx-filters"><div class="chips">${chip('method', 'all', 'Todos los métodos', state.method)}${methods.map((m) => chip('method', m, d.methods[m] || m, state.method)).join('')}</div>
             <div class="chips">${chip('kind', 'all', 'Todo tipo', state.kind)}${kinds.map((x) => chip('kind', x, x, state.kind)).join('')}</div></div>
-            ${slice.length ? `<div class="table-wrap"><table><thead><tr><th>Cuándo</th><th>Producto</th><th>Método</th><th>Bruto</th><th>Comisión</th><th>Neto</th><th>Estado</th><th></th></tr></thead><tbody>${slice.map((r) => `<tr>
-                <td class="muted" style="white-space:nowrap">${esc(when(r.occurred_at))}</td>
-                <td>${esc(r.product || 'Sin nombre')} <span class="fx-tag ${KIND_CLASS[r.kind] || ''}">${esc(r.kind)}</span> <button class="fx-edit" data-edit="${esc(r.id)}" data-name="${esc(r.product || '')}" title="Corregir el nombre del producto" aria-label="Corregir el nombre del producto">✎</button><div class="muted small">${esc(r.email || '')}</div></td>
-                <td><span class="fx-tag ${METHOD_CLASS[r.method] || ''}">${esc(d.methods[r.method] || r.method)}</span>${r.method === 'binance' && r.net ? `<div class="muted small">≈ ${(Number(r.net) / (d.settings.binanceRate || 3.46)).toFixed(1)} USDT</div>` : ''}</td>
-                <td>${money(r.gross, r.currency)}</td><td class="${r.fee ? 'fx-fee' : 'muted'}">${r.fee === null || r.fee === undefined ? '—' : `−${money(r.fee, r.currency)}`}</td>
-                <td><b class="fx-net">${r.currency === 'ARS' && r.settled_pen !== null && r.settled_pen !== undefined ? pen(r.settled_pen) : money(r.net, r.currency)}</b></td>
-                <td>${status(r)}</td>
-                <td style="white-space:nowrap">${r.method === 'paypal' && !r.by_willie && !r.verified ? `<button class="btn btn--ghost btn--sm" data-verify="${esc(r.id)}">Verificar</button> ` : ''}</td></tr>`).join('')}</tbody></table></div>`
+            ${slice.length ? `<div class="table-wrap"><table class="fx-table"><thead><tr><th>Cuándo</th><th>Producto</th><th>Método</th><th>Bruto</th><th>Comisión</th><th>Neto</th><th>Estado</th><th></th></tr></thead><tbody>${slice.map((r) => `<tr>
+                <td class="muted" data-label="Cuándo" style="white-space:nowrap">${esc(when(r.occurred_at))}</td>
+                <td data-label="Producto" class="fx-prod">${esc(r.product || 'Sin nombre')} <span class="fx-tag ${KIND_CLASS[r.kind] || ''}">${esc(r.kind)}</span> <button class="fx-edit" data-edit="${esc(r.id)}" data-name="${esc(r.product || '')}" title="Corregir el nombre del producto" aria-label="Corregir el nombre del producto">✎</button><div class="muted small">${esc(r.email || '')}</div></td>
+                <td data-label="Método"><span class="fx-tag ${METHOD_CLASS[r.method] || ''}">${esc(d.methods[r.method] || r.method)}</span>${r.method === 'binance' && r.net ? `<div class="muted small">≈ ${(Number(r.net) / (d.settings.binanceRate || 3.46)).toFixed(1)} USDT</div>` : ''}</td>
+                <td data-label="Bruto">${money(r.gross, r.currency)}</td><td data-label="Comisión" class="${r.fee ? 'fx-fee' : 'muted'}">${r.fee === null || r.fee === undefined ? '—' : `−${money(r.fee, r.currency)}`}</td>
+                <td data-label="Neto"><b class="fx-net">${r.currency === 'ARS' && r.settled_pen !== null && r.settled_pen !== undefined ? pen(r.settled_pen) : money(r.net, r.currency)}</b></td>
+                <td data-label="Estado">${status(r)}</td>
+                <td class="fx-act" style="white-space:nowrap">${r.method === 'paypal' && !r.by_willie && !r.verified ? `<button class="btn btn--ghost btn--sm" data-verify="${esc(r.id)}">Verificar</button> ` : ''}</td></tr>`).join('')}</tbody></table></div>`
                 : '<div class="empty"><p>No hay movimientos con ese filtro.</p></div>'}
             <div class="fx-pager muted small"><span>Mostrando ${slice.length} de ${list.length}</span><span><button class="btn btn--ghost btn--sm" data-pg="-1" ${state.page <= 1 ? 'disabled' : ''}>‹</button> ${state.page} / ${pages} <button class="btn btn--ghost btn--sm" data-pg="1" ${state.page >= pages ? 'disabled' : ''}>›</button></span></div>`);
         $$('#fxMovs [data-f]').forEach((b) => { b.onclick = () => { state[b.dataset.f] = b.dataset.v; state.page = 1; drawMovs(d); }; });
@@ -297,6 +302,20 @@
         <div class="fx-goal__labels"><span>S/ 0</span><span>Mínimo ${pen0(g.goals.min)}</span><span>Intermedia ${pen0(g.goals.mid)}</span><span>La mejor ${pen0(g.goals.top)}+</span></div></div>`;
     const goalText = (g) => (g.level === 'none' ? `faltan ${pen(g.missing.min)} para el mínimo` : g.level === 'min' ? 'mínimo logrado 🟡' : g.level === 'mid' ? 'intermedia lograda 🟢' : '¡la mejor meta lograda! 🏆');
 
+    // Cuadre: por qué la meta y "dinero del mes total" no son el mismo número. Todo suma exacto (lo calcula el servidor).
+    const cuadreCard = (x) => {
+        const c = x.d.reconcile;
+        if (!c || !x.hasYape) return '';
+        const sg = (n) => `${n >= 0 ? '+' : '−'} ${pen(Math.abs(n))}`;
+        const row = (label, v, hint, cls = '') => `<div class="fx-cuadre__row ${cls}"><span>${label}<small>${hint}</small></span><b>${v}</b></div>`;
+        return card('¿Por qué no es igual a la meta?', 'La meta cuenta solo lo que vendiste este mes. Lo que tienes hoy incluye también dinero de antes del mes. Así cuadra, centavo por centavo:', `<div class="fx-cuadre">
+            ${row('Meta del mes (ventas netas)', pen(c.meta), 'Después de todas las comisiones, con lo que ya está en tu banco incluido')}
+            ${row('PayPal de antes del mes', sg(c.paypalBefore), 'Cobros de PayPal que no son de este mes, ya con su parte del costo de retiro')}
+            ${row('Ajuste de Yape', sg(c.yapeAdjust), 'Saldo que ya tenías en Yape antes del mes, menos los gastos')}
+            ${row('Dinero del mes total', pen(c.total), `${pen(x.available)} para depositar + ${pen(x.sentPen + x.wdPen)} que ya pasaron al banco`, 'is-total')}</div>`, 'mt16');
+    };
+    const goalNote = (d) => `<span class="muted small">Ventas netas del mes, <b>después de todas las comisiones</b> (la de PayPal y el costo del retiro).${d.goal.sentToBankPen ? ` Incluye <b>${pen(d.goal.sentToBankPen)}</b> que ya pasaron a tu banco este mes.` : ''}</span>`;
+
     // ─── Inicio: el panel único con las tarjetas y los gráficos ────────────────────────────────────────────────
     const ACTIONS = [['ventas', 'bag', 'Venta manual', 'Anotar una venta (Yape, Binance…)'], ['finanzas-retiro', 'send', 'Retiro de PayPal', 'Simular o registrar'], ['finanzas-envio', 'wallet', 'Envío al banco', 'De Yape al banco'], ['finanzas-gastos', 'cart', 'Anotar gasto', 'Gaseosa, comida…']];
     const homePanel = {
@@ -311,7 +330,7 @@
                 <div class="fx-actions">${ACTIONS.map(([k, ic, t, sub]) => `<button class="fx-action" data-go="${k}">${icon(ic)}<span><b>${t}</b><small>${sub}</small></span></button>`).join('')}</div>
                 <div class="kpis" style="margin-top:18px">
                     ${hasYape
-                        ? `<div class="card kpi fx-hero"><div class="kpi__top"><span>💰 Dinero para depositar</span>${icon('bag')}</div><div class="kpi__value">${pen(available)}</div><div class="kpi__foot">Yape ${pen(yapeNow)} (Binance incluido) + PayPal cambiado a soles ${pen(pp.nowPen)} (ya con el −${usd(pp.nowCostUsd)} del retiro).</div></div>
+                        ? `<div class="card kpi fx-hero"><div class="kpi__top"><span>💰 Dinero para depositar</span>${icon('bag')}</div><div class="kpi__value">${pen(available)}</div><div class="kpi__foot">Ya con todas las comisiones: Yape ${pen(yapeNow)} (Binance incluido) + PayPal cambiado a soles ${pen(pp.nowPen)} (con el −${usd(pp.nowCostUsd)} del retiro).</div></div>
                            <div class="card kpi"><div class="kpi__top"><span>Dinero del mes total</span>${icon('trend')}</div><div class="kpi__value">${pen(monthTotal)}</div><div class="kpi__foot">${pen(available)} para depositar + ${pen(sentPen)} enviados al banco${wdPen ? ` + ${pen(wdPen)} de retiros de PayPal` : ''}.</div></div>`
                         : `<div class="card kpi fx-hero"><div class="kpi__top"><span>PayPal si retiras hoy</span>${icon('bag')}</div><div class="kpi__value">${pen(pp.nowPen)}</div><div class="kpi__foot">Anota tu saldo de Yape en "Banco y Yape" para ver el total.</div></div>`}
                 </div>
@@ -321,7 +340,8 @@
                     <button class="card fx-tile" data-go="finanzas-banco"><span class="fx-tile__top"><i class="fx-dot fx-dot--yp"></i> Yape (Binance incluido)</span><span class="kpi__value">${hasYape ? pen(yapeNow) : '—'}</span><span class="muted small">Lo que hay hoy · ver detalle ›</span></button>
                     <button class="card fx-tile" data-go="finanzas-paypal"><span class="fx-tile__top"><i class="fx-dot fx-dot--pp"></i> PayPal</span><span class="kpi__value">${usd(pp.balanceUsd)}</span><span class="muted small">≈ ${pen(pp.nowPen)} si lo cambias hoy · ver detalle ›</span></button>
                 </div>
-                ${d.goal ? `<button class="card fx-tile fx-tile--wide" data-go="finanzas-metas" style="margin-top:16px"><span class="fx-tile__top">🎯 Meta del mes</span><span class="row between" style="align-items:baseline;flex-wrap:wrap;width:100%"><span class="kpi__value">${pen(d.goal.salesNetPen)}</span><span class="muted small">${goalText(d.goal)}</span></span>${goalBar(d.goal)}<span class="muted small">${proj ? `Estimado simple: a este ritmo cerrarías el mes en ≈ <b>${pen0(proj)}</b> · ` : ''}Ver metas ›</span></button>` : ''}
+                ${d.goal ? `<button class="card fx-tile fx-tile--wide" data-go="finanzas-metas" style="margin-top:16px"><span class="fx-tile__top">🎯 Meta del mes · ventas netas</span><span class="row between" style="align-items:baseline;flex-wrap:wrap;width:100%"><span class="kpi__value">${pen(d.goal.salesNetPen)}</span><span class="muted small">${goalText(d.goal)}</span></span>${goalBar(d.goal)}${goalNote(d)}<span class="muted small">${proj ? `Estimado simple: a este ritmo cerrarías el mes en ≈ <b>${pen0(proj)}</b> · ` : ''}Ver metas ›</span></button>` : ''}
+                ${cuadreCard(x)}
                 <div class="grid grid-2" style="margin-top:16px">
                     ${card('Ventas por día', `${monthLabel(d.month)} · soles netos aproximados`, barsByDay(d.month, d.byDay))}
                     ${card('De dónde vienen las ventas', `${monthLabel(d.month)} · en soles`, donut(d, w.rate))}
@@ -362,18 +382,20 @@
     // ─── 3. Metas ──────────────────────────────────────────────────────────────────────────────────────────────
     C.pages['finanzas-metas'] = {
         async render(view, token) {
-            const x = await load(view, token, 'Dinero · Metas', 'Qué tan cerca estás de tu meta del mes. Se mide con tus ventas netas (ya sin comisiones).');
+            const x = await load(view, token, 'Dinero · Metas', 'Qué tan cerca estás de tu meta del mes. Se mide con tus ventas netas del mes, después de todas las comisiones.');
             if (!x) return;
             const { d, w } = x; const g = d.goal;
             view.innerHTML = `${x.head}
                 ${card('🎯 Tu meta de ' + monthLabel(d.month), 'Mínimo ≈ US$ 1.000 · intermedia · la mejor.', `
                     <div class="row between" style="align-items:baseline;flex-wrap:wrap"><span class="kpi__value">${pen(g.salesNetPen)}</span><span class="muted small">${goalText(g)}</span></div>
                     ${goalBar(g)}
+                    ${goalNote(d)}
                     <div class="fx-levels">
                         <div class="fx-level ${g.level !== 'none' ? 'is-done' : ''}"><b>Mínimo</b><span>${pen0(g.goals.min)}</span><small>${g.missing.min ? `faltan ${pen0(g.missing.min)}` : 'logrado ✓'}</small></div>
                         <div class="fx-level ${g.level === 'mid' || g.level === 'top' ? 'is-done' : ''}"><b>Intermedia</b><span>${pen0(g.goals.mid)}</span><small>${g.missing.mid ? `faltan ${pen0(g.missing.mid)}` : 'logrado ✓'}</small></div>
                         <div class="fx-level ${g.level === 'top' ? 'is-done' : ''}"><b>La mejor</b><span>${pen0(g.goals.top)}+</span><small>${g.missing.top ? `faltan ${pen0(g.missing.top)}` : 'logrado ✓'}</small></div>
                     </div>`)}
+                ${cuadreCard(x)}
                 ${card('Cómo vas día a día', `${monthLabel(d.month)} · ventas acumuladas contra tus metas`, goalLine(d.month, d.byDay, g.goals, w.rate), 'mt16')}`;
             bind(x);
         }

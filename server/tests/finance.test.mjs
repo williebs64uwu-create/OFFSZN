@@ -108,7 +108,7 @@ test('pesos argentinos: cuentan solo cuando llegan los soles; el depósito se re
 });
 
 // ─── Bolsillos, retiro de PayPal y servicios ───────────────────────────────────────────────────────────────────
-import { paypalPocket, pockets, kindOf, byDay, liveBalances, goalProgress, withdrawalPen } from '../src/shared/store/finance.js';
+import { paypalPocket, pockets, kindOf, byDay, liveBalances, goalProgress, withdrawalPen, monthNet, cuadre } from '../src/shared/store/finance.js';
 const ppRow = (net, fee = 0) => ({ status: 'confirmed', method: 'paypal', currency: 'USD', gross: net + fee, fee, net });
 test('PayPal por debajo de 120 US$: solo se convierte a 3,3, sin costo de retiro', () => {
     const p = paypalPocket([ppRow(46.05, 2.95), ppRow(15.78, 1.22)]);
@@ -216,4 +216,23 @@ test('Correo semanal: el HTML trae los números y escapa el texto', () => {
         goal, projection: 5307, pending: 1, crmUrl: 'https://offszn.lat/crm', week: { pen: 705, count: 10, prevPen: 0, prevCount: 0, avgTicket: 70.5, best: { date: '2026-11-03', pen: 300 }, products: [{ name: '<b>Easy</b> Mix', pen: 300 }], methods: [{ method: 'paypal', label: 'PayPal', pen: 337.65 }] } });
     assert.match(subject, /para depositar/); assert.match(html, /736,81|736\.81/); assert.match(html, /27,000\.00|27\.000,00|27,000/); assert.ok(!html.includes('<b>Easy</b> Mix')); assert.match(html, /&lt;b&gt;Easy/);
     assert.match(html, /1 pago por revisar/); assert.match(html, /Abrir mi panel/);
+});
+
+test('meta del mes = ventas netas después de TODAS las comisiones y cuadra con el dinero para depositar (datos reales del 5 nov)', () => {
+    const w = { threshold: 200, fee: 4, rate: 3.3292, provision: 120 };
+    const pp = (net, at) => ({ status: 'confirmed', method: 'paypal', currency: 'USD', net, gross: net, fee: 0, occurred_at: at });
+    const pen = (net, method, at) => ({ status: 'confirmed', method, currency: 'PEN', net, gross: net, occurred_at: at });
+    const all = [pp(37.54, '2026-10-31T22:24:55Z'), pen(85, 'binance', '2026-11-01T16:07:00Z'), pen(70, 'binance', '2026-11-01T17:47:00Z'), pp(15.78, '2026-11-01T23:01:29Z'), pp(8.66, '2026-11-01T23:07:06Z'), pp(15.15, '2026-11-02T00:17:28Z'), pp(46.05, '2026-11-02T21:24:52Z'),
+        pen(120, 'yape', '2026-11-03T03:00:40Z'), pp(15.78, '2026-11-03T22:39:59Z'), pen(45, 'binance', '2026-11-04T00:27:00Z'), pen(50, 'yape', '2026-11-04T03:03:37Z'), pp(9.16, '2026-11-05T00:58:10Z')];
+    const nov = all.filter((r) => r.occurred_at >= '2026-11-01T05:00:00Z');
+    const pk = paypalPocket(all, w, []);
+    const mn = monthNet(nov, pk, w);
+    assert.equal(pk.balanceUsd, 148.12); assert.equal(pk.nowPen, 479.8);
+    assert.equal(mn.solesPen, 370); assert.equal(mn.paypalPen, 358.2); assert.equal(mn.netPen, 728.2); // PayPal ya con la comisión y su parte del costo de retiro
+    const live = liveBalances({ income: all, transfers: [{ date: '2026-11-02', pen: 113 }], yape: { pen: 287.5, at: '2026-11-04T15:50:00Z' }, bank: { pen: 27000, as_of: '2026-11-02' } });
+    const c = cuadre({ netPen: mn.netPen, paypalPen: mn.paypalPen, solesPen: mn.solesPen, yapeNow: live.yape.now, paypalNowPen: pk.nowPen, sentPen: 113 });
+    assert.equal(live.yape.now + pk.nowPen, 767.3); // dinero para depositar
+    assert.deepEqual([c.meta, c.paypalBefore, c.yapeAdjust, c.total], [728.2, 121.6, 30.5, 880.3]); // dinero del mes total
+    assert.equal(c.check, c.total); // las piezas suman exacto
+    assert.equal(cuadre({ netPen: 1, paypalPen: 1, solesPen: 0, yapeNow: null, paypalNowPen: 0 }), null); // sin saldo de Yape no hay cuadre
 });

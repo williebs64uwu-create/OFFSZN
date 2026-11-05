@@ -206,6 +206,29 @@ export function goalProgress(salesNetPen, goals = GOALS_DEFAULT) {
     return { salesNetPen: v, goals, level, pct: Math.min(100, Math.round((v / goals.top) * 100)), missing: { min: r2(Math.max(0, goals.min - v)), mid: r2(Math.max(0, goals.mid - v)), top: r2(Math.max(0, goals.top - v)) } };
 }
 
+// ─── Meta del mes = ventas netas DESPUÉS de todas las comisiones ───────────────────────────────────────────────
+// Lo mismo que el "dinero para depositar": PayPal ya sin su comisión y con el costo del retiro (4 US$) repartido en proporción entre
+// los cobros de PayPal (los de este mes son una parte del saldo). Yape, Binance y pesos ya confirmados llegan netos.
+export function monthNet(rows = [], allPaypal = null, w = PAYPAL_WITHDRAW_DEFAULT) {
+    const month = paypalPocket(rows, w, []);
+    const soles = solesPocket(rows);
+    const total = allPaypal && allPaypal.balanceUsd > 0 ? allPaypal.balanceUsd : 0;
+    const share = total > 0 ? Math.min(1, month.balanceUsd / total) : 0;
+    const costUsd = total > 0 ? allPaypal.nowCostUsd * share : 0; // el mismo costo que descuenta el "dinero para depositar"
+    const paypalPen = r2(month.balanceUsd * w.rate - costUsd * w.rate);
+    return { paypalPen, solesPen: soles.netPen, netPen: r2(paypalPen + soles.netPen), paypalUsd: month.balanceUsd, costUsd: r2(costUsd) };
+}
+
+// Cuadre: por qué la meta (ventas netas de este mes) no es igual a "dinero del mes total" (lo que tienes + lo que ya mandaste al banco).
+//   dinero del mes total = meta + PayPal de antes del mes + ajuste de Yape (saldo que ya tenías antes del mes menos los gastos)
+export function cuadre({ netPen, paypalPen, solesPen, yapeNow, paypalNowPen, sentPen = 0, withdrawnPen = 0 } = {}) {
+    if (yapeNow === null || yapeNow === undefined) return null;
+    const paypalBefore = r2(paypalNowPen + withdrawnPen - paypalPen); // lo que sigue en PayPal y NO es venta de este mes
+    const yapeAdjust = r2(yapeNow + sentPen - solesPen); // Yape hoy + lo enviado al banco, contra lo que sumaron las ventas en soles del mes
+    const total = r2(yapeNow + paypalNowPen + sentPen + withdrawnPen);
+    return { meta: r2(netPen), paypalBefore, yapeAdjust, total, check: r2(netPen + paypalBefore + yapeAdjust) };
+}
+
 // Retiro de PayPal: los soles que llegan = (dólares − costo del retiro) × cambio. Si PayPal te dio otro monto, ese es el que vale.
 export function withdrawalPen(usd, fee, rate) {
     const u = num(usd) || 0;
