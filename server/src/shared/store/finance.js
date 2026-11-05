@@ -206,6 +206,20 @@ export function goalProgress(salesNetPen, goals = GOALS_DEFAULT) {
     return { salesNetPen: v, goals, level, pct: Math.min(100, Math.round((v / goals.top) * 100)), missing: { min: r2(Math.max(0, goals.min - v)), mid: r2(Math.max(0, goals.mid - v)), top: r2(Math.max(0, goals.top - v)) } };
 }
 
+// ─── Ventana de la meta ──────────────────────────────────────────────────────────────────────────────────────────
+// Normalmente es el mes. Pero el conteo empezó los últimos días de un mes (31 oct): ese dinero ya entró a tu cuenta, así que cuenta
+// en la meta del mes siguiente (noviembre) y no se muestra en la del mes anterior. Solo aplica si el conteo arrancó en los últimos 7 días del mes.
+export function goalWindow(month, startAt = START_AT_DEFAULT) {
+    const r = monthRange(month);
+    const startMonth = limaMonth(startAt);
+    const nextFrom = Date.parse(monthRange(startMonth).to);
+    const days = (nextFrom - Date.parse(startAt)) / 86400000;
+    const stub = days > 0 && days <= 7 ? Math.round(days) : 0;
+    if (stub && r.month === startMonth) return { month: r.month, from: r.from, to: r.to, stubDays: 0, skip: true };
+    if (stub && r.month === limaMonth(new Date(nextFrom).toISOString())) return { month: r.month, from: new Date(startAt).toISOString(), to: r.to, stubDays: stub, skip: false };
+    return { month: r.month, from: r.from, to: r.to, stubDays: 0, skip: false };
+}
+
 // ─── Meta del mes = ventas netas DESPUÉS de todas las comisiones ───────────────────────────────────────────────
 // Lo mismo que el "dinero para depositar": PayPal ya sin su comisión y con el costo del retiro (4 US$) repartido en proporción entre
 // los cobros de PayPal (los de este mes son una parte del saldo). Yape, Binance y pesos ya confirmados llegan netos.

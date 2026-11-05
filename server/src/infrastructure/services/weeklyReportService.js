@@ -23,7 +23,8 @@ export async function collectWeeklyData(now = Date.now()) {
     const available = yape + pp.nowPen;
     const dayOfMonth = Number(new Date(now - 5 * 3600000).toISOString().slice(8, 10));
     const [y, m] = month.split('-').map(Number);
-    const projection = d.goal && dayOfMonth >= 3 ? Math.round((d.goal.salesNetPen / dayOfMonth) * new Date(y, m, 0).getDate()) : null;
+    const stub = (d.goal && d.goal.stubDays) || 0; // el primer mes también cuenta los días desde el inicio del conteo (31 oct)
+    const projection = d.goal && dayOfMonth >= 3 ? Math.round((d.goal.salesNetPen / (dayOfMonth + stub)) * (new Date(y, m, 0).getDate() + stub)) : null;
     const fmt = (ms) => { const [, mm, dd] = new Date(ms - 5 * 3600000).toISOString().slice(0, 10).split('-').map(Number); return `${dd} de ${MONTHS[mm - 1]}`; };
     return {
         rangeText: `Del ${fmt(now - 6 * 86400000)} al ${fmt(now)}`, monthLabel: `${MONTHS[m - 1]} ${y}`,

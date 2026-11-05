@@ -4,7 +4,7 @@
 import { supabase } from '../database/connection.js';
 import { PAYPAL_CLIENT_ID, PAYPAL_CLIENT_SECRET, PAYPAL_ENVIRONMENT } from '../../shared/config/config.js';
 import {
-    FX_DEFAULT, START_AT_DEFAULT, EXPENSE_CATEGORIES, PAYPAL_WITHDRAW_DEFAULT, BINANCE_RATE_DEFAULT, monthRange, summarize, pockets, byDay, kindOf, withdrawalPen, liveBalances, goalProgress, paypalPocket, solesPocket, GOALS_DEFAULT, monthNet, cuadre, currentMonth, normalizeManualIncome, paypalCaptureRows, mercadoPagoRow, allocateSettlement
+    FX_DEFAULT, START_AT_DEFAULT, EXPENSE_CATEGORIES, PAYPAL_WITHDRAW_DEFAULT, BINANCE_RATE_DEFAULT, monthRange, summarize, pockets, byDay, kindOf, withdrawalPen, liveBalances, goalProgress, paypalPocket, solesPocket, GOALS_DEFAULT, monthNet, cuadre, currentMonth, goalWindow, normalizeManualIncome, paypalCaptureRows, mercadoPagoRow, allocateSettlement
 } from '../../shared/store/finance.js';
 
 const PAYPAL_API = PAYPAL_ENVIRONMENT === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
@@ -186,10 +186,12 @@ export async function monthData(month) {
     const withdrawals = settings.withdrawals.filter((t) => String(t.date).startsWith(range.month));
     const withdrawalsPen = Math.round(withdrawals.reduce((a, t) => a + Number(t.pen), 0) * 100) / 100;
     // Meta del mes: ventas netas del mes (Yape y Binance en soles + PayPal ya sin comisión, sin el costo de retiro) contra el mínimo, el intermedio y el mejor
-    // (ahora la meta es después de TODAS las comisiones, igual que el dinero para depositar; ver monthNet)
-    const mn = monthNet(rows, pk.paypal, settings.withdraw);
-    const goal = { ...goalProgress(mn.netPen, settings.goals), sentToBankPen: Math.round((transfersPen + withdrawalsPen) * 100) / 100, paypalPen: mn.paypalPen, solesPen: mn.solesPen };
-    const reconcile = range.month === currentMonth()
+    // La meta cuenta desde el inicio del conteo (31 oct) en el primer mes, y va después de TODAS las comisiones (igual que el dinero para depositar)
+    const gw = goalWindow(range.month, settings.startAt);
+    const goalRows = (all.data || []).filter((r) => Date.parse(r.occurred_at) >= Date.parse(gw.from) && Date.parse(r.occurred_at) < Date.parse(gw.to));
+    const mn = monthNet(goalRows, pk.paypal, settings.withdraw);
+    const goal = gw.skip ? null : { ...goalProgress(mn.netPen, settings.goals), sentToBankPen: Math.round((transfersPen + withdrawalsPen) * 100) / 100, paypalPen: mn.paypalPen, solesPen: mn.solesPen, from: gw.from, stubDays: gw.stubDays, byDay: byDay(goalRows, settings.withdraw.rate) };
+    const reconcile = !gw.skip && range.month === currentMonth()
         ? cuadre({ netPen: mn.netPen, paypalPen: mn.paypalPen, solesPen: mn.solesPen, yapeNow: live.yape.now, paypalNowPen: pk.paypal.nowPen, sentPen: transfersPen, withdrawnPen: withdrawalsPen })
         : null;
     return { settings, month: range.month, income: rows, transfers, transfersPen, withdrawals, withdrawalsPen, live, goal, reconcile, expenses: spent.data || [], pendingArs, summary, pockets: { ...pk, real }, byDay: byDay(rows, settings.withdraw.rate) };

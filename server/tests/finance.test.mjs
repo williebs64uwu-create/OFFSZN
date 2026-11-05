@@ -108,7 +108,7 @@ test('pesos argentinos: cuentan solo cuando llegan los soles; el depósito se re
 });
 
 // ─── Bolsillos, retiro de PayPal y servicios ───────────────────────────────────────────────────────────────────
-import { paypalPocket, pockets, kindOf, byDay, liveBalances, goalProgress, withdrawalPen, monthNet, cuadre } from '../src/shared/store/finance.js';
+import { paypalPocket, pockets, kindOf, byDay, liveBalances, goalProgress, withdrawalPen, monthNet, cuadre, goalWindow } from '../src/shared/store/finance.js';
 const ppRow = (net, fee = 0) => ({ status: 'confirmed', method: 'paypal', currency: 'USD', gross: net + fee, fee, net });
 test('PayPal por debajo de 120 US$: solo se convierte a 3,3, sin costo de retiro', () => {
     const p = paypalPocket([ppRow(46.05, 2.95), ppRow(15.78, 1.22)]);
@@ -235,4 +235,33 @@ test('meta del mes = ventas netas después de TODAS las comisiones y cuadra con 
     assert.deepEqual([c.meta, c.paypalBefore, c.yapeAdjust, c.total], [728.2, 121.6, 30.5, 880.3]); // dinero del mes total
     assert.equal(c.check, c.total); // las piezas suman exacto
     assert.equal(cuadre({ netPen: 1, paypalPen: 1, solesPen: 0, yapeNow: null, paypalNowPen: 0 }), null); // sin saldo de Yape no hay cuadre
+});
+
+test('la meta de noviembre cuenta desde el 31 de octubre (inicio del conteo) y octubre no muestra meta', () => {
+    const start = '2026-10-31T05:00:00.000Z';
+    const nov = goalWindow('2026-11', start);
+    assert.deepEqual([nov.from, nov.to, nov.stubDays, nov.skip], ['2026-10-31T05:00:00.000Z', '2026-12-01T05:00:00.000Z', 1, false]);
+    assert.equal(goalWindow('2026-10', start).skip, true); // el 31 oct ya está dentro de la meta de noviembre
+    const dic = goalWindow('2026-12', start);
+    assert.deepEqual([dic.from, dic.stubDays, dic.skip], ['2026-12-01T05:00:00.000Z', 0, false]); // los meses siguientes son normales
+    const mitad = goalWindow('2026-12', '2026-11-01T05:00:00.000Z'); // conteo que arranca el día 1: no hay "arranque" que mover
+    assert.deepEqual([mitad.from, mitad.skip], ['2026-12-01T05:00:00.000Z', false]);
+});
+
+test('meta de noviembre desde el 31 oct = S/ 848.14 y cuadra con el dinero del mes total (US$ 10 de Yan Block ya como Payhip: neto 8.66)', () => {
+    const w = { threshold: 200, fee: 4, rate: 3.3292, provision: 120 };
+    const pp = (net, at) => ({ status: 'confirmed', method: 'paypal', currency: 'USD', net, gross: net, fee: 0, occurred_at: at });
+    const pen = (net, method, at) => ({ status: 'confirmed', method, currency: 'PEN', net, gross: net, occurred_at: at });
+    const all = [pp(37.54, '2026-10-31T22:24:55Z'), pen(85, 'binance', '2026-11-01T16:07:00Z'), pen(70, 'binance', '2026-11-01T17:47:00Z'), pp(15.78, '2026-11-01T23:01:29Z'), pp(8.66, '2026-11-01T23:07:06Z'), pp(15.15, '2026-11-02T00:17:28Z'), pp(46.05, '2026-11-02T21:24:52Z'),
+        pen(120, 'yape', '2026-11-03T03:00:40Z'), pp(15.78, '2026-11-03T22:39:59Z'), pen(45, 'binance', '2026-11-04T00:27:00Z'), pen(50, 'yape', '2026-11-04T03:03:37Z'), pp(8.66, '2026-11-05T00:58:10Z')];
+    const gw = goalWindow('2026-11', '2026-10-31T05:00:00.000Z');
+    const rows = all.filter((r) => Date.parse(r.occurred_at) >= Date.parse(gw.from) && Date.parse(r.occurred_at) < Date.parse(gw.to));
+    const pk = paypalPocket(all, w, []);
+    const mn = monthNet(rows, pk, w);
+    assert.equal(pk.balanceUsd, 147.62); assert.equal(pk.nowPen, 478.14);
+    assert.deepEqual([mn.paypalPen, mn.solesPen, mn.netPen], [478.14, 370, 848.14]);
+    const live = liveBalances({ income: all, transfers: [{ date: '2026-11-02', pen: 113 }], yape: { pen: 287.5, at: '2026-11-04T15:50:00Z' }, bank: { pen: 27000, as_of: '2026-11-02' } });
+    const c = cuadre({ netPen: mn.netPen, paypalPen: mn.paypalPen, solesPen: mn.solesPen, yapeNow: live.yape.now, paypalNowPen: pk.nowPen, sentPen: 113 });
+    assert.deepEqual([c.meta, c.paypalBefore, c.yapeAdjust, c.total], [848.14, 0, 30.5, 878.64]); // solo queda el saldo de Yape que anotas tú
+    assert.equal(live.yape.now + pk.nowPen, 765.64); // dinero para depositar
 });

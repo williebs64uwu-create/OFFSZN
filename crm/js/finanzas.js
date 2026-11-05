@@ -97,7 +97,7 @@
         const W = 600; const H = 220; const padL = 46; const padB = 22; const top = Math.max(goals.top * 1.05, 1);
         const X = (d) => padL + ((W - padL - 8) * (d - 1)) / Math.max(1, total - 1);
         const Y = (v) => H - padB - ((H - padB - 10) * v) / top;
-        let acc = 0; const pts = [];
+        let acc = days.filter((x) => x.date < `${month}-01`).reduce((a, x) => a + x.pen, 0); const pts = []; // lo vendido antes del día 1 (31 oct) ya cuenta en la meta
         const nowDay = month === nowMonth() ? Number(today().slice(8, 10)) : total;
         for (let d = 1; d <= nowDay; d += 1) { acc += map.get(`${month}-${String(d).padStart(2, '0')}`) || 0; pts.push(`${X(d).toFixed(1)},${Y(acc).toFixed(1)}`); }
         const lines = [['min', goals.min, 'Mínimo', 'hsl(45 95% 45%)'], ['mid', goals.mid, 'Intermedia', 'hsl(142 71% 35%)'], ['top', goals.top, 'La mejor', 'hsl(32 95% 44%)']]
@@ -145,7 +145,8 @@
     // A este ritmo, ¿cuánto cerrarías el mes? (solo ventas netas del mes en curso)
     const projection = (d) => {
         if (!d.goal || d.month !== nowMonth()) return null;
-        const day = Number(today().slice(8, 10)); const [y, m] = d.month.split('-').map(Number); const total = new Date(y, m, 0).getDate();
+        const stub = d.goal.stubDays || 0; // el 31 oct también cuenta como día de este conteo
+        const day = Number(today().slice(8, 10)) + stub; const [y, m] = d.month.split('-').map(Number); const total = new Date(y, m, 0).getDate() + stub;
         if (day < 3) return null;
         return Math.round((d.goal.salesNetPen / day) * total);
     };
@@ -308,13 +309,14 @@
         if (!c || !x.hasYape) return '';
         const sg = (n) => `${n >= 0 ? '+' : '−'} ${pen(Math.abs(n))}`;
         const row = (label, v, hint, cls = '') => `<div class="fx-cuadre__row ${cls}"><span>${label}<small>${hint}</small></span><b>${v}</b></div>`;
-        return card('¿Por qué no es igual a la meta?', 'La meta cuenta solo lo que vendiste este mes. Lo que tienes hoy incluye también dinero de antes del mes. Así cuadra, centavo por centavo:', `<div class="fx-cuadre">
-            ${row('Meta del mes (ventas netas)', pen(c.meta), 'Después de todas las comisiones, con lo que ya está en tu banco incluido')}
-            ${row('PayPal de antes del mes', sg(c.paypalBefore), 'Cobros de PayPal que no son de este mes, ya con su parte del costo de retiro')}
-            ${row('Ajuste de Yape', sg(c.yapeAdjust), 'Saldo que ya tenías en Yape antes del mes, menos los gastos')}
+        return card('¿Por qué no es igual a la meta?', 'La meta son solo ventas. Lo que tienes hoy suma además tu saldo de Yape, que lo anotas tú y no es una venta. Así cuadra, centavo por centavo:', `<div class="fx-cuadre">
+            ${row('Meta del mes (ventas netas)', pen(c.meta), 'Después de todas las comisiones, con lo que ya pasó al banco incluido')}
+            ${Math.abs(c.paypalBefore) >= 0.005 ? row('PayPal que no es de la meta', sg(c.paypalBefore), 'Cobros de PayPal anteriores al conteo, ya con su parte del costo de retiro') : ''}
+            ${row('Saldo de Yape que anotaste', sg(c.yapeAdjust), 'Lo que tu Yape tiene de más contra las ventas anotadas (saldo que ya tenías), menos los gastos. No es una venta')}
             ${row('Dinero del mes total', pen(c.total), `${pen(x.available)} para depositar + ${pen(x.sentPen + x.wdPen)} que ya pasaron al banco`, 'is-total')}</div>`, 'mt16');
     };
-    const goalNote = (d) => `<span class="muted small">Ventas netas del mes, <b>después de todas las comisiones</b> (la de PayPal y el costo del retiro).${d.goal.sentToBankPen ? ` Incluye <b>${pen(d.goal.sentToBankPen)}</b> que ya pasaron a tu banco este mes.` : ''}</span>`;
+    const dayLabel = (iso) => { const [, m, dd] = new Date(new Date(iso).getTime() - 5 * 3600000).toISOString().slice(0, 10).split('-').map(Number); return `${dd} de ${MONTHS[m - 1]}`; };
+    const goalNote = (d) => `<span class="muted small">Ventas netas, <b>después de todas las comisiones</b> (la de PayPal y el costo del retiro)${d.goal.stubDays ? `, contadas <b>desde el ${dayLabel(d.goal.from)}</b>` : ''}. ${d.goal.sentToBankPen ? `Incluye <b>${pen(d.goal.sentToBankPen)}</b> que ya pasaron a tu banco este mes. ` : ''}No cuenta el saldo del banco ni el de Yape.</span>`;
 
     // ─── Inicio: el panel único con las tarjetas y los gráficos ────────────────────────────────────────────────
     const ACTIONS = [['ventas', 'bag', 'Venta manual', 'Anotar una venta (Yape, Binance…)'], ['finanzas-retiro', 'send', 'Retiro de PayPal', 'Simular o registrar'], ['finanzas-envio', 'wallet', 'Envío al banco', 'De Yape al banco'], ['finanzas-gastos', 'cart', 'Anotar gasto', 'Gaseosa, comida…']];
@@ -396,7 +398,7 @@
                         <div class="fx-level ${g.level === 'top' ? 'is-done' : ''}"><b>La mejor</b><span>${pen0(g.goals.top)}+</span><small>${g.missing.top ? `faltan ${pen0(g.missing.top)}` : 'logrado ✓'}</small></div>
                     </div>`)}
                 ${cuadreCard(x)}
-                ${card('Cómo vas día a día', `${monthLabel(d.month)} · ventas acumuladas contra tus metas`, goalLine(d.month, d.byDay, g.goals, w.rate), 'mt16')}`;
+                ${card('Cómo vas día a día', `${monthLabel(d.month)} · ventas acumuladas contra tus metas`, goalLine(d.month, g.byDay || d.byDay, g.goals, w.rate), 'mt16')}`;
             bind(x);
         }
     };
