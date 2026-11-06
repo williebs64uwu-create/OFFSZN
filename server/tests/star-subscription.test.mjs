@@ -51,7 +51,7 @@ const supabase = { from: (t) => new Query(t) };
 
 const emails = [];
 mock.module('../src/infrastructure/database/connection.js', { namedExports: { supabase } });
-mock.module('../src/shared/utils/mailer.js', { namedExports: { sendOffsznEmail: async (m) => { emails.push(m); } } });
+mock.module('../src/shared/utils/mailer.js', { namedExports: { sendOffsznEmail: async (m) => { if (globalThis.__failBuyerMail && m.to !== 'willie2008garay@gmail.com') throw new Error('Brevo caído'); emails.push(m); } } });
 mock.module('../src/shared/config/config.js', { namedExports: { PAYPAL_CLIENT_ID: 'id', PAYPAL_CLIENT_SECRET: 'secret', PAYPAL_ENVIRONMENT: 'live' } });
 
 const svc = await import('../src/infrastructure/services/starSubscriptionService.js');
@@ -144,4 +144,21 @@ test('confirmar desde el navegador entrega la clave de la cuota 1 y es idempoten
     const b = await svc.confirmStarSubscription({ subscriptionId: SUB_ID, email: 'cliente@correo.com', userId: null });
     assert.equal(b.serialKey, a.serialKey);
     assert.equal(licenses().length, 1);
+});
+
+test('si el correo con la clave NO le llega al cliente, la clave igual queda activa y a Willie se le avisa claramente', async () => {
+    reset(); emails.length = 0; process.env.STAR_PAYPAL_PLAN_ID = 'P-STAR';
+    T('products').push({ id: 5003, sales_count: 0 });
+    globalThis.__failBuyerMail = true;
+    try {
+        paypalTx = [sale('F1')];
+        assert.equal(await svc.handleStarWebhook(saleEvent('F1')), true);
+        assert.equal(licenses().length, 1);                                  // la clave se creó igual
+        assert.equal(licenses()[0].status, 'active');
+        assert.ok(!emails.some((m) => m.to === 'comprador@correo.com'));     // al cliente no le llegó nada
+        const aviso = emails.find((m) => m.to === 'willie2008garay@gmail.com');
+        assert.match(aviso.subject, /CORREO NO ENVIADO/);                    // y Willie lo ve desde el asunto
+        assert.match(aviso.html, /NO le llegó al cliente/);
+        assert.match(aviso.html, new RegExp(licenses()[0].serial_key));      // con la clave para mandársela
+    } finally { globalThis.__failBuyerMail = false; }
 });
