@@ -116,7 +116,7 @@ const shell = (inner) => `<div style="font-family:Arial,sans-serif;font-size:15p
 const keyBox = (serial) => `<p style="background:#f4f4f5;border-radius:8px;padding:14px 16px;font-family:monospace;font-size:17px;letter-spacing:1px"><b>${esc(serial)}</b></p>`;
 
 async function emailBuyer({ to, n, serial, kind }) {
-    if (!validEmail(to)) return;
+    if (!validEmail(to)) throw new Error('el correo del comprador no es válido');
     const full = kind === 'full';
     const html = shell(`
         <p>${full ? '¡Completaste tus 3 cuotas! 🎉' : `¡Gracias por tu cuota ${n} de ${STAR_INSTALLMENTS}!`}</p>
@@ -127,6 +127,16 @@ async function emailBuyer({ to, n, serial, kind }) {
         <p>¿Usas Mac? <a href="${STAR_MAC_URL}">Descarga el instalador de macOS (.rar)</a>. Si no se abre, escríbele a Willie por WhatsApp.</p>
         <p>¿Dudas? Escríbele a Willie por <a href="https://wa.me/51993525005">WhatsApp</a>.</p>`);
     await sendOffsznEmail({ to, subject: full ? '🔑 Tu licencia STAR CHAIN FULL de por vida' : `🔑 Tu clave STAR CHAIN · cuota ${n} de ${STAR_INSTALLMENTS}`, html, fromName: 'OFFSZN', type: 'transactional' });
+    return true;
+}
+
+// Manda el correo de la clave al comprador. Si falla, lo intenta una vez más; si sigue fallando devuelve el motivo para avisarle a Willie.
+async function deliverKeyEmail(args) {
+    let last = null;
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+        try { await emailBuyer(args); return { ok: true, attempts: attempt }; } catch (e) { last = e; console.warn(`[STAR sub] correo comprador (intento ${attempt}):`, e.message); if (attempt === 1) await new Promise((r) => setTimeout(r, 1500)); }
+    }
+    return { ok: false, error: String((last && last.message) || 'error desconocido').slice(0, 160) };
 }
 
 async function emailPaymentFailed({ to }) {
@@ -210,12 +220,13 @@ export async function processStarPayment({ subscription, saleId, amountUsd, feeU
         source: 'subscription', ref: saleId, occurred_at: paidAt || new Date().toISOString(), email: subscription.email, product: `STAR CHAIN · cuota ${n} de ${STAR_INSTALLMENTS}`, product_id: STAR_PRODUCT_ID,
         method: 'paypal', currency: 'USD', gross: amountUsd || STAR_INSTALLMENT_USD, fee: feeUsd, net: netUsd, status: 'confirmed', verified: true, by_willie: false, note: null, order_id: null
     });
-    await emailBuyer({ to: subscription.email, n, serial, kind }).catch((e) => console.warn('[STAR sub] correo comprador:', e.message));
+    const mail = await deliverKeyEmail({ to: subscription.email, n, serial, kind });
     await emailOwner({
-        subject: `💸 [MARKETPLACE · PLUGIN · STAR CHAIN · CUOTA ${n}/${STAR_INSTALLMENTS}] $${Number(amountUsd || STAR_INSTALLMENT_USD).toFixed(2)} USD`,
-        lines: [`<b>${esc(subscription.email)}</b> pagó la cuota ${n} de ${STAR_INSTALLMENTS} de STAR CHAIN.`, `Entregado: <b>${kind === 'full' ? 'licencia FULL de por vida' : 'clave temporal de 1 mes'}</b> <code>${esc(serial)}</code>`, `Suscripción PayPal: ${esc(subscription.subscription_id)}`]
+        subject: `${mail.ok ? '💸' : '⚠️ [CORREO NO ENVIADO]'} [MARKETPLACE · PLUGIN · STAR CHAIN · CUOTA ${n}/${STAR_INSTALLMENTS}] $${Number(amountUsd || STAR_INSTALLMENT_USD).toFixed(2)} USD`,
+        lines: [`<b>${esc(subscription.email)}</b> pagó la cuota ${n} de ${STAR_INSTALLMENTS} de STAR CHAIN.`, `Entregado: <b>${kind === 'full' ? 'licencia FULL de por vida' : 'clave temporal de 1 mes'}</b> <code>${esc(serial)}</code>`, `Suscripción PayPal: ${esc(subscription.subscription_id)}`,
+            mail.ok ? '✅ El correo con la clave sí salió hacia el cliente.' : `⚠️ <b>OJO: el correo con la clave NO le llegó al cliente</b> (motivo: ${esc(mail.error)}). La clave ya está creada y activa: mándasela tú por WhatsApp o por correo.`]
     }).catch((e) => console.warn('[STAR sub] correo owner:', e.message));
-    return { duplicate: false, serial, n, kind };
+    return { duplicate: false, serial, n, kind, mailOk: mail.ok };
 }
 
 // Cobro fallido: se revocan las claves temporales hasta que se pague la siguiente cuota.
