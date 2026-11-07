@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Finalizar compra | STAR CHAIN® — OFFSZN</title>
     <meta name="robots" content="noindex, nofollow">
-    <link rel="icon" type="image/png" sizes="32x32" href="/willieimages/favicon-32x32.png">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="https://pub-6ee2d2530ccf470d8fa1759f5b749cf8.r2.dev/plugins/star-chain/logo-star.png">
+    <link rel="apple-touch-icon" href="https://pub-6ee2d2530ccf470d8fa1759f5b749cf8.r2.dev/plugins/star-chain/logo-star.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -735,6 +735,21 @@
             flex-shrink: 0;
         }
     </style>
+    <style>
+        /* Móvil: resumen simple y compacto; la lista "Tu compra incluye" no se muestra */
+        .back-nav-top, .total-chev { display: none; }
+        @media (max-width: 860px) {
+            .included-perks-box { display: none !important; }
+            .back-nav-left { display: none; }
+            .back-nav-top { display: inline-flex; margin-bottom: 16px; }
+            .checkout-right-col { padding: 18px 20px 20px; }
+            .summary-breakdown .breakdown-line:not(.total-line) { display: none; }
+            .summary-breakdown.open .breakdown-line:not(.total-line) { display: flex; }
+            .total-line { cursor: pointer; }
+            .total-chev { display: inline-block; font-size: 12px; margin-left: 4px; transition: transform .2s ease; }
+            .summary-breakdown.open .total-chev { transform: rotate(180deg); }
+        }
+    </style>
 </head>
 <body>
 
@@ -744,7 +759,7 @@
         <!-- ==================== LEFT COLUMN: PAYMENT / CHECKOUT FORM ==================== -->
         <main class="checkout-left-col">
             
-            <a href="/plugins/star-chain.html" class="back-nav">
+            <a href="/plugins/star-chain.html" class="back-nav back-nav-left">
                 <i class="bi bi-arrow-left"></i> Volver a STAR CHAIN
             </a>
 
@@ -837,11 +852,16 @@
 
         <!-- ==================== RIGHT COLUMN: ORDER SUMMARY & PLAN ==================== -->
         <aside class="checkout-right-col">
-            
+
+            <!-- Flecha para volver (solo móvil: allí el resumen va arriba) -->
+            <a href="/plugins/star-chain.html" class="back-nav back-nav-top" aria-label="Volver a STAR CHAIN">
+                <i class="bi bi-arrow-left"></i> Volver a STAR CHAIN
+            </a>
+
             <!-- Product Item Row -->
             <div class="order-product-row">
                 <div class="product-thumb">
-                    <img src="/images/plugins/star-mockup.png" alt="STAR CHAIN" onerror="this.src='/images/plugins/star-chain/00_inicio_asistente.png'">
+                    <img src="https://pub-6ee2d2530ccf470d8fa1759f5b749cf8.r2.dev/plugins/star-chain/logo-star.png" alt="STAR CHAIN" onerror="this.onerror=null;this.src='/images/plugins/star.png'">
                 </div>
                 <div class="product-info">
                     <h2 class="product-title">STAR CHAIN - WIN Y MAC</h2>
@@ -893,12 +913,12 @@
 
             </div>
 
-            <!-- Coupon Input Row -->
-            <div class="coupon-row">
+            <!-- Cupón: oculto por ahora (la lógica sigue en el código) -->
+            <div class="coupon-row" style="display:none">
                 <input type="text" id="couponInput" class="coupon-input" placeholder="Código del cupón" uppercase>
                 <button type="button" class="coupon-btn" onclick="applyCoupon()">Aplicar</button>
             </div>
-            <div id="couponMsg" class="coupon-msg"></div>
+            <div id="couponMsg" class="coupon-msg" style="display:none"></div>
 
             <!-- Price Breakdown -->
             <div class="summary-breakdown">
@@ -914,8 +934,8 @@
                     <span>Impuestos</span>
                     <span>$0.00 USD</span>
                 </div>
-                <div class="breakdown-line total-line">
-                    <span>Total</span>
+                <div class="breakdown-line total-line" id="totalLine">
+                    <span>Total <i class="bi bi-chevron-down total-chev"></i></span>
                     <span class="total-num" id="displayTotal">USD $49.00</span>
                 </div>
             </div>
@@ -1113,6 +1133,12 @@
             : `Hola Willie! Quiero pagar la 1ra Cuota de STAR CHAIN con USDT / Binance (16.33 USDT)${emailText}`;
         document.getElementById('btnActionCrypto').href = `https://wa.me/${WA_PHONE}?text=` + encodeURIComponent(cryptoText);
     }
+
+    // Móvil: tocar el Total despliega el detalle (subtotal e impuestos)
+    (function () {
+        const tl = document.getElementById('totalLine'), bd = document.querySelector('.summary-breakdown');
+        if (tl && bd) tl.addEventListener('click', () => { if (window.innerWidth <= 860) bd.classList.toggle('open'); });
+    })();
 
     function handleEmailInput(val) {
         recalculateTotals();
