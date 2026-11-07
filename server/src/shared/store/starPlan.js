@@ -5,6 +5,8 @@ export const STAR_PRICE_USD = 49;
 export const STAR_PRICE_PEN = 185;
 export const STAR_INSTALLMENTS = 3;
 export const STAR_INSTALLMENT_USD = 16.33;
+// Primera cuota por Yape (en soles): un tercio del precio en soles.
+export const STAR_INSTALLMENT_PEN = Math.round((STAR_PRICE_PEN / STAR_INSTALLMENTS) * 100) / 100;
 // Clave temporal de cuotas 1 y 2: un mes más unos días de gracia por si el cobro se atrasa.
 export const SUB_LICENSE_DAYS = 33;
 

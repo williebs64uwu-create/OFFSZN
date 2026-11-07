@@ -14,9 +14,9 @@ import { STAR_WIN_URL, STAR_MAC_URL } from '../../../shared/config/starDelivery.
 import { PLUGINS } from '../../../shared/config/pluginRegistry.js';
 import { sendOffsznEmail } from '../../../shared/utils/mailer.js';
 import MetaCapiService from '../../services/MetaCapiService.js';
-import { getStarCouponPercent } from '../../services/starSubscriptionService.js';
+import { getStarCouponPercent, issueLicense as issueStarLicense } from '../../services/starSubscriptionService.js';
 import { recordMercadoPago } from '../../services/financeService.js';
-import { starPrice, STAR_PRODUCT_ID } from '../../../shared/store/starPlan.js';
+import { starPrice, STAR_PRODUCT_ID, STAR_INSTALLMENT_USD, STAR_INSTALLMENT_PEN } from '../../../shared/store/starPlan.js';
 import { resolveYapePrice, rateFromEnv } from '../../../shared/store/yapePricing.js';
 
 const PLUGIN_INFO_MAP = {
@@ -116,8 +116,10 @@ for (const id of WIDGET_PLUGIN?.productIds || []) {
  * Precio que se cobra por Yape. STAR CHAIN: 49 US$ / S/ 185 (con cupón). Plugins: USD permitido para ese producto × YAPE_EXCHANGE_RATE_PEN.
  * Lo usan el cobro y la cotización, así el modal muestra exactamente lo que se va a cobrar.
  */
-async function priceForRequest({ productId, isPromo2x1, customPrice, couponCode }) {
+async function priceForRequest({ productId, isPromo2x1, customPrice, couponCode, installment = false }) {
     if (String(productId) === String(STAR_PRODUCT_ID)) {
+        // 1ra cuota por Yape (S/ 61.67 ≈ US$ 16.33): el precio lo fija el servidor, sin cupón.
+        if (installment) return { ok: true, usd: STAR_INSTALLMENT_USD, pen: STAR_INSTALLMENT_PEN };
         const price = starPrice(await getStarCouponPercent(couponCode));
         return { ok: true, usd: price.usd, pen: price.pen };
     }
@@ -132,7 +134,7 @@ export const quoteYape = async (req, res) => {
     try {
         const productId = String(req.query.productId || '899');
         const isPromo2x1 = req.query.promo === '1' || productId === 'promo-2x1';
-        const price = await priceForRequest({ productId, isPromo2x1, customPrice: req.query.price, couponCode: req.query.coupon });
+        const price = await priceForRequest({ productId, isPromo2x1, customPrice: req.query.price, couponCode: req.query.coupon, installment: req.query.installment === '1' });
         if (!price.ok) return res.status(400).json({ error: price.error });
         return res.json({ success: true, usd: price.usd, pen: price.pen });
     } catch (error) {
@@ -189,7 +191,9 @@ export const chargeYape = async (req, res) => {
         const strProdId = String(productId || '');
 
         // El monto lo decide el servidor (ver priceForRequest): lo que mande el navegador no se cobra.
-        const price = await priceForRequest({ productId: strProdId, isPromo2x1, customPrice, couponCode: req.body.couponCode });
+        // STAR CHAIN en cuotas por Yape: solo la 1ra cuota (las demás las cobra Willie aparte).
+        const isInstallment = Boolean(req.body.installment) && strProdId === String(STAR_PRODUCT_ID);
+        const price = await priceForRequest({ productId: strProdId, isPromo2x1, customPrice, couponCode: req.body.couponCode, installment: isInstallment });
         if (!price.ok) {
             console.warn(`[YapeCharge] Precio rechazado: producto=${strProdId} customPrice=${customPrice} promo=${isPromo2x1}`);
             return res.status(400).json({ error: price.error });
@@ -197,7 +201,7 @@ export const chargeYape = async (req, res) => {
         const validUsdPrice = price.usd;
         const amountPEN = price.pen;
         const prodInfo = PLUGIN_INFO_MAP[strProdId] || ((req.body.pluginName || '').toLowerCase().includes('cassette') ? PLUGIN_INFO_MAP['5002'] : null) || (strProdId === 'promo-2x1' ? PLUGIN_INFO_MAP['899'] : (productId ? PLUGIN_INFO_MAP['899'] : null));
-        const pluginName = prodInfo ? (isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : prodInfo.name) : (req.body.pluginName || 'Presets');
+        const pluginName = prodInfo ? (isPromo2x1 ? 'Promo 2x1 (Easy Mix + Easy Master)' : (isInstallment ? `${prodInfo.name} · cuota 1 de 3` : prodInfo.name)) : (req.body.pluginName || 'Presets');
 
         console.log(`[YapeCharge] Initiating charge: S/. ${amountPEN} PEN ($${validUsdPrice} USD @ T.C. ${exchangeRate}) for ${email} (${pluginName}) | 2x1: ${isPromo2x1}`);
 
@@ -209,7 +213,7 @@ export const chargeYape = async (req, res) => {
             token,
             transaction_amount: amountPEN,
             installments: 1,
-            description: prodInfo ? `OFFSZN - ${pluginName} (Licencia Vitalicia)` : `OFFSZN - ${pluginName}`,
+            description: prodInfo ? `OFFSZN - ${pluginName} (${isInstallment ? 'Licencia en cuotas' : 'Licencia Vitalicia'})` : `OFFSZN - ${pluginName}`,
             payment_method_id: 'yape',
             external_reference: externalReference,
             notification_url: 'https://offszn.lat/api/orders/mercadopago-webhook',
@@ -316,7 +320,15 @@ export const chargeYape = async (req, res) => {
         let serialKey = null;
         let bonusSerialKey = null;
 
-        if (prodInfo) {
+        if (prodInfo && isInstallment) {
+            // Cuota 1 por Yape: clave temporal STAR-SUB de ~1 mes (igual que la cuota 1 de PayPal). La cuota 2 y 3 se cobran aparte.
+            try {
+                serialKey = await issueStarLicense({ kind: 'sub', userId: null });
+                console.log(`[YapeCharge] Clave temporal de cuota 1 para ${email}: ${serialKey}`);
+            } catch (licErr) {
+                console.error('[YapeCharge] Error generating installment license:', licErr);
+            }
+        } else if (prodInfo) {
             try {
                 const primaryPluginToGen = (pluginName.includes('Promo 2x1') || isPromo2x1) ? 'Easy Mix' : prodInfo.name;
                 const licResult = await generatePluginLicense({
@@ -381,7 +393,7 @@ export const chargeYape = async (req, res) => {
                     product_id: parsedProductId,
                     price_at_purchase: validUsdPrice,
                     quantity: 1,
-                    license_name: 'lifetime'
+                    license_name: isInstallment ? 'subscription' : 'lifetime'
                 });
                 const { data: soldProd } = await supabase.from('products').select('sales_count').eq('id', parsedProductId).maybeSingle();
                 if (soldProd) await supabase.from('products').update({ sales_count: (soldProd.sales_count || 0) + 1 }).eq('id', parsedProductId);
@@ -485,6 +497,7 @@ export const chargeYape = async (req, res) => {
             orderId: orderId,
             pluginName: pluginName,
             isPromo2x1: isPromo2x1,
+            installment: isInstallment,
             amountPEN: amountPEN,
             serialKey: serialKey,
             bonusSerialKey: bonusSerialKey,

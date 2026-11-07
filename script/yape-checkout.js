@@ -78,6 +78,7 @@
                 const qs = new URLSearchParams({ productId: String(this.productId), price: String(usd) });
                 if (isPromo) qs.set('promo', '1');
                 if (window.COUPON_CODE) qs.set('coupon', window.COUPON_CODE);
+                if (window.PLUGIN_INSTALLMENT) qs.set('installment', '1');
                 const res = await fetch('/api/orders/yape/quote?' + qs.toString());
                 const data = res.ok ? await res.json() : null;
                 this.quote = data && data.success ? { usd: Number(data.usd), pen: Number(data.pen) } : null;
@@ -971,6 +972,7 @@
                 };
 
                 if (window.COUPON_CODE) bodyPayload.couponCode = window.COUPON_CODE;
+                if (window.PLUGIN_INSTALLMENT) bodyPayload.installment = true;
 
                 const response = await fetch('/api/orders/yape/charge', {
                     method: 'POST',

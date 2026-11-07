@@ -11,7 +11,7 @@ mock.module('../src/infrastructure/database/connection.js', { namedExports: { su
 mock.module('../src/shared/utils/mailer.js', { namedExports: { sendOffsznEmail: async () => {} } });
 mock.module('../src/infrastructure/services/MetaCapiService.js', { defaultExport: { sendEvent: async () => {} } });
 mock.module('../src/infrastructure/http/controllers/PluginLicensingController.js', { namedExports: { generatePluginLicense: async ({ pluginName }) => ({ serialKey: `${pluginName}-KEY` }) } });
-mock.module('../src/infrastructure/services/starSubscriptionService.js', { namedExports: { getStarCouponPercent: async (code) => (String(code).toUpperCase() === 'STAR' ? 10 : 0) } });
+mock.module('../src/infrastructure/services/starSubscriptionService.js', { namedExports: { getStarCouponPercent: async (code) => (String(code).toUpperCase() === 'STAR' ? 10 : 0), issueLicense: async ({ kind }) => `STAR-${kind.toUpperCase()}-TEST` } });
 
 const ledger = [];
 mock.module('../src/infrastructure/services/financeService.js', { namedExports: { recordMercadoPago: async (payment, ctx) => { ledger.push({ payment, ctx }); return { ok: true }; } } });
@@ -85,6 +85,22 @@ test('promo 2x1: solo 17 o 25 y solo desde sus productos', async () => {
 test('STAR CHAIN sigue con precio del servidor (49 US$ → S/ 185; cupón -10%)', async () => {
     assert.equal((await run({ productId: 5003, customPrice: 1, customPricePEN: 1 })).charged, 185);
     assert.equal((await run({ productId: 5003, customPrice: 1, couponCode: 'star' })).charged, 166.5);
+});
+
+test('STAR CHAIN en cuotas por Yape: se cobra solo la 1ra cuota (S/ 61.67), sin cupón, y entrega clave temporal STAR-SUB', async () => {
+    ledger.length = 0;
+    const r = await run({ productId: 5003, customPrice: 1, customPricePEN: 1, couponCode: 'star', installment: true });
+    assert.equal(r.status, 200);
+    assert.equal(r.charged, 61.67);
+    assert.equal(r.payload.installment, true);
+    assert.equal(r.payload.serialKey, 'STAR-SUB-TEST');
+    assert.equal(ledger[0].ctx.product, 'STAR CHAIN · cuota 1 de 3');
+    // el pago único sigue igual y entrega la licencia de por vida
+    const full = await run({ productId: 5003, customPrice: 1 });
+    assert.equal(full.charged, 185);
+    assert.notEqual(full.payload.installment, true);
+    // "installment" en otro producto no cambia nada
+    assert.equal((await run({ productId: 899, customPrice: 17, installment: true })).charged, 65);
 });
 
 test('precio dinámico: al cambiar la variable de Vercel cambia lo que se cobra, sin tocar páginas', async () => {

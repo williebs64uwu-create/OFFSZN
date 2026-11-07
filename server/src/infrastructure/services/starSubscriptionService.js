@@ -87,7 +87,7 @@ async function listTransactions(sub) {
 // ─── Licencias ────────────────────────────────────────────────────────────────────────────────────────────────
 const part = () => crypto.randomBytes(4).toString('hex').toUpperCase();
 
-async function issueLicense({ kind, userId }) {
+export async function issueLicense({ kind, userId, email = null }) {
     const serial = `STAR-${kind === 'full' ? 'FULL' : 'SUB'}-${part()}-${part()}`;
     const { error } = await supabase.from('plugin_licenses').insert({
         serial_key: serial,

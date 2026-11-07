@@ -810,7 +810,7 @@
                 </button>
                 <a id="btnActionMp" class="pay-method" href="#" target="_blank" rel="noopener" onclick="return validateBeforeLocal(event)">
                     <img src="/images/payments/mercadopago.png" alt="" width="28" height="28">
-                    <span class="pm-name">Mercado Pago</span><span class="pm-price" id="labelAltMpPrice">$49.00</span>
+                    <span class="pm-name">Mercado Pago Argentina</span><span class="pm-price" id="labelAltMpPrice">$49.00</span>
                 </a>
                 <a id="btnActionCrypto" class="pay-method" href="#" target="_blank" rel="noopener" onclick="return validateBeforeLocal(event)">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#F0B90B" aria-hidden="true"><path d="M12 2L4.5 9.5L7.33 12.33L12 7.66L16.67 12.33L19.5 9.5L12 2ZM4.5 14.5L2 12L4.5 9.5L7.33 12.33L4.5 14.5ZM19.5 14.5L16.67 12.33L19.5 9.5L22 12L19.5 14.5ZM12 22L4.5 14.5L7.33 11.67L12 16.34L16.67 11.67L19.5 14.5L12 22ZM12 13.5L9.17 10.67L12 7.84L14.83 10.67L12 13.5Z"/></svg>
@@ -864,7 +864,7 @@
                                 Licencia FULL - 2 dispositivos
                                 <span class="plan-badge-rec">RECOMENDADO</span>
                             </h4>
-                            <p>Pago único · Acceso para 2 PCs · 51% OFF</p>
+                            <p>Pago único · Acceso para 2 PCs · 50% OFF</p>
                         </div>
                     </div>
                     <div class="plan-price-tag">
@@ -1015,7 +1015,7 @@
             sub.textContent = '3 Cuotas Mensuales ($16.33 USD/mes)';
         }
 
-        // Pago único: botones de PayPal + Yape rápido. Cuotas: suscripción de PayPal (Yape solo por WhatsApp).
+        // Pago único: botones de PayPal + Yape rápido. Cuotas: suscripción de PayPal (y Yape para la 1ra cuota).
         const pp = document.getElementById('plugin-paypal-button-container');
         if (pp) pp.style.display = (plan === 'full') ? '' : 'none';
         const subBox = document.getElementById('star-subscription-container');
@@ -1086,6 +1086,10 @@
             document.getElementById('labelAltMpPrice').textContent = `$${finalPrice.toFixed(2)}`;
             document.getElementById('labelAltCryptoPrice').textContent = `${finalPrice.toFixed(2)} USDT`;
         } else {
+            // Cuotas: Yape cobra solo la 1ra cuota (S/ 61.67); las otras dos las cobra Willie aparte.
+            window.CURRENT_PROMO_PRICE = 16.33;
+            window.YAPE_FIXED_PRICE_PEN = 61.67;
+            document.getElementById('yapeNowPrice').textContent = 'S/ 61.67 · 1ra cuota';
             document.getElementById('labelAltMpPrice').textContent = '$16.33 · 1ra cuota';
             document.getElementById('labelAltCryptoPrice').textContent = '16.33 USDT';
         }
@@ -1114,11 +1118,12 @@
         recalculateTotals();
     }
 
-    // Yape solo funciona con celular de Perú y en pago único; Mercado Pago y Binance siempre se ven.
+    // Yape solo funciona con celular de Perú (pago único o 1ra cuota); Mercado Pago y Binance siempre se ven.
     function syncLocalMethods() {
         const yape = document.getElementById('btnYapeNow');
         const country = (document.getElementById('buyerCountry') || {}).value;
-        if (yape) yape.style.display = (selectedPlan === 'full' && country === 'PE') ? '' : 'none';
+        window.PLUGIN_INSTALLMENT = (selectedPlan === 'cuotas');
+        if (yape) yape.style.display = (country === 'PE') ? '' : 'none';
     }
 
     function handleCountryChange() {
@@ -1216,5 +1221,12 @@
 </script>
 
 
+    <!-- Botón flotante de WhatsApp (esquina inferior derecha) -->
+    <style>
+        .wa-fab { position: fixed; right: 20px; bottom: 20px; width: 58px; height: 58px; border-radius: 50%; background: #25D366; color: #fff !important; display: flex; align-items: center; justify-content: center; font-size: 30px; text-decoration: none; box-shadow: 0 8px 24px rgba(0,0,0,.35); z-index: 9990; transition: background-color .2s ease, transform .2s ease; }
+        .wa-fab:hover { background: #20ba5a; transform: scale(1.05); }
+        @media (max-width: 768px) { .wa-fab { right: 16px; bottom: 16px; width: 52px; height: 52px; font-size: 27px; } }
+    </style>
+    <a class="wa-fab" id="waFab" href="https://wa.me/51993525005?text=Hola%20Willie%2C%20tengo%20una%20duda%20para%20comprar%20STAR%20CHAIN" target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp"><i class="bi bi-whatsapp"></i></a>
 </body>
 </html>
