@@ -28,7 +28,7 @@ export async function collectWeeklyData(now = Date.now()) {
     const fmt = (ms) => { const [, mm, dd] = new Date(ms - 5 * 3600000).toISOString().slice(0, 10).split('-').map(Number); return `${dd} de ${MONTHS[mm - 1]}`; };
     return {
         rangeText: `Del ${fmt(now - 6 * 86400000)} al ${fmt(now)}`, monthLabel: `${MONTHS[m - 1]} ${y}`,
-        available, monthTotal: available + (Number(d.transfersPen) || 0) + (Number(d.withdrawalsPen) || 0), sentToBank: (Number(d.transfersPen) || 0) + (Number(d.withdrawalsPen) || 0),
+        available, monthTotal: available + (Number(d.transfersPen) || 0) + (Number(d.withdrawalsBankPen) || 0), sentToBank: (Number(d.transfersPen) || 0) + (Number(d.withdrawalsBankPen) || 0),
         bank: live.bank.now, yape, paypalUsd: pp.balanceUsd, paypalNowPen: pp.nowPen, paypalProgress: pp.progress, paypalRemainingUsd: pp.remainingUsd, paypalThreshold: pp.threshold,
         goal: d.goal, projection, week, pending: d.income.filter((r) => r.kind === 'Por revisar').length + (d.pendingArs || []).length, crmUrl: CRM_URL
     };
