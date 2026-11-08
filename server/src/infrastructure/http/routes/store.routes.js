@@ -7,7 +7,7 @@ import {
     cronAuth, trialFollowups, adminAuth, adminCustomers, adminAbReport, unsubscribe, saveCart, getCart
 } from '../controllers/StoreController.js';
 import * as crm from '../controllers/CrmController.js';
-import { createPlanAdmin, starPlanStatus } from '../controllers/StarSubscriptionController.js';
+import { createPlanAdmin, starPlanStatus, starReconcileCron } from '../controllers/StarSubscriptionController.js';
 import { financeMonth, financeAddExpense, financeDeleteExpense, financeSaveBank, financeSaveYape, financeEditIncome, financeSaveWithdrawRate, financeAddTransfer, financeDeleteTransfer, financeAddWithdrawal, financeDeleteWithdrawal, financeWeeklyCron, financeWeeklyPreview, financeWeeklySend, financeVerify, paypalWebhookSetup, financeSettleArs, financeAddIncome } from '../controllers/FinanceController.js';
 import { runAutomations } from '../../services/crmService.js';
 
@@ -60,6 +60,7 @@ router.post('/admin/finance/paypal-withdrawals', adminAuth, financeAddWithdrawal
 router.get('/admin/finance/weekly-preview', adminAuth, financeWeeklyPreview);
 router.post('/admin/finance/weekly-send', adminAuth, financeWeeklySend);
 router.all('/cron/weekly-finance', cronAuth, financeWeeklyCron);
+router.all('/cron/star-reconcile', cronAuth, starReconcileCron); // STAR CHAIN: registra los cobros de PayPal que falten (cada 10 min)
 router.delete('/admin/finance/paypal-withdrawals/:id', adminAuth, financeDeleteWithdrawal);
 router.delete('/admin/finance/bank-transfers/:id', adminAuth, financeDeleteTransfer);
 router.patch('/admin/finance/income/:id', adminAuth, financeEditIncome);

@@ -265,6 +265,81 @@ export async function confirmStarSubscription({ subscriptionId, email, userId })
     return { ok: true, pending: true, email: row.email };
 }
 
+// ─── Repaso automático contra PayPal (red de seguridad) ──────────────────────────────────────────────────────
+// Cada pocos minutos un cron le pregunta a PayPal qué avisos de cobro mandó y qué cobros tienen las suscripciones abiertas, y registra los que
+// falten (la venta queda anotada aunque la página, el webhook o el navegador del cliente hayan fallado). Es seguro repetirlo: cada cobro se registra una sola vez.
+const cfgGet = async (key) => (await supabase.from('star_config').select('value').eq('key', key).maybeSingle()).data?.value || null;
+const cfgSet = (key, value) => supabase.from('star_config').upsert([{ key, value, updated_at: new Date().toISOString() }], { onConflict: 'key' });
+// Avisa a Willie una sola vez por motivo (para no llenar su correo con un cron cada 10 minutos).
+async function alertOnce(key, subject, lines) {
+    if (await cfgGet(key)) return;
+    await cfgSet(key, new Date().toISOString());
+    await emailOwner({ subject, lines }).catch(() => {});
+}
+
+async function listSaleEvents(hours) {
+    const iso = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, 'Z'); // PayPal rechaza las fechas con milisegundos (400)
+    const start = iso(Date.now() - hours * 3600000), end = iso(Date.now());
+    let path = `/v1/notifications/webhooks-events?page_size=100&event_type=PAYMENT.SALE.COMPLETED&start_time=${encodeURIComponent(start)}&end_time=${encodeURIComponent(end)}`;
+    const events = [];
+    for (let page = 0; page < 5 && path; page++) {
+        const data = await paypal(path);
+        events.push(...(data.events || []));
+        const next = (data.links || []).find((l) => l.rel === 'next');
+        path = next ? String(next.href).replace(API, '') : null;
+    }
+    return events;
+}
+
+export async function reconcileStarPayments({ hours = 48 } = {}) {
+    const out = { events: 0, recovered: 0, failed: [], polled: 0 };
+    const recovered = [];
+
+    // 1) Avisos de cobro que PayPal mandó (aunque nuestro servidor los haya perdido)
+    let events = [];
+    try { events = await listSaleEvents(hours); }
+    catch (e) {
+        out.listError = e.message;
+        await alertOnce(`alert_list_${Math.floor(Date.now() / 21600000)}`, '⚠️ [STAR CHAIN] El repaso automático no pudo leer los avisos de PayPal', [`Motivo: <b>${esc(e.message)}</b>. Mientras tanto siguen funcionando el webhook y la confirmación de la página.`]);
+    }
+    for (const ev of events) {
+        const saleId = ev.resource?.id, subId = ev.resource?.billing_agreement_id;
+        if (!saleId || !String(subId || '').startsWith('I-')) continue;
+        const { data: done } = await supabase.from('star_subscription_payments').select('sale_id').eq('sale_id', saleId).maybeSingle();
+        if (done) continue;
+        out.events++;
+        try { if (!(await handleStarWebhook(ev))) continue; } // false = suscripción de otro producto
+        catch (e) { out.failed.push({ saleId, error: e.message }); continue; }
+        const { data: now } = await supabase.from('star_subscription_payments').select('sale_id').eq('sale_id', saleId).maybeSingle();
+        if (now) { out.recovered++; recovered.push(saleId); }
+        else out.failed.push({ saleId, error: 'PayPal aún no lista el cobro' });
+    }
+
+    // 2) Suscripciones abiertas sin cobro reciente registrado: se mira directo en PayPal (cubre la cuota 1 y los meses siguientes)
+    const { data: subs } = await supabase.from('star_subscriptions').select('*').eq('status', 'active');
+    for (const row of subs || []) {
+        const stale = !row.last_payment_at || Date.now() - new Date(row.last_payment_at).getTime() > 27 * 86400000;
+        if (!stale || (row.payments_count || 0) >= STAR_INSTALLMENTS) continue;
+        out.polled++;
+        try {
+            const sub = await getSubscription(row.subscription_id);
+            for (const t of await listTransactions(sub)) {
+                const sale = findCompletedSale([t], t.id);
+                if (!sale) continue;
+                const r = await processStarPayment({ subscription: row, saleId: sale.saleId, amountUsd: sale.amountUsd, feeUsd: sale.feeUsd, netUsd: sale.netUsd, paidAt: sale.paidAt });
+                if (!r.duplicate) { out.recovered++; recovered.push(sale.saleId); }
+            }
+        } catch (e) { out.failed.push({ saleId: row.subscription_id, error: e.message }); }
+    }
+
+    if (recovered.length) await emailOwner({ subject: `✅ [STAR CHAIN] El repaso automático registró ${recovered.length} cobro(s) que faltaban`, lines: [`Cobros recuperados: <b>${esc(recovered.join(', '))}</b>. Ya se les entregó su clave.`] }).catch(() => {});
+    for (const f of out.failed) {
+        // Un cobro recién hecho puede tardar unos minutos en poder leerse: solo se avisa una vez por cobro y siempre queda para el próximo repaso
+        await alertOnce(`alert_${f.saleId}`, `⚠️ [STAR CHAIN] Cobro sin registrar: ${f.saleId}`, [`El repaso automático no pudo registrar <b>${esc(f.saleId)}</b>: ${esc(f.error)}. Seguirá intentando; si el cliente espera su clave, regístrala a mano.`]);
+    }
+    return out;
+}
+
 // ─── Webhook de PayPal: devuelve true si el evento era de STAR CHAIN (y ya se atendió) ───────────────────────
 export async function handleStarWebhook(event) {
     const type = event?.event_type || '';

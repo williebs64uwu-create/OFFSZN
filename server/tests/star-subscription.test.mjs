@@ -59,10 +59,12 @@ const svc = await import('../src/infrastructure/services/starSubscriptionService
 // ─── PayPal simulado ──────────────────────────────────────────────────────────────────────────────────────────
 const SUB_ID = 'I-TESTSTAR0001';
 let paypalTx = [];
+let paypalEvents = [];
 globalThis.fetch = async (url) => {
     const u = String(url);
     const json = (b) => ({ ok: true, status: 200, json: async () => b });
     if (u.includes('/oauth2/token')) return json({ access_token: 'tok' });
+    if (u.includes('/webhooks-events')) return json({ events: paypalEvents, links: [] });
     if (u.includes('/transactions')) return json({ transactions: paypalTx });
     if (u.includes(`/subscriptions/${SUB_ID}`)) return json({ id: SUB_ID, plan_id: 'P-STAR', status: 'ACTIVE', start_time: '2026-11-01T00:00:00Z', subscriber: { email_address: 'comprador@correo.com' } });
     if (u.includes('/subscriptions/I-OTHER')) return json({ id: 'I-OTHER', plan_id: 'P-OTRO', status: 'ACTIVE' });
@@ -144,6 +146,45 @@ test('el cobro tarda en aparecer en PayPal: el webhook falla (500 y PayPal reint
     assert.equal(await svc.handleStarWebhook(saleEvent('S1')), true);
     assert.equal(licenses().length, 1);
     assert.equal(await svc.handleStarWebhook(saleEvent('S1')), true);   // otro reintento: no duplica
+    assert.equal(licenses().length, 1);
+});
+
+test('repaso automático: registra un cobro cuyo aviso y navegador se perdieron, una sola vez y avisando a Willie', async () => {
+    reset(); emails.length = 0; process.env.STAR_PAYPAL_PLAN_ID = 'P-STAR';
+    paypalTx = [sale('S1')];
+    paypalEvents = [saleEvent('S1'), { event_type: 'PAYMENT.SALE.COMPLETED', resource: { id: 'OTRO', billing_agreement_id: 'I-OTHER' } }];
+    const a = await svc.reconcileStarPayments();
+    assert.equal(a.recovered, 1);
+    assert.equal(a.failed.length, 0);
+    assert.equal(licenses().length, 1);                       // la clave de la cuota 1 se creó
+    assert.equal(T('star_subscription_payments').length, 1);   // y la suscripción de otro plan no se tocó
+    assert.ok(emails.some((e) => /repaso automático/.test(e.subject)));
+    const b = await svc.reconcileStarPayments();               // segundo repaso: no duplica nada
+    assert.equal(b.recovered, 0);
+    assert.equal(licenses().length, 1);
+});
+
+test('repaso automático: si PayPal aún no lista el cobro queda pendiente, avisa una sola vez y lo registra cuando aparece', async () => {
+    reset(); emails.length = 0; process.env.STAR_PAYPAL_PLAN_ID = 'P-STAR';
+    paypalTx = []; paypalEvents = [saleEvent('S9')];
+    const a = await svc.reconcileStarPayments();
+    assert.equal(a.recovered, 0);
+    assert.equal(a.failed.length, 1);
+    await svc.reconcileStarPayments();
+    assert.equal(emails.filter((e) => /Cobro sin registrar/.test(e.subject)).length, 1);   // un solo aviso, no uno por repaso
+    paypalTx = [sale('S9')];
+    const c = await svc.reconcileStarPayments();
+    assert.equal(c.recovered, 1);
+    assert.equal(licenses().length, 1);
+});
+
+test('repaso automático: una suscripción abierta cuyo cobro no se registró se completa mirando a PayPal', async () => {
+    reset(); emails.length = 0; process.env.STAR_PAYPAL_PLAN_ID = 'P-STAR';
+    T('star_subscriptions').push({ subscription_id: SUB_ID, email: 'comprador@correo.com', plan_id: 'P-STAR', status: 'active', payments_count: 0, user_id: null });
+    paypalTx = [sale('S1')]; paypalEvents = [];
+    const a = await svc.reconcileStarPayments();
+    assert.equal(a.polled, 1);
+    assert.equal(a.recovered, 1);
     assert.equal(licenses().length, 1);
 });
 

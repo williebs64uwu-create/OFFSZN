@@ -1,5 +1,5 @@
 // ─── STAR CHAIN en cuotas: endpoints del checkout y del CRM ──────────────────────────────────────────────────────
-import { getStarPlanId, createStarPlan, confirmStarSubscription } from '../../services/starSubscriptionService.js';
+import { getStarPlanId, createStarPlan, confirmStarSubscription, reconcileStarPayments } from '../../services/starSubscriptionService.js';
 import { STAR_INSTALLMENTS, STAR_INSTALLMENT_USD, STAR_PRICE_USD } from '../../../shared/store/starPlan.js';
 
 // GET /api/orders/star/config → el checkout decide si ofrece las cuotas (solo si el plan ya existe)
@@ -29,6 +29,12 @@ export const subscribeStar = async (req, res) => {
 export const createPlanAdmin = async (req, res) => {
     try { return res.json({ ok: true, ...(await createStarPlan()) }); }
     catch (e) { return res.status(500).json({ error: e.message || 'No se pudo crear el plan.' }); }
+};
+
+// GET/POST /api/store/cron/star-reconcile (Bearer STORE_CRON_SECRET) → repaso automático: registra los cobros de PayPal que falten
+export const starReconcileCron = async (req, res) => {
+    try { return res.json({ ok: true, ...(await reconcileStarPayments({ hours: Number(req.query?.hours) || 48 })) }); }
+    catch (e) { console.error('[STAR reconcile]', e); return res.status(500).json({ ok: false, error: e.message }); }
 };
 
 // GET /api/store/admin/star-plan → ¿ya existe el plan?
