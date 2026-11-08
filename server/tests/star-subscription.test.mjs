@@ -125,13 +125,26 @@ test('cuotas: 1 y 2 dan clave SUB de un mes (la anterior se revoca), un cobro fa
 test('un webhook falso (cobro que PayPal no confirma) no crea licencias, y otras suscripciones no se tocan', async () => {
     reset(); emails.length = 0; process.env.STAR_PAYPAL_PLAN_ID = 'P-STAR';
     paypalTx = [];
-    assert.equal(await svc.handleStarWebhook(saleEvent('FAKE')), true); // es de STAR, pero PayPal no lo confirma
+    // es de STAR pero PayPal no lo confirma: se lanza error (el controlador responde 500 y PayPal reintenta); nunca crea nada
+    await assert.rejects(() => svc.handleStarWebhook(saleEvent('FAKE')), /no confirmado/);
     assert.equal(licenses().length, 0);
     assert.equal(T('orders').length, 0);
     // Una suscripción de otro plan la atiende el flujo de siempre
     assert.equal(await svc.handleStarWebhook({ event_type: 'PAYMENT.SALE.COMPLETED', resource: { id: 'X', billing_agreement_id: 'I-OTHER' } }), false);
     // Eventos que no son de suscripción tampoco
     assert.equal(await svc.handleStarWebhook({ event_type: 'CHECKOUT.ORDER.APPROVED', resource: { id: 'O1' } }), false);
+});
+
+test('el cobro tarda en aparecer en PayPal: el webhook falla (500 y PayPal reintenta) y al reintentar registra la venta una sola vez', async () => {
+    reset(); emails.length = 0; process.env.STAR_PAYPAL_PLAN_ID = 'P-STAR';
+    paypalTx = [];
+    await assert.rejects(() => svc.handleStarWebhook(saleEvent('S1')), /no confirmado/);
+    assert.equal(licenses().length, 0);
+    paypalTx = [sale('S1')];                                   // PayPal ya lo lista: llega el reintento
+    assert.equal(await svc.handleStarWebhook(saleEvent('S1')), true);
+    assert.equal(licenses().length, 1);
+    assert.equal(await svc.handleStarWebhook(saleEvent('S1')), true);   // otro reintento: no duplica
+    assert.equal(licenses().length, 1);
 });
 
 test('confirmar desde el navegador entrega la clave de la cuota 1 y es idempotente', async () => {

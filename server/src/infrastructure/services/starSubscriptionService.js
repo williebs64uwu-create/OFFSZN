@@ -278,12 +278,16 @@ export async function handleStarWebhook(event) {
     const planId = await getStarPlanId();
     if (!planId) return false;
     let sub;
-    // PayPal a veces tarda unos segundos en poder leer una suscripción recién creada: se reintenta antes de rendirse (y se deja registro).
+    // PayPal a veces tarda unos segundos en poder leer una suscripción recién creada: se reintenta; si no se puede, se lanza el error
+    // (el controlador responde 500 y PayPal reintenta el aviso) y se avisa a Willie para que no dependa del cliente.
     for (let attempt = 1; attempt <= 3 && !sub; attempt++) {
         try { sub = await getSubscription(subscriptionId); }
-        catch (e) { console.warn(`[STAR sub] webhook ${type}: no se pudo leer ${subscriptionId} (intento ${attempt}/3): ${e.message}`); if (attempt < 3) await new Promise((r) => setTimeout(r, 2500)); }
+        catch (e) { console.warn(`[STAR sub] webhook ${type}: no se pudo leer ${subscriptionId} (intento ${attempt}/3): ${e.message}`); if (attempt < 3) await new Promise((r) => setTimeout(r, 1500)); }
     }
-    if (!sub) { console.error(`[STAR sub] webhook ${type}: se rindió con ${subscriptionId}; revisar a mano.`); return false; }
+    if (!sub) {
+        await emailOwner({ subject: `⚠️ [STAR CHAIN] Aviso de PayPal sin procesar (${type})`, lines: [`PayPal avisó <b>${esc(type)}</b> de la suscripción <b>${esc(subscriptionId)}</b> pero no se pudo leer. PayPal reintentará solo; si el cliente pagó y no recibe su clave, regístrala a mano.`] }).catch(() => {});
+        throw new Error(`no se pudo leer la suscripción ${subscriptionId}`);
+    }
     if (sub.plan_id !== planId) return false; // otra suscripción (créditos de OFFSZN, etc.): la atiende el flujo de siempre
 
     const row = await ensureSubscription({ id: subscriptionId, email: sub.subscriber?.email_address, planId });
@@ -291,11 +295,12 @@ export async function handleStarWebhook(event) {
     if (isSale) {
         // El cobro puede tardar unos segundos en aparecer en la lista de PayPal: se reintenta (si es falso, nunca aparece y se ignora).
         let sale = null;
-        for (let attempt = 1; attempt <= 4 && !sale; attempt++) {
+        for (let attempt = 1; attempt <= 3 && !sale; attempt++) {
             sale = findCompletedSale(await listTransactions(sub), event.resource?.id);
-            if (!sale && attempt < 4) await new Promise((r) => setTimeout(r, 3000));
+            if (!sale && attempt < 3) await new Promise((r) => setTimeout(r, 2000));
         }
-        if (!sale) { console.warn(`[STAR sub] Pago ${event.resource?.id} no confirmado por PayPal; se ignora.`); return true; }
+        // No aparece como cobrado: o es un aviso falso o PayPal aún no lo lista. Se lanza el error para que PayPal reintente más tarde (un falso nunca aparecerá).
+        if (!sale) throw new Error(`pago ${event.resource?.id} aún no confirmado por PayPal`);
         await processStarPayment({ subscription: row, saleId: sale.saleId, amountUsd: sale.amountUsd, feeUsd: sale.feeUsd, netUsd: sale.netUsd, paidAt: sale.paidAt });
         return true;
     }

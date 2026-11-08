@@ -2298,14 +2298,21 @@ const getLegacyPaymentDetails = async (paymentId, accessToken) => {
 // ─── Webhook: Process Successful PayPal Payments automatically ────────────────
 export const handlePayPalWebhook = async (req, res) => {
     const event = req.body;
-    
-    // Accept event immediately to prevent PayPal retries while we process
+
+    // STAR CHAIN en cuotas: se procesa ANTES de responder. En Vercel la función puede congelarse al responder y el cobro quedaría sin registrar.
+    // Si algo falla se responde 500 y PayPal reintenta el aviso solo (durante días).
+    console.log(`🔔 [PayPalWebhook] Processing event: ${event.event_type} | Event ID: ${event.id}`);
+    try {
+        if (await handleStarWebhook(event)) return res.status(200).json({ received: true });
+    } catch (starErr) {
+        console.error('[STAR sub] webhook falló; PayPal reintentará:', starErr.message);
+        return res.status(500).json({ received: false, retry: true });
+    }
+
+    // El resto de eventos: se acepta de inmediato (como antes)
     res.status(200).json({ received: true });
 
     try {
-        console.log(`🔔 [PayPalWebhook] Processing event: ${event.event_type} | Event ID: ${event.id}`);
-        // STAR CHAIN en cuotas: cobros, fallos y cancelaciones de su suscripción (se confirman contra la API de PayPal)
-        if (await handleStarWebhook(event)) return;
         const eventType = event.event_type;
         let transactionId = '';
         let isSale = false;
