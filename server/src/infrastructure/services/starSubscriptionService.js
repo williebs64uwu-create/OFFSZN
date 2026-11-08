@@ -278,13 +278,23 @@ export async function handleStarWebhook(event) {
     const planId = await getStarPlanId();
     if (!planId) return false;
     let sub;
-    try { sub = await getSubscription(subscriptionId); } catch (_) { return false; }
+    // PayPal a veces tarda unos segundos en poder leer una suscripción recién creada: se reintenta antes de rendirse (y se deja registro).
+    for (let attempt = 1; attempt <= 3 && !sub; attempt++) {
+        try { sub = await getSubscription(subscriptionId); }
+        catch (e) { console.warn(`[STAR sub] webhook ${type}: no se pudo leer ${subscriptionId} (intento ${attempt}/3): ${e.message}`); if (attempt < 3) await new Promise((r) => setTimeout(r, 2500)); }
+    }
+    if (!sub) { console.error(`[STAR sub] webhook ${type}: se rindió con ${subscriptionId}; revisar a mano.`); return false; }
     if (sub.plan_id !== planId) return false; // otra suscripción (créditos de OFFSZN, etc.): la atiende el flujo de siempre
 
     const row = await ensureSubscription({ id: subscriptionId, email: sub.subscriber?.email_address, planId });
 
     if (isSale) {
-        const sale = findCompletedSale(await listTransactions(sub), event.resource?.id);
+        // El cobro puede tardar unos segundos en aparecer en la lista de PayPal: se reintenta (si es falso, nunca aparece y se ignora).
+        let sale = null;
+        for (let attempt = 1; attempt <= 4 && !sale; attempt++) {
+            sale = findCompletedSale(await listTransactions(sub), event.resource?.id);
+            if (!sale && attempt < 4) await new Promise((r) => setTimeout(r, 3000));
+        }
         if (!sale) { console.warn(`[STAR sub] Pago ${event.resource?.id} no confirmado por PayPal; se ignora.`); return true; }
         await processStarPayment({ subscription: row, saleId: sale.saleId, amountUsd: sale.amountUsd, feeUsd: sale.feeUsd, netUsd: sale.netUsd, paidAt: sale.paidAt });
         return true;
