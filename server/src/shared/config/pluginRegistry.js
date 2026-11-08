@@ -27,8 +27,9 @@ export const PLUGINS = [
     { id: 'easy-clean', prefix: 'CLEAN', displayName: 'Easy Clean', names: ['easy clean'], keywords: ['clean'], productIds: idsFromEnv('CLEAN_PRODUCT_IDS'), trialDays: 3, exclusive: true },
     // GHOST (agente de mastering): IDs de tienda con GHOST_PRODUCT_IDS (coma-separados) cuando exista en `products`.
     { id: 'ghost', prefix: 'GHOST', displayName: 'GHOST', names: ['ghost', 'offszn ghost'], keywords: ['ghost'], productIds: idsFromEnv('GHOST_PRODUCT_IDS'), trialDays: 3, exclusive: true },
-    // OFFSZN RACK (Rack y Hub de Presets vocales y mezcla):
-    { id: 'offszn-rack', prefix: 'RACK', displayName: 'OFFSZN Rack', names: ['offszn rack', 'rack', 'offszn hub'], keywords: ['rack', 'hub'], productIds: idsFromEnv('RACK_PRODUCT_IDS'), trialDays: 3, exclusive: true },
+    // PRESET RACK (rack que carga cadenas .fst y abre cada plugin en su ventana; antes «OFFSZN Rack»): IDs de tienda con RACK_PRODUCT_IDS.
+    // Las palabras clave son específicas a propósito: «rack» suelto coincidiría con «Track» o «Drum Rack» en nombres de productos.
+    { id: 'offszn-rack', prefix: 'RACK', displayName: 'PRESET RACK', names: ['preset rack', 'presetrack', 'offszn rack', 'rack', 'offszn hub'], keywords: ['preset rack', 'presetrack', 'offszn rack', 'offszn hub'], productIds: idsFromEnv('RACK_PRODUCT_IDS'), trialDays: 3, exclusive: true },
     // CASSETTE (cinta lo-fi y espacio): IDs de tienda con CASSETTE_PRODUCT_IDS (coma-separados) o default [5002].
     { id: 'cassette', prefix: 'CASSETTE', displayName: 'Cassette', names: ['cassette', 'cassette vst', 'cassette plugin'], keywords: ['cassette'], productIds: idsFromEnv('CASSETTE_PRODUCT_IDS').length ? idsFromEnv('CASSETTE_PRODUCT_IDS') : [5002], trialDays: 3, exclusive: true },
     // ORB (sintetizador con Astra, IA de sonido): IDs de tienda con ORB_PRODUCT_IDS (coma-separados). Pro/Max = suscripciones orb_pro_* / orb_max_* (ver AstraController).

@@ -558,3 +558,23 @@ test('STAR CHAIN: la prueba NO se pide desde el plugin: solo con una clave TRIAL
     const wrong = await call(C.activateSerial, { serial_key: key, hwid: HW('PC-A', DEV_C), plugin_name: 'Easy Pitch' });
     assert.equal(wrong.code, 403); assert.equal(wrong.body.code, 'wrong_product');
 });
+
+// ── PRESET RACK (antes «OFFSZN Rack») ─────────────────────────────────────────────────────────────────────────────
+test('PRESET RACK: prefijo RACK, nombres exactos y palabras clave que NO se confunden con «Track» ni «Drum Rack»', async () => {
+    const R = await import('../src/shared/config/pluginRegistry.js');
+    assert.equal(R.prefixForName('PRESET RACK'), 'RACK');
+    assert.equal(R.findPluginByName('PRESET RACK').id, 'offszn-rack');
+    assert.equal(R.findPluginByName('Preset Rack (Windows)').id, 'offszn-rack');
+    assert.equal(R.findPluginByName('OFFSZN Rack').id, 'offszn-rack');
+    assert.equal(R.findPluginBySerial('RACK-FULL-AB12CD34-EF56AB78').id, 'offszn-rack');
+    assert.equal(R.extractSerial('Tu clave: rack-trial-ab12cd34-ef56ab78'), 'RACK-TRIAL-AB12CD34-EF56AB78');
+    // productos de la tienda que contienen «rack» NO emiten licencia de PRESET RACK
+    assert.notEqual(R.findPluginByName('Drum Track Pack')?.id, 'offszn-rack');
+    assert.notEqual(R.findPluginByName('Drum Rack Kit')?.id, 'offszn-rack');
+    assert.equal(R.isProductOfPlugin('offszn-rack', { id: 899, name: 'Easy Mix' }), false);
+    assert.equal(R.isProductOfPlugin('offszn-rack', { name: 'Preset Rack' }), true);
+    // exclusiva: una clave RACK no sirve en otro plugin y al revés
+    assert.equal(R.checkProductMatch({ serial: 'RACK-FULL-AB12CD34-EF56AB78', requestedPluginName: 'Easy Pitch' }).ok, false);
+    assert.equal(R.checkProductMatch({ serial: 'PITCH-FULL-AB12CD34-EF56AB78', requestedPluginName: 'PRESET RACK' }).ok, false);
+    assert.equal(R.checkProductMatch({ serial: 'RACK-FULL-AB12CD34-EF56AB78', requestedPluginName: 'PRESET RACK' }).ok, true);
+});

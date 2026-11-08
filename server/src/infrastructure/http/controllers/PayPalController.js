@@ -1276,11 +1276,12 @@ export const capturePayPalOrder = async (req, res) => {
                 const isEasyClean = prodName.toLowerCase().includes('easy clean') || prodName.toLowerCase().includes('easyclean');
                 const isWidget = isProductOfPlugin('offszn-widget', { name: prodName, id: prodId }); // OFFSZN Widget (WIDGET_PRODUCT_IDS)
                 const isStar = isProductOfPlugin('star-chain', { name: prodName, id: prodId }); // STAR CHAIN (STAR_PRODUCT_IDS)
+                const isRack = isProductOfPlugin('offszn-rack', { name: prodName, id: prodId }); // PRESET RACK (RACK_PRODUCT_IDS)
                 const isPromo2x1 = item.is_promo_2x1 === true || item.product?.is_promo_2x1 === true || prodName.toLowerCase().includes('2x1') || (item.license_name || '').toLowerCase().includes('2x1') || req.body.isPromo2x1 === true;
                 
-                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette || isEasyLevel || isEasyDeeser || isEasyClean || isWidget || isStar) {
+                if (isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette || isEasyLevel || isEasyDeeser || isEasyClean || isWidget || isStar || isRack) {
                     try {
-                        const pluginName = isStar ? 'STAR CHAIN' : isWidget ? 'OFFSZN Widget' : isCassette ? 'Cassette' : (isEasyClean ? 'Easy Clean' : isEasyDeeser ? 'Easy Deeser' : isEasyLevel ? 'Easy Level' : isOmni ? 'Omni Plugin' : (isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix')))));
+                        const pluginName = isRack ? 'PRESET RACK' : isStar ? 'STAR CHAIN' : isWidget ? 'OFFSZN Widget' : isCassette ? 'Cassette' : (isEasyClean ? 'Easy Clean' : isEasyDeeser ? 'Easy Deeser' : isEasyLevel ? 'Easy Level' : isOmni ? 'Omni Plugin' : (isEasyPitch ? 'Easy Pitch' : isVocalPreset ? 'Vocal Preset' : (isCoke ? 'Coca-Cola' : (isInkaKola ? 'INKA KOLA' : (isEasyMaster ? 'Easy Master' : 'Easy Mix')))));
                         const isSubscription = (item.license_name && item.license_name.toLowerCase().includes('sub')) || 
                                                (item.product?.product_type && item.product.product_type === 'subscription');
                         const licenseType = isSubscription ? 'subscription' : 'lifetime';
@@ -1442,7 +1443,8 @@ export const capturePayPalOrder = async (req, res) => {
                         const isCassette = prodName.toLowerCase().includes('cassette') || prodId === '5002';
                         const isWidget = isProductOfPlugin('offszn-widget', { name: prodName, id: prodId });
                         const isStar = isProductOfPlugin('star-chain', { name: prodName, id: prodId });
-                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette || isWidget || isStar;
+                        const isRack = isProductOfPlugin('offszn-rack', { name: prodName, id: prodId });
+                        const isPlugin = isCoke || isEasyMix || isEasyMaster || isInkaKola || isVocalPreset || isEasyPitch || isOmni || isCassette || isWidget || isStar || isRack;
 
                         // A. Notify Client (Receipt) — includes serial key for plugin purchases
                         const serialKeySection = (isPlugin && keysGenerated.length > 0) ? `
@@ -1460,7 +1462,13 @@ export const capturePayPalOrder = async (req, res) => {
 
                         let downloadLinks = null;
                         if (isPlugin) {
-                            if (isStar) {
+                            if (isRack) {
+                                // Instalador de PRESET RACK (solo Windows): RACK_DOWNLOAD_URL en Vercel; si falta, "Mis compras"
+                                downloadLinks = {
+                                    win: process.env.RACK_DOWNLOAD_URL || 'https://offszn.lat/mis-compras',
+                                    mac: null
+                                };
+                            } else if (isStar) {
                                 // Instalador de STAR CHAIN: Windows = ZIP en Drive; macOS = WhatsApp de Willie (ver config/starDelivery.js)
                                 downloadLinks = {
                                     win: STAR_WIN_URL,
