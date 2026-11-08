@@ -757,6 +757,23 @@
         .plan-radio-circle { margin-top: 0; }
         .plan-badge-float { position: absolute; top: -10px; right: 14px; padding: 3px 9px; border-radius: 999px; background: #2563eb; color: #fff; font-size: 9.5px; letter-spacing: .05em; box-shadow: 0 2px 6px rgba(37, 99, 235, .25); }
     </style>
+    <style>
+        .account-hint, .account-hint.show { display: none !important; }
+        .form-group { margin-bottom: 16px; }
+        .checkout-left-col .form-group + .form-group { margin-top: -2px; }
+        @media (max-width: 860px) {
+            /* Móvil: el total va arriba (en la fila del producto) y se quita el bloque de total/impuestos */
+            .summary-breakdown { display: none !important; }
+            #displayProductPrice::before { content: 'Total'; display: block; text-align: right; font-size: 11px; font-weight: 600; color: #6b7280; }
+            .checkout-right-col { padding: 14px 18px 8px; border-bottom: none; }
+            .back-nav-top { margin-bottom: 10px; }
+            .order-product-row { padding-bottom: 12px; }
+            .plan-selector-container { margin: 22px 0 8px; gap: 12px; }
+            .checkout-left-col { padding: 8px 18px 28px; }
+            .checkout-left-col .form-group { margin-bottom: 14px; }
+            .alt-methods-divider { margin: 18px 0 12px; }
+        }
+    </style>
 </head>
 <body>
 
@@ -783,7 +800,6 @@
             <div id="emailFormGroup" class="form-group">
                 <div class="label-row">
                     <label for="buyerEmail" class="form-label">Dirección de correo electrónico</label>
-                    <span class="form-link" onclick="promptLogin()">Iniciar sesión</span>
                 </div>
                 <input type="email" id="buyerEmail" class="checkout-input" placeholder="Tu dirección de correo electrónico" value="" oninput="handleEmailInput(this.value)" onblur="checkAccountForEmail(this.value)" autocomplete="email" required>
                 <div id="accountHint" class="account-hint">
@@ -792,7 +808,6 @@
             </div>
 
             <!-- 2. Additional Data / Country -->
-            <h3 class="section-heading">Datos adicionales</h3>
             <div class="form-group">
                 <label for="buyerCountry" class="form-label" style="font-weight: 500; font-size: 13px; color: #374151; display: block; margin-bottom: 6px;">País</label>
                 <select id="buyerCountry" class="checkout-select" onchange="handleCountryChange(this.value)">
@@ -871,8 +886,8 @@
                     <img src="https://pub-6ee2d2530ccf470d8fa1759f5b749cf8.r2.dev/plugins/star-chain/logo-star.png" alt="STAR CHAIN" onerror="this.onerror=null;this.src='/images/plugins/star.png'">
                 </div>
                 <div class="product-info">
-                    <h2 class="product-title">STAR CHAIN - WIN Y MAC</h2>
-                    <p class="product-subtitle" id="displayProductSubtitle">Licencia FULL - 2 dispositivos</p>
+                    <h2 class="product-title">STAR CHAIN</h2>
+                    <p class="product-subtitle" id="displayProductSubtitle">Disponible: Windows y Mac</p>
                 </div>
                 <div class="product-price-col" id="displayProductPrice">
                     $49.00 USD
@@ -891,7 +906,6 @@
                             <h4>
                                 Licencia FULL - 2 dispositivos
                             </h4>
-                            <p>Pago único · Acceso para 2 PCs · 50% OFF</p>
                         </div>
                     </div>
                     <div class="plan-price-tag">
@@ -1036,11 +1050,7 @@
         document.getElementById('cardPlanCuotas').classList.toggle('active', plan === 'cuotas');
         
         const sub = document.getElementById('displayProductSubtitle');
-        if (plan === 'full') {
-            sub.textContent = 'Licencia FULL - 2 dispositivos';
-        } else {
-            sub.textContent = '3 Cuotas Mensuales ($16.33 USD/mes)';
-        }
+        sub.textContent = 'Disponible: Windows y Mac';
 
         // Pago único: botones de PayPal + Yape rápido. Cuotas: suscripción de PayPal (y Yape para la 1ra cuota).
         const pp = document.getElementById('plugin-paypal-button-container');
