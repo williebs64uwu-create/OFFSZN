@@ -807,8 +807,8 @@
                 </div>
             </div>
 
-            <!-- 2. Additional Data / Country -->
-            <div class="form-group">
+            <!-- 2. País: oculto para comprar directo (Yape se ve siempre; pide celular de Perú) -->
+            <div class="form-group" style="display:none">
                 <label for="buyerCountry" class="form-label" style="font-weight: 500; font-size: 13px; color: #374151; display: block; margin-bottom: 6px;">País</label>
                 <select id="buyerCountry" class="checkout-select" onchange="handleCountryChange(this.value)">
                     <option value="PE" selected>Perú</option>
@@ -1164,9 +1164,11 @@
     // Yape solo funciona con celular de Perú (pago único o 1ra cuota); Mercado Pago y Binance siempre se ven.
     function syncLocalMethods() {
         const yape = document.getElementById('btnYapeNow');
-        const country = (document.getElementById('buyerCountry') || {}).value;
+        
         window.PLUGIN_INSTALLMENT = (selectedPlan === 'cuotas');
-        if (yape) yape.style.display = (country === 'PE') ? '' : 'none';
+        // Sin selector de país: Yape se muestra siempre (el modal pide un celular +51). Con ?country=XX distinto de PE se oculta.
+        const forced = (new URLSearchParams(location.search).get('country') || '').toUpperCase();
+        if (yape) yape.style.display = (forced && forced !== 'PE') ? 'none' : '';
     }
 
     function handleCountryChange() {
