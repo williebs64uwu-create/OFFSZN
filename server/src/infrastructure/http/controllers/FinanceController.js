@@ -59,7 +59,7 @@ export const financeSaveYape = async (req, res) => {
 
 // POST /admin/finance/paypal-withdrawals { usd, fee, rate, pen, date, note } · DELETE /admin/finance/paypal-withdrawals/:id
 export const financeAddWithdrawal = async (req, res) => {
-    try { const b = req.body || {}; return res.json({ ok: true, withdrawal: await addPayPalWithdrawal({ usd: b.usd, fee: b.fee, rate: b.rate, pen: b.pen, date: b.date, note: b.note }) }); } catch (e) { return fail(res, e); }
+    try { const b = req.body || {}; return res.json({ ok: true, withdrawal: await addPayPalWithdrawal({ usd: b.usd, fee: b.fee, rate: b.rate, pen: b.pen, date: b.date, note: b.note, to: b.to }) }); } catch (e) { return fail(res, e); }
 };
 export const financeDeleteWithdrawal = async (req, res) => {
     try { await deletePayPalWithdrawal(req.params.id); return res.json({ ok: true }); } catch (e) { return fail(res, e); }

@@ -178,8 +178,8 @@ export function byDay(rows = [], rate = PAYPAL_WITHDRAW_DEFAULT.rate) {
 
 // ─── Saldos que se mueven solos ───────────────────────────────────────────────────────────────────────────────
 // SALDO YAPE y BANCO son fotos que tú anotas (con su fecha y hora). Desde esa foto, lo nuevo se suma o se resta solo:
-//   Yape  = foto + cobros en soles nuevos (Yape, Binance, pesos ya confirmados) − gastos nuevos − envíos al banco nuevos
-//   Banco = foto + envíos al banco nuevos
+//   Yape  = foto + cobros en soles nuevos (Yape, Binance, pesos ya confirmados) + retiros de PayPal que llegaron a Yape/Ligo − gastos nuevos − envíos al banco nuevos
+//   Banco = foto + envíos al banco nuevos + retiros de PayPal que fueron directo al banco
 // Lo que ya pasó antes de la foto no se vuelve a contar. Sin hora guardada, la foto vale hasta el final de su día (hora de Lima).
 const endOfDayLima = (date) => (date ? Date.parse(`${date}T23:59:59-05:00`) : 0);
 const snapAt = (snap) => (snap && snap.at && !Number.isNaN(Date.parse(snap.at)) ? Date.parse(snap.at) : endOfDayLima(snap && snap.as_of));
@@ -190,11 +190,14 @@ export function liveBalances({ income = [], expenses = [], transfers = [], withd
     const spentNew = r2(expenses.filter((e) => e.created_at && Date.parse(e.created_at) > afterYape).reduce((a, e) => a + (num(e.amount_pen) || 0), 0));
     const sentYape = r2(transfers.filter((t) => newer(t, afterYape)).reduce((a, t) => a + (num(t.pen) || 0), 0));
     const sentBank = r2(transfers.filter((t) => newer(t, afterBank)).reduce((a, t) => a + (num(t.pen) || 0), 0));
-    const fromPaypal = r2((withdrawals || []).filter((t) => newer(t, afterBank)).reduce((a, t) => a + (num(t.pen) || 0), 0)); // PayPal → banco, sin pasar por Yape
+    // Retiros de PayPal: los soles llegan a Yape/Ligo (lo normal: ahí se juntan y luego pasas al banco) o directo al banco.
+    const toYape = (t) => (t.to || 'yape') === 'yape';
+    const wYape = r2((withdrawals || []).filter((t) => toYape(t) && newer(t, afterYape)).reduce((a, t) => a + (num(t.pen) || 0), 0));
+    const wBank = r2((withdrawals || []).filter((t) => !toYape(t) && newer(t, afterBank)).reduce((a, t) => a + (num(t.pen) || 0), 0));
     const hasYape = yape && num(yape.pen) !== null;
     return {
-        yape: { base: hasYape ? num(yape.pen) : null, newSales: sales.netPen, newSpent: spentNew, newSent: sentYape, now: hasYape ? r2(num(yape.pen) + sales.netPen - spentNew - sentYape) : null },
-        bank: { base: num(bank && bank.pen) ?? 0, newSent: r2(sentBank + fromPaypal), newFromPaypal: fromPaypal, now: r2((num(bank && bank.pen) ?? 0) + sentBank + fromPaypal) }
+        yape: { base: hasYape ? num(yape.pen) : null, newSales: sales.netPen, newFromPaypal: wYape, newSpent: spentNew, newSent: sentYape, now: hasYape ? r2(num(yape.pen) + sales.netPen + wYape - spentNew - sentYape) : null },
+        bank: { base: num(bank && bank.pen) ?? 0, newSent: r2(sentBank + wBank), newFromPaypal: wBank, now: r2((num(bank && bank.pen) ?? 0) + sentBank + wBank) }
     };
 }
 
@@ -235,11 +238,11 @@ export function monthNet(rows = [], allPaypal = null, w = PAYPAL_WITHDRAW_DEFAUL
 
 // Cuadre: por qué la meta (ventas netas de este mes) no es igual a "dinero del mes total" (lo que tienes + lo que ya mandaste al banco).
 //   dinero del mes total = meta + PayPal de antes del mes + ajuste de Yape (saldo que ya tenías antes del mes menos los gastos)
-export function cuadre({ netPen, paypalPen, solesPen, yapeNow, paypalNowPen, sentPen = 0, withdrawnPen = 0 } = {}) {
+export function cuadre({ netPen, paypalPen, solesPen, yapeNow, paypalNowPen, sentPen = 0, withdrawnPen = 0, withdrawnYapePen = 0 } = {}) {
     if (yapeNow === null || yapeNow === undefined) return null;
     const paypalBefore = r2(paypalNowPen + withdrawnPen - paypalPen); // lo que sigue en PayPal y NO es venta de este mes
-    const yapeAdjust = r2(yapeNow + sentPen - solesPen); // Yape hoy + lo enviado al banco, contra lo que sumaron las ventas en soles del mes
-    const total = r2(yapeNow + paypalNowPen + sentPen + withdrawnPen);
+    const yapeAdjust = r2(yapeNow + sentPen - solesPen - withdrawnYapePen); // Yape hoy + lo enviado al banco, contra las ventas en soles del mes (sin lo que llegó de PayPal)
+    const total = r2(yapeNow + paypalNowPen + sentPen + (withdrawnPen - withdrawnYapePen)); // lo que llegó a Yape ya está en yapeNow
     return { meta: r2(netPen), paypalBefore, yapeAdjust, total, check: r2(netPen + paypalBefore + yapeAdjust) };
 }
 

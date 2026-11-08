@@ -83,7 +83,7 @@ async function writeWithdrawals(list) {
     const { error } = await supabase.from('finance_settings').upsert({ key: 'paypal_withdrawals', value: list, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     if (error) throw error;
 }
-export async function addPayPalWithdrawal({ usd, fee, rate, pen, date, note }) {
+export async function addPayPalWithdrawal({ usd, fee, rate, pen, date, note, to }) {
     const settings = await getSettings();
     const dollars = Number(usd);
     if (!Number.isFinite(dollars) || dollars <= 0 || dollars > 1000000) throw Object.assign(new Error('Escribe cuántos dólares retiraste de PayPal.'), { status: 400 });
@@ -96,7 +96,7 @@ export async function addPayPalWithdrawal({ usd, fee, rate, pen, date, note }) {
     const balance = paypalPocket(all.data || [], settings.withdraw, settings.withdrawals).balanceUsd;
     if (dollars > balance + 5) throw Object.assign(new Error(`En el CRM PayPal tiene ${balance.toFixed(2)} US$; no puedes retirar ${dollars.toFixed(2)} US$. Revisa el monto.`), { status: 400 });
     const day = /^\d{4}-\d{2}-\d{2}$/.test(String(date)) ? date : new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 10);
-    const item = { id: `w-${Date.now().toString(36)}`, at: new Date().toISOString(), date: day, usd: Math.round(dollars * 100) / 100, fee: Math.round(cost * 100) / 100, rate: Math.round(change * 10000) / 10000, pen: Math.round(received * 100) / 100, note: String(note || '').trim().slice(0, 120) || null };
+    const item = { id: `w-${Date.now().toString(36)}`, at: new Date().toISOString(), date: day, usd: Math.round(dollars * 100) / 100, fee: Math.round(cost * 100) / 100, rate: Math.round(change * 10000) / 10000, pen: Math.round(received * 100) / 100, to: to === 'bank' ? 'bank' : 'yape', note: String(note || '').trim().slice(0, 120) || null };
     await writeWithdrawals([...settings.withdrawals, item]);
     return item;
 }
@@ -185,16 +185,19 @@ export async function monthData(month) {
     const live = liveBalances({ income: all.data || [], expenses: spentAll.data || [], transfers: settings.transfers, withdrawals: settings.withdrawals, yape: settings.yape, bank: settings.bank });
     const withdrawals = settings.withdrawals.filter((t) => String(t.date).startsWith(range.month));
     const withdrawalsPen = Math.round(withdrawals.reduce((a, t) => a + Number(t.pen), 0) * 100) / 100;
+    const wSum = (list) => Math.round(list.reduce((a, t) => a + Number(t.pen), 0) * 100) / 100;
+    const withdrawalsYapePen = wSum(withdrawals.filter((t) => (t.to || 'yape') === 'yape')); // llegaron a Yape/Ligo
+    const withdrawalsBankPen = wSum(withdrawals.filter((t) => t.to === 'bank')); // fueron directo al banco
     // Meta del mes: ventas netas del mes (Yape y Binance en soles + PayPal ya sin comisión, sin el costo de retiro) contra el mínimo, el intermedio y el mejor
     // La meta cuenta desde el inicio del conteo (31 oct) en el primer mes, y va después de TODAS las comisiones (igual que el dinero para depositar)
     const gw = goalWindow(range.month, settings.startAt);
     const goalRows = (all.data || []).filter((r) => Date.parse(r.occurred_at) >= Date.parse(gw.from) && Date.parse(r.occurred_at) < Date.parse(gw.to));
     const mn = monthNet(goalRows, pk.paypal, settings.withdraw);
-    const goal = gw.skip ? null : { ...goalProgress(mn.netPen, settings.goals), sentToBankPen: Math.round((transfersPen + withdrawalsPen) * 100) / 100, paypalPen: mn.paypalPen, solesPen: mn.solesPen, from: gw.from, stubDays: gw.stubDays, byDay: byDay(goalRows, settings.withdraw.rate) };
+    const goal = gw.skip ? null : { ...goalProgress(mn.netPen, settings.goals), sentToBankPen: Math.round((transfersPen + withdrawalsBankPen) * 100) / 100, paypalPen: mn.paypalPen, solesPen: mn.solesPen, from: gw.from, stubDays: gw.stubDays, byDay: byDay(goalRows, settings.withdraw.rate) };
     const reconcile = !gw.skip && range.month === currentMonth()
-        ? cuadre({ netPen: mn.netPen, paypalPen: mn.paypalPen, solesPen: mn.solesPen, yapeNow: live.yape.now, paypalNowPen: pk.paypal.nowPen, sentPen: transfersPen, withdrawnPen: withdrawalsPen })
+        ? cuadre({ netPen: mn.netPen, paypalPen: mn.paypalPen, solesPen: mn.solesPen, yapeNow: live.yape.now, paypalNowPen: pk.paypal.nowPen, sentPen: transfersPen, withdrawnPen: withdrawalsPen, withdrawnYapePen: withdrawalsYapePen })
         : null;
-    return { settings, month: range.month, income: rows, transfers, transfersPen, withdrawals, withdrawalsPen, live, goal, reconcile, expenses: spent.data || [], pendingArs, summary, pockets: { ...pk, real }, byDay: byDay(rows, settings.withdraw.rate) };
+    return { settings, month: range.month, income: rows, transfers, transfersPen, withdrawals, withdrawalsPen, withdrawalsYapePen, withdrawalsBankPen, live, goal, reconcile, expenses: spent.data || [], pendingArs, summary, pockets: { ...pk, real }, byDay: byDay(rows, settings.withdraw.rate) };
 }
 
 // Ingresos desde el inicio del conteo (los usa el Resumen del CRM).

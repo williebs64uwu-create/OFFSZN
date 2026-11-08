@@ -192,7 +192,7 @@ test('Retiro de PayPal: los dólares bajan, no es pérdida; los soles = (dólare
     assert.equal(paypalPocket([ppRow(100)], undefined, [{ usd: 250 }]).balanceUsd, 0);   // nunca negativo
 });
 test('Retiro de PayPal: sube el banco y NO toca Yape', () => {
-    const k = liveBalances({ yape: yapeSnap, bank: bankSnap, withdrawals: [{ at: '2026-11-06T12:00:00Z', date: '2026-11-06', usd: 139, pen: 449.44 }] });
+    const k = liveBalances({ yape: yapeSnap, bank: bankSnap, withdrawals: [{ at: '2026-11-06T12:00:00Z', date: '2026-11-06', usd: 139, pen: 449.44, to: 'bank' }] });
     assert.equal(k.bank.now, 27449.44); assert.equal(k.bank.newFromPaypal, 449.44); assert.equal(k.yape.now, 287.5);
 });
 
@@ -264,4 +264,23 @@ test('meta de noviembre desde el 31 oct = S/ 848.14 y cuadra con el dinero del m
     const c = cuadre({ netPen: mn.netPen, paypalPen: mn.paypalPen, solesPen: mn.solesPen, yapeNow: live.yape.now, paypalNowPen: pk.nowPen, sentPen: 113 });
     assert.deepEqual([c.meta, c.paypalBefore, c.yapeAdjust, c.total], [848.14, 0, 30.5, 878.64]); // solo queda el saldo de Yape que anotas tú
     assert.equal(live.yape.now + pk.nowPen, 765.64); // dinero para depositar
+});
+
+// ─── A dónde llegan los soles del retiro: Yape/Ligo (normal) o directo al banco ────────────────────────────────
+test('Retiro que llega a Yape/Ligo: sube Yape (no el banco) y el envío posterior de 1.000 mueve Yape → banco', () => {
+    const k = liveBalances({ yape: yapeSnap, bank: bankSnap, withdrawals: [{ at: '2026-11-07T23:21:00Z', date: '2026-11-07', usd: 200, pen: 650.72 }],
+        transfers: [{ at: '2026-11-07T23:59:00Z', date: '2026-11-07', pen: 1000 }] });
+    assert.equal(k.yape.newFromPaypal, 650.72); assert.equal(k.yape.now, Math.round((287.5 + 650.72 - 1000) * 100) / 100);   // −61,78 si no hubo más ventas
+    assert.equal(k.bank.now, 28000);                      // 27.000 + 1.000, NO + 650,72 otra vez
+});
+test('Retiro directo al banco: sube el banco y no toca Yape', () => {
+    const k = liveBalances({ yape: yapeSnap, bank: bankSnap, withdrawals: [{ at: '2026-11-07T23:21:00Z', date: '2026-11-07', usd: 200, pen: 650.72, to: 'bank' }] });
+    assert.equal(k.bank.now, 27650.72); assert.equal(k.yape.now, 287.5);
+});
+test('Cuadre: con retiro a Yape/Ligo, todo suma exacto y no se cuenta dos veces', () => {
+    import('../src/shared/store/finance.js').then(({ cuadre }) => {
+        const c = cuadre({ netPen: 1243.31, paypalPen: 600, solesPen: 643.31, yapeNow: 93.35, paypalNowPen: 49.34, sentPen: 1113, withdrawnPen: 650.72, withdrawnYapePen: 650.72 });
+        assert.equal(c.total, Math.round((93.35 + 49.34 + 1113) * 100) / 100);
+        assert.equal(Math.round(c.check * 100), Math.round(c.total * 100));
+    });
 });
