@@ -285,6 +285,7 @@
                 <div class="row"><label class="label grow">Monto<input class="input" name="amount" type="number" inputmode="decimal" min="0.01" step="0.01" required placeholder="120"><span class="field-hint" id="regHint">Soles: lo que te llegó neto.</span></label>
                 <label class="label grow">Moneda<select class="select" name="currency" id="regCur"><option value="PEN">Soles (neto)</option><option value="USD">Dólares (USD)</option><option value="ARS">Pesos argentinos</option></select></label></div>
                 <label class="label">Método<select class="select" name="method" id="regMethod">${METHODS.map(([k, n]) => `<option value="${k}">${n}</option>`).join('')}</select></label>
+                <div class="row" id="regFeeBox" hidden><label class="label grow">Comisión de PayPal (US$, opcional)<input class="input" name="fee" id="regFee" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Ej. 1,22"><span class="field-hint">Si no la sabes, se calcula sola (5,4% + 0,30) y queda marcada como estimada. Si la sabes, escríbela: es la que manda.</span></label></div>
                 <div class="row" id="regUsdtBox" hidden><label class="label grow">USDT que recibiste en Binance<input class="input" name="usdt" id="regUsdt" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Ej. 20"><span class="field-hint">Llegan a tu Yape. Se calculan soles con el cambio de abajo (aproximado).</span></label>
                 <label class="label grow">Cambio (soles por USDT)<input class="input" name="usdtRate" id="regUsdtRate" type="number" inputmode="decimal" min="0" step="0.01" value="${USDT_RATE}"></label></div>
                 <div class="row"><label class="label grow">¿Cuándo?<select class="select" name="when" id="regWhen"><option value="now">Ahora</option><option value="h1">Hace 1 hora</option><option value="h2">Hace 2 horas</option><option value="h5">Hace 5 horas</option><option value="d1">Hace 1 día</option><option value="custom">Elegir fecha y hora…</option></select></label>
@@ -297,12 +298,13 @@
         const f = $('#regForm');
         $('#regChips').onclick = (e) => { const b = e.target.closest('[data-prod]'); if (b) { f.product.value = b.dataset.prod; } };
         $('#regCur').onchange = (e) => { $('#regMethod').value = DEFAULT_METHOD[e.target.value]; syncUsdt(); $('#regHint').textContent = { PEN: 'Soles: lo que te llegó neto.', USD: 'Dólares: lo que te dieron.', ARS: 'Pesos: queda por confirmar hasta que lleguen los soles.' }[e.target.value]; };
+        const syncFee = () => { $('#regFeeBox').hidden = !($('#regCur').value === 'USD' && $('#regMethod').value === 'paypal'); };
         const syncUsdt = () => {
             const bin = $('#regMethod').value === 'binance';
             $('#regUsdtBox').hidden = !bin;
             if (bin) { $('#regCur').value = 'PEN'; const u = Number($('#regUsdt').value) || 0; const r = Number($('#regUsdtRate').value) || USDT_RATE; if (u) f.amount.value = (Math.round(u * r * 100) / 100).toFixed(2); $('#regHint').textContent = 'Soles aproximados: USDT × cambio. Cámbialo si te llegó otro monto.'; }
         };
-        $('#regMethod').addEventListener('change', syncUsdt); $('#regUsdt').addEventListener('input', syncUsdt); $('#regUsdtRate').addEventListener('input', syncUsdt);
+        $('#regMethod').addEventListener('change', () => { syncUsdt(); syncFee(); }); $('#regCur').addEventListener('change', syncFee); syncFee(); $('#regUsdt').addEventListener('input', syncUsdt); $('#regUsdtRate').addEventListener('input', syncUsdt);
         $('#regWhen').onchange = (e) => { $('#regCustomBox').hidden = e.target.value !== 'custom'; };
         f.onsubmit = async (e) => {
             e.preventDefault();
@@ -311,11 +313,11 @@
             if (!occurredAt) { toast('Elige la fecha y la hora', 'error'); return; }
             const btn = $('#regBtn'); btn.disabled = true; btn.textContent = 'Registrando…';
             try {
-                const r = await api('/admin/finance/income', { method: 'POST', body: { product: fd.get('product'), amount: fd.get('amount'), currency: fd.get('currency'), method: fd.get('method'), email: fd.get('email'), note: [fd.get('note'), fd.get('method') === 'binance' && Number(fd.get('usdt')) ? `${Number(fd.get('usdt'))} USDT × ${fd.get('usdtRate') || USDT_RATE}` : ''].filter(Boolean).join(' · '), occurredAt } });
+                const r = await api('/admin/finance/income', { method: 'POST', body: { product: fd.get('product'), amount: fd.get('amount'), currency: fd.get('currency'), fee: fd.get('fee'), method: fd.get('method'), email: fd.get('email'), note: [fd.get('note'), fd.get('method') === 'binance' && Number(fd.get('usdt')) ? `${Number(fd.get('usdt'))} USDT × ${fd.get('usdtRate') || USDT_RATE}` : ''].filter(Boolean).join(' · '), occurredAt } });
                 const cur = r.income.currency;
                 const money = cur === 'PEN' ? `S/ ${Number(r.income.net).toFixed(2)}` : cur === 'USD' ? usd(r.income.net) : 'Pesos por confirmar';
                 $('#regMsg').innerHTML = `<div class="alert alert--ok">${icon('check')}<div><b>Registrado: ${esc(r.income.product)} · ${money}.</b><br>${C.when(r.income.occurredAt)} · ya cuenta en <a href="#/finanzas" style="text-decoration:underline">Finanzas</a>.</div></div>`;
-                f.reset(); $('#regCustomBox').hidden = true; $('#regUsdtBox').hidden = true; toast('Venta registrada');
+                f.reset(); $('#regCustomBox').hidden = true; $('#regUsdtBox').hidden = true; $('#regFeeBox').hidden = true; toast('Venta registrada');
             } catch (err) { $('#regMsg').innerHTML = `<div class="alert alert--error">${icon('alert')}<div>${esc(err.message)}</div></div>`; }
             btn.disabled = false; btn.textContent = 'Registrar venta';
         };

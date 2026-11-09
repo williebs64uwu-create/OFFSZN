@@ -23,9 +23,10 @@ export async function getSettings() {
     const transfers = (Array.isArray(map.get('bank_transfers')) ? map.get('bank_transfers') : []).filter((t) => t && Number(t.pen) > 0);
     const withdrawals = (Array.isArray(map.get('paypal_withdrawals')) ? map.get('paypal_withdrawals') : []).filter((t) => t && Number(t.usd) > 0);
     const reportEmail = (map.get('report_email') || {}).email || null;
+    const paypalOpeningUsd = Number((map.get('paypal_opening') || {}).usd) > 0 ? Number(map.get('paypal_opening').usd) : 0; // saldo de PayPal de antes del conteo
     const g = map.get('month_goals') || {};
     const goals = { min: pos(g.min, GOALS_DEFAULT.min), mid: pos(g.mid, GOALS_DEFAULT.mid), top: pos(g.top, GOALS_DEFAULT.top) };
-    return { bank, yape, transfers, withdrawals, goals, reportEmail, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw, binanceRate: pos(map.get('binance_rate'), BINANCE_RATE_DEFAULT) };
+    return { bank, yape, transfers, withdrawals, goals, reportEmail, paypalOpeningUsd, fx: Number.isFinite(fx) && fx > 0 ? fx : FX_DEFAULT, startAt: map.get('start_at') || START_AT_DEFAULT, withdraw, binanceRate: pos(map.get('binance_rate'), BINANCE_RATE_DEFAULT) };
 }
 
 export async function saveBank({ pen, asOf }) {
@@ -93,7 +94,7 @@ export async function addPayPalWithdrawal({ usd, fee, rate, pen, date, note, to 
     if (!(received > 0)) throw Object.assign(new Error('Escribe cuántos soles te llegaron.'), { status: 400 });
     const all = await supabase.from('finance_income').select('*').gte('occurred_at', settings.startAt).limit(20000);
     if (all.error) throw all.error;
-    const balance = paypalPocket(all.data || [], settings.withdraw, settings.withdrawals).balanceUsd;
+    const balance = paypalPocket(all.data || [], settings.withdraw, settings.withdrawals, settings.paypalOpeningUsd).balanceUsd;
     if (dollars > balance + 5) throw Object.assign(new Error(`En el CRM PayPal tiene ${balance.toFixed(2)} US$; no puedes retirar ${dollars.toFixed(2)} US$. Revisa el monto.`), { status: 400 });
     const day = /^\d{4}-\d{2}-\d{2}$/.test(String(date)) ? date : new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 10);
     const item = { id: `w-${Date.now().toString(36)}`, at: new Date().toISOString(), date: day, usd: Math.round(dollars * 100) / 100, fee: Math.round(cost * 100) / 100, rate: Math.round(change * 10000) / 10000, pen: Math.round(received * 100) / 100, to: to === 'bank' ? 'bank' : 'yape', note: String(note || '').trim().slice(0, 120) || null };
@@ -175,7 +176,7 @@ export async function monthData(month) {
     // Bolsillos: el saldo de PayPal se junta mes a mes (el retiro es por cada 200 US$), así que se calcula desde el inicio del conteo.
     const all = await supabase.from('finance_income').select('*').gte('occurred_at', settings.startAt).limit(20000);
     if (all.error) throw all.error;
-    const pk = pockets(all.data || [], settings.bank.pen, settings.withdraw, summary.expenses.totalPen, null, settings.withdrawals);
+    const pk = pockets(all.data || [], settings.bank.pen, settings.withdraw, summary.expenses.totalPen, null, settings.withdrawals, settings.paypalOpeningUsd);
     const real = pockets(rows, settings.bank.pen, settings.withdraw, summary.expenses.totalPen, pk.paypal).real; // bruto vs neto real del mes
     const transfers = settings.transfers.filter((t) => String(t.date).startsWith(range.month));
     const transfersPen = Math.round(transfers.reduce((a, t) => a + Number(t.pen), 0) * 100) / 100;

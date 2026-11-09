@@ -32,6 +32,12 @@ export function kindOf(row) {
 // Binance: el dinero final es Yape en soles. Los USDT solo se muestran aproximados (soles ÷ este cambio, que sale de tus cobros reales ≈ 3,46).
 export const BINANCE_RATE_DEFAULT = 3.46;
 
+// Comisión de PayPal de tu cuenta por cobro: 5,4% + US$ 0,30. Coincide con los cobros reales: 10 → 0,84 · 16,33 → 1,18 · 17 → 1,22 · 40 → 2,46 · 49 → 2,95.
+// Solo se usa para cobros que anotas a mano y todavía no aparecen en PayPal; cuando sabes el monto real lo escribes y manda el real.
+export const PAYPAL_FEE_PCT = 0.054;
+export const PAYPAL_FEE_FIXED = 0.30;
+export const estimatePayPalFee = (gross) => (Number(gross) > 0 ? Math.round((Number(gross) * PAYPAL_FEE_PCT + PAYPAL_FEE_FIXED) * 100) / 100 : 0);
+
 export const MAIN_MERCHANT_ID = 'MXV5F6X8JXG4S';
 export const MAIN_MERCHANT_EMAIL = 'willie2008garay@gmail.com';
 
@@ -77,6 +83,13 @@ export function normalizeManualIncome(input = {}, now = new Date()) {
     const method = METHODS.includes(input.method) ? input.method : DEFAULT_METHOD[currency];
     const gross = r2(amount);
     if (currency === 'ARS') return { ok: true, row: { ...base, method, currency, gross, net: null, status: 'pending_review' } };
+    if (currency === 'USD' && method === 'paypal') {
+        const given = input.fee === undefined || input.fee === null || String(input.fee).trim() === '' ? null : num(input.fee);
+        if (given !== null && (given < 0 || given >= gross)) return { ok: false, error: 'La comisión de PayPal no puede ser negativa ni mayor que el cobro.' };
+        const fee = given !== null ? r2(given) : estimatePayPalFee(gross);
+        const note = given !== null ? base.note : [base.note, `Comisión ESTIMADA de PayPal (5,4% + 0,30): ${fee.toFixed(2)} US$. Cámbiala si sabes la real.`].filter(Boolean).join(' · ').slice(0, 300);
+        return { ok: true, row: { ...base, note, method, currency, gross, fee, net: r2(gross - fee), status: 'confirmed' } };
+    }
     return { ok: true, row: { ...base, method, currency, gross, net: gross, status: 'confirmed' } };
 }
 
@@ -111,7 +124,7 @@ export function incomeAsOrders(rows = [], fx = FX_DEFAULT) {
 // ─── Bolsillos: dónde está el dinero ─────────────────────────────────────────────────────────────────────────
 // PayPal (dólares, con retiro), soles (Yape, Binance y pesos ya confirmados; ya son netos) y banco (fijo, lo editas tú).
 // El retiro solo cuenta por cada 200 US$ completos: ahí se descuentan 4 US$ y se cambia a 3,3. Lo que no llega a 200 solo se convierte.
-export function paypalPocket(rows = [], w = PAYPAL_WITHDRAW_DEFAULT, withdrawals = []) {
+export function paypalPocket(rows = [], w = PAYPAL_WITHDRAW_DEFAULT, withdrawals = [], openingUsd = 0) {
     const t = { count: 0, grossUsd: 0, feeUsd: 0, balanceUsd: 0 };
     for (const r of rows) {
         if (r.status !== 'confirmed' || r.method !== 'paypal' || r.currency !== 'USD') continue;
@@ -121,7 +134,8 @@ export function paypalPocket(rows = [], w = PAYPAL_WITHDRAW_DEFAULT, withdrawals
     // Retiros ya hechos: los dólares salen de PayPal (se convirtieron en soles que fueron directo al banco). No es una pérdida.
     t.ledgerUsd = t.balanceUsd;
     t.withdrawnUsd = r2((withdrawals || []).reduce((a, x) => a + (num(x.usd) || 0), 0));
-    t.balanceUsd = r2(Math.max(0, t.balanceUsd - t.withdrawnUsd));
+    t.openingUsd = r2(num(openingUsd) || 0); // saldo que ya tenías antes del 31-oct: está en PayPal pero no es una venta
+    t.balanceUsd = r2(Math.max(0, t.balanceUsd + t.openingUsd - t.withdrawnUsd));
     const blocks = Math.floor(t.balanceUsd / w.threshold);
     const leftUsd = r2(t.balanceUsd - blocks * w.threshold);
     // Lo que sobra después de los retiros completos: desde 120 US$ se prevé el costo de 4 US$ (previsión); por debajo no se descuenta nada.
@@ -149,8 +163,8 @@ export function solesPocket(rows = []) {
 // Resumen de bolsillos y de bruto vs neto REAL en soles (después de comisiones de PayPal y del retiro).
 // Si se pasa `allPaypal` (el bolsillo de PayPal desde el inicio), el costo de retiro de ese saldo se reparte en proporción entre los pagos de `rows`
 // (así el neto de un solo mes también descuenta la previsión, aunque ese mes solo no llegue a 120 US$).
-export function pockets(rows = [], bankPen = 0, w = PAYPAL_WITHDRAW_DEFAULT, expensesPen = 0, allPaypal = null, withdrawals = []) {
-    const paypal = paypalPocket(rows, w, withdrawals);
+export function pockets(rows = [], bankPen = 0, w = PAYPAL_WITHDRAW_DEFAULT, expensesPen = 0, allPaypal = null, withdrawals = [], openingUsd = 0) {
+    const paypal = paypalPocket(rows, w, withdrawals, openingUsd);
     const soles = solesPocket(rows);
     let ppEst = paypal.estPen;
     if (allPaypal && allPaypal.balanceUsd > 0) {
