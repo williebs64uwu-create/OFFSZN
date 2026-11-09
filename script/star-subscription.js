@@ -1,5 +1,5 @@
 // Link del ZIP del instalador de Windows (el mismo de server/src/shared/config/starDelivery.js). Vacío = Mis compras.
-const STAR_WIN_LINK = 'https://drive.google.com/file/d/104B9tmDLjLX6Rj1qh70QJijs_6khRrCS/view?usp=sharing';
+const STAR_WIN_LINK = 'https://drive.google.com/file/d/12RKOCJQ5I9a1tjx3NPJeDO1bkyT8v-xE/view?usp=sharing';
 /**
  * STAR CHAIN en 3 cuotas · botón de suscripción de PayPal.
  * Cuota 1 y 2 = clave temporal de 1 mes (STAR-SUB); cuota 3 = licencia FULL de por vida. El servidor confirma cada cobro con PayPal.
@@ -42,7 +42,7 @@ const STAR_WIN_LINK = 'https://drive.google.com/file/d/104B9tmDLjLX6Rj1qh70QJijs
             <div class="plugin-modal-success-icon"><i class="bi bi-check-lg"></i></div>
             <h2 class="plugin-modal-title">¡Suscripción activa!</h2>${body}
             <a href="${STAR_WIN_LINK || '/mis-compras'}" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer" style="display:inline-flex;margin-top:10px"><i class="bi bi-download"></i> Descargar instalador (Windows)</a>
-            <a href="https://drive.google.com/file/d/1WgLixKEU1OJPoCgU_AjCH1MFOPM4trjH/view?usp=sharing" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer" style="display:inline-flex;margin-top:10px"><i class="bi bi-apple"></i> Descargar instalador (macOS .rar)</a>
+            <a href="https://drive.google.com/file/d/1uDaJUlOfiZEiVYuYxEZu9Gr4U3nr2tFG/view?usp=sharing" class="plugin-dl-btn" target="_blank" rel="noopener noreferrer" style="display:inline-flex;margin-top:10px"><i class="bi bi-apple"></i> Descargar instalador (macOS .rar)</a>
         </div>`;
         modal.querySelector('#star-modal-close').onclick = () => modal.classList.remove('active');
         const copy = modal.querySelector('#star-copy-key');

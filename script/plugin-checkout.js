@@ -22,11 +22,11 @@ class PluginDirectCheckout {
 
         if (isStar) {
             // Windows y macOS: archivos en Drive (los mismos links de server/src/shared/config/starDelivery.js).
-            const STAR_WIN_LINK = 'https://drive.google.com/file/d/104B9tmDLjLX6Rj1qh70QJijs_6khRrCS/view?usp=sharing';
+            const STAR_WIN_LINK = 'https://drive.google.com/file/d/12RKOCJQ5I9a1tjx3NPJeDO1bkyT8v-xE/view?usp=sharing';
             this.downloads = {
                 name: 'STAR CHAIN',
                 win: STAR_WIN_LINK || '/mis-compras',
-                mac: 'https://drive.google.com/file/d/1WgLixKEU1OJPoCgU_AjCH1MFOPM4trjH/view?usp=sharing',
+                mac: 'https://drive.google.com/file/d/1uDaJUlOfiZEiVYuYxEZu9Gr4U3nr2tFG/view?usp=sharing',
                 macLabel: 'macOS (.rar)'
             };
         } else if (isCoke) {
