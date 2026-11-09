@@ -6,7 +6,7 @@ import { normalizeManualIncome, summarize, usdOf, paypalCaptureRows, mercadoPago
 
 test('despacho manual: dólares = lo que te dieron (PayPal), soles = neto (Yape), pesos argentinos = pendiente', () => {
     const usd = normalizeManualIncome({ serial: 'EASY-FULL-AAAA', currency: 'USD', amount: 17, email: 'A@B.com', product: 'Easy Mix' }).row;
-    assert.deepEqual([usd.method, usd.currency, usd.gross, usd.net, usd.status, usd.by_willie, usd.email], ['paypal', 'USD', 17, 17, 'confirmed', true, 'a@b.com']);
+    assert.deepEqual([usd.method, usd.currency, usd.gross, usd.fee, usd.net, usd.status, usd.by_willie, usd.email], ['paypal', 'USD', 17, 1.22, 15.78, 'confirmed', true, 'a@b.com']);   // dólares por PayPal: con su comisión estimada
     const pen = normalizeManualIncome({ serial: 'K2', currency: 'PEN', amount: 65 }).row;
     assert.deepEqual([pen.method, pen.gross, pen.net, pen.status], ['yape', 65, 65, 'confirmed']);
     const ars = normalizeManualIncome({ serial: 'K3', currency: 'ARS', amount: 15000 }).row;
@@ -108,7 +108,7 @@ test('pesos argentinos: cuentan solo cuando llegan los soles; el depósito se re
 });
 
 // ─── Bolsillos, retiro de PayPal y servicios ───────────────────────────────────────────────────────────────────
-import { paypalPocket, pockets, kindOf, byDay, liveBalances, goalProgress, withdrawalPen, monthNet, cuadre, goalWindow } from '../src/shared/store/finance.js';
+import { paypalPocket, pockets, kindOf, byDay, liveBalances, goalProgress, withdrawalPen, estimatePayPalFee, monthNet, cuadre, goalWindow } from '../src/shared/store/finance.js';
 const ppRow = (net, fee = 0) => ({ status: 'confirmed', method: 'paypal', currency: 'USD', gross: net + fee, fee, net });
 test('PayPal por debajo de 120 US$: solo se convierte a 3,3, sin costo de retiro', () => {
     const p = paypalPocket([ppRow(46.05, 2.95), ppRow(15.78, 1.22)]);
@@ -283,4 +283,25 @@ test('Cuadre: con retiro a Yape/Ligo, todo suma exacto y no se cuenta dos veces'
         assert.equal(c.total, Math.round((93.35 + 49.34 + 1113) * 100) / 100);
         assert.equal(Math.round(c.check * 100), Math.round(c.total * 100));
     });
+});
+
+// ─── Comisión de PayPal en cobros anotados a mano, y saldo inicial ─────────────────────────────────────────────
+test('La comisión estimada (5,4% + 0,30) coincide con tus cobros reales de PayPal', () => {
+    for (const [gross, fee] of [[10, 0.84], [16.33, 1.18], [17, 1.22], [40, 2.46], [49, 2.95]]) assert.equal(estimatePayPalFee(gross), fee, `cobro de ${gross}`);
+});
+test('Venta manual por PayPal en dólares: la comisión real que escribes manda; si no, se estima y se avisa en la nota', () => {
+    const real = normalizeManualIncome({ registerOnly: true, product: 'Preset', currency: 'USD', amount: 10, method: 'paypal', fee: 1.34 }).row;
+    assert.deepEqual([real.gross, real.fee, real.net], [10, 1.34, 8.66]); assert.ok(!/ESTIMADA/.test(real.note || ''));
+    const est = normalizeManualIncome({ registerOnly: true, product: 'Preset', currency: 'USD', amount: 40, method: 'paypal' }).row;
+    assert.deepEqual([est.fee, est.net], [2.46, 37.54]); assert.match(est.note, /ESTIMADA/);
+    assert.equal(normalizeManualIncome({ registerOnly: true, product: 'X', currency: 'USD', amount: 10, method: 'paypal', fee: 11 }).ok, false);   // comisión mayor que el cobro
+    const sol = normalizeManualIncome({ registerOnly: true, product: 'X', currency: 'PEN', amount: 50 }).row;
+    assert.deepEqual([sol.fee, sol.net], [null, 50]);                                                                                          // soles: neto, sin comisión
+});
+test('Saldo inicial de PayPal: cuenta en el saldo (0,55 US$ que ya tenías) pero no es una venta', () => {
+    const rows = [ppRow(100)];
+    const sin = paypalPocket(rows); const con = paypalPocket(rows, undefined, [], 0.55);
+    assert.equal(sin.balanceUsd, 100); assert.equal(con.balanceUsd, 100.55); assert.equal(con.openingUsd, 0.55);
+    assert.equal(con.grossUsd, sin.grossUsd);                         // las ventas no cambian
+    assert.equal(paypalPocket(rows, undefined, [{ usd: 100.55 }], 0.55).balanceUsd, 0);
 });
