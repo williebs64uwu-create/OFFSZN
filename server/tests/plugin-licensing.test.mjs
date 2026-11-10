@@ -578,3 +578,18 @@ test('PRESET RACK: prefijo RACK, nombres exactos y palabras clave que NO se conf
     assert.equal(R.checkProductMatch({ serial: 'PITCH-FULL-AB12CD34-EF56AB78', requestedPluginName: 'PRESET RACK' }).ok, false);
     assert.equal(R.checkProductMatch({ serial: 'RACK-FULL-AB12CD34-EF56AB78', requestedPluginName: 'PRESET RACK' }).ok, true);
 });
+
+test('PRESET RACK: la prueba NO se pide desde el plugin; una clave RACK-TRIAL da 3 días en 1 equipo y una FULL activa con firma', async () => {
+    const r = await call(C.requestTrial, { hwid: HW('PC-A', DEV_C), device_name: 'PC-A', plugin_name: 'PRESET RACK' });
+    assert.equal(r.code, 403); assert.equal(r.body.trial_key_required, true);
+    const key = await newKey('PRESET RACK', { license_type: 'trial' });
+    assert.match(key, /^RACK-TRIAL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    const a = await call(C.activateSerial, { serial_key: key, hwid: HW('PC-A', DEV_C), plugin_name: 'PRESET RACK', nonce: 'n1' });
+    assert.equal(a.code, 200, JSON.stringify(a.body)); assert.equal(a.body.license_type, 'trial');
+    const days = (new Date(a.body.expires_at) - Date.now()) / 86400000;
+    assert.ok(days > 2.9 && days < 3.1, 'prueba de 3 días');
+    const other = await call(C.activateSerial, { serial_key: key, hwid: HW('PC-B', DEV_B), plugin_name: 'PRESET RACK', nonce: 'n2' });
+    assert.notEqual(other.code, 200, 'la clave TRIAL es de un solo equipo');
+    const wrong = await call(C.activateSerial, { serial_key: key, hwid: HW('PC-A', DEV_C), plugin_name: 'STAR CHAIN' });
+    assert.equal(wrong.code, 403); assert.equal(wrong.body.code, 'wrong_product');
+});

@@ -285,6 +285,10 @@ export const requestTrial = async (req, res) => {
         if (findPluginByName(activePluginName)?.prefix === 'STAR') {
             return res.status(403).json({ error: 'La prueba de STAR CHAIN se activa con tu clave TRIAL. Pídela en offszn.lat/plugins.', trial_key_required: true });
         }
+        // PRESET RACK: igual; el plugin no tiene botón de prueba y la prueba solo existe con una clave RACK-TRIAL.
+        if (findPluginByName(activePluginName)?.prefix === 'RACK') {
+            return res.status(403).json({ error: 'La prueba de PRESET RACK se activa con tu clave TRIAL.', trial_key_required: true });
+        }
 
         // ── 1. Check if this HWID ALREADY has a trial (past or present) ──────
         // Strict: ONE trial per machine, ever. No re-trials.
