@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFFSZN Widget | La barra del productor para Windows - OFFSZN</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/willieimages/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/willieimages/favicon-16x16.png">
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+    <meta name="description" content="Widget flotante para productores: manda tus beats en MP3 con tu tag de voz, mide LUFS y pico real, saca el tempo, convierte, graba y organiza tus tareas. Pomodoro, Tareas y Tempo gratis.">
+    <meta name="theme-color" content="#121214">
+    <meta property="og:title" content="OFFSZN Widget | La barra del productor para Windows">
+    <meta property="og:description" content="Manda beats con tu tag de voz, mide LUFS, saca el tempo y organiza tu sesión sin salir de tu DAW.">
+    <meta property="og:image" content="https://offszn.lat/willieimages/logo-og.jpg">
+    <meta property="og:url" content="https://offszn.lat/plugins/offszn-widget">
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="OFFSZN">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!--
+      ╔══════════════════════════════════════════════════════════════════════════════╗
+      ║  CONFIGURACIÓN (lo único que hay que tocar para vender)                      ║
+      ║  1. productId:   id del producto "OFFSZN Widget" en la tienda (el mismo que  ║
+      ║                  va en WIDGET_PRODUCT_IDS de Vercel). Con 0 no se muestra    ║
+      ║                  ningún botón de pago (la página se puede publicar igual).   ║
+      ║  2. price:       precio en USD (debe coincidir con la tienda y el backend).  ║
+      ║  3. yapePricePEN: precio fijo en soles para Yape (0 = lo calcula el backend).║
+      ║  4. downloadUrl: enlace del instalador de Windows. Vacío = sin botón.        ║
+      ╚══════════════════════════════════════════════════════════════════════════════╝
+    -->
+    <script>
+        window.WIDGET_PAGE = { productId: 0, price: 5, yapePricePEN: 0, downloadUrl: '' };
+    </script>
+
+    <!-- iconos que usa el modal de compra (script/plugin-checkout.js) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>window.supabaseClient = null;</script>
+    <script src="/script/config.js"></script>
+    <script src="/script/auth-utils.js?v=12"></script>
+    <script src="/script/meta-pixel.js"></script>
+
+    <style>
+        :root {
+            --bg: #121214; --bg2: #1b1b1f; --bg3: #26262c; --line: #2f2f36;
+            --text: #ececf0; --dim: #8b8b96; --accent: #ff6a2b; --ok: #3ddc84; --bad: #ff5a5a;
+            --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { background: #0c0c0e; color: var(--text); font: 16px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+        a { color: inherit; text-decoration: none; }
+        ul { list-style: none; }
+        [hidden] { display: none !important; }
+        .wrap { width: 100%; max-width: 1060px; margin: 0 auto; padding: 0 20px; }
+
+        /* barra superior */
+        .top { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+        .brand { font-weight: 800; letter-spacing: 2px; font-size: 15px; }
+        .brand b { color: var(--accent); }
+        .top nav { display: flex; gap: 22px; font-size: 14px; color: var(--dim); }
+        .top nav a { transition: color .15s ease; }
+        .top nav a:hover { color: var(--text); }
+
+        /* botones */
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 22px; border-radius: 12px; border: 0; cursor: pointer; font: inherit; font-weight: 700; background: var(--bg3); color: var(--text); transition: transform .14s var(--ease-out), filter .15s ease; }
+        .btn:active { transform: scale(.97); }
+        .btn.primary { background: var(--accent); color: #fff; }
+        .btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        @media (hover: hover) and (pointer: fine) { .btn:hover { filter: brightness(1.12); } }
+        a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+        /* hero */
+        .hero { display: grid; grid-template-columns: 1fr 1.05fr; gap: 44px; align-items: center; padding: 44px 0 64px; }
+        .tag { display: inline-block; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--accent); color: var(--accent); font-size: 12.5px; font-weight: 700; margin-bottom: 16px; }
+        h1 { font-size: clamp(32px, 5vw, 50px); line-height: 1.08; letter-spacing: -1px; margin-bottom: 16px; }
+        h1 em { font-style: normal; color: var(--accent); }
+        .lead { color: #b9b9c4; font-size: 18px; max-width: 480px; margin-bottom: 26px; }
+        .cta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        .fine { margin-top: 14px; color: var(--dim); font-size: 13px; }
+
+        /* réplica del widget (pestaña Enviar) */
+        .mock { background: var(--bg); border: 1px solid var(--line); border-radius: 0 0 18px 18px; padding: 12px 16px 16px; font-size: 13px; box-shadow: 0 30px 80px rgba(0, 0, 0, .55); user-select: none; }
+        .mhead { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .mtabs { display: flex; gap: 2px; background: var(--bg2); padding: 3px; border-radius: 10px; }
+        .mtabs span { display: flex; align-items: center; gap: 5px; padding: 4px 7px; border-radius: 8px; color: var(--dim); font-weight: 600; font-size: 12.5px; }
+        .mtabs span.on { background: var(--bg3); color: var(--text); }
+        .mtabs svg, .mpick svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+        .mpicks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .mpick { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 1.5px solid var(--line); border-radius: 12px; background: var(--bg2); min-width: 0; }
+        .mpick svg { width: 22px; height: 22px; stroke: var(--accent); stroke-width: 1.8; }
+        .mpick div { min-width: 0; }
+        .mpick b { display: block; font-weight: 600; }
+        .mpick small { display: block; color: var(--dim); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mfields { display: grid; grid-template-columns: 2.2fr .8fr .8fr 1.4fr; gap: 6px; margin-top: 8px; }
+        .mfields span { background: var(--bg2); border-radius: 9px; padding: 6px 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mrow { display: flex; align-items: center; gap: 12px; margin-top: 8px; color: var(--dim); font-size: 12px; }
+        .mrow i { flex: none; width: 80px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--accent) 65%, var(--bg3) 65%); }
+        .mrow b { margin-left: auto; background: var(--accent); color: #fff; padding: 6px 12px; border-radius: 9px; font-weight: 600; font-size: 13px; }
+        .mjob { margin-top: 10px; background: var(--bg2); border-radius: 10px; padding: 7px 10px; border-bottom: 2px solid var(--accent); }
+        .mjob div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mjob small { color: var(--ok); font-size: 11px; }
+
+        section { padding: 56px 0; border-top: 1px solid #1c1c21; }
+        h2 { font-size: clamp(24px, 3.4vw, 34px); letter-spacing: -.5px; margin-bottom: 10px; }
+        .sub { color: var(--dim); max-width: 620px; margin-bottom: 28px; }
+
+        /* funciones */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+        .card { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+        .card svg { width: 24px; height: 24px; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 10px; }
+        .card h3 { font-size: 16px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .card p { color: var(--dim); font-size: 14px; }
+        .free { font-size: 10.5px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--ok); border: 1px solid var(--ok); border-radius: 20px; padding: 1px 7px; }
+
+        /* pasos */
+        .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; counter-reset: paso; }
+        .steps li { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 18px; counter-increment: paso; }
+        .steps li::before { content: counter(paso); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+        .steps b { display: block; margin-bottom: 2px; }
+        .steps span { color: var(--dim); font-size: 14px; }
+        .file { display: inline-block; margin-top: 18px; padding: 8px 14px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line); font: 13.5px Consolas, monospace; color: #d6d6de; overflow-wrap: anywhere; }
+
+        /* precio */
+        .price { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .plan { background: var(--bg); border: 1px solid var(--line); border-radius: 18px; padding: 24px; }
+        .plan.pro { border-color: var(--accent); }
+        .plan h3 { font-size: 18px; }
+        .amount { font-size: 42px; font-weight: 800; letter-spacing: -1px; margin: 6px 0 2px; }
+        .amount small { font-size: 14px; font-weight: 500; color: var(--dim); letter-spacing: 0; }
+        .plan ul { margin: 16px 0 20px; display: flex; flex-direction: column; gap: 8px; }
+        .plan li { display: flex; gap: 9px; font-size: 14.5px; color: #c9c9d2; }
+        .plan li::before { content: "✓"; color: var(--ok); font-weight: 700; }
+        .pay { display: flex; flex-direction: column; gap: 10px; }
+        #plugin-paypal-button-container:empty { display: none; }
+        .btn-yape { width: 100%; background: #fff; color: #111; }
+        .btn-yape img { width: 22px; height: 22px; border-radius: 5px; object-fit: contain; }
+        .soon { padding: 12px 14px; border-radius: 12px; background: var(--bg2); color: var(--dim); font-size: 14px; }
+
+        /* preguntas */
+        details { border-bottom: 1px solid #1c1c21; padding: 14px 0; }
+        summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+        summary::-webkit-details-marker { display: none; }
+        summary::after { content: "+"; color: var(--dim); font-weight: 400; }
+        details[open] summary::after { content: "−"; }
+        details p { color: var(--dim); margin-top: 8px; font-size: 15px; max-width: 720px; }
+
+        footer { padding: 30px 0 46px; color: var(--dim); font-size: 13px; border-top: 1px solid #1c1c21; display: flex; flex-wrap: wrap; gap: 8px 22px; justify-content: space-between; }
+
+        @media (max-width: 860px) {
+            .hero { grid-template-columns: 1fr; padding-top: 20px; gap: 30px; }
+            .price { grid-template-columns: 1fr; }
+            .top nav a:not(.keep) { display: none; }
+            .mfields { grid-template-columns: 1.6fr .8fr .8fr; }
+            .mfields span:last-child { display: none; }
+        }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <header class="top">
+            <a class="brand" href="/">OFF<b>SZN</b></a>
+            <nav>
+                <a href="#funciones">Funciones</a>
+                <a href="#enviar">Enviar beats</a>
+                <a href="#preguntas">Preguntas</a>
+                <a class="keep" href="#precio">Precio</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="hero">
+                <div>
+                    <span class="tag">Para Windows · Pomodoro, Tareas y Tempo gratis</span>
+                    <h1>Manda tu beat con tag <em>en 10 segundos</em>, sin salir de tu DAW.</h1>
+                    <p class="lead">OFFSZN Widget es una barra flotante que vive en el borde de tu pantalla: prepara el MP3 para tu cliente, mide el volumen, saca el tempo y ordena tu sesión.</p>
+                    <div class="cta">
+                        <a class="btn primary" id="dlBtn" hidden>
+                            <svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M4 20h16" /></svg>
+                            Descargar gratis para Windows
+                        </a>
+                        <a class="btn" href="#precio">Ver la licencia completa</a>
+                    </div>
+                    <p class="fine" id="dlNote">Descarga disponible muy pronto.</p>
+                </div>
+
+                <!-- Réplica de la pestaña Enviar del widget -->
+                <div class="mock" aria-hidden="true">
+                    <div class="mhead">
+                        <div class="mtabs">
+                            <span><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18M12 7v5l3 2" /></svg></span>
+                            <span><svg viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v13h-4z" /></svg></span>
+                            <span><svg viewBox="0 0 24 24"><path d="M8 3h8l3 18H5zM12 15l5-9" /></svg></span>
+                            <span><svg viewBox="0 0 24 24"><path d="M4 8h13l-3-3M20 16H7l3 3" /></svg></span>
+                            <span class="on"><svg viewBox="0 0 24 24"><path d="M21 3L3 10l7 3 3 7zM10 13l5-5" /></svg>Enviar</span>
+                            <span><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20v-4" /></svg></span>
+                            <span><svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 0 0 16a8 8 0 0 0 0-16M12 9a3 3 0 1 0 0 6a3 3 0 0 0 0-6" /></svg></span>
+                            <span><svg viewBox="0 0 24 24"><path d="M8 5h8v3H8zM6 6H5v15h14V6h-1" /></svg></span>
+                        </div>
+                    </div>
+                    <div class="mpicks">
+                        <div class="mpick"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0a3 3 0 0 1 6 0M20 16a3 3 0 1 1-6 0a3 3 0 0 1 6 0" /></svg><div><b>Tu beat</b><small>Noche Larga.wav</small></div></div>
+                        <div class="mpick"><svg viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3M5 11a7 7 0 0 0 14 0M12 18v3" /></svg><div><b>Tag de voz</b><small>mi-tag.wav</small></div></div>
+                    </div>
+                    <div class="mfields"><span>Noche Larga</span><span>140</span><span>Am</span><span>OFFSZN</span></div>
+                    <div class="mrow">Tag cada 30 s · Volumen <i></i><b>Crear MP3</b></div>
+                    <div class="mjob"><div>Noche Larga - 140bpm - Am (prod. OFFSZN).mp3</div><small>✓ Listo · arrástralo a WhatsApp, Telegram o tu correo</small></div>
+                </div>
+            </div>
+
+            <section id="funciones">
+                <h2>Ocho herramientas en una barra</h2>
+                <p class="sub">Se abre al pasar el mouse, se pega a cualquier borde y no estorba mientras produces.</p>
+                <div class="grid">
+                    <div class="card"><svg viewBox="0 0 24 24"><path d="M21 3L3 10l7 3 3 7zM10 13l5-5" /></svg><h3>Enviar</h3><p>MP3 320 con nombre ordenado, datos y tu tag de voz repetido. Listo para arrastrar al chat.</p></div>
+                    <div class="card"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20v-4" /></svg><h3>Analizar</h3><p>Volumen integrado (LUFS), pico real y rango dinámico, con avisos si va a saturar.</p></div>
+                    <div class="card"><svg viewBox="0 0 24 24"><path d="M4 8h13l-3-3M20 16H7l3 3" /></svg><h3>Convertir</h3><p>Suelta audio o video y sale en MP3 320, WAV 24-bit o FLAC. Nunca pisa el original.</p></div>
+                    <div class="card"><svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 0 0 16a8 8 0 0 0 0-16M12 9a3 3 0 1 0 0 6a3 3 0 0 0 0-6" /></svg><h3>Grabar</h3><p>Graba lo que suena en tu PC en WAV 24-bit y arrástralo a tu DAW.</p></div>
+                    <div class="card"><svg viewBox="0 0 24 24"><path d="M8 5h8v3H8zM6 6H5v15h14V6h-1" /></svg><h3>Portapapeles</h3><p>Historial de lo que copias y textos fijados: precios, enlaces y respuestas a clientes.</p></div>
+                    <div class="card"><svg viewBox="0 0 24 24"><path d="M8 3h8l3 18H5zM12 15l5-9" /></svg><h3>Tempo <span class="free">Gratis</span></h3><p>Toca TAP y obtén el BPM con los tiempos en milisegundos para delay y reverb.</p></div>
+                    <div class="card"><svg viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v13h-4z" /></svg><h3>Tareas <span class="free">Gratis</span></h3><p>Tablero Por hacer, En proceso y Realizado. Arrastra cada tarjeta a su columna.</p></div>
+                    <div class="card"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18M12 7v5l3 2" /></svg><h3>Pomodoro <span class="free">Gratis</span></h3><p>Sesiones de foco con descansos y aviso al terminar. El tiempo se ve aunque esté cerrado.</p></div>
+                </div>
+            </section>
+
+            <section id="enviar">
+                <h2>Así mandas un beat</h2>
+                <p class="sub">El MP3 se guarda junto a tu beat y queda listo para soltarlo en el chat de tu cliente.</p>
+                <ol class="steps">
+                    <li><b>Suelta tu beat</b><span>WAV, MP3 o el video del bounce. Si el archivo ya dice el BPM, se rellena solo.</span></li>
+                    <li><b>Añade tu tag</b><span>Elige tu tag de voz una vez; queda guardado. Tú decides cada cuántos segundos suena y a qué volumen.</span></li>
+                    <li><b>Arrástralo</b><span>Sale el MP3 con nombre, tono y BPM. Arrástralo desde el widget a WhatsApp, Telegram o tu correo.</span></li>
+                </ol>
+                <span class="file">Noche Larga - 140bpm - Am (prod. OFFSZN).mp3</span>
+            </section>
+
+            <section id="precio">
+                <h2>Empieza gratis. Paga una sola vez.</h2>
+                <p class="sub">Sin suscripción. La licencia es de por vida y sirve en 2 equipos.</p>
+                <div class="price">
+                    <div class="plan">
+                        <h3>Gratis</h3>
+                        <div class="amount">$0</div>
+                        <ul>
+                            <li>Pomodoro</li>
+                            <li>Tareas (tablero Kanban)</li>
+                            <li>Tempo y tabla de milisegundos</li>
+                            <li>Prueba de todo lo demás por 3 días</li>
+                        </ul>
+                        <a class="btn" id="dlBtn2" hidden>Descargar para Windows</a>
+                        <p class="soon" id="dlSoon">Descarga disponible muy pronto.</p>
+                    </div>
+                    <div class="plan pro">
+                        <h3>Licencia completa</h3>
+                        <div class="amount">$<span id="priceUsd">5</span> <small>USD · pago único</small></div>
+                        <ul>
+                            <li>Enviar: MP3 con tu tag de voz</li>
+                            <li>Analizar: LUFS y pico real</li>
+                            <li>Convertir, Grabar y Portapapeles</li>
+                            <li>Tu clave llega a tu correo al instante</li>
+                        </ul>
+                        <div class="pay" id="payBox" hidden>
+                            <div id="plugin-paypal-button-container"></div>
+                            <button type="button" class="btn btn-yape" data-action="open-yape-checkout" id="btn-yape-checkout">
+                                <img src="/images/payments/yape.png" alt=""> Pagar con Yape (soles)
+                            </button>
+                        </div>
+                        <p class="soon" id="paySoon">La compra se abre muy pronto. ¿La quieres ya? <a href="https://wa.me/51993525005?text=Hola,%20quiero%20la%20licencia%20de%20OFFSZN%20Widget" target="_blank" rel="noopener noreferrer" style="color:var(--accent);font-weight:600">Escríbenos por WhatsApp</a>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="preguntas">
+                <h2>Preguntas</h2>
+                <details><summary>¿Funciona en Mac?</summary><p>Por ahora solo en Windows 10 y 11.</p></details>
+                <details><summary>¿Necesito un DAW en particular?</summary><p>No. Es una app aparte que flota sobre tu pantalla, así que acompaña a cualquier DAW. Lo que grabas o conviertes se arrastra directo a tu DAW.</p></details>
+                <details><summary>¿Qué pasa cuando termina la prueba de 3 días?</summary><p>Pomodoro, Tareas y Tempo siguen funcionando gratis para siempre. Enviar, Analizar, Convertir, Grabar y Portapapeles piden la licencia.</p></details>
+                <details><summary>¿En cuántos equipos puedo usar mi licencia?</summary><p>En 2 equipos. La clave es de por vida, sin pagos mensuales.</p></details>
+                <details><summary>¿El tag daña mi beat original?</summary><p>No. Tu archivo original no se toca: el widget crea un MP3 nuevo al lado, y si ya existe uno con ese nombre le añade un número.</p></details>
+                <details><summary>Windows me avisa al instalar, ¿es normal?</summary><p>Sí. La primera vez Windows puede mostrar un aviso azul porque el instalador es nuevo. Pulsa «Más información» y luego «Ejecutar de todas formas».</p></details>
+            </section>
+        </main>
+
+        <footer>
+            <span>© OFFSZN · Hecho para productores</span>
+            <span><a href="/plugins/all">Más plugins</a> · <a href="https://wa.me/51993525005" target="_blank" rel="noopener noreferrer">Soporte por WhatsApp</a></span>
+        </footer>
+    </div>
+
+    <script>
+        // Enciende descarga y pago según la configuración de arriba (antes de que carguen los scripts de checkout).
+        (function () {
+            var c = window.WIDGET_PAGE || {};
+            document.getElementById('priceUsd').textContent = c.price;
+            if (c.downloadUrl) {
+                ['dlBtn', 'dlBtn2'].forEach(function (id) { var a = document.getElementById(id); a.href = c.downloadUrl; a.hidden = false; });
+                document.getElementById('dlSoon').hidden = true;
+                document.getElementById('dlNote').textContent = 'Windows 10 y 11 · sin registro · la primera vez Windows puede pedir «Más información → Ejecutar de todas formas».';
+            }
+            if (c.productId) {
+                window.PLUGIN_NAME = 'OFFSZN Widget';
+                window.PLUGIN_ID = c.productId;
+                window.CURRENT_PROMO_PRICE = c.price;
+                window.WIDGET_DOWNLOAD_URL = c.downloadUrl || '';
+                if (c.yapePricePEN) window.YAPE_FIXED_PRICE_PEN = c.yapePricePEN;
+                document.getElementById('payBox').hidden = false;
+                document.getElementById('paySoon').hidden = true;
+            } else {
+                // sin producto: se quita el botón de Yape para que el checkout no cobre otro plugin por defecto
+                document.getElementById('btn-yape-checkout').remove();
+            }
+        })();
+    </script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <script src="/script/plugin-checkout.js?v=20261110"></script>
+    <script src="/script/yape-checkout.js?v=20261101_dyn"></script>
+    <script src="/script/pay-click-tracker.js?v=20261016"></script>
+</body>
+
+</html>
