@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../../../shared/config/config.js';
 import { supabase } from '../../database/connection.js';
 import { findPluginByName, DEFAULT_PLUGIN } from '../../../shared/config/pluginRegistry.js';
 
@@ -122,6 +124,11 @@ export const confirmDevice = async (req, res) => {
             return res.status(404).json({ success: false, error: 'El código ha expirado o no es válido.' });
         }
 
+        // Beat Post recibe una llave para subir a la tienda: solo se vincula con sesión iniciada.
+        if (entry.plugin_name === 'Beat Post' && !userId) {
+            return res.status(401).json({ success: false, error: 'Inicia sesión en OFFSZN para vincular Beat Post.' });
+        }
+
         // Consultar detalles del usuario en Supabase si no vienen en req.user
         let finalEmail = userEmail;
         let finalNickname = 'Usuario OFFSZN';
@@ -188,6 +195,23 @@ export const pollDeviceCode = async (req, res) => {
             const leaseSeconds = 30 * 86400;
             const expiresAtUnix = Math.floor(Date.now() / 1000) + leaseSeconds;
 
+            // Beat Post: el código solo lo canjea la misma PC que lo pidió, y recibe un token de 30 días
+            // (mismo formato que valida authenticateTokenMiddleware: sub + email).
+            let beatpost = {};
+            if (entry.plugin_name === 'Beat Post') {
+                if (String(hwid || '').trim() !== entry.hwid) {
+                    return res.status(403).json({ success: false, status: 'access_denied', error: 'Dispositivo distinto.' });
+                }
+                if (JWT_SECRET && entry.user?.id && entry.user.id !== 'web-confirmed-user') {
+                    beatpost = {
+                        access_token: jwt.sign(
+                            { sub: entry.user.id, email: entry.user.email, role: 'authenticated', aud: 'authenticated' },
+                            JWT_SECRET, { expiresIn: '30d' }),
+                        expires_in: leaseSeconds
+                    };
+                }
+            }
+
             // Limpiamos la entrada para que no pueda ser re-usada
             activeDeviceCodes.delete(device_code);
             activeDeviceCodes.delete(entry.user_code.replace('-', ''));
@@ -195,6 +219,7 @@ export const pollDeviceCode = async (req, res) => {
             return res.status(200).json({
                 success: true,
                 status: 'approved',
+                ...beatpost,
                 user: entry.user,
                 license: {
                     type: 'sub_active',

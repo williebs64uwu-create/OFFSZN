@@ -101,6 +101,18 @@ export async function runSubscriptionScavenger() {
                 continue;
             }
 
+            // Si le queda otra suscripción del sitio vigente (ej. compró Beat Post y además paga PRO), no se le baja el plan.
+            const { data: stillActive } = await supabase
+                .from('subscriptions')
+                .select('id, plan_id')
+                .eq('user_id', sub.user_id)
+                .eq('status', 'active')
+                .gt('current_period_end', new Date().toISOString());
+            if ((stillActive || []).some((s) => s.id !== sub.id && !String(s.plan_id || '').startsWith('orb_'))) {
+                console.log(`  - ✅ Sub ${sub.plan_id} of user ${sub.user_id} expired, but another site plan is still active (plan untouched)`);
+                continue;
+            }
+
             // B. Downgrade user plan to free in users and profiles
             const { error: userUpdateError } = await supabase
                 .from('users')

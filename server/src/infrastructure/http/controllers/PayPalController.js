@@ -1,6 +1,7 @@
 import paypal from '@paypal/checkout-server-sdk';
 import paypalClient from '../paypalClient.js';
 import { handleStarWebhook } from '../../services/starSubscriptionService.js';
+import { handleWebhook as handleBeatPostWebhook } from '../../services/beatpostService.js';
 import { STAR_WIN_URL, STAR_MAC_URL } from '../../../shared/config/starDelivery.js';
 import { recordPayPalCaptures, recordIncome, productLabel } from '../../services/financeService.js';
 import { paypalSaleEventRow } from '../../../shared/store/finance.js';
@@ -2314,6 +2315,13 @@ export const handlePayPalWebhook = async (req, res) => {
         if (await handleStarWebhook(event)) return res.status(200).json({ received: true });
     } catch (starErr) {
         console.error('[STAR sub] webhook falló; PayPal reintentará:', starErr.message);
+        return res.status(500).json({ received: false, retry: true });
+    }
+    // Beat Post en 2 cuotas: igual que STAR CHAIN (solo atiende las suscripciones de su propio plan).
+    try {
+        if (await handleBeatPostWebhook(event)) return res.status(200).json({ received: true });
+    } catch (bpErr) {
+        console.error('[BeatPost] webhook falló; PayPal reintentará:', bpErr.message);
         return res.status(500).json({ received: false, retry: true });
     }
 

@@ -32,6 +32,7 @@ import youtubeSyncRoutes from './infrastructure/http/routes/youtube-sync.routes.
 import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
 import pluginLicensingRoutes from './infrastructure/http/routes/plugin-licensing.routes.js';
 import deviceAuthRoutes from './infrastructure/http/routes/device-auth.routes.js';
+import beatpostRoutes from './infrastructure/http/routes/beatpost.routes.js';
 import cokeCheckoutRoutes from './infrastructure/http/routes/coke-checkout.routes.js';
 import promo2x1CheckoutRoutes from './infrastructure/http/routes/promo2x1-checkout.routes.js';
 import calendarRoutes from './infrastructure/http/routes/calendar.routes.js';
@@ -378,6 +379,7 @@ app.use('/api', subscriptionRoutes);
 app.use('/api', subscriptionV2Routes);
 app.use('/api/plugin', pluginLicensingRoutes);
 app.use('/api/auth/device', deviceAuthRoutes);
+app.use('/api/beatpost', beatpostRoutes);
 app.use('/api', r2Routes);
 app.use('/api/imagekit', imagekitRoutes);
 app.use('/api', paypalRoutes);

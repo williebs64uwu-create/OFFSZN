@@ -21,3 +21,10 @@ jobs:
           curl -fsS --max-time 90 \
             -H "Authorization: Bearer $STORE_CRON_SECRET" \
             https://offszn.lat/api/store/cron/star-reconcile
+      - name: Llamar al repaso de Beat Post (2 cuotas)
+        if: ${{ env.STORE_CRON_SECRET != '' }}
+        continue-on-error: true
+        run: |
+          curl -fsS --max-time 90 \
+            -H "Authorization: Bearer $STORE_CRON_SECRET" \
+            https://offszn.lat/api/beatpost/cron/reconcile
