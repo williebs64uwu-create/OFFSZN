@@ -11,7 +11,8 @@ import {
 } from '../../services/beatpostService.js';
 
 const router = Router();
-const FEATURES = new Set(['aplicar_orden', 'escanear_ilimitado', 'preparar_beat', 'armar_kit', 'subir', 'whatsapp']);
+const FEATURES = new Set(['aplicar_orden', 'escanear_ilimitado', 'preparar_beat', 'armar_kit', 'subir', 'whatsapp',
+    'revisar_mezcla', 'repetidos', 'combinan', 'vigilar']);
 const PLANS = new Set(['free', 'starter', 'pro']);
 
 const limiter = (limit, minutes = 10) => rateLimit({ windowMs: minutes * 60 * 1000, limit, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Demasiados intentos. Prueba en unos minutos.' } });
